@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="@string/pref_advanced">
+
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_dnscrypt_global_settings_categ"
+        android:key="dnscrypt_global_settings">
+
+        <EditTextPreference
+            android:id="@+id/local_port"
+            android:defaultValue="5354"
+            android:key="listen_port"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_dnscrypt_local_port_summ"
+            android:title="@string/pref_dnscrypt_local_port" />
+        <EditTextPreference
+            android:id="@+id/max_clients"
+            android:defaultValue="250"
+            android:key="max_clients"
+            android:selectAllOnFocus="false"
+            android:singleLine="false"
+            android:summary="@string/pref_dnscrypt_max_clients_summ"
+            android:title="@string/pref_dnscrypt_max_clients" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_dnscrypt_require_servers_categ"
+        android:key="dnscrypt_require_servers_summ">
+
+
+        <CheckBoxPreference
+            android:id="@+id/ipv4_servers"
+            android:defaultValue="true"
+            android:key="ipv4_servers"
+            android:summary="@string/pref_dnscrypt_ipv4_servers_summ"
+            android:title="@string/pref_dnscrypt_ipv4_servers" />
+        <CheckBoxPreference
+            android:id="@+id/ipv6_servers"
+            android:defaultValue="false"
+            android:enabled="false"
+            android:key="ipv6_servers"
+            android:summary="@string/pref_dnscrypt_ipv6_servers_summ"
+            android:title="@string/pref_dnscrypt_ipv6_servers" />
+        <CheckBoxPreference
+            android:id="@+id/dnscrypt_servers"
+            android:defaultValue="true"
+            android:key="dnscrypt_servers"
+            android:summary="@string/pref_dnscrypt_dnscrypt_servers_summ"
+            android:title="@string/pref_dnscrypt_dnscrypt_servers" />
+        <CheckBoxPreference
+            android:id="@+id/doh_servers"
+            android:defaultValue="true"
+            android:key="doh_servers"
+            android:summary="@string/pref_dnscrypt_doh_servers_summ"
+            android:title="@string/pref_dnscrypt_doh_servers" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_dnscrypt_require_servers_prop_categ"
+        android:key="dnscrypt_require_servers_prop_summ">
+
+        <CheckBoxPreference
+            android:id="@+id/require_dnssec"
+            android:defaultValue="false"
+            android:key="require_dnssec"
+            android:summary="@string/pref_dnscrypt_require_dnssec_summ"
+            android:title="@string/pref_dnscrypt_require_dnssec" />
+        <CheckBoxPreference
+            android:id="@+id/require_nolog"
+            android:defaultValue="false"
+            android:key="require_nolog"
+            android:summary="@string/pref_dnscrypt_require_nolog_summ"
+            android:title="@string/pref_dnscrypt_require_nolog" />
+        <CheckBoxPreference
+            android:id="@+id/require_nofilter"
+            android:defaultValue="false"
+            android:key="require_nofilter"
+            android:summary="@string/pref_dnscrypt_require_nofilter_summ"
+            android:title="@string/pref_dnscrypt_require_nofilter" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_dnscrypt_force_tcp_categ"
+        android:key="dnscrypt_force_tcp_categ">
+
+        <CheckBoxPreference
+            android:id="@+id/force_tcp"
+            android:defaultValue="false"
+            android:key="force_tcp"
+            android:summary="@string/pref_dnscrypt_force_tcp_summ"
+            android:title="@string/pref_dnscrypt_force_tcp" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_dnscrypt_HTTP_SOCKS_proxy_categ">
+
+        <SwitchPreference
+            android:id="@+id/use_dnscrypt_proxy"
+            android:defaultValue="false"
+            android:key="Enable proxy"
+            android:title="@string/pref_dnscrypt_use_proxy" />
+        <EditTextPreference
+            android:id="@+id/dnscrypt_proxy"
+            android:defaultValue="9050"
+            android:dependency="Enable proxy"
+            android:key="proxy_port"
+            android:selectAllOnFocus="false"
+            android:summary="@string/pref_dnscrypt_proxy_summ"
+            android:title="@string/pref_dnscrypt_proxy" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_dnscrypt_other_categ"
+        android:key="pref_dnscrypt_other_categ">
+
+        <EditTextPreference
+            android:id="@+id/dnscrypt_timeout"
+            android:defaultValue="2500"
+            android:key="timeout"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_dnscrypt_timeout_summ"
+            android:title="@string/pref_dnscrypt_timeout" />
+        <EditTextPreference
+            android:id="@+id/dnscrypt_keepalive"
+            android:defaultValue="30"
+            android:key="keepalive"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_dnscrypt_keepalive_summ"
+            android:title="@string/pref_dnscrypt_keepalive" />
+        <EditTextPreference
+            android:id="@+id/cert_refresh_delay"
+            android:defaultValue="240"
+            android:key="cert_refresh_delay"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_dnscrypt_cert_refresh_del_summ"
+            android:title="@string/pref_dnscrypt_cert_refresh_del" />
+        <CheckBoxPreference
+            android:id="@+id/dnscrypt_ephemeral_keys"
+            android:defaultValue="false"
+            android:key="dnscrypt_ephemeral_keys"
+            android:summary="@string/pref_dnscrypt_dnscrypt_ephemeral_keys_summ"
+            android:title="@string/pref_dnscrypt_dnscrypt_ephemeral_keys" />
+        <CheckBoxPreference
+            android:id="@+id/tls_disable_session_tickets"
+            android:defaultValue="false"
+            android:key="tls_disable_session_tickets"
+            android:summary="@string/pref_dnscrypt_tls_disable_session_tickets_summ"
+            android:title="@string/pref_dnscrypt_tls_disable_session_tickets" />
+        <EditTextPreference
+            android:id="@+id/fallback_resolver"
+            android:defaultValue="9.9.9.9"
+            android:key="fallback_resolver"
+            android:selectAllOnFocus="false"
+            android:singleLine="false"
+            android:summary="@string/pref_dnscrypt_fallback_resolver_summ"
+            android:title="@string/pref_dnscrypt_fallback_resolver" />
+        <CheckBoxPreference
+            android:id="@+id/ignore_system_dns"
+            android:defaultValue="true"
+            android:key="ignore_system_dns"
+            android:summary="@string/pref_dnscrypt_ignore_system_dns_summ"
+            android:title="@string/pref_dnscrypt_ignore_system_dns" />
+        <EditTextPreference
+            android:id="@+id/netprobe_timeout"
+            android:defaultValue="30"
+            android:key="netprobe_timeout"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_dnscrypt_netprobe_timeout_summ"
+            android:title="@string/pref_dnscrypt_netprobe_timeout" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_dnscrypt_filters_categ"
+        android:key="pref_dnscrypt_filters_categ">
+
+        <CheckBoxPreference
+            android:id="@+id/block_ipv6"
+            android:defaultValue="true"
+            android:key="block_ipv6"
+            android:summary="@string/pref_dnscrypt_block_ipv6_summ"
+            android:title="@string/pref_dnscrypt_dnscrypt_block_ipv6" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_dnscrypt_forwarding_rules_categ"
+        android:key="pref_dnscrypt_forwarding_rules">
+        <Preference
+            android:enabled="false"
+            android:key="forwarding_rules"
+            android:title="@string/pref_dnscrypt_forwarding_rules"
+            android:summary="@string/pref_dnscrypt_forwarding_rules_summ">
+            <intent
+                android:action="forwarding_rules_Pref"
+                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetPackage="@string/package_name" />
+        </Preference>
+
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_dnscrypt_cloaking_rules_categ"
+        android:key="pref_dnscrypt_cloaking_rules">
+        <Preference
+            android:key="cloaking_rules"
+            android:title="@string/pref_dnscrypt_cloaking_rules"
+            android:summary="@string/pref_dnscrypt_cloaking_rules_summ">
+            <intent
+                android:action="cloaking_rules_Pref"
+                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetPackage="@string/package_name" />
+        </Preference>
+
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_dnscrypt_DNS_cache_categ"
+        android:key="pref_dnscrypt_DNS_cache_categ">
+
+        <SwitchPreference
+            android:id="@+id/dnscrypt_cache"
+            android:defaultValue="true"
+            android:key="Enable DNS cache"
+            android:summary="@string/pref_dnscrypt_cache_summ"
+            android:title="@string/pref_dnscrypt_cache" />
+        <EditTextPreference
+            android:id="@+id/cache_size"
+            android:defaultValue="512"
+            android:dependency="Enable DNS cache"
+            android:key="cache_size"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_dnscrypt_cache_size_summ"
+            android:title="@string/pref_dnscrypt_cache_size" />
+        <EditTextPreference
+            android:id="@+id/cache_min_ttl"
+            android:defaultValue="600"
+            android:dependency="Enable DNS cache"
+            android:key="cache_min_ttl"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_dnscrypt_cache_min_ttl_summ"
+            android:title="@string/pref_dnscrypt_cache_min_ttl" />
+        <EditTextPreference
+            android:id="@+id/cache_max_ttl"
+            android:defaultValue="86400"
+            android:dependency="Enable DNS cache"
+            android:key="cache_max_ttl"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_dnscrypt_cache_max_ttl_summ"
+            android:title="@string/pref_dnscrypt_cache_max_ttl" />
+        <EditTextPreference
+            android:id="@+id/cache_neg_min_ttl"
+            android:defaultValue="60"
+            android:dependency="Enable DNS cache"
+            android:key="cache_neg_min_ttl"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_dnscrypt_cache_neg_min_ttl_summ"
+            android:title="@string/pref_dnscrypt_cache_neg_min_ttl" />
+        <EditTextPreference
+            android:id="@+id/cache_neg_max_ttl"
+            android:defaultValue="600"
+            android:dependency="Enable DNS cache"
+            android:key="cache_neg_max_ttl"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_dnscrypt_cache_neg_max_ttl_summ"
+            android:title="@string/pref_dnscrypt_cache_neg_max_ttl" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_dnscrypt_query_log_categ"
+        android:key="pref_dnscrypt_query_log">
+
+        <SwitchPreference
+            android:id="@+id/query_log"
+            android:defaultValue="false"
+            android:key="Enable Query logging"
+            android:summary="@string/pref_dnscrypt_query_log_summ"
+            android:title="@string/pref_dnscrypt_query_log" />
+        <EditTextPreference
+            android:id="@+id/ignored_qtypes"
+            android:defaultValue="['DNSKEY', 'NS']"
+            android:dependency="Enable Query logging"
+            android:key="ignored_qtypes"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_dnscrypt_ignored_qtypes_summ"
+            android:title="@string/pref_dnscrypt_ignored_qtypes" />
+        <Preference
+            android:key="open_query_log"
+            android:title="@string/open_query_log"
+            android:dependency="Enable Query logging">
+            <intent
+                android:action="open_qery_log"
+                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetPackage="@string/package_name" />
+        </Preference>
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_dnscrypt_nx_log_categ">
+
+        <SwitchPreference
+            android:id="@+id/nx_log"
+            android:defaultValue="false"
+            android:key="Enable Suspicious logging"
+            android:summary="@string/pref_dnscrypt_nx_log_summ"
+            android:title="@string/pref_dnscrypt_nx_log" />
+        <Preference
+            android:key="open_nx_log"
+            android:title="@string/open_nx_log"
+            android:dependency="Enable Suspicious logging">
+            <intent
+                android:action="open_nx_log"
+                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetPackage="@string/package_name" />
+        </Preference>
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_dnscrypt_blacklist_categ"
+        android:key="pref_dnscrypt_blacklist">
+        <Preference
+            android:key="blacklist"
+            android:title="@string/pref_dnscrypt_blacklist"
+            android:summary="@string/pref_dnscrypt_blacklist_summ">
+            <intent
+                android:action="blacklist_Pref"
+                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetPackage="@string/package_name" />
+        </Preference>
+
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_dnscrypt_ipblacklist_categ"
+        android:key="pref_dnscrypt_ipblacklist">
+        <Preference
+            android:key="ipblacklist"
+            android:title="@string/pref_dnscrypt_ipblacklist"
+            android:summary="@string/pref_dnscrypt_ipblacklist_summ">
+            <intent
+                android:action="ipblacklist_Pref"
+                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetPackage="@string/package_name" />
+        </Preference>
+
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_dnscrypt_whitelist_categ"
+        android:key="pref_dnscrypt_whitelist">
+        <Preference
+            android:key="whitelist"
+            android:title="@string/pref_dnscrypt_whitelist"
+            android:summary="@string/pref_dnscrypt_whitelist_summ">
+            <intent
+                android:action="whitelist_Pref"
+                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetPackage="@string/package_name" />
+        </Preference>
+
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_dnscrypt_sources_categ"
+        android:key="pref_dnscrypt_servers">
+        <EditTextPreference
+            android:id="@+id/sources"
+            android:defaultValue="urls = ['https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v2/public-resolvers.md', 'https://download.dnscrypt.info/resolvers-list/v2/public-resolvers.md']"
+            android:key="Sources"
+            android:selectAllOnFocus="false"
+            android:singleLine="false"
+            android:summary="@string/pref_dnscrypt_sources_summ"
+            android:title="@string/pref_dnscrypt_sources" />
+        <EditTextPreference
+            android:id="@+id/minisign_key"
+            android:defaultValue='"RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3"'
+            android:key="minisign_key"
+            android:selectAllOnFocus="false"
+            android:singleLine="false"
+            android:summary="@string/pref_dnscrypt_minisign_key_summ"
+            android:title="@string/pref_dnscrypt_minisign_key" />
+        <EditTextPreference
+            android:id="@+id/refresh_delay"
+            android:defaultValue="72"
+            android:key="refresh_delay"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_dnscrypt_refresh_delay_summ"
+            android:title="@string/pref_dnscrypt_refresh_delay" />
+    </PreferenceCategory>
+</PreferenceScreen>

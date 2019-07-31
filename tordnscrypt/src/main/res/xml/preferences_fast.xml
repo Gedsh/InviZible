@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="@string/pref_fast_categ_autostart">
+
+        <SwitchPreference
+            android:id="@+id/swAutostartDNS"
+            android:defaultValue="true"
+            android:key="swAutostartDNS"
+            android:title="@string/pref_fast_dns_autostart" />
+        <SwitchPreference
+            android:id="@+id/swAutostartTor"
+            android:defaultValue="false"
+            android:key="swAutostartTor"
+            android:title="@string/pref_fast_tor_autostart"/>
+        <SwitchPreference
+            android:id="@+id/swAutostartITPD"
+            android:defaultValue="false"
+            android:key="swAutostartITPD"
+            android:title="@string/pref_fast_itpd_autostart" />
+        <EditTextPreference
+            android:id="@+id/pref_fast_autostart_delay"
+            android:defaultValue="0"
+            android:key="pref_fast_autostart_delay"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_fast_autostart_delay_summ"
+            android:title="@string/pref_fast_autostart_delay" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_fast_dns_server">
+        <Preference
+            android:key="prefDNSCryptServer"
+            android:title="@string/pref_fast_select_dns_server">
+            <intent
+                android:action="DNS_servers_Pref"
+                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetPackage="@string/package_name" />
+        </Preference>
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_fast_tor">
+        <SwitchPreference
+            android:id="@+id/pref_fast_all_through_tor"
+            android:defaultValue="true"
+            android:key="pref_fast_all_through_tor"
+            android:title="@string/pref_fast_all_through_tor" />
+        <Preference
+            android:key="prefTorSiteUnlock"
+            android:summary="@string/pref_fast_unlock_with_tor_summ"
+            android:title="@string/pref_fast_unlock_with_tor">
+            <intent
+                android:action="tor_sites_unlock"
+                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetPackage="@string/package_name" />
+        </Preference>
+        <Preference
+            android:key="prefTorAppUnlock"
+            android:summary="@string/pref_fast_unlock_apps_with_tor_summ"
+            android:title="@string/pref_fast_unlock_apps_with_tor">
+            <intent
+                android:action="tor_apps_unlock"
+                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetPackage="@string/package_name" />
+        </Preference>
+        <Preference
+            android:key="prefTorSiteExclude"
+            android:title="@string/pref_fast_exclude_from_tor"
+            android:summary="@string/pref_fast_exclude_from_tor_summ"
+            android:dependency="pref_fast_all_through_tor">
+            <intent
+                android:action="tor_sites_unlock"
+                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetPackage="@string/package_name" />
+        </Preference>
+        <Preference
+            android:key="prefTorAppExclude"
+            android:title="@string/pref_fast_exclude_apps_from_tor"
+            android:summary="@string/pref_fast_exclude_apps_from_tor_summ"
+            android:dependency="pref_fast_all_through_tor">
+            <intent
+                android:action="tor_apps_unlock"
+                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetPackage="@string/package_name" />
+        </Preference>
+        <EditTextPreference
+            android:defaultValue="12"
+            android:key="pref_fast_site_refresh_interval"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:summary="@string/pref_fast_site_refresh_interval_summ"
+            android:title="@string/pref_fast_site_refresh_interval" />
+        <Preference
+            android:key="prefTorBridges"
+            android:title="@string/pref_fast_use_tor_bridges"
+            android:summary="@string/pref_fast_use_tor_bridges_summ">
+            <intent
+                android:action="tor_bridges"
+                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetPackage="@string/package_name" />
+        </Preference>
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_fast_categ_update">
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="pref_fast_auto_update"
+            android:summary="@string/pref_fast_auto_update_summ"
+            android:title="@string/pref_fast_auto_update" />
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="pref_fast through_tor_update"
+            android:dependency="pref_fast_auto_update"
+            android:summary="@string/pref_fast_through_tor_update_summ"
+            android:title="@string/pref_fast_through_tor_update" />
+        <Preference
+            android:key="pref_fast_chek_update"
+            android:title="@string/pref_fast_chek_update"
+            android:summary="@string/pref_fast_chek_update_summ">
+        </Preference>
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_common_categ_other">
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="pref_fast_block_http"
+            android:summary="@string/pref_fast_block_http_summ"
+            android:title="@string/pref_fast_block_http" />
+        <ListPreference
+            android:defaultValue="4"
+            android:entries="@array/pref_fast_theme_titles"
+            android:entryValues="@array/pref_fast_theme_values"
+            android:key="pref_fast_theme"
+            android:title="@string/pref_fast_theme" />
+        <pan.alexander.tordnscrypt.language.LanguagePreference
+            android:key="pref_fast_language"
+            android:title="@string/pref_fast_language"
+            android:enabled="true"
+            android:selectable="true" />
+    </PreferenceCategory>
+</PreferenceScreen>

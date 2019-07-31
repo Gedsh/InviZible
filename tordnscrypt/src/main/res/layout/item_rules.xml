@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:baselineAligned="false"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/llRules"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:orientation="horizontal"
+        tools:ignore="UselessParent">
+
+        <EditText
+            android:id="@+id/etRule"
+            style="@android:style/Widget.Holo.EditText"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="50"
+            android:editable="true"
+            android:ellipsize="end"
+            android:gravity="center_vertical"
+            android:inputType="text"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:text="Text"
+            android:textAlignment="gravity" />
+
+        <ImageButton
+            android:id="@+id/delBtnRules"
+            style="@android:style/Widget.Holo.ImageButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:layout_weight="1"
+            android:contentDescription="Delete"
+            android:scaleType="fitCenter"
+            android:src="@android:drawable/ic_menu_delete" />
+
+        <Switch
+            android:id="@+id/swRuleActive"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_margin="3dp"
+            android:layout_weight="1"
+            android:checked="false"
+            tools:checked="true" />
+
+    </LinearLayout>
+
+</LinearLayout>

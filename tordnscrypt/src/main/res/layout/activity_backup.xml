@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp"
+    tools:actionBarNavMode="standard"
+    tools:context=".BackupActivity">
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/etPathBackup" />
+
+    <EditText
+        android:id="@+id/etPathBackup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="@string/etPathBackup"
+        android:inputType="text"
+        android:singleLine="false"
+        android:textAppearance="@android:style/TextAppearance.Material.Small"
+        android:importantForAutofill="no" tools:targetApi="o" />
+
+    <ProgressBar
+        android:id="@+id/pbBackup"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnRestoreBackup"
+            style="@android:style/Widget.Holo.Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:layout_weight="1"
+            android:text="@string/btnRestoreBackup"
+            android:textAlignment="center" />
+
+        <Button
+            android:id="@+id/btnSaveBackup"
+            style="@android:style/Widget.Holo.Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:layout_weight="1"
+            android:text="@string/btnSaveBackup"
+            android:textAlignment="center" />
+    </LinearLayout>
+
+</android.support.v7.widget.LinearLayoutCompat>

@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="@string/pref_advanced">
+
+        <SwitchPreference
+            android:id="@+id/pref_tor_exclude_exit_nodes"
+            android:defaultValue="false"
+            android:key="ExcludeExitNodes"
+            android:summary="@string/pref_tor_exclude_exit_nodes_summ"
+            android:title="@string/pref_tor_exclude_exit_nodes" />
+        <SwitchPreference
+            android:id="@+id/pref_tor_exit_nodes"
+            android:defaultValue="false"
+            android:key="ExitNodes"
+            android:summary="@string/pref_tor_exit_nodes_summ"
+            android:title="@string/pref_tor_exit_nodes" />
+        <SwitchPreference
+            android:id="@+id/pref_tor_exclude_nodes"
+            android:defaultValue="false"
+            android:key="ExcludeNodes"
+            android:summary="@string/pref_tor_exclude_nodes_summ"
+            android:title="@string/pref_tor_exclude_nodes" />
+        <SwitchPreference
+            android:id="@+id/pref_tor_entry_nodes"
+            android:defaultValue="false"
+            android:key="EntryNodes"
+            android:summary="@string/pref_tor_entry_nodes_summ"
+            android:title="@string/pref_tor_entry_nodes" />
+        <EditTextPreference
+            android:id="@+id/pref_tor_virtual_addr_network_IPv4"
+            android:defaultValue="10.0.0.0/10"
+            android:key="VirtualAddrNetworkIPv4"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_tor_virtual_addr_network_IPv4_summ"
+            android:title="@string/pref_tor_virtual_addr_network_IPv4" />
+        <CheckBoxPreference
+            android:id="@+id/pref_tor_avoid_disc_writes"
+            android:defaultValue="true"
+            android:key="AvoidDiskWrites"
+            android:summary="@string/pref_tor_avoid_disc_writes_summ"
+            android:title="@string/pref_tor_avoid_disc_writes" />
+        <CheckBoxPreference
+            android:id="@+id/pref_tor_connections_padding"
+            android:defaultValue="true"
+            android:key="ConnectionPadding"
+            android:summary="@string/pref_tor_connections_padding_summ"
+            android:title="@string/pref_tor_connections_padding" />
+        <CheckBoxPreference
+            android:id="@+id/pref_tor_reduced_connections_padding"
+            android:defaultValue="true"
+            android:key="ReducedConnectionPadding"
+            android:summary="@string/pref_tor_reduced_connections_padding_summ"
+            android:title="@string/pref_tor_reduced_connections_padding" />
+        <CheckBoxPreference
+            android:id="@+id/pref_tor_strict_nodes"
+            android:defaultValue="false"
+            android:dependency="ExcludeNodes"
+            android:key="StrictNodes"
+            android:summary="@string/pref_tor_strict_nodes_summ"
+            android:title="@string/pref_tor_strict_nodes" />
+        <CheckBoxPreference
+            android:id="@+id/pref_tor_fascist_firewall"
+            android:defaultValue="false"
+            android:key="FascistFirewall"
+            android:summary="@string/pref_tor_fascist_firewall_summ"
+            android:title="@string/pref_tor_fascist_firewall" />
+        <EditTextPreference
+            android:id="@+id/pref_tor_new_circuit_period"
+            android:defaultValue="30"
+            android:key="NewCircuitPeriod"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_tor_new_circuit_period_summ"
+            android:title="@string/pref_tor_new_circuit_period" />
+        <EditTextPreference
+            android:id="@+id/pref_tor_max_circuit_dirtiness"
+            android:defaultValue="600"
+            android:key="MaxCircuitDirtiness"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_tor_max_circuit_dirtiness_summ"
+            android:title="@string/pref_tor_max_circuit_dirtiness" />
+        <CheckBoxPreference
+            android:id="@+id/pref_tor_enforce_distinct_subnets"
+            android:defaultValue="true"
+            android:key="EnforceDistinctSubnets"
+            android:summary="@string/pref_tor_enforce_distinct_subnets_summ"
+            android:title="@string/pref_tor_enforce_distinct_subnets" />
+        <SwitchPreference
+            android:id="@+id/pref_tor_enable_SOCKS_proxy"
+            android:defaultValue="true"
+            android:key="Enable SOCKS proxy"
+            android:title="@string/pref_tor_enable_SOCKS_proxy" />
+        <EditTextPreference
+            android:id="@+id/pref_tor_SOCKS_port"
+            android:defaultValue="9050"
+            android:dependency="Enable SOCKS proxy"
+            android:key="SOCKSPort"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_tor_SOCKS_port_summ"
+            android:title="@string/pref_tor_SOCKS_port" />
+        <SwitchPreference
+            android:id="@+id/pref_tor_enable_HTTPTunnel_proxy"
+            android:defaultValue="false"
+            android:key="Enable HTTPTunnel"
+            android:title="@string/pref_tor_enable_HTTPTunnel_proxy" />
+        <EditTextPreference
+            android:id="@+id/pref_tor_HTTPTunnel_port"
+            android:defaultValue="8118"
+            android:dependency="Enable HTTPTunnel"
+            android:key="HTTPTunnelPort"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_tor_HTTPTunnel_port_summ"
+            android:title="@string/pref_tor_HTTPTunnel_port" />
+        <SwitchPreference
+            android:id="@+id/pref_tor_enable_transparent_proxy"
+            android:defaultValue="true"
+            android:key="Enable Transparent proxy"
+            android:title="@string/pref_tor_enable_transparent_proxy" />
+        <EditTextPreference
+            android:id="@+id/pref_tor_trans_port"
+            android:defaultValue="9040"
+            android:dependency="Enable Transparent proxy"
+            android:key="TransPort"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_tor_trans_port_summ"
+            android:title="@string/pref_tor_trans_port" />
+        <SwitchPreference
+            android:id="@+id/pref_tor_enable_DNS"
+            android:defaultValue="true"
+            android:key="Enable DNS"
+            android:title="@string/pref_tor_enable_DNS" />
+        <EditTextPreference
+            android:id="@+id/pref_tor_DNS_port"
+            android:defaultValue="5400"
+            android:dependency="Enable DNS"
+            android:key="DNSPort"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_tor_DNS_port_summ"
+            android:title="@string/pref_tor_DNS_port" />
+        <CheckBoxPreference
+            android:id="@+id/pref_tor_client_use_IPv4"
+            android:defaultValue="true"
+            android:key="ClientUseIPv4"
+            android:summary="@string/pref_tor_client_use_IPv4_summ"
+            android:title="@string/pref_tor_client_use_IPv4" />
+        <CheckBoxPreference
+            android:id="@+id/pref_tor_client_use_IPv6"
+            android:defaultValue="false"
+            android:enabled="false"
+            android:key="ClientUseIPv6"
+            android:summary="@string/pref_tor_client_use_IPv6_summ"
+            android:title="@string/pref_tor_client_use_IPv6" />
+    </PreferenceCategory>
+</PreferenceScreen>

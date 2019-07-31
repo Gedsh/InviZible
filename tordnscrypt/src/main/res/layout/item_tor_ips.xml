@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="5dp"
+    android:orientation="horizontal"
+    android:baselineAligned="false">
+
+    <LinearLayout
+        android:id="@+id/llHostIP"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:foreground="@drawable/custom_border"
+        android:orientation="vertical"
+        tools:targetApi="m">
+
+        <TextView
+            android:id="@+id/tvTorItemHost"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_weight="1"
+            android:gravity="fill"
+            android:text="Host:"
+            tools:ignore="NestedWeights" />
+
+        <TextView
+            android:id="@+id/tvTorItemIP"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_weight="1"
+            android:gravity="fill"
+            android:text="IP:" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/custom_border"
+        android:orientation="vertical">
+
+        <Switch
+            android:id="@+id/swTorItem"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="5dp"
+            android:layout_weight="1"
+            android:checked="true" />
+
+        <ImageButton
+            android:id="@+id/imbtnTorItem"
+            style="@android:style/Widget.Holo.ImageButton"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="5dp"
+            android:layout_weight="1"
+            app:srcCompat="@android:drawable/ic_menu_delete" />
+    </LinearLayout>
+
+</LinearLayout>

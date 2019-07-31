@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="@string/pref_advanced">
+
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_itpd_common">
+
+        <SwitchPreference
+            android:id="@+id/pref_itpd_com_incom_connect"
+            android:defaultValue="false"
+            android:key="Allow incoming connections"
+            android:title="@string/pref_itpd_com_incom_connect" />
+        <EditTextPreference
+            android:id="@+id/pref_itpd_com_host"
+            android:defaultValue="1.2.3.4"
+            android:dependency="Allow incoming connections"
+            android:key="incoming host"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_itpd_com_host_summ"
+            android:title="@string/pref_itpd_com_host" />
+        <EditTextPreference
+            android:id="@+id/pref_itpd_com_port"
+            android:defaultValue="4567"
+            android:dependency="Allow incoming connections"
+            android:key="incoming port"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_itpd_com_port_summ"
+            android:title="@string/pref_itpd_com_port" />
+        <CheckBoxPreference
+            android:id="@+id/pref_itpd_com_ipv4"
+            android:defaultValue="true"
+            android:key="ipv4"
+            android:summary="@string/pref_itpd_com_ipv4_summ"
+            android:title="@string/pref_itpd_com_ipv4" />
+        <CheckBoxPreference
+            android:id="@+id/pref_itpd_com_ipv6"
+            android:defaultValue="false"
+            android:enabled="false"
+            android:key="ipv6"
+            android:summary="@string/pref_itpd_com_ipv6_summ"
+            android:title="@string/pref_itpd_com_ipv6" />
+        <CheckBoxPreference
+            android:id="@+id/pref_itpd_com_notransit"
+            android:defaultValue="false"
+            android:key="notransit"
+            android:summary="@string/pref_itpd_com_notransit_summ"
+            android:title="@string/pref_itpd_com_notransit" />
+        <CheckBoxPreference
+            android:id="@+id/pref_itpd_com_floodfill"
+            android:defaultValue="false"
+            android:key="floodfill"
+            android:summary="@string/pref_itpd_com_floodfill_summ"
+            android:title="@string/pref_itpd_com_floodfill" />
+        <ListPreference
+            android:defaultValue="L"
+            android:entries="@array/itpd_com_bandwidth_title"
+            android:entryValues="@array/itpd_com_bandwidth_value"
+            android:key="bandwidth"
+            android:summary="@string/pref_itpd_com_bandwidth_summ"
+            android:title="@string/pref_itpd_com_bandwidth" />
+        <EditTextPreference
+            android:id="@+id/pref_itpd_com_share"
+            android:defaultValue="20"
+            android:key="share"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_itpd_com_share_summ"
+            android:title="@string/pref_itpd_com_share" />
+        <CheckBoxPreference
+            android:id="@+id/pref_itpd_com_ssu"
+            android:defaultValue="true"
+            android:key="ssu"
+            android:summary="@string/pref_itpd_com_ssu_summ"
+            android:title="@string/pref_itpd_com_ssu" />
+        <CheckBoxPreference
+            android:id="@+id/pref_itpd_com_ntcp"
+            android:defaultValue="true"
+            android:key="ntcp"
+            android:summary="@string/pref_itpd_com_ntcp_summ"
+            android:title="@string/pref_itpd_com_ntcp" />
+        <SwitchPreference
+            android:id="@+id/pref_itpd_com_use_ntcpproxy"
+            android:defaultValue="false"
+            android:key="Enable ntcpproxy"
+            android:title="@string/pref_itpd_com_use_ntcpproxy" />
+        <EditTextPreference
+            android:id="@+id/pref_itpd_com_ntcpproxy"
+            android:defaultValue="http://127.0.0.1:8118"
+            android:dependency="Enable ntcpproxy"
+            android:key="ntcpproxy"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_itpd_com_ntcpproxy_summ"
+            android:title="@string/pref_itpd_com_ntcpproxy" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_itpd_HTTP_proxy">
+
+        <SwitchPreference
+            android:id="@+id/pref_itpd_HTTP_proxy_enabled"
+            android:defaultValue="true"
+            android:key="HTTP proxy"
+            android:title="@string/pref_itpd_HTTP_proxy_enabled" />
+        <EditTextPreference
+            android:id="@+id/pref_itpd_HTTP_proxy_port"
+            android:defaultValue="4444"
+            android:dependency="HTTP proxy"
+            android:key="HTTP proxy port"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_itpd_HTTP_proxy_port_summ"
+            android:title="@string/pref_itpd_HTTP_proxy_port" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_itpd_Socks_proxy">
+
+        <SwitchPreference
+            android:id="@+id/pref_itpd_Socks_proxy_enabled"
+            android:defaultValue="true"
+            android:key="Socks proxy"
+            android:title="@string/pref_itpd_Socks_proxy_enabled" />
+        <EditTextPreference
+            android:id="@+id/pref_itpd_Socks_proxy_port"
+            android:defaultValue="4447"
+            android:dependency="Socks proxy"
+            android:key="Socks proxy port"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_itpd_Socks_proxy_port_summ"
+            android:title="@string/pref_itpd_Socks_proxy_port" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_itpd_SAM_interface">
+
+        <SwitchPreference
+            android:id="@+id/pref_itpd_SAM_interface_enabled"
+            android:defaultValue="false"
+            android:key="SAM interface"
+            android:title="@string/pref_itpd_SAM_interface_enabled" />
+        <EditTextPreference
+            android:id="@+id/pref_itpd_SAM_interface_port"
+            android:defaultValue="7656"
+            android:dependency="SAM interface"
+            android:key="SAM interface port"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_itpd_SAM_interface_port_summ"
+            android:title="@string/pref_itpd_SAM_interface_port" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_itpd_Cryptography">
+
+        <CheckBoxPreference
+            android:id="@+id/pref_itp_delgamal_enabled"
+            android:defaultValue="true"
+            android:key="elgamal"
+            android:summary="@string/pref_itpd_elgamal_summ"
+            android:title="@string/pref_itpd_elgamal_enabled" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_itpd_UPNP">
+
+        <CheckBoxPreference
+            android:id="@+id/pref_itpd_UPNP_enabled"
+            android:defaultValue="true"
+            android:key="UPNP"
+            android:summary="@string/pref_itpd_UPNP_summ"
+            android:title="@string/pref_itpd_UPNP_enabled" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_itpd_ntcp2">
+
+        <CheckBoxPreference
+            android:id="@+id/pref_itpd_ntcp2_enabled"
+            android:defaultValue="true"
+            android:key="ntcp2 enabled"
+            android:title="@string/pref_itpd_ntcp2_enabled" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_itpd_reseeding">
+
+        <CheckBoxPreference
+            android:id="@+id/pref_itpd_reseeding_enabled"
+            android:defaultValue="true"
+            android:key="verify"
+            android:summary="@string/pref_itpd_reseeding_summ"
+            android:title="@string/pref_itpd_reseeding_enabled" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_itpd_limits">
+
+        <EditTextPreference
+            android:id="@+id/pref_itpd_limits_transittunnels"
+            android:defaultValue="10"
+            android:key="transittunnels"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_itpd_limits_transittunnels_summ"
+            android:title="@string/pref_itpd_limits_transittunnels" />
+        <EditTextPreference
+            android:id="@+id/pref_itpd_limits_openfiles"
+            android:defaultValue="500"
+            android:key="openfiles"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_itpd_limits_openfiles_summ"
+            android:title="@string/pref_itpd_limits_openfiles" />
+        <EditTextPreference
+            android:id="@+id/pref_itpd_limits_coresize"
+            android:defaultValue="0"
+            android:key="coresize"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_itpd_limits_coresize_summ"
+            android:title="@string/pref_itpd_limits_coresize" />
+        <EditTextPreference
+            android:id="@+id/pref_itpd_limits_ntcpsoft"
+            android:defaultValue="0"
+            android:key="ntcpsoft"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_itpd_limits_ntcpsoft_summ"
+            android:title="@string/pref_itpd_limits_ntcpsoft" />
+        <EditTextPreference
+            android:id="@+id/pref_itpd_limits_ntcphard"
+            android:defaultValue="0"
+            android:key="ntcphard"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_itpd_limits_ntcphard_summ"
+            android:title="@string/pref_itpd_limits_ntcphard" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_itpd_addressbook">
+
+        <EditTextPreference
+            android:id="@+id/pref_itpd_addressbook_defaulturl"
+            android:defaultValue="http://joajgazyztfssty4w2on5oaqksz6tqoxbduy553y34mf4byv6gpq.b32.i2p/export/alive-hosts.txt"
+            android:key="defaulturl"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_itpd_addressbook_defaulturl_summ"
+            android:title="@string/pref_itpd_addressbook_defaulturl" />
+        <Preference
+            android:key="subscriptions"
+            android:title="@string/pref_itpd_addressbook_subscriptions"
+            android:summary="@string/pref_itpd_addressbook_subscriptions_summ">
+            <intent
+                android:action="pref_itpd_addressbook_subscriptions"
+                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetPackage="@string/package_name" />
+        </Preference>
+    </PreferenceCategory>
+</PreferenceScreen>

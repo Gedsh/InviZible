@@ -1,0 +1,1112 @@
+<resources>
+    <string name="app_name">InviZible Pro</string>
+    <string name="navigation_drawer_open" translatable="false">Open navigation drawer</string>
+    <string name="navigation_drawer_close" translatable="false">Close navigation drawer</string>
+    <string name="nav_header_title">Tor with DNSCrypt and I2P</string>
+    <string name="nav_header_subtitle">best solution for your privacy</string>
+    <string name="nav_header_desc" translatable="false">Navigation header</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="btnDNSCryptStart" translatable="false">Start DNSCrypt</string>
+    <string name="btnDNSCryptStop" translatable="false">Stop DNSCrypt</string>
+    <string name="btnTorStart" translatable="false">Start Tor</string>
+    <string name="btnTorStop" translatable="false">Stop Tor</string>
+
+    <string name="btnITPDStart" translatable="false">Start I2P</string>
+    <string name="btnITPDStop" translatable="false">Stop I2P</string>
+    <string name="tvITPDStop">I2P Stopped</string>
+    <string name="tvITPDRunning">I2P Running</string>
+    <string name="tvITPDStarting">I2P Starting</string>
+    <string name="tvITPDStopping">I2P Stopping</string>
+    <string name="tvITPDInstalling">I2P Installing</string>
+    <string name="tvITPDInstalled">I2P Installed</string>
+    <string name="tvITPDNotInstalled">I2P Not Installed</string>
+    <string name="tvITPDDefaultLog" translatable="false">Purple I2P version</string>
+
+    <string name="swRunOnBoot">Start on Boot</string>
+
+    <string name="tvDeviceRoot" translatable="false">Device Root</string>
+    <string name="tvBBox" translatable="false">Busy Box</string>
+    <string name="root" translatable="false">Root</string>
+    <string name="root_available">Checking if Root is available…</string>
+
+    <string name="please_wait">Please wait…</string>
+    <string name="dont_show">Don\'t show again</string>
+
+
+    <string name="tvDNSStop">DNSCrypt Stopped</string>
+    <string name="tvDNSInstalled">DNSCrypt Installed</string>
+    <string name="tvDNSInstalling">DNSCrypt Installing</string>
+    <string name="tvDNSNotInstalled">DNSCrypt Not Installed</string>
+
+    <string name="tvDNSStarting">DNSCrypt Starting</string>
+    <string name="tvDNSRunning">DNSCrypt Running</string>
+    <string name="tvDNSStopping">DNSCrypt Stopping</string>
+    <string name="tvDNSDefaultLog" translatable="false">DNSCrypt-proxy version</string>
+
+
+    <string name="tvTorStop">Tor Stopped</string>
+    <string name="tvTorInstalled">Tor Installed</string>
+    <string name="tvTorInstalling">Tor Installing</string>
+    <string name="tvTorNotInstalled">Tor Not Installed</string>
+
+    <string name="tvTorStarting">Tor Starting</string>
+    <string name="tvTorRunning">Tor Running</string>
+    <string name="tvTorStopping">Tor Stopping</string>
+    <string name="tvTorDefaultLog" translatable="false">Tor version</string>
+
+    <string name="ok" translatable="false">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="error">Error!</string>
+    <string name="warning">Warning!</string>
+    <string name="sorry">My apologies!</string>
+    <string name="check_root">But You can not use this application without root permissions. Pls ensure first that your device is rooted!</string>
+    <string name="no_root" translatable="false">NO ROOT!</string>
+    <string name="install">Install</string>
+    <string name="exit">Exit</string>
+    <string name="wrong">Something went wrong!</string>
+    <string name="install_title">Do you want to complete installation?</string>
+
+    <string name="no_bb">Pls install BusyBox!</string>
+    <string name="install_bb">Pls install BusyBox and restart application! Install it from Google PlayMarket?</string>
+
+    <string name="write_file_error">Save file Error!</string>
+
+    <string name="drawer_menu_commonSettings">Common Settings</string>
+    <string name="drawer_menu_DNSSettings">DNS Crypt Settings</string>
+    <string name="drawer_menu_TorSettings">Tor Settings</string>
+    <string name="drawer_menu_I2PDSettings">I2P Settings</string>
+    <string name="drawer_menu_fastSettings">Fast Settings</string>
+    <string name="drawer_menu_backup">Backup &amp; Restore</string>
+    <string name="drawer_menu_about">About</string>
+    <string name="drawer_menu_help">Logs</string>
+    <string name="drawer_menu_donate">Donate</string>
+
+    <string name="btnRestoreBackup">Restore All</string>
+    <string name="btnSaveBackup">Save All</string>
+    <string name="etPathBackup">Folder Path:</string>
+    <string name="backupFolder">Choose backup folder:</string>
+
+    <string name="menu_show_DNSCrypt" translatable="false">Show DNSCrypt uninstall panel</string>
+    <string name="menu_show_tor" translatable="false">Show Tor uninstall panel</string>
+    <string name="menu_hide_DNSCrypt_scr" translatable="false">Hide DNSCrypt panel</string>
+    <string name="menu_hide_tor_scr" translatable="false">Hide Tor panel</string>
+
+    <string name="menu_show_command_result" translatable="false">Show command result info</string>
+
+    <string-array name="pref_countries_titles">
+        <item>Afghanistan</item>
+        <item>Åland Islands</item>
+        <item>Albania</item>
+        <item>Algeria</item>
+        <item>American Samoa</item>
+        <item>Andorra</item>
+        <item>Angola</item>
+        <item>Anguilla</item>
+        <item>Antarctica</item>
+        <item>Antigua and Barbuda</item>
+        <item>Argentina</item>
+        <item>Armenia</item>
+        <item>Aruba</item>
+        <item>Australia</item>
+        <item>Austria</item>
+        <item>Azerbaijan</item>
+        <item>Bahrain</item>
+        <item>Bahamas</item>
+        <item>Bangladesh</item>
+        <item>Barbados</item>
+        <item>Belarus</item>
+        <item>Belgium</item>
+        <item>Belize</item>
+        <item>Benin</item>
+        <item>Bermuda</item>
+        <item>Bhutan</item>
+        <item>Bolivia</item>
+        <item>Bonaire</item>
+        <item>Bosnia and Herzegovina</item>
+        <item>Botswana</item>
+        <item>Bouvet Island</item>
+        <item>Brazil</item>
+        <item>British Indian Ocean Territory</item>
+        <item>Brunei Darussalam</item>
+        <item>Bulgaria</item>
+        <item>Burkina Faso</item>
+        <item>Burundi</item>
+        <item>Cambodia</item>
+        <item>Cameroon</item>
+        <item>Canada</item>
+        <item>Cape Verde</item>
+        <item>Cayman Islands</item>
+        <item>Central African Republic</item>
+        <item>Chad</item>
+        <item>Chile</item>
+        <item>China</item>
+        <item>Christmas Island</item>
+        <item>Cocos (Keeling) Islands</item>
+        <item>Colombia</item>
+        <item>Comoros</item>
+        <item>Congo</item>
+        <item>Congo, the Democratic Republic</item>
+        <item>Cook Islands</item>
+        <item>Costa Rica</item>
+        <item>Côte d\'Ivoire</item>
+        <item>Croatia</item>
+        <item>Cuba</item>
+        <item>Curaçao</item>
+        <item>Cyprus</item>
+        <item>Czech Republic</item>
+        <item>Denmark</item>
+        <item>Djibouti</item>
+        <item>Dominica</item>
+        <item>Dominican Republic</item>
+        <item>Ecuador</item>
+        <item>Egypt</item>
+        <item>El Salvador</item>
+        <item>Equatorial Guinea</item>
+        <item>Eritrea</item>
+        <item>Estonia</item>
+        <item>Ethiopia</item>
+        <item>Falkland Islands (Malvinas)</item>
+        <item>Faroe Islands</item>
+        <item>Fiji</item>
+        <item>Finland</item>
+        <item>France</item>
+        <item>French Guiana</item>
+        <item>French Polynesia</item>
+        <item>French Southern Territories</item>
+        <item>Gabon</item>
+        <item>Gambia</item>
+        <item>Georgia</item>
+        <item>Germany</item>
+        <item>Ghana</item>
+        <item>Gibraltar</item>
+        <item>Greece</item>
+        <item>Greenland</item>
+        <item>Grenada</item>
+        <item>Guadeloupe</item>
+        <item>Guam</item>
+        <item>Guatemala</item>
+        <item>Guernsey</item>
+        <item>Guinea</item>
+        <item>Guinea-Bissau</item>
+        <item>Guyana</item>
+        <item>Haiti</item>
+        <item>Heard Island and McDonald Islands</item>
+        <item>Holy See (Vatican City State)</item>
+        <item>Honduras</item>
+        <item>Hong Kong</item>
+        <item>Hungary</item>
+        <item>Iceland</item>
+        <item>India</item>
+        <item>Indonesia</item>
+        <item>Iran</item>
+        <item>Iraq</item>
+        <item>Ireland</item>
+        <item>Isle of Man</item>
+        <item>Israel</item>
+        <item>Italy</item>
+        <item>Jamaica</item>
+        <item>Japan</item>
+        <item>Jersey</item>
+        <item>Jordan</item>
+        <item>Kazakhstan</item>
+        <item>Kenya</item>
+        <item>Kiribati</item>
+        <item>Korea, Democratic People\'s Republic</item>
+        <item>Korea, Republic</item>
+        <item>Kuwait</item>
+        <item>Kyrgyzstan</item>
+        <item>Lao People\'s Democratic Republic</item>
+        <item>Latvia</item>
+        <item>Lebanon</item>
+        <item>Lesotho</item>
+        <item>Liberia</item>
+        <item>Libya</item>
+        <item>Liechtenstein</item>
+        <item>Lithuania</item>
+        <item>Luxembourg</item>
+        <item>Macao</item>
+        <item>Macedonia</item>
+        <item>Madagascar</item>
+        <item>Malawi</item>
+        <item>Malaysia</item>
+        <item>Maldives</item>
+        <item>Mali</item>
+        <item>Malta</item>
+        <item>Marshall Islands</item>
+        <item>Martinique</item>
+        <item>Mauritania</item>
+        <item>Mauritius</item>
+        <item>Mayotte</item>
+        <item>Mexico</item>
+        <item>Micronesia</item>
+        <item>Moldova</item>
+        <item>Monaco</item>
+        <item>Mongolia</item>
+        <item>Montenegro</item>
+        <item>Montserrat</item>
+        <item>Morocco</item>
+        <item>Mozambique</item>
+        <item>Myanmar</item>
+        <item>Namibia</item>
+        <item>Nauru</item>
+        <item>Nepal</item>
+        <item>Netherlands</item>
+        <item>New Caledonia</item>
+        <item>New Zealand</item>
+        <item>Nicaragua</item>
+        <item>Niger</item>
+        <item>Nigeria</item>
+        <item>Niue</item>
+        <item>Norfolk Island</item>
+        <item>Northern Mariana Islands</item>
+        <item>Norway</item>
+        <item>Oman</item>
+        <item>Pakistan</item>
+        <item>Palau</item>
+        <item>Palestine</item>
+        <item>Panama</item>
+        <item>Papua New Guinea</item>
+        <item>Paraguay</item>
+        <item>Peru</item>
+        <item>Philippines</item>
+        <item>Pitcairn</item>
+        <item>Poland</item>
+        <item>Portugal</item>
+        <item>Puerto Rico</item>
+        <item>Qatar</item>
+        <item>Réunion</item>
+        <item>Romania</item>
+        <item>Russian Federation</item>
+        <item>Rwanda</item>
+        <item>Saint Barthélemy</item>
+        <item>Saint Helena, Ascension and Tristan da Cunha</item>
+        <item>Saint Kitts and Nevis</item>
+        <item>Saint Lucia</item>
+        <item>Saint Martin (French part)</item>
+        <item>Saint Pierre and Miquelon</item>
+        <item>Saint Vincent and the Grenadines</item>
+        <item>Samoa</item>
+        <item>San Marino</item>
+        <item>Sao Tome and Principe</item>
+        <item>Saudi Arabia</item>
+        <item>Senegal</item>
+        <item>Serbia</item>
+        <item>Seychelles</item>
+        <item>Sierra Leone</item>
+        <item>Singapore</item>
+        <item>Sint Maarten (Dutch part)</item>
+        <item>Slovakia</item>
+        <item>Slovenia</item>
+        <item>Solomon Islands</item>
+        <item>Somalia</item>
+        <item>South Africa</item>
+        <item>South Georgia and the South Sandwich Islands</item>
+        <item>South Sudan</item>
+        <item>Spain</item>
+        <item>Sri Lanka</item>
+        <item>Sudan</item>
+        <item>Suriname</item>
+        <item>Svalbard and Jan Mayen</item>
+        <item>Swaziland</item>
+        <item>Sweden</item>
+        <item>Switzerland</item>
+        <item>Syrian Arab Republic</item>
+        <item>Taiwan, Province of China</item>
+        <item>Tajikistan</item>
+        <item>Tanzania</item>
+        <item>Thailand</item>
+        <item>Timor-Leste</item>
+        <item>Togo</item>
+        <item>Tokelau</item>
+        <item>Tonga</item>
+        <item>Trinidad and Tobago</item>
+        <item>Tunisia</item>
+        <item>Turkey</item>
+        <item>Turkmenistan</item>
+        <item>Turks and Caicos Islands</item>
+        <item>Tuvalu</item>
+        <item>Uganda</item>
+        <item>Ukraine</item>
+        <item>United Arab Emirates</item>
+        <item>United Kingdom</item>
+        <item>United States</item>
+        <item>United States Minor Outlying Islands</item>
+        <item>Uruguay</item>
+        <item>Uzbekistan</item>
+        <item>Vanuatu</item>
+        <item>Venezuela</item>
+        <item>Viet Nam</item>
+        <item>Virgin Islands, British</item>
+        <item>Virgin Islands, U.S.</item>
+        <item>Wallis and Futuna</item>
+        <item>Western Sahara</item>
+        <item>Yemen</item>
+        <item>Zambia</item>
+        <item>Zimbabwe</item>
+    </string-array>
+    <string-array name="pref_countries_values">
+        <item>AF</item>
+        <item>AX</item>
+        <item>AL</item>
+        <item>DZ</item>
+        <item>AS</item>
+        <item>AD</item>
+        <item>AO</item>
+        <item>AI</item>
+        <item>AQ</item>
+        <item>AG</item>
+        <item>AR</item>
+        <item>AM</item>
+        <item>AW</item>
+        <item>AU</item>
+        <item>AT</item>
+        <item>AZ</item>
+        <item>BH</item>
+        <item>BS</item>
+        <item>BD</item>
+        <item>BB</item>
+        <item>BY</item>
+        <item>BE</item>
+        <item>BZ</item>
+        <item>BJ</item>
+        <item>BM</item>
+        <item>BT</item>
+        <item>BO</item>
+        <item>BQ</item>
+        <item>BA</item>
+        <item>BW</item>
+        <item>BV</item>
+        <item>BR</item>
+        <item>IO</item>
+        <item>BN</item>
+        <item>BG</item>
+        <item>BF</item>
+        <item>BI</item>
+        <item>KH</item>
+        <item>CM</item>
+        <item>CA</item>
+        <item>CV</item>
+        <item>KY</item>
+        <item>CF</item>
+        <item>TD</item>
+        <item>CL</item>
+        <item>CN</item>
+        <item>CX</item>
+        <item>CC</item>
+        <item>CO</item>
+        <item>KM</item>
+        <item>CG</item>
+        <item>CD</item>
+        <item>CK</item>
+        <item>CR</item>
+        <item>CI</item>
+        <item>HR</item>
+        <item>CU</item>
+        <item>CW</item>
+        <item>CY</item>
+        <item>CZ</item>
+        <item>DK</item>
+        <item>DJ</item>
+        <item>DM</item>
+        <item>DO</item>
+        <item>EC</item>
+        <item>EG</item>
+        <item>SV</item>
+        <item>GQ</item>
+        <item>ER</item>
+        <item>EE</item>
+        <item>ET</item>
+        <item>FK</item>
+        <item>FO</item>
+        <item>FJ</item>
+        <item>FI</item>
+        <item>FR</item>
+        <item>GF</item>
+        <item>PF</item>
+        <item>TF</item>
+        <item>GA</item>
+        <item>GM</item>
+        <item>GE</item>
+        <item>DE</item>
+        <item>GH</item>
+        <item>GI</item>
+        <item>GR</item>
+        <item>GL</item>
+        <item>GD</item>
+        <item>GP</item>
+        <item>GU</item>
+        <item>GT</item>
+        <item>GG</item>
+        <item>GN</item>
+        <item>GW</item>
+        <item>GY</item>
+        <item>HT</item>
+        <item>HM</item>
+        <item>VA</item>
+        <item>HN</item>
+        <item>HK</item>
+        <item>HU</item>
+        <item>IS</item>
+        <item>IN</item>
+        <item>ID</item>
+        <item>IR</item>
+        <item>IQ</item>
+        <item>IE</item>
+        <item>IM</item>
+        <item>IL</item>
+        <item>IT</item>
+        <item>JM</item>
+        <item>JP</item>
+        <item>JE</item>
+        <item>JO</item>
+        <item>KZ</item>
+        <item>KE</item>
+        <item>KI</item>
+        <item>KP</item>
+        <item>KR</item>
+        <item>KW</item>
+        <item>KG</item>
+        <item>LA</item>
+        <item>LV</item>
+        <item>LB</item>
+        <item>LS</item>
+        <item>LR</item>
+        <item>LY</item>
+        <item>LI</item>
+        <item>LT</item>
+        <item>LU</item>
+        <item>MO</item>
+        <item>MK</item>
+        <item>MG</item>
+        <item>MW</item>
+        <item>MY</item>
+        <item>MV</item>
+        <item>ML</item>
+        <item>MT</item>
+        <item>MH</item>
+        <item>MQ</item>
+        <item>MR</item>
+        <item>MU</item>
+        <item>YT</item>
+        <item>MX</item>
+        <item>FM</item>
+        <item>MD</item>
+        <item>MC</item>
+        <item>MN</item>
+        <item>ME</item>
+        <item>MS</item>
+        <item>MA</item>
+        <item>MZ</item>
+        <item>MM</item>
+        <item>NA</item>
+        <item>NR</item>
+        <item>NP</item>
+        <item>NL</item>
+        <item>NC</item>
+        <item>NZ</item>
+        <item>NI</item>
+        <item>NE</item>
+        <item>NG</item>
+        <item>NU</item>
+        <item>NF</item>
+        <item>MP</item>
+        <item>NO</item>
+        <item>OM</item>
+        <item>PK</item>
+        <item>PW</item>
+        <item>PS</item>
+        <item>PA</item>
+        <item>PG</item>
+        <item>PY</item>
+        <item>PE</item>
+        <item>PH</item>
+        <item>PN</item>
+        <item>PL</item>
+        <item>PT</item>
+        <item>PR</item>
+        <item>QA</item>
+        <item>RE</item>
+        <item>RO</item>
+        <item>RU</item>
+        <item>RW</item>
+        <item>BL</item>
+        <item>SH</item>
+        <item>KN</item>
+        <item>LC</item>
+        <item>MF</item>
+        <item>PM</item>
+        <item>VC</item>
+        <item>WS</item>
+        <item>SM</item>
+        <item>ST</item>
+        <item>SA</item>
+        <item>SN</item>
+        <item>RS</item>
+        <item>SC</item>
+        <item>SL</item>
+        <item>SG</item>
+        <item>SX</item>
+        <item>SK</item>
+        <item>SI</item>
+        <item>SB</item>
+        <item>SO</item>
+        <item>ZA</item>
+        <item>GS</item>
+        <item>SS</item>
+        <item>ES</item>
+        <item>LK</item>
+        <item>SD</item>
+        <item>SR</item>
+        <item>SJ</item>
+        <item>SZ</item>
+        <item>SE</item>
+        <item>CH</item>
+        <item>SY</item>
+        <item>TW</item>
+        <item>TJ</item>
+        <item>TZ</item>
+        <item>TH</item>
+        <item>TL</item>
+        <item>TG</item>
+        <item>TK</item>
+        <item>TO</item>
+        <item>TT</item>
+        <item>TN</item>
+        <item>TR</item>
+        <item>TM</item>
+        <item>TC</item>
+        <item>TV</item>
+        <item>UG</item>
+        <item>UA</item>
+        <item>AE</item>
+        <item>GB</item>
+        <item>US</item>
+        <item>UM</item>
+        <item>UY</item>
+        <item>UZ</item>
+        <item>VU</item>
+        <item>VE</item>
+        <item>VN</item>
+        <item>VG</item>
+        <item>VI</item>
+        <item>WF</item>
+        <item>EH</item>
+        <item>YE</item>
+        <item>ZM</item>
+        <item>ZW</item>
+    </string-array>
+
+    <string name="title_activity_settings">Settings</string>
+
+    <string name="pref_fast_categ_autostart">Autostart</string>
+    <string name="pref_fast_dns_autostart">Start DNSCrypt On Boot</string>
+    <string name="pref_fast_tor_autostart">Start Tor On Boot</string>
+    <string name="pref_fast_itpd_autostart">Start I2P On Boot</string>
+    <string name="pref_fast_autostart_delay">Delay</string>
+    <string name="pref_fast_autostart_delay_summ">Use delay (in sec) only if auto start works Not Correct</string>
+    <string name="pref_fast_dns_server">DNSCrypt servers</string>
+    <string name="pref_fast_select_dns_server">Select DNSCrypt servers</string>
+    <string name="pref_fast_tor">Tor Settings</string>
+    <string name="pref_fast_all_through_tor">Route All traffic through Tor</string>
+    <string name="pref_fast_unlock_with_tor">Select WebSites</string>
+    <string name="pref_fast_unlock_with_tor_summ">WebSites list to open with Tor</string>
+    <string name="pref_fast_unlock_apps_with_tor">Select Applications</string>
+    <string name="pref_fast_unlock_apps_with_tor_summ">Applications list to open with Tor</string>
+    <string name="pref_fast_exclude_from_tor">Exclude WebSites</string>
+    <string name="pref_fast_exclude_from_tor_summ">WebSites list to open directly</string>
+    <string name="pref_fast_exclude_apps_from_tor">Exclude Applications</string>
+    <string name="pref_fast_exclude_apps_from_tor_summ">Applications list to open directly</string>
+    <string name="pref_fast_site_refresh_interval">Refresh Interval</string>
+    <string name="pref_fast_site_refresh_interval_summ">Period in hours to refresh WebSites IPs. For Android 5.1 and higher. Put 0 to stop refresh.</string>
+    <string name="pref_fast_use_tor_bridges">Bridges</string>
+    <string name="pref_fast_use_tor_bridges_summ">Use it if you can not connect to Tor network</string>
+    <string name="pref_fast_use_tor_bridges_no">Not Use Bridges</string>
+    <string name="pref_fast_use_tor_bridges_default">Use Bridges Default List</string>
+    <string name="pref_fast_use_tor_bridges_own">Use Bridges Own List</string>
+    <string name="pref_fast_use_tor_bridges_request">Request Bridges</string>
+    <string name="pref_fast_use_tor_bridges_add">Add Bridges</string>
+    <string name="pref_fast_use_tor_bridges_edit">Edit Bridge</string>
+    <string name="pref_fast_use_tor_bridges_deactivate">Pls deactivate bridge first!</string>
+    <string name="pref_fast_use_tor_bridges_obfs">Obfuscation</string>
+    <string-array name="tor_bridges_default_obfs">
+        <item>obfs4</item>
+        <item>obfs3</item>
+        <item>meek_lite</item>
+    </string-array>
+    <string-array name="tor_bridges_own_obfs">
+        <item>obfs4</item>
+        <item>obfs3</item>
+        <item>scramblesuit</item>
+        <item>meek_lite</item>
+        <item>none</item>
+    </string-array>
+    <string name="pref_fast_use_tor_bridges_transport_select">Pls select obfuscation type:</string>
+    <string name="pref_fast_use_tor_bridges_enter_characters">Pls enter characters from image</string>
+    <string name="pref_fast_use_tor_bridges_request_dialog">Requesting new Bridges</string>
+    <string name="pref_fast_use_tor_bridges_show_dialog">Your new bridges from bridges.torproject.org:</string>
+    <string name="pref_fast_use_tor_bridges_add_dialog">Save</string>
+    <string name="pref_fast_use_tor_bridges_close_dialog">Close</string>
+    <string name="pref_fast_unlock_host_wrong">Wrong host name!</string>
+    <string name="pref_fast_theme">Select Theme</string>
+    <string-array name="pref_fast_theme_titles">
+        <item>Day Mode</item>
+        <item>Night Mode</item>
+        <item>Auto</item>
+        <item>System default</item>
+    </string-array>
+    <string-array name="pref_fast_theme_values">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </string-array>
+    <string name="pref_fast_language">Select Language</string>
+    <string name="pref_fast_block_http">Block http</string>
+    <string name="pref_fast_block_http_summ">Deny connection to http port 80</string>
+    <string name="pref_fast_categ_update">Update</string>
+    <string name="pref_fast_auto_update">Automatic Updates</string>
+    <string name="pref_fast_auto_update_summ">Check InviZible Pro and modules Updates daily</string>
+    <string name="pref_fast_chek_update">Check Update</string>
+    <string name="pref_fast_chek_update_summ">Check if new versions are available now</string>
+    <string name="pref_fast_through_tor_update">Update strictly through Tor</string>
+    <string name="pref_fast_through_tor_update_summ">Check updates only with Tor and when Tor is running</string>
+
+    <string name="pref_common_categ_run_with_root">Use Root Privileges</string>
+    <string name="pref_common_run_with_root">Run Modules With Root</string>
+    <string name="pref_common_run_with_root_summ">Use Root privileges for DNS Crypt, Tor, I2P </string>
+    <string name="pref_common_categ_other">Other</string>
+    <string name="pref_common_block_http">Block HOTSPOT http</string>
+    <string name="pref_common_block_http_summ">Deny connection to http port 80 for HOTSPOT</string>
+    <string name="pref_common_notification_summ">Protect application with No Root Mode to prevent app being killed by android</string>
+    <string name="pref_common_show_notification">Show notification</string>
+    <string name="pref_common_show_help">Help messages</string>
+    <string name="pref_common_show_help_summ">Always Show Help messages</string>
+    <string name="pref_common_notification_helper">Please exclude InviZible Pro from android battery optimisation.
+        Otherwise android will kill DNSCrypt, Tor or I2P at any time. On special systems,
+        like MIUI, required some additional steps, to exclude InviZible Pro from battery
+        optimisation (e.g. Safety->Battery->Power Saving->Select InviZible Pro->No Background Restrictions,
+        Safety->allow auto start and Long Press The Home Button->Open the Recent App->Then Swipe InviZible Pro
+        Downward and click sign lock in memory).</string>
+    <string name="pref_common_use_busybox">Select BusyBox</string>
+    <string-array name="pref_common_categ_use_busybox_titles">
+        <item>Auto</item>
+        <item>Use device BusyBox</item>
+        <item>Use application BusyBox</item>
+        <item>Not use BusyBox</item>
+    </string-array>
+    <string-array name="pref_common_use_busybox_values">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </string-array>
+    <string name="pref_common_categ_hotspot">HOTSPOT-Experimental</string>
+    <string name="pref_common_tethering_autostart">Start Tethering On Boot</string>
+    <string name="pref_common_tor_tethering">Allow Tor Tethering</string>
+    <string name="pref_common_tor_route_all">Route All through Tor</string>
+    <string name="pref_common_tor_route_all_summ">Route All incoming traffic through Tor</string>
+    <string name="pref_common_unblock_with_tor">Select WebSites</string>
+    <string name="pref_common_unblock_with_tor_summ">WebSites list to open with Tor for HOTSPOT</string>
+    <string name="pref_common_excludes_from_tor">Exclude WebSites</string>
+    <string name="pref_common_excludes_from_tor_summ">WebSites list to open directly for HOTSPOT</string>
+    <string name="pref_common_itpd_tethering">Allow I2P Tethering</string>
+    <string name="pref_common_tethering_settings">Open Tethering config</string>
+    <string name="pref_common_restart_dnscrypt">Please restart DNS Crypt</string>
+    <string name="pref_common_restart_tor">Please restart Tor</string>
+    <string name="pref_common_restart_itpd">Please restart I2P</string>
+
+    <string name="pref_common_use_iptables">Select Iptables</string>
+    <string-array name="pref_common_categ_use_iptables_titles">
+        <item>Use application Iptables</item>
+        <item>Use device Iptables</item>
+    </string-array>
+    <string-array name="pref_common_use_iptables_values">
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
+    <string name="pref_common_log_root_commands">Save Root Commands to Log</string>
+
+
+    <string name="notification_text">DNSCrypt, Tor, I2P are protected. Don\'t hide.</string>
+    <string name="notification_temp_text">This notification must disappear soon.</string>
+
+    <string name="tvSettings_text">Please wait…</string>
+    <string name="toastSettings_saved">Settings saved</string>
+
+
+    <string name="pref_dnscrypt_global_settings_categ">GLOBAL SETTINGS</string>
+
+    <string name="pref_advanced"> For advanced user only!</string>
+
+    <string name="pref_dnscrypt_select_server_names">Select at least one server!</string>
+    <string name="pref_dnscrypt_local_port_summ">Local port to listen to.</string>
+    <string name="pref_dnscrypt_local_port" translatable="false">listen_port</string>
+    <string name="pref_dnscrypt_max_clients_summ">Maximum number of simultaneous client connections to accept.</string>
+    <string name="pref_dnscrypt_max_clients" translatable="false">max_clients</string>
+
+    <string name="pref_dnscrypt_require_servers_categ">Require servers (from static + remote sources) to satisfy specific properties.</string>
+    <string name="pref_dnscrypt_ipv4_servers_summ">Use servers reachable over IPv4.</string>
+    <string name="pref_dnscrypt_ipv4_servers" translatable="false">ipv4_servers</string>
+    <string name="pref_dnscrypt_ipv6_servers_summ">Use servers reachable over IPv6. Do not enable if you don\'t have IPv6 connectivity.</string>
+    <string name="pref_dnscrypt_ipv6_servers" translatable="false">ipv6_servers</string>
+    <string name="pref_dnscrypt_dnscrypt_servers_summ">Use servers implementing the DNSCrypt protocol.</string>
+    <string name="pref_dnscrypt_dnscrypt_servers" translatable="false">dnscrypt_servers</string>
+    <string name="pref_dnscrypt_doh_servers_summ">Use servers implementing the DNS-over-HTTPS protocol.</string>
+    <string name="pref_dnscrypt_doh_servers" translatable="false">doh_servers</string>
+
+    <string name="pref_dnscrypt_require_servers_prop_categ">Require servers defined by remote sources to satisfy specific properties.</string>
+    <string name="pref_dnscrypt_require_dnssec_summ">Server must support DNS security extensions (DNSSEC).</string>
+    <string name="pref_dnscrypt_require_dnssec" translatable="false">require_dnssec</string>
+    <string name="pref_dnscrypt_require_nolog_summ">Server must not log user queries (declarative).</string>
+    <string name="pref_dnscrypt_require_nolog" translatable="false">require_nolog</string>
+    <string name="pref_dnscrypt_require_nofilter_summ">Server must not enforce its own blacklist (for parental control, ads blocking…).</string>
+    <string name="pref_dnscrypt_require_nofilter" translatable="false">require_nofilter</string>
+
+    <string name="pref_dnscrypt_force_tcp_categ">Always use TCP to connect to upstream servers.</string>
+    <string name="pref_dnscrypt_force_tcp_summ"> This can be can be useful if you need to route everything through Tor.\n
+        Otherwise, leave this to false, as it doesn\'t improve security (dnscrypt-proxy will always encrypt everything even using UDP), and can only increase latency.</string>
+    <string name="pref_dnscrypt_force_tcp" translatable="false">force_tcp</string>
+
+    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">HTTP / SOCKS proxy.</string>
+    <string name="pref_dnscrypt_use_proxy">Enable proxy</string>
+    <string name="pref_dnscrypt_proxy_summ">Route all TCP connections to a local Tor node.
+        Tor doesn\'t support UDP, so set force_tcp to true as well.</string>
+    <string name="pref_dnscrypt_proxy">proxy_port</string>
+
+    <string name="pref_dnscrypt_other_categ">Other Settings.</string>
+    <string name="pref_dnscrypt_timeout_summ"> How long a DNS query will wait for a response, in milliseconds.</string>
+    <string name="pref_dnscrypt_timeout" translatable="false">timeout</string>
+    <string name="pref_dnscrypt_keepalive_summ"> Keepalive for HTTP (HTTPS, HTTP/2) queries, in seconds.</string>
+    <string name="pref_dnscrypt_keepalive" translatable="false">keepalive</string>
+    <string name="pref_dnscrypt_cert_refresh_del_summ"> Keepalive for HTTP (HTTPS, HTTP/2) queries, in seconds.</string>
+    <string name="pref_dnscrypt_cert_refresh_del" translatable="false">cert_refresh_delay</string>
+    <string name="pref_dnscrypt_dnscrypt_ephemeral_keys_summ">Create a new, unique key for every single DNS query.
+        This may improve privacy but can also have a significant impact on CPU usage.
+        Only enable if you don\'t have a lot of network load.</string>
+    <string name="pref_dnscrypt_dnscrypt_ephemeral_keys" translatable="false">dnscrypt_ephemeral_keys</string>
+    <string name="pref_dnscrypt_tls_disable_session_tickets_summ"> Tls_disable_session_tickets.</string>
+    <string name="pref_dnscrypt_tls_disable_session_tickets" translatable="false">tls_disable_session_tickets</string>
+    <string name="pref_dnscrypt_fallback_resolver_summ">Fallback resolver.
+        This is a normal, non-encrypted DNS resolver, that will be only used for one-shot queries
+        when retrieving the initial resolvers list, and only if the system DNS configuration doesn\'t work.
+        It will never be used if lists have already been cached.
+        People in China may need to use 114.114.114.114:53 here.</string>
+    <string name="pref_dnscrypt_fallback_resolver" translatable="false">fallback_resolver</string>
+    <string name="pref_dnscrypt_ignore_system_dns_summ">Never let dnscrypt-proxy try to use the system DNS settings. Unconditionally use the fallback resolver..</string>
+    <string name="pref_dnscrypt_ignore_system_dns" translatable="false">ignore_system_dns</string>
+    <string name="pref_dnscrypt_netprobe_timeout_summ"> Maximum time (in seconds) to wait for network connectivity before initializing the proxy.\n
+        Useful if the proxy is automatically started at boot, and network connectivity is not guaranteed to be immediately available.\n
+        Use 0 to disable..</string>
+    <string name="pref_dnscrypt_netprobe_timeout" translatable="false">netprobe_timeout</string>
+
+    <string name="pref_dnscrypt_filters_categ">FILTERS</string>
+    <string name="pref_dnscrypt_dnscrypt_block_ipv6" translatable="false">block_ipv6</string>
+    <string name="pref_dnscrypt_block_ipv6_summ">Immediately respond to IPv6-related queries with an empty response. This makes things faster when there is no IPv6 connectivity, but can also cause reliability issues with some stub resolvers.</string>
+
+    <string name="pref_dnscrypt_forwarding_rules_categ" translatable="false">Forwarding rules.</string>
+    <string name="pref_dnscrypt_forwarding_rules" translatable="false">forwarding_rules</string>
+    <string name="pref_dnscrypt_forwarding_rules_summ">Route queries for specific domains to a dedicated set of servers. Disabled temporally </string>
+
+    <string name="pref_dnscrypt_cloaking_rules_categ" translatable="false">Cloaking rules.</string>
+    <string name="pref_dnscrypt_cloaking_rules" translatable="false">cloaking_rules</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking returns a predefined address for a specific name.\n
+        In addition to acting as a HOSTS file, it can also return the IP address of a different name. It will also do CNAME flattening..</string>
+
+    <string name="pref_dnscrypt_DNS_cache_categ">DNS cache.</string>
+    <string name="pref_dnscrypt_cache_summ">Enable a DNS cache to reduce latency and outgoing traffic.</string>
+    <string name="pref_dnscrypt_cache">Enable DNS cache</string>
+    <string name="pref_dnscrypt_cache_size_summ">Cache size.</string>
+    <string name="pref_dnscrypt_cache_size" translatable="false">cache_size</string>
+    <string name="pref_dnscrypt_cache_min_ttl_summ">Minimum TTL for cached entries.</string>
+    <string name="pref_dnscrypt_cache_min_ttl" translatable="false">cache_min_ttl</string>
+    <string name="pref_dnscrypt_cache_max_ttl_summ">Maximum TTL for cached entries.</string>
+    <string name="pref_dnscrypt_cache_max_ttl" translatable="false">cache_max_ttl</string>
+    <string name="pref_dnscrypt_cache_neg_min_ttl_summ">Minimum TTL for negatively cached entries.</string>
+    <string name="pref_dnscrypt_cache_neg_min_ttl" translatable="false">cache_neg_min_ttl</string>
+    <string name="pref_dnscrypt_cache_neg_max_ttl_summ">Maximum TTL for negatively cached entries.</string>
+    <string name="pref_dnscrypt_cache_neg_max_ttl" translatable="false">cache_neg_max_ttl</string>
+
+    <string name="pref_dnscrypt_query_log_categ">Query logging.</string>
+    <string name="pref_dnscrypt_query_log_summ">Log client queries to a file.</string>
+    <string name="pref_dnscrypt_query_log">Enable Query logging</string>
+    <string name="pref_dnscrypt_ignored_qtypes_summ">Do not log these query types, to reduce verbosity. Keep empty to log everything.</string>
+    <string name="pref_dnscrypt_ignored_qtypes" translatable="false">ignored_qtypes</string>
+    <string name="open_query_log">Open Query Log</string>
+
+    <string name="pref_dnscrypt_nx_log_categ">Suspicious queries logging.</string>
+    <string name="pref_dnscrypt_nx_log_summ">Log queries for nonexistent zones.\n
+        These queries can reveal the presence of malware, broken/obsolete applications, and devices signaling their presence to 3rd parties..</string>
+    <string name="pref_dnscrypt_nx_log">Enable Suspicious logging</string>
+    <string name="open_nx_log">Open Suspicious Log</string>
+
+    <string name="pref_dnscrypt_blacklist_categ">Pattern-based blocking (blacklist).</string>
+    <string name="pref_dnscrypt_blacklist">Blacklist</string>
+    <string name="pref_dnscrypt_blacklist_summ">Blacklist are made of one pattern per line.</string>
+
+    <string name="pref_dnscrypt_ipblacklist_categ">Pattern-based IP blocking (IP blacklist).</string>
+    <string name="pref_dnscrypt_ipblacklist">IP Blacklist</string>
+    <string name="pref_dnscrypt_ipblacklist_summ">IP Blacklist are made of one pattern per line.</string>
+
+    <string name="pref_dnscrypt_whitelist_categ">Pattern-based whitelisting (blacklists bypass).</string>
+    <string name="pref_dnscrypt_whitelist">Whitelist</string>
+    <string name="pref_dnscrypt_whitelist_summ">Whitelist support the same patterns as blacklists. If a name matches a whitelist entry, the corresponding session will bypass names and IP filters.</string>
+
+    <string name="pref_dnscrypt_sources_categ">Servers.</string>
+    <string name="pref_dnscrypt_sources">Sources</string>
+    <string name="pref_dnscrypt_sources_summ">Remote lists of available servers.</string>
+    <string name="pref_dnscrypt_minisign_key" translatable="false">minisign_key</string>
+    <string name="pref_dnscrypt_minisign_key_summ">Key.</string>
+    <string name="pref_dnscrypt_refresh_delay" translatable="false">refresh_delay</string>
+    <string name="pref_dnscrypt_refresh_delay_summ">Sources list expiring after refresh_delay hours.</string>
+
+    <string name="pref_dnscrypt_not_exist">Preference does not exist in dnscrypt-proxy.toml!</string>
+
+    <string name="btn_dnscrypt_delete_log">Delete log</string>
+    <string name="title_dnscrypt_query_log">DNSCrypt Query Log</string>
+    <string name="title_dnscrypt_nx_log">DNSCrypt Suspicious Log</string>
+    <string name="dnscrypt_empty_log">Log Emty</string>
+    <string name="title_dnscrypt_forwarding_rules" translatable="false">DNSCrypt Forwarding rules</string>
+    <string name="title_dnscrypt_cloaking_rules" translatable="false">DNSCrypt Cloaking rules</string>
+    <string name="title_dnscrypt_blacklist" translatable="false">DNSCrypt Blacklist</string>
+    <string name="title_dnscrypt_ip_blacklist" translatable="false">DNSCrypt IP Blacklist</string>
+    <string name="title_dnscrypt_whitelist" translatable="false">DNSCrypt Whitelist</string>
+
+    <string name="pref_tor_virtual_addr_network_IPv4" translatable="false">VirtualAddrNetworkIPv4</string>
+    <string name="pref_tor_virtual_addr_network_IPv4_summ">When Tor needs to assign a virtual (unused) address because of a MAPADDRESS command from the controller or the AutomapHostsOnResolve feature, Tor picks an unassigned address from this range.</string>
+    <string name="pref_tor_avoid_disc_writes" translatable="false">AvoidDiskWrites</string>
+    <string name="pref_tor_avoid_disc_writes_summ">If non-zero, try to write to disk less frequently.</string>
+    <string name="pref_tor_connections_padding" translatable="false">ConnectionPadding</string>
+    <string name="pref_tor_connections_padding_summ">This option governs Tor’s use of padding to defend against some forms of traffic analysis. Disable to save bandwidth.</string>
+    <string name="pref_tor_reduced_connections_padding" translatable="false">ReducedConnectionPadding</string>
+    <string name="pref_tor_reduced_connections_padding_summ">If set enabled, Tor will not hold OR connections open for very long, and will send less padding on these connections. Enable to save bandwidth.</string>
+    <string name="pref_tor_exclude_exit_nodes" translatable="false">ExcludeExitNodes</string>
+    <string name="pref_tor_exclude_exit_nodes_summ">A list of country codes to never use when picking an exit node, that delivers traffic for you outside the Tor network.</string>
+    <string name="pref_tor_exit_nodes" translatable="false">ExitNodes</string>
+    <string name="pref_tor_exit_nodes_summ">A list of country codes to use as exit node - that is, a node that delivers traffic for you outside the Tor network.</string>
+    <string name="pref_tor_exclude_nodes" translatable="false">ExcludeNodes</string>
+    <string name="pref_tor_exclude_nodes_summ">A list of country codes to avoid when building a circuit.</string>
+    <string name="pref_tor_entry_nodes" translatable="false">EntryNodes</string>
+    <string name="pref_tor_entry_nodes_summ">A list of country codes of nodes to use for the first hop in your normal circuits.</string>
+    <string name="pref_tor_strict_nodes" translatable="false">StrictNodes</string>
+    <string name="pref_tor_strict_nodes_summ">If StrictNodes enabled, Tor will treat solely the ExcludeNodes option as a requirement to follow for all the circuits you generate, even if doing so will break functionality for you.</string>
+    <string name="pref_tor_fascist_firewall" translatable="false">FascistFirewall</string>
+    <string name="pref_tor_fascist_firewall_summ">If enabled, Tor will only create outgoing connections to ORs running on ports that your firewall allows (defaults to 80 and 443).</string>
+    <string name="pref_tor_new_circuit_period" translatable="false">NewCircuitPeriod</string>
+    <string name="pref_tor_new_circuit_period_summ">Every NUM seconds consider whether to build a new circuit.</string>
+    <string name="pref_tor_max_circuit_dirtiness" translatable="false">MaxCircuitDirtiness</string>
+    <string name="pref_tor_max_circuit_dirtiness_summ">Feel free to reuse a circuit that was first used at most NUM seconds ago, but never attach a new stream to a circuit that is too old.</string>
+    <string name="pref_tor_enforce_distinct_subnets" translatable="false">EnforceDistinctSubnets</string>
+    <string name="pref_tor_enforce_distinct_subnets_summ">If enabled, Tor will not put two servers whose IP addresses are "too close" on the same circuit. Currently, two addresses are "too close" if they lie in the same /16 range.</string>
+    <string name="pref_tor_enable_SOCKS_proxy">Enable SOCKS proxy</string>
+    <string name="pref_tor_SOCKS_port" translatable="false">SOCKSPort</string>
+    <string name="pref_tor_SOCKS_port_summ">Open this port to listen for connections from SOCKS-speaking applications.</string>
+    <string name="pref_tor_enable_HTTPTunnel_proxy">Enable HTTPTunnel</string>
+    <string name="pref_tor_HTTPTunnel_port" translatable="false">HTTPTunnelPort</string>
+    <string name="pref_tor_HTTPTunnel_port_summ">Open this port to listen for proxy connections using the "HTTP CONNECT" protocol instead of SOCKS.</string>
+    <string name="pref_tor_enable_transparent_proxy">Enable Transparent proxy</string>
+    <string name="pref_tor_trans_port" translatable="false">TransPort</string>
+    <string name="pref_tor_trans_port_summ">Open this port to listen for transparent proxy connections.</string>
+    <string name="pref_tor_enable_DNS">Enable DNS</string>
+    <string name="pref_tor_DNS_port" translatable="false">DNSPort</string>
+    <string name="pref_tor_DNS_port_summ">Open this port to listen for UDP DNS requests, and resolve them anonymously.</string>
+    <string name="pref_tor_client_use_IPv4" translatable="false">ClientUseIPv4</string>
+    <string name="pref_tor_client_use_IPv4_summ">If disable, Tor will avoid connecting to directory servers and entry nodes over IPv4.</string>
+    <string name="pref_tor_client_use_IPv6" translatable="false">ClientUseIPv6</string>
+    <string name="pref_tor_client_use_IPv6_summ">If enabled, Tor might connect to directory servers or entry nodes over IPv6.</string>
+    <string name="pref_tor_not_exist">Preference not exist in dnscrypt-proxy.toml!</string>
+    <string name="pref_tor_unlock">Host or IP to unblock</string>
+    <string name="pref_tor_clearnet">Host or IP for bypass</string>
+    <string name="pref_tor_unlock_edit">Edit Host or IP</string>
+    <string name="pref_tor_unlock_disabled">Disabled</string>
+    <string name="pref_tor_unlock_app">Apps to Torify</string>
+    <string name="pref_tor_clearnet_app">Apps to bypass Tor</string>
+
+    <string name="country_select_select_all">Select All</string>
+    <string name="country_select_unselect_all">Remove Selection</string>
+
+    <string name="pref_itpd_common">Common Settings</string>
+    <string name="pref_itpd_com_incom_connect">Allow incoming connections</string>
+    <string name="pref_itpd_com_port" translatable="false">incoming port</string>
+    <string name="pref_itpd_com_port_summ">Port to listen for incoming connections.</string>
+    <string name="pref_itpd_com_host" translatable="false">incoming host</string>
+    <string name="pref_itpd_com_host_summ">Router external IP for incoming connections.</string>
+    <string name="pref_itpd_com_ipv4" translatable="false">ipv4</string>
+    <string name="pref_itpd_com_ipv4_summ">Enable communication through IPv4.</string>
+    <string name="pref_itpd_com_ipv6" translatable="false">ipv6</string>
+    <string name="pref_itpd_com_ipv6_summ">Enable communication through IPv6.</string>
+    <string name="pref_itpd_com_notransit" translatable="false">notransit</string>
+    <string name="pref_itpd_com_notransit_summ">Router will not accept transit tunnels, disabling transit traffic completely.</string>
+    <string name="pref_itpd_com_floodfill" translatable="false">floodfill</string>
+    <string name="pref_itpd_com_floodfill_summ">Router will be floodfill.</string>
+    <string name="pref_itpd_com_bandwidth" translatable="false">bandwidth</string>
+    <string name="pref_itpd_com_bandwidth_summ">Bandwidth limit in KBps.</string>
+    <string-array name="itpd_com_bandwidth_title">
+        <item>32</item>
+        <item>256</item>
+        <item>2048</item>
+        <item>>9000</item>
+    </string-array>
+    <string-array name="itpd_com_bandwidth_value">
+        <item>L</item>
+        <item>O</item>
+        <item>P</item>
+        <item>>X</item>
+    </string-array>
+    <string name="pref_itpd_com_share" translatable="false">share</string>
+    <string name="pref_itpd_com_share_summ">Max % of bandwidth limit for transit. 0–100.</string>
+    <string name="pref_itpd_com_ssu" translatable="false">ssu</string>
+    <string name="pref_itpd_com_ssu_summ">Enable SSU transport protocol (use UDP).</string>
+    <string name="pref_itpd_com_ntcp" translatable="false">ntcp</string>
+    <string name="pref_itpd_com_ntcp_summ">Enable NTCP transport protocol (use TCP).</string>
+    <string name="pref_itpd_com_use_ntcpproxy">Enable ntcpproxy</string>
+    <string name="pref_itpd_com_ntcpproxy" translatable="false">ntcpproxy</string>
+    <string name="pref_itpd_com_ntcpproxy_summ">Specify proxy server for NTCP. Should be http://address:port or socks://address:port.</string>
+    <string name="pref_itpd_HTTP_proxy">HTTP proxy</string>
+    <string name="pref_itpd_HTTP_proxy_enabled">HTTP proxy</string>
+    <string name="pref_itpd_HTTP_proxy_port">HTTP proxy port</string>
+    <string name="pref_itpd_HTTP_proxy_port_summ">The port to listen on (HTTP Proxy).</string>
+    <string name="pref_itpd_Socks_proxy">Socks proxy</string>
+    <string name="pref_itpd_Socks_proxy_enabled">Socks proxy</string>
+    <string name="pref_itpd_Socks_proxy_port">Socks proxy port</string>
+    <string name="pref_itpd_Socks_proxy_port_summ">The port to listen on (SOCKS Proxy).</string>
+    <string name="pref_itpd_SAM_interface">SAM interface</string>
+    <string name="pref_itpd_SAM_interface_enabled">SAM interface</string>
+    <string name="pref_itpd_SAM_interface_port">SAM interface port</string>
+    <string name="pref_itpd_SAM_interface_port_summ">Port of SAM bridge.</string>
+    <string name="pref_itpd_Cryptography">Cryptography</string>
+    <string name="pref_itpd_elgamal_enabled" translatable="false">elgamal</string>
+    <string name="pref_itpd_elgamal_summ">Use ElGamal precomputated tables.</string>
+    <string name="pref_itpd_UPNP" translatable="false">UPNP</string>
+    <string name="pref_itpd_UPNP_enabled" translatable="false">UPNP</string>
+    <string name="pref_itpd_UPNP_summ">Enable or disable UPnP.</string>
+    <string name="pref_itpd_ntcp2" translatable="false">ntcp2</string>
+    <string name="pref_itpd_ntcp2_enabled">ntcp2 enabled</string>
+    <string name="pref_itpd_reseeding" translatable="false">Reseeding</string>
+    <string name="pref_itpd_reseeding_enabled" translatable="false">verify</string>
+    <string name="pref_itpd_reseeding_summ">Verify .su3 signature.</string>
+    <string name="pref_itpd_limits">Limits</string>
+    <string name="pref_itpd_limits_transittunnels" translatable="false">transittunnels</string>
+    <string name="pref_itpd_limits_transittunnels_summ">Override maximum number of transit tunnels. 2500 by default.</string>
+    <string name="pref_itpd_limits_openfiles" translatable="false">openfiles</string>
+    <string name="pref_itpd_limits_openfiles_summ">Limit number of open file descriptors (0 - use system limit).</string>
+    <string name="pref_itpd_limits_coresize" translatable="false">coresize</string>
+    <string name="pref_itpd_limits_coresize_summ">Maximum size of corefile in Kb (0 - use system limit).</string>
+    <string name="pref_itpd_limits_ntcpsoft" translatable="false">ntcpsoft</string>
+    <string name="pref_itpd_limits_ntcpsoft_summ">Threshold to start probabalistic backoff with ntcp sessions (0 - use system limit).</string>
+    <string name="pref_itpd_limits_ntcphard" translatable="false">ntcphard</string>
+    <string name="pref_itpd_limits_ntcphard_summ">Maximum number of ntcp sessions (0 - use system limit).</string>
+    <string name="pref_itpd_addressbook" translatable="false">Addressbook</string>
+    <string name="pref_itpd_addressbook_defaulturl" translatable="false">defaulturl</string>
+    <string name="pref_itpd_addressbook_defaulturl_summ">AddressBook subscription URL for initial setup.</string>
+    <string name="pref_itpd_addressbook_subscriptions" translatable="false">subscriptions</string>
+    <string name="pref_itpd_addressbook_subscriptions_summ">AddressBook subscriptions URLs.</string>
+    <string name="pref_itpd_not_exist">Prererence not exist in i2pd.conf!</string>
+    <string name="pref_itpd_current_events">Current Events:</string>
+
+    <string name="helper_dialog_title">Info</string>
+    <string name="helper_after_install">Congratulations! You can use this tools to have fast access
+        for all websites without restrictions now. Start DNSCrypt with or without Tor and I2P as requested (Fast Mode). Or you can use
+        this tools to enhance privacy. Start Tor with or without I2P as requested(Enhanced Privacy Mode).</string>
+    <string name="helper_dnscrypt">(Fast Mode)\n Your DNS traffic is encrypting now. Try to use different
+        servers for additional features. MENU->FastSettings->Select DNSCrypt servers.</string>
+    <string name="helper_dnscrypt_tor">(Fast Mode)\n Your DNS traffic is encrypting now. You have access to ONION
+        websites from any application. You can add websites, applications to MENU->Fast Settings->Select WebSites, Applications
+        to Unblock for opening its with Tor network and without restrictions.</string>
+    <string name="helper_dnscrypt_tor_privacy">(Enhanced Privacy Mode)\n Your DNS traffic is encrypting now. You have access to ONION
+        websites from any application. You can add websites, applications to MENU->Fast Settings->Exclude WebSites, Exclude Applications
+        for Tor network bypass. All other traffic goes through Tor network. All other connections were blocked.</string>
+    <string name="helper_dnscrypt_itpd">Your DNS traffic is encrypting now. You have access to I2P websites from any application.</string>
+    <string name="helper_dnscrypt_tor_itpd">Your DNS traffic is encrypting now. You have access to ONION
+        and I2P websites from any application</string>
+    <string name="helper_tor">(Enhanced Privacy Mode)\n You have access to ONION websites from any application.
+        All your traffic goes through Tor network. You can add websites, applications to MENU->Fast Settings->Exclude WebSites, Exclude Applications
+        for Tor network bypass. All other connections were blocked.</string>
+    <string name="helper_tor_itpd">(Enhanced Privacy Mode)\n You have access to ONION websites
+        from any application. All your traffic goes through Tor network. You can add websites, applications to MENU->Fast Settings->Exclude WebSites, Exclude Applications
+        for Tor network bypass. You have access to I2P websites only through SOCKS or HTTP proxy. All other connections were blocked.</string>
+    <string name="helper_itpd">You have access to I2P websites only through SOCKS or HTTP proxy.</string>
+    <string name="helper_dnscrypt_stopped">Looks like DNS Crypt was killed by android system.
+        Your internet connection was restored. Check device Settings!</string>
+    <string name="helper_tor_stopped">Looks like Tor was killed by android system.
+        Your internet connection was restored. Check device Settings!</string>
+    <string name="helper_itpd_stopped">Looks like I2P was killed by android system. Check device Settings!</string>
+    <string name="helper_dnscrypt_no_internet">Looks like InviZible Pro CAN NOT connect to INTERNET.
+        Please Check FIREWALL rules. Allow connection for InviZible Pro and for ROOT applications.</string>
+    <string name="helper_tor_use_bridges">Looks like Tor CAN NOT connect to INTERNET.
+        ISP may blocks Tor connections. You can try to use tor Bridges. Please find them in MENU -> Fast Settings -> Bridges</string>
+    <string name="action_mode_child_lock">Child Lock</string>
+    <string name="action_mode_dialog_message_lock">You can lock control of this application. Please enter password, or use previous.</string>
+    <string name="action_mode_dialog_message_unlock">Please enter password.</string>
+    <string name="action_mode_dialog_wrong_pass">Wrong password!</string>
+    <string name="action_mode_dialog_unlocked">Control Unlocked</string>
+    <string name="action_mode_dialog_locked">Control Locked</string>
+    <string name="action_mode_hotspot">HOTSPOT</string>
+
+    <string name="help_activity_save_logs">Save logs</string>
+    <string name="help_activity_path">Path for logs:</string>
+    <string name="help_activity_logs_saved">Logs Saved. Please send InvizibleLogs.txt to developer. You can find logs in the folder:</string>
+
+    <string name="update_core_title">Update</string>
+    <string name="update_core_message">Some of InviZible modules are ready for update.         Do you want to update its? This will overwrite your modules settings!</string>
+    <string name="update_core_yes">Update</string>
+    <string name="update_core_no">Later</string>
+    <string name="update_core_not_show_again">Not ask again</string>
+    <string name="update_core_restart">Please restart InviZible Pro and allow complete installation!         After installation reconfigure HOTSPOT, if you use it!</string>
+
+    <string name="about_build_ver" translatable="false">Build Version:</string>
+    <string name="about_app_ver" translatable="false">Application Version:</string>
+    <string name="about_build_date" translatable="false">Build Date:</string>
+    <string name="about_proc_ver" translatable="false">Processor Version:</string>
+    <string name="about_own_copyright" translatable="false">Copyright (C) 2019 Garmatin Oleksandr\n All Rights Reserved\n Web Site:</string>
+    <string name="about_own_licence" translatable="false">
+        THE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</string>
+    <string name="about_title_licences" translatable="false">Open-source\n LICENSES</string>
+    <string name="about_license" translatable="false">License</string>
+    <string name="about_license_dnscrypt" translatable="false">Dnscrypt-proxy license</string>
+    <string name="about_license_tor" translatable="false">Tor license</string>
+    <string name="about_license_itpd" translatable="false">Purple I2P license</string>
+    <string name="about_license_libsupeuser" translatable="false">Chainfire/libsuperuser license</string>
+    <string name="about_license_AndroidShell" translatable="false">Jaredrummler/AndroidShell license</string>
+    <string name="about_license_filepicker" translatable="false">Angads25/android-filepicker license</string>
+    <string name="about_site" translatable="false"><a href="https://invizible.net">https://invizible.net</a></string>
+
+    <string name="update_notification">Downloading file</string>
+    <string name="update_interrupt_notification">Download was stopped</string>
+    <string name="cancel_download">CANCEL DOWNLOAD</string>
+    <string name="update_new_version">New Version:</string>
+    <string name="update_ipro_has_apdate">InviZible Pro update is available. Do you want to download and update its?</string>
+    <string name="update_dnscrypt_has_apdate">DNSCrypt update is available. Do you want to download and update its?</string>
+    <string name="update_tor_has_apdate">Tor update is available. Do you want to download and update its?</string>
+    <string name="update_itpd_has_apdate">Purple I2P update is available. Do you want to download and update its?</string>
+    <string name="update_checking_title">Checking Updates</string>
+    <string name="update_checking_message">Please wait while Updates are checking.</string>
+    <string name="update_check_warning">The update server is temporarily unavailable. Please try again later.</string>
+    <string name="update_check_warning_menu">The update server was unavailable.</string>
+    <string name="update_check_fault">Update check fault.</string>
+    <string name="update_check_no_update">No Updates were Found.</string>
+    <string name="update_last_check">Last check:</string>
+    <string name="update_found">Updates were found.</string>
+    <string name="update_installed">Updates were installed.</string>
+    <string name="update_over_three_activations">Looks like you have activated 3 copies of InviZible with this code already. If it is wrong, please contact the developer.</string>
+    <string name="update_wrong_code">Looks like your PRO code is wrong. Please contact the developer.</string>
+    <string name="update_over_five_times">You checked InviZible Pro updates more than 5 times a day. Please try again later.</string>
+
+    <string name="verifier_error">Looks like this unofficial version of InviZible. Please be care of it!</string>
+    <string name="only_for_pro">Only for PRO version</string>
+    <string name="donate">Donate</string>
+    <string name="donate_project">InviZible Pro Project requires your assistance. Please visit donate page or enter received registration code.</string>
+    <string name="donate_button">Visit</string>
+    <string name="enter_code_button">Enter Code</string>
+    <string name="enter_code">Enter Code</string>
+    <string name="thanks_for_donate">InviZible Pro Project and its author express appreciation
+        for the assistance. Would you like to download and upgrade to PRO?</string>
+
+</resources>
