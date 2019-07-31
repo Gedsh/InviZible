@@ -161,9 +161,12 @@ public class RootExecService extends Service {
 
                 writer.println("--------------------");
                 writer.println("RESULT");
-                for (String res:result) {
-                    writer.println(res);
-                    Log.i(LOG_TAG,"ROOT COMMANDS RESULT "+res);
+
+                if (result != null) {
+                    for (String res:result) {
+                        writer.println(res);
+                        Log.i(LOG_TAG,"ROOT COMMANDS RESULT "+res);
+                    }
                 }
                 writer.println("********************");
 

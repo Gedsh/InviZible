@@ -91,6 +91,8 @@ If you cannot build yourself, there are prebuilt versions of **InviZible Pro** a
 For application signing you can use your own signature. But without original signature you will see warning about it's. 
 All functions will work as with original signature in any case.
 
+The source code presented in this repository is intended primarily for investigation, but not for repetition. Because of wrong coding style that improves with time.
+
 #### Translating
 
 If you would like to translate this application into other languages ​​- 
