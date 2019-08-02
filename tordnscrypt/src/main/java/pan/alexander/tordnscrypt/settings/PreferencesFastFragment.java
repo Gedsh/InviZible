@@ -39,6 +39,8 @@ import pan.alexander.tordnscrypt.language.Language;
 import pan.alexander.tordnscrypt.utils.GetIPsJobService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 
+import static pan.alexander.tordnscrypt.TopFragment.appVersion;
+
 
 public class PreferencesFastFragment extends PreferenceFragment implements Preference.OnPreferenceChangeListener {
 
@@ -90,7 +92,7 @@ public class PreferencesFastFragment extends PreferenceFragment implements Prefe
         if (prefLastUpdate==null)
             return;
 
-        if (!updateTimeLastStr.isEmpty()) {
+        if (!updateTimeLastStr.isEmpty() && updateTimeLastStr.trim().matches("\\d+")) {
             long updateTimeLast = Long.parseLong(updateTimeLastStr);
             Date date = new Date(updateTimeLast);
 
@@ -99,6 +101,13 @@ public class PreferencesFastFragment extends PreferenceFragment implements Prefe
 
             prefLastUpdate.setSummary(getString(R.string.update_last_check) + " "
                     + dateString + " " + timeString + System.lineSeparator() + lastUpdateResult);
+        } else if (lastUpdateResult.equals(getString(R.string.update_check_fault))
+                && new PrefManager(getActivity()).getStrPref("updateTimeLast").isEmpty()
+                && appVersion.startsWith("p")) {
+            findPreference("pref_fast_auto_update").setEnabled(false);
+            prefLastUpdate.setSummary(lastUpdateResult);
+        } else {
+            prefLastUpdate.setSummary(lastUpdateResult);
         }
         if (getActivity()==null)
             return;
