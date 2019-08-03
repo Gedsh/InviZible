@@ -73,11 +73,11 @@ Depending on rooting method and device specifics application can be incompatible
 For questions, feature requests and bug reports, you can use GitHub or site [invizible.net](https://invizible.net/ru)
  for Russian-speaking users at the moment.
 
-There is support on the latest version of **InviZible Pro** only.
+There is support for the latest version of **InviZible Pro** only.
 
-There is no support on things that are not directly related to **InviZible Pro**.
+There is no support for things that are not directly related to **InviZible Pro**.
 
-There is no support on building and developing things by yourself.
+There is no support for building and developing things by yourself.
 
 ## Contributing
 
@@ -85,7 +85,7 @@ There is no support on building and developing things by yourself.
 
 To build **InviZible Pro** please use **Android Studio**.
 
-It is expected that you can solve build problems yourself, so there is no support on building. 
+It is expected that you can solve build problems yourself, so there is no support for building. 
 If you cannot build yourself, there are prebuilt versions of **InviZible Pro** available [here](https://invizible.net/ru/downloads).
 
 For application signing you can use your own signature. But without original signature you will see warning about it's. 
