@@ -1,0 +1,458 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">InviZible Pro</string>
+    <string name="nav_header_title">Tor z DNSCrypt oraz I2P</string>
+    <string name="nav_header_subtitle">najlepsze rozwiazanie dla Twojej prywatnosci</string>
+    <string name="action_settings">Ustawienia</string>
+
+    <string name="tvITPDStop">I2P Zatrzymane</string>
+    <string name="tvITPDRunning">I2P Uruchomione</string>
+    <string name="tvITPDStarting">Uruchamianie I2P</string>
+    <string name="tvITPDStopping">Zatrzymywanie I2P</string>
+    <string name="tvITPDInstalling">Instalacja I2P</string>
+    <string name="tvITPDInstalled">I2P Zainstalowane</string>
+    <string name="tvITPDNotInstalled">I2P Nie zainstalowane</string>
+
+    <string name="swRunOnBoot">Uruchom podczas startu urzadzenia</string>
+
+    <string name="root_available">Sprawdzam czy Root jest dostepny…</string>
+
+    <string name="please_wait">Prosze czekac…</string>
+    <string name="dont_show">Nie pokazuj ponownie</string>
+
+
+    <string name="tvDNSStop">DNSCrypt zatrzymany</string>
+    <string name="tvDNSInstalled">DNSCrypt zainstalowany</string>
+    <string name="tvDNSInstalling">Instalacja DNSCrypt</string>
+    <string name="tvDNSNotInstalled">Nie zainstalowano DNSCrypt</string>
+
+    <string name="tvDNSStarting">Uruchamianie DNSCrypt</string>
+    <string name="tvDNSRunning">DNSCrypt uruchomione</string>
+    <string name="tvDNSStopping">Zatrzymywanie DNSCrypt</string>
+
+
+    <string name="tvTorStop">Tor zatrzymany</string>
+    <string name="tvTorInstalled">Tor zainstalowany</string>
+    <string name="tvTorInstalling">Instalacja Tor</string>
+    <string name="tvTorNotInstalled">Tor nie zainstalowany</string>
+
+    <string name="tvTorStarting">Uruchamianie Tor</string>
+    <string name="tvTorRunning">Tor uruchomiony</string>
+    <string name="tvTorStopping">Zatrzymywanie Tor</string>
+
+    <string name="cancel">Anuluj</string>
+    <string name="error">Blad!</string>
+    <string name="warning">Ostrzezenie!</string>
+    <string name="sorry">Przepraszam!</string>
+    <string name="check_root">Nie mozesz uzywac tej aplikacji bez praw Roota. Upewnij sie ze urzadzenie jest zrootowane!</string>
+    <string name="install">Instaluj</string>
+    <string name="exit">Wyjdz</string>
+    <string name="wrong">Cos poszlo zle!</string>
+    <string name="install_title">Czy chcesz dokonczyc instalacje?</string>
+
+    <string name="no_bb">Prosze zainstalowac BusyBox!</string>
+    <string name="install_bb">Prosze zainstalowac BusyBox i zrestartowac apke! Zainstalowac ze Sklepu Google?</string>
+
+    <string name="write_file_error">Blad zapisu pliku!</string>
+
+    <string name="drawer_menu_commonSettings">Ustawienia wspolne</string>
+    <string name="drawer_menu_DNSSettings">Ustawienia DNS Crypt</string>
+    <string name="drawer_menu_TorSettings">Ustawienia Tor</string>
+    <string name="drawer_menu_I2PDSettings">Ustawienia I2P</string>
+    <string name="drawer_menu_fastSettings">Szybkie ustawienia</string>
+    <string name="drawer_menu_backup">Zapisz kopie &amp; Przywroc</string>
+    <string name="drawer_menu_about">O programie</string>
+    <string name="drawer_menu_help">Logi</string>
+    <string name="drawer_menu_donate">Dotuje</string>
+
+    <string name="btnRestoreBackup">Przywroc wszystko</string>
+    <string name="btnSaveBackup">Zapisz wszystko</string>
+    <string name="etPathBackup">Sciezka folderu:</string>
+    <string name="backupFolder">Wybierz folder kopii zapasowej:</string>
+
+    <string name="title_activity_settings">Ustawienia</string>
+
+    <string name="pref_fast_categ_autostart">Autostart</string>
+    <string name="pref_fast_dns_autostart">Uruchom DNSCrypt przy starcie systemu</string>
+    <string name="pref_fast_tor_autostart">Uruchom Tor przy starcie systemu</string>
+    <string name="pref_fast_itpd_autostart">Uruchom I2P przy starcie systemu</string>
+    <string name="pref_fast_autostart_delay">Opoznij</string>
+    <string name="pref_fast_autostart_delay_summ">Uzyj opoznienia (w sek) tylko jesli autostart nie dziala prawidlowo</string>
+    <string name="pref_fast_dns_server">Serwery DNSCrypt</string>
+    <string name="pref_fast_select_dns_server">Wybierz serwery DNSCrypt</string>
+    <string name="pref_fast_tor">Ustawienia Tora</string>
+    <string name="pref_fast_all_through_tor">Przekieruj caly ruch przez Tor</string>
+    <string name="pref_fast_unlock_with_tor">Wybierz strony web</string>
+    <string name="pref_fast_unlock_with_tor_summ">Lista stron web do otwierania przez Tor</string>
+    <string name="pref_fast_unlock_apps_with_tor">Wybierz aplikacje</string>
+    <string name="pref_fast_unlock_apps_with_tor_summ">Lista aplikacji laczacych sie przez Tor</string>
+    <string name="pref_fast_exclude_from_tor">Wyklucz stony web</string>
+    <string name="pref_fast_exclude_from_tor_summ">Lista stron web laczacych sie bezposrednio</string>
+    <string name="pref_fast_exclude_apps_from_tor">wyklucz aplikacje</string>
+    <string name="pref_fast_exclude_apps_from_tor_summ">Lista aplikacji laczacych sie bezposrednio</string>
+    <string name="pref_fast_site_refresh_interval">Czestotliwosc odswiezania</string>
+    <string name="pref_fast_site_refresh_interval_summ">Czestotliwosc odswiezania IP stron w godzinach. Dla Androida 5.1 i wyzej. 0 blokuje odswiezanie.</string>
+    <string name="pref_fast_use_tor_bridges">Pomost</string>
+    <string name="pref_fast_use_tor_bridges_summ">Zatosuj jesli nie mozesz polaczyc sie z siecia Tor</string>
+    <string name="pref_fast_use_tor_bridges_no">Nie uzywaj pomostow</string>
+    <string name="pref_fast_use_tor_bridges_default">Uzyj listy domyslnej</string>
+    <string name="pref_fast_use_tor_bridges_own">Zastosuj wlasna liste pomostow</string>
+    <string name="pref_fast_use_tor_bridges_request">Zadanie pomostow</string>
+    <string name="pref_fast_use_tor_bridges_add">Dodaj pomosty</string>
+    <string name="pref_fast_use_tor_bridges_edit">Edytuj pomost</string>
+    <string name="pref_fast_use_tor_bridges_deactivate">Prosze najpierw deaktywowac pomost!</string>
+    <string name="pref_fast_use_tor_bridges_obfs">Zaciemnianie</string>
+    <string name="pref_fast_use_tor_bridges_transport_select">Prosze wybrac typ zaciemniania:</string>
+    <string name="pref_fast_use_tor_bridges_enter_characters">Wprowadz znaki z obrazka</string>
+    <string name="pref_fast_use_tor_bridges_request_dialog">Wysylam zadanie listy pomostow</string>
+    <string name="pref_fast_use_tor_bridges_show_dialog">Twoje nowe pomosty z bridges.torproject.org:</string>
+    <string name="pref_fast_use_tor_bridges_add_dialog">Zapisz</string>
+    <string name="pref_fast_use_tor_bridges_close_dialog">Zamknij</string>
+    <string name="pref_fast_unlock_host_wrong">bledna nazwa hosta!</string>
+    <string name="pref_fast_theme">Wybierz schemat</string>
+    <string-array name="pref_fast_theme_titles">
+        <item>Tryb dzienny</item>
+        <item>Tryb nocny</item>
+        <item>Auto</item>
+        <item>domyslny systemu</item>
+    </string-array>
+    <string-array name="pref_fast_theme_values">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </string-array>
+    <string name="pref_fast_language">Wybierz jezyk</string>
+    <string name="pref_fast_block_http">Zablokuj ruch http</string>
+    <string name="pref_fast_block_http_summ">Zablokuj polaczenia z portem http	80</string>
+    <string name="pref_fast_categ_update">Aktualizacja</string>
+    <string name="pref_fast_auto_update">Aktualizacja automatyczna</string>
+    <string name="pref_fast_auto_update_summ">Sprawdzaj aktualizacje InviZible Pro i modulow codziennie</string>
+    <string name="pref_fast_chek_update">Sprawdz aktuaizacje</string>
+    <string name="pref_fast_chek_update_summ">Sprawdz czy sa dostepne nowe wersje</string>
+    <string name="pref_fast_through_tor_update">Aktualizuj tylko przez Tor</string>
+    <string name="pref_fast_through_tor_update_summ">sprawdzaj aktualizacje tylko przez Tor</string>
+
+    <string name="pref_common_categ_run_with_root">Uzyj uprawnien Roota</string>
+    <string name="pref_common_run_with_root">Uruchom moduly z uprawnieiami Roota</string>
+    <string name="pref_common_run_with_root_summ">Zastosuj uprawnienia Roota do DNS Crypt, Tor, I2P </string>
+    <string name="pref_common_categ_other">Inne</string>
+    <string name="pref_common_block_http">Zablokuj Punkt Dostepu po http</string>
+    <string name="pref_common_block_http_summ">Odmow polaczenia na port http 80 dla Punktu Dostepu</string>
+    <string name="pref_common_notification_summ">Zapobiega zamknieciu aplikacji uruchomionej bez praw roota przez system</string>
+    <string name="pref_common_show_notification">Pokaz powiadomienia</string>
+    <string name="pref_common_show_help">Podpowiedzi</string>
+    <string name="pref_common_show_help_summ">Zawsze pokazuj podpowiedzi</string>
+    <string name="pref_common_notification_helper">Prosze wykluczyc InviZible Pro z optymalizacji baterii.
+        W innym przypadku Android moze zatrzymac proces DNSCrypt, Tor or I2P w kazdej chwili. Systemy niest-
+        andardowe jak MIUI, wymagaja dodatowych czynnosci, wykluczajacych InviZible Pro z optymalizacji baterii
+        (np. Safety->Battery->Power Saving->Select InviZible Pro->No Background Restrictions,
+        Safety->allow auto start and Long Press The Home Button->Open the Recent App->Then Swipe InviZible Pro
+        Downward i kliknac sign lock in memory).</string>
+    <string name="pref_common_use_busybox">Wybierz BusyBox</string>
+    <string-array name="pref_common_categ_use_busybox_titles">
+        <item>Auto</item>
+        <item>Uzyj BusyBoxa urzadzenia</item>
+        <item>Uzyj BusyBoxa aplikacji</item>
+        <item>Nie uzywaj BusyBoxa</item>
+    </string-array>
+    <string-array name="pref_common_use_busybox_values">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </string-array>
+    <string name="pref_common_categ_hotspot">Punkt dostepu - eksperymentalnie</string>
+    <string name="pref_common_tethering_autostart">Autostart udostepniania polaczenia przy starcie systemu</string>
+    <string name="pref_common_tor_tethering">Zezwol na udostepnianie polaczenia</string>
+    <string name="pref_common_tor_route_all">Przekieruj caly ruch przez Tor</string>
+    <string name="pref_common_tor_route_all_summ">Kieruj caly ruch przychodzacy przez Tor</string>
+    <string name="pref_common_unblock_with_tor">Wybierz strony web</string>
+    <string name="pref_common_unblock_with_tor_summ">Strony otwierane w trybie Punktu Dostepu przez Tor</string>
+    <string name="pref_common_excludes_from_tor">Wyklucz strony</string>
+    <string name="pref_common_excludes_from_tor_summ">Stony otwierane bezposrednio przez Punkt Dostepu</string>
+    <string name="pref_common_itpd_tethering">Zezwol na udostepnianie I2P</string>
+    <string name="pref_common_tethering_settings">Otworz ustawienia Punktu Dostepu</string>
+    <string name="pref_common_restart_dnscrypt">Prosze zrestartowac DNS Crypt</string>
+    <string name="pref_common_restart_tor">Prosze zrestartowac Tor</string>
+    <string name="pref_common_restart_itpd">Prosze zrestartowac I2P</string>
+
+    <string name="pref_common_use_iptables">Wybierz Iptables</string>
+    <string-array name="pref_common_categ_use_iptables_titles">
+        <item>Uzyj Iptables aplikacji</item>
+        <item>Uzyj Iptables urzadzenia</item>
+    </string-array>
+    <string-array name="pref_common_use_iptables_values">
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
+    <string name="pref_common_log_root_commands">Zapisz polecenia Roota w logu</string>
+
+
+    <string name="notification_text">DNSCrypt, Tor, I2P sa chronione. Nie ukrywaj!</string>
+    <string name="notification_temp_text">To powiadomienie za chwile zniknie.</string>
+
+    <string name="tvSettings_text">Prosze czekac…</string>
+    <string name="toastSettings_saved">Zapisano ustawienia</string>
+
+
+    <string name="pref_dnscrypt_global_settings_categ">Ustawienia glowne</string>
+
+    <string name="pref_advanced"> Dla zaawansowanych! Wiesz co robisz?</string>
+
+    <string name="pref_dnscrypt_select_server_names">Wybierz przynajmniej 1 serwer!</string>
+    <string name="pref_dnscrypt_local_port_summ">Lokalny port nasluchu.</string>
+    <string name="pref_dnscrypt_max_clients_summ">Maksymalna akcepotowana ilosc polaczen klientow.</string>
+
+    <string name="pref_dnscrypt_require_servers_categ">Wymaga serwerow (ze zrodla lokalnego i zdalnych) spelniajacych wymogi.</string>
+    <string name="pref_dnscrypt_ipv4_servers_summ">Zastosuj serwery dostepne po IPv4.</string>
+    <string name="pref_dnscrypt_ipv6_servers_summ">Zastosuj serwery dostepne przez IPv6. NIE zaznaczaj jesli nie masz polaczenia po IPv6.</string>
+    <string name="pref_dnscrypt_dnscrypt_servers_summ">Zastosuj serwery uzywajace DNSCrypt.</string>
+    <string name="pref_dnscrypt_doh_servers_summ">Zastosuj serwery uzywajace DNS-over-HTTPS.</string>
+
+    <string name="pref_dnscrypt_require_servers_prop_categ">Wymaga serwerow spelniajacych wymagania zdalnych zrodel.</string>
+    <string name="pref_dnscrypt_require_dnssec_summ">Serwer musi wspierac rozszerzenia DNS security (DNSSEC).</string>
+    <string name="pref_dnscrypt_require_nolog_summ">Serwer nie moze logowac zapytan (deklarajca serwera!).</string>
+    <string name="pref_dnscrypt_require_nofilter_summ">Serwer nie moze stoswoac wlasnej blacklisty (kontrola rodzicielska, blok reklam…).</string>
+
+    <string name="pref_dnscrypt_force_tcp_categ">Zawsze stosuj TCP do polaczenia z serwerem.</string>
+    <string name="pref_dnscrypt_force_tcp_summ"> Moze byc przydatne jesli przekierowujesz caly ruch przez Tor.\n
+        W innym przypadku zostaw odznaczone, i tak nie zwieksza ochrony prywatnosci (proksy dnscrypt i tak zaszyfruje wszytko nawet po UDP), i moze tylko zwiekszyc lagi</string>
+
+    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">HTTP / SOCKS proxy.</string>
+    <string name="pref_dnscrypt_use_proxy">Uruchom proxy</string>
+    <string name="pref_dnscrypt_proxy_summ">Przekieruj calosc ruchu TCP do Tora.
+        Tor nie wspiera UDP - nalezy ustawic rowniez force_tcp.</string>
+    <string name="pref_dnscrypt_proxy">port_proxy</string>
+
+    <string name="pref_dnscrypt_other_categ">Inne ustawienia.</string>
+    <string name="pref_dnscrypt_timeout_summ"> Jak dlugo zapytanie DNS ma czekac na odpowiedz, w milisekundach.</string>
+    <string name="pref_dnscrypt_keepalive_summ"> Keepalive for HTTP (HTTPS, HTTP/2) zapytania, w sek.</string>
+    <string name="pref_dnscrypt_cert_refresh_del_summ"> Keepalive dla zapytania HTTP (HTTPS, HTTP/2), w sekundach.</string>
+    <string name="pref_dnscrypt_dnscrypt_ephemeral_keys_summ">Utworz nowy unikalny klucz dla kazdego zapytania DNS.
+        Moze to podniesc poziom prywatnosci, ale moze tez wplynac znaczaca na obciazenie CPU.
+        Wlaczyc tylko przy braku znaczacego obciazenia sieciowego.</string>
+    <string name="pref_dnscrypt_tls_disable_session_tickets_summ"> Zablokuj tickety sesji TLS.</string>
+    <string name="pref_dnscrypt_fallback_resolver_summ">Serwer zapasowy.
+        To jest normalny, nieszyfroway serwer DNS, ktory bedzie wykorzystwany tylko dla jednorazowych zapytan
+        przy pobieraniu listy serwerow TYLKO jesli systemowy DNS nie bedzie dostepny.
+        Nie zostanie uzyty jesli bedzie istniala kopia listy serwerow.
+        Uzytkownicy w Chinach moga sprobowac uzyc 114.114.114.114:53.</string>
+    <string name="pref_dnscrypt_ignore_system_dns_summ">Nie zezwalaj proxy dnscrypt uzywac systemowego DNS. Bezwarunkowo stosuj serwer zapasowy.</string>
+    <string name="pref_dnscrypt_netprobe_timeout_summ"> Czas maksymalny (w sek) oczekiwania na polaczenie z siecia przed startem proxy.\n
+        Stosowane jesli proxy startuje z uruchomieniem systemu, a siec nie jest dostepna zaraz po starcie.\n
+        Wpisz 0 zeby zablokowac.</string>
+
+    <string name="pref_dnscrypt_filters_categ">FILTRY</string>
+    <string name="pref_dnscrypt_block_ipv6_summ">Natychmiast odpowiadaj pusta odpowiedzia na zapytania IPv6. To przyspiesza prace przy braku polaczenia IPv6, ale moze spowodowac roblem dostepnosci niektorych resolverow.</string>
+
+    <string name="pref_dnscrypt_forwarding_rules_summ">Przekierowuj zapytania do wybranych domen przez wybrana grupe serwerow. Czasowo wylaczone </string>
+
+    <string name="pref_dnscrypt_cloaking_rules_summ">Maskowanie zwraca predefiniowany adres dla specyficznych nazw.\n
+        Pracuje jak plik HOSTS, a takze zwraca adres IP innej nazwy. Wykonuje tez flattening CNAME.</string>
+
+    <string name="pref_dnscrypt_DNS_cache_categ">Cache DNS.</string>
+    <string name="pref_dnscrypt_cache_summ">Uruchom cache DNS w celu przyspieszenia ruchu wychodzacego.</string>
+    <string name="pref_dnscrypt_cache">Uruchom cache DNS</string>
+    <string name="pref_dnscrypt_cache_size_summ">Rozmiar cache.</string>
+    <string name="pref_dnscrypt_cache_min_ttl_summ">Wartosc minimalna TTL dla wpisow.</string>
+    <string name="pref_dnscrypt_cache_max_ttl_summ">Wartosc maksymalna TTL dla wpisow.</string>
+    <string name="pref_dnscrypt_cache_neg_min_ttl_summ">Wartosc minimalna TTL dla wpisow bledow.</string>
+    <string name="pref_dnscrypt_cache_neg_max_ttl_summ">Wartosc maksymalna TTL dla wpisow bledow.</string>
+
+    <string name="pref_dnscrypt_query_log_categ">Logowanie zapytan.</string>
+    <string name="pref_dnscrypt_query_log_summ">Zapisuj log zapytan klientow do pliku.</string>
+    <string name="pref_dnscrypt_query_log">Uruchom logowanie zapytan</string>
+    <string name="pref_dnscrypt_ignored_qtypes_summ">Nie zapisuj zapytan tego typu by zredukowac nadmiarowe dane. Zostaw puste by logowac wszystko.</string>
+    <string name="open_query_log">Otworz log zapytan</string>
+
+    <string name="pref_dnscrypt_nx_log_categ">Logowanie podejrzanych zapytan.</string>
+    <string name="pref_dnscrypt_nx_log_summ">Logowanie zapytan do nieistniejacych stref.\n
+        Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych aplikacji, oraz raportowanie obecnosci przez urzadzenie do innych podmiotow.</string>
+    <string name="pref_dnscrypt_nx_log">Wlacz logowanie podejrzanych</string>
+    <string name="open_nx_log">Otworz log podejrzanych zapytan</string>
+
+    <string name="pref_dnscrypt_blacklist_categ">Lista blokowania (blacklist).</string>
+    <string name="pref_dnscrypt_blacklist">Blacklista</string>
+    <string name="pref_dnscrypt_blacklist_summ">Blacklista jest tworzona przez jeden wpis na linie.</string>
+
+    <string name="pref_dnscrypt_ipblacklist_categ">Blokowanie IP (IP blacklist).</string>
+    <string name="pref_dnscrypt_ipblacklist">Blacklista IP</string>
+    <string name="pref_dnscrypt_ipblacklist_summ">Blacklista IP tworzona jest przez jeden wpis na linie.</string>
+
+    <string name="pref_dnscrypt_whitelist_categ">Whitelista (obejscie Blacklisty).</string>
+    <string name="pref_dnscrypt_whitelist">Whitelista</string>
+    <string name="pref_dnscrypt_whitelist_summ">Whitelista wspiera takie same zasady jak Blacklista. Jesli nazwa jest znaleziona we Whiteliscie, sesja pominie filtrowanie nazw i IP.</string>
+
+    <string name="pref_dnscrypt_sources_categ">Serwery.</string>
+    <string name="pref_dnscrypt_sources">Zrodla</string>
+    <string name="pref_dnscrypt_sources_summ">Zdalna lista dostepnych serwerow.</string>
+    <string name="pref_dnscrypt_minisign_key_summ">Klucz minisign</string>
+    <string name="pref_dnscrypt_refresh_delay_summ">Lista zrodel wygasa po uplywie refresh_delay godzin.</string>
+
+    <string name="pref_dnscrypt_not_exist">Ustawienie nie istnieje w dnscrypt-proxy.toml!</string>
+
+    <string name="btn_dnscrypt_delete_log">Usun log</string>
+    <string name="title_dnscrypt_query_log">Log zapytan DNSCrypt</string>
+    <string name="title_dnscrypt_nx_log">Log podejrzanych zapytan DNSCrypt</string>
+    <string name="dnscrypt_empty_log">Log pusty</string>
+
+    <string name="pref_tor_virtual_addr_network_IPv4_summ">Gdy tor musi przydzielic adres wirtualny z powodu polecenia MAPADDRESS lub wlasnosci AutomapHostsOnResolve, Tor wybiera nieprzydzielony adres z tego zakresu.</string>
+    <string name="pref_tor_avoid_disc_writes_summ">Jezeli rozne od zera, sprobuj zapisywac na dysk z mniejsza czestotliwoscia.</string>
+    <string name="pref_tor_connections_padding_summ">Zarzadza Paddingiem Tora jako proba obrony przed analiza traffica. Zablokuj dla zmniejszenia transmisji.</string>
+    <string name="pref_tor_reduced_connections_padding_summ">Jesli wlaczone, Tor nie bedzie podtrzymywal dlugich polaczen OR, oraz bedzie wysylal mniejsze odstepy dla tych polaczen. Wlacz by zmniejszyc transmisje danych.</string>
+    <string name="pref_tor_exclude_exit_nodes_summ">Lista krajow wykluczonych przy wyborze exit node, ktore kieruja twoj ruch sieciowy na zewnatrz Tora.</string>
+    <string name="pref_tor_exit_nodes_summ">Lista krajow wybranych jako exit node - beda one przekierowywac twoj ruch na zewnatrz Tora.</string>
+    <string name="pref_tor_exclude_nodes_summ">Lista krajow pomijanych przy budowie obwodu.</string>
+    <string name="pref_tor_entry_nodes_summ">Lista krajow z pierwszego kregu obwodu.</string>
+    <string name="pref_tor_strict_nodes_summ">Wlaczenie StrictNodes spowoduje ze Tor bedzie bezwzglednie przestrzegal ograniczen wpisanych w ExcludeNodes dla wszystkich tworzonych obwodow, nawet jesli uniemozliwi to funkcjonowanie.</string>
+    <string name="pref_tor_fascist_firewall_summ">Gdy wlaczone, Tor utworzy polaczenia wychodzace tylko OR-ow ktore maja uruchomione porty na uzycie ktorych zezwalaja reguly (domyslnie 80 i 443).</string>
+    <string name="pref_tor_new_circuit_period_summ">Sprawdza czy tworzyc nowy obwod co kazde NUM sekund.</string>
+    <string name="pref_tor_max_circuit_dirtiness_summ">Umozliwia uzycie obwodu utworzonego maksymalnie NUM sekund temu, ale nigdy nie dolacza nowego strumienia do obwodu zbyt starego.</string>
+    <string name="pref_tor_enforce_distinct_subnets_summ">Jesli zaznaczone, Tor nie uzyje dwoch serwerow ktorych adresy IP znajduja sie "zbyt blisko" w tym samym obwodzie. Obecnie adresy sa "zbyt blisko" jesli oba sa w tym samym /16 zakresie.</string>
+    <string name="pref_tor_enable_SOCKS_proxy">Uruchom proxy SOCKS</string>
+    <string name="pref_tor_SOCKS_port_summ">Otworz port nasluchujacy polaczenia z aplikacji uzywajacych SOCKS.</string>
+    <string name="pref_tor_enable_HTTPTunnel_proxy">Wlacz HTTPTunnel</string>
+    <string name="pref_tor_HTTPTunnel_port_summ">Otworz port nasluchujacy polaczen aplikacji stosujacych protokol "HTTP CONNECT" zamiast SOCKS.</string>
+    <string name="pref_tor_enable_transparent_proxy">Uruchom transparentne proxy</string>
+    <string name="pref_tor_trans_port_summ">Otworz port dla nasluchu polaczen transparentnych.</string>
+    <string name="pref_tor_enable_DNS">Uruchom DNS</string>
+    <string name="pref_tor_DNS_port_summ">Otworz ten port do nasluchu zapytan DNS po UDP i rozwiaz anonimowo.</string>
+    <string name="pref_tor_client_use_IPv4_summ">Jesli zablokowane, Tor bedzie unikal wysylania zapytan do directory servers i nodow wejsciowych po IPv4.</string>
+    <string name="pref_tor_client_use_IPv6_summ">Jesli zaznaczone, Tor moze komunikowac sie z directory servers i nodami wejsciowymi po IPv6.</string>
+    <string name="pref_tor_not_exist">Ustawienie nie istnieje w dnscrypt-proxy.toml!</string>
+    <string name="pref_tor_unlock">Host lub IP ktory chesz odblokowac</string>
+    <string name="pref_tor_clearnet">Host lub IP ktory chcesz pominac</string>
+    <string name="pref_tor_unlock_edit">Edytuj Host lub IP</string>
+    <string name="pref_tor_unlock_disabled">Zablokowane</string>
+    <string name="pref_tor_unlock_app">Aplikacje laczace sie przez Tor</string>
+    <string name="pref_tor_clearnet_app">Aplikacje pomijajace Tor</string>
+
+    <string name="country_select_select_all">Zaznacz wszystko</string>
+    <string name="country_select_unselect_all">Usun zaznaczenie</string>
+
+    <string name="pref_itpd_common">Ustawienia wspolne</string>
+    <string name="pref_itpd_com_incom_connect">Zezwol na polaczenia przychodzace</string>
+    <string name="pref_itpd_com_port_summ">Port nasluchu polaczen przychodzacych.</string>
+    <string name="pref_itpd_com_host_summ">Zewnetrzne IP dla polaczen przychodzacych.</string>
+    <string name="pref_itpd_com_ipv4_summ">Umozliw komunikacje po IPv4.</string>
+    <string name="pref_itpd_com_ipv6_summ">Umozliw komunikacje po IPv6.</string>
+    <string name="pref_itpd_com_notransit_summ">Ruter nie bedzie akceptowac ruchu tunelowego, calkowicie go blokujac.</string>
+    <string name="pref_itpd_com_floodfill_summ">Ustaw ruter jako floodfill.</string>
+    <string name="pref_itpd_com_bandwidth_summ">Limit pasma  KBps.</string>
+
+    <string name="pref_itpd_com_share_summ">Max % pasma na ruch tranzytowy. 0–100.</string>
+    <string name="pref_itpd_com_ssu_summ">Uruchom protokol transferu SSU (uzyj UDP).</string>
+    <string name="pref_itpd_com_ntcp_summ">Uruchom protokol transferu NTCP (uzyj TCP).</string>
+    <string name="pref_itpd_com_use_ntcpproxy">Uruchom ntcpproxy</string>
+    <string name="pref_itpd_com_ntcpproxy_summ">Okresl serwer proxy dla NTCP. Albo http://address:port albo socks://address:port.</string>
+    <string name="pref_itpd_HTTP_proxy">proxy HTTP</string>
+    <string name="pref_itpd_HTTP_proxy_enabled">proxy HTTP</string>
+    <string name="pref_itpd_HTTP_proxy_port">port proxy HTTP</string>
+    <string name="pref_itpd_HTTP_proxy_port_summ">Port nasluchu (proxy HTTP).</string>
+    <string name="pref_itpd_Socks_proxy">proxy SOCKS</string>
+    <string name="pref_itpd_Socks_proxy_enabled">proxy SOCKS</string>
+    <string name="pref_itpd_Socks_proxy_port">port proxy SOCKS</string>
+    <string name="pref_itpd_Socks_proxy_port_summ">Port nasluchu (Proxy SOCKS).</string>
+    <string name="pref_itpd_SAM_interface">interfejs SAM</string>
+    <string name="pref_itpd_SAM_interface_enabled">interfejs SAM</string>
+    <string name="pref_itpd_SAM_interface_port">Port interfejsu SAM</string>
+    <string name="pref_itpd_SAM_interface_port_summ">Port mostka SAM.</string>
+    <string name="pref_itpd_Cryptography">Kryptografia</string>
+    <string name="pref_itpd_elgamal_summ">Uzyj predefiniowanych tablic ElGamal.</string>
+    <string name="pref_itpd_UPNP_summ">Uruchom lub zablokuj UPnP.</string>
+    <string name="pref_itpd_ntcp2_enabled">Uruchomione ntcp2</string>
+    <string name="pref_itpd_reseeding_summ">Zweryfikuj podpis .su3.</string>
+    <string name="pref_itpd_limits">Ograniczenia</string>
+    <string name="pref_itpd_limits_transittunnels_summ">Zmien maksymalna ilosc tuneli tranzytowych. Domyslnie 2500.</string>
+    <string name="pref_itpd_limits_openfiles_summ">Ogranicz ilosc deskryptorow plikow (0 - zastosuj ograniczenie systemowe).</string>
+    <string name="pref_itpd_limits_coresize_summ">Maksymalna wielkosc corefile w Kb (0 - zastosuj ograniczenie systemowe).</string>
+    <string name="pref_itpd_limits_ntcpsoft_summ">Prog rozpoczecia probabilsitycznego cofania sesji ntcp(0 - zastosuj ograniczenie systemowe).</string>
+    <string name="pref_itpd_limits_ntcphard_summ">Maksymalna ilosc sesji ntcp (0 - zastosuj ograniczenie systemowe).</string>
+    <string name="pref_itpd_addressbook_defaulturl_summ">Subskrybcja URL ksiazki adresowej dla ustawien poczatkowych.</string>
+    <string name="pref_itpd_addressbook_subscriptions_summ">URL subskrybcji ksiaki adresowej.</string>
+    <string name="pref_itpd_not_exist">Ustawienie nie istnieje w i2pd.conf!</string>
+    <string name="pref_itpd_current_events">Obecne zdarzenia:</string>
+
+    <string name="helper_dialog_title">Info</string>
+    <string name="helper_after_install">Gratulacje! Mozesz zastosowac te narzedzia aby miec szybki dostep
+        bez ograniczen do wszystkich stron. Uruchom DNSCrypt z lub bez Tora oraz I2P (ustawienia w Fast Mode). Mozesz tez uzyc
+        te narzedzia do zwiekszenia prywatnosci. Uruchom Tor z lub bez I2P (Tryb Enhanced Privacy Mode).</string>
+    <string name="helper_dnscrypt">(Fast Mode)\n Twoj ruch DNS jest teraz szyfrowany. Sprobuj uzyc innych serwerow
+        majacych dodatkowe wlasnosci. MENU->Ustawienia Szybkie->Wybierz serwery DNSCrypt.</string>
+    <string name="helper_dnscrypt_tor">(Fast Mode)\n Ruch DNS jest szyfrowany. Masz dostep do stron ONION
+        z kazdej aplikacji. Mozesz dodac strony i aplikacje MENU->Ustawienia szybkie->Wybierz strony web, aplikacje
+        by odblokowac ich otwieranie przez siec Tor bez ograniczen.</string>
+    <string name="helper_dnscrypt_tor_privacy">(Enhanced Privacy Mode)\n Ruch DNS jest szyfrowany. Masz dostep do stron ONION
+        z kazdej aplikacji. Maozesz dodac strony i aplikacje w MENU->Ustawienia szybkie->Wyklucz strony web, Wyklucz aplikacje
+        aby pomijaly TORa. Calosc pozostalego ruchu odbywa sie przez Tor. Wszystkie ine polaczenia sa blokowane.</string>
+    <string name="helper_dnscrypt_itpd">Ruch DNS jest szyfrowany. Masz dostep do stron I2P z kazdej aplikacji.</string>
+    <string name="helper_dnscrypt_tor_itpd">Ruch DNS jest szyfrowany. Masz dostep do stron ONION i I2P
+        z kazdej aplikacji</string>
+    <string name="helper_tor">(Enhanced Privacy Mode)\n Masz dostep do stron ONION z kazdej aplikacji.
+        Caly ruch sieciowy odbywa sie przez Tor. Mozesz dodac strony, aplikacje do MENU->Szybkie Ustawienia->Wyklucz strony, Wyklucz Aplikacje
+        by pomijaly Tor. Wszystkie inne polaczenia beda blokowane.</string>
+    <string name="helper_tor_itpd">(Enhanced Privacy Mode)\n Masz dostep do stron ONION
+        z kazdej aplikacji. Caly ruch sieciowy odywa sie przez Tor. Mozesz dodac strony i aplikacje do MENU->Szybkie Ustawienia->Wyklucz strony, Wyklucz Aplikacje
+        by pomijaly Tor. Masz dostep do sieci I2P tylko przez proxy SOCKS lub HTTP . Caly inny ruch jest blokowany.</string>
+    <string name="helper_itpd">Masz dostep do scieci I2P tylko przez proxy SOCKS lub HTTP.</string>
+    <string name="helper_dnscrypt_stopped">Wyglada na to ze system android wylaczyl DNS Crypt.
+        Twoje polaczenie z siecia zostalo przywrocone. Szprawdz ustawienia urzadzenia!</string>
+    <string name="helper_tor_stopped">Wyglada na to ze system android wylaczyl Tor.
+        Twoje polaczenie z siecia zostalo przywrocone. Szprawdz ustawienia urzadzenia!</string>
+    <string name="helper_itpd_stopped">Wyglada ze system android wylaczyl I2P. sprawdz ustawienia urzadzenia!</string>
+    <string name="helper_dnscrypt_no_internet">Wyglada ze InviZible Pro NIE MOZE polaczyc sie z siecia.
+        Prosze sprawdzic reguly FIREWALLa. Prosze zzwolic na polaczenie InviZible Pro oraz aplikacji z uprawnieniami ROOTa.</string>
+    <string name="helper_tor_use_bridges">Wyglada ze Tor NIE MOZE polaczyc sie z siecia.
+        Twoj ISP moze blokowac polaczenie. Mozesz sprobowac uzyc mostka. UStawienia w MENU -> Szybkie ustawienia -> Pomosty</string>
+    <string name="action_mode_child_lock">Child Lock</string>
+    <string name="action_mode_dialog_message_lock">Mozesz zablokowac dostep do ustawien aplikacji. Wprowadz haslo lub uzyj poprzedniego.</string>
+    <string name="action_mode_dialog_message_unlock">Wprowadz haslo.</string>
+    <string name="action_mode_dialog_wrong_pass">Bledne haslo!</string>
+    <string name="action_mode_dialog_unlocked">Ustawienia odblokowane</string>
+    <string name="action_mode_dialog_locked">Ustawienia zablokowane</string>
+    <string name="action_mode_hotspot">Punkt Dostepu</string>
+
+    <string name="help_activity_save_logs">Zapisz logi</string>
+    <string name="help_activity_path">Sciezka do logow:</string>
+    <string name="help_activity_logs_saved">Logi zapisane. Wyslij InvizibleLogs.txt do developera. Logi znajduja sie w folderze:</string>
+
+    <string name="update_core_title">Aktualizacja</string>
+    <string name="update_core_message">Jest dostepna aktualizacje niektorych moduloow InviZible.         Czy chcesz aktualizowac? Aktualizacja nadpisze ustawienia modulow!</string>
+    <string name="update_core_yes">Aktualizacja</string>
+    <string name="update_core_no">Pozniej</string>
+    <string name="update_core_not_show_again">Nie pytaj ponownie</string>
+    <string name="update_core_restart">Prosze uruchomic ponownie InviZible Pro i dokonczyc instalacje!         Po instalacji ponownie ustaw Punkt Dostepu, jesli go uzywasz!</string>
+
+    <string name="update_notification">Sciagam plik</string>
+    <string name="update_interrupt_notification">Sciaganie zostalo zatrzymane</string>
+    <string name="cancel_download">Anuluj sciaganie</string>
+    <string name="update_new_version">Nowa wersja:</string>
+    <string name="update_ipro_has_apdate">Jest dostepna nowa wersja InviZible Pro. Czy chcesz ja sciagnac i wykonac aktualizacje?</string>
+    <string name="update_dnscrypt_has_apdate">Jest dostepna aktualizacja DNSCrypt. Czy chcesz ja sciagnac i wykonac aktualizacje?</string>
+    <string name="update_tor_has_apdate">Jest dostepna aktualizacja Tora. Czy chcesz ja sciagnac i wykonac aktualizacje?</string>
+    <string name="update_itpd_has_apdate">Jest dostepna aktualizacja Purple I2P. Czy chcesz ja sciagnac i wykonac aktualizacje?</string>
+    <string name="update_checking_title">Sprawdzam aktualizacje</string>
+    <string name="update_checking_message">Prosze czekac, sprawdzam aktualizacje.</string>
+    <string name="update_check_warning">Serwer aktualizacji jest czasowo niedostepny. Prosze sprobowac  pozniej.</string>
+    <string name="update_check_warning_menu">Serwer aktualizacji jest niedostepny.</string>
+    <string name="update_check_fault">Blad sprawdzania aktualizacji.</string>
+    <string name="update_check_no_update">Brak dostepnych aktualizacji.</string>
+    <string name="update_last_check">Ostatnio sprawdzono:</string>
+    <string name="update_found">Znaleziono aktualizacje.</string>
+    <string name="update_installed">Aktualizacje zostaly zainstalowane.</string>
+    <string name="update_over_three_activations">Wyglada ze juz aktywowales 3 kopie InviZible z tym kodem. Jesli to blad, skontaktuj sie z developerem.</string>
+    <string name="update_wrong_code">Wyglada ze Twoj kod PRO jest bledny. Skontaktuj sie z deweloperem.</string>
+    <string name="update_over_five_times">Dzisiaj sprawdziles aktualizacje 5 razy. Sprawdz ponownie pozniej.</string>
+
+    <string name="verifier_error">Chyba to nie jest oficjalna wersja InviZible. Uwazaj!</string>
+    <string name="only_for_pro">Tylko wersja PRO</string>
+    <string name="donate">Dotacja</string>
+    <string name="donate_project">Projekt InviZible Pro wymaga Twojego wsparcia. Prosze odwiedz strone dotacji lub wprowadz otrzymany kod rejestracyjny.</string>
+    <string name="donate_button">Odwiedz</string>
+    <string name="enter_code_button">Wprowadz kod</string>
+    <string name="enter_code">wprowadz kod</string>
+    <string name="thanks_for_donate">Projekt InviZible Pro Project i jego Autor wyrazaja podziekowania
+        za wsparcie. Czy chcialbys pobrac i wykonac upgrade do wersji PRO?</string>
+</resources>
