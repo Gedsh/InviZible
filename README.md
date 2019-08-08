@@ -85,10 +85,21 @@ There is no support for building and developing things by yourself.
 
 To build **InviZible Pro** please use **Android Studio**.
 
+If you see something like this:
+_Illegal character in opaque part at index 2: C:\KStore\keystore.properties_
+
+Please comment lines of the settings.gradle file in the project root, as shown below:
+
+```bash
+include ':tordnscrypt'
+//Please comment below if you are not the project owner
+//project(':tordnscrypt').buildFileName = 'owner.gradle'
+```
+
 It is expected that you can solve build problems yourself, so there is no support for building. 
 If you cannot build yourself, there are prebuilt versions of **InviZible Pro** available [here](https://invizible.net/ru/downloads).
 
-For application signing you can use your own signature. But without original signature you will see warning about it's. 
+For application signing you can use your own signature. But without the original signature, you will see a warning about this. 
 All functions will work as with original signature in any case.
 
 The source code presented in this repository is intended primarily for investigation, but not for repetition. Because of wrong coding style that improves with time.

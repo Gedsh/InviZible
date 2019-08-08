@@ -1,1 +1,3 @@
 include ':tordnscrypt'
+//Please comment below if you are not the project owner
+//project(':tordnscrypt').buildFileName = 'owner.gradle'

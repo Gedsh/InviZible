@@ -1,16 +1,37 @@
 apply plugin: 'com.android.application'
 
+def keystorePropertiesFile = file("C:\\KStore\\keystore.properties")
+def keystoreProperties = new Properties()
+keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+
 android {
     compileSdkVersion 28
 
 
     flavorDimensions "version", "processor"
 
+    signingConfigs {
+        stablesign {
+            storeFile file("C:\\KStore\\pan_alexander.jks")
+            storePassword keystoreProperties['storePassword']
+            keyAlias keystoreProperties['keySAlias']
+            keyPassword keystoreProperties['keySPassword']
+        }
+
+        betasign {
+            storeFile file("C:\\KStore\\pan_alexander.jks")
+            storePassword keystoreProperties['storePassword']
+            keyAlias keystoreProperties['keyBAlias']
+            keyPassword keystoreProperties['keyBPassword']
+        }
+    }
+
     productFlavors {
         lite {
             applicationId "pan.alexander.tordnscrypt.stable"
             versionName "2.0.0"
             dimension = 'version'
+            signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
         }
 
@@ -18,6 +39,7 @@ android {
             applicationId "pan.alexander.tordnscrypt.stable"
             versionName "2.0.0"
             dimension = 'version'
+            signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
         }
 
@@ -25,6 +47,7 @@ android {
             applicationId "pan.alexander.tordnscrypt"
             versionName "0.2.8"
             dimension = 'version'
+            signingConfig signingConfigs.betasign
             resValue 'string', 'package_name', applicationId
         }
 
