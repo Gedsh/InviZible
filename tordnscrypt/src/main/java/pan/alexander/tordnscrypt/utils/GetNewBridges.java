@@ -430,6 +430,16 @@ public class GetNewBridges {
                                    // commandResult.show(activity.getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
                                 }
                             });
+                        } else if (!keyWordBridge && !wrongImageCode) {
+                            activity.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (dialogPleaseWait!=null)
+                                        dialogPleaseWait.dismiss();
+                                    Toast.makeText(activity, "Tor Project web site error!",Toast.LENGTH_LONG).show();
+                                    Log.e(LOG_TAG,"Tor Project web site error");
+                                }
+                            });
                         }
                         in.close();
                     } else {
@@ -481,7 +491,7 @@ public class GetNewBridges {
                 FragmentManager fm = activity.getFragmentManager();
                 PreferencesTorBridges frgPreferencesTorBridges = (PreferencesTorBridges) fm.findFragmentByTag("PreferencesTorBridges");
                 if (frgPreferencesTorBridges!=null) {
-                    frgPreferencesTorBridges.addRequestedBridges(bridges);
+                    frgPreferencesTorBridges.readCurrentCustomBridges(bridges);
                 } else {
                     Toast.makeText(activity, "Unable to save bridges!",Toast.LENGTH_LONG).show();
                 }
