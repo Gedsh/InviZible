@@ -93,11 +93,6 @@
             android:theme="@style/AppTheme" />
         <activity android:name=".AboutActivity" />
 
-        <receiver
-            android:name=".SettingsReceiver"
-            android:enabled="true"
-            android:exported="false" />
-
         <service
             android:name=".utils.GetIPsJobService"
             android:enabled="true"
