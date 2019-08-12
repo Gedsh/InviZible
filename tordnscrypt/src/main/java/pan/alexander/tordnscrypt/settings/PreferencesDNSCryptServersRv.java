@@ -47,6 +47,8 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.utils.FileOperations;
 import pan.alexander.tordnscrypt.utils.NoRootService;
 import pan.alexander.tordnscrypt.utils.NotificationHelper;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -95,6 +97,7 @@ public class PreferencesDNSCryptServersRv extends Fragment {
             dnsServerSDNS = getArguments().getStringArrayList("dnsServerSDNS");
             dnscrypt_proxy_toml = getArguments().getStringArrayList("dnscrypt_proxy_toml");
             dnscrypt_servers_current = getArguments().getStringArrayList("dnscrypt_servers");
+
 
             assert dnscrypt_servers_current != null;
         } else {
@@ -196,9 +199,7 @@ public class PreferencesDNSCryptServersRv extends Fragment {
         if(list_dns_servers.size()==0)
             return;
 
-        //Toast.makeText(getActivity(), sb.toString(), Toast.LENGTH_SHORT).show();
         StringBuilder dnscrypt_servers = new StringBuilder();
-        StringBuilder dnscrypt_proxy_toml_new = new StringBuilder();
         dnscrypt_servers.append("[\"");
         for(int i = 0; i < list_dns_servers.size(); i++){
             if (list_dns_servers.get(i).checked) {
@@ -214,35 +215,33 @@ public class PreferencesDNSCryptServersRv extends Fragment {
 
         new PrefManager(getActivity()).setStrPref("DNSCrypt Servers",dnscrypt_servers.toString());
 
-        for (String str:dnscrypt_proxy_toml){
+        for (int i=0; i<dnscrypt_proxy_toml.size();i++){
+            String str = dnscrypt_proxy_toml.get(i);
             if(str.contains("server_names")){
                 String strTemp = str;
                 str = str.replaceFirst("\\[.+]",dnscrypt_servers.toString());
                 if(strTemp.equals(str))
                     return;
+                dnscrypt_proxy_toml.set(i,str);
+                break;
             }
-            str = str.replace("\"","\\\"");
-            dnscrypt_proxy_toml_new.append(str).append((char)10);
         }
-        //Toast.makeText(getActivity(), dnscrypt_servers, Toast.LENGTH_LONG).show();
+
+        FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml",dnscrypt_proxy_toml, SettingsActivity.public_resolvers_md_tag);
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
         boolean runDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot",true);
         boolean dnsCryptRunning = new PrefManager(getActivity()).getBoolPref("DNSCrypt Running");
         String[] commandsEcho;
         if (runDNSCryptWithRoot) {
-            commandsEcho = new String[] { busyboxPath+ "echo 'overwrite dnscrypt-proxy.toml'",
-                    busyboxPath+ "echo \"" + dnscrypt_proxy_toml_new.toString()+"\" > "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml",
-                    busyboxPath+ "chmod 644 "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml",
-                    busyboxPath+ "sleep 1",
+            commandsEcho = new String[] {
                     busyboxPath+ "killall dnscrypt-proxy; if [[ $? -eq 0 ]] ; then "+busyboxPath+
-                            "nohup " + dnscryptPath+" --config "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml >/dev/null 2>&1 & fi"};
+                            "nohup " + dnscryptPath+" --config "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml >/dev/null 2>&1 & fi"
+            };
         } else {
-            commandsEcho = new String[] { busyboxPath+ "echo 'overwrite dnscrypt-proxy.toml'",
-                    busyboxPath+ "echo \"" + dnscrypt_proxy_toml_new.toString()+"\" > "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml",
-                    busyboxPath+ "chmod 644 "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml",
-                    busyboxPath+ "sleep 1",
-                    busyboxPath+ "killall dnscrypt-proxy"};
+            commandsEcho = new String[] {
+                    busyboxPath+ "killall dnscrypt-proxy"
+            };
 
             if (dnsCryptRunning)
                 runDNSCryptNoRoot();
@@ -254,7 +253,6 @@ public class PreferencesDNSCryptServersRv extends Fragment {
         intent.putExtra("Commands",rootCommands);
         intent.putExtra("Mark", RootExecService.SettingsActivityMark);
         RootExecService.performAction(getActivity(),intent);
-        Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
 
         if (callback!=null)
             callback.onServersChange();
@@ -296,7 +294,7 @@ public class PreferencesDNSCryptServersRv extends Fragment {
             }
 
             for (int i = 0; i < dnscrypt_servers_current.size(); i++) {
-                if (!this.name.isEmpty() && this.name.equals(dnscrypt_servers_current.get(i)))
+                if (!this.name.isEmpty() && this.name.equals(dnscrypt_servers_current.get(i).trim()))
                     this.checked = true;
             }
 

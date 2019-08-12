@@ -29,9 +29,13 @@ import android.preference.PreferenceManager;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.utils.FileOperations;
 import pan.alexander.tordnscrypt.utils.NoRootService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
@@ -39,10 +43,10 @@ import pan.alexander.tordnscrypt.utils.RootExecService;
 
 public class PreferencesITPDFragment extends PreferenceFragment implements Preference.OnPreferenceChangeListener {
 
-    static ArrayList<String> key_itpd;
-    static ArrayList<String> val_itpd;
-    static ArrayList<String> key_itpd_orig;
-    static ArrayList<String> val_itpd_orig;
+    ArrayList<String> key_itpd;
+    ArrayList<String> val_itpd;
+    ArrayList<String> key_itpd_orig;
+    ArrayList<String> val_itpd_orig;
     String appDataDir;
     String itpdPath;
     String busyboxPath;
@@ -101,19 +105,20 @@ public class PreferencesITPDFragment extends PreferenceFragment implements Prefe
         busyboxPath = pathVars.busyboxPath;
     }
 
-    public void onDestroy() {
-        super.onDestroy();
+    public void onStop() {
+        super.onStop();
 
-        StringBuilder itpd_conf = new StringBuilder();
+        List<String> itpd_conf = new LinkedList<>();
         boolean isChanged = false;
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
         if (key_itpd.indexOf("subscriptions")>=0)
             val_itpd.set(key_itpd.indexOf("subscriptions"),sp.getString("subscriptions",""));
 
+
+
         for (int i=0;i<key_itpd.size();i++){
             if(!(key_itpd_orig.get(i).equals(key_itpd.get(i))&&val_itpd_orig.get(i).equals(val_itpd.get(i)))&&!isChanged){
-                //Toast.makeText(getActivity(),key_itpd.get(i)+" "+key_itpd.get(i-1),Toast.LENGTH_LONG).show();
                 isChanged = true;
             }
 
@@ -154,33 +159,29 @@ public class PreferencesITPDFragment extends PreferenceFragment implements Prefe
             }
 
             if(val_itpd.get(i).isEmpty()){
-                itpd_conf.append(key_itpd.get(i)).append((char)10);
+                itpd_conf.add(key_itpd.get(i));
             } else {
-                String val = val_itpd.get(i).replace("\"","\\\"");
-                itpd_conf.append(key_itpd.get(i)).append(" = ").append(val).append((char)10);
+                itpd_conf.add(key_itpd.get(i) + " = " + val_itpd.get(i));
             }
 
         }
 
         if(!isChanged) return;
 
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean rnI2PDWithRoot = shPref.getBoolean("swUseModulesRoot",false);
+        FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/i2pd/i2pd.conf",itpd_conf, SettingsActivity.itpd_conf_tag);
+
+        boolean rnI2PDWithRoot = sp.getBoolean("swUseModulesRoot",false);
         boolean itpdRunning = new PrefManager(getActivity()).getBoolPref("I2PD Running");
         String[] commandsEcho;
         if (rnI2PDWithRoot) {
-            commandsEcho = new String[] { busyboxPath+ "echo 'overwrite itpd.conf'",
-                    busyboxPath+ "echo \"" + itpd_conf.toString()+"\" > "+appDataDir+"/app_data/i2pd/i2pd.conf",
-                    busyboxPath+ "chmod 644 "+appDataDir+"/app_data/i2pd/i2pd.conf",
-                    busyboxPath+ "sleep 1",
+            commandsEcho = new String[] {
                     busyboxPath+ "killall i2pd; if [[ $? -eq 0 ]] ; " +
-                            "then "+itpdPath+" --conf "+appDataDir+"/app_data/i2pd/i2pd.conf --datadir /data/media/0/i2pd & fi"};
+                            "then "+itpdPath+" --conf "+appDataDir+"/app_data/i2pd/i2pd.conf --datadir /data/media/0/i2pd & fi"
+            };
         } else {
-            commandsEcho = new String[] { busyboxPath+ "echo 'overwrite itpd.conf'",
-                    busyboxPath+ "echo \"" + itpd_conf.toString()+"\" > "+appDataDir+"/app_data/i2pd/i2pd.conf",
-                    busyboxPath+ "chmod 644 "+appDataDir+"/app_data/i2pd/i2pd.conf",
-                    busyboxPath+ "sleep 1",
-                    busyboxPath+ "killall i2pd"};
+            commandsEcho = new String[] {
+                    busyboxPath+ "killall i2pd"
+            };
             if (itpdRunning)
                 runITPDNoRoot();
         }
@@ -192,7 +193,6 @@ public class PreferencesITPDFragment extends PreferenceFragment implements Prefe
         intent.putExtra("Commands",rootCommands);
         intent.putExtra("Mark", RootExecService.SettingsActivityMark);
         RootExecService.performAction(getActivity(),intent);
-        Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
     }
 
     @Override

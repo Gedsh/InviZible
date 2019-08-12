@@ -19,7 +19,6 @@ package pan.alexander.tordnscrypt.settings;
 */
 
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -29,11 +28,11 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.RootExecService;
-
+import pan.alexander.tordnscrypt.utils.FileOperations;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -41,7 +40,7 @@ import pan.alexander.tordnscrypt.utils.RootExecService;
 public class ShowLogFragment extends android.app.Fragment implements View.OnClickListener {
 
     ArrayList<String> log_file;
-    String[] commandsDel;
+    String file_path;
     TextView tvLogFile;
     String appDataDir;
     String busyboxPath;
@@ -57,6 +56,7 @@ public class ShowLogFragment extends android.app.Fragment implements View.OnClic
         setRetainInstance(true);
 
         log_file = getArguments().getStringArrayList("log_file");
+        file_path = getArguments().getString("path");
     }
 
     @Override
@@ -77,27 +77,20 @@ public class ShowLogFragment extends android.app.Fragment implements View.OnClic
         tvLogFile = getActivity().findViewById(R.id.tvLogFile);
         getActivity().findViewById(R.id.btnDeleteLog).setOnClickListener(this);
 
-        if(log_file.get(0).equals("cat dnscrypt_proxy_qery.log")){
+        if(file_path.contains("query.log")){
             getActivity().setTitle(R.string.title_dnscrypt_query_log);
-            commandsDel = new String[] { busyboxPath+ "echo 'del dnscrypt_proxy_query.log'",
-                    busyboxPath+ "echo '' > "+appDataDir+"/cache/query.log",
-                    busyboxPath+ "chmod 755 "+appDataDir+"/cache/query.log"};
-        }
-        if(log_file.get(0).equals("cat dnscrypt_proxy_nx.log")){
+        } else if(file_path.contains("nx.log")){
             getActivity().setTitle(R.string.title_dnscrypt_nx_log);
-            commandsDel = new String[] { "echo 'del dnscrypt_proxy_nx.log'",
-                    busyboxPath+ "echo '' > "+appDataDir+"/cache/nx.log",
-                    busyboxPath+ "chmod 755 "+appDataDir+"/cache/nx.log"};
         }
 
-
-        StringBuilder sb = new StringBuilder();
-        if (log_file.size()>2){
-            for (int i=1;i<log_file.size();i++){
+        if (log_file.size() > 1){
+            StringBuilder sb = new StringBuilder();
+            for (int i=0;i<log_file.size();i++){
                 sb.append(log_file.get(i)).append((char)10);
             }
             tvLogFile.setText(sb);
         } else {
+            tvLogFile.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
             tvLogFile.setText(R.string.dnscrypt_empty_log);
         }
 
@@ -105,14 +98,12 @@ public class ShowLogFragment extends android.app.Fragment implements View.OnClic
 
     @Override
     public void onClick(View v) {
-        if(v.getId()==R.id.btnDeleteLog){
-            RootCommands rootCommands  = new RootCommands(commandsDel);
-            Intent intent = new Intent(getActivity(), RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands",rootCommands);
-            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
-            RootExecService.performAction(getActivity(),intent);
+        List<String> emptyString = new LinkedList<>();
+        emptyString.add("");
 
+        if(v.getId()==R.id.btnDeleteLog){
+            FileOperations.writeToTextFile(getActivity(),file_path,emptyString,"ignored");
+            tvLogFile.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
             tvLogFile.setText(R.string.dnscrypt_empty_log);
         }
 

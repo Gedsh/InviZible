@@ -36,18 +36,13 @@ import android.provider.Settings;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.TopFragment;
+import pan.alexander.tordnscrypt.utils.FileOperations;
 import pan.alexander.tordnscrypt.utils.NoRootService;
 import pan.alexander.tordnscrypt.utils.NotificationHelper;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -62,11 +57,14 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class PreferencesCommonFragment extends PreferenceFragment implements Preference.OnPreferenceChangeListener {
-    String torTransPort;
-    BufferedReader br = null;
-    FileInputStream fstream = null;
-    PrintWriter writer;
+public class PreferencesCommonFragment extends PreferenceFragment
+        implements Preference.OnPreferenceChangeListener,FileOperations.OnFileOperationsCompleteListener {
+    private String torTransPort;
+    private String appDataDir;
+    private String iptablesPath;
+    private String itpdHttpProxyPort;
+    private boolean allowTorTether = false;
+    private boolean allowITPDtether = false;
 
     public PreferencesCommonFragment() {
         // Required empty public constructor
@@ -77,9 +75,9 @@ public class PreferencesCommonFragment extends PreferenceFragment implements Pre
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Load the preferences from an XML resource
-
         addPreferencesFromResource(R.xml.preferences_common);
+
+        FileOperations.setOnFileOperationCompleteListener(this);
     }
 
     @Override
@@ -106,7 +104,10 @@ public class PreferencesCommonFragment extends PreferenceFragment implements Pre
         pref_common_block_http.setOnPreferenceChangeListener(this);
 
         PathVars pathVars = new PathVars(getActivity());
+        appDataDir = pathVars.appDataDir;
         torTransPort = pathVars.torTransPort;
+        iptablesPath = pathVars.iptablesPath;
+        itpdHttpProxyPort = pathVars.itpdHttpProxyPort;
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
         if (shPref.getBoolean("pref_common_tor_route_all",false)) {
@@ -156,7 +157,8 @@ public class PreferencesCommonFragment extends PreferenceFragment implements Pre
                 }
                 break;
             case "pref_common_tor_tethering":
-                allowTorTethering(Boolean.valueOf(newValue.toString()));
+                allowTorTether = Boolean.valueOf(newValue.toString());
+                readTorConf();
                 if (new PrefManager(getActivity()).getBoolPref("Tor Running")) {
                     TopFragment.NotificationDialogFragment commandResult =
                             TopFragment.NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_tor).toString());
@@ -164,7 +166,8 @@ public class PreferencesCommonFragment extends PreferenceFragment implements Pre
                 }
                 break;
             case "pref_common_itpd_tethering":
-                allowITPDTethering(Boolean.valueOf(newValue.toString()));
+                allowITPDtether = Boolean.valueOf(newValue.toString());
+                readITPDConf();
                 if (new PrefManager(getActivity()).getBoolPref("I2PD Running")) {
                     TopFragment.NotificationDialogFragment commandResult =
                             TopFragment.NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_itpd).toString());
@@ -198,14 +201,28 @@ public class PreferencesCommonFragment extends PreferenceFragment implements Pre
         return true;
     }
 
-    private void allowTorTethering(boolean allow) {
+    private void allowTorTethering(List<String> torConf) {
 
         boolean itpdTethering = PreferenceManager.getDefaultSharedPreferences(getActivity()).getBoolean("pref_common_itpd_tethering",false);
-        PathVars pathVars = new PathVars(getActivity());
-        String iptablesPath = pathVars.iptablesPath;
-        String itpdHttpProxyPort = pathVars.itpdHttpProxyPort;
+
         String[] tetheringCommands;
-        if (!allow) {
+
+        String line;
+        for (int i=0; i<torConf.size(); i++) {
+            line = torConf.get(i);
+            if (line.contains("TransPort")) {
+                if (allowTorTether) {
+                    line = "TransPort " + "0.0.0.0:" + torTransPort;
+                } else {
+                    line = line.trim().replaceAll(" .+:"," ");
+                }
+                torConf.set(i,line);
+            }
+        }
+
+        FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/tor/tor.conf",torConf,"ignored");
+
+        if (!allowTorTether) {
             if (!itpdTethering) {
                 tetheringCommands = new String[]{
                         iptablesPath + "iptables -t nat -F tordnscrypt_prerouting",
@@ -229,70 +246,37 @@ public class PreferencesCommonFragment extends PreferenceFragment implements Pre
             intent.putExtra("Mark", RootExecService.NullMark);
             RootExecService.performAction(getActivity(),intent);
         }
+    }
 
+    public void readTorConf() {
+        FileOperations.readTextFile(getActivity(),appDataDir+"/app_data/tor/tor.conf", SettingsActivity.tor_conf_tag);
+    }
 
-        try {
-            String appUID = new PrefManager(getActivity()).getStrPref("appUID");
-            pathVars = new PathVars(getActivity());
-            String filePath = pathVars.appDataDir+"/app_data/tor/tor.conf";
-            String[] commands = {pathVars.busyboxPath + "chown -R " + appUID + "." + appUID + " " + filePath,
-                    "restorecon " + filePath};
-            RootCommands rootCommands = new RootCommands(commands);
-            Intent intent = new Intent(getActivity(), RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands",rootCommands);
-            intent.putExtra("Mark", RootExecService.NullMark);
-            RootExecService.performAction(getActivity(),intent);
+    private void allowITPDTethering(List<String> itpdConf) {
 
+        String[] tetheringCommands;
+        boolean torTethering = PreferenceManager.getDefaultSharedPreferences(getActivity()).getBoolean("pref_common_tor_tethering",false);
 
-            File f = new File(filePath);
-            if (f.isFile() && f.setReadable(true) && f.setWritable(true))
-                Log.i(LOG_TAG,"PreferencesCommonFragment allowTorTethering Pass");
-
-            fstream = new FileInputStream(filePath);
-            br = new BufferedReader(new InputStreamReader(fstream));
-            List<String> lines = new LinkedList<>();
-
-            for(String tmp; (tmp = br.readLine()) != null;) {
-                if (allow && tmp.contains("TransPort")) {
-                    tmp = "TransPort " + "0.0.0.0:" + torTransPort;
-                } else if (!allow && tmp.contains("TransPort")) {
-                    tmp = tmp.replaceAll(" .+:"," ");
+        String line;
+        String head = "";
+        for (int i=0; i<itpdConf.size(); i++) {
+            line = itpdConf.get(i);
+            if (line.matches("\\[.+]"))
+                head = line.replace("[","").replace("]","");
+            if (head.equals("httpproxy") && line.contains("address")) {
+                if (allowITPDtether) {
+                    line = line.replace("127.0.0.1","0.0.0.0");
+                } else {
+                    line = line.replace("0.0.0.0","127.0.0.1");
                 }
-                lines.add(tmp);
-            }
-            if (fstream!= null)fstream.close();
-            fstream = null;
-            if (br != null)br.close();
-            br = null;
-
-            writer = new PrintWriter(filePath);
-            for (String line:lines)
-                writer.println(line);
-            writer.close();
-            writer = null;
-
-        } catch (IOException e) {
-            Log.e(LOG_TAG,"PreferencesCommonFragment allowTorTethering Exception " + e.getMessage());
-        } finally {
-            try {
-                if (fstream!= null)fstream.close();
-                if (br != null)br.close();
-                if (writer != null)writer.close();
-            } catch (IOException ex) {
-                Log.e(LOG_TAG,"PreferencesCommonFragment allowTorTethering Error when close file" + ex.getMessage());
+                itpdConf.set(i,line);
             }
         }
 
-    }
+        FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/i2pd/i2pd.conf",itpdConf,"ignored");
 
-    private void allowITPDTethering(boolean allow) {
-        PathVars pathVars = new PathVars(getActivity());
-        String iptablesPath = pathVars.iptablesPath;
-        String itpdHttpProxyPort = pathVars.itpdHttpProxyPort;
-        String[] tetheringCommands;
-        boolean torTethering = PreferenceManager.getDefaultSharedPreferences(getActivity()).getBoolean("pref_common_tor_tethering",false);
-        if (!allow) {
+
+        if (!allowITPDtether) {
             if (!torTethering) {
                 tetheringCommands = new String[]{
                         iptablesPath + "iptables -t nat -F tordnscrypt_prerouting",
@@ -314,64 +298,35 @@ public class PreferencesCommonFragment extends PreferenceFragment implements Pre
             intent.putExtra("Mark", RootExecService.NullMark);
             RootExecService.performAction(getActivity(),intent);
         }
+    }
 
+    public void readITPDConf() {
+        FileOperations.readTextFile(getActivity(),appDataDir+"/app_data/i2pd/i2pd.conf", SettingsActivity.itpd_conf_tag);
+    }
 
-        try {
-            pathVars = new PathVars(getActivity());
-            String appUID = new PrefManager(getActivity()).getStrPref("appUID");
-            String filePath = pathVars.appDataDir+"/app_data/i2pd/i2pd.conf";
-            String[] commands = {pathVars.busyboxPath + "chown -R " + appUID + "." + appUID + " " + filePath,
-                    "restorecon " + filePath};
-            RootCommands rootCommands = new RootCommands(commands);
-            Intent intent = new Intent(getActivity(), RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands",rootCommands);
-            intent.putExtra("Mark", RootExecService.NullMark);
-            RootExecService.performAction(getActivity(),intent);
+    @Override
+    public void OnFileOperationComplete(String currentFileOperation, String path, final String tag) {
 
-
-            File f = new File(filePath);
-            if (f.isFile() && f.setReadable(true) && f.setWritable(true))
-                Log.i(LOG_TAG,"PreferencesCommonFragment allowITPDTethering Pass");
-
-            fstream = new FileInputStream(filePath);
-            br = new BufferedReader(new InputStreamReader(fstream));
-            List<String> lines = new LinkedList<>();
-            String head = "";
-
-            for(String tmp; (tmp = br.readLine()) != null;) {
-                if (tmp.matches("\\[.+]"))
-                head = tmp.replace("[","").replace("]","");
-                if (head.equals("httpproxy") && allow && tmp.contains("address")) {
-                    tmp = tmp.replace("127.0.0.1","0.0.0.0");
-                } else if (head.equals("httpproxy") && !allow&& tmp.contains("address")) {
-                    tmp = tmp.replace("0.0.0.0","127.0.0.1");
+        if (FileOperations.fileOperationResult && currentFileOperation.equals(FileOperations.readTextFileCurrentOperation)) {
+            final List<String> lines = FileOperations.linesListMap.get(path);
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (lines!=null) {
+                        switch (tag) {
+                            case SettingsActivity.tor_conf_tag:
+                                allowTorTethering(lines);
+                                break;
+                            case SettingsActivity.itpd_conf_tag:
+                                allowITPDTethering(lines);
+                                break;
+                        }
+                    }
                 }
-                lines.add(tmp);
-            }
-            if (fstream!= null)fstream.close();
-            fstream = null;
-            if (br != null)br.close();
-            br = null;
+            });
 
-            writer = new PrintWriter(filePath);
-            for (String line:lines)
-                writer.println(line);
-            writer.close();
-            writer = null;
 
-        } catch (IOException e) {
-            Log.e(LOG_TAG,"PreferencesCommonFragment allowITPDTethering Exception " + e.getMessage());
-        } finally {
-            try {
-                if (fstream!= null)fstream.close();
-                if (br != null)br.close();
-                if (writer != null)writer.close();
-            } catch (IOException ex) {
-                Log.e(LOG_TAG,"PreferencesCommonFragment allowITPDTethering Error when close file" + ex.getMessage());
-            }
         }
-
     }
 
     public static class InfoNotificationProtectService extends DialogFragment {
@@ -403,5 +358,9 @@ public class PreferencesCommonFragment extends PreferenceFragment implements Pre
         }
     }
 
-
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        FileOperations.deleteOnFileOperationCompleteListener();
+    }
 }
