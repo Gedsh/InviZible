@@ -220,6 +220,9 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
                                     if (notificationHelper != null) {
                                         notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
                                     }
+
+                                    FileOperations.deleteOnFileOperationCompleteListener();
+
                                     /////////////////////////TO RENEW MODULES VERSIONS/////////////////////////////////////
                                     getActivity().recreate();
                                 }
@@ -338,7 +341,8 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
         runI2PDWithRoot = shPref.getBoolean("swUseModulesRoot",false);
 
-        FileOperations.setOnFileOperationCompleteListener(this);
+        if (!new PrefManager(getActivity()).getBoolPref("I2PD Installed"))
+            FileOperations.setOnFileOperationCompleteListener(this);
 
         /////////////////////////// HOTSPOT///////////////////////////////////
         tethering = new Tethering(getActivity());
@@ -796,6 +800,9 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
                         if (notificationHelper != null) {
                             notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
                         }
+
+                        FileOperations.deleteOnFileOperationCompleteListener();
+
                         /////////////////////////TO RENEW MODULES VERSIONS/////////////////////////////////////
                         getActivity().recreate();
                     }
