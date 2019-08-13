@@ -48,9 +48,11 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import pan.alexander.tordnscrypt.utils.ApManager;
+import pan.alexander.tordnscrypt.utils.FileOperations;
 import pan.alexander.tordnscrypt.utils.LangAppCompatActivity;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Registration;
+import pan.alexander.tordnscrypt.utils.RootExecService;
 
 import static pan.alexander.tordnscrypt.TopFragment.LOG_TAG;
 
@@ -113,6 +115,11 @@ public class MainActivity extends LangAppCompatActivity
 
     @Override
     public void onBackPressed() {
+        if (RootExecService.lockStartStop) {
+            Toast.makeText(this,R.string.please_wait,Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
@@ -180,7 +187,6 @@ public class MainActivity extends LangAppCompatActivity
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         try {
-            //String saved_pass = new String(Base64.decode(new PrefManager(getApplicationContext()).getStrPref("passwd"),16));
             if (childLockActive) {
                 menu.findItem(R.id.item_unlock).setIcon(R.drawable.ic_lock_white_24dp);
             } else {
@@ -195,8 +201,6 @@ public class MainActivity extends LangAppCompatActivity
         if (apState == ApManager.apStateON) {
             menu.findItem(R.id.item_hotspot).setIcon(R.drawable.ic_wifi_tethering_green_24dp);
             if (!new PrefManager(this).getBoolPref("APisON")) {
-                //Tethering tethering = new Tethering(this);
-                //tethering.overrideAFWallDNSrules();
                 boolean dnsCryptRunning = new PrefManager(this).getBoolPref("DNSCrypt Running");
                 boolean torRunning = new PrefManager(this).getBoolPref("Tor Running");
                 boolean itpdRunning = new PrefManager(this).getBoolPref("I2PD Running");
@@ -235,7 +239,6 @@ public class MainActivity extends LangAppCompatActivity
 
                 try {
                     String saved_pass = new String(Base64.decode(new PrefManager(getApplicationContext()).getStrPref("passwd"),16));
-                    //Toast.makeText(getApplicationContext(),saved_pass,Toast.LENGTH_LONG).show();
                     if (saved_pass.contains("-l-o-c-k-e-d")) {
                         childUnlock(item);
                     } else {
@@ -512,6 +515,8 @@ public class MainActivity extends LangAppCompatActivity
         if (modernDialog!=null) {
             modernDialog.dismiss();
         }
+
+        FileOperations.removeAllOnFileOperationsListeners();
     }
 
 
