@@ -296,6 +296,7 @@ public class UnlockTorIpsFrag extends Fragment{
                     new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")){
                 if (!routeAllThroughTorDevice) {
                     FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/tor/unlock",ipsToUnlock,"ignored");
+                    Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
                     commandsSaveIPs = new String[] {
                             "ip6tables -D OUTPUT -j DROP || true",
                             "ip6tables -I OUTPUT -j DROP",
@@ -316,6 +317,7 @@ public class UnlockTorIpsFrag extends Fragment{
                             busyboxPath+ "cat "+appDataDir+"/app_data/tor/unlockApps | while read var1; do "+iptablesPath+"iptables -t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j REDIRECT --to-port "+torTransPort+"; done"};
                 } else {
                     FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/tor/clearnet",ipsToUnlock,"ignored");
+                    Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
                     commandsSaveIPs = new String[] {
                             "ip6tables -D OUTPUT -j DROP || true",
                             "ip6tables -I OUTPUT -j DROP",
@@ -371,8 +373,10 @@ public class UnlockTorIpsFrag extends Fragment{
             } else if (new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("Tor Running")){
                 if (!routeAllThroughTorDevice) {
                     FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/tor/unlock",ipsToUnlock,"ignored");
+                    Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
                 } else {
                     FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/tor/clearnet",ipsToUnlock,"ignored");
+                    Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
                     commandsSaveIPs = new String[] {
                             "ip6tables -D OUTPUT -j DROP || true",
                             "ip6tables -I OUTPUT -j DROP",
@@ -425,8 +429,10 @@ public class UnlockTorIpsFrag extends Fragment{
             } else {
                 if (!routeAllThroughTorDevice) {
                     FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/tor/unlock",ipsToUnlock,"ignored");
+                    Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
                 } else {
                     FileOperations.writeToTextFile(getActivity(),appDataDir + "/app_data/tor/clearnet",ipsToUnlock,"ignored");
+                    Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
                 }
             }
             //////////////////////////////////////////////////////////////////////////////////////
@@ -435,8 +441,10 @@ public class UnlockTorIpsFrag extends Fragment{
         } else if (deviceOrTether.equals("tether")) {
             if (!routeAllThroughTorTether) {
                 FileOperations.writeToTextFile(getActivity(),appDataDir + "/app_data/tor/unlock_tether",ipsToUnlock,"ignored");
+                Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
             } else {
                 FileOperations.writeToTextFile(getActivity(),appDataDir + "/app_data/tor/clearnet_tether",ipsToUnlock,"ignored");
+                Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
             }
         }
 
@@ -459,7 +467,6 @@ public class UnlockTorIpsFrag extends Fragment{
         intent.putExtra("Commands",rootCommands);
         intent.putExtra("Mark", RootExecService.SettingsActivityMark);
         RootExecService.performAction(getActivity(),intent);
-        Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -545,7 +552,6 @@ public class UnlockTorIpsFrag extends Fragment{
         void setActive(int position, boolean active){
             HostIP hip = unlockHostIP.get(position);
             hip.active = active;
-            //unlockHostIP.set(position,hip);
         }
 
         class HostIPViewHolder extends RecyclerView.ViewHolder {
@@ -598,7 +604,6 @@ public class UnlockTorIpsFrag extends Fragment{
                             break;
                         case R.id.llHostIP:
                             editHostIPDialog(getAdapterPosition());
-                            //Toast.makeText(getActivity(),String.valueOf(getAdapterPosition()),Toast.LENGTH_SHORT).show();
                             break;
                     }
 
