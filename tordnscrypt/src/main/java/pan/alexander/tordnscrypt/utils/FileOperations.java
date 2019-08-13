@@ -56,7 +56,7 @@ public class FileOperations {
     public static boolean fileOperationResult = false;
     public static Map<String,List<String>> linesListMap = new HashMap<>();
     private static OnFileOperationsCompleteListener callback;
-    public static Stack<OnFileOperationsCompleteListener> stackCallbacks;
+    private static Stack<OnFileOperationsCompleteListener> stackCallbacks;
     public static String moveBinaryFileCurrentOperation = "pan.alexander.tordnscrypt.moveBinaryFile";
     public static String copyBinaryFileCurrentOperation = "pan.alexander.tordnscrypt.copyBinaryFile";
     public static String deleteFileCurrentOperation = "pan.alexander.tordnscrypt.deleteFile";
@@ -87,6 +87,7 @@ public class FileOperations {
     public static void moveBinaryFile(final Context context, final String inputPath, final String inputFile, final String outputPath, final String tag) {
 
         Runnable runnable = new Runnable() {
+            @SuppressLint("SetWorldReadable")
             @Override
             public void run() {
                 fileOperationResult = false;
@@ -145,6 +146,12 @@ public class FileOperations {
                         if (callback!=null && !tag.equals("ignored"))
                             callback.OnFileOperationComplete(moveBinaryFileCurrentOperation, outputPath + "/" + inputFile, tag);
                         return;
+                    }
+
+                    if (tag.contains("executable")) {
+                        if (newFile.setReadable(true, false) && newFile.setWritable(true) && newFile.setExecutable(true, false)) {
+                            Log.e(LOG_TAG, "Chmod exec file fault " + outputPath + "/" + inputFile);
+                        }
                     }
 
                     // delete the unwanted file
@@ -502,16 +509,25 @@ public class FileOperations {
         if (FileOperations.callback != null)
             stackCallbacks.push(FileOperations.callback);
 
-        FileOperations.callback = callback;
+        if (callback != null)
+            FileOperations.callback = callback;
     }
 
     public static void deleteOnFileOperationCompleteListener() {
-        if (stackCallbacks.empty()) {
-            FileOperations.callback = null;
-        } else {
-            FileOperations.callback = stackCallbacks.pop();
+        if (stackCallbacks != null) {
+            if (stackCallbacks.empty()) {
+                callback = null;
+            } else {
+                callback = stackCallbacks.pop();
+            }
         }
+    }
 
+    public static void removeAllOnFileOperationsListeners() {
+        if (callback != null)
+            callback = null;
+        if (stackCallbacks != null && !stackCallbacks.empty())
+            FileOperations.stackCallbacks.removeAllElements();
     }
 
     public interface OnFileOperationsCompleteListener {
