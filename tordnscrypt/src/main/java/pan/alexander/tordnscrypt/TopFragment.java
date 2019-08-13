@@ -104,7 +104,6 @@ public class TopFragment extends Fragment implements View.OnClickListener {
         appProcVersion = getString(R.string.appProcVersion);
 
         Chkroot ckroot = new Chkroot();
-        //ckroot.setContext(getActivity());
         ckroot.execute();
     }
 
@@ -152,29 +151,16 @@ public class TopFragment extends Fragment implements View.OnClickListener {
     //Check if root available
     @SuppressLint("StaticFieldLeak")
     private class Chkroot extends AsyncTask<Void, Void, Void> {
-        //dialogProgres = null;
-        //private Context context = null;
         private boolean suAvailable = false;
-
-
-        /*public Chkroot setContext(Context context) {
-            this.context = context;
-            return this;
-        }*/
 
         @Override
         protected void onPreExecute() {
-            // We're creating a progress dialog here because we want the user to wait.
-            // If in your app your user can just continue on with clicking other things,
-            // don't do the dialog thing.
-
             dialogInterface = modernProgressDialog();
         }
 
         @SuppressWarnings("deprecation")
         @Override
         protected Void doInBackground(Void... params) {
-            // Let's do some SU stuff
             try {
                 suAvailable = Shell.SU.available();
             } catch (Exception e) {
@@ -287,7 +273,7 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                             int currentDNSCryptVersion = Integer.parseInt(currentDNSCryptVersionStr.replaceAll("\\D+", ""));
                             int currentTorVersion = Integer.parseInt(currentTorVersionStr.replaceAll("\\D+", ""));
                             int currentITPDVersion = Integer.parseInt(currentITPDVersionStr.replaceAll("\\D+", ""));
-                            //Toast.makeText(getActivity(),currentDNSCryptVersion + " " + currentTorVersion + " " + currentITPDVersion,Toast.LENGTH_LONG).show();
+
                             if ((currentDNSCryptVersion < Integer.parseInt(DNSCryptVersion.replaceAll("\\D+", ""))
                                     || currentTorVersion < Integer.parseInt(TorVersion.replaceAll("\\D+", ""))
                                     || currentITPDVersion < Integer.parseInt(ITPDVersion.replaceAll("\\D+", ""))
@@ -358,7 +344,6 @@ public class TopFragment extends Fragment implements View.OnClickListener {
             new PrefManager(getActivity()).setBoolPref("rootOK",false);
             TextView tvDeviceRoot=view.findViewById(R.id.tvDeviceRoot);
             tvDeviceRoot.setText(R.string.no_root);
-            //tvDeviceRoot.setTextColor(getResources().getColor(android.R.color.holo_red_light));
 
             DialogFragment dialogCheckRoot = new CheckRoot();
             dialogCheckRoot.show(getFragmentManager(), "dialogCheckRoot");
@@ -380,7 +365,6 @@ public class TopFragment extends Fragment implements View.OnClickListener {
             new PrefManager(getActivity()).setBoolPref("bbOK",false);
             TextView tvBBox=view.findViewById(R.id.tvBBox);
             tvBBox.setText(R.string.no_bb);
-            //tvBBox.setTextColor(getResources().getColor(android.R.color.holo_red_light));
             return;
         }
 
@@ -398,7 +382,6 @@ public class TopFragment extends Fragment implements View.OnClickListener {
             new PrefManager(getActivity()).setBoolPref("bbOK",false);
             TextView tvBBox=view.findViewById(R.id.tvBBox);
             tvBBox.setText(R.string.no_bb);
-           // tvBBox.setTextColor(getResources().getColor(android.R.color.holo_red_light));
 
         }
     }
@@ -452,7 +435,6 @@ public class TopFragment extends Fragment implements View.OnClickListener {
 
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            // Use the Builder class for convenient dialog construction
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setMessage(R.string.install_title)
                     .setTitle(R.string.install)
@@ -469,7 +451,6 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                             getActivity().finish();
                         }
                     });
-            // Create the AlertDialog object and return it
             return builder.create();
         }
     }
@@ -483,7 +464,6 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                 FragmentTransaction ft = manager.beginTransaction();
                 ft.add(this, tag);
                 ft.commitAllowingStateLoss();
-                //ft.commit();
             } catch (IllegalStateException e) {
                 Log.w(LOG_TAG, "Top Fragment CheckRoot Exception"+e.getMessage() + " " + e.getCause());
             }
@@ -491,7 +471,6 @@ public class TopFragment extends Fragment implements View.OnClickListener {
 
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            // Use the Builder class for convenient dialog construction
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setMessage(R.string.check_root)
                     .setTitle(R.string.sorry)
@@ -501,7 +480,6 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                             getActivity().finish();
                         }
                     });
-            // Create the AlertDialog object and return it
             return builder.create();
         }
     }
@@ -511,7 +489,6 @@ public class TopFragment extends Fragment implements View.OnClickListener {
 
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            // Use the Builder class for convenient dialog construction
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setMessage(R.string.install_bb)
                     .setTitle(R.string.warning)
@@ -527,7 +504,6 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                             dismiss();
                         }
                     });
-            // Create the AlertDialog object and return it
             return builder.create();
         }
     }
@@ -647,7 +623,6 @@ public class TopFragment extends Fragment implements View.OnClickListener {
         return builder.show();
     }
 
-    //Dialog modules update available
     public static class UpdateCore extends DialogFragment {
 
         @Override
@@ -656,7 +631,6 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                 FragmentTransaction ft = manager.beginTransaction();
                 ft.add(this, tag);
                 ft.commitAllowingStateLoss();
-                //ft.commit();
             } catch (IllegalStateException e) {
                 Log.w("TPDCLogs", "UpdateCore Dialog Exception "+e.getMessage() + " " + e.getCause());
             }
@@ -664,7 +638,6 @@ public class TopFragment extends Fragment implements View.OnClickListener {
 
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            // Use the Builder class for convenient dialog construction
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setMessage(R.string.update_core_message)
                     .setTitle(R.string.update_core_title)

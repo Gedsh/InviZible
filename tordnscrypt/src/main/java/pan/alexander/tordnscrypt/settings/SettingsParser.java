@@ -65,8 +65,7 @@ public class SettingsParser implements FileOperations.OnFileOperationsCompleteLi
             } else if (tag.equals(SettingsActivity.rules_tag)) {
                 readRules(path);
             }
-        } else if (FileOperations.fileOperationResult && currentFileOperation.equals(FileOperations.writeToTextFileCurrentOperation)
-                && !tag.equals("ignored")) {
+        } else if (FileOperations.fileOperationResult && currentFileOperation.equals(FileOperations.writeToTextFileCurrentOperation)) {
             settingsActivity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {

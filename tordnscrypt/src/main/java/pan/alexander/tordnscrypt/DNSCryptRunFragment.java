@@ -389,13 +389,6 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
         }
     }
 
-
-    @Override
-    public void onDestroy() {
-        //if (br!=null) Objects.requireNonNull(getActivity()).unregisterReceiver(br);
-        super.onDestroy();
-    }
-
     @Override
     public void onClick(View v) {
         if (RootExecService.lockStartStop) {
@@ -437,7 +430,6 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
             if (runDNSCryptWithRoot) {
                 startCommandDNSCrypt = busyboxPath+ "nohup " + dnscryptPath+" --config "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml >/dev/null 2>&1 &";
-                //startCommandDNSCrypt = dnscryptPath+" --child --config "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml </dev/null >/dev/null 2>&1";
                 killall = busyboxPath + "killall dnscrypt-proxy";
                 restoreUID = busyboxPath + "chown -R 0.0 " + appDataDir + "/app_data/dnscrypt-proxy";
                 restoreSEContext = "";
@@ -560,7 +552,6 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                             torSitesBypassNatUDP,
                             torAppsBypassNatTCP,
                             torAppsBypassNatUDP,
-                            //iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --syn -j DNAT --to-destination 127.0.0.1:" + torTransPort,
                             iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p tcp -j DNAT --to-destination 127.0.0.1:"+torTransPort,
                             iptablesPath + "iptables -N tordnscrypt",
                             iptablesPath + "iptables -A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
@@ -702,7 +693,6 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                         torSitesBypassNatUDP,
                         torAppsBypassNatTCP,
                         torAppsBypassNatUDP,
-                        //iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --syn -j DNAT --to-destination 127.0.0.1:" + torTransPort,
                         iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -j DNAT --to-destination 127.0.0.1:" + torTransPort,
                         iptablesPath + "iptables -N tordnscrypt",
                         iptablesPath + "iptables -A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
@@ -778,11 +768,6 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
         } else {
             busyboxNative = "";
         }
-        /*if (new PrefManager(getActivity()).getBoolPref("bbOK")) {
-            busyboxPath = "busybox ";
-        } else {
-            busyboxPath = appDataDir+"/app_bin/busybox ";
-        }*/
 
         File cacheDir = getActivity().getCacheDir();
         if (!cacheDir.isDirectory()) {

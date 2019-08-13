@@ -324,8 +324,6 @@ public class PreferencesCommonFragment extends PreferenceFragment
                     }
                 }
             });
-
-
         }
     }
 

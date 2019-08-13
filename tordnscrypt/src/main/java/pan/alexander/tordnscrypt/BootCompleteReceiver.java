@@ -208,10 +208,6 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                 if (!routeAllThroughTor) {
                     commandsStart = new String[] {
                             "ip6tables -I OUTPUT -j DROP",
-                            //iptablesPath+ "iptables -t nat -F tordnscrypt_nat_output",
-                            //iptablesPath+ "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
-                            //iptablesPath+ "iptables -F tordnscrypt",
-                            //iptablesPath+ "iptables -D OUTPUT -j tordnscrypt",
                             busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/DnsCrypt.log",
                             busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/Tor.log",
                             busyboxPath+ "sleep 1",
@@ -253,10 +249,6 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                 } else {
                     commandsStart = new String[] {
                             "ip6tables -I OUTPUT -j DROP",
-                            //iptablesPath+ "iptables -t nat -F tordnscrypt_nat_output",
-                            //iptablesPath+ "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
-                            //iptablesPath+ "iptables -F tordnscrypt",
-                            //iptablesPath+ "iptables -D OUTPUT -j tordnscrypt",
                             busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/DnsCrypt.log",
                             busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/Tor.log",
                             busyboxPath+ "sleep 1",
@@ -339,10 +331,6 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                 if (!routeAllThroughTor) {
                     commandsStart = new String[] {
                             "ip6tables -I OUTPUT -j DROP",
-                            //iptablesPath+ "iptables -t nat -F tordnscrypt_nat_output",
-                            //iptablesPath+ "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
-                            //iptablesPath+ "iptables -F tordnscrypt",
-                            //iptablesPath+ "iptables -D OUTPUT -j tordnscrypt",
                             busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/DnsCrypt.log",
                             busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/Tor.log",
                             busyboxPath+ "sleep 1",
@@ -380,10 +368,6 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                 } else {
                     commandsStart = new String[] {
                             "ip6tables -I OUTPUT -j DROP",
-                            //iptablesPath+ "iptables -t nat -F tordnscrypt_nat_output",
-                            //iptablesPath+ "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
-                            //iptablesPath+ "iptables -F tordnscrypt",
-                            //iptablesPath+ "iptables -D OUTPUT -j tordnscrypt",
                             busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/DnsCrypt.log",
                             busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/Tor.log",
                             busyboxPath+ "sleep 1",
@@ -463,10 +447,6 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
                 commandsStart = new String[] {
                         "ip6tables -I OUTPUT -j DROP",
-                        //iptablesPath+ "iptables -t nat -F tordnscrypt_nat_output",
-                        //iptablesPath+ "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
-                        //iptablesPath+ "iptables -F tordnscrypt",
-                        //iptablesPath+ "iptables -D OUTPUT -j tordnscrypt",
                         busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/DnsCrypt.log",
                         busyboxPath+ "sleep 1",
                         restoreUIDDNS,
@@ -511,10 +491,6 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
                 commandsStart = new String[] {
                         "ip6tables -I OUTPUT -j DROP",
-                        //iptablesPath+ "iptables -t nat -F tordnscrypt_nat_output",
-                        //iptablesPath+ "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
-                        //iptablesPath+ "iptables -F tordnscrypt",
-                        //iptablesPath+ "iptables -D OUTPUT -j tordnscrypt",
                         busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/Tor.log",
                         busyboxPath+ "sleep 1",
                         restoreUIDTor,
@@ -579,10 +555,6 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
                 commandsStart = new String[] {
                         "ip6tables -I OUTPUT -j DROP",
-                        //iptablesPath+ "iptables -t nat -F tordnscrypt_nat_output",
-                        //iptablesPath+ "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
-                        //iptablesPath+ "iptables -F tordnscrypt",
-                        //iptablesPath+ "iptables -D OUTPUT -j tordnscrypt",
                         busyboxPath+ "sleep 1",
                         restoreUIDITPD,
                         restoreSEContextITPD,
@@ -604,10 +576,6 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
                 commandsStart = new String[] {
                         "ip6tables -I OUTPUT -j DROP",
-                        //iptablesPath+ "iptables -t nat -F tordnscrypt_nat_output",
-                        //iptablesPath+ "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
-                        //iptablesPath+ "iptables -F tordnscrypt",
-                        //iptablesPath+ "iptables -D OUTPUT -j tordnscrypt",
                         busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/Tor.log",
                         busyboxPath+ "sleep 1",
                         restoreUIDTor,
@@ -678,10 +646,6 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
                 commandsStart = new String[] {
                         "ip6tables -I OUTPUT -j DROP",
-                        //iptablesPath+ "iptables -t nat -F tordnscrypt_nat_output",
-                        //iptablesPath+ "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
-                        //iptablesPath+ "iptables -F tordnscrypt",
-                        //iptablesPath+ "iptables -D OUTPUT -j tordnscrypt",
                         busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/DnsCrypt.log",
                         busyboxPath+ "sleep 1",
                         restoreUIDDNS,

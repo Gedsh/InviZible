@@ -316,7 +316,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
         torHTTPTunnelPort = pathVars.torHTTPTunnelPort;
         itpdSOCKSPort = pathVars.itpdSOCKSPort;
         torTransPort = pathVars.torTransPort;
-        //dnsCryptFallbackRes = pathVars.dnsCryptFallbackRes;
         torDNSPort = pathVars.torDNSPort;
         torVirtAdrNet = pathVars.torVirtAdrNet;
         dnscryptPath = pathVars.dnscryptPath;
@@ -329,11 +328,9 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
         IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
         IntentFilter intentFilterTopFrg = new IntentFilter(TopFragment.TOP_BROADCAST);
-        //IntentFilter intentFilterDNSFrg = new IntentFilter(DNSCryptRunFragment.DNSCrypt_BROADCAST);
         if(getActivity()!=null){
             getActivity().registerReceiver(br,intentFilterBckgIntSer);
             getActivity().registerReceiver(br,intentFilterTopFrg);
-            //getActivity().registerReceiver(br,intentFilterDNSFrg);
         }
 
         if(new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("Tor Running"))
@@ -360,7 +357,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        //new PrefManager(getActivity()).setBoolPref("INet Available",false);
     }
 
     @Override
@@ -503,7 +499,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
-                            //iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p udp -d "+dnsCryptFallbackRes+" --dport 53 -j ACCEPT",
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d " + torVirtAdrNet + " -j DNAT --to-destination 127.0.0.1:" + torTransPort,
@@ -549,7 +544,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
-                            //iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p udp -d "+dnsCryptFallbackRes+" --dport 53 -j ACCEPT",
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -m owner --uid-owner $TOR_UID -j RETURN",
@@ -560,7 +554,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                             torSitesBypassNatUDP,
                             torAppsBypassNatTCP,
                             torAppsBypassNatUDP,
-                            //iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --syn -j DNAT --to-destination 127.0.0.1:" + torTransPort,
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -j DNAT --to-destination 127.0.0.1:" + torTransPort,
                             iptablesPath + "iptables -N tordnscrypt",
                             iptablesPath + "iptables -A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
@@ -642,7 +635,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                         torSitesBypassNatUDP,
                         torAppsBypassNatTCP,
                         torAppsBypassNatUDP,
-                        //iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --syn -j DNAT --to-destination 127.0.0.1:" + torTransPort,
                         iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -j DNAT --to-destination 127.0.0.1:" + torTransPort,
                         iptablesPath + "iptables -N tordnscrypt",
                         iptablesPath + "iptables -A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
@@ -698,7 +690,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                         iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
                         iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
                         iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
-                        //iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p udp -d "+dnsCryptFallbackRes+" --dport 53 -j ACCEPT",
                         iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
                         iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
                         blockHttpRuleNatTCP,
@@ -776,12 +767,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
     }
 
     public void installTor(){
-
-        /*if (new PrefManager(getActivity()).getBoolPref("bbOK")) {
-            busyboxPath = "busybox ";
-        } else {
-            busyboxPath = appDataDir+"/app_bin/busybox ";
-        }*/
 
         String path = getActivity().getCacheDir()+"/Backup.arch";
 

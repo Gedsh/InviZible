@@ -62,15 +62,6 @@ public class Tethering {
         blockHotspotHttp = shPref.getBoolean("pref_common_block_http",false);
         boolean apIsOn = new PrefManager(context).getBoolPref("APisON");
 
-        /*if (new PrefManager(context).getBoolPref("APisON")
-        && !torTethering && !itpdTethering) {
-            overrideAFWallDNSrules();
-        } else if (shPref.getBoolean("pref_common_tethering_autostart",false)
-                && !new PrefManager(context).getBoolPref("bootCompleteForTether")) {
-            overrideAFWallDNSrules();
-            new PrefManager(context).setBoolPref("bootCompleteForTether",true);
-        }*/
-
         String torSitesBypassPreroutingTCP = "";
         String torSitesBypassForwardTCP = "";
         String torSitesBypassPreroutingUDP = "";
@@ -143,7 +134,6 @@ public class Tethering {
                         blockHttpRulePreroutingUDP,
                         torSitesBypassPreroutingTCP,
                         torSitesBypassPreroutingUDP,
-                        //iptablesPath + "iptables -t nat -A tordnscrypt_prerouting -i wlan0 -p tcp ! -d 192.168.43.0/24 --syn -j REDIRECT --to-ports "+ torTransPort,
                         iptablesPath + "iptables -t nat -A tordnscrypt_prerouting -i wlan0 -p tcp ! -d 192.168.43.0/24 -j REDIRECT --to-ports "+ torTransPort,
                         iptablesPath + "iptables -A tordnscrypt_forward -p udp --dport 53 -j RETURN",
                         iptablesPath + "iptables -A tordnscrypt_forward -p tcp --dport 53 -j RETURN",
@@ -277,7 +267,6 @@ public class Tethering {
                         blockHttpRulePreroutingUDP,
                         torSitesBypassPreroutingTCP,
                         torSitesBypassPreroutingUDP,
-                        //iptablesPath + "iptables -t nat -A tordnscrypt_prerouting -i wlan0 -p tcp ! -d 192.168.43.0/24 --syn -j REDIRECT --to-ports "+ torTransPort,
                         iptablesPath + "iptables -t nat -A tordnscrypt_prerouting -i wlan0 -p tcp ! -d 192.168.43.0/24 -j REDIRECT --to-ports "+ torTransPort,
                         iptablesPath + "iptables -A tordnscrypt_forward -p tcp --dport 53 -j RETURN",
                         iptablesPath + "iptables -A tordnscrypt_forward -p udp --dport 53 -j RETURN",
@@ -373,7 +362,6 @@ public class Tethering {
                         blockHttpRulePreroutingUDP,
                         torSitesBypassPreroutingTCP,
                         torSitesBypassPreroutingUDP,
-                        //iptablesPath + "iptables -t nat -A tordnscrypt_prerouting -i wlan0 -p tcp ! -d 192.168.43.0/24 --syn -j REDIRECT --to-ports "+ torTransPort,
                         iptablesPath + "iptables -t nat -A tordnscrypt_prerouting -i wlan0 -p tcp ! -d 192.168.43.0/24 -j REDIRECT --to-ports "+ torTransPort,
                         iptablesPath + "iptables -A tordnscrypt_forward -p tcp --dport 53 -j RETURN",
                         iptablesPath + "iptables -A tordnscrypt_forward -p udp --dport 53 -j RETURN",
@@ -422,7 +410,6 @@ public class Tethering {
                         blockHttpRulePreroutingUDP,
                         torSitesBypassPreroutingTCP,
                         torSitesBypassPreroutingUDP,
-                        //iptablesPath + "iptables -t nat -A tordnscrypt_prerouting -i wlan0 -p tcp ! -d 192.168.43.0/24 --syn -j REDIRECT --to-ports " + torTransPort,
                         iptablesPath + "iptables -t nat -A tordnscrypt_prerouting -i wlan0 -p tcp ! -d 192.168.43.0/24 -j REDIRECT --to-ports "+ torTransPort,
                         iptablesPath + "iptables -A tordnscrypt_forward -p tcp --dport 53 -j RETURN",
                         iptablesPath + "iptables -A tordnscrypt_forward -p udp --dport 53 -j RETURN",
@@ -506,7 +493,6 @@ public class Tethering {
             Runnable runTethering = new Runnable() {
                 @Override
                 public void run() {
-                    //Toast.makeText(context, Arrays.toString(tetheringCommandsFinal),Toast.LENGTH_LONG).show();
                     RootCommands rootCommands = new RootCommands(tetheringCommandsFinal);
                     Intent intent = new Intent(context, RootExecService.class);
                     intent.setAction(RootExecService.RUN_COMMAND);
