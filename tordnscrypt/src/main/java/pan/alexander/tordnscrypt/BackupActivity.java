@@ -145,8 +145,8 @@ public class BackupActivity extends LangAppCompatActivity implements View.OnClic
                         busyboxPath+ "killall i2pd",
                         busyboxPath+ "sleep 5",
                         "cd "+appDataDir,
-                        busyboxPath+ "mkdir -p cache",
-                        busyboxPath+ "chmod -R 755 cache",
+                        //busyboxPath+ "mkdir -p cache",
+                        //busyboxPath+ "chmod -R 755 cache",
                         busyboxPath+ "sleep 1",
                         "app_bin/gnutar -xvzpf "+pathBackup+"/Backup.arch app_bin app_data",
                         busyboxPath+ "sleep 3",
@@ -172,8 +172,8 @@ public class BackupActivity extends LangAppCompatActivity implements View.OnClic
 
                 String[] commandsSave = {
                         "cd "+appDataDir,
-                        busyboxPath+ "mkdir -p cache",
-                        busyboxPath+ "chmod -R 755 cache",
+                        //busyboxPath+ "mkdir -p cache",
+                        //busyboxPath+ "chmod -R 755 cache",
                         busyboxPath+ "sleep 1",
                         busyboxPath+ "mkdir -p "+pathBackup,
                         "app_bin/gnutar -cvzpf "+pathBackup+"/Backup.arch app_bin app_data/dnscrypt-proxy" +
