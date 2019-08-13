@@ -181,15 +181,18 @@ public class RootExecService extends Service {
 
     private void sendResult(List<String> commandsResult, int mark){
 
-        lockStartStop = false;
-
-        if (commandsResult==null || mark==NullMark) return;
+        if (commandsResult==null || mark==NullMark) {
+            lockStartStop = false;
+            return;
+        }
 
         RootCommands comResult = new RootCommands(commandsResult.toArray(new String[0]));
         Intent intent = new Intent(COMMAND_RESULT);
         intent.putExtra("CommandsResult",comResult);
         intent.putExtra("Mark",mark);
         sendBroadcast(intent);
+
+        lockStartStop = false;
     }
 
     @Override
