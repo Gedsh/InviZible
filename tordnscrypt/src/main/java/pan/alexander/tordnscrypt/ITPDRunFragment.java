@@ -181,8 +181,10 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
                             if (tvITPDinfoLog != null)
                                 tvITPDinfoLog.setText("");
 
-                            if (new PrefManager(getActivity()).getBoolPref("I2PD Running")
-                                    && !sb.toString().contains("stopProcess")) {
+                            if ((new PrefManager(getActivity()).getBoolPref("I2PD Running")
+                                    && !sb.toString().contains("stopProcess"))
+                                    || (!new PrefManager(getActivity()).getBoolPref("I2PD Running")
+                                    && sb.toString().contains("startProcess"))) {
                                 Log.e(LOG_TAG,getText(R.string.helper_itpd_stopped).toString());
                                 NotificationHelper  notificationHelper = NotificationHelper.setHelperMessage(
                                         getActivity(),getText(R.string.helper_itpd_stopped).toString(),"itpd_suddenly_stopped");
@@ -419,7 +421,10 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
                         restoreSEContext,
                         startCommandI2PD,
                         busyboxPath + "sleep 7",
-                        busyboxPath + "pgrep -l /i2pd", "echo 'checkITPDRunning'"};
+                        busyboxPath + "pgrep -l /i2pd",
+                        busyboxPath + "echo 'checkITPDRunning'",
+                        busyboxPath + "echo 'startProcess'"
+                };
 
                 tvITPDStatus.setText(R.string.tvITPDStarting);
                 tvITPDStatus.setTextColor(Color.BLUE);
@@ -452,7 +457,10 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
                         restoreSEContext,
                         startCommandI2PD,
                         busyboxPath + "sleep 7",
-                        busyboxPath + "pgrep -l /i2pd", "echo 'checkITPDRunning'"};
+                        busyboxPath + "pgrep -l /i2pd",
+                        busyboxPath + "echo 'checkITPDRunning'",
+                        busyboxPath + "echo 'startProcess'"
+                };
 
                 tvITPDStatus.setText(R.string.tvITPDStarting);
                 tvITPDStatus.setTextColor(Color.BLUE);
@@ -486,7 +494,10 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
                         busyboxPath + "echo 'Beginning of log' > " + appDataDir + "/logs/i2pd.log",
                         startCommandI2PD,
                         busyboxPath + "sleep 7",
-                        busyboxPath + "pgrep -l /i2pd", "echo 'checkITPDRunning'"};
+                        busyboxPath + "pgrep -l /i2pd",
+                        busyboxPath + "echo 'checkITPDRunning'",
+                        busyboxPath + "echo 'startProcess'"
+                };
 
                 tvITPDStatus.setText(R.string.tvITPDStarting);
                 tvITPDStatus.setTextColor(Color.BLUE);
@@ -520,7 +531,9 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
                         busyboxPath + "echo 'Beginning of log' > " + appDataDir + "/logs/i2pd.log",
                         startCommandI2PD,
                         busyboxPath + "sleep 7",
-                        busyboxPath + "pgrep -l /i2pd", "echo 'checkITPDRunning'"};
+                        busyboxPath + "pgrep -l /i2pd",
+                        busyboxPath + "echo 'checkITPDRunning'",
+                        busyboxPath + "echo 'startProcess'"};
 
                 tvITPDStatus.setText(R.string.tvITPDStarting);
                 tvITPDStatus.setTextColor(Color.BLUE);
