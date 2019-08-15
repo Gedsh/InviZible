@@ -106,7 +106,7 @@ public class FileOperations {
 
                     File oldFile = new File(outputPath + "/" + inputFile);
                     if (oldFile.exists()) {
-                        if (!deleteFileInternal(context,outputPath,inputFile)) {
+                        if (deleteFileInternal(context, outputPath, inputFile)) {
                             Log.e(LOG_TAG, "Unable to delete file " + oldFile.toString());
                             return;
                         }
@@ -155,7 +155,7 @@ public class FileOperations {
                     }
 
                     // delete the unwanted file
-                    if (!deleteFileInternal(context,inputPath,inputFile)) {
+                    if (deleteFileInternal(context, inputPath, inputFile)) {
                         Log.e(LOG_TAG, "Unable to delete file " + inputFile);
                         return;
                     }
@@ -204,7 +204,7 @@ public class FileOperations {
 
                     File oldFile = new File(outputPath + "/" + inputFile);
                     if (oldFile.exists()) {
-                        if (!deleteFileInternal(context,outputPath,inputFile)) {
+                        if (deleteFileInternal(context, outputPath, inputFile)) {
                             Log.e(LOG_TAG, "Unable to delete file " + oldFile.toString());
                             return;
                         }
@@ -274,22 +274,22 @@ public class FileOperations {
                         fileOperations.restoreAccess(context, inputPath + "/" + inputFile);
                     } else if (!usedFile.setReadable(true) || !usedFile.setWritable(true)) {
                         Log.e(LOG_TAG, "Unable to chmod file " + inputPath + "/" + inputFile);
-                        return false;
+                        return true;
                     }
                 }
                 if (!usedFile.delete()) {
                     Log.e(LOG_TAG, "Unable to delete file " + usedFile.toString());
-                    return false;
+                    return true;
                 }
             } else {
                 Log.e(LOG_TAG, "Unable to delete file. No file " + usedFile.toString());
-                return false;
+                return true;
             }
         } catch (Exception e) {
             Log.e(LOG_TAG,"deleteFileInternal function fault " + e.getMessage());
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
 
     public static void deleteFile(final Context context, final String inputPath, final String inputFile, final String tag) {
