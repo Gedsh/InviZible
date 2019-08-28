@@ -419,8 +419,6 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
 
                 commandsI2PD = new String[]{
                         killall,
-                        "ip6tables -D OUTPUT -j DROP || true",
-                        "ip6tables -I OUTPUT -j DROP",
                         busyboxPath + "mkdir -p " + appDataDir + "/i2pd_data",
                         "cd " + appDataDir + "/app_data/i2pd",
                         busyboxPath + "cp -R certificates " + appDataDir + "/i2pd_data",
@@ -453,8 +451,6 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
 
                 commandsI2PD = new String[]{
                         killall,
-                        "ip6tables -D OUTPUT -j DROP || true",
-                        "ip6tables -I OUTPUT -j DROP",
                         busyboxPath + "mkdir -p " + appDataDir + "/i2pd_data",
                         "cd " + appDataDir + "/app_data/i2pd",
                         busyboxPath + "cp -R certificates " + appDataDir + "/i2pd_data",
@@ -486,8 +482,6 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
 
                 commandsI2PD = new String[]{
                         killall,
-                        "ip6tables -D OUTPUT -j DROP || true",
-                        "ip6tables -I OUTPUT -j DROP",
                         busyboxPath + "mkdir -p " + appDataDir + "/i2pd_data",
                         "cd " + appDataDir + "/app_data/i2pd",
                         busyboxPath + "cp -R certificates " + appDataDir + "/i2pd_data",
@@ -520,8 +514,6 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
 
                 commandsI2PD = new String[]{
                         killall,
-                        "ip6tables -D OUTPUT -j DROP || true",
-                        "ip6tables -I OUTPUT -j DROP",
                         busyboxPath + "mkdir -p " + appDataDir + "/i2pd_data",
                         "cd " + appDataDir + "/app_data/i2pd",
                         busyboxPath + "cp -R certificates " + appDataDir + "/i2pd_data",
