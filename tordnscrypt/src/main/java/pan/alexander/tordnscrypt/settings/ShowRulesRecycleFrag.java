@@ -23,6 +23,7 @@ import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
@@ -41,8 +42,14 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.utils.FileOperations;
+import pan.alexander.tordnscrypt.utils.NoRootService;
+import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 
@@ -53,10 +60,10 @@ import pan.alexander.tordnscrypt.utils.RootExecService;
 public class ShowRulesRecycleFrag extends Fragment {
 
     ArrayList<String> rules_file;
+    String file_path;
     ArrayList<Rules> rules_list;
-    StringBuilder others_list;
-    StringBuilder original_rules;
-    String[] commandsEdit={"echo 'Something went wrong'"};
+    ArrayList<String> others_list;
+    ArrayList<String> original_rules;
     String appDataDir;
     String busyboxPath;
 
@@ -72,6 +79,7 @@ public class ShowRulesRecycleFrag extends Fragment {
         setRetainInstance(true);
 
         rules_file = getArguments().getStringArrayList("rules_file");
+        file_path = getArguments().getString("path");
     }
 
 
@@ -90,19 +98,19 @@ public class ShowRulesRecycleFrag extends Fragment {
 
 
         rules_list = new ArrayList<>();
-        others_list = new StringBuilder();
-        original_rules = new StringBuilder();
+        others_list = new ArrayList<>();
+        original_rules = new ArrayList<>();
         String[] lockedItems = {"stun.",".in-addr.arpa","in-adr.arpa",".i2p",".lib",".onion"};
         boolean match;
         boolean active;
         boolean locked;
         boolean subscription;
 
-        for (int i = 1; i < rules_file.size(); i++) {
+        for (int i = 0; i < rules_file.size(); i++) {
             match = !rules_file.get(i).matches("#.*#.*")&&!rules_file.get(i).isEmpty();
             active = !rules_file.get(i).contains("#");
             locked = false;
-            subscription = rules_file.get(0).contains("subscriptions")&&!rules_file.get(i).isEmpty();
+            subscription = file_path.contains("subscriptions")&&!rules_file.get(i).isEmpty();
 
             for (String str:lockedItems){
                 if (rules_file.get(i).matches(".?"+ str +".*")){
@@ -112,19 +120,13 @@ public class ShowRulesRecycleFrag extends Fragment {
             }
             if(match){
                 rules_list.add(new Rules(rules_file.get(i).replace("#",""),active,locked,subscription));
-                original_rules.append(rules_file.get(i)).append((char)10).append((char)10);
+                original_rules.add(rules_file.get(i));
+                original_rules.add("");
             } else if(!rules_file.get(i).isEmpty()) {
-                others_list.append(rules_file.get(i)).append((char)10).append((char)10);
+                others_list.add(rules_file.get(i));
+                others_list.add("");
             }
         }
-
-        /*StringBuilder sb = new StringBuilder();
-        for(int i=0;i<rules_list.size();i++){
-            sb.append(rules_list.get(i).text).append((char)10);
-        }
-        TopFragment.NotificationDialogFragment commandResult = TopFragment.NotificationDialogFragment.newInstance(sb.toString());
-        commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);*/
-
 
         return view;
     }
@@ -141,25 +143,18 @@ public class ShowRulesRecycleFrag extends Fragment {
         final RecyclerView.Adapter mAdapter = new RulesAdapter(rules_list);
         mRecyclerView.setAdapter(mAdapter);
 
-        switch (rules_file.get(0)) {
-            case "cat forwarding_rules.txt":
-                getActivity().setTitle(R.string.title_dnscrypt_forwarding_rules);
-                break;
-            case "cat cloaking_rules.txt":
-                getActivity().setTitle(R.string.title_dnscrypt_cloaking_rules);
-                break;
-            case "cat blacklist.txt":
-                getActivity().setTitle(R.string.title_dnscrypt_blacklist);
-                break;
-            case "cat ip-blacklist.txt":
-                getActivity().setTitle(R.string.title_dnscrypt_ip_blacklist);
-                break;
-            case "cat whitelist.txt":
-                getActivity().setTitle(R.string.title_dnscrypt_whitelist);
-                break;
-            case "subscriptions":
-                getActivity().setTitle(R.string.pref_itpd_addressbook_subscriptions);
-                break;
+        if (file_path.contains("forwarding_rules.txt")) {
+            getActivity().setTitle(R.string.title_dnscrypt_forwarding_rules);
+        } else if (file_path.contains("cloaking_rules.txt")) {
+            getActivity().setTitle(R.string.title_dnscrypt_cloaking_rules);
+        } else if (file_path.contains("blacklist.txt")) {
+            getActivity().setTitle(R.string.title_dnscrypt_blacklist);
+        } else if (file_path.contains("ip-blacklist.txt")) {
+            getActivity().setTitle(R.string.title_dnscrypt_ip_blacklist);
+        } else if (file_path.contains("whitelist.txt")) {
+            getActivity().setTitle(R.string.title_dnscrypt_whitelist);
+        } else if (file_path.contains("subscriptions")) {
+            getActivity().setTitle(R.string.pref_itpd_addressbook_subscriptions);
         }
 
 
@@ -169,7 +164,7 @@ public class ShowRulesRecycleFrag extends Fragment {
         btnAddRule.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                boolean subscription = rules_file.get(0).contains("subscriptions");
+                boolean subscription = file_path.contains("subscriptions");
                 rules_list.add(new Rules("",true,false,subscription));
                 mAdapter.notifyItemInserted(rules_list.size()-1);
                 mRecyclerView.scrollToPosition(rules_list.size() - 1);
@@ -179,66 +174,78 @@ public class ShowRulesRecycleFrag extends Fragment {
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onStop() {
+        super.onStop();
 
-        StringBuilder rules_file_new = new StringBuilder();
+        List<String> rules_file_new = new LinkedList<>();
 
         for (Rules rule:rules_list){
             if(rule.active){
-                rules_file_new.append(rule.text).append((char)10).append((char)10);
+                rules_file_new.add(rule.text);
             } else {
-                rules_file_new.append("#").append(rule.text).append((char)10).append((char)10);
+                rules_file_new.add("#" + rule.text);
+            }
+            rules_file_new.add("");
+        }
+
+        if (rules_file_new.equals(original_rules)) return;
+
+        if (file_path.contains("subscriptions")) {
+            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            StringBuilder sb = new StringBuilder();
+            String str;
+            for (Rules rule:rules_list){
+                if(rule.subscription)
+                    sb.append(rule.text).append(", ");
+            }
+            str = sb.toString().substring(0,sb.length()-2);
+            sp.edit().putString("subscriptions",str).apply();
+        } else {
+            others_list.addAll(rules_file_new);
+            FileOperations.writeToTextFile(getActivity(),file_path,others_list, SettingsActivity.rules_tag);
+        }
+
+        PathVars pathVars = new PathVars(getActivity());
+        String dnscryptPath = pathVars.dnscryptPath;
+        String itpdPath = pathVars.itpdPath;
+
+        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        boolean runDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot",false);
+        boolean dnsCryptRunning = new PrefManager(getActivity()).getBoolPref("DNSCrypt Running");
+        boolean itpdRunning = new PrefManager(getActivity()).getBoolPref("I2PD Running");
+        String[] commandsEcho;
+        if (runDNSCryptWithRoot) {
+            if (file_path.contains("subscriptions")) {
+                commandsEcho = new String[]{
+                        busyboxPath + "killall i2pd; if [[ $? -eq 0 ]] ; " +
+                                "then " + itpdPath + " --conf " + appDataDir + "/app_data/i2pd/i2pd.conf --datadir /data/media/0/i2pd & fi"
+                };
+            } else {
+                commandsEcho = new String[] {
+                        busyboxPath+ "killall dnscrypt-proxy; if [[ $? -eq 0 ]] ; then "+busyboxPath+
+                                "nohup " + dnscryptPath+" --config "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml >/dev/null 2>&1 & fi"
+                };
+            }
+        } else {
+            if (file_path.contains("subscriptions")) {
+                commandsEcho = new String[] {
+                        busyboxPath+ "killall i2pd"
+                };
+            } else {
+                commandsEcho = new String[] {
+                        busyboxPath+ "killall dnscrypt-proxy"
+                };
+            }
+
+            if (itpdRunning && file_path.contains("subscriptions")) {
+                runITPDNoRoot();
+            } else if (dnsCryptRunning) {
+                runDNSCryptNoRoot();
             }
         }
 
-        if (rules_file_new.toString().equals(original_rules.toString())) return;
 
-        PreferencesDNSFragment.isChanged = true;
-
-        //Toast.makeText(getActivity(),rules_file_new.toString(),Toast.LENGTH_LONG).show();
-
-
-        switch (rules_file.get(0)) {
-            case "cat forwarding_rules.txt":
-                commandsEdit = new String[]{"echo 'restart dnscrypt-proxy'",
-                        busyboxPath+ "echo \"" + others_list.toString() + rules_file_new.toString() + "\" > "+appDataDir+"/app_data/dnscrypt-proxy/forwarding-rules.txt",
-                        busyboxPath+ "chmod 644 "+appDataDir+"/app_data/dnscrypt-proxy/forwarding-rules.txt"};
-                break;
-            case "cat cloaking_rules.txt":
-                commandsEdit = new String[]{"echo 'restart dnscrypt-proxy'",
-                        busyboxPath+ "echo \"" + others_list.toString() + rules_file_new.toString() + "\" > "+appDataDir+"/app_data/dnscrypt-proxy/cloaking-rules.txt",
-                        busyboxPath+ "chmod 644 "+appDataDir+"/app_data/dnscrypt-proxy/cloaking-rules.txt"};
-                break;
-            case "cat blacklist.txt":
-                commandsEdit = new String[]{"echo 'restart dnscrypt-proxy'",
-                        busyboxPath+ "echo \"" + others_list.toString() + rules_file_new.toString() + "\" > "+appDataDir+"/app_data/dnscrypt-proxy/blacklist.txt",
-                        busyboxPath+ "chmod 644 "+appDataDir+"/app_data/dnscrypt-proxy/blacklist.txt"};
-                break;
-            case "cat ip-blacklist.txt":
-                commandsEdit = new String[]{"echo 'restart dnscrypt-proxy'",
-                        busyboxPath+ "echo \"" + others_list.toString() + rules_file_new.toString() + "\" > "+appDataDir+"/app_data/dnscrypt-proxy/ip-blacklist.txt",
-                        busyboxPath+ "chmod 644 "+appDataDir+"/app_data/dnscrypt-proxy/ip-blacklist.txt"};
-                break;
-            case "cat whitelist.txt":
-                commandsEdit = new String[]{"echo 'restart dnscrypt-proxy'",
-                        busyboxPath+ "echo \"" + others_list.toString() + rules_file_new.toString() + "\" > "+appDataDir+"/app_data/dnscrypt-proxy/whitelist.txt",
-                        busyboxPath+ "chmod 644 "+appDataDir+"/app_data/dnscrypt-proxy/whitelist.txt"};
-                break;
-            case "subscriptions":
-                SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
-                StringBuilder sb = new StringBuilder();
-                String str;
-                for (Rules rule:rules_list){
-                    if(rule.subscription && !rule.text.contains("subscriptions"))
-                        sb.append(rule.text).append(", ");
-                }
-                str = sb.toString().substring(0,sb.length()-2);
-                sp.edit().putString("subscriptions",str).apply();
-                return;
-        }
-
-        RootCommands rootCommands  = new RootCommands(commandsEdit);
+        RootCommands rootCommands  = new RootCommands(commandsEcho);
         Intent intent = new Intent(getActivity(), RootExecService.class);
         intent.setAction(RootExecService.RUN_COMMAND);
         intent.putExtra("Commands",rootCommands);
@@ -382,6 +389,32 @@ public class ShowRulesRecycleFrag extends Fragment {
 
                 }
             };
+        }
+    }
+
+    private void runDNSCryptNoRoot() {
+        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        boolean showNotification = shPref.getBoolean("swShowNotification",true);
+        Intent intent = new Intent(getActivity(), NoRootService.class);
+        intent.setAction(NoRootService.actionStartDnsCrypt);
+        intent.putExtra("showNotification",showNotification);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            getActivity().startForegroundService(intent);
+        } else {
+            getActivity().startService(intent);
+        }
+    }
+
+    private void runITPDNoRoot() {
+        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        boolean showNotification = shPref.getBoolean("swShowNotification",true);
+        Intent intent = new Intent(getActivity(), NoRootService.class);
+        intent.setAction(NoRootService.actionStartITPD);
+        intent.putExtra("showNotification",showNotification);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            getActivity().startForegroundService(intent);
+        } else {
+            getActivity().startService(intent);
         }
     }
 

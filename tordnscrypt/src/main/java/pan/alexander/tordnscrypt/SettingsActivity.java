@@ -20,15 +20,13 @@ package pan.alexander.tordnscrypt;
 
 import android.app.Fragment;
 import android.app.FragmentTransaction;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.ProgressBar;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -39,12 +37,12 @@ import pan.alexander.tordnscrypt.settings.PreferencesDNSCryptServersRv;
 import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
 import pan.alexander.tordnscrypt.settings.PreferencesTorBridges;
 import pan.alexander.tordnscrypt.settings.PreferencesTorFragment;
+import pan.alexander.tordnscrypt.settings.SettingsParser;
 import pan.alexander.tordnscrypt.settings.ShowRulesRecycleFrag;
 import pan.alexander.tordnscrypt.settings.UnlockTorAppsFragment;
 import pan.alexander.tordnscrypt.settings.UnlockTorIpsFrag;
+import pan.alexander.tordnscrypt.utils.FileOperations;
 import pan.alexander.tordnscrypt.utils.LangAppCompatActivity;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.RootExecService;
 
 import static pan.alexander.tordnscrypt.TopFragment.LOG_TAG;
 
@@ -52,10 +50,16 @@ import static pan.alexander.tordnscrypt.TopFragment.LOG_TAG;
 public class SettingsActivity extends LangAppCompatActivity
         implements PreferencesDNSCryptServersRv.OnServersChangeListener {
 
-    SettingsReceiver br = null;
-    IntentFilter intentFilter = null;
     public static ArrayList<String> key_tor;
     public static ArrayList<String> val_tor;
+    SettingsParser settingsParser;
+    public static final String dnscrypt_proxy_toml_tag = "pan.alexander.tordnscrypt/app_data/dnscrypt-proxy/dnscrypt-proxy.toml";
+    public static final String tor_conf_tag = "pan.alexander.tordnscrypt/app_data/tor/tor.conf";
+    public static final String itpd_conf_tag = "pan.alexander.tordnscrypt/app_data/itpd/itpd.conf";
+    public static final String public_resolvers_md_tag = "pan.alexander.tordnscrypt/app_data/dnscrypt-proxy/public-resolvers.md";
+    public static final String dnscrypt_proxy_log_tag = "pan.alexander.tordnscrypt/app_data/dnscrypt-proxy/dnscrypt_proxy.log";
+    public static final String rules_tag = "pan.alexander.tordnscrypt/app_data/abstract_rules";
+    public static DialogInterface dialogInterface;
 
     private static PreferencesFastFragment preferencesFastFragment;
 
@@ -69,52 +73,26 @@ public class SettingsActivity extends LangAppCompatActivity
 
         PathVars pathVars = new PathVars(this);
         String appDataDir = pathVars.appDataDir;
-        String busyboxPath = pathVars.busyboxPath;
-
-        br = new SettingsReceiver();
 
         if (savedInstanceState!=null) return;
+
+        settingsParser = new SettingsParser(this);
+        settingsParser.activateSettingsParser();
 
         FragmentTransaction fTrans = getFragmentManager().beginTransaction();
         Intent intent = getIntent();
         Log.d(LOG_TAG,"SettingsActivity getAction " + intent.getAction());
 
         if(Objects.equals(intent.getAction(), "DNS_Pref")){
-            findViewById(R.id.pbSettings).setVisibility(View.VISIBLE);
-            ((ProgressBar)findViewById(R.id.pbSettings)).setIndeterminate(true);
-            findViewById(R.id.tvSettings).setVisibility(View.VISIBLE);
-            String[] commandsCat = {busyboxPath+ "echo 'cat dnscrypt-proxy.toml'",
-                    busyboxPath+ "cat "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml"};
-            RootCommands rootCommands  = new RootCommands(commandsCat);
-            intent = new Intent(this, RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands",rootCommands);
-            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
-            RootExecService.performAction(this,intent);
+            dialogInterface = FileOperations.fileOperationProgressDialog(this);
+            FileOperations.readTextFile(this,appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml",dnscrypt_proxy_toml_tag);
         } else if (Objects.equals(intent.getAction(), "Tor_Pref")){
-            findViewById(R.id.pbSettings).setVisibility(View.VISIBLE);
-            ((ProgressBar)findViewById(R.id.pbSettings)).setIndeterminate(true);
-            findViewById(R.id.tvSettings).setVisibility(View.VISIBLE);
-            String[] commandsCat = {busyboxPath+ "echo 'cat tor.conf'",
-                    busyboxPath+ "cat "+appDataDir+"/app_data/tor/tor.conf"};
-            RootCommands rootCommands  = new RootCommands(commandsCat);
-            intent = new Intent(this, RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands",rootCommands);
-            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
-            RootExecService.performAction(this,intent);
+            dialogInterface = FileOperations.fileOperationProgressDialog(this);
+            FileOperations.readTextFile(this,appDataDir+"/app_data/tor/tor.conf",tor_conf_tag);
+
         } else if (Objects.equals(intent.getAction(), "I2PD_Pref")){
-            findViewById(R.id.pbSettings).setVisibility(View.VISIBLE);
-            ((ProgressBar)findViewById(R.id.pbSettings)).setIndeterminate(true);
-            findViewById(R.id.tvSettings).setVisibility(View.VISIBLE);
-            String[] commandsCat = {busyboxPath+ "echo 'cat i2pd.conf'",
-                    busyboxPath+ "cat "+appDataDir+"/app_data/i2pd/i2pd.conf"};
-            RootCommands rootCommands  = new RootCommands(commandsCat);
-            intent = new Intent(this, RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands",rootCommands);
-            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
-            RootExecService.performAction(this,intent);
+            dialogInterface = FileOperations.fileOperationProgressDialog(this);
+            FileOperations.readTextFile(this,appDataDir+"/app_data/i2pd/i2pd.conf",itpd_conf_tag);
         } else if (Objects.equals(intent.getAction(), "fast_Pref")){
             preferencesFastFragment = new PreferencesFastFragment();
             fTrans.replace(android.R.id.content, preferencesFastFragment,"fastSettingsFragment");
@@ -123,114 +101,43 @@ public class SettingsActivity extends LangAppCompatActivity
             fTrans.replace(android.R.id.content, new PreferencesCommonFragment());
             fTrans.commit();
         } else if (Objects.equals(intent.getAction(), "DNS_servers_Pref")){
-            findViewById(R.id.pbSettings).setVisibility(View.VISIBLE);
-            ((ProgressBar)findViewById(R.id.pbSettings)).setIndeterminate(true);
-            findViewById(R.id.tvSettings).setVisibility(View.VISIBLE);
-            String[] commandsCat = { busyboxPath+ "echo 'cat public-resolvers.md'",
-                    busyboxPath+ "cat "+appDataDir+"/app_data/dnscrypt-proxy/public-resolvers.md",
-                    busyboxPath+ "echo 'cat dnscrypt-proxy.toml'",
-                    busyboxPath+ "cat "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml"};
-            RootCommands rootCommands  = new RootCommands(commandsCat);
-            intent = new Intent(this, RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands",rootCommands);
-            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
-            RootExecService.performAction(this,intent);
+            dialogInterface = FileOperations.fileOperationProgressDialog(this);
+            FileOperations.readTextFile(this,appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml",public_resolvers_md_tag);
+            FileOperations.readTextFile(this,appDataDir+"/app_data/dnscrypt-proxy/public-resolvers.md",public_resolvers_md_tag);
+
         } else if (Objects.equals(intent.getAction(), "open_qery_log")){
-            findViewById(R.id.pbSettings).setVisibility(View.VISIBLE);
-            ((ProgressBar)findViewById(R.id.pbSettings)).setIndeterminate(true);
-            findViewById(R.id.tvSettings).setVisibility(View.VISIBLE);
-            String[] commandsCat = { busyboxPath+ "echo 'cat dnscrypt_proxy_qery.log'",
-                    busyboxPath+ "cat "+appDataDir+"/cache/query.log"};
-            RootCommands rootCommands  = new RootCommands(commandsCat);
-            intent = new Intent(this, RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands",rootCommands);
-            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
-            RootExecService.performAction(this,intent);
+            dialogInterface = FileOperations.fileOperationProgressDialog(this);
+            FileOperations.readTextFile(this,appDataDir+"/cache/query.log",dnscrypt_proxy_log_tag);
         }  else if (Objects.equals(intent.getAction(), "open_nx_log")){
-            findViewById(R.id.pbSettings).setVisibility(View.VISIBLE);
-            ((ProgressBar)findViewById(R.id.pbSettings)).setIndeterminate(true);
-            findViewById(R.id.tvSettings).setVisibility(View.VISIBLE);
-            String[] commandsCat = { busyboxPath+ "echo 'cat dnscrypt_proxy_nx.log'",
-                    busyboxPath+ "cat "+appDataDir+"/cache/nx.log"};
-            RootCommands rootCommands  = new RootCommands(commandsCat);
-            intent = new Intent(this, RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands",rootCommands);
-            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
-            RootExecService.performAction(this,intent);
+            dialogInterface = FileOperations.fileOperationProgressDialog(this);
+            FileOperations.readTextFile(this,appDataDir+"/cache/nx.log",dnscrypt_proxy_log_tag);
         } else if (Objects.equals(intent.getAction(), "forwarding_rules_Pref")){
-            findViewById(R.id.pbSettings).setVisibility(View.VISIBLE);
-            ((ProgressBar)findViewById(R.id.pbSettings)).setIndeterminate(true);
-            findViewById(R.id.tvSettings).setVisibility(View.VISIBLE);
-            String[] commandsCat = { busyboxPath+ "echo 'cat forwarding_rules.txt'",
-                    busyboxPath+ "cat "+appDataDir+"/app_data/dnscrypt-proxy/forwarding-rules.txt"};
-            RootCommands rootCommands  = new RootCommands(commandsCat);
-            intent = new Intent(this, RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands",rootCommands);
-            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
-            RootExecService.performAction(this,intent);
+            dialogInterface = FileOperations.fileOperationProgressDialog(this);
+            FileOperations.readTextFile(this,appDataDir+"/app_data/dnscrypt-proxy/forwarding-rules.txt",rules_tag);
         } else if (Objects.equals(intent.getAction(), "cloaking_rules_Pref")){
-            findViewById(R.id.pbSettings).setVisibility(View.VISIBLE);
-            ((ProgressBar)findViewById(R.id.pbSettings)).setIndeterminate(true);
-            findViewById(R.id.tvSettings).setVisibility(View.VISIBLE);
-            String[] commandsCat = { busyboxPath+ "echo 'cat cloaking_rules.txt'",
-                    busyboxPath+ "cat "+appDataDir+"/app_data/dnscrypt-proxy/cloaking-rules.txt"};
-            RootCommands rootCommands  = new RootCommands(commandsCat);
-            intent = new Intent(this, RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands",rootCommands);
-            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
-            RootExecService.performAction(this,intent);
+            dialogInterface = FileOperations.fileOperationProgressDialog(this);
+            FileOperations.readTextFile(this,appDataDir+"/app_data/dnscrypt-proxy/cloaking-rules.txt",rules_tag);
         } else if (Objects.equals(intent.getAction(), "blacklist_Pref")){
-            findViewById(R.id.pbSettings).setVisibility(View.VISIBLE);
-            ((ProgressBar)findViewById(R.id.pbSettings)).setIndeterminate(true);
-            findViewById(R.id.tvSettings).setVisibility(View.VISIBLE);
-            String[] commandsCat = { busyboxPath+ "echo 'cat blacklist.txt'",
-                    busyboxPath+ "cat "+appDataDir+"/app_data/dnscrypt-proxy/blacklist.txt"};
-            RootCommands rootCommands  = new RootCommands(commandsCat);
-            intent = new Intent(this, RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands",rootCommands);
-            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
-            RootExecService.performAction(this,intent);
+            dialogInterface = FileOperations.fileOperationProgressDialog(this);
+            FileOperations.readTextFile(this,appDataDir+"/app_data/dnscrypt-proxy/blacklist.txt",rules_tag);
         } else if (Objects.equals(intent.getAction(), "ipblacklist_Pref")){
-            findViewById(R.id.pbSettings).setVisibility(View.VISIBLE);
-            ((ProgressBar)findViewById(R.id.pbSettings)).setIndeterminate(true);
-            findViewById(R.id.tvSettings).setVisibility(View.VISIBLE);
-            String[] commandsCat = { busyboxPath+ "echo 'cat ip-blacklist.txt'",
-                    busyboxPath+ "cat "+appDataDir+"/app_data/dnscrypt-proxy/ip-blacklist.txt"};
-            RootCommands rootCommands  = new RootCommands(commandsCat);
-            intent = new Intent(this, RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands",rootCommands);
-            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
-            RootExecService.performAction(this,intent);
+            dialogInterface = FileOperations.fileOperationProgressDialog(this);
+            FileOperations.readTextFile(this,appDataDir+"/app_data/dnscrypt-proxy/ip-blacklist.txt",rules_tag);
         } else if (Objects.equals(intent.getAction(), "whitelist_Pref")){
-            findViewById(R.id.pbSettings).setVisibility(View.VISIBLE);
-            ((ProgressBar)findViewById(R.id.pbSettings)).setIndeterminate(true);
-            findViewById(R.id.tvSettings).setVisibility(View.VISIBLE);
-            String[] commandsCat = { busyboxPath+ "echo 'cat whitelist.txt'",
-                    busyboxPath+ "cat "+appDataDir+"/app_data/dnscrypt-proxy/whitelist.txt"};
-            RootCommands rootCommands  = new RootCommands(commandsCat);
-            intent = new Intent(this, RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands",rootCommands);
-            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
-            RootExecService.performAction(this,intent);
+            dialogInterface = FileOperations.fileOperationProgressDialog(this);
+            FileOperations.readTextFile(this,appDataDir+"/app_data/dnscrypt-proxy/whitelist.txt",rules_tag);
         } else if (Objects.equals(intent.getAction(), "pref_itpd_addressbook_subscriptions")){
             SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
             ArrayList<String> rules_file = new ArrayList<>();
             String[] arr = sp.getString("subscriptions", "").split(",");
-            rules_file.add("subscriptions");
+            String subscriptions = "subscriptions";
             for (String str:arr){
                 rules_file.add(str.trim());
             }
             fTrans = getFragmentManager().beginTransaction();
             Bundle bundle = new Bundle();
             bundle.putStringArrayList("rules_file",rules_file);
+            bundle.putString("path",subscriptions);
             ShowRulesRecycleFrag frag = new ShowRulesRecycleFrag();
             frag.setArguments(bundle);
             fTrans.replace(android.R.id.content, frag);
@@ -262,8 +169,6 @@ public class SettingsActivity extends LangAppCompatActivity
     @Override
     public void onResume() {
         super.onResume();
-        intentFilter = new IntentFilter(RootExecService.COMMAND_RESULT);
-        this.registerReceiver(br,intentFilter);
     }
 
     @Override
@@ -278,19 +183,16 @@ public class SettingsActivity extends LangAppCompatActivity
 
     @Override
     public void onServersChange() {
-        //Toast.makeText(this,"dfgdgg",Toast.LENGTH_LONG).show();
         if (preferencesFastFragment!=null)
             preferencesFastFragment.setDnsCryptServersSumm();
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        try{
-            this.unregisterReceiver(br);
-        } catch (IllegalArgumentException e){
-            e.printStackTrace();
-        }
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (settingsParser!=null)
+            settingsParser.deactivateSettingsParser();
     }
 
     @Override

@@ -32,11 +32,14 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 
 import pan.alexander.tordnscrypt.CountrySelectFragment;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.utils.FileOperations;
 import pan.alexander.tordnscrypt.utils.NoRootService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
@@ -134,7 +137,7 @@ public class PreferencesTorFragment extends PreferenceFragment implements Prefer
 
 
 
-        StringBuilder tor_conf = new StringBuilder();
+        List<String> tor_conf = new LinkedList<>();
         boolean isChanged = false;
         for (int i=0;i<key_tor.size();i++){
 
@@ -143,35 +146,33 @@ public class PreferencesTorFragment extends PreferenceFragment implements Prefer
             }
 
             if(val_tor.get(i).isEmpty()){
-                tor_conf.append(key_tor.get(i)).append((char)10);
+                tor_conf.add(key_tor.get(i));
             } else {
-                String val = val_tor.get(i).replace("\"","\\\"");
+                String val = val_tor.get(i);
                 if (val.equals("true")) val = "1";
                 if (val.equals("false")) val = "0";
-                tor_conf.append(key_tor.get(i)).append(" ").append(val).append((char)10);
+                tor_conf.add(key_tor.get(i) + " " + val);
             }
 
         }
 
         if(!isChanged) return;
 
+        FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/tor/tor.conf",tor_conf,SettingsActivity.tor_conf_tag);
+
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
         boolean rnTorWithRoot = shPref.getBoolean("swUseModulesRoot",false);
         boolean torRunning = new PrefManager(getActivity()).getBoolPref("Tor Running");
         String[] commandsEcho;
         if (rnTorWithRoot) {
-            commandsEcho = new String[] {busyboxPath+ "echo 'renew tor.conf'",
-                    busyboxPath+ "echo \"" + tor_conf.toString()+"\" > "+appDataDir+"/app_data/tor/tor.conf",
-                    busyboxPath+ "chmod 644 "+appDataDir+"/app_data/tor/tor.conf",
-                    busyboxPath+ "sleep 1",
+            commandsEcho = new String[] {
                     busyboxPath+ "killall tor; if [[ $? -eq 0 ]] ; " +
-                            "then "+torPath+" -f "+appDataDir+"/app_data/tor/tor.conf; fi"};
+                            "then "+torPath+" -f "+appDataDir+"/app_data/tor/tor.conf; fi"
+            };
         } else {
-            commandsEcho = new String[] {busyboxPath+ "echo 'renew tor.conf'",
-                    busyboxPath+ "echo \"" + tor_conf.toString()+"\" > "+appDataDir+"/app_data/tor/tor.conf",
-                    busyboxPath+ "chmod 644 "+appDataDir+"/app_data/tor/tor.conf",
-                    busyboxPath+ "sleep 1",
-                    busyboxPath+ "killall tor"};
+            commandsEcho = new String[] {
+                    busyboxPath+ "killall tor"
+            };
             if (torRunning)
                 runTorNoRoot();
         }
@@ -183,7 +184,6 @@ public class PreferencesTorFragment extends PreferenceFragment implements Prefer
         intent.putExtra("Commands",rootCommands);
         intent.putExtra("Mark", RootExecService.SettingsActivityMark);
         RootExecService.performAction(getActivity(),intent);
-        Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
     }
 
     @Override

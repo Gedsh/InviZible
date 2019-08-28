@@ -305,6 +305,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         if (dialogInterface!=null)
             dialogInterface.dismiss();
         this.unregisterReceiver(br);
+        FileOperations.deleteOnFileOperationCompleteListener();
     }
 
     @Override

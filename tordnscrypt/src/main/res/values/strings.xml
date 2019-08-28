@@ -866,7 +866,7 @@
     <string name="btn_dnscrypt_delete_log">Delete log</string>
     <string name="title_dnscrypt_query_log">DNSCrypt Query Log</string>
     <string name="title_dnscrypt_nx_log">DNSCrypt Suspicious Log</string>
-    <string name="dnscrypt_empty_log">Log Emty</string>
+    <string name="dnscrypt_empty_log">Log is Empty</string>
     <string name="title_dnscrypt_forwarding_rules" translatable="false">DNSCrypt Forwarding rules</string>
     <string name="title_dnscrypt_cloaking_rules" translatable="false">DNSCrypt Cloaking rules</string>
     <string name="title_dnscrypt_blacklist" translatable="false">DNSCrypt Blacklist</string>

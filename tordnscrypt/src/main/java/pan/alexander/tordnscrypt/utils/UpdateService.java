@@ -18,7 +18,6 @@ package pan.alexander.tordnscrypt.utils;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -243,12 +242,12 @@ public class UpdateService extends Service {
                                 getApplicationContext().startActivity(intent);
                             }
                         } else {
-                            replaceBinaryFile(storageDir + "/download/",fileToDownload,appDataDir+"/app_bin/");
+                            FileOperations.moveBinaryFile(getApplicationContext(),storageDir + "/download/",fileToDownload,appDataDir+"/app_bin/","executable");
                             runPreviousStoppedModules(fileToDownload);
                         }
 
                     } else {
-                        deleteTempFile(storageDir + "/download/" + fileToDownload);
+                        FileOperations.deleteFile(getApplicationContext(),storageDir + "/download/", fileToDownload,"ignored");
                         Log.w(LOG_TAG,"UpdateService file hashes mismatch " + fileToDownload);
                     }
 
@@ -262,10 +261,8 @@ public class UpdateService extends Service {
                         stopForeground(true);
                         notificationManager.cancel(notificationId);
                         stopSelf();
-                        //Log.i(LOG_TAG,"Notification canceled and service stopped " + notificationId);
                     } else {
                         notificationManager.cancel(notificationId);
-                        //Log.i(LOG_TAG,"Notification canceled " + notificationId);
                         currentNotificationId -=1;
                     }
 
@@ -292,7 +289,6 @@ public class UpdateService extends Service {
             builder.setContentIntent(contentIntent)
                     .setOngoing(true)   //Can't be swiped out
                     .setSmallIcon(R.drawable.ic_update)
-                    //.setLargeIcon(BitmapFactory.decodeResource(res, R.drawable.large))   // большая картинка
                     .setTicker(Ticker)
                     .setContentTitle(Title) //Заголовок
                     .setContentText(Text) // Текст уведомления
@@ -316,7 +312,6 @@ public class UpdateService extends Service {
 
             Intent stopDownloadIntent = new Intent(getApplicationContext(), UpdateService.class);
             stopDownloadIntent.setAction(STOP_DOWNLOAD_ACTION);
-            //stopDownloadIntent.putExtra("NotificationId",notificationId);
             stopDownloadIntent.putExtra("ServiceStartId",serviceStartId);
             PendingIntent stopDownloadPendingIntent = PendingIntent.getService(getApplicationContext(), notificationId, stopDownloadIntent,PendingIntent.FLAG_UPDATE_CURRENT);
 
@@ -376,67 +371,6 @@ public class UpdateService extends Service {
             Log.e(LOG_TAG, "crc32() IOException " + e.getMessage());
         }
         return null;
-    }
-
-
-    @SuppressLint("SetWorldReadable")
-    private void replaceBinaryFile(String inputPath, String inputFile, String outputPath) {
-
-        InputStream in;
-        OutputStream out;
-        try {
-            File originalFile = new File(outputPath + inputFile);
-            if (originalFile.exists())
-                if (!originalFile.delete()){
-                    Log.e(LOG_TAG,"Unable to delete binary file " + originalFile.toString());
-                    return;
-                }
-
-            in = new FileInputStream(inputPath + inputFile);
-            out = new FileOutputStream(outputPath + inputFile);
-
-            byte[] buffer = new byte[1024];
-            int read;
-            while ((read = in.read(buffer)) != -1) {
-                out.write(buffer, 0, read);
-            }
-            in.close();
-
-            // write the output file
-            out.flush();
-            out.close();
-
-            File updatedFile = new File(outputPath + inputFile);
-            if (updatedFile.exists()) {
-                if (!(updatedFile.setReadable(true,false)
-                        && updatedFile.setWritable(true)
-                        && updatedFile.setExecutable(true,false))){
-                    Log.e(LOG_TAG,"Updated binary file chmod failed " + updatedFile.toString());
-                }
-            } else {
-                Log.e(LOG_TAG,"Updated binary file not exist " + updatedFile.toString());
-            }
-
-            // delete the downloaded file
-            File downloadedFile = new File(inputPath + inputFile);
-            if (!downloadedFile.delete())
-                Log.e(LOG_TAG,"Unable to delete binary file " + downloadedFile.toString());
-        }
-
-        catch (FileNotFoundException fnfe1) {
-            Log.e(LOG_TAG,"File not found " + fnfe1.getMessage());
-        }
-        catch (Exception e) {
-            Log.e(LOG_TAG,"updateBinaryFile fault " + e.getMessage());
-        }
-
-    }
-
-    void deleteTempFile(String path){
-        // delete the downloaded file
-        File downloadedFile = new File(path);
-        if (!downloadedFile.delete())
-            Log.e(LOG_TAG,"Unable to delete binary file " + downloadedFile.toString());
     }
 
     void stopRunningModules(String fileName) {

@@ -40,20 +40,21 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.utils.FileOperations;
 import pan.alexander.tordnscrypt.utils.NotificationHelper;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.TorRefreshIPsWork;
@@ -73,7 +74,6 @@ public class UnlockTorAppsFragment extends Fragment implements View.OnClickListe
     RecyclerView.Adapter mAdapter;
     boolean torTethering;
     boolean routeAllThroughTorDevice;
-    //boolean runModulesWithRoot;
     String unlockAppsStr;
     ArrayList<String> unlockAppsArrListSaved;
     ArrayList<AppUnlock> appsUnlock;
@@ -113,7 +113,6 @@ public class UnlockTorAppsFragment extends Fragment implements View.OnClickListe
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
         torTethering = shPref.getBoolean("pref_common_tor_tethering",false);
         routeAllThroughTorDevice = shPref.getBoolean("pref_fast_all_through_tor",true);
-        //runModulesWithRoot = shPref.getBoolean("swUseModulesRoot",false);
 
         if (!routeAllThroughTorDevice) {
             Objects.requireNonNull(getActivity()).setTitle(R.string.pref_tor_unlock_app);
@@ -195,14 +194,9 @@ public class UnlockTorAppsFragment extends Fragment implements View.OnClickListe
         }
         new PrefManager(getActivity()).setSetStrPref(unlockAppsStr,setAppUIDtoSave);
 
-        try {
-            PrintWriter writer = new PrintWriter(appDataDir+"/app_data/tor/"+unlockAppsStr,"UTF-8");
-            for (String uid:setAppUIDtoSave)
-                writer.println(uid);
-            writer.close();
-        } catch (IOException e) {
-            Log.e(LOG_TAG,"UnlockTorAppsFragment Unable to create "+unlockAppsStr+" file "+e.getMessage());
-        }
+        List<String> listAppUIDtoSave = new LinkedList<>(setAppUIDtoSave);
+        FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/tor/"+unlockAppsStr,listAppUIDtoSave,"ignored");
+        Toast.makeText(getActivity(),getString(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
 
         /////////////Refresh iptables rules/////////////////////////
         TorRefreshIPsWork torRefreshIPsWork = new TorRefreshIPsWork(getActivity(),null);

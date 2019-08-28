@@ -29,9 +29,13 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.utils.FileOperations;
 import pan.alexander.tordnscrypt.utils.NoRootService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
@@ -48,7 +52,7 @@ public class PreferencesDNSFragment extends PreferenceFragment implements Prefer
     String appDataDir;
     String dnscryptPath;
     String busyboxPath;
-    public static boolean isChanged = false;
+    private boolean isChanged = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -117,45 +121,40 @@ public class PreferencesDNSFragment extends PreferenceFragment implements Prefer
     public void onStop() {
         super.onStop();
 
-        StringBuilder dnscrypt_proxy_toml = new StringBuilder();
+        List<String> dnscrypt_proxy_toml = new LinkedList<>();
         for (int i=0;i<key_toml.size();i++){
             if(!(key_toml_orig.get(i).equals(key_toml.get(i))&&val_toml_orig.get(i).equals(val_toml.get(i)))&&!isChanged){
                 isChanged = true;
             }
 
             if(val_toml.get(i).isEmpty()){
-                dnscrypt_proxy_toml.append(key_toml.get(i)).append((char)10);
+                dnscrypt_proxy_toml.add(key_toml.get(i));
             } else {
-                String val = val_toml.get(i).replace("\"","\\\"");
-                dnscrypt_proxy_toml.append(key_toml.get(i)).append(" = ").append(val).append((char)10);
+                dnscrypt_proxy_toml.add(key_toml.get(i) + " = " + val_toml.get(i));
             }
 
         }
 
         if(!isChanged) return;
 
+        FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml",dnscrypt_proxy_toml, SettingsActivity.dnscrypt_proxy_toml_tag);
+
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
         boolean runDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot",false);
         boolean dnsCryptRunning = new PrefManager(getActivity()).getBoolPref("DNSCrypt Running");
         String[] commandsEcho;
         if (runDNSCryptWithRoot) {
-            commandsEcho = new String[] { busyboxPath+ "echo 'renew dnscrypt-proxy.toml'",
-                    busyboxPath+ "echo \"" + dnscrypt_proxy_toml.toString()+"\" > "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml",
-                    busyboxPath+ "chmod 644 "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml",
-                    busyboxPath+ "sleep 1",
+            commandsEcho = new String[] {
                     busyboxPath+ "killall dnscrypt-proxy; if [[ $? -eq 0 ]] ; then "+busyboxPath+
-                            "nohup " + dnscryptPath+" --config "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml >/dev/null 2>&1 & fi"};
+                            "nohup " + dnscryptPath+" --config "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml >/dev/null 2>&1 & fi"
+            };
         } else {
-            commandsEcho = new String[] { busyboxPath+ "echo 'renew dnscrypt-proxy.toml'",
-                    busyboxPath+ "echo \"" + dnscrypt_proxy_toml.toString()+"\" > "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml",
-                    busyboxPath+ "chmod 644 "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml",
-                    busyboxPath+ "sleep 1",
-                    busyboxPath+ "killall dnscrypt-proxy"};
+            commandsEcho = new String[] {
+                    busyboxPath+ "killall dnscrypt-proxy"
+            };
             if (dnsCryptRunning)
                 runDNSCryptNoRoot();
         }
-
-        isChanged = false;
 
 
         RootCommands rootCommands  = new RootCommands(commandsEcho);
@@ -164,7 +163,6 @@ public class PreferencesDNSFragment extends PreferenceFragment implements Prefer
         intent.putExtra("Commands",rootCommands);
         intent.putExtra("Mark", RootExecService.SettingsActivityMark);
         RootExecService.performAction(getActivity(),intent);
-        Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
     }
 
     @Override

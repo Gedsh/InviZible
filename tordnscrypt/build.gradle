@@ -23,7 +23,7 @@ android {
 
         beta{
             applicationId "pan.alexander.tordnscrypt"
-            versionName "0.2.8"
+            versionName "0.2.9"
             dimension = 'version'
             resValue 'string', 'package_name', applicationId
         }

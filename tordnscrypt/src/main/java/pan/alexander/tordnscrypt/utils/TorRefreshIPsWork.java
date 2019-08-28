@@ -25,14 +25,13 @@ import android.os.Build;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -48,7 +47,6 @@ public class TorRefreshIPsWork {
     private  ArrayList<String> unlockIPsTether;
     private String[] commandsSaveIPs;
     private String appDataDir;
-    private String busyboxPath;
     private boolean torTethering;
     private boolean routeAllThroughTorDevice;
     private boolean routeAllThroughTorTether;
@@ -67,7 +65,7 @@ public class TorRefreshIPsWork {
                 ArrayList<String> bridgesIPlist = handleActionGetIP("https://bridges.torproject.org");
                 //////////////TO GET UPDATES WITH TOR//////////////////////////////////////
                 bridgesIPlist.addAll(handleActionGetIP("https://invizible.net"));
-                writeToFile(appDataDir+"/app_data/tor/bridgesIP",bridgesIPlist);
+                FileOperations.writeToTextFile(context,appDataDir+"/app_data/tor/bridgesIP",bridgesIPlist,"ignored");
             }
         };
         Thread thread = new Thread(getBridgesIPRunnable);
@@ -91,7 +89,7 @@ public class TorRefreshIPsWork {
         String itpdHttpProxyPort = pathVars.itpdHttpProxyPort;
         String torTransPort = pathVars.torTransPort;
         String torVirtAdrNet = pathVars.torVirtAdrNet;
-        busyboxPath = pathVars.busyboxPath;
+        String busyboxPath = pathVars.busyboxPath;
         String iptablesPath = pathVars.iptablesPath;
         String torSOCKSPort = pathVars.torSOCKSPort;
         String torHTTPTunnelPort = pathVars.torHTTPTunnelPort;
@@ -111,14 +109,14 @@ public class TorRefreshIPsWork {
         String torAppsBypassFilterTCP = "";
         String torAppsBypassFilterUDP = "";
         if (routeAllThroughTorDevice) {
-            torSitesBypassNatTCP = busyboxPath+ "cat "+appDataDir+"/app_data/tor/clearnet | while read var1; do "+iptablesPath+"iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j RETURN; done";
-            torSitesBypassFilterTCP = busyboxPath+ "cat "+appDataDir+"/app_data/tor/clearnet | while read var1; do "+iptablesPath+"iptables -A tordnscrypt -p tcp -d $var1 -j RETURN; done";
-            torSitesBypassNatUDP = busyboxPath+ "cat "+appDataDir+"/app_data/tor/clearnet | while read var1; do "+iptablesPath+"iptables -t nat -A tordnscrypt_nat_output -p udp -d $var1 -j RETURN; done";
-            torSitesBypassFilterUDP = busyboxPath+ "cat "+appDataDir+"/app_data/tor/clearnet | while read var1; do "+iptablesPath+"iptables -A tordnscrypt -p udp -d $var1 -j RETURN; done";
-            torAppsBypassNatTCP = busyboxPath+ "cat "+appDataDir+"/app_data/tor/clearnetApps | while read var1; do "+iptablesPath+"iptables -t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j RETURN; done";
-            torAppsBypassNatUDP = busyboxPath+ "cat "+appDataDir+"/app_data/tor/clearnetApps | while read var1; do "+iptablesPath+"iptables -t nat -A tordnscrypt_nat_output -p udp -m owner --uid-owner $var1 -j RETURN; done";
-            torAppsBypassFilterTCP = busyboxPath+ "cat "+appDataDir+"/app_data/tor/clearnetApps | while read var1; do "+iptablesPath+"iptables -A tordnscrypt -p tcp -m owner --uid-owner $var1 -j RETURN; done";
-            torAppsBypassFilterUDP = busyboxPath+ "cat "+appDataDir+"/app_data/tor/clearnetApps | while read var1; do "+iptablesPath+"iptables -A tordnscrypt -p udp -m owner --uid-owner $var1 -j RETURN; done";
+            torSitesBypassNatTCP = busyboxPath + "cat "+appDataDir+"/app_data/tor/clearnet | while read var1; do "+iptablesPath+"iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j RETURN; done";
+            torSitesBypassFilterTCP = busyboxPath + "cat "+appDataDir+"/app_data/tor/clearnet | while read var1; do "+iptablesPath+"iptables -A tordnscrypt -p tcp -d $var1 -j RETURN; done";
+            torSitesBypassNatUDP = busyboxPath + "cat "+appDataDir+"/app_data/tor/clearnet | while read var1; do "+iptablesPath+"iptables -t nat -A tordnscrypt_nat_output -p udp -d $var1 -j RETURN; done";
+            torSitesBypassFilterUDP = busyboxPath + "cat "+appDataDir+"/app_data/tor/clearnet | while read var1; do "+iptablesPath+"iptables -A tordnscrypt -p udp -d $var1 -j RETURN; done";
+            torAppsBypassNatTCP = busyboxPath + "cat "+appDataDir+"/app_data/tor/clearnetApps | while read var1; do "+iptablesPath+"iptables -t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j RETURN; done";
+            torAppsBypassNatUDP = busyboxPath + "cat "+appDataDir+"/app_data/tor/clearnetApps | while read var1; do "+iptablesPath+"iptables -t nat -A tordnscrypt_nat_output -p udp -m owner --uid-owner $var1 -j RETURN; done";
+            torAppsBypassFilterTCP = busyboxPath + "cat "+appDataDir+"/app_data/tor/clearnetApps | while read var1; do "+iptablesPath+"iptables -A tordnscrypt -p tcp -m owner --uid-owner $var1 -j RETURN; done";
+            torAppsBypassFilterUDP = busyboxPath + "cat "+appDataDir+"/app_data/tor/clearnetApps | while read var1; do "+iptablesPath+"iptables -A tordnscrypt -p udp -m owner --uid-owner $var1 -j RETURN; done";
         }
 
         String blockHttpRuleFilterAll = "";
@@ -135,31 +133,11 @@ public class TorRefreshIPsWork {
             appUID ="0";
         }
 
-
-        String ipsToUnlock = "";
-
-        String ipsToUnlockTether = "";
-        String chmodIpsToUnlockTether = "";
-        if (torTethering) {
-            if (!routeAllThroughTorTether) {
-                ipsToUnlockTether = busyboxPath+ "echo \"" + ipsToUnlock + "\" > "+appDataDir+"/app_data/tor/unlock_tether";
-                chmodIpsToUnlockTether = busyboxPath+ "chmod 644 "+appDataDir+"/app_data/tor/unlock_tether";
-            } else {
-                ipsToUnlockTether = busyboxPath+ "echo \"" + ipsToUnlock + "\" > "+appDataDir+"/app_data/tor/clearnet_tether";
-                chmodIpsToUnlockTether = busyboxPath+ "chmod 644 "+appDataDir+"/app_data/tor/clearnet_tether";
-            }
-        }
-
         if( new PrefManager(Objects.requireNonNull(context)).getBoolPref("Tor Running") &&
                 new PrefManager(context).getBoolPref("DNSCrypt Running")){
 
             if (!routeAllThroughTorDevice) {
                 commandsSaveIPs = new String[] {
-                        busyboxPath+ "echo \"" + ipsToUnlock + "\" > "+appDataDir+"/app_data/tor/unlock",
-                        ipsToUnlockTether,
-                        busyboxPath+ "chmod 644 "+appDataDir+"/app_data/tor/unlock",
-                        chmodIpsToUnlockTether,
-                        busyboxPath+ "sleep 1",
                         "ip6tables -D OUTPUT -j DROP || true",
                         "ip6tables -I OUTPUT -j DROP",
                         iptablesPath+ "iptables -t nat -F tordnscrypt_nat_output",
@@ -171,28 +149,23 @@ public class TorRefreshIPsWork {
                         iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p tcp -d "+torVirtAdrNet+" -j DNAT --to-destination 127.0.0.1:"+torTransPort,
                         blockHttpRuleNatTCP,
                         blockHttpRuleNatUDP,
-                        //iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p udp -d "+dnsCryptFallbackRes+" --dport 53 -j ACCEPT",
                         iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:"+dnsCryptPort,
                         iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:"+dnsCryptPort,
                         iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:"+itpdHttpProxyPort,
                         iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:"+itpdHttpProxyPort,
-                        busyboxPath+ "cat "+appDataDir+"/app_data/tor/bridgesIP | while read var1; do "+iptablesPath+"iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port "+torTransPort+"; done",
-                        busyboxPath+ "cat "+appDataDir+"/app_data/tor/unlock | while read var1; do "+iptablesPath+"iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port "+torTransPort+"; done",
-                        busyboxPath+ "cat "+appDataDir+"/app_data/tor/unlockApps | while read var1; do "+iptablesPath+"iptables -t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j REDIRECT --to-port "+torTransPort+"; done"};
+                        busyboxPath + "cat "+appDataDir+"/app_data/tor/bridgesIP | while read var1; do "+iptablesPath+"iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port "+torTransPort+"; done",
+                        busyboxPath + "cat "+appDataDir+"/app_data/tor/unlock | while read var1; do "+iptablesPath+"iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port "+torTransPort+"; done",
+                        busyboxPath + "cat "+appDataDir+"/app_data/tor/unlockApps | while read var1; do "+iptablesPath+"iptables -t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j REDIRECT --to-port "+torTransPort+"; done"};
             } else {
                 commandsSaveIPs = new String[] {
-                        busyboxPath+ "echo \"" + ipsToUnlock + "\" > "+appDataDir+"/app_data/tor/clearnet",
-                        ipsToUnlockTether,
-                        busyboxPath+ "chmod 644 "+appDataDir+"/app_data/tor/clearnet",
-                        chmodIpsToUnlockTether,
-                        busyboxPath+ "sleep 1",
+                        busyboxPath + "sleep 1",
                         "ip6tables -D OUTPUT -j DROP || true",
                         "ip6tables -I OUTPUT -j DROP",
                         iptablesPath+ "iptables -t nat -F tordnscrypt_nat_output",
                         iptablesPath+ "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
                         iptablesPath+ "iptables -F tordnscrypt",
                         iptablesPath+ "iptables -D OUTPUT -j tordnscrypt || true",
-                        busyboxPath+ "sleep 1",
+                        busyboxPath + "sleep 1",
                         "TOR_UID="+ appUID,
                         iptablesPath+ "iptables -t nat -N tordnscrypt_nat_output",
                         iptablesPath+ "iptables -t nat -I OUTPUT -j tordnscrypt_nat_output",
@@ -200,10 +173,9 @@ public class TorRefreshIPsWork {
                         iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
                         iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:"+itpdHttpProxyPort,
                         iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:"+itpdHttpProxyPort,
-                        //iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p udp -d "+dnsCryptFallbackRes+" --dport 53 -j ACCEPT",
                         iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:"+dnsCryptPort,
                         iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:"+dnsCryptPort,
-                        busyboxPath+ "cat "+appDataDir+"/app_data/tor/bridgesIP | while read var1; do "+iptablesPath+"iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port "+torTransPort+"; done",
+                        busyboxPath + "cat "+appDataDir+"/app_data/tor/bridgesIP | while read var1; do "+iptablesPath+"iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port "+torTransPort+"; done",
                         iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -m owner --uid-owner $TOR_UID -j RETURN",
                         iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d " + torVirtAdrNet + " -j DNAT --to-destination 127.0.0.1:" + torTransPort,
                         blockHttpRuleNatTCP,
@@ -212,7 +184,6 @@ public class TorRefreshIPsWork {
                         torSitesBypassNatUDP,
                         torAppsBypassNatTCP,
                         torAppsBypassNatUDP,
-                        //iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p tcp --syn -j DNAT --to-destination 127.0.0.1:"+torTransPort,
                         iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p tcp -j DNAT --to-destination 127.0.0.1:"+torTransPort,
                         iptablesPath+ "iptables -N tordnscrypt",
                         iptablesPath+ "iptables -A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
@@ -242,26 +213,17 @@ public class TorRefreshIPsWork {
         } else if (new PrefManager(Objects.requireNonNull(context)).getBoolPref("Tor Running")) {
             if (!routeAllThroughTorDevice) {
                 commandsSaveIPs = new String[] {
-                        busyboxPath+ "echo \"" + ipsToUnlock + "\" > "+appDataDir+"/app_data/tor/unlock",
-                        ipsToUnlockTether,
-                        busyboxPath+ "chmod 644 "+appDataDir+"/app_data/tor/unlock",
-                        chmodIpsToUnlockTether,
-                        busyboxPath+ "cat "+appDataDir+"/app_data/tor/bridgesIP | while read var1; do "+iptablesPath+"iptables -t nat -I tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port "+torTransPort+"; done"
+                        busyboxPath + "echo 'empty'"
                 };
             } else {
                 commandsSaveIPs = new String[] {
-                        busyboxPath+ "echo \"" + ipsToUnlock + "\" > "+appDataDir+"/app_data/tor/clearnet",
-                        ipsToUnlockTether,
-                        busyboxPath+ "chmod 644 "+appDataDir+"/app_data/tor/clearnet",
-                        chmodIpsToUnlockTether,
-                        busyboxPath+ "sleep 1",
                         "ip6tables -D OUTPUT -j DROP || true",
                         "ip6tables -I OUTPUT -j DROP",
                         iptablesPath+ "iptables -t nat -F tordnscrypt_nat_output",
                         iptablesPath+ "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
                         iptablesPath+ "iptables -F tordnscrypt",
                         iptablesPath+ "iptables -D OUTPUT -j tordnscrypt || true",
-                        busyboxPath+ "sleep 1",
+                        busyboxPath + "sleep 1",
                         "TOR_UID="+ appUID,
                         iptablesPath+ "iptables -t nat -N tordnscrypt_nat_output",
                         iptablesPath+ "iptables -t nat -I OUTPUT -j tordnscrypt_nat_output",
@@ -269,7 +231,7 @@ public class TorRefreshIPsWork {
                         iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
                         iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:"+ torDNSPort,
                         iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:"+ torDNSPort,
-                        busyboxPath+ "cat "+appDataDir+"/app_data/tor/bridgesIP | while read var1; do "+iptablesPath+"iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port "+torTransPort+"; done",
+                        busyboxPath + "cat "+appDataDir+"/app_data/tor/bridgesIP | while read var1; do "+iptablesPath+"iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port "+torTransPort+"; done",
                         iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -m owner --uid-owner $TOR_UID -j RETURN",
                         iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d " + torVirtAdrNet + " -j DNAT --to-destination 127.0.0.1:" + torTransPort,
                         blockHttpRuleNatTCP,
@@ -278,7 +240,6 @@ public class TorRefreshIPsWork {
                         torSitesBypassNatUDP,
                         torAppsBypassNatTCP,
                         torAppsBypassNatUDP,
-                        //iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p tcp --syn -j DNAT --to-destination 127.0.0.1:"+torTransPort,
                         iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p tcp -j DNAT --to-destination 127.0.0.1:"+torTransPort,
                         iptablesPath+ "iptables -N tordnscrypt",
                         iptablesPath+ "iptables -A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
@@ -351,28 +312,32 @@ public class TorRefreshIPsWork {
 
                 if (!unlockHostsDevice.isEmpty() || !unlockIPsDevice.isEmpty()) {
 
-                    String unlockIPsReadyDevice = universalGetIPs(unlockHostsDevice, unlockIPsDevice);
+                    List<String> unlockIPsReadyDevice = universalGetIPs(unlockHostsDevice, unlockIPsDevice);
 
-                    if (unlockIPsReadyDevice == null)
-                        unlockIPsReadyDevice = "";
+                    if (unlockIPsReadyDevice == null) {
+                        unlockIPsReadyDevice = new LinkedList<>();
+                        unlockIPsReadyDevice.add("");
+                    }
 
-                    String unlockIPsReadyTether = universalGetIPs(unlockHostsTether, unlockIPsTether);
+                    List<String> unlockIPsReadyTether = universalGetIPs(unlockHostsTether, unlockIPsTether);
 
-                    if (unlockIPsReadyTether == null)
-                        unlockIPsReadyTether = "";
+                    if (unlockIPsReadyTether == null) {
+                        unlockIPsReadyTether = new LinkedList<>();
+                        unlockIPsReadyTether.add("");
+                    }
 
 
                     if (!routeAllThroughTorDevice) {
-                        commandsSaveIPs[0] = busyboxPath + "echo \"" + unlockIPsReadyDevice + "\" > " + appDataDir + "/app_data/tor/unlock";
+                        FileOperations.writeToTextFile(context,appDataDir + "/app_data/tor/unlock",unlockIPsReadyDevice,"ignored");
                     } else {
-                        commandsSaveIPs[0] = busyboxPath + "echo \"" + unlockIPsReadyDevice + "\" > " + appDataDir + "/app_data/tor/clearnet";
+                        FileOperations.writeToTextFile(context,appDataDir + "/app_data/tor/clearnet",unlockIPsReadyDevice,"ignored");
                     }
 
                     if (torTethering) {
                         if (!routeAllThroughTorTether) {
-                            commandsSaveIPs[1] = busyboxPath + "echo \"" + unlockIPsReadyTether + "\" > " + appDataDir + "/app_data/tor/unlock_tether";
+                            FileOperations.writeToTextFile(context,appDataDir + "/app_data/tor/unlock_tether",unlockIPsReadyTether,"ignored");
                         } else {
-                            commandsSaveIPs[1] = busyboxPath + "echo \"" + unlockIPsReadyTether + "\" > " + appDataDir + "/app_data/tor/clearnet_tether";
+                            FileOperations.writeToTextFile(context,appDataDir + "/app_data/tor/clearnet_tether",unlockIPsReadyTether,"ignored");
                         }
                     }
                 }
@@ -402,11 +367,11 @@ public class TorRefreshIPsWork {
 
 
 
-    private String universalGetIPs(ArrayList<String> hosts, ArrayList<String> IPs) {
+    private List<String> universalGetIPs(ArrayList<String> hosts, ArrayList<String> IPs) {
 
 
         ArrayList<String> unlockIPsPrepared = new ArrayList<>();
-        StringBuilder sb = new StringBuilder();
+        List<String> IPsReady = new LinkedList<>();
 
         if (hosts!=null) {
             for (String host:hosts) {
@@ -418,23 +383,23 @@ public class TorRefreshIPsWork {
 
             for (String unlockIPprepared:unlockIPsPrepared) {
                 if (unlockIPprepared.matches("[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}"))
-                    sb.append(unlockIPprepared).append((char)10);
+                    IPsReady.add(unlockIPprepared);
             }
         }
 
         if (IPs!=null) {
             for (String unlockIP:IPs) {
                 if (!unlockIP.startsWith("#")) {
-                    sb.append(unlockIP).append((char)10);
+                    IPsReady.add(unlockIP);
                 }
             }
 
         }
 
-        if (sb.toString().isEmpty())
+        if (IPsReady.isEmpty())
             return null;
 
-        return sb.toString();
+        return IPsReady;
     }
 
     private ArrayList<String> handleActionGetIP(String host) {
@@ -448,25 +413,5 @@ public class TorRefreshIPsWork {
             e.printStackTrace();
         }
         return preparedIPs;
-    }
-
-    private void writeToFile(String filePath, ArrayList<String> lines) {
-        PrintWriter writer = null;
-        try {
-            File f = new File(filePath);
-            if (f.isFile() && f.setWritable(true)) {
-                Log.i(LOG_TAG,"TorRefreshIPsWork writeTo " + filePath + " success");
-            }
-
-            writer = new PrintWriter(filePath);
-            for (String line:lines)
-                writer.println(line);
-            writer.close();
-            writer = null;
-        } catch (IOException e) {
-            Log.e(LOG_TAG,"TorRefreshIPsWork writeFile Exception " + e.getMessage());
-        } finally {
-            if (writer != null)writer.close();
-        }
     }
 }

@@ -68,7 +68,6 @@ public class Verifier {
                 ZipEntry ze = entries.nextElement();
                 String name = ze.getName().toUpperCase();
                 if (name.startsWith("META-INF/") && (name.endsWith(".RSA") || name.endsWith(".DSA"))) {
-                    //Log.i("TPDCLogs","Zip entry "+ze.getName());
                     InputStream inputStream = zipFile.getInputStream(ze);
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     byte[] buffer = new byte[8192];
@@ -130,10 +129,6 @@ public class Verifier {
         // Create key and cipher
         Key aesKey = new SecretKeySpec(key.getBytes(), "AES");
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        // encrypt the text
-        //cipher.init(Cipher.ENCRYPT_MODE, aesKey);
-        //byte[] encrypted = cipher.doFinal(text.getBytes(StandardCharsets.UTF_8));
-        //Log.i(LOG_TAG, "Encrypted str " + Base64.encodeToString(encrypted,Base64.DEFAULT));
         // decrypt the text
         byte[] ivBytes = vector.substring(vector.length()-16).getBytes();
         cipher.init(Cipher.DECRYPT_MODE, aesKey,new IvParameterSpec(ivBytes));
@@ -169,7 +164,6 @@ public class Verifier {
                 writer.println("********************");
                 writer.close();
             }
-            //Log.i(LOG_TAG, "Encrypted str " + text + " " + Base64.encodeToString(encrypted,Base64.DEFAULT));
 
 
         } catch (Exception e) {

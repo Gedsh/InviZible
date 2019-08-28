@@ -34,8 +34,8 @@ public class RootCommands implements Serializable {
         return this.commands;
     }
 
-    public void setCommands(String[] name) {
-        this.commands = commands;
-    }
+    //public void setCommands(String[] name) {
+        //this.commands = commands;
+    //}
 
 }

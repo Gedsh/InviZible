@@ -53,11 +53,14 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.utils.Arr;
+import pan.alexander.tordnscrypt.utils.FileOperations;
 import pan.alexander.tordnscrypt.utils.NotificationHelper;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
@@ -73,7 +76,7 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class UnlockTorIpsFrag extends Fragment {
+public class UnlockTorIpsFrag extends Fragment{
 
     RecyclerView rvListHostip;
     RecyclerView.Adapter rvAdapter;
@@ -83,7 +86,6 @@ public class UnlockTorIpsFrag extends Fragment {
     String dnsCryptPort;
     String itpdHttpProxyPort;
     String torTransPort;
-    //String dnsCryptFallbackRes;
     String torDNSPort;
     String torVirtAdrNet;
     String busyboxPath;
@@ -107,6 +109,10 @@ public class UnlockTorIpsFrag extends Fragment {
         // Required empty public constructor
     }
 
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -124,7 +130,6 @@ public class UnlockTorIpsFrag extends Fragment {
         dnsCryptPort = pathVars.dnsCryptPort;
         itpdHttpProxyPort = pathVars.itpdHttpProxyPort;
         torTransPort = pathVars.torTransPort;
-        //dnsCryptFallbackRes = pathVars.dnsCryptFallbackRes;
         torDNSPort = pathVars.torDNSPort;
         torVirtAdrNet = pathVars.torVirtAdrNet;
         busyboxPath = pathVars.busyboxPath;
@@ -237,18 +242,16 @@ public class UnlockTorIpsFrag extends Fragment {
 
         if (unlockHostIP==null || !isChanged) return;
 
-        StringBuilder sb = new StringBuilder();
+        List<String> ipsToUnlock = new LinkedList<>();
         for (int i = 0;i<unlockHostIP.size();i++) {
             if (unlockHostIP.get(i).active) {
-                //Toast.makeText(getActivity(),unlockHostIP.get(i).IP,Toast.LENGTH_LONG).show();
                 String[] arr = unlockHostIP.get(i).IP.split(", ");
                 for (String ip:arr) {
                     if (ip.matches("[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}"))
-                        sb.append(ip).append((char)10);
+                        ipsToUnlock.add(ip);
                 }
             }
         }
-        String ipsToUnlock = sb.toString();
 
         if (!isChanged) return;
 
@@ -292,10 +295,9 @@ public class UnlockTorIpsFrag extends Fragment {
             if( new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("Tor Running") &&
                     new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")){
                 if (!routeAllThroughTorDevice) {
-                    commandsSaveIPs = new String[] {busyboxPath+ "echo 'save unlock'",
-                            busyboxPath+ "echo \"" + ipsToUnlock + "\" > "+appDataDir+"/app_data/tor/unlock",
-                            busyboxPath+ "chmod 644 "+appDataDir+"/app_data/tor/unlock",
-                            busyboxPath+ "sleep 1",
+                    FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/tor/unlock",ipsToUnlock,"ignored");
+                    Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
+                    commandsSaveIPs = new String[] {
                             "ip6tables -D OUTPUT -j DROP || true",
                             "ip6tables -I OUTPUT -j DROP",
                             iptablesPath+ "iptables -t nat -F tordnscrypt_nat_output",
@@ -305,7 +307,6 @@ public class UnlockTorIpsFrag extends Fragment {
                             iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
                             iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
                             iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p tcp -d "+torVirtAdrNet+" -j DNAT --to-destination 127.0.0.1:"+torTransPort,
-                            //iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p udp -d "+dnsCryptFallbackRes+" --dport 53 -j ACCEPT",
                             iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:"+dnsCryptPort,
                             iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:"+dnsCryptPort,
                             iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:"+itpdHttpProxyPort,
@@ -315,10 +316,9 @@ public class UnlockTorIpsFrag extends Fragment {
                             busyboxPath+ "cat "+appDataDir+"/app_data/tor/unlock | while read var1; do "+iptablesPath+"iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port "+torTransPort+"; done",
                             busyboxPath+ "cat "+appDataDir+"/app_data/tor/unlockApps | while read var1; do "+iptablesPath+"iptables -t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j REDIRECT --to-port "+torTransPort+"; done"};
                 } else {
-                    commandsSaveIPs = new String[] {busyboxPath+ "echo 'save clearnet'",
-                            busyboxPath+ "echo \"" + ipsToUnlock + "\" > "+appDataDir+"/app_data/tor/clearnet",
-                            busyboxPath+ "chmod 644 "+appDataDir+"/app_data/tor/clearnet",
-                            busyboxPath+ "sleep 1",
+                    FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/tor/clearnet",ipsToUnlock,"ignored");
+                    Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
+                    commandsSaveIPs = new String[] {
                             "ip6tables -D OUTPUT -j DROP || true",
                             "ip6tables -I OUTPUT -j DROP",
                             iptablesPath+ "iptables -t nat -F tordnscrypt_nat_output",
@@ -334,7 +334,6 @@ public class UnlockTorIpsFrag extends Fragment {
 
                             iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:"+itpdHttpProxyPort,
                             iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:"+itpdHttpProxyPort,
-                            //iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p udp -d "+dnsCryptFallbackRes+" --dport 53 -j ACCEPT",
                             iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:"+dnsCryptPort,
                             iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:"+dnsCryptPort,
                             iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -m owner --uid-owner $TOR_UID -j RETURN",
@@ -345,7 +344,6 @@ public class UnlockTorIpsFrag extends Fragment {
                             torSitesBypassNatUDP,
                             torAppsBypassNatTCP,
                             torAppsBypassNatUDP,
-                            //iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p tcp --syn -j DNAT --to-destination 127.0.0.1:"+torTransPort,
                             iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p tcp -j DNAT --to-destination 127.0.0.1:"+torTransPort,
                             iptablesPath+ "iptables -N tordnscrypt",
                             iptablesPath+ "iptables -A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
@@ -374,14 +372,12 @@ public class UnlockTorIpsFrag extends Fragment {
 
             } else if (new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("Tor Running")){
                 if (!routeAllThroughTorDevice) {
-                    commandsSaveIPs = new String[] {"echo 'save unlock'",
-                            busyboxPath+ "echo \"" + ipsToUnlock + "\" > "+appDataDir+"/app_data/tor/unlock",
-                            busyboxPath+ "chmod 644 "+appDataDir+"/app_data/tor/unlock"};
+                    FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/tor/unlock",ipsToUnlock,"ignored");
+                    Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
                 } else {
-                    commandsSaveIPs = new String[] {"echo 'save clearnet'",
-                            busyboxPath+ "echo \"" + ipsToUnlock + "\" > "+appDataDir+"/app_data/tor/clearnet",
-                            busyboxPath+ "chmod 644 "+appDataDir+"/app_data/tor/clearnet",
-                            busyboxPath+ "sleep 1",
+                    FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/tor/clearnet",ipsToUnlock,"ignored");
+                    Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
+                    commandsSaveIPs = new String[] {
                             "ip6tables -D OUTPUT -j DROP || true",
                             "ip6tables -I OUTPUT -j DROP",
                             iptablesPath+ "iptables -t nat -F tordnscrypt_nat_output",
@@ -404,7 +400,6 @@ public class UnlockTorIpsFrag extends Fragment {
                             torSitesBypassNatUDP,
                             torAppsBypassNatTCP,
                             torAppsBypassNatUDP,
-                            //iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p tcp --syn -j DNAT --to-destination 127.0.0.1:"+torTransPort,
                             iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p tcp -j DNAT --to-destination 127.0.0.1:"+torTransPort,
                             iptablesPath+ "iptables -N tordnscrypt",
                             iptablesPath+ "iptables -A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
@@ -433,27 +428,23 @@ public class UnlockTorIpsFrag extends Fragment {
 
             } else {
                 if (!routeAllThroughTorDevice) {
-                    commandsSaveIPs = new String[] {"echo 'save unlock'",
-                            busyboxPath+ "echo \"" + ipsToUnlock + "\" > "+appDataDir+"/app_data/tor/unlock",
-                            busyboxPath+ "chmod 644 "+appDataDir+"/app_data/tor/unlock"};
+                    FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/tor/unlock",ipsToUnlock,"ignored");
+                    Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
                 } else {
-                    commandsSaveIPs = new String[]{"echo 'save clearnet'",
-                            busyboxPath + "echo \"" + ipsToUnlock + "\" > " + appDataDir + "/app_data/tor/clearnet",
-                            busyboxPath + "chmod 644 " + appDataDir + "/app_data/tor/clearnet"};
+                    FileOperations.writeToTextFile(getActivity(),appDataDir + "/app_data/tor/clearnet",ipsToUnlock,"ignored");
+                    Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
                 }
             }
             //////////////////////////////////////////////////////////////////////////////////////
-            //////////////When open this fragment for add sites for external tether devices/////////
+            //////////////When open this fragment to add sites for external tether devices/////////
             /////////////////////////////////////////////////////////////////////////////////////
         } else if (deviceOrTether.equals("tether")) {
             if (!routeAllThroughTorTether) {
-                commandsSaveIPs = new String[]{"echo 'save unlock_tether'",
-                        busyboxPath + "echo \"" + ipsToUnlock + "\" > " + appDataDir + "/app_data/tor/unlock_tether",
-                        busyboxPath + "chmod 644 " + appDataDir + "/app_data/tor/unlock_tether"};
+                FileOperations.writeToTextFile(getActivity(),appDataDir + "/app_data/tor/unlock_tether",ipsToUnlock,"ignored");
+                Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
             } else {
-                commandsSaveIPs = new String[]{"echo 'save clearnet_tether'",
-                        busyboxPath + "echo \"" + ipsToUnlock + "\" > " + appDataDir + "/app_data/tor/clearnet_tether",
-                        busyboxPath + "chmod 644 " + appDataDir + "/app_data/tor/clearnet_tether"};
+                FileOperations.writeToTextFile(getActivity(),appDataDir + "/app_data/tor/clearnet_tether",ipsToUnlock,"ignored");
+                Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
             }
         }
 
@@ -476,7 +467,11 @@ public class UnlockTorIpsFrag extends Fragment {
         intent.putExtra("Commands",rootCommands);
         intent.putExtra("Mark", RootExecService.SettingsActivityMark);
         RootExecService.performAction(getActivity(),intent);
-        Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
     }
 
     public class HostIP {
@@ -557,7 +552,6 @@ public class UnlockTorIpsFrag extends Fragment {
         void setActive(int position, boolean active){
             HostIP hip = unlockHostIP.get(position);
             hip.active = active;
-            //unlockHostIP.set(position,hip);
         }
 
         class HostIPViewHolder extends RecyclerView.ViewHolder {
@@ -610,7 +604,6 @@ public class UnlockTorIpsFrag extends Fragment {
                             break;
                         case R.id.llHostIP:
                             editHostIPDialog(getAdapterPosition());
-                            //Toast.makeText(getActivity(),String.valueOf(getAdapterPosition()),Toast.LENGTH_SHORT).show();
                             break;
                     }
 
@@ -823,7 +816,6 @@ public class UnlockTorIpsFrag extends Fragment {
         GetHostIP (ArrayList<String> unlockHosts, ArrayList<String> unlockIPs) {
             this.unlockHosts = unlockHosts;
             this.unlockIPs = unlockIPs;
-            //unlockHostIP = new ArrayList<>();
         }
 
         @Override
@@ -861,7 +853,6 @@ public class UnlockTorIpsFrag extends Fragment {
             super.onProgressUpdate(values);
 
             rvAdapter.notifyItemChanged(values[0]);
-            //rvAdapter.notifyDataSetChanged();
         }
 
         @Override
@@ -889,7 +880,6 @@ public class UnlockTorIpsFrag extends Fragment {
                     @Override
                     public void run() {
                         if (addHostIP) {
-                            //rvAdapter.notifyDataSetChanged();
                             rvAdapter.notifyItemChanged(position);
                             rvListHostip.scrollToPosition(position);
                         } else if (editHostIP) {
@@ -907,7 +897,6 @@ public class UnlockTorIpsFrag extends Fragment {
                     @Override
                     public void run() {
                         if (addHostIP) {
-                            //rvAdapter.notifyDataSetChanged();
                             rvAdapter.notifyItemChanged(position);
                             rvListHostip.scrollToPosition(position);
                         } else if (editHostIP) {
@@ -920,7 +909,6 @@ public class UnlockTorIpsFrag extends Fragment {
             String IP = unlockHostIP.get(position).IP;
             String host = "";
             try {
-                //InetAddress address = InetAddress.getByName(IP);
                 URL url = new URL("http://" +IP);
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
                 con.setInstanceFollowRedirects(false);
