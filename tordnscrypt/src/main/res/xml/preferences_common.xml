@@ -14,7 +14,7 @@
             android:title="@string/pref_common_tor_tethering" />
         <SwitchPreference
             android:id="@+id/pref_common_tor_route_all"
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="pref_common_tor_route_all"
             android:summary="@string/pref_common_tor_route_all_summ"
             android:title="@string/pref_common_tor_route_all"
@@ -74,6 +74,12 @@
             android:key="swShowNotification"
             android:summary="@string/pref_common_notification_summ"
             android:title="@string/pref_common_show_notification" />
+        <SwitchPreference
+            android:id="@+id/swWakelock"
+            android:defaultValue="false"
+            android:key="swWakelock"
+            android:summary="@string/pref_common_wakelock_summ"
+            android:title="@string/pref_common_wakelock" />
         <SwitchPreference
             android:id="@+id/pref_common_show_help"
             android:defaultValue="false"
