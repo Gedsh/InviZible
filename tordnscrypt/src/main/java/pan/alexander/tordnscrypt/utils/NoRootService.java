@@ -18,15 +18,20 @@ package pan.alexander.tordnscrypt.utils;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
@@ -34,6 +39,7 @@ import android.widget.Toast;
 import com.jrummyapps.android.shell.CommandResult;
 import com.jrummyapps.android.shell.Shell;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.MainActivity;
@@ -56,10 +62,12 @@ public class NoRootService extends Service {
     public final String ANDROID_CHANNEL_ID = "InviZible";
     private NotificationManager notificationManager;
     public static final int DEFAULT_NOTIFICATION_ID = 101;
+    private static PowerManager.WakeLock wakeLock = null;
 
     public NoRootService() {
     }
 
+    @SuppressLint({"InvalidWakeLockTag", "WakelockTimeout"})
     @Override
     public void onCreate() {
         super.onCreate();
@@ -71,6 +79,15 @@ public class NoRootService extends Service {
         itpdPath = pathVars.itpdPath;
         mHandler = new Handler();
         notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        if (sharedPreferences.getBoolean("swWakelock", false)) {
+            final String TAG = "AudioMix";
+            if (wakeLock == null) {
+                wakeLock = ((PowerManager) Objects.requireNonNull(getSystemService(Context.POWER_SERVICE))).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
+                wakeLock.acquire();
+            }
+        }
     }
 
     @Override
@@ -195,6 +212,14 @@ public class NoRootService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    @Override
+    public void onDestroy() {
+        if (wakeLock != null) {
+            wakeLock.release();
+        }
+        super.onDestroy();
     }
 
     Runnable startDNSCrypt = new Runnable() {
