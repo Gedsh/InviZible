@@ -151,7 +151,7 @@
             android:title="@string/pref_dnscrypt_fallback_resolver" />
         <CheckBoxPreference
             android:id="@+id/ignore_system_dns"
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="ignore_system_dns"
             android:summary="@string/pref_dnscrypt_ignore_system_dns_summ"
             android:title="@string/pref_dnscrypt_ignore_system_dns" />
