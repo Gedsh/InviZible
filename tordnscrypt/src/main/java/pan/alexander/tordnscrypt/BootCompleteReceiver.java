@@ -170,31 +170,37 @@ public class BootCompleteReceiver extends BroadcastReceiver {
             String appUIDDNS = new PrefManager(context).getStrPref("appUID");
             String restoreUIDDNS = busyboxPath+ "chown -R "+appUIDDNS+"."+appUIDDNS+" "+appDataDir+"/app_data/dnscrypt-proxy";
             String restoreSEContextDNS = "restorecon -R "+appDataDir+"/app_data/dnscrypt-proxy";
+            String killallDNS = busyboxPath + "killall dnscrypt-proxy";
             if (rnDNSCryptWithRoot) {
                 startCommandDNSCrypt = busyboxPath+ "nohup " + dnscryptPath+" --config "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml >/dev/null 2>&1 &";
                 restoreUIDDNS = busyboxPath+"chown -R 0.0 "+appDataDir+"/app_data/dnscrypt-proxy";
                 restoreSEContextDNS = "";
+                killallDNS = busyboxPath + "killall dnscrypt-proxy";
             }
 
             String startCommandTor = "";
             String appUIDTor = new PrefManager(context).getStrPref("appUID");
             String restoreUIDTor = busyboxPath+ "chown -R "+appUIDTor+"."+appUIDTor+" "+appDataDir+"/tor_data";
             String restoreSEContextTor = "restorecon -R "+appDataDir+"/tor_data";
+            String killallTor = busyboxPath + "killall tor";
             if (rnTorWithRoot) {
                 startCommandTor = torPath+" -f "+appDataDir+"/app_data/tor/tor.conf";
                 restoreUIDTor = busyboxPath+"chown -R 0.0 "+appDataDir+"/tor_data";
                 restoreSEContextTor = "";
                 appUIDTor ="0";
+                killallTor = busyboxPath + "killall tor";
             }
 
             String startCommandI2PD = "";
             String appUIDITPD = new PrefManager(context).getStrPref("appUID");
             String restoreUIDITPD = busyboxPath+ "chown -R "+appUIDITPD+"."+appUIDITPD+" "+appDataDir+"/i2pd_data";
             String restoreSEContextITPD = "restorecon -R "+appDataDir+"/i2pd_data";
+            String killallITPD = busyboxPath + "killall i2pd";
             if (rnI2PDWithRoot) {
                 startCommandI2PD = itpdPath+" --conf "+appDataDir+"/app_data/i2pd/i2pd.conf --datadir "+appDataDir+"/i2pd_data &";
                 restoreUIDITPD = busyboxPath+"chown -R 0.0 "+appDataDir+"/i2pd_data";
                 restoreSEContextITPD = "";
+                killallITPD = busyboxPath + "killall i2pd";
             }
 
             String[] commandsStart = null;
@@ -207,7 +213,15 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
                 if (!routeAllThroughTor) {
                     commandsStart = new String[] {
+                            killallDNS, killallTor, killallITPD,
+                            "ip6tables -D OUTPUT -j DROP || true",
                             "ip6tables -I OUTPUT -j DROP",
+                            iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
+                            iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
+                            iptablesPath + "iptables -F tordnscrypt",
+                            iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
+                            busyboxPath + "sleep 1",
+
                             busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/DnsCrypt.log",
                             busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/Tor.log",
                             busyboxPath+ "sleep 1",
@@ -248,7 +262,15 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
                 } else {
                     commandsStart = new String[] {
+                            killallDNS, killallTor, killallITPD,
+                            "ip6tables -D OUTPUT -j DROP || true",
                             "ip6tables -I OUTPUT -j DROP",
+                            iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
+                            iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
+                            iptablesPath + "iptables -F tordnscrypt",
+                            iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
+                            busyboxPath + "sleep 1",
+
                             busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/DnsCrypt.log",
                             busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/Tor.log",
                             busyboxPath+ "sleep 1",
@@ -330,7 +352,15 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
                 if (!routeAllThroughTor) {
                     commandsStart = new String[] {
+                            killallDNS, killallTor, killallITPD,
+                            "ip6tables -D OUTPUT -j DROP || true",
                             "ip6tables -I OUTPUT -j DROP",
+                            iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
+                            iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
+                            iptablesPath + "iptables -F tordnscrypt",
+                            iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
+                            busyboxPath + "sleep 1",
+
                             busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/DnsCrypt.log",
                             busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/Tor.log",
                             busyboxPath+ "sleep 1",
@@ -367,7 +397,15 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                     };
                 } else {
                     commandsStart = new String[] {
+                            killallDNS, killallTor, killallITPD,
+                            "ip6tables -D OUTPUT -j DROP || true",
                             "ip6tables -I OUTPUT -j DROP",
+                            iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
+                            iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
+                            iptablesPath + "iptables -F tordnscrypt",
+                            iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
+                            busyboxPath + "sleep 1",
+
                             busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/DnsCrypt.log",
                             busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/Tor.log",
                             busyboxPath+ "sleep 1",
@@ -446,7 +484,15 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                 new PrefManager(context).setBoolPref("I2PD Running",false);
 
                 commandsStart = new String[] {
+                        killallDNS, killallTor, killallITPD,
+                        "ip6tables -D OUTPUT -j DROP || true",
                         "ip6tables -I OUTPUT -j DROP",
+                        iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
+                        iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
+                        iptablesPath + "iptables -F tordnscrypt",
+                        iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
+                        busyboxPath + "sleep 1",
+
                         busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/DnsCrypt.log",
                         busyboxPath+ "sleep 1",
                         restoreUIDDNS,
@@ -490,7 +536,15 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                 new PrefManager(context).setBoolPref("I2PD Running",false);
 
                 commandsStart = new String[] {
+                        killallDNS, killallTor, killallITPD,
+                        "ip6tables -D OUTPUT -j DROP || true",
                         "ip6tables -I OUTPUT -j DROP",
+                        iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
+                        iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
+                        iptablesPath + "iptables -F tordnscrypt",
+                        iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
+                        busyboxPath + "sleep 1",
+
                         busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/Tor.log",
                         busyboxPath+ "sleep 1",
                         restoreUIDTor,
@@ -575,7 +629,15 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                 new PrefManager(context).setBoolPref("I2PD Running",true);
 
                 commandsStart = new String[] {
+                        killallDNS, killallTor, killallITPD,
+                        "ip6tables -D OUTPUT -j DROP || true",
                         "ip6tables -I OUTPUT -j DROP",
+                        iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
+                        iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
+                        iptablesPath + "iptables -F tordnscrypt",
+                        iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
+                        busyboxPath + "sleep 1",
+
                         busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/Tor.log",
                         busyboxPath+ "sleep 1",
                         restoreUIDTor,
@@ -645,7 +707,15 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                 new PrefManager(context).setBoolPref("I2PD Running",true);
 
                 commandsStart = new String[] {
+                        killallDNS, killallTor, killallITPD,
+                        "ip6tables -D OUTPUT -j DROP || true",
                         "ip6tables -I OUTPUT -j DROP",
+                        iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
+                        iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
+                        iptablesPath + "iptables -F tordnscrypt",
+                        iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
+                        busyboxPath + "sleep 1",
+
                         busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/DnsCrypt.log",
                         busyboxPath+ "sleep 1",
                         restoreUIDDNS,
