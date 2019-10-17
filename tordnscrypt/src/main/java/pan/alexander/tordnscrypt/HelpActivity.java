@@ -65,7 +65,6 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 public class HelpActivity extends LangAppCompatActivity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener, FileOperations.OnFileOperationsCompleteListener {
 
     EditText etLogsPath;
-    //ProgressBar pbHelp;
     Button btnSaveLogs;
     Switch swRootCommandsLog;
     BroadcastReceiver br;
@@ -93,7 +92,6 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
         etLogsPath = findViewById(R.id.etLogsPath);
         etLogsPath.setOnClickListener(this);
-        //pbHelp = findViewById(R.id.pbHelp);
         btnSaveLogs = findViewById(R.id.btnSaveLogs);
         btnSaveLogs.setOnClickListener(this);
         swRootCommandsLog = findViewById(R.id.swRootCommandsLog);
@@ -113,8 +111,6 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                             RootExecService.HelpActivityMark)) return;
 
                     if(action.equals(RootExecService.COMMAND_RESULT)){
-
-                        //pbHelp.setIndeterminate(false);
 
                         RootCommands comResult = (RootCommands) intent.getSerializableExtra("CommandsResult");
 
@@ -272,7 +268,6 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                 intent.putExtra("Mark", RootExecService.HelpActivityMark);
                 RootExecService.performAction(this,intent);
 
-                //pbHelp.setIndeterminate(true);
                 dialogInterface = FileOperations.fileOperationProgressDialog(this);
                 break;
             case R.id.etLogsPath:

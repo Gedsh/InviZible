@@ -18,14 +18,20 @@ package pan.alexander.tordnscrypt.utils;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.text.InputType;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
+
+import java.util.Objects;
 
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
@@ -66,7 +72,8 @@ public class Registration {
                     })
                     .setCancelable(false);
             if (wrongRegistrationCode) {
-                builder.show();
+                AlertDialog view  = builder.show();
+                Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
             }
         } catch (Exception e) {
             e.getStackTrace();
@@ -75,9 +82,11 @@ public class Registration {
     }
 
     public void showEnterCodeDialog() {
-        final EditText editText = new EditText(context);
+
+        LayoutInflater inflater = ((Activity)context).getLayoutInflater();
+        @SuppressLint("InflateParams") final View inputView = inflater.inflate(R.layout.edit_text_for_dialog, null, false);
+        final EditText editText = inputView.findViewById(R.id.etForDialog);
         editText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
-        editText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder .setTitle(R.string.enter_code)
@@ -102,7 +111,8 @@ public class Registration {
                     }
                 })
                 .setCancelable(false)
-                .setView(editText);
-        builder.show();
+                .setView(inputView);
+        AlertDialog view  = builder.show();
+        Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
     }
 }

@@ -81,6 +81,7 @@ public class BackupActivity extends LangAppCompatActivity implements View.OnClic
         findViewById(R.id.btnRestoreBackup).setOnClickListener(this);
         findViewById(R.id.btnSaveBackup).setOnClickListener(this);
         pbBackup = findViewById(R.id.pbBackup);
+        pbBackup.setVisibility(View.INVISIBLE);
         etFilePath=findViewById(R.id.etPathBackup);
         PathVars pathVars = new PathVars(this);
         pathBackup = pathVars.pathBackup;
@@ -118,6 +119,7 @@ public class BackupActivity extends LangAppCompatActivity implements View.OnClic
                         commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
 
 
+                        pbBackup.setVisibility(View.INVISIBLE);
                         pbBackup.setIndeterminate(false);
 
                         if(flagSave) Toast.makeText(context,"Backup OK",Toast.LENGTH_SHORT).show();
@@ -161,6 +163,7 @@ public class BackupActivity extends LangAppCompatActivity implements View.OnClic
                 flagRestore = true;
                 flagSave = false;
 
+                pbBackup.setVisibility(View.VISIBLE);
                 pbBackup.setIndeterminate(true);
 
                 break;
@@ -190,6 +193,7 @@ public class BackupActivity extends LangAppCompatActivity implements View.OnClic
                 flagSave = true;
                 flagRestore = false;
 
+                pbBackup.setVisibility(View.VISIBLE);
                 pbBackup.setIndeterminate(true);
 
                 break;

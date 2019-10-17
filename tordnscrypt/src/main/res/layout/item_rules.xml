@@ -1,54 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginTop="5dp"
     android:baselineAligned="false"
     android:orientation="vertical">
 
-    <LinearLayout
-        android:id="@+id/llRules"
+    <android.support.v7.widget.CardView
+        android:id="@+id/cardRules"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:orientation="horizontal"
-        tools:ignore="UselessParent">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:focusable="false"
+        app:cardBackgroundColor="@color/cardsColor"
+        app:cardCornerRadius="5dp"
+        app:cardUseCompatPadding="true"
+        app:contentPadding="8dp">
 
-        <EditText
-            android:id="@+id/etRule"
-            style="@android:style/Widget.Holo.EditText"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="50"
-            android:editable="true"
-            android:ellipsize="end"
-            android:gravity="center_vertical"
-            android:inputType="text"
-            android:selectAllOnFocus="false"
-            android:singleLine="true"
-            android:text="Text"
-            android:textAlignment="gravity" />
+            android:orientation="vertical">
 
-        <ImageButton
-            android:id="@+id/delBtnRules"
-            style="@android:style/Widget.Holo.ImageButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="3dp"
-            android:layout_weight="1"
-            android:contentDescription="Delete"
-            android:scaleType="fitCenter"
-            android:src="@android:drawable/ic_menu_delete" />
+            <LinearLayout
+                android:id="@+id/llRules"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
-        <Switch
-            android:id="@+id/swRuleActive"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_margin="3dp"
-            android:layout_weight="1"
-            android:checked="false"
-            tools:checked="true" />
+                <EditText
+                    android:id="@+id/etRule"
+                    style="@android:style/Widget.Holo.EditText"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginBottom="8dp"
+                    android:layout_weight="1"
+                    android:editable="true"
+                    android:ellipsize="end"
+                    android:fontFamily="serif"
+                    android:gravity="center_vertical"
+                    android:inputType="text"
+                    android:nextFocusDown="@id/swRuleActive"
+                    android:selectAllOnFocus="false"
+                    android:singleLine="true"
+                    android:text="Text"
+                    android:textAlignment="center" />
 
-    </LinearLayout>
+                <Switch
+                    android:id="@+id/swRuleActive"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_margin="5dp"
+                    android:checked="false"
+                    tools:checked="true" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </android.support.v7.widget.CardView>
+
+    <ImageButton
+        android:id="@+id/delBtnRules"
+        android:layout_width="wrap_content"
+        android:layout_height="25dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="3dp"
+        android:background="@drawable/button_item_selector"
+        android:contentDescription="Delete"
+        android:focusable="false"
+        android:scaleType="fitCenter"
+        app:srcCompat="@android:drawable/ic_menu_delete" />
 
 </LinearLayout>

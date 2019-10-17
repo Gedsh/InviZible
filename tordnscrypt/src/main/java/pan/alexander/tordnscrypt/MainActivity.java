@@ -18,10 +18,12 @@ package pan.alexander.tordnscrypt;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -36,6 +38,7 @@ import android.support.v7.widget.Toolbar;
 import android.text.InputType;
 import android.util.Base64;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -310,14 +313,16 @@ public class MainActivity extends LangAppCompatActivity
 
 
     private void childLock(final MenuItem item) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomDialogTheme);
         builder.setTitle(R.string.action_mode_child_lock);
         builder.setMessage(R.string.action_mode_dialog_message_lock);
         builder.setIcon(R.drawable.ic_lock_outline_blue_24dp);
 
-        final EditText input = new EditText(this);
+
+        LayoutInflater inflater = getLayoutInflater();
+        @SuppressLint("InflateParams") final View inputView = inflater.inflate(R.layout.edit_text_for_dialog, null, false);
+        final EditText input = inputView.findViewById(R.id.etForDialog);
         input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        input.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
 
         final MainActivity mainActivity = this;
 
@@ -327,7 +332,7 @@ public class MainActivity extends LangAppCompatActivity
             input.setText(saved_pass);
             input.setSelection(saved_pass.length());
         }
-        builder.setView(input);
+        builder.setView(inputView);
 
         builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             @Override
@@ -354,19 +359,22 @@ public class MainActivity extends LangAppCompatActivity
                 dialogInterface.cancel();
             }
         });
-        builder.show();
+
+        AlertDialog view  = builder.show();
+        Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
     }
 
     private void childUnlock(final MenuItem item) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomDialogTheme);
         builder.setTitle(R.string.action_mode_child_lock);
         builder.setMessage(R.string.action_mode_dialog_message_unlock);
         builder.setIcon(R.drawable.ic_lock_outline_blue_24dp);
 
-        final EditText input = new EditText(this);
+        LayoutInflater inflater = getLayoutInflater();
+        @SuppressLint("InflateParams") final View inputView = inflater.inflate(R.layout.edit_text_for_dialog, null, false);
+        final EditText input = inputView.findViewById(R.id.etForDialog);
         input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        input.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-        builder.setView(input);
+        builder.setView(inputView);
 
         final MainActivity mainActivity = this;
 
@@ -396,7 +404,9 @@ public class MainActivity extends LangAppCompatActivity
                 dialogInterface.cancel();
             }
         });
-        builder.show();
+
+        AlertDialog view  = builder.show();
+        Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
     }
 
 
@@ -479,7 +489,7 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     public DialogInterface modernProgressDialog() {
-        android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(this);
+        android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(this, R.style.CustomDialogTheme);
         builder.setTitle(R.string.update_checking_title);
         builder.setMessage(R.string.update_checking_message);
         builder.setIcon(R.drawable.ic_visibility_off_black_24dp);
@@ -501,10 +511,15 @@ public class MainActivity extends LangAppCompatActivity
         });
 
         ProgressBar progressBar = new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);
+        progressBar.setBackgroundResource(R.drawable.background_10dp_padding);
         progressBar.setIndeterminate(true);
         builder.setView(progressBar);
         builder.setCancelable(false);
-        return builder.show();
+
+        AlertDialog view  = builder.show();
+        Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
+
+        return view;
     }
 
     @Override

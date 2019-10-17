@@ -3,8 +3,26 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#3F51B5</color>
-    <color name="colorSelected">#808080</color>
-    <color name="colorUnSelected">#FFFFFF</color>
-    <color name="colorFirst">#FFFFFF</color>
+    <color name="colorBackground">#FFFFFF</color>
+    <color name="colorSelected">#803F51B5</color>
+    <!-- colorFirst same as cardsColor -->
+    <color name="colorFirst">#F0F0F0</color>
     <color name="colorSecond">#C0C0C0</color>
+    <color name="cardsColor">#F0F0F0</color>
+    <color name="alertWindowColor">#F7F7F7</color>
+    <color name="buttonColor">#444444</color>
+    <color name="buttonColorFocusedHighlight">#4E747B</color>
+    <color name="buttonColorFocusedHighlightStroke">#00E5FF</color>
+    <color name="buttonColorPressedHighlight">#C8C8C8</color>
+    <color name="buttonTextColor">#FFFFFF</color>
+    <color name="textModuleStatusColorAlert">#B00020</color>
+    <color name="textModuleStatusColorStopped">#444444</color>
+    <color name="textModuleStatusColorStarting">#1A237E</color>
+    <color name="textModuleStatusColorStopping">#1A237E</color>
+    <color name="textModuleStatusColorRunning">#009688</color>
+    <color name="textModuleStatusColorInstalling">#1A237E</color>
+    <color name="textModuleStatusColorInstalled">#009688</color>
+    <color name="customBorderColor">#9e9e9e</color>
+    <color name="itemDividerColor">#9e9e9e</color>
+    <color name="buttonItemColorFocusedHighlight">#C8C8C8</color>
 </resources>

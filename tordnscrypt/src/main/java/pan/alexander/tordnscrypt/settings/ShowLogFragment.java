@@ -21,6 +21,7 @@ package pan.alexander.tordnscrypt.settings;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -75,7 +76,9 @@ public class ShowLogFragment extends android.app.Fragment implements View.OnClic
         busyboxPath = pathVars.busyboxPath;
 
         tvLogFile = getActivity().findViewById(R.id.tvLogFile);
-        getActivity().findViewById(R.id.btnDeleteLog).setOnClickListener(this);
+        FloatingActionButton floatingBtnClearLog = getActivity().findViewById(R.id.floatingBtnClearLog);
+        floatingBtnClearLog.setAlpha(0.8f);
+        floatingBtnClearLog.setOnClickListener(this);
 
         if(file_path.contains("query.log")){
             getActivity().setTitle(R.string.title_dnscrypt_query_log);
@@ -101,7 +104,7 @@ public class ShowLogFragment extends android.app.Fragment implements View.OnClic
         List<String> emptyString = new LinkedList<>();
         emptyString.add("");
 
-        if(v.getId()==R.id.btnDeleteLog){
+        if(v.getId()==R.id.floatingBtnClearLog){
             FileOperations.writeToTextFile(getActivity(),file_path,emptyString,"ignored");
             tvLogFile.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
             tvLogFile.setText(R.string.dnscrypt_empty_log);

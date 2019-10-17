@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.widget.ProgressBar;
 
@@ -23,6 +25,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Stack;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -485,7 +488,7 @@ public class FileOperations {
     }
 
     public static DialogInterface fileOperationProgressDialog(Context context) {
-        final android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(context,R.style.Theme_AppCompat_DayNight_Dialog_Alert);
+        final android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(context,R.style.CustomDialogTheme);
         builder.setTitle(R.string.please_wait);
         builder.setCancelable(false);
         builder.setPositiveButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -496,10 +499,13 @@ public class FileOperations {
         });
 
         ProgressBar progressBar = new ProgressBar(context,null,android.R.attr.progressBarStyleHorizontal);
+        progressBar.setBackgroundResource(R.drawable.background_10dp_padding);
         progressBar.setIndeterminate(true);
         builder.setView(progressBar);
         builder.setCancelable(false);
-        return builder.show();
+        AlertDialog view  = builder.show();
+        Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
+        return view;
     }
 
     public static void setOnFileOperationCompleteListener(OnFileOperationsCompleteListener callback) {

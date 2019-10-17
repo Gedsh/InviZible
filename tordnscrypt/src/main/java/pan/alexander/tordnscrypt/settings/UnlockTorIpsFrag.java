@@ -26,10 +26,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
@@ -226,8 +228,9 @@ public class UnlockTorIpsFrag extends Fragment{
         });
         thread.start();
 
-
-        getActivity().findViewById(R.id.imbtnAddTorIPs).setOnClickListener(new View.OnClickListener() {
+        FloatingActionButton floatingbtnAddTorIPs = getActivity().findViewById(R.id.floatingbtnAddTorIPs);
+        floatingbtnAddTorIPs.setAlpha(0.8f);
+        floatingbtnAddTorIPs.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 addHostIPDialog();
@@ -670,14 +673,16 @@ public class UnlockTorIpsFrag extends Fragment{
             };
 
             void editHostIPDialog(final int position) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
                 builder.setTitle(R.string.pref_tor_unlock_edit);
 
-                final EditText input = new EditText(getActivity());
+                LayoutInflater inflater = getActivity().getLayoutInflater();
+                @SuppressLint("InflateParams") final View inputView = inflater.inflate(R.layout.edit_text_for_dialog, null, false);
+                final EditText input = inputView.findViewById(R.id.etForDialog);
+
                 String oldHost = "";
                 String oldIP = "";
 
-                input.setInputType(InputType.TYPE_CLASS_TEXT);
                 if (unlockHostIP.get(position).inputHost) {
                     oldHost = unlockHostIP.get(position).host;
                     input.setText(oldHost,TextView.BufferType.EDITABLE);
@@ -685,7 +690,7 @@ public class UnlockTorIpsFrag extends Fragment{
                     oldIP = unlockHostIP.get(position).IP;
                     input.setText(oldIP,TextView.BufferType.EDITABLE);
                 }
-                builder.setView(input);
+                builder.setView(inputView);
 
                 final String finalOldIP = oldIP;
                 final String finalOldHost = oldHost;
@@ -730,14 +735,15 @@ public class UnlockTorIpsFrag extends Fragment{
                     }
                 });
 
-                builder.show();
+                AlertDialog view  = builder.show();
+                Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
             }
 
         }
     }
 
     void addHostIPDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
 
         if (deviceOrTether.equals("device")) {
             if (!routeAllThroughTorDevice) {
@@ -754,12 +760,11 @@ public class UnlockTorIpsFrag extends Fragment{
         }
 
 
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        @SuppressLint("InflateParams") final View inputView = inflater.inflate(R.layout.edit_text_for_dialog, null, false);
+        final EditText input = inputView.findViewById(R.id.etForDialog);
 
-        final EditText input = new EditText(getActivity());
-
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-
-        builder.setView(input);
+        builder.setView(inputView);
 
         builder.setCancelable(false);
 
@@ -804,7 +809,8 @@ public class UnlockTorIpsFrag extends Fragment{
             }
         });
 
-        builder.show();
+        AlertDialog view  = builder.show();
+        Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
     }
 
     @SuppressLint("StaticFieldLeak")

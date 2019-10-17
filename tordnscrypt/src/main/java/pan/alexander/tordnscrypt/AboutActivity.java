@@ -21,8 +21,10 @@ package pan.alexander.tordnscrypt;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
@@ -114,14 +116,11 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
                 outputText = outputText + byteArrayOutputStream.toString();
             }
 
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            TextView license_text = new TextView(this);
-            license_text.setText(outputText);
-            license_text.setSingleLine(false);
-            license_text.setVerticalScrollBarEnabled(true);
-            license_text.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
-            license_text.setPadding(10,10,10,10);
-            license_text.setMovementMethod(ScrollingMovementMethod.getInstance());
+            AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomDialogTheme);
+            LayoutInflater layoutInflater = getLayoutInflater();
+            View inflatedView = layoutInflater.inflate(R.layout.licenses_scrollable_text, null, false);
+            TextView licenseText = inflatedView.findViewById(R.id.tvLicense);
+            licenseText.setText(outputText);
 
             builder.setTitle(title);
 
@@ -132,9 +131,10 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
                 }
             });
 
-            builder.setView(license_text);
+            builder.setView(inflatedView);
 
-            builder.show();
+            AlertDialog view  = builder.show();
+            Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
         }
         catch (IOException e)
         {

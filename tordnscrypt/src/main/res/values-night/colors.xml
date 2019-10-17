@@ -3,8 +3,24 @@
     <color name="colorPrimary">#1A224C</color>
     <color name="colorPrimaryDark">#13193E</color>
     <color name="colorAccent">#3F51B5</color>
-    <color name="colorSelected">#000000</color>
-    <color name="colorUnSelected">#353535</color>
-    <color name="colorFirst">#353535</color>
-    <color name="colorSecond">#808080</color>
+    <color name="colorBackground">#121212</color>
+    <color name="colorSelected">#1A3F51B5</color>
+    <!-- colorFirst same as cardsColor -->
+    <color name="colorFirst">#1E1E1E</color>
+    <color name="colorSecond">#3C3C3C</color>
+    <color name="cardsColor">#1E1E1E</color>
+    <color name="alertWindowColor">#1E1E1E</color>
+    <color name="buttonColor">#3C3C3C</color>
+    <color name="buttonColorFocusedHighlight">#1A00E5FF</color>
+    <color name="buttonColorFocusedHighlightStroke">#00E5FF</color>
+    <color name="buttonColorPressedHighlight">#C8C8C8</color>
+    <color name="buttonTextColor">#FFFFFF</color>
+    <color name="textModuleStatusColorAlert">#FF1744</color>
+    <color name="textModuleStatusColorStopped">#FFFFFF</color>
+    <color name="textModuleStatusColorStarting">#2979FF</color>
+    <color name="textModuleStatusColorStopping">#2979FF</color>
+    <color name="textModuleStatusColorRunning">#1DE9B6</color>
+    <color name="textModuleStatusColorInstalling">#2979FF</color>
+    <color name="textModuleStatusColorInstalled">#1DE9B6</color>
+    <color name="buttonItemColorFocusedHighlight">#3C3C3C</color>
 </resources>

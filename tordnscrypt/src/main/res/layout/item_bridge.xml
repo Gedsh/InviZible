@@ -4,33 +4,60 @@
     android:id="@+id/llBridge"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="8dp"
-    android:layout_marginBottom="8dp">
+    android:layout_marginTop="5dp"
+    android:focusable="false"
+    android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/tvBridge"
+    <android.support.v7.widget.CardView
+        android:id="@+id/cardBridge"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginEnd="8dp"
-        android:layout_weight="50"
-        android:gravity="center_vertical"
-        android:text="Bridge" />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:focusable="false"
+        app:cardBackgroundColor="@color/cardsColor"
+        app:cardCornerRadius="5dp"
+        app:cardUseCompatPadding="true"
+        app:contentPadding="8dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"
+            android:gravity="start"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvBridge"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_margin="4dp"
+                android:layout_weight="1"
+                android:fontFamily="serif"
+                android:gravity="center_vertical"
+                android:text="Bridge"
+                android:textAlignment="center" />
+
+            <Switch
+                android:id="@+id/swBridge"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_margin="4dp"
+                android:checked="false" />
+        </LinearLayout>
+
+    </android.support.v7.widget.CardView>
 
     <ImageButton
         android:id="@+id/ibtnBridgeDel"
-        style="@android:style/Widget.Holo.ImageButton"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_weight="1"
+        android:layout_height="25dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="3dp"
+        android:background="@drawable/button_item_selector"
         android:contentDescription="Delete"
+        android:focusable="false"
         android:scaleType="fitCenter"
         app:srcCompat="@android:drawable/ic_menu_delete" />
-
-    <Switch
-        android:id="@+id/swBridge"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_weight="1" />
 
 </LinearLayout>

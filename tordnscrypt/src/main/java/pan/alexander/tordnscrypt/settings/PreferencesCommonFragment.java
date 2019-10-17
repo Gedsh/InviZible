@@ -26,6 +26,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
@@ -35,9 +37,13 @@ import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.v4.app.Fragment;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
@@ -332,7 +338,7 @@ public class PreferencesCommonFragment extends PreferenceFragment
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             // Use the Builder class for convenient dialog construction
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
             builder.setMessage(R.string.pref_common_notification_helper)
                     .setTitle(R.string.helper_dialog_title)
                     .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
@@ -353,6 +359,12 @@ public class PreferencesCommonFragment extends PreferenceFragment
                     });
             // Create the AlertDialog object and return it
             return builder.create();
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            Objects.requireNonNull(getDialog().getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            return super.onCreateView(inflater, container, savedInstanceState);
         }
     }
 

@@ -378,4 +378,6 @@
     <string name="update_over_five_times">Вы проверяли обновление InviZible Pro больше 5 раз в день. Пожалуйста, попробуйте позже.</string>
     <string name="update_over_three_activations">Похоже Вы уже активировали 3 копии InviZible Pro этим кодом. Если это не так, свяжитесь с разработчиком.</string>
     <string name="update_wrong_code">Похоже Ваш PRO код неверный. Пожалуйста, свяжитесь с разработчиком.</string>
+    <string name="pref_common_wakelock">Запретить сон устройства</string>
+    <string name="pref_common_wakelock_summ">Дополнительная защита в Безрутовом Режиме, чтоб андроид не закрыл приложение. Может привести к повышенному разряду батареи</string>
 </resources>

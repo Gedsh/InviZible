@@ -25,32 +25,31 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.constraint.ConstraintLayout;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.SearchView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
-public class CountrySelectFragment extends Fragment implements View.OnClickListener {
+public class CountrySelectFragment extends Fragment implements CompoundButton.OnCheckedChangeListener, SearchView.OnQueryTextListener {
 
     public static final int entryNodes =100;
     public static final int excludeNodes =200;
     public static final int exitNodes =300;
     public static final int excludeExitNodes =400;
     int current_nodes_type = 0;
-    String countries = "";
-    String[] countriesFullListTitles;
-    String[] countriesFullListValues;
+    private String countries = "";
     RecyclerView.Adapter rvAdapter;
     RecyclerView rvSelectCountries;
+    ArrayList<Countries> countriesListCurrent;
+    ArrayList<Countries> countriesListSaved = null;
 
     public CountrySelectFragment() {
 
@@ -61,8 +60,18 @@ public class CountrySelectFragment extends Fragment implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
 
-        countriesFullListTitles = getResources().getStringArray(R.array.pref_countries_titles);
-        countriesFullListValues = getResources().getStringArray(R.array.pref_countries_values);
+        String[] countriesFullListTitles = getResources().getStringArray(R.array.pref_countries_titles);
+        String[] countriesFullListValues = getResources().getStringArray(R.array.pref_countries_values);
+
+        countriesListCurrent = new ArrayList<>();
+
+        if (countriesFullListValues.length != countriesFullListTitles.length) {
+            throw new IllegalStateException("Wrong Tor countries array");
+        }
+        for (int i = 0; i < countriesFullListValues.length; i++) {
+            countriesListCurrent.add(new Countries(countriesFullListTitles[i], countriesFullListValues[i]));
+        }
+
         current_nodes_type = getArguments().getInt("nodes_type");
         countries = getArguments().getString("countries");
     }
@@ -78,41 +87,82 @@ public class CountrySelectFragment extends Fragment implements View.OnClickListe
     public void onResume() {
         super.onResume();
 
-        if (current_nodes_type==entryNodes){
+        if (current_nodes_type == entryNodes){
             getActivity().setTitle(R.string.pref_tor_entry_nodes);
-        } else if (current_nodes_type==excludeNodes) {
+        } else if (current_nodes_type == excludeNodes) {
             getActivity().setTitle(R.string.pref_tor_exclude_nodes);
-        } else if (current_nodes_type==exitNodes) {
+        } else if (current_nodes_type == exitNodes) {
             getActivity().setTitle(R.string.pref_tor_exit_nodes);
-        } else if (current_nodes_type==excludeExitNodes) {
+        } else if (current_nodes_type == excludeExitNodes) {
             getActivity().setTitle(R.string.pref_tor_exclude_exit_nodes);
         }
 
-        Button btnSelectAll = getActivity().findViewById(R.id.btnSelectAll);
-        btnSelectAll.setOnClickListener(this);
-        Button btnUnselectAll = getActivity().findViewById(R.id.btnUnselectAll);
-        btnUnselectAll.setOnClickListener(this);
+        CheckBox chbTorCountriesSelectorAll = getActivity().findViewById(R.id.chbTorCountriesSelectorAll);
+        chbTorCountriesSelectorAll.setOnCheckedChangeListener(this);
+
+        ((SearchView)getActivity().findViewById(R.id.searhTorCountry)).setOnQueryTextListener(this);
 
         rvSelectCountries = getActivity().findViewById(R.id.rvSelectCountries);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
         rvSelectCountries.setLayoutManager(mLayoutManager);
+        rvSelectCountries.requestFocus();
         rvAdapter = new CountriesAdapter();
         rvSelectCountries.setAdapter(rvAdapter);
     }
 
     @Override
-    public void onClick(View v) {
-        switch (v.getId()){
-            case R.id.btnSelectAll:
+    public void onCheckedChanged(CompoundButton compoundButton, boolean active) {
+        if (compoundButton.getId() == R.id.chbTorCountriesSelectorAll) {
+            if (active) {
                 ((CountriesAdapter)rvAdapter).checkAllCountries();
                 rvAdapter.notifyDataSetChanged();
-                break;
-            case R.id.btnUnselectAll:
+            } else {
                 ((CountriesAdapter)rvAdapter).cleanAllCountries();
                 rvAdapter.notifyDataSetChanged();
-                break;
+            }
+        }
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String s) {
+        return true;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String s) {
+        if (s == null || s.isEmpty()) {
+            if (countriesListSaved != null) {
+                countriesListCurrent = countriesListSaved;
+                countriesListSaved = null;
+                rvAdapter.notifyDataSetChanged();
+            }
+            return true;
         }
 
+        if (countriesListSaved == null) {
+            countriesListSaved = new ArrayList<>(countriesListCurrent);
+        }
+
+        countriesListCurrent.clear();
+
+        for (Countries country: countriesListSaved) {
+
+            if (s.trim().matches("[A-Z]{2}")
+                    && country.countryCode.contains(s.trim())) {
+
+                countriesListCurrent.clear();
+                countriesListCurrent.add(country);
+                break;
+
+            } else if (country.countryName.toLowerCase().contains(s.toLowerCase().trim())
+                    || country.countryCode.toLowerCase().contains(s.toLowerCase().trim())) {
+                countriesListCurrent.add(country);
+            }
+        }
+
+        rvAdapter.notifyDataSetChanged();
+
+        return true;
     }
 
     @Override
@@ -122,18 +172,28 @@ public class CountrySelectFragment extends Fragment implements View.OnClickListe
         SharedPreferences.Editor editor = sp.edit();
         countries = ((CountriesAdapter)rvAdapter).getCheckedCountries();
 
-        if (current_nodes_type==entryNodes){
+        if (current_nodes_type == entryNodes){
             editor.putString("EntryNodesCountries",countries);
             editor.apply();
-        } else if (current_nodes_type==excludeNodes) {
+        } else if (current_nodes_type == excludeNodes) {
             editor.putString("ExcludeNodesCountries",countries);
             editor.apply();
-        } else if (current_nodes_type==excludeExitNodes) {
+        } else if (current_nodes_type == excludeExitNodes) {
             editor.putString("ExcludeExitNodesCountries",countries);
             editor.apply();
-        } else if (current_nodes_type==exitNodes) {
+        } else if (current_nodes_type == exitNodes) {
             editor.putString("ExitNodesCountries",countries);
             editor.apply();
+        }
+    }
+
+    private final class Countries {
+        String countryName;
+        String countryCode;
+
+        Countries(String countryName, String countryCode) {
+            this.countryName = countryName;
+            this.countryCode = countryCode;
         }
     }
 
@@ -146,9 +206,10 @@ public class CountrySelectFragment extends Fragment implements View.OnClickListe
                 for (String str : arr) {
                     this.countriesList.add(str.trim().replaceAll("[^A-Z]+", ""));
                 }
-                //Toast.makeText(getActivity(),this.countriesList.toString(),Toast.LENGTH_LONG).show();
-            } else if(current_nodes_type==entryNodes){
-                this.countriesList = new ArrayList<>(Arrays.asList(countriesFullListValues));
+            } else if(current_nodes_type == entryNodes){
+                for (Countries country: countriesListCurrent) {
+                    this.countriesList.add(country.countryCode);
+                }
             }
         }
     }
@@ -174,15 +235,15 @@ public class CountrySelectFragment extends Fragment implements View.OnClickListe
 
         @Override
         public int getItemCount() {
-            return countriesFullListValues.length;
+            return countriesListCurrent.size();
         }
 
         boolean isCountryInList(int position) {
-            return selectedCountries.countriesList.contains(countriesFullListValues[position]);
+            return selectedCountries.countriesList.contains(countriesListCurrent.get(position).countryCode);
         }
 
         void setChecked(int position) {
-            selectedCountries.countriesList.add(countriesFullListValues[position]);
+            selectedCountries.countriesList.add(countriesListCurrent.get(position).countryCode);
         }
 
         void removeCheck(String country){
@@ -190,7 +251,10 @@ public class CountrySelectFragment extends Fragment implements View.OnClickListe
         }
 
         void checkAllCountries(){
-            selectedCountries.countriesList = new ArrayList<>(Arrays.asList(countriesFullListValues));
+            selectedCountries.countriesList.clear();
+            for (Countries country: countriesListCurrent) {
+                selectedCountries.countriesList.add(country.countryCode);
+            }
         }
 
         void cleanAllCountries(){
@@ -198,7 +262,9 @@ public class CountrySelectFragment extends Fragment implements View.OnClickListe
         }
 
         String getCheckedCountries() {
+
             if (selectedCountries.countriesList.isEmpty()) return "";
+
             StringBuilder sb = new StringBuilder();
             for (String str:selectedCountries.countriesList){
                 sb.append("{").append(str).append("}").append(",");
@@ -210,32 +276,30 @@ public class CountrySelectFragment extends Fragment implements View.OnClickListe
 
             TextView tvCountry;
             CheckBox chbCountry;
-            ConstraintLayout clCountry;
+            CardView cardCountry;
 
             CountriesViewHolder(View itemView) {
                 super(itemView);
 
                 tvCountry = itemView.findViewById(R.id.tvCountry);
                 chbCountry = itemView.findViewById(R.id.chbCountry);
-                clCountry = itemView.findViewById(R.id.clCountry);
-                clCountry.addStatesFromChildren();
-                clCountry.shouldDelayChildPressedState();
-                clCountry.setClickable(true);
-                clCountry.setOnClickListener(onClickListener);
+                cardCountry = itemView.findViewById(R.id.cardCountry);
+                cardCountry.setClickable(true);
+                cardCountry.setOnClickListener(onClickListener);
                 chbCountry.setOnCheckedChangeListener(activeListener);
                 chbCountry.setFocusable(false);
-                clCountry.setFocusable(true);
-                clCountry.setOnFocusChangeListener(onFocusChangeListener);
+                cardCountry.setFocusable(true);
+                cardCountry.setOnFocusChangeListener(onFocusChangeListener);
             }
 
             void bind(int position){
                 if (position%2==0) {
-                    clCountry.setBackgroundColor(getResources().getColor(R.color.colorSecond));
+                    cardCountry.setCardBackgroundColor(getResources().getColor(R.color.colorSecond));
                 } else {
-                    clCountry.setBackgroundColor(getResources().getColor(R.color.colorFirst));
+                    cardCountry.setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
                 }
 
-                tvCountry.setText(countriesFullListTitles[position]);
+                tvCountry.setText(countriesListCurrent.get(position).countryName);
                 chbCountry.setChecked(isCountryInList(position));
             }
 
@@ -247,7 +311,7 @@ public class CountrySelectFragment extends Fragment implements View.OnClickListe
                         setChecked(getAdapterPosition());
                         notifyItemChanged(getAdapterPosition());
                     } else if (isCountryInList(getAdapterPosition())&& !isChecked) {
-                        removeCheck(countriesFullListValues[getAdapterPosition()]);
+                        removeCheck(countriesListCurrent.get(getAdapterPosition()).countryCode);
                         notifyItemChanged(getAdapterPosition());
                     }
                 }
@@ -260,7 +324,7 @@ public class CountrySelectFragment extends Fragment implements View.OnClickListe
                         setChecked(getAdapterPosition());
                         notifyItemChanged(getAdapterPosition());
                     } else if (isCountryInList(getAdapterPosition())) {
-                        removeCheck(countriesFullListValues[getAdapterPosition()]);
+                        removeCheck(countriesListCurrent.get(getAdapterPosition()).countryCode);
                         notifyItemChanged(getAdapterPosition());
                     }
                 }
@@ -270,12 +334,12 @@ public class CountrySelectFragment extends Fragment implements View.OnClickListe
                 @Override
                 public void onFocusChange(View v, boolean hasFocus) {
                     if (hasFocus) {
-                        v.setBackgroundColor(getResources().getColor(R.color.colorSelected));
+                        ((CardView)v).setCardBackgroundColor(getResources().getColor(R.color.colorSelected));
                     } else {
                         if (getAdapterPosition()%2==0) {
-                            v.setBackgroundColor(getResources().getColor(R.color.colorSecond));
+                            ((CardView)v).setCardBackgroundColor(getResources().getColor(R.color.colorSecond));
                         } else {
-                            v.setBackgroundColor(getResources().getColor(R.color.colorFirst));
+                            ((CardView)v).setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
                         }
                     }
 

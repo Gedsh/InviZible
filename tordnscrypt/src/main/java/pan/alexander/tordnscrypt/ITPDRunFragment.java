@@ -132,7 +132,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
                         if(comResult.getCommands().length == 0){
 
                             tvITPDStatus.setText(R.string.wrong);
-                            tvITPDStatus.setTextColor(Color.RED);
+                            tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
                             return;
                         }
 
@@ -163,14 +163,14 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
                         if(sb.toString().toLowerCase().contains(itpdPath)
                                 && sb.toString().contains("checkITPDRunning")){
                             tvITPDStatus.setText(R.string.tvITPDRunning);
-                            tvITPDStatus.setTextColor(getResources().getColor(R.color.colorPrimaryDark));
+                            tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorRunning));
                             btnITPDStart.setText(R.string.btnITPDStop);
                             new PrefManager(Objects.requireNonNull(getActivity())).setBoolPref("I2PD Running",true);
                             displayLog();
                         } else if (!sb.toString().toLowerCase().contains(itpdPath)
                                 && sb.toString().contains("checkITPDRunning")) {
                             tvITPDStatus.setText(R.string.tvITPDStop);
-                            tvITPDStatus.setTextColor(Color.DKGRAY);
+                            tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStopped));
                             btnITPDStart.setText(R.string.btnITPDStart);
                             if (timer!=null) {
                                 timer.cancel();
@@ -209,7 +209,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
                                     FileOperations.readTextFile(getActivity(),appDataDir+"/app_data/i2pd/i2pd.conf","i2pd.conf");
                                 } else {
                                     tvITPDStatus.setText(R.string.tvITPDInstalled);
-                                    tvITPDStatus.setTextColor(Color.GREEN);
+                                    tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorInstalled));
                                     new PrefManager(Objects.requireNonNull(getActivity())).setBoolPref("I2PD Installed",true);
 
                                     NotificationHelper  notificationHelper = NotificationHelper.setHelperMessage(
@@ -225,7 +225,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
                                 }
                             } else {
                                 tvITPDStatus.setText(R.string.wrong);
-                                tvITPDStatus.setTextColor(Color.RED);
+                                tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
                             }
 
 
@@ -235,7 +235,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
 
                         } else if (sb.toString().contains("Something went wrong!")) {
                             tvITPDStatus.setText(R.string.wrong);
-                            tvITPDStatus.setTextColor(Color.RED);
+                            tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
                         }
 
                     }
@@ -246,7 +246,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
                             Log.i(LOG_TAG,"ITPDRunFragment onReceive TOP_BROADCAST");
                         } else {
                             tvITPDStatus.setText(R.string.wrong);
-                            tvITPDStatus.setTextColor(Color.RED);
+                            tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
                             btnITPDStart.setEnabled(false);
                             Log.i(LOG_TAG,"ITPDRunFragment onReceive wrong TOP_BROADCAST");
                         }
@@ -286,12 +286,12 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
 
         if(new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("I2PD Running")){
             tvITPDStatus.setText(R.string.tvITPDRunning);
-            tvITPDStatus.setTextColor(getResources().getColor(R.color.colorPrimaryDark));
+            tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorRunning));
             btnITPDStart.setText(R.string.btnITPDStop);
 
         } else {
             tvITPDStatus.setText(R.string.tvITPDStop);
-            tvITPDStatus.setTextColor(Color.DKGRAY);
+            tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStopped));
             btnITPDStart.setText(R.string.btnITPDStart);
         }
 
@@ -425,7 +425,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
                 };
 
                 tvITPDStatus.setText(R.string.tvITPDStarting);
-                tvITPDStatus.setTextColor(Color.BLUE);
+                tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStarting));
 
                 if (!runI2PDWithRoot) {
                     runITPDNoRoot();
@@ -459,7 +459,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
                 };
 
                 tvITPDStatus.setText(R.string.tvITPDStarting);
-                tvITPDStatus.setTextColor(Color.BLUE);
+                tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStarting));
 
                 if (!runI2PDWithRoot) {
                     runITPDNoRoot();
@@ -494,7 +494,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
                 };
 
                 tvITPDStatus.setText(R.string.tvITPDStarting);
-                tvITPDStatus.setTextColor(Color.BLUE);
+                tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStarting));
 
                 if (!runI2PDWithRoot) {
                     runITPDNoRoot();
@@ -528,7 +528,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
                         busyboxPath + "echo 'startProcess'"};
 
                 tvITPDStatus.setText(R.string.tvITPDStarting);
-                tvITPDStatus.setTextColor(Color.BLUE);
+                tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStarting));
 
                 if (!runI2PDWithRoot) {
                     runITPDNoRoot();
@@ -546,7 +546,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
                         busyboxPath + "echo 'stopProcess'"};
 
                 tvITPDStatus.setText(R.string.tvITPDStopping);
-                tvITPDStatus.setTextColor(Color.BLUE);
+                tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStopping));
                 OwnFileReader ofr = new OwnFileReader(appDataDir+"/logs/i2pd.log");
                 ofr.shortenToToLongFile();
             }
@@ -614,7 +614,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
         pbITPD.setIndeterminate(true);
 
         tvITPDStatus.setText(R.string.tvITPDInstalling);
-        tvITPDStatus.setTextColor(Color.BLUE);
+        tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorInstalling));
 
         btnITPDStart.setEnabled(true);
 
@@ -756,26 +756,26 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
                     FileOperations.writeToTextFile(getActivity(), path, list, "No tag");
                 } else {
                     tvITPDStatus.setText(R.string.wrong);
-                    tvITPDStatus.setTextColor(Color.RED);
+                    tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
                     Log.e(LOG_TAG, "correctAppDir readTextFile return null " + path);
                 }
             } else {
                 tvITPDStatus.setText(R.string.wrong);
-                tvITPDStatus.setTextColor(Color.RED);
+                tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
                 Log.e(LOG_TAG, "correctAppDir readTextFile fault " + path);
             }
         } else if (currentFileOperation.equals(FileOperations.writeToTextFileCurrentOperation)) {
 
             if (!FileOperations.fileOperationResult) {
                 tvITPDStatus.setText(R.string.wrong);
-                tvITPDStatus.setTextColor(Color.RED);
+                tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
                 Log.e(LOG_TAG, "correctAppDir writeTextFile return fault " + path);
             } else if (path.equals(appDataDir+"/app_data/i2pd/i2pd.conf")){
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         tvITPDStatus.setText(R.string.tvITPDInstalled);
-                        tvITPDStatus.setTextColor(Color.GREEN);
+                        tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorInstalled));
                         new PrefManager(Objects.requireNonNull(getActivity())).setBoolPref("I2PD Installed",true);
                         NotificationHelper  notificationHelper = NotificationHelper.setHelperMessage(
                                 getActivity(),getText(R.string.helper_after_install).toString(),"after_install");

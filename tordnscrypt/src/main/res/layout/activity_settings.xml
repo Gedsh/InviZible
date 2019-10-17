@@ -8,24 +8,4 @@
     tools:actionBarNavMode="standard"
     tools:context=".SettingsActivity">
 
-
-    <ProgressBar
-        android:id="@+id/pbSettings"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:indeterminate="true"
-        android:visibility="gone" />
-
-    <TextView
-        android:id="@+id/tvSettings"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="@string/tvSettings_text"
-        android:textAlignment="center"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:visibility="gone" />
 </android.widget.LinearLayout>

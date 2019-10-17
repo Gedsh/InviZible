@@ -160,7 +160,7 @@ public class ShowRulesRecycleFrag extends Fragment {
 
 
 
-        ImageButton btnAddRule = getActivity().findViewById(R.id.btnAddRule);
+        ImageButton btnAddRule = getActivity().findViewById(R.id.floatingBtnAddRule);
         btnAddRule.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -319,7 +319,6 @@ public class ShowRulesRecycleFrag extends Fragment {
             EditText etRule;
             ImageButton delBtnRules;
             Switch swRuleActive;
-            //LinearLayout llRules;
 
             RuleViewHolder(View itemView) {
                 super(itemView);

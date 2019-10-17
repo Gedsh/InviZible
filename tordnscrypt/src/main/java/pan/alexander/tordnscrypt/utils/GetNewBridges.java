@@ -26,6 +26,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -188,12 +189,14 @@ public class GetNewBridges {
 
 
     private DialogInterface modernProgressDialog() {
-        android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(activity);
+        android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(activity, R.style.CustomDialogTheme);
         builder.setTitle(R.string.pref_fast_use_tor_bridges_request_dialog);
         builder.setMessage(R.string.please_wait);
         builder.setIcon(R.drawable.ic_visibility_off_black_24dp);
 
         ProgressBar progressBar = new ProgressBar(activity,null,android.R.attr.progressBarStyleHorizontal);
+        progressBar.setBackgroundResource(R.drawable.background_10dp_padding);
+        progressBar.setBackgroundResource(R.drawable.background_10dp_padding);
         progressBar.setIndeterminate(true);
         builder.setView(progressBar);
         builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -211,12 +214,14 @@ public class GetNewBridges {
                 dialogInterface.cancel();
             }
         });
-        return builder.show();
+        android.support.v7.app.AlertDialog view  = builder.show();
+        Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
+        return view;
     }
 
     public void selectTransport() {
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomDialogTheme);
         LayoutInflater layoutInflater = (LayoutInflater) Objects.requireNonNull(activity).getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         if (layoutInflater == null)
             return;
@@ -262,11 +267,12 @@ public class GetNewBridges {
             }
         });
 
-        builder.show();
+        AlertDialog dialog  = builder.show();
+        Objects.requireNonNull(dialog.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
     }
 
     private void showCodeImage(Bitmap codeImage, final String secretCode) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomDialogTheme);
         LayoutInflater layoutInflater = (LayoutInflater) Objects.requireNonNull(activity).getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         if (layoutInflater == null)
             return;
@@ -296,7 +302,8 @@ public class GetNewBridges {
                 dialog.cancel();
             }
         });
-        builder.show();
+        AlertDialog dialog  = builder.show();
+        Objects.requireNonNull(dialog.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
     }
 
     private void requestNewBridges(final String imageCode, final String secretCode) {
@@ -473,13 +480,13 @@ public class GetNewBridges {
     }
 
     private void showBridges(final String bridges) {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomDialogTheme);
 
         TextView tvBridges = new TextView(activity);
+        tvBridges.setBackgroundResource(R.drawable.background_10dp_padding);
         tvBridges.setTextIsSelectable(true);
         tvBridges.setSingleLine(false);
         tvBridges.setVerticalScrollBarEnabled(true);
-        tvBridges.setPaddingRelative(10,10,10,10);
         tvBridges.setText(bridges);
 
         builder.setTitle(R.string.pref_fast_use_tor_bridges_show_dialog);
@@ -506,6 +513,7 @@ public class GetNewBridges {
             }
         });
 
-        builder.show();
+        AlertDialog view  = builder.show();
+        Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
     }
 }

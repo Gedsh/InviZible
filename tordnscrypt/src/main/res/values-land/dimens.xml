@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
+    <dimen name="run_btns_side_margin">15dp</dimen>
+    <dimen name="run_btns_top_margin">4dp</dimen>
+    <dimen name="run_btns_min_width">40dip</dimen>
+    <dimen name="status_text_margin">4dp</dimen>
 </resources>

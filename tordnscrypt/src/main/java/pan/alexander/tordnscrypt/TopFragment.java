@@ -30,6 +30,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -435,7 +437,7 @@ public class TopFragment extends Fragment implements View.OnClickListener {
 
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
             builder.setMessage(R.string.install_title)
                     .setTitle(R.string.install)
                     .setPositiveButton(R.string.install, new DialogInterface.OnClickListener() {
@@ -452,6 +454,12 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                         }
                     });
             return builder.create();
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            Objects.requireNonNull(getDialog().getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            return super.onCreateView(inflater, container, savedInstanceState);
         }
     }
 
@@ -471,7 +479,7 @@ public class TopFragment extends Fragment implements View.OnClickListener {
 
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
             builder.setMessage(R.string.check_root)
                     .setTitle(R.string.sorry)
                     .setIcon(R.drawable.ic_no_root)
@@ -482,6 +490,12 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                     });
             return builder.create();
         }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            Objects.requireNonNull(getDialog().getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            return super.onCreateView(inflater, container, savedInstanceState);
+        }
     }
 
     //Dialog BusyBox not available
@@ -489,7 +503,7 @@ public class TopFragment extends Fragment implements View.OnClickListener {
 
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
             builder.setMessage(R.string.install_bb)
                     .setTitle(R.string.warning)
                     .setPositiveButton(R.string.install, new DialogInterface.OnClickListener() {
@@ -505,6 +519,12 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                         }
                     });
             return builder.create();
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            Objects.requireNonNull(getDialog().getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            return super.onCreateView(inflater, container, savedInstanceState);
         }
     }
 
@@ -523,7 +543,8 @@ public class TopFragment extends Fragment implements View.OnClickListener {
 
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            AlertDialog.Builder alertDialog = new AlertDialog.Builder(getActivity());
+            AlertDialog.Builder alertDialog = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
+
             alertDialog.setMessage(mMessageToDisplay)
                     .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
@@ -531,6 +552,12 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                         }
                     });
             return alertDialog.create();
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            Objects.requireNonNull(getDialog().getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            return super.onCreateView(inflater, container, savedInstanceState);
         }
     }
 
@@ -611,16 +638,19 @@ public class TopFragment extends Fragment implements View.OnClickListener {
     }
 
     private DialogInterface modernProgressDialog() {
-        android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(getActivity());
+        android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
         builder.setTitle(R.string.root);
         builder.setMessage(R.string.root_available);
         builder.setIcon(R.drawable.ic_visibility_off_black_24dp);
 
-        ProgressBar progressBar = new ProgressBar(getActivity(),null,android.R.attr.progressBarStyleHorizontal);
+        ProgressBar progressBar = new ProgressBar(getActivity(),null, android.R.attr.progressBarStyleHorizontal);
+        progressBar.setBackgroundResource(R.drawable.background_10dp_padding);
         progressBar.setIndeterminate(true);
         builder.setView(progressBar);
         builder.setCancelable(false);
-        return builder.show();
+        android.support.v7.app.AlertDialog view  = builder.show();
+        Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
+        return view;
     }
 
     public static class UpdateCore extends DialogFragment {
@@ -638,7 +668,7 @@ public class TopFragment extends Fragment implements View.OnClickListener {
 
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
             builder.setMessage(R.string.update_core_message)
                     .setTitle(R.string.update_core_title)
                     .setPositiveButton(R.string.update_core_yes, new DialogInterface.OnClickListener() {
@@ -688,6 +718,12 @@ public class TopFragment extends Fragment implements View.OnClickListener {
             // Create the AlertDialog object and return it
             return builder.create();
         }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            Objects.requireNonNull(getDialog().getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            return super.onCreateView(inflater, container, savedInstanceState);
+        }
     }
 
     public static class NewUpdateDialogFragment extends DialogFragment {
@@ -716,7 +752,7 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                 FragmentTransaction ft = manager.beginTransaction();
                 ft.add(this, tag);
                 ft.commitAllowingStateLoss();
-                //ft.commit();
+
             } catch (IllegalStateException e) {
                 Log.w(LOG_TAG, "NewUpdateDialogFragment dialog Exception "+e.getMessage() + " " + e.getCause());
             }
@@ -724,7 +760,7 @@ public class TopFragment extends Fragment implements View.OnClickListener {
 
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            AlertDialog.Builder alertDialog = new AlertDialog.Builder(getActivity());
+            AlertDialog.Builder alertDialog = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
             alertDialog.setMessage(mMessageToDisplay)
                     .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
@@ -743,6 +779,12 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                         }
                     });
             return alertDialog.create();
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            Objects.requireNonNull(getDialog().getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            return super.onCreateView(inflater, container, savedInstanceState);
         }
     }
 

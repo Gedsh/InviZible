@@ -139,7 +139,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                         if(comResult.getCommands().length == 0){
 
                             tvDNSStatus.setText(R.string.wrong);
-                            tvDNSStatus.setTextColor(Color.RED);
+                            tvDNSStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
                             return;
                         }
 
@@ -168,7 +168,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                             /////////////For correct display dnscrypt bootstrap/////////////////////
                             if (sb.toString().contains("DNSCrypt_version")) {
                                 tvDNSStatus.setText(R.string.tvDNSRunning);
-                                tvDNSStatus.setTextColor(getResources().getColor(R.color.colorPrimaryDark));
+                                tvDNSStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorRunning));
                             } else {
                                 pbDNSCrypt.setIndeterminate(true);
                             }
@@ -178,7 +178,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                         } else if (!sb.toString().toLowerCase().contains(dnscryptPath)
                                 && sb.toString().contains("checkDNSRunning")) {
                             tvDNSStatus.setText(R.string.tvDNSStop);
-                            tvDNSStatus.setTextColor(Color.DKGRAY);
+                            tvDNSStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStopped));
                             btnDNSCryptStart.setText(R.string.btnDNSCryptStart);
                             pbDNSCrypt.setIndeterminate(false);
 
@@ -229,7 +229,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                             File file = new File(dnscryptPath);
                             if (file.isFile()){
                                 tvDNSStatus.setText(R.string.tvDNSInstalled);
-                                tvDNSStatus.setTextColor(Color.GREEN);
+                                tvDNSStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorInstalled));
                                 new PrefManager(Objects.requireNonNull(getActivity())).setBoolPref("DNSCrypt Installed",true);
                                 FragmentManager fm = getFragmentManager();
                                 TorRunFragment frgTor = (TorRunFragment) fm.findFragmentById(R.id.Torfrg);
@@ -239,12 +239,12 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                                 }
                             } else {
                                 tvDNSStatus.setText(R.string.wrong);
-                                tvDNSStatus.setTextColor(Color.RED);
+                                tvDNSStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
                             }
 
                         } else if (sb.toString().contains("Something went wrong!")) {
                             tvDNSStatus.setText(R.string.wrong);
-                            tvDNSStatus.setTextColor(Color.RED);
+                            tvDNSStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
                         }
 
                     }
@@ -314,13 +314,13 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
         if(new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")){
             tvDNSStatus.setText(R.string.tvDNSRunning);
-            tvDNSStatus.setTextColor(getResources().getColor(R.color.colorPrimaryDark));
+            tvDNSStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorRunning));
             btnDNSCryptStart.setText(R.string.btnDNSCryptStop);
 
 
         } else {
             tvDNSStatus.setText(R.string.tvDNSStop);
-            tvDNSStatus.setTextColor(Color.DKGRAY);
+            tvDNSStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStopped));
             btnDNSCryptStart.setText(R.string.btnDNSCryptStart);
         }
 
@@ -591,7 +591,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
 
                 tvDNSStatus.setText(R.string.tvDNSStarting);
-                tvDNSStatus.setTextColor(Color.BLUE);
+                tvDNSStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStarting));
 
                 if (!runDNSCryptWithRoot) {
                     runDNSCryptNoRoot();
@@ -646,7 +646,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                         busyboxPath + "echo 'checkDNSRunning'",
                         busyboxPath + "echo 'startProcess'"};
                 tvDNSStatus.setText(R.string.tvDNSStarting);
-                tvDNSStatus.setTextColor(Color.BLUE);
+                tvDNSStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStarting));
 
                 if (!runDNSCryptWithRoot) {
                     runDNSCryptNoRoot();
@@ -669,7 +669,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                         busyboxPath + "echo 'checkDNSRunning'",
                         busyboxPath + "echo 'stopProcess'"};
                 tvDNSStatus.setText(R.string.tvDNSStopping);
-                tvDNSStatus.setTextColor(Color.BLUE);
+                tvDNSStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStopping));
                 String[] commandsTether = tethering.activateTethering(false);
                 if (commandsTether != null && commandsTether.length > 0)
                     commandsDNS = Arr.ADD2(commandsDNS, commandsTether);
@@ -732,7 +732,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                         busyboxPath + "echo 'checkDNSRunning'",
                         busyboxPath + "echo 'stopProcess'"};
                 tvDNSStatus.setText(R.string.tvDNSStopping);
-                tvDNSStatus.setTextColor(Color.BLUE);
+                tvDNSStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStopping));
                 String[] commandsTether = tethering.activateTethering(true);
                 if (commandsTether != null && commandsTether.length > 0)
                     commandsDNS = Arr.ADD2(commandsDNS, commandsTether);
@@ -898,7 +898,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
         pbDNSCrypt.setIndeterminate(true);
 
         tvDNSStatus.setText(R.string.tvDNSInstalling);
-        tvDNSStatus.setTextColor(Color.BLUE);
+        tvDNSStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorInstalling));
 
         btnDNSCryptStart.setEnabled(true);
 
@@ -940,7 +940,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                                     && new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")
                                     && !tvDNSStatus.getText().equals(getString(R.string.tvDNSRunning))) {
                                 tvDNSStatus.setText(R.string.tvDNSRunning);
-                                tvDNSStatus.setTextColor(getResources().getColor(R.color.colorPrimaryDark));
+                                tvDNSStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorRunning));
                                 if (pbDNSCrypt.isIndeterminate())
                                     pbDNSCrypt.setIndeterminate(false);
                             }

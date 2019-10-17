@@ -1,46 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".settings.UnlockTorAppsFragment">
 
-    <LinearLayout
-        android:id="@+id/linearLayout4"
+    <android.support.v7.widget.CardView
+        android:id="@+id/cardTorAppFragment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:layout_marginBottom="5dp"
+        android:focusable="false"
+        app:cardBackgroundColor="@color/cardsColor"
+        app:cardCornerRadius="4dp"
+        app:cardUseCompatPadding="true"
+        app:contentPadding="4dp">
 
-        <Button
-            android:id="@+id/btnTorAppsSelectAll"
-            style="@android:style/Widget.Holo.Button"
+        <LinearLayout
+            android:id="@+id/linearLayout4"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="@string/country_select_select_all" />
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/btnTorAppsUnSelectAll"
-            style="@android:style/Widget.Holo.Button"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="@string/country_select_unselect_all" />
-    </LinearLayout>
+            <SearchView
+                android:id="@+id/searhTorApp"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:iconifiedByDefault="false"
+                android:imeOptions="actionDone" />
+
+            <Switch
+                android:id="@+id/swTorAppSellectorAll"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_margin="8dp" />
+        </LinearLayout>
+    </android.support.v7.widget.CardView>
+
+    <ProgressBar
+        android:id="@+id/pbTorApp"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:indeterminateBehavior="cycle"
+        android:visibility="gone" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/rvTorApps"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
-        android:scrollbars="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout4" />
+        android:layout_weight="1"
+        android:scrollbars="vertical">
 
-</android.support.constraint.ConstraintLayout>
+    </android.support.v7.widget.RecyclerView>
+
+</LinearLayout>

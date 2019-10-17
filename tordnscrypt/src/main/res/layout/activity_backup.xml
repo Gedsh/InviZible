@@ -1,61 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.v7.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="20dp"
-    tools:actionBarNavMode="standard"
     tools:context=".BackupActivity">
 
-    <TextView
-        android:id="@+id/textView2"
+    <android.support.v7.widget.CardView
+        android:id="@+id/cardRules"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/etPathBackup" />
+        android:layout_marginTop="10dp"
+        android:focusable="false"
+        app:cardBackgroundColor="@color/cardsColor"
+        app:cardCornerRadius="5dp"
+        app:cardUseCompatPadding="true"
+        app:contentPadding="8dp">
 
-    <EditText
-        android:id="@+id/etPathBackup"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:hint="@string/etPathBackup"
-        android:inputType="text"
-        android:singleLine="false"
-        android:textAppearance="@android:style/TextAppearance.Material.Small"
-        android:importantForAutofill="no" tools:targetApi="o" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-    <ProgressBar
-        android:id="@+id/pbBackup"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/etPathBackup" />
+
+            <EditText
+                android:id="@+id/etPathBackup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:hint="@string/etPathBackup"
+                android:importantForAutofill="no"
+                android:inputType="text"
+                android:singleLine="false" />
+
+        </LinearLayout>
+
+    </android.support.v7.widget.CardView>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="10dp"
         android:orientation="horizontal">
 
         <Button
             android:id="@+id/btnRestoreBackup"
-            style="@android:style/Widget.Holo.Button"
+            style="@android:style/Widget.DeviceDefault.Button.Borderless"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_margin="4dp"
             android:layout_weight="1"
+            android:background="@drawable/button_start_selector"
+            android:minHeight="45dp"
             android:text="@string/btnRestoreBackup"
-            android:textAlignment="center" />
+            android:textAlignment="center"
+            android:textColor="@color/buttonTextColor"
+            android:typeface="serif" />
 
         <Button
             android:id="@+id/btnSaveBackup"
-            style="@android:style/Widget.Holo.Button"
+            style="@android:style/Widget.DeviceDefault.Button.Borderless"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_margin="4dp"
             android:layout_weight="1"
+            android:background="@drawable/button_start_selector"
+            android:minHeight="45dp"
             android:text="@string/btnSaveBackup"
-            android:textAlignment="center" />
+            android:textAlignment="center"
+            android:textColor="@color/buttonTextColor"
+            android:typeface="serif" />
     </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/pbBackup"
+        style="@style/Widget.AppCompat.ProgressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:layout_marginBottom="50dp" />
 
 </android.support.v7.widget.LinearLayoutCompat>

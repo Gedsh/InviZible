@@ -6,6 +6,23 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".settings.UnlockTorIpsFrag">
 
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/floatingbtnAddTorIPs"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:clickable="true"
+        android:cropToPadding="true"
+        android:fitsSystemWindows="false"
+        android:focusable="true"
+        android:src="@drawable/ic_add_white_24dp"
+        app:backgroundTint="@color/buttonColor"
+        app:fabSize="auto"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:useCompatPadding="true" />
+
     <LinearLayout
         android:id="@+id/linearLayout2"
         android:layout_width="match_parent"
@@ -13,7 +30,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
         android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/imbtnAddTorIPs"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -21,19 +38,9 @@
         <android.support.v7.widget.RecyclerView
             android:id="@+id/rvTorIPs"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-    </LinearLayout>
+            android:layout_height="match_parent"
+            android:scrollbars="vertical" />
 
-    <ImageButton
-        android:id="@+id/imbtnAddTorIPs"
-        style="@android:style/Widget.Holo.ImageButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:contentDescription="ADD"
-        android:src="@android:drawable/ic_menu_add"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+    </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>

@@ -19,17 +19,20 @@ package pan.alexander.tordnscrypt.settings;
 */
 
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
@@ -42,7 +45,6 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.Switch;
@@ -341,11 +343,12 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     }
 
     void addBridges(final List<String> persistList) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        final EditText input = new EditText(getActivity());
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        @SuppressLint("InflateParams") final View inputView = inflater.inflate(R.layout.edit_text_for_dialog, null, false);
+        final EditText input = inputView.findViewById(R.id.etForDialog);
         input.setSingleLine(false);
-        builder.setView(input);
+        builder.setView(inputView);
 
         builder.setPositiveButton(getText(R.string.ok), new DialogInterface.OnClickListener() {
             @Override
@@ -389,7 +392,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             }
         });
         builder.setTitle(R.string.pref_fast_use_tor_bridges_add);
-        builder.show();
+        AlertDialog view  = builder.show();
+        Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
     }
 
     private void addRequestedBridges(String bridges, List<String> persistList) {
@@ -784,7 +788,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         @NonNull
         @Override
         public BridgeAdapter.BridgeViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = lInflater.inflate(R.layout.item_bridge,parent,false);
+            View view = lInflater.inflate(R.layout.item_bridge, parent,false);
             return new BridgeViewHolder(view);
         }
 
@@ -813,7 +817,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             TextView tvBridge;
             Switch swBridge;
             ImageButton ibtnBridgeDel;
-            LinearLayout llBridge;
+            CardView cardBridge;
 
             BridgeViewHolder(@NonNull View itemView) {
                 super(itemView);
@@ -823,8 +827,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 swBridge.setOnCheckedChangeListener(onCheckedChangeListener);
                 ibtnBridgeDel = itemView.findViewById(R.id.ibtnBridgeDel);
                 ibtnBridgeDel.setOnClickListener(onClickListener);
-                llBridge = itemView.findViewById(R.id.llBridge);
-                llBridge.setOnClickListener(onClickListener);
+                cardBridge = itemView.findViewById(R.id.cardBridge);
+                cardBridge.setOnClickListener(onClickListener);
             }
 
             void bind(int position) {
@@ -884,7 +888,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 @Override
                 public void onClick(View view) {
                     switch (view.getId()) {
-                        case R.id.llBridge:
+                        case R.id.cardBridge:
                             editBridge(getAdapterPosition());
                             break;
                         case R.id.ibtnBridgeDel:
@@ -895,11 +899,12 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             };
 
             void editBridge(final int position) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
                 builder.setTitle(R.string.pref_fast_use_tor_bridges_edit);
 
-                final EditText input = new EditText(getActivity());
-                input.setInputType(InputType.TYPE_CLASS_TEXT);
+                LayoutInflater inflater = getActivity().getLayoutInflater();
+                @SuppressLint("InflateParams") final View inputView = inflater.inflate(R.layout.edit_text_for_dialog, null, false);
+                final EditText input = inputView.findViewById(R.id.etForDialog);
                 input.setSingleLine(false);
                 String brgEdit = bridgeList.get(position).bridge;
                 final String obfsTypeEdit = bridgeList.get(position).obfsType;
@@ -911,7 +916,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     return;
                 }
                 input.setText(brgEdit,TextView.BufferType.EDITABLE);
-                builder.setView(input);
+                builder.setView(inputView);
 
                 builder.setPositiveButton(getText(R.string.ok), new DialogInterface.OnClickListener() {
                     @Override
@@ -936,7 +941,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                         dialog.cancel();
                     }
                 });
-                builder.show();
+                AlertDialog view  = builder.show();
+                Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
             }
 
             void deleteBridge(int position) {

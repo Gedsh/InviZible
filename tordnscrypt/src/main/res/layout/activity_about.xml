@@ -20,16 +20,28 @@
             android:layout_height="wrap_content"
             android:orientation="vertical" >
 
-            <ImageView
-                android:id="@+id/imageView2"
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="150dp"
-                android:layout_gravity="center_horizontal"
-                android:adjustViewBounds="true"
-                android:background="@color/ic_launcher_background"
-                android:cropToPadding="true"
-                app:srcCompat="@drawable/ic_help_title"
-                tools:ignore="ContentDescription" />
+                android:layout_height="match_parent">
+
+                <ImageView
+                    android:id="@+id/imageView2"
+                    android:layout_width="match_parent"
+                    android:layout_height="150dp"
+                    android:layout_gravity="center_horizontal"
+                    android:adjustViewBounds="true"
+                    android:background="@color/ic_launcher_background"
+                    android:cropToPadding="true"
+                    app:srcCompat="@drawable/ic_help_title"
+                    tools:ignore="ContentDescription" />
+
+                <ImageView
+                    android:id="@+id/imageView3"
+                    android:layout_width="70dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="bottom|end"
+                    app:srcCompat="@drawable/gplv3" />
+            </FrameLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -45,7 +57,8 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/about_build_date"
-                    android:textAlignment="viewEnd" />
+                    android:textAlignment="viewEnd"
+                    android:typeface="serif" />
 
                 <TextView
                     android:id="@+id/tvHelpBuildDate"
@@ -55,7 +68,8 @@
                     android:layout_weight="1"
                     android:text="time"
                     android:textAlignment="viewStart"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:typeface="serif" />
             </LinearLayout>
 
 
@@ -71,7 +85,8 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/about_build_ver"
-                    android:textAlignment="viewEnd" />
+                    android:textAlignment="viewEnd"
+                    android:typeface="serif" />
 
                 <TextView
                     android:id="@+id/tvHelpBuildNo"
@@ -81,7 +96,8 @@
                     android:layout_weight="1"
                     android:text="version"
                     android:textAlignment="viewStart"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:typeface="serif" />
 
             </LinearLayout>
 
@@ -98,7 +114,8 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/about_proc_ver"
-                    android:textAlignment="viewEnd" />
+                    android:textAlignment="viewEnd"
+                    android:typeface="serif" />
 
                 <TextView
                     android:id="@+id/textView15"
@@ -108,8 +125,9 @@
                     android:layout_weight="1"
                     android:text="@string/appProcVersion"
                     android:textAlignment="viewStart"
+                    android:textAllCaps="true"
                     android:textStyle="bold"
-                    android:textAllCaps="true"/>
+                    android:typeface="serif" />
             </LinearLayout>
 
             <LinearLayout
@@ -125,7 +143,8 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/about_app_ver"
-                    android:textAlignment="viewEnd" />
+                    android:textAlignment="viewEnd"
+                    android:typeface="serif" />
 
                 <TextView
                     android:id="@+id/textView12"
@@ -135,8 +154,9 @@
                     android:layout_weight="1"
                     android:text="@string/appVersion"
                     android:textAlignment="viewStart"
+                    android:textAllCaps="true"
                     android:textStyle="bold"
-                    android:textAllCaps="true"/>
+                    android:typeface="serif" />
             </LinearLayout>
 
             <TextView
@@ -146,7 +166,8 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
                 android:text="@string/about_own_copyright"
-                android:textAlignment="center" />
+                android:textAlignment="center"
+                android:typeface="serif" />
 
             <TextView
                 android:id="@+id/textView4"
@@ -155,19 +176,23 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
                 android:layout_marginBottom="8dp"
-                android:linksClickable="true"
                 android:autoLink="web"
+                android:linksClickable="true"
                 android:text="@string/about_site"
                 android:textAlignment="center"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                android:textColor="@color/ic_launcher_background" />
+                android:textColor="@color/ic_launcher_background"
+                android:typeface="serif" />
 
             <TextView
                 android:id="@+id/textView11"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
-                android:text="@string/about_own_licence" />
+                android:autoLink="web"
+                android:linksClickable="true"
+                android:text="@string/about_own_licence"
+                android:typeface="serif" />
 
             <TextView
                 android:id="@+id/textView3"
@@ -176,7 +201,8 @@
                 android:layout_margin="10dp"
                 android:text="@string/about_title_licences"
                 android:textAlignment="center"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:typeface="serif" />
 
             <TextView
                 android:id="@+id/dnscryptLicence"
@@ -185,7 +211,8 @@
                 android:layout_margin="8dp"
                 android:focusable="auto"
                 android:text="@string/about_license_dnscrypt"
-                android:textColor="@color/ic_launcher_background" />
+                android:textColor="@color/ic_launcher_background"
+                android:typeface="serif" />
 
             <TextView
                 android:id="@+id/torLicence"
@@ -194,7 +221,8 @@
                 android:layout_margin="8dp"
                 android:focusable="auto"
                 android:text="@string/about_license_tor"
-                android:textColor="@color/ic_launcher_background" />
+                android:textColor="@color/ic_launcher_background"
+                android:typeface="serif" />
 
             <TextView
                 android:id="@+id/itpdLicence"
@@ -203,7 +231,8 @@
                 android:layout_margin="8dp"
                 android:focusable="auto"
                 android:text="@string/about_license_itpd"
-                android:textColor="@color/ic_launcher_background" />
+                android:textColor="@color/ic_launcher_background"
+                android:typeface="serif" />
 
             <TextView
                 android:id="@+id/libsuperuserLicence"
@@ -212,7 +241,8 @@
                 android:layout_margin="8dp"
                 android:focusable="auto"
                 android:text="@string/about_license_libsupeuser"
-                android:textColor="@color/ic_launcher_background" />
+                android:textColor="@color/ic_launcher_background"
+                android:typeface="serif" />
 
             <TextView
                 android:id="@+id/androidShellLicence"
@@ -221,7 +251,8 @@
                 android:layout_margin="8dp"
                 android:focusable="auto"
                 android:text="@string/about_license_AndroidShell"
-                android:textColor="@color/ic_launcher_background" />
+                android:textColor="@color/ic_launcher_background"
+                android:typeface="serif" />
 
             <TextView
                 android:id="@+id/filepickerLicence"
@@ -230,7 +261,8 @@
                 android:layout_margin="8dp"
                 android:focusable="auto"
                 android:text="@string/about_license_filepicker"
-                android:textColor="@color/ic_launcher_background" />
+                android:textColor="@color/ic_launcher_background"
+                android:typeface="serif" />
 
         </LinearLayout>
     </ScrollView>

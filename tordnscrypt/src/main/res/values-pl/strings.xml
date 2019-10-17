@@ -455,4 +455,6 @@
     <string name="enter_code">wprowadz kod</string>
     <string name="thanks_for_donate">Projekt InviZible Pro Project i jego Autor wyrazaja podziekowania
         za wsparcie. Czy chcialbys pobrac i wykonac upgrade do wersji PRO?</string>
+    <string name="pref_common_wakelock_summ">Dodatkowa ochrona bez trybu rootowania, aby zapobiec śmierci aplikacji przez Androida. Może wyczerpać baterię</string>
+    <string name="pref_common_wakelock">Zapobiegaj uśpieniu urządzenia</string>
 </resources>

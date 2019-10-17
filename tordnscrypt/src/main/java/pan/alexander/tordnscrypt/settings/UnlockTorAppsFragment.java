@@ -29,7 +29,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
-import android.support.constraint.ConstraintLayout;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -38,6 +38,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.SearchView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -68,15 +70,17 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class UnlockTorAppsFragment extends Fragment implements View.OnClickListener {
+public class UnlockTorAppsFragment extends Fragment implements CompoundButton.OnCheckedChangeListener, SearchView.OnQueryTextListener {
     boolean isChanged;
     RecyclerView rvListTorApps;
     RecyclerView.Adapter mAdapter;
+    ProgressBar pbTorApp;
     boolean torTethering;
     boolean routeAllThroughTorDevice;
     String unlockAppsStr;
     ArrayList<String> unlockAppsArrListSaved;
     ArrayList<AppUnlock> appsUnlock;
+    ArrayList<AppUnlock> savedAppsUnlockWhenSearch = null;
     Thread thread;
 
 
@@ -90,8 +94,9 @@ public class UnlockTorAppsFragment extends Fragment implements View.OnClickListe
 
         View view = inflater.inflate(R.layout.fragment_preferences_tor_apps, container, false);
 
-        view.findViewById(R.id.btnTorAppsSelectAll).setOnClickListener(this);
-        view.findViewById(R.id.btnTorAppsUnSelectAll).setOnClickListener(this);
+        ((Switch)view.findViewById(R.id.swTorAppSellectorAll)).setOnCheckedChangeListener(this);
+        ((SearchView)view.findViewById(R.id.searhTorApp)).setOnQueryTextListener(this);
+        pbTorApp = view.findViewById(R.id.pbTorApp);
 
         return view;
     }
@@ -106,6 +111,8 @@ public class UnlockTorAppsFragment extends Fragment implements View.OnClickListe
         ////////////////////////////////////////////////////////////////////////////////////
         ///////////////////////Reverse logic when route all through Tor!///////////////////
         //////////////////////////////////////////////////////////////////////////////////
+
+
 
         isChanged = false;
         appsUnlock = new ArrayList<>();
@@ -126,13 +133,14 @@ public class UnlockTorAppsFragment extends Fragment implements View.OnClickListe
         unlockAppsArrListSaved = new ArrayList<>(setUnlockApps);
 
         rvListTorApps = getActivity().findViewById(R.id.rvTorApps);
+        rvListTorApps.requestFocus();
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
         rvListTorApps.setLayoutManager(mLayoutManager);
 
         mAdapter = new TorAppsAdapter();
         rvListTorApps.setAdapter(mAdapter);
 
-        getDeviceApps(getActivity(),mAdapter,unlockAppsArrListSaved);
+        getDeviceApps(getActivity(), mAdapter, unlockAppsArrListSaved);
 
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -186,8 +194,12 @@ public class UnlockTorAppsFragment extends Fragment implements View.OnClickListe
         if (!isChanged)
             return;
 
+        if (savedAppsUnlockWhenSearch != null) {
+            appsUnlock = savedAppsUnlockWhenSearch;
+        }
+
         Set<String> setAppUIDtoSave = new HashSet<>();
-        for (int i=0;i<appsUnlock.size();i++) {
+        for (int i = 0; i < appsUnlock.size(); i++) {
             AppUnlock app = appsUnlock.get(i);
             if (app.active)
                 setAppUIDtoSave.add(app.uid);
@@ -195,7 +207,7 @@ public class UnlockTorAppsFragment extends Fragment implements View.OnClickListe
         new PrefManager(getActivity()).setSetStrPref(unlockAppsStr,setAppUIDtoSave);
 
         List<String> listAppUIDtoSave = new LinkedList<>(setAppUIDtoSave);
-        FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/tor/"+unlockAppsStr,listAppUIDtoSave,"ignored");
+        FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/tor/"+unlockAppsStr, listAppUIDtoSave,"ignored");
         Toast.makeText(getActivity(),getString(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
 
         /////////////Refresh iptables rules/////////////////////////
@@ -204,26 +216,59 @@ public class UnlockTorAppsFragment extends Fragment implements View.OnClickListe
     }
 
     @Override
-    public void onClick(View view) {
-
-        switch (view.getId()) {
-            case R.id.btnTorAppsSelectAll:
-                for (int i=0;i<appsUnlock.size();i++) {
+    public void onCheckedChanged(CompoundButton compoundButton, boolean active) {
+        if (compoundButton.getId() == R.id.swTorAppSellectorAll) {
+            if (active) {
+                for (int i = 0; i < appsUnlock.size(); i++) {
                     AppUnlock app = appsUnlock.get(i);
                     app.active = true;
-                    appsUnlock.set(i,app);
+                    appsUnlock.set(i, app);
                 }
                 mAdapter.notifyDataSetChanged();
-                break;
-            case R.id.btnTorAppsUnSelectAll:
-                for (int i=0;i<appsUnlock.size();i++) {
+            } else {
+                for (int i = 0; i < appsUnlock.size(); i++) {
                     AppUnlock app = appsUnlock.get(i);
                     app.active = false;
-                    appsUnlock.set(i,app);
+                    appsUnlock.set(i, app);
                 }
                 mAdapter.notifyDataSetChanged();
-                break;
+            }
         }
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String s) {
+        return false;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String s) {
+
+        if (s == null || s.isEmpty()) {
+            if (savedAppsUnlockWhenSearch != null) {
+                appsUnlock = savedAppsUnlockWhenSearch;
+                savedAppsUnlockWhenSearch = null;
+                mAdapter.notifyDataSetChanged();
+            }
+            return true;
+        }
+
+        if (savedAppsUnlockWhenSearch == null) {
+            savedAppsUnlockWhenSearch = new ArrayList<>(appsUnlock);
+        }
+
+        appsUnlock.clear();
+
+        for (int i = 0; i < savedAppsUnlockWhenSearch.size(); i++) {
+            AppUnlock app = savedAppsUnlockWhenSearch.get(i);
+            if (app.name.toLowerCase().contains(s.toLowerCase().trim())
+                    || app.pack.toLowerCase().contains(s.toLowerCase().trim())) {
+                appsUnlock.add(app);
+            }
+        }
+        mAdapter.notifyDataSetChanged();
+
+        return true;
     }
 
     public class AppUnlock {
@@ -241,6 +286,24 @@ public class UnlockTorAppsFragment extends Fragment implements View.OnClickListe
             this.icon = icon;
             this.system = system;
             this.active = active;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            AppUnlock appUnlock = (AppUnlock) o;
+            return system == appUnlock.system &&
+                    active == appUnlock.active &&
+                    name.equals(appUnlock.name) &&
+                    pack.equals(appUnlock.pack) &&
+                    uid.equals(appUnlock.uid) &&
+                    icon.equals(appUnlock.icon);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name, pack, uid, icon, system, active);
         }
     }
 
@@ -274,7 +337,16 @@ public class UnlockTorAppsFragment extends Fragment implements View.OnClickListe
         void setActive(int position, boolean active) {
             AppUnlock appUnlock = appsUnlock.get(position);
             appUnlock.active = active;
-            appsUnlock.set(position,appUnlock);
+            appsUnlock.set(position, appUnlock);
+
+            if (savedAppsUnlockWhenSearch != null) {
+                for (int i = 0; i < savedAppsUnlockWhenSearch.size(); i++) {
+                    AppUnlock appUnlockSaved = savedAppsUnlockWhenSearch.get(i);
+                    if (appUnlockSaved.pack.equals(appUnlock.pack)) {
+                        savedAppsUnlockWhenSearch.set(i, appUnlock);
+                    }
+                }
+            }
         }
 
         class TorAppsViewHolder extends RecyclerView.ViewHolder {
@@ -282,7 +354,7 @@ public class UnlockTorAppsFragment extends Fragment implements View.OnClickListe
             TextView tvTorAppName;
             TextView tvTorAppPackage;
             Switch swTorApp;
-            ConstraintLayout cLayoutTorApps;
+            CardView cardTorApps;
 
             TorAppsViewHolder(View itemView) {
                 super(itemView);
@@ -293,11 +365,11 @@ public class UnlockTorAppsFragment extends Fragment implements View.OnClickListe
                 swTorApp = itemView.findViewById(R.id.swTorApp);
                 swTorApp.setOnCheckedChangeListener(onCheckedChangeListener);
                 swTorApp.setFocusable(false);
-                cLayoutTorApps = itemView.findViewById(R.id.cLayoutTorApps);
-                cLayoutTorApps.setFocusable(true);
-                cLayoutTorApps.setOnClickListener(onClickListener);
-                cLayoutTorApps.setOnFocusChangeListener(onFocusChangeListener);
-                cLayoutTorApps.setBackgroundColor(getResources().getColor(R.color.colorFirst));
+                cardTorApps = itemView.findViewById(R.id.cardTorApp);
+                cardTorApps.setFocusable(true);
+                cardTorApps.setOnClickListener(onClickListener);
+                cardTorApps.setOnFocusChangeListener(onFocusChangeListener);
+                cardTorApps.setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
             }
 
             void bind(int position){
@@ -306,12 +378,12 @@ public class UnlockTorAppsFragment extends Fragment implements View.OnClickListe
                 imgTorApp.setImageDrawable(app.icon);
                 tvTorAppPackage.setText(app.pack);
                 swTorApp.setChecked(app.active);
-                if (app.pack.equals(getString(R.string.package_name))) {
+                if (app.pack.contains(getString(R.string.package_name))) {
                     swTorApp.setEnabled(false);
-                    cLayoutTorApps.setEnabled(false);
+                    cardTorApps.setEnabled(false);
                 } else {
                     swTorApp.setEnabled(true);
-                    cLayoutTorApps.setEnabled(true);
+                    cardTorApps.setEnabled(true);
                 }
             }
 
@@ -338,9 +410,9 @@ public class UnlockTorAppsFragment extends Fragment implements View.OnClickListe
                 @Override
                 public void onFocusChange(View view, boolean inFocus) {
                     if (inFocus) {
-                        view.setBackgroundColor(getResources().getColor(R.color.colorSecond));
+                        ((CardView)view).setCardBackgroundColor(getResources().getColor(R.color.colorSecond));
                     } else {
-                        view.setBackgroundColor(getResources().getColor(R.color.colorFirst));
+                        ((CardView)view).setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
                     }
                 }
             };
@@ -349,6 +421,9 @@ public class UnlockTorAppsFragment extends Fragment implements View.OnClickListe
 
 
     void getDeviceApps(final Context context, final RecyclerView.Adapter adapter, final ArrayList<String> unlockAppsArrListSaved) {
+
+        pbTorApp.setIndeterminate(true);
+        pbTorApp.setVisibility(View.VISIBLE);
 
         final PackageManager pMgr = context.getPackageManager();
 
@@ -415,7 +490,7 @@ public class UnlockTorAppsFragment extends Fragment implements View.OnClickListe
                             active = true;
                         }
 
-                        final AppUnlock app = new AppUnlock(name,pack,uid,icon,system,active);
+                        final AppUnlock app = new AppUnlock(name, pack, uid, icon, system, active);
 
                         if (getActivity()==null)
                             return;
@@ -436,6 +511,14 @@ public class UnlockTorAppsFragment extends Fragment implements View.OnClickListe
 
                     }
                 }
+
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        pbTorApp.setIndeterminate(true);
+                        pbTorApp.setVisibility(View.GONE);
+                    }
+                });
             }
         };
         thread = new Thread(fillAppsList);

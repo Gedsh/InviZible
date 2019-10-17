@@ -4,16 +4,14 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="nav_header_vertical_spacing">8dp</dimen>
     <dimen name="nav_header_height">120dp</dimen>
-    <dimen name="start_btns_margin">20dp</dimen>
-    <dimen name="run_btns_margin">10dp</dimen>
-    <dimen name="switch_margin">5dp</dimen>
+    <dimen name="run_btns_side_margin">40dp</dimen>
+    <dimen name="run_btns_top_margin">4dp</dimen>
+    <dimen name="run_btns_min_width">40dip</dimen>
+    <dimen name="status_text_margin">4dp</dimen>
     <dimen name="start_btns_text_size">17sp</dimen>
     <dimen name="top_text_size">15sp</dimen>
     <dimen name="status_text_size">15sp</dimen>
-    <dimen name="action_bar_size">15dp</dimen>
     <dimen name="fragment_log_text_size">12sp</dimen>
     <dimen name="fragment_file_log_text_size">15sp</dimen>
     <dimen name="fragment_counry_select_text_size">17sp</dimen>
-    <dimen name="fab_margin">16dp</dimen>
-    <dimen name="text_margin">16dp</dimen>
 </resources>

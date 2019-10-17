@@ -28,6 +28,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
@@ -38,7 +39,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -363,7 +363,7 @@ public class PreferencesDNSCryptServersRv extends Fragment {
 
         class DNSServersViewHolder extends RecyclerView.ViewHolder{
 
-            LinearLayout llDNSServer;
+            CardView cardDNSServer;
             TextView tvDNSServerName;
             CheckBox chbDNSServer;
             TextView tvDNSServerDescription;
@@ -372,11 +372,11 @@ public class PreferencesDNSCryptServersRv extends Fragment {
             DNSServersViewHolder(@NonNull View itemView) {
                 super(itemView);
 
-                llDNSServer = itemView.findViewById(R.id.llDNSServer);
-                llDNSServer.setFocusable(true);
-                llDNSServer.setOnClickListener(onClickListener);
-                llDNSServer.setBackgroundColor(getResources().getColor(R.color.colorFirst));
-                llDNSServer.setOnFocusChangeListener(onFocusChangeListener);
+                cardDNSServer = itemView.findViewById(R.id.cardDNSServer);
+                cardDNSServer.setFocusable(true);
+                cardDNSServer.setOnClickListener(onClickListener);
+                cardDNSServer.setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
+                cardDNSServer.setOnFocusChangeListener(onFocusChangeListener);
                 tvDNSServerName = itemView.findViewById(R.id.tvDNSServerName);
                 chbDNSServer = itemView.findViewById(R.id.chbDNSServer);
                 chbDNSServer.setFocusable(false);
@@ -444,9 +444,9 @@ public class PreferencesDNSCryptServersRv extends Fragment {
                 @Override
                 public void onFocusChange(View view, boolean b) {
                     if (b) {
-                        view.setBackgroundColor(getResources().getColor(R.color.colorSecond));
+                        ((CardView)view).setCardBackgroundColor(getResources().getColor(R.color.colorSecond));
                     } else {
-                        view.setBackgroundColor(getResources().getColor(R.color.colorFirst));
+                        ((CardView)view).setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
                     }
                 }
             };

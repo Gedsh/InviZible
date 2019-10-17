@@ -4,61 +4,87 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="5dp"
-    android:orientation="horizontal"
-    android:baselineAligned="false">
+    android:layout_marginTop="5dp"
+    android:baselineAligned="false"
+    android:orientation="vertical">
 
-    <LinearLayout
-        android:id="@+id/llHostIP"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
+    <android.support.v7.widget.CardView
+        android:id="@+id/cardHostIP"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
         android:layout_weight="1"
-        android:foreground="@drawable/custom_border"
-        android:orientation="vertical"
-        tools:targetApi="m">
+        android:focusable="false"
+        app:cardBackgroundColor="@color/cardsColor"
+        app:cardCornerRadius="5dp"
+        app:cardUseCompatPadding="true"
+        app:contentPadding="8dp">
 
-        <TextView
-            android:id="@+id/tvTorItemHost"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="5dp"
-            android:layout_weight="1"
-            android:gravity="fill"
-            android:text="Host:"
-            tools:ignore="NestedWeights" />
+            android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/tvTorItemIP"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="5dp"
-            android:layout_weight="1"
-            android:gravity="fill"
-            android:text="IP:" />
-    </LinearLayout>
+            <LinearLayout
+                android:id="@+id/llHostIP"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:nextFocusDown="@id/swTorItem"
+                android:orientation="vertical">
 
-    <LinearLayout
+                <TextView
+                    android:id="@+id/tvTorItemHost"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="4dp"
+                    android:layout_weight="1"
+                    android:fontFamily="serif"
+                    android:gravity="fill"
+                    android:text="Host:"
+                    android:textStyle="bold"
+                    tools:ignore="NestedWeights" />
+
+                <View
+                    android:id="@+id/divider"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_margin="4dp"
+                    android:layout_weight="1"
+                    android:background="@color/itemDividerColor" />
+
+                <TextView
+                    android:id="@+id/tvTorItemIP"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="4dp"
+                    android:layout_weight="1"
+                    android:fontFamily="serif"
+                    android:gravity="fill"
+                    android:text="IP:" />
+            </LinearLayout>
+
+            <Switch
+                android:id="@+id/swTorItem"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_margin="4dp"
+                android:checked="true"
+                android:nextFocusUp="@id/llHostIP" />
+
+        </LinearLayout>
+
+    </android.support.v7.widget.CardView>
+
+    <ImageButton
+        android:id="@+id/imbtnTorItem"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@drawable/custom_border"
-        android:orientation="vertical">
-
-        <Switch
-            android:id="@+id/swTorItem"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_margin="5dp"
-            android:layout_weight="1"
-            android:checked="true" />
-
-        <ImageButton
-            android:id="@+id/imbtnTorItem"
-            style="@android:style/Widget.Holo.ImageButton"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_margin="5dp"
-            android:layout_weight="1"
-            app:srcCompat="@android:drawable/ic_menu_delete" />
-    </LinearLayout>
+        android:layout_height="25dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="3dp"
+        android:background="@drawable/button_item_selector"
+        android:contentDescription="Delete"
+        android:focusable="false"
+        android:scaleType="fitCenter"
+        app:srcCompat="@android:drawable/ic_menu_delete" />
 
 </LinearLayout>

@@ -43,7 +43,7 @@ public class OwnFileReader {
         this.filePath = filePath;
     }
 
-    public String readLastLines(){
+    public String readLastLines() {
         File file = new File(filePath);
         if (!file.exists())
             return "";
@@ -57,47 +57,54 @@ public class OwnFileReader {
             fstream = new FileInputStream(filePath);
             br = new BufferedReader(new InputStreamReader(fstream));
 
-            for(String tmp; (tmp = br.readLine()) != null;)
+            for (String tmp; (tmp = br.readLine()) != null; )
                 if (lines.add(tmp) && lines.size() > 25)
                     lines.remove(0);
 
-            for (String s : lines)
-            {
+            for (String s : lines) {
                 s = Html.escapeHtml(s);
-                if(s.toLowerCase().contains("[notice]") || s.toLowerCase().contains("/info")){
-                    s = "<font color=#808080>" + s.replace("[notice]","").replace("[NOTICE]","") + "</font>";
-                } else if (s.toLowerCase().contains("[warn]") || s.toLowerCase().contains("/warn")){
+                if (s.toLowerCase().contains("[notice]") || s.toLowerCase().contains("/info")) {
+                    s = "<font color=#808080>" + s.replace("[notice]", "").replace("[NOTICE]", "") + "</font>";
+                } else if (s.toLowerCase().contains("[warn]") || s.toLowerCase().contains("/warn")) {
                     s = "<font color=#ffa500>" + s + "</font>";
-                } else if (s.toLowerCase().contains("[warning]")){
+                } else if (s.toLowerCase().contains("[warning]")) {
                     s = "<font color=#ffa500>" + s + "</font>";
-                } else if (s.toLowerCase().contains("[error]") || s.toLowerCase().contains("/error")){
+                } else if (s.toLowerCase().contains("[error]") || s.toLowerCase().contains("/error")) {
                     s = "<font color=#f08080>" + s + "</font>";
-                } else if (s.toLowerCase().contains("[critical]")){
+                } else if (s.toLowerCase().contains("[critical]")) {
                     s = "<font color=#990000>" + s + "</font>";
-                } else if (s.toLowerCase().contains("[fatal]")){
+                } else if (s.toLowerCase().contains("[fatal]")) {
                     s = "<font color=#990000>" + s + "</font>";
-                } else {
+                } else if (!s.isEmpty()) {
                     s = "<font color=#6897bb>" + s + "</font>";
                 }
-                sb.append(s);
-                //sb.append(System.lineSeparator());
-                sb.append("<br />");
+
+                if (!s.isEmpty()) {
+                    sb.append(s);
+                    sb.append("<br />");
+                }
+
             }
 
         } catch (IOException e) {
-            Log.e(LOG_TAG,"Impossible to read file " + filePath + " " + e.getMessage());
+            Log.e(LOG_TAG, "Impossible to read file " + filePath + " " + e.getMessage());
         } finally {
             try {
-                if (fstream!= null)fstream.close();
-                if (br != null)br.close();
+                if (fstream != null) fstream.close();
+                if (br != null) br.close();
             } catch (IOException ex) {
-                Log.e(LOG_TAG,"Error when close file " + filePath + " " + ex.getMessage());
+                Log.e(LOG_TAG, "Error when close file " + filePath + " " + ex.getMessage());
             }
         }
 
         shortenToLongFile();
 
-        return sb.toString();
+        String result = sb.toString();
+        int lastBrIndex = result.lastIndexOf("<br />");
+        if (lastBrIndex > 0) {
+            result = result.substring(0, lastBrIndex);
+        }
+        return result;
     }
 
     private void shortenToLongFile() {
@@ -105,12 +112,12 @@ public class OwnFileReader {
         if (!file.exists())
             return;
 
-        if (file.length()/1024 > 10) {
+        if (file.length() / 1024 > 10) {
             try {
                 PrintWriter writer = new PrintWriter(file, "UTF-8");
-                if (lines!=null && lines.size()!=0) {
+                if (lines != null && lines.size() != 0) {
                     StringBuilder buffer = new StringBuilder();
-                    for (String line:lines) {
+                    for (String line : lines) {
                         buffer.append(line).append(System.lineSeparator());
                     }
                     writer.println(buffer);
@@ -127,7 +134,7 @@ public class OwnFileReader {
         if (!file.exists())
             return;
 
-        if (file.length()/1024 > 100) {
+        if (file.length() / 1024 > 100) {
             try {
                 PrintWriter writer = new PrintWriter(file, "UTF-8");
                 writer.println("");

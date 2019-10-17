@@ -6,9 +6,15 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:colorBackground">@color/colorBackground</item>
+        <item name="android:windowBackground">@color/colorBackground</item>
+
+        <!-- AppCompat Dialog Attributes -->
+        <item name="android:dialogTheme">@style/AppCompatDialog</item>
+        <item name="android:alertDialogTheme">@style/AppCompatAlert</item>
     </style>
 
-    <style name="AppTheme.NoActionBar">
+    <style name="AppTheme.NoActionBar" parent="AppTheme">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
@@ -16,5 +22,25 @@
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Dark" />
+
+    <style name="CustomDialogTheme" parent="Theme.AppCompat.DayNight.Dialog.Alert">
+        <item name="android:background">@drawable/alert_dialog_custom</item>
+    </style>
+
+    <!-- Generic Dialog Theme -->
+    <style name="AppCompatDialog" parent="Theme.AppCompat.DayNight.Dialog">
+
+        <!-- Used for the background -->
+        <item name="android:colorBackground">@color/alertWindowColor</item>
+        <item name="android:windowBackground">@color/alertWindowColor</item>
+    </style>
+
+    <!-- Alert Dialog Theme -->
+    <style name="AppCompatAlert" parent="Theme.AppCompat.DayNight.Dialog.Alert">
+        <!-- Used for the background -->
+        <item name="android:colorBackground">@color/alertWindowColor</item>
+        <item name="android:windowBackground">@color/alertWindowColor</item>
+
+    </style>
 
 </resources>

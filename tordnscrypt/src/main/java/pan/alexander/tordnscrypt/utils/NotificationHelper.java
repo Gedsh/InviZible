@@ -24,9 +24,16 @@ import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 
@@ -40,7 +47,7 @@ public class NotificationHelper extends DialogFragment{
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         // Use the Builder class for convenient dialog construction
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
         builder.setMessage(message)
                 .setTitle(R.string.helper_dialog_title)
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
@@ -59,6 +66,12 @@ public class NotificationHelper extends DialogFragment{
                 });
         // Create the AlertDialog object and return it
         return builder.create();
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        Objects.requireNonNull(getDialog().getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        return super.onCreateView(inflater, container, savedInstanceState);
     }
 
     public static NotificationHelper setHelperMessage(Context context, String message, String preferenceTag) {

@@ -139,7 +139,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                         if(comResult.getCommands().length == 0){
 
                             tvTorStatus.setText(R.string.wrong);
-                            tvTorStatus.setTextColor(Color.RED);
+                            tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
                             return;
                         }
 
@@ -168,7 +168,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                             /////////////For correct display tor bootstrap/////////////////////
                             if (sb.toString().contains("Tor_version")) {
                                 tvTorStatus.setText(R.string.tvTorRunning);
-                                tvTorStatus.setTextColor(getResources().getColor(R.color.colorPrimaryDark));
+                                tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorRunning));
                             }
 
                             btnTorStart.setText(R.string.btnTorStop);
@@ -178,7 +178,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                         } else if (!sb.toString().toLowerCase().contains(torPath)
                                 && sb.toString().contains("checkTrRunning")) {
                             tvTorStatus.setText(R.string.tvTorStop);
-                            tvTorStatus.setTextColor(Color.DKGRAY);
+                            tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStopped));
                             btnTorStart.setText(R.string.btnTorStart);
                             pbTor.setProgress(0);
 
@@ -231,7 +231,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                             File file = new File(torPath);
                             if (file.exists()){
                                 tvTorStatus.setText(R.string.tvTorInstalled);
-                                tvTorStatus.setTextColor(Color.GREEN);
+                                tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorInstalled));
                                 new PrefManager(Objects.requireNonNull(getActivity())).setBoolPref("Tor Installed",true);
                                 FragmentManager fm = getFragmentManager();
                                 ITPDRunFragment frgITPD = (ITPDRunFragment) fm.findFragmentById(R.id.ITPDfrg);
@@ -241,12 +241,12 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                                 }
                             } else {
                                 tvTorStatus.setText(R.string.wrong);
-                                tvTorStatus.setTextColor(Color.RED);
+                                tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
                             }
 
                         } else if (sb.toString().contains("Something went wrong!")) {
                             tvTorStatus.setText(R.string.wrong);
-                            tvTorStatus.setTextColor(Color.RED);
+                            tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
                         }
 
                     }
@@ -257,7 +257,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                             Log.i(LOG_TAG,"TorRunFragment onReceive TOP_BROADCAST");
                         } else {
                             tvTorStatus.setText(R.string.wrong);
-                            tvTorStatus.setTextColor(Color.RED);
+                            tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
                             btnTorStart.setEnabled(false);
                             Log.i(LOG_TAG,"TorRunFragment onReceive wrong TOP_BROADCAST");
                         }
@@ -293,12 +293,12 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
         if(new PrefManager(getActivity()).getBoolPref("Tor Running")){
             tvTorStatus.setText(R.string.tvTorRunning);
-            tvTorStatus.setTextColor(getResources().getColor(R.color.colorPrimaryDark));
+            tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorRunning));
             btnTorStart.setText(R.string.btnTorStop);
 
         } else {
             tvTorStatus.setText(R.string.tvTorStop);
-            tvTorStatus.setTextColor(Color.DKGRAY);
+            tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStopped));
             btnTorStart.setText(R.string.btnTorStart);
         }
 
@@ -595,7 +595,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
 
                 tvTorStatus.setText(R.string.tvTorStarting);
-                tvTorStatus.setTextColor(Color.BLUE);
+                tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStarting));
 
                 if (!runTorWithRoot) {
                     runTorNoRoot();
@@ -676,7 +676,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                 };
 
                 tvTorStatus.setText(R.string.tvTorStarting);
-                tvTorStatus.setTextColor(Color.BLUE);
+                tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStarting));
                 if (!runTorWithRoot) {
                     runTorNoRoot();
                 }
@@ -718,7 +718,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                         busyboxPath + "echo 'stopProcess'"};
 
                 tvTorStatus.setText(R.string.tvTorStopping);
-                tvTorStatus.setTextColor(Color.BLUE);
+                tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStopping));
                 String[] commandsTether = tethering.activateTethering(false);
                 if (commandsTether != null && commandsTether.length > 0)
                     commandsTor = Arr.ADD2(commandsTor, commandsTether);
@@ -739,7 +739,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                         busyboxPath + "echo 'stopProcess'"};
 
                 tvTorStatus.setText(R.string.tvTorStopping);
-                tvTorStatus.setTextColor(Color.BLUE);
+                tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStopping));
                 String[] commandsTether = tethering.activateTethering(false);
                 if (commandsTether != null && commandsTether.length > 0)
                     commandsTor = Arr.ADD2(commandsTor, commandsTether);
@@ -804,7 +804,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
         pbTor.setIndeterminate(true);
 
         tvTorStatus.setText(R.string.tvTorInstalling);
-        tvTorStatus.setTextColor(Color.BLUE);
+        tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorInstalling));
 
         btnTorStart.setEnabled(true);
 
@@ -855,11 +855,11 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                                                 if (0 <= perc && perc < 100) {
                                                     pbTor.setProgress(perc);
                                                     tvTorStatus.setText(R.string.tvTorStarting);
-                                                    tvTorStatus.setTextColor(Color.BLUE);
+                                                    tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStarting));
                                                 } else if (!tvTorStatus.getText().equals(getString(R.string.tvTorRunning))) {
                                                     pbTor.setProgress(0);
                                                     tvTorStatus.setText(R.string.tvTorRunning);
-                                                    tvTorStatus.setTextColor(getResources().getColor(R.color.colorPrimaryDark));
+                                                    tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorRunning));
                                                     new PrefManager(Objects.requireNonNull(getActivity())).setBoolPref("Tor Ready", true);
 
                                                     /////////////////Check Updates///////////////////////////////////////////////
