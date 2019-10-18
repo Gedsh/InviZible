@@ -152,7 +152,7 @@ public class FileOperations {
                     }
 
                     if (tag.contains("executable")) {
-                        if (newFile.setReadable(true, false) && newFile.setWritable(true) && newFile.setExecutable(true, false)) {
+                        if (!newFile.setReadable(true, false) || !newFile.setWritable(true) || !newFile.setExecutable(true, false)) {
                             Log.e(LOG_TAG, "Chmod exec file fault " + outputPath + "/" + inputFile);
                         }
                     }
