@@ -340,11 +340,11 @@
     <string name="pref_common_block_http">Заблокировать http</string>
     <string name="pref_common_block_http_summ">Закрыть http порт 80 для точки доступа</string>
     <string name="pref_common_restart_dnscrypt">Пожалуйста, перезапустите DNS Crypt</string>
-    <string name="update_dnscrypt_has_apdate">Доступно обновление DNSCrypt. Загрузить и установить его?</string>
-    <string name="update_ipro_has_apdate">Доступно обновление InviZible Pro. Загрузить и установить его?</string>
-    <string name="update_itpd_has_apdate">Доступно обновление Purple I2P. Загрузить и установить его?</string>
+    <string name="update_dnscrypt_has_apdate">Доступно обновление DNSCrypt. Загрузить и установить его? Обновление будет продолжено в фоновом режиме.</string>
+    <string name="update_ipro_has_apdate">Доступно обновление InviZible Pro. Загрузить и установить его? Обновление будет продолжено в фоновом режиме.</string>
+    <string name="update_itpd_has_apdate">Доступно обновление Purple I2P. Загрузить и установить его? Обновление будет продолжено в фоновом режиме.</string>
     <string name="update_notification">Загрузка файла</string>
-    <string name="update_tor_has_apdate">Доступно обновление Tor. Загрузить и установить его?</string>
+    <string name="update_tor_has_apdate">Доступно обновление Tor. Загрузить и установить его? Обновление будет продолжено в фоновом режиме.</string>
     <string name="update_new_version">Новая версия:</string>
     <string name="update_interrupt_notification">Загрузка остановлена</string>
     <string name="cancel_download">ОТМЕНИТЬ ЗАГРУЗКУ</string>
@@ -353,7 +353,7 @@
     <string name="pref_fast_chek_update_summ">Проверить наличие новых версий</string>
     <string name="pref_fast_auto_update">Автообновление</string>
     <string name="pref_fast_auto_update_summ">Проверять обновления InviZible Pro и модулей ежедневно</string>
-    <string name="update_check_fault">Ошибка обновления.</string>
+    <string name="update_fault">Ошибка обновления.</string>
     <string name="update_check_no_update">Нет новых версий.</string>
     <string name="update_checking_message">Подождите, проверка обновлений.</string>
     <string name="update_checking_title">Проверка обновлений</string>
@@ -373,7 +373,7 @@
     <string name="enter_code_button">Ввести код</string>
     <string name="donate_project">Проект InviZible Pro нуждается в Вашей помощи. Пожалуйста, посетите
         страницу поддержки или введите уже полученный регистрационный код.</string>
-    <string name="thanks_for_donate">Проект InviZible Pro и его автор благодарен за помощь. Загрузить и обновить до PRO?</string>
+    <string name="thanks_for_donate">Проект InviZible Pro и его автор благодарен за помощь. Загрузить и обновить до PRO? Обновление будет продолжено в фоновом режиме.</string>
     <string name="enter_code">Введите код</string>
     <string name="update_over_five_times">Вы проверяли обновление InviZible Pro больше 5 раз в день. Пожалуйста, попробуйте позже.</string>
     <string name="update_over_three_activations">Похоже Вы уже активировали 3 копии InviZible Pro этим кодом. Если это не так, свяжитесь с разработчиком.</string>

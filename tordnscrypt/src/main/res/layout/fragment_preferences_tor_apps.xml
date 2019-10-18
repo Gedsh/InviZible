@@ -40,16 +40,6 @@
         </LinearLayout>
     </android.support.v7.widget.CardView>
 
-    <ProgressBar
-        android:id="@+id/pbTorApp"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="10dp"
-        android:indeterminateBehavior="cycle"
-        android:visibility="gone" />
-
     <android.support.v7.widget.RecyclerView
         android:id="@+id/rvTorApps"
         android:layout_width="match_parent"
@@ -59,5 +49,15 @@
         android:scrollbars="vertical">
 
     </android.support.v7.widget.RecyclerView>
+
+    <ProgressBar
+        android:id="@+id/pbTorApp"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:indeterminateBehavior="cycle"
+        android:visibility="visible" />
 
 </LinearLayout>

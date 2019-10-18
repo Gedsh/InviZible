@@ -429,15 +429,15 @@
     <string name="update_interrupt_notification">Sciaganie zostalo zatrzymane</string>
     <string name="cancel_download">Anuluj sciaganie</string>
     <string name="update_new_version">Nowa wersja:</string>
-    <string name="update_ipro_has_apdate">Jest dostepna nowa wersja InviZible Pro. Czy chcesz ja sciagnac i wykonac aktualizacje?</string>
-    <string name="update_dnscrypt_has_apdate">Jest dostepna aktualizacja DNSCrypt. Czy chcesz ja sciagnac i wykonac aktualizacje?</string>
-    <string name="update_tor_has_apdate">Jest dostepna aktualizacja Tora. Czy chcesz ja sciagnac i wykonac aktualizacje?</string>
-    <string name="update_itpd_has_apdate">Jest dostepna aktualizacja Purple I2P. Czy chcesz ja sciagnac i wykonac aktualizacje?</string>
+    <string name="update_ipro_has_apdate">Jest dostepna nowa wersja InviZible Pro. Czy chcesz ja sciagnac i wykonac aktualizacje? Aktualizacja będzie kontynuowana w tle.</string>
+    <string name="update_dnscrypt_has_apdate">Jest dostepna aktualizacja DNSCrypt. Czy chcesz ja sciagnac i wykonac aktualizacje? Aktualizacja będzie kontynuowana w tle.</string>
+    <string name="update_tor_has_apdate">Jest dostepna aktualizacja Tora. Czy chcesz ja sciagnac i wykonac aktualizacje? Aktualizacja będzie kontynuowana w tle.</string>
+    <string name="update_itpd_has_apdate">Jest dostepna aktualizacja Purple I2P. Czy chcesz ja sciagnac i wykonac aktualizacje? Aktualizacja będzie kontynuowana w tle.</string>
     <string name="update_checking_title">Sprawdzam aktualizacje</string>
     <string name="update_checking_message">Prosze czekac, sprawdzam aktualizacje.</string>
     <string name="update_check_warning">Serwer aktualizacji jest czasowo niedostepny. Prosze sprobowac  pozniej.</string>
     <string name="update_check_warning_menu">Serwer aktualizacji jest niedostepny.</string>
-    <string name="update_check_fault">Blad sprawdzania aktualizacji.</string>
+    <string name="update_fault">Blad aktualizacji.</string>
     <string name="update_check_no_update">Brak dostepnych aktualizacji.</string>
     <string name="update_last_check">Ostatnio sprawdzono:</string>
     <string name="update_found">Znaleziono aktualizacje.</string>
@@ -454,7 +454,7 @@
     <string name="enter_code_button">Wprowadz kod</string>
     <string name="enter_code">wprowadz kod</string>
     <string name="thanks_for_donate">Projekt InviZible Pro Project i jego Autor wyrazaja podziekowania
-        za wsparcie. Czy chcialbys pobrac i wykonac upgrade do wersji PRO?</string>
+        za wsparcie. Czy chcialbys pobrac i wykonac upgrade do wersji PRO? Aktualizacja będzie kontynuowana w tle.</string>
     <string name="pref_common_wakelock_summ">Dodatkowa ochrona bez trybu rootowania, aby zapobiec śmierci aplikacji przez Androida. Może wyczerpać baterię</string>
     <string name="pref_common_wakelock">Zapobiegaj uśpieniu urządzenia</string>
 </resources>

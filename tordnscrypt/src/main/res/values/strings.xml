@@ -586,15 +586,15 @@
     <string name="update_interrupt_notification">Download was stopped</string>
     <string name="cancel_download">CANCEL DOWNLOAD</string>
     <string name="update_new_version">New Version:</string>
-    <string name="update_ipro_has_apdate">InviZible Pro update is available. Do you want to download and update its?</string>
-    <string name="update_dnscrypt_has_apdate">DNSCrypt update is available. Do you want to download and update its?</string>
-    <string name="update_tor_has_apdate">Tor update is available. Do you want to download and update its?</string>
-    <string name="update_itpd_has_apdate">Purple I2P update is available. Do you want to download and update its?</string>
+    <string name="update_ipro_has_apdate">InviZible Pro update is available. Do you want to download and update it? The update will continue in the background.</string>
+    <string name="update_dnscrypt_has_apdate">DNSCrypt update is available. Do you want to download and update it? The update will continue in the background.</string>
+    <string name="update_tor_has_apdate">Tor update is available. Do you want to download and update it? The update will continue in the background.</string>
+    <string name="update_itpd_has_apdate">Purple I2P update is available. Do you want to download and update it? The update will continue in the background.</string>
     <string name="update_checking_title">Checking Updates</string>
     <string name="update_checking_message">Please wait while Updates are checking.</string>
     <string name="update_check_warning">The update server is temporarily unavailable. Please try again later.</string>
     <string name="update_check_warning_menu">The update server was unavailable.</string>
-    <string name="update_check_fault">Update check fault.</string>
+    <string name="update_fault">Update fault.</string>
     <string name="update_check_no_update">No Updates were Found.</string>
     <string name="update_last_check">Last check:</string>
     <string name="update_found">Updates were found.</string>
@@ -611,6 +611,6 @@
     <string name="enter_code_button">Enter Code</string>
     <string name="enter_code">Enter Code</string>
     <string name="thanks_for_donate">InviZible Pro Project and its author express appreciation
-        for the assistance. Would you like to download and upgrade to PRO?</string>
+        for the assistance. Would you like to download and upgrade to PRO? The update will continue in the background.</string>
 
 </resources>

@@ -322,8 +322,8 @@ public class GetNewBridges {
                     huc.setDoOutput(true);
                     huc.setRequestMethod("POST");
                     huc.setRequestProperty("Content-Length", String.valueOf(query.getBytes().length));
-                    huc.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) " +
-                            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36");
+                    huc.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 9.0.1; " +
+                            "Mi Mi) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Mobile Safari/537.36");
                     huc.setReadTimeout(10000);
                     Writer writer = new OutputStreamWriter(huc.getOutputStream());
                     writer.write(query);

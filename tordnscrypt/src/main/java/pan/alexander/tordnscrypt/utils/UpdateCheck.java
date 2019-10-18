@@ -82,8 +82,8 @@ public class UpdateCheck {
         } catch (Exception e) {
             if (context !=null) {
                 if (MainActivity.modernDialog!=null)
-                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_check_fault).toString());
-                new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_check_fault).toString());
+                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
+                new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_fault).toString());
             }
             Log.e(LOG_TAG,"RSADecrypt function fault " + e.getMessage());
         }
@@ -127,8 +127,8 @@ public class UpdateCheck {
         } catch (Exception e) {
             if (context !=null) {
                 if (MainActivity.modernDialog!=null)
-                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_check_fault).toString());
-                new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_check_fault).toString());
+                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
+                new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_fault).toString());
             }
             Log.e(LOG_TAG,"RSASign function fault " + e.getMessage());
         }
@@ -145,8 +145,8 @@ public class UpdateCheck {
         if (!serverAnswer.toLowerCase().contains(appProcVersion.toLowerCase())) {
             if (context !=null) {
                 if (MainActivity.modernDialog!=null)
-                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_check_fault).toString());
-                new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_check_fault).toString());
+                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
+                new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_fault).toString());
                 Log.e(LOG_TAG,"compareVersions function fault " + serverAnswer);
             }
             return;
@@ -157,8 +157,8 @@ public class UpdateCheck {
         if (modulesArr.length<4) {
             if (context !=null) {
                 if (MainActivity.modernDialog!=null)
-                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_check_fault).toString());
-                new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_check_fault).toString());
+                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
+                new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_fault).toString());
             }
             Log.w(LOG_TAG,"compareVersions function fault modulesArr length<4");
             return;
@@ -172,8 +172,8 @@ public class UpdateCheck {
         if (iproArr.length<4 || dnscryptArr.length<4 || torArr.length<4 || itpdArr.length<4) {
             if (context !=null) {
                 if (MainActivity.modernDialog!=null)
-                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_check_fault).toString());
-                new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_check_fault).toString());
+                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
+                new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_fault).toString());
             }
             Log.w(LOG_TAG,"compareVersions function fault iproArr dnscryptArr torArr itpdArr length<4");
             return;
@@ -185,8 +185,8 @@ public class UpdateCheck {
                 && itpdArr[1].matches("\\d+\\.+\\d+\\.\\d+")) ) {
             if (context !=null) {
                 if (MainActivity.modernDialog!=null)
-                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_check_fault).toString());
-                new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_check_fault).toString());
+                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
+                new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_fault).toString());
             }
             Log.w(LOG_TAG,"compareVersions function fault iproArr dnscryptArr torArr itpdArr version regexp mismatch");
             return;
@@ -196,8 +196,8 @@ public class UpdateCheck {
                 && torArr[2].matches("\\d{3}") && itpdArr[2].matches("\\d{3}"))) {
             if (context !=null) {
                 if (MainActivity.modernDialog!=null)
-                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_check_fault).toString());
-                new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_check_fault).toString());
+                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
+                new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_fault).toString());
             }
             Log.w(LOG_TAG,"compareVersions function fault iproArr dnscryptArr torArr itpdArr pass regexp mismatch");
             return;
@@ -207,8 +207,8 @@ public class UpdateCheck {
                 && torArr[3].matches("\\w{8}") && itpdArr[3].matches("\\w{8}"))) {
             if (context !=null) {
                 if (MainActivity.modernDialog!=null)
-                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_check_fault).toString());
-                new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_check_fault).toString());
+                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
+                new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_fault).toString());
             }
             Log.w(LOG_TAG,"compareVersions function fault iproArr dnscryptArr torArr itpdArr hash regexp mismatch");
             return;
@@ -228,8 +228,8 @@ public class UpdateCheck {
         } catch (Exception e) {
             if (context !=null) {
                 if (MainActivity.modernDialog!=null)
-                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_check_fault).toString());
-                new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_check_fault).toString());
+                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
+                new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_fault).toString());
             }
             Log.e(LOG_TAG,"UpdateCheck compareVersions getFragmentManager exception " + e.getMessage());
         }
@@ -339,8 +339,8 @@ public class UpdateCheck {
                     if (rsaSign == null){
                         if (context != null) {
                             if (MainActivity.modernDialog!=null)
-                                ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_check_fault).toString());
-                            new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_check_fault).toString());
+                                ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
+                            new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_fault).toString());
                         }
                         Log.e(LOG_TAG,"RSASign(appSign) returns null");
                         return;
@@ -374,7 +374,7 @@ public class UpdateCheck {
                         if(serverAnswerEncoded.contains("wrong code")) {
                             if (context !=null) {
                                 ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_wrong_code).toString());
-                                new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_check_fault).toString());
+                                new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
                                 new PrefManager(context).setStrPref("updateTimeLast", "");
                             }
                             wrongRegistrationCode = true;
@@ -382,14 +382,14 @@ public class UpdateCheck {
                         } else if (serverAnswerEncoded.contains("over 3 activations")) {
                             if (context !=null) {
                                 ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_over_three_activations).toString());
-                                new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_check_fault).toString());
+                                new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
                             }
                             wrongRegistrationCode = true;
                             Log.e(LOG_TAG,"requestUpdateData function fault - server returns over 3 activations");
                         }  else if (serverAnswerEncoded.contains("over 5 times")) {
                             if (context !=null) {
                                 ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_over_five_times).toString());
-                                new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_check_fault).toString());
+                                new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
                             }
                             Log.e(LOG_TAG,"requestUpdateData function fault - server returns over 5 times");
                         } else {

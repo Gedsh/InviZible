@@ -114,6 +114,18 @@ public class MainActivity extends LangAppCompatActivity
                 modernDialog = modernProgressDialog();
             }
         }
+
+        new PrefManager(this).setBoolPref("MainActivityActive", true);
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+
+        if (new PrefManager(this).getBoolPref("refresh_main_activity")) {
+            new PrefManager(this).setBoolPref("refresh_main_activity", false);
+            recreate();
+        }
     }
 
     @Override
@@ -475,7 +487,11 @@ public class MainActivity extends LangAppCompatActivity
             Log.e(LOG_TAG,"MainActivity Child Lock Exeption "+e.getMessage());
         }
 
-
+        String updateResultMessage = new PrefManager(this).getStrPref("UpdateResultMessage");
+        if (!updateResultMessage.isEmpty()) {
+            showUpdateMessage(updateResultMessage);
+            new PrefManager(this).setStrPref("UpdateResultMessage", "");
+        }
 
     }
 
@@ -532,7 +548,10 @@ public class MainActivity extends LangAppCompatActivity
         }
 
         FileOperations.removeAllOnFileOperationsListeners();
+
+        new PrefManager(this).setBoolPref("MainActivityActive", false);
     }
+
 
 
 }

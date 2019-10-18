@@ -45,6 +45,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.CRC32;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -62,7 +63,6 @@ public class UpdateService extends Service {
     private static final int READTIMEOUT = 60;
     private static final int CONNECTTIMEOUT = 60;
     private String appDataDir;
-    private String storageDir;
     private String busyboxPath;
     private String dnscryptPath;
     private String torPath;
@@ -70,11 +70,13 @@ public class UpdateService extends Service {
     private String iptablesPath;
     public static final String DOWNLOAD_ACTION = "pan.alexander.tordnscrypt.DOWNLOAD_ACTION";
     private static final String STOP_DOWNLOAD_ACTION = "pan.alexander.tordnscrypt.STOP_DOWNLOAD_ACTION";
-    private int currentNotificationId = DEFAULT_NOTIFICATION_ID -1;
-    private SparseArray<DownloadThread> sparseArray;
+    private final AtomicInteger currentNotificationId = new AtomicInteger(DEFAULT_NOTIFICATION_ID) ;
+    private volatile SparseArray<DownloadThread> sparseArray;
+    private boolean allowActivityRestartAfterUpdate = true;
 
     public UpdateService() {
     }
+
     @Override
     public IBinder onBind(Intent intent) {
         return null;
@@ -85,15 +87,14 @@ public class UpdateService extends Service {
         super.onCreate();
 
         PathVars pathVars = new PathVars(getApplicationContext());
+        notificationManager = (NotificationManager) getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
         sparseArray = new SparseArray<>();
         appDataDir = pathVars.appDataDir;
-        storageDir = pathVars.storageDir;
         busyboxPath = pathVars.busyboxPath;
         dnscryptPath = pathVars.dnscryptPath;
         torPath = pathVars.torPath;
         itpdPath = pathVars.itpdPath;
         iptablesPath = pathVars.iptablesPath;
-        notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
     }
 
     @Override
@@ -102,16 +103,15 @@ public class UpdateService extends Service {
         if (action == null) {
             stopSelf();
         } else if (action.equals(DOWNLOAD_ACTION)) {
-            currentNotificationId +=1;
-            DownloadThread downloadThread = new DownloadThread(intent,startId,currentNotificationId);
-            sparseArray.put(startId,downloadThread);
+            DownloadThread downloadThread = new DownloadThread(intent, startId, currentNotificationId.getAndIncrement());
+            sparseArray.put(startId, downloadThread);
             downloadThread.startDownloadThread();
         } else if (action.equals(STOP_DOWNLOAD_ACTION)) {
-            int serviceId = intent.getIntExtra("ServiceStartId",0);
+            int serviceId = intent.getIntExtra("ServiceStartId", 0);
             DownloadThread downloadThread = sparseArray.get(serviceId);
-            if (downloadThread!=null){
-                downloadThread.sendNotification(getText(R.string.update_interrupt_notification).toString(),getString(R.string.app_name),getText(R.string.update_interrupt_notification).toString());
-                downloadThread.interruptDownload = true;
+            if (downloadThread != null) {
+                sendNotification(downloadThread.serviceStartId, downloadThread.notificationId, downloadThread.startTime, getText(R.string.update_interrupt_notification).toString(), getString(R.string.app_name), getText(R.string.update_interrupt_notification).toString());
+                downloadThread.thread.interrupt();
                 sparseArray.delete(serviceId);
             }
         }
@@ -119,13 +119,12 @@ public class UpdateService extends Service {
     }
 
 
-
     private class DownloadThread {
         Intent intent;
         int serviceStartId;
         int notificationId;
         long startTime = System.currentTimeMillis();
-        boolean interruptDownload = false;
+        Thread thread;
 
         DownloadThread(Intent intent, int serviceStartId, int notificationId) {
             this.intent = intent;
@@ -143,14 +142,12 @@ public class UpdateService extends Service {
                 notificationChannel.enableLights(false);
                 notificationChannel.enableVibration(false);
                 notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-                assert notificationManager != null;
-                notificationManager.createNotificationChannel(notificationChannel);
 
-                sendNotification(getText(R.string.update_notification).toString(),getString(R.string.app_name),getText(R.string.update_notification).toString());
-
-            } else {
-                sendNotification(getText(R.string.update_notification).toString(),getString(R.string.app_name),getText(R.string.update_notification).toString());
+                if (notificationManager != null) {
+                    notificationManager.createNotificationChannel(notificationChannel);
+                }
             }
+            sendNotification(serviceStartId, notificationId, startTime, getText(R.string.update_notification).toString(), getString(R.string.app_name), getText(R.string.update_notification).toString());
 
             Thread downloadThread = new Thread(downloadUpdateWork);
             downloadThread.setDaemon(false);
@@ -160,8 +157,11 @@ public class UpdateService extends Service {
         }
 
         Runnable downloadUpdateWork = new Runnable() {
+
             @Override
             public void run() {
+                thread = Thread.currentThread();
+
                 String urlToDownload = intent.getStringExtra("url");
                 String fileToDownload = intent.getStringExtra("file");
                 String hash = intent.getStringExtra("hash");
@@ -172,8 +172,8 @@ public class UpdateService extends Service {
                     HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
                     con.setConnectTimeout(1000 * CONNECTTIMEOUT);
                     con.setReadTimeout(1000 * READTIMEOUT);
-                    con.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) " +
-                            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36");
+                    con.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 9.0.1; " +
+                            "Mi Mi) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Mobile Safari/537.36");
                     con.connect();
 
                     // this will be useful so that you can show a typical 0-100% progress bar
@@ -182,12 +182,27 @@ public class UpdateService extends Service {
                     // download the file
                     InputStream input = new BufferedInputStream(con.getInputStream());
 
-                    File f = new File(storageDir + "/download");
+                    File cacheDir = getExternalCacheDir();
+                    if (cacheDir == null) {
+                        cacheDir = getCacheDir();
+                    }
+                    if (!cacheDir.isDirectory()) {
+                        if (cacheDir.mkdirs()) {
+                            Log.i(LOG_TAG,"downloadUpdateWork create cache dir success");
+                            if (cacheDir.setReadable(true)
+                                    && cacheDir.setWritable(true)) {
+                                Log.i(LOG_TAG,"downloadUpdateWork chmod cache dir success");
+                            } else {
+                                Log.e(LOG_TAG,"downloadUpdateWork chmod cache dir failed");
+                            }
+                        } else {
+                            Log.e(LOG_TAG,"downloadUpdateWork create cache dir failed");
+                        }
+                    }
 
-                    if (f.mkdirs() && f.setReadable(true) && f.setWritable(true))
-                        Log.i(LOG_TAG, "download dir created");
+                    removeOldApkFileFromPrevUpdate(cacheDir);
 
-                    String path = storageDir + "/download/" + fileToDownload;
+                    String path = cacheDir + "/" + fileToDownload;
                     OutputStream output = new FileOutputStream(path);
 
                     byte[] data = new byte[1024];
@@ -197,19 +212,19 @@ public class UpdateService extends Service {
                     while ((count = input.read(data)) != -1) {
                         total += count;
 
-                        if (interruptDownload){
-                            Log.w(LOG_TAG,"Download was interrupted by user " + fileToDownload);
+                        if (thread.isInterrupted()) {
+                            Log.w(LOG_TAG, "Download was interrupted by user " + fileToDownload);
                             break;
                         }
 
 
                         int currentPercent = (int) (total * 100 / fileLength);
-                        if (currentPercent-percent >= 5) {
+                        if (currentPercent - percent >= 5) {
                             percent = currentPercent;
                             String notification = getText(R.string.update_notification).toString() +
                                     " " + fileToDownload;
 
-                            updateNotification(getText(R.string.update_notification).toString(), getString(R.string.app_name), notification, percent);
+                            updateNotification(serviceStartId, notificationId, startTime, getText(R.string.update_notification).toString(), getString(R.string.app_name), notification, percent);
                         }
 
                         output.write(data, 0, count);
@@ -220,13 +235,15 @@ public class UpdateService extends Service {
                     output.close();
                     input.close();
 
-                    if (Objects.requireNonNull(crc32(new File(path))).equalsIgnoreCase(hash)){
+                    if (Objects.requireNonNull(crc32(new File(path))).equalsIgnoreCase(hash)) {
                         new PrefManager(getApplicationContext()).setStrPref("LastUpdateResult",
                                 getApplicationContext().getText(R.string.update_installed).toString());
 
                         stopRunningModules(fileToDownload);
 
-                        if (fileToDownload.contains("InviZible")){
+                        if (fileToDownload.contains("InviZible")) {
+                            allowActivityRestartAfterUpdate = false;
+
                             File file = new File(path);
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                                 Uri apkUri = FileProvider.getUriForFile(getApplicationContext(), getApplicationContext().getPackageName() + ".fileprovider", file);
@@ -242,28 +259,35 @@ public class UpdateService extends Service {
                                 getApplicationContext().startActivity(intent);
                             }
                         } else {
-                            FileOperations.moveBinaryFile(getApplicationContext(),storageDir + "/download/",fileToDownload,appDataDir+"/app_bin/","executable");
+                            allowActivityRestartAfterUpdate = true;
+
+                            FileOperations.moveBinaryFile(getApplicationContext(), cacheDir.getPath(), fileToDownload, appDataDir + "/app_bin", "executable");
                             runPreviousStoppedModules(fileToDownload);
+
+                            new PrefManager(getApplicationContext()).setStrPref("UpdateResultMessage", getString(R.string.update_installed));
                         }
 
                     } else {
-                        FileOperations.deleteFile(getApplicationContext(),storageDir + "/download/", fileToDownload,"ignored");
-                        Log.w(LOG_TAG,"UpdateService file hashes mismatch " + fileToDownload);
+                        FileOperations.deleteFile(getApplicationContext(), cacheDir.getPath(), fileToDownload, "ignored");
+                        new PrefManager(getApplicationContext()).setStrPref("LastUpdateResult", getString(R.string.update_fault));
+                        new PrefManager(getApplicationContext()).setStrPref("UpdateResultMessage", getString(R.string.update_fault));
+                        Log.w(LOG_TAG, "UpdateService file hashes mismatch " + fileToDownload);
                     }
 
                 } catch (Exception e) {
-                    new PrefManager(getApplicationContext()).setStrPref("LastUpdateResult",
-                            getApplicationContext().getText(R.string.update_check_fault).toString());
-                    Log.e(LOG_TAG,"UpdateService failed to download file " + urlToDownload + " " + e.getMessage());
+                    new PrefManager(getApplicationContext()).setStrPref("LastUpdateResult", getString(R.string.update_fault));
+                    new PrefManager(getApplicationContext()).setStrPref("UpdateResultMessage", getString(R.string.update_fault));
+                    Log.e(LOG_TAG, "UpdateService failed to download file " + urlToDownload + " " + e.getMessage());
                 } finally {
                     sparseArray.delete(serviceStartId);
-                    if (currentNotificationId == DEFAULT_NOTIFICATION_ID) {
+                    if (currentNotificationId.get() - 1 == DEFAULT_NOTIFICATION_ID) {
                         stopForeground(true);
                         notificationManager.cancel(notificationId);
+                        restartMainActivity();
                         stopSelf();
                     } else {
                         notificationManager.cancel(notificationId);
-                        currentNotificationId -=1;
+                        currentNotificationId.getAndDecrement();
                     }
 
                 }
@@ -271,68 +295,83 @@ public class UpdateService extends Service {
             }
         };
 
-        void sendNotification(String Ticker, String Title, String Text) {
 
-            //These three lines makes Notification to open main activity after clicking on it
-            Intent notificationIntent = new Intent(getApplicationContext(), MainActivity.class);
-            notificationIntent.setAction(Intent.ACTION_MAIN);
-            notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
 
-            Intent stopDownloadIntent = new Intent(getApplicationContext(), UpdateService.class);
-            stopDownloadIntent.setAction(STOP_DOWNLOAD_ACTION);
-            stopDownloadIntent.putExtra("ServiceStartId",serviceStartId);
-            PendingIntent stopDownloadPendingIntent = PendingIntent.getService(getApplicationContext(), notificationId, stopDownloadIntent,PendingIntent.FLAG_UPDATE_CURRENT);
 
-            PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
 
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(),ANDROID_CHANNEL_ID);
-            builder.setContentIntent(contentIntent)
-                    .setOngoing(true)   //Can't be swiped out
-                    .setSmallIcon(R.drawable.ic_update)
-                    .setTicker(Ticker)
-                    .setContentTitle(Title) //Заголовок
-                    .setContentText(Text) // Текст уведомления
-                    .setOnlyAlertOnce(true)
-                    .setWhen(startTime)
-                    .setUsesChronometer(true)
-                    .addAction(R.drawable.ic_stop,getText(R.string.cancel_download),stopDownloadPendingIntent);
-
-            Notification notification = builder.build();
-
-            startForeground(notificationId, notification);
+    private void restartMainActivity() {
+        boolean mainActivityActive = new PrefManager(this).getBoolPref("MainActivityActive");
+        if (mainActivityActive && allowActivityRestartAfterUpdate) {
+            Intent dialogIntent = new Intent(getApplicationContext(), MainActivity.class);
+            dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            startActivity(dialogIntent);
         }
+    }
 
-        void updateNotification(String Ticker, String Title, String Text, int percent) {
+    void sendNotification(int serviceStartId, int notificationId, long startTime, String Ticker, String Title, String Text) {
 
-            //These three lines makes Notification to open main activity after clicking on it
-            Intent notificationIntent = new Intent(getApplicationContext(), MainActivity.class);
-            notificationIntent.setAction(Intent.ACTION_MAIN);
-            notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-            PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        //These three lines makes Notification to open main activity after clicking on it
+        Intent notificationIntent = new Intent(getApplicationContext(), MainActivity.class);
+        notificationIntent.setAction(Intent.ACTION_MAIN);
+        notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
 
-            Intent stopDownloadIntent = new Intent(getApplicationContext(), UpdateService.class);
-            stopDownloadIntent.setAction(STOP_DOWNLOAD_ACTION);
-            stopDownloadIntent.putExtra("ServiceStartId",serviceStartId);
-            PendingIntent stopDownloadPendingIntent = PendingIntent.getService(getApplicationContext(), notificationId, stopDownloadIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent stopDownloadIntent = new Intent(getApplicationContext(), UpdateService.class);
+        stopDownloadIntent.setAction(STOP_DOWNLOAD_ACTION);
+        stopDownloadIntent.putExtra("ServiceStartId", serviceStartId);
+        PendingIntent stopDownloadPendingIntent = PendingIntent.getService(getApplicationContext(), notificationId, stopDownloadIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), ANDROID_CHANNEL_ID);
+        builder.setContentIntent(contentIntent)
+                .setOngoing(true)   //Can't be swiped out
+                .setSmallIcon(R.drawable.ic_update)
+                .setTicker(Ticker)
+                .setContentTitle(Title) //Заголовок
+                .setContentText(Text) // Текст уведомления
+                .setOnlyAlertOnce(true)
+                .setWhen(startTime)
+                .setUsesChronometer(true)
+                .addAction(R.drawable.ic_stop, getText(R.string.cancel_download), stopDownloadPendingIntent);
+
+        Notification notification = builder.build();
+
+        startForeground(notificationId, notification);
+    }
+
+    private void updateNotification(int serviceStartId, int notificationId, long startTime, String Ticker, String Title, String Text, int percent) {
+
+        //These three lines makes Notification to open main activity after clicking on it
+        Intent notificationIntent = new Intent(getApplicationContext(), MainActivity.class);
+        notificationIntent.setAction(Intent.ACTION_MAIN);
+        notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+        PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Intent stopDownloadIntent = new Intent(getApplicationContext(), UpdateService.class);
+        stopDownloadIntent.setAction(STOP_DOWNLOAD_ACTION);
+        stopDownloadIntent.putExtra("ServiceStartId", serviceStartId);
+        PendingIntent stopDownloadPendingIntent = PendingIntent.getService(getApplicationContext(), notificationId, stopDownloadIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
 
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), ANDROID_CHANNEL_ID);
+        builder.setContentIntent(contentIntent)
+                .setOngoing(true)   //Can't be swiped out
+                .setSmallIcon(R.drawable.ic_update)
+                .setTicker(Ticker)
+                .setContentTitle(Title) //Заголовок
+                .setContentText(Text) // Текст уведомления
+                .setOnlyAlertOnce(true)
+                .setWhen(startTime - (System.currentTimeMillis() - startTime))
+                .setUsesChronometer(true)
+                .addAction(R.drawable.ic_stop, getText(R.string.cancel_download), stopDownloadPendingIntent);
 
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(),ANDROID_CHANNEL_ID);
-            builder.setContentIntent(contentIntent)
-                    .setOngoing(true)   //Can't be swiped out
-                    .setSmallIcon(R.drawable.ic_update)
-                    .setTicker(Ticker)
-                    .setContentTitle(Title) //Заголовок
-                    .setContentText(Text) // Текст уведомления
-                    .setOnlyAlertOnce(true)
-                    .setWhen(startTime-(System.currentTimeMillis()-startTime))
-                    .setUsesChronometer(true)
-                    .addAction(R.drawable.ic_stop,getText(R.string.cancel_download),stopDownloadPendingIntent);
+        int PROGRESS_MAX = 100;
+        builder.setProgress(PROGRESS_MAX, percent, false);
 
-            int PROGRESS_MAX = 100;
-            builder.setProgress(PROGRESS_MAX, percent, false);
+        Notification notification = builder.build();
 
-            Notification notification = builder.build();
+        synchronized (notificationManager) {
             notificationManager.notify(notificationId, notification);
         }
     }
@@ -355,11 +394,11 @@ public class UpdateService extends Service {
             int read;
             do {
                 read = is.read(readBuffer, 0, readBuffer.length);
-                if(read == -1) {
+                if (read == -1) {
                     break;
                 }
                 bout.write(readBuffer, 0, read);
-            } while(true);
+            } while (true);
 
             crc.update(bout.toByteArray());
 
@@ -373,7 +412,7 @@ public class UpdateService extends Service {
         return null;
     }
 
-    void stopRunningModules(String fileName) {
+    private void stopRunningModules(String fileName) {
         String[] commandsStop = new String[0];
         if (fileName.contains("dnscrypt-proxy")) {
             boolean dnsCryptRunning = new PrefManager(getApplicationContext()).getBoolPref("DNSCrypt Running");
@@ -382,13 +421,13 @@ public class UpdateService extends Service {
                         busyboxPath + "killall dnscrypt-proxy"
                 };
             }
-        } else if (fileName.contains("tor")){
+        } else if (fileName.contains("tor")) {
             boolean torRunning = new PrefManager(getApplicationContext()).getBoolPref("Tor Running");
             if (torRunning) {
                 while (sparseArray.size() > 1) {
                     try {
                         Thread.sleep(5000);
-                    } catch(InterruptedException e){
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
@@ -396,14 +435,14 @@ public class UpdateService extends Service {
                         busyboxPath + "killall tor"
                 };
             }
-        } else if (fileName.contains("i2pd")){
+        } else if (fileName.contains("i2pd")) {
             boolean itpdRunning = new PrefManager(getApplicationContext()).getBoolPref("I2PD Running");
             if (itpdRunning) {
                 commandsStop = new String[]{
                         busyboxPath + "killall i2pd"
                 };
             }
-        } else if (fileName.contains("InviZible")){
+        } else if (fileName.contains("InviZible")) {
             commandsStop = new String[]{
                     iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
                     iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
@@ -416,7 +455,7 @@ public class UpdateService extends Service {
             };
         }
 
-        if (commandsStop.length!=0) {
+        if (commandsStop.length != 0) {
             RootCommands rootCommands = new RootCommands(commandsStop);
             Intent intent = new Intent(getApplicationContext(), RootExecService.class);
             intent.setAction(RootExecService.RUN_COMMAND);
@@ -432,22 +471,22 @@ public class UpdateService extends Service {
         }
     }
 
-    void runPreviousStoppedModules(String fileName) {
+    private void runPreviousStoppedModules(String fileName) {
         String[] commandsRun = new String[0];
         if (fileName.contains("dnscrypt-proxy")) {
             boolean dnsCryptRunning = new PrefManager(getApplicationContext()).getBoolPref("DNSCrypt Running");
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-            boolean runDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot",false);
+            boolean runDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot", false);
             if (dnsCryptRunning && runDNSCryptWithRoot) {
                 commandsRun = new String[]{
-                        busyboxPath+ "nohup " + dnscryptPath+" --config "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml >/dev/null 2>&1 &"
+                        busyboxPath + "nohup " + dnscryptPath + " --config " + appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml >/dev/null 2>&1 &"
                 };
             } else if (dnsCryptRunning) {
                 runDNSCryptNoRoot();
             }
-        } else if (fileName.contains("tor")){
+        } else if (fileName.contains("tor")) {
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-            boolean rnTorWithRoot = shPref.getBoolean("swUseModulesRoot",false);
+            boolean rnTorWithRoot = shPref.getBoolean("swUseModulesRoot", false);
             boolean torRunning = new PrefManager(getApplicationContext()).getBoolPref("Tor Running");
             if (torRunning && rnTorWithRoot) {
                 commandsRun = new String[]{
@@ -456,9 +495,9 @@ public class UpdateService extends Service {
             } else if (torRunning) {
                 runTorNoRoot();
             }
-        } else if (fileName.contains("i2pd")){
+        } else if (fileName.contains("i2pd")) {
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-            boolean rnI2PDWithRoot = shPref.getBoolean("swUseModulesRoot",false);
+            boolean rnI2PDWithRoot = shPref.getBoolean("swUseModulesRoot", false);
             boolean itpdRunning = new PrefManager(getApplicationContext()).getBoolPref("I2PD Running");
             if (itpdRunning && rnI2PDWithRoot) {
                 commandsRun = new String[]{
@@ -469,7 +508,7 @@ public class UpdateService extends Service {
             }
         }
 
-        if (commandsRun.length!=0) {
+        if (commandsRun.length != 0) {
             RootCommands rootCommands = new RootCommands(commandsRun);
             Intent intent = new Intent(getApplicationContext(), RootExecService.class);
             intent.setAction(RootExecService.RUN_COMMAND);
@@ -481,34 +520,10 @@ public class UpdateService extends Service {
 
     private void runDNSCryptNoRoot() {
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        boolean showNotification = shPref.getBoolean("swShowNotification",true);
+        boolean showNotification = shPref.getBoolean("swShowNotification", true);
         Intent intent = new Intent(getApplicationContext(), NoRootService.class);
         intent.setAction(NoRootService.actionStartDnsCrypt);
-        intent.putExtra("showNotification",showNotification);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            getApplicationContext().startForegroundService(intent);
-        } else {
-            getApplicationContext().startService(intent);
-        }
-    }
-    private void runTorNoRoot() {
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        boolean showNotification = shPref.getBoolean("swShowNotification",true);
-        Intent intent = new Intent(getApplicationContext(), NoRootService.class);
-        intent.setAction(NoRootService.actionStartTor);
-        intent.putExtra("showNotification",showNotification);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            getApplicationContext().startForegroundService(intent);
-        } else {
-            getApplicationContext().startService(intent);
-        }
-    }
-    private void runITPDNoRoot() {
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        boolean showNotification = shPref.getBoolean("swShowNotification",true);
-        Intent intent = new Intent(getApplicationContext(), NoRootService.class);
-        intent.setAction(NoRootService.actionStartITPD);
-        intent.putExtra("showNotification",showNotification);
+        intent.putExtra("showNotification", showNotification);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             getApplicationContext().startForegroundService(intent);
         } else {
@@ -516,6 +531,44 @@ public class UpdateService extends Service {
         }
     }
 
+    private void runTorNoRoot() {
+        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        boolean showNotification = shPref.getBoolean("swShowNotification", true);
+        Intent intent = new Intent(getApplicationContext(), NoRootService.class);
+        intent.setAction(NoRootService.actionStartTor);
+        intent.putExtra("showNotification", showNotification);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            getApplicationContext().startForegroundService(intent);
+        } else {
+            getApplicationContext().startService(intent);
+        }
+    }
+
+    private void runITPDNoRoot() {
+        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        boolean showNotification = shPref.getBoolean("swShowNotification", true);
+        Intent intent = new Intent(getApplicationContext(), NoRootService.class);
+        intent.setAction(NoRootService.actionStartITPD);
+        intent.putExtra("showNotification", showNotification);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            getApplicationContext().startForegroundService(intent);
+        } else {
+            getApplicationContext().startService(intent);
+        }
+    }
+
+    @SuppressWarnings("unused")
+    private void removeOldApkFileFromPrevUpdate(File dir) {
+        try {
+            for (File file: dir.listFiles()) {
+                if (file.getName().contains("InviZible")) {
+                    boolean result = file.delete();
+                }
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "Unable to remove old InviZible.apk file during update" + e.getMessage() + " " + e.getCause());
+        }
+    }
 
 
 }

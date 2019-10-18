@@ -25,9 +25,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.support.v7.app.AppCompatDelegate;
 
 import java.util.Date;
 import java.util.Objects;
@@ -63,10 +65,12 @@ public class PreferencesFastFragment extends PreferenceFragment implements Prefe
         findPreference("swAutostartTor").setOnPreferenceChangeListener(this);
         findPreference("pref_fast_all_through_tor").setOnPreferenceChangeListener(this);
         findPreference("pref_fast_block_http").setOnPreferenceChangeListener(this);
+        findPreference("pref_fast_theme").setOnPreferenceChangeListener(this);
+        findPreference("pref_fast_language").setOnPreferenceChangeListener(this);
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        refreshPeriodHours = Integer.parseInt(shPref.getString("pref_fast_site_refresh_interval","12"));
-        if (shPref.getBoolean("pref_fast_all_through_tor",true)) {
+        refreshPeriodHours = Integer.parseInt(shPref.getString("pref_fast_site_refresh_interval", "12"));
+        if (shPref.getBoolean("pref_fast_all_through_tor", true)) {
             findPreference("prefTorSiteUnlock").setEnabled(false);
             findPreference("prefTorAppUnlock").setEnabled(false);
         } else {
@@ -78,30 +82,30 @@ public class PreferencesFastFragment extends PreferenceFragment implements Prefe
     }
 
     public void setDnsCryptServersSumm() {
-        if (getActivity()==null)
+        if (getActivity() == null)
             return;
         Preference prefDNSCryptServer = findPreference("prefDNSCryptServer");
-        if (prefDNSCryptServer!=null)
+        if (prefDNSCryptServer != null)
             prefDNSCryptServer.setSummary(new PrefManager(Objects.requireNonNull(getActivity())).getStrPref("DNSCrypt Servers"));
     }
 
-    public void setUpdateTimeLast(){
+    public void setUpdateTimeLast() {
         String updateTimeLastStr = new PrefManager(getActivity()).getStrPref("updateTimeLast");
         String lastUpdateResult = new PrefManager(getActivity()).getStrPref("LastUpdateResult");
         final Preference prefLastUpdate = findPreference("pref_fast_chek_update");
-        if (prefLastUpdate==null)
+        if (prefLastUpdate == null)
             return;
 
         if (!updateTimeLastStr.isEmpty() && updateTimeLastStr.trim().matches("\\d+")) {
             long updateTimeLast = Long.parseLong(updateTimeLastStr);
             Date date = new Date(updateTimeLast);
 
-            String dateString  = android.text.format.DateFormat.getDateFormat(getActivity()).format(date);
+            String dateString = android.text.format.DateFormat.getDateFormat(getActivity()).format(date);
             String timeString = android.text.format.DateFormat.getTimeFormat(getActivity()).format(date);
 
             prefLastUpdate.setSummary(getString(R.string.update_last_check) + " "
                     + dateString + " " + timeString + System.lineSeparator() + lastUpdateResult);
-        } else if (lastUpdateResult.equals(getString(R.string.update_check_fault))
+        } else if (lastUpdateResult.equals(getString(R.string.update_fault))
                 && new PrefManager(getActivity()).getStrPref("updateTimeLast").isEmpty()
                 && appVersion.startsWith("p")) {
             findPreference("pref_fast_auto_update").setEnabled(false);
@@ -109,18 +113,27 @@ public class PreferencesFastFragment extends PreferenceFragment implements Prefe
         } else {
             prefLastUpdate.setSummary(lastUpdateResult);
         }
-        if (getActivity()==null)
+        if (getActivity() == null)
             return;
 
         prefLastUpdate.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
                 if (prefLastUpdate.isEnabled()) {
-                    Intent intent = new Intent(getActivity(), MainActivity.class);
-                    intent.setAction("check_update");
-                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-                    getActivity().finish();
+                    new Handler().post(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            Intent intent = new Intent(getActivity(), MainActivity.class);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                            intent.setAction("check_update");
+                            getActivity().overridePendingTransition(0, 0);
+                            getActivity().finish();
+
+                            startActivity(intent);
+                        }
+                    });
+
                     return true;
                 } else {
                     return false;
@@ -130,7 +143,49 @@ public class PreferencesFastFragment extends PreferenceFragment implements Prefe
 
     }
 
+    private void changeTheme() {
+        new Handler().post(new Runnable() {
 
+            @Override
+            public void run() {
+                SharedPreferences defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+                try {
+                    String theme = defaultSharedPreferences.getString("pref_fast_theme", "4");
+                    switch (theme) {
+                        case "1":
+                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                            break;
+                        case "2":
+                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                            break;
+                        case "3":
+                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO);
+                            break;
+                        case "4":
+                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                            break;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                activityCurrentRecreate();
+            }
+        });
+
+    }
+
+    private void activityCurrentRecreate() {
+        Intent intent = getActivity().getIntent();
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+        getActivity().overridePendingTransition(0, 0);
+        getActivity().finish();
+
+        getActivity().overridePendingTransition(0, 0);
+        startActivity(intent);
+
+        new PrefManager(getActivity()).setBoolPref("refresh_main_activity", true);
+    }
 
     @Override
     public void onPause() {
@@ -143,7 +198,7 @@ public class PreferencesFastFragment extends PreferenceFragment implements Prefe
     public boolean onPreferenceChange(Preference preference, Object newValue) {
         switch (preference.getKey()) {
             case "swAutostartTor":
-                if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP || refreshPeriodHours==0) {
+                if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP || refreshPeriodHours == 0) {
                     return true;
                 }
                 if (Boolean.valueOf(newValue.toString())) {
@@ -151,14 +206,14 @@ public class PreferencesFastFragment extends PreferenceFragment implements Prefe
                     ComponentName jobService = new ComponentName(getActivity(), GetIPsJobService.class);
                     JobInfo.Builder getIPsJobBuilder = new JobInfo.Builder(mJobId, jobService);
                     getIPsJobBuilder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
-                    getIPsJobBuilder.setPeriodic(refreshPeriodHours*60*60*1000);
+                    getIPsJobBuilder.setPeriodic(refreshPeriodHours * 60 * 60 * 1000);
 
                     JobScheduler jobScheduler = (JobScheduler) getActivity().getSystemService(Context.JOB_SCHEDULER_SERVICE);
 
                     if (jobScheduler != null) {
                         jobScheduler.schedule(getIPsJobBuilder.build());
                     }
-                } else if (!new PrefManager(getActivity()).getBoolPref("Tor Running")){
+                } else if (!new PrefManager(getActivity()).getBoolPref("Tor Running")) {
                     JobScheduler jobScheduler = (JobScheduler) getActivity().getSystemService(Context.JOB_SCHEDULER_SERVICE);
                     if (jobScheduler != null) {
                         jobScheduler.cancel(mJobId);
@@ -170,7 +225,7 @@ public class PreferencesFastFragment extends PreferenceFragment implements Prefe
                 if (new PrefManager(getActivity()).getBoolPref("Tor Running")) {
                     TopFragment.NotificationDialogFragment commandResult =
                             TopFragment.NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_tor).toString());
-                    commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
+                    commandResult.show(getFragmentManager(), TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
                 }
 
                 if (Boolean.valueOf(newValue.toString())) {
@@ -185,12 +240,23 @@ public class PreferencesFastFragment extends PreferenceFragment implements Prefe
                 if (new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
                     TopFragment.NotificationDialogFragment commandResult =
                             TopFragment.NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_dnscrypt).toString());
-                    commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
+                    commandResult.show(getFragmentManager(), TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
                 } else if (new PrefManager(getActivity()).getBoolPref("Tor Running")) {
                     TopFragment.NotificationDialogFragment commandResult =
                             TopFragment.NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_tor).toString());
-                    commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
+                    commandResult.show(getFragmentManager(), TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
                 }
+                return true;
+            case "pref_fast_theme":
+                changeTheme();
+                return true;
+            case "pref_fast_language":
+                new Handler().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        activityCurrentRecreate();
+                    }
+                });
                 return true;
         }
 

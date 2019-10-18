@@ -827,9 +827,9 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                     updateCheck.requestUpdateData("https://invizible.net",appSign);
                 } catch (Exception e) {
                     if (getActivity() != null) {
-                        new PrefManager(getActivity()).setStrPref("LastUpdateResult",getText(R.string.update_check_fault).toString());
+                        new PrefManager(getActivity()).setStrPref("LastUpdateResult",getText(R.string.update_fault).toString());
                         if (MainActivity.modernDialog!=null)
-                            ((MainActivity) getActivity()).showUpdateMessage(getText(R.string.update_check_fault).toString());
+                            ((MainActivity) getActivity()).showUpdateMessage(getText(R.string.update_fault).toString());
                     }
                     Log.e(LOG_TAG,"TopFragment Failed to requestUpdate() " + e.getMessage() + " " + e.getCause());
                 }
