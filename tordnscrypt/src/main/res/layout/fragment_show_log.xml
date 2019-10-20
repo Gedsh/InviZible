@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/LogLayout"
@@ -10,48 +10,47 @@
     <!-- TODO: Update blank fragment layout -->
 
 
-    <ScrollView
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshDNSQueries"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_margin="8dp"
-        android:scrollbars="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:layout_height="match_parent">
 
-        <LinearLayout
+        <ScrollView
+            android:id="@+id/scrollViewDNSLog"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="match_parent"
+            android:layout_margin="8dp"
+            android:scrollbars="vertical">
 
-            <TextView
-                android:id="@+id/tvLogFile"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:textIsSelectable="true"
-                android:textSize="@dimen/fragment_file_log_text_size"
-                android:typeface="serif" />
-        </LinearLayout>
-    </ScrollView>
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvLogFile"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textIsSelectable="true"
+                    android:textSize="@dimen/fragment_file_log_text_size"
+                    android:typeface="serif" />
+            </LinearLayout>
+        </ScrollView>
+    </android.support.v4.widget.SwipeRefreshLayout>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/floatingBtnClearLog"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
         android:layout_marginBottom="8dp"
         android:adjustViewBounds="true"
-        android:clickable="true"
         android:cropToPadding="true"
         android:fitsSystemWindows="false"
-        android:focusable="true"
         android:src="@drawable/ic_clear_white_24dp"
         app:backgroundTint="@color/buttonColor"
         app:fabSize="auto"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:useCompatPadding="false" />
+        app:rippleColor="@color/colorAccent" />
 
 
-</android.support.constraint.ConstraintLayout>
+</FrameLayout>

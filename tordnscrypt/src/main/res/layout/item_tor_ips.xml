@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/llHostIPRoot"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="5dp"
@@ -29,7 +30,8 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:nextFocusDown="@id/swTorItem"
+                android:clickable="true"
+                android:focusable="true"
                 android:orientation="vertical">
 
                 <TextView
@@ -48,7 +50,10 @@
                     android:id="@+id/divider"
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:layout_margin="4dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginEnd="10dp"
+                    android:layout_marginBottom="5dp"
                     android:layout_weight="1"
                     android:background="@color/itemDividerColor" />
 
@@ -69,7 +74,8 @@
                 android:layout_height="match_parent"
                 android:layout_margin="4dp"
                 android:checked="true"
-                android:nextFocusUp="@id/llHostIP" />
+                android:paddingStart="3dp"
+                android:paddingEnd="3dp" />
 
         </LinearLayout>
 
@@ -83,7 +89,8 @@
         android:layout_marginEnd="3dp"
         android:background="@drawable/button_item_selector"
         android:contentDescription="Delete"
-        android:focusable="false"
+        android:focusable="true"
+        android:clickable="true"
         android:scaleType="fitCenter"
         app:srcCompat="@android:drawable/ic_menu_delete" />
 

@@ -38,6 +38,7 @@ import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
 import pan.alexander.tordnscrypt.settings.PreferencesTorBridges;
 import pan.alexander.tordnscrypt.settings.PreferencesTorFragment;
 import pan.alexander.tordnscrypt.settings.SettingsParser;
+import pan.alexander.tordnscrypt.settings.ShowLogFragment;
 import pan.alexander.tordnscrypt.settings.ShowRulesRecycleFrag;
 import pan.alexander.tordnscrypt.settings.UnlockTorAppsFragment;
 import pan.alexander.tordnscrypt.settings.UnlockTorIpsFrag;
@@ -57,7 +58,6 @@ public class SettingsActivity extends LangAppCompatActivity
     public static final String tor_conf_tag = "pan.alexander.tordnscrypt/app_data/tor/tor.conf";
     public static final String itpd_conf_tag = "pan.alexander.tordnscrypt/app_data/itpd/itpd.conf";
     public static final String public_resolvers_md_tag = "pan.alexander.tordnscrypt/app_data/dnscrypt-proxy/public-resolvers.md";
-    public static final String dnscrypt_proxy_log_tag = "pan.alexander.tordnscrypt/app_data/dnscrypt-proxy/dnscrypt_proxy.log";
     public static final String rules_tag = "pan.alexander.tordnscrypt/app_data/abstract_rules";
     public static DialogInterface dialogInterface;
 
@@ -106,11 +106,21 @@ public class SettingsActivity extends LangAppCompatActivity
             FileOperations.readTextFile(this,appDataDir+"/app_data/dnscrypt-proxy/public-resolvers.md",public_resolvers_md_tag);
 
         } else if (Objects.equals(intent.getAction(), "open_qery_log")){
-            dialogInterface = FileOperations.fileOperationProgressDialog(this);
-            FileOperations.readTextFile(this,appDataDir+"/cache/query.log",dnscrypt_proxy_log_tag);
+            Bundle bundle = new Bundle();
+            String path = appDataDir+"/cache/query.log";
+            bundle.putString("path", path);
+            ShowLogFragment frag = new ShowLogFragment();
+            frag.setArguments(bundle);
+            fTrans.replace(android.R.id.content, frag);
+            fTrans.commit();
         }  else if (Objects.equals(intent.getAction(), "open_nx_log")){
-            dialogInterface = FileOperations.fileOperationProgressDialog(this);
-            FileOperations.readTextFile(this,appDataDir+"/cache/nx.log",dnscrypt_proxy_log_tag);
+            Bundle bundle = new Bundle();
+            String path = appDataDir+"/cache/nx.log";
+            bundle.putString("path", path);
+            ShowLogFragment frag = new ShowLogFragment();
+            frag.setArguments(bundle);
+            fTrans.replace(android.R.id.content, frag);
+            fTrans.commit();
         } else if (Objects.equals(intent.getAction(), "forwarding_rules_Pref")){
             dialogInterface = FileOperations.fileOperationProgressDialog(this);
             FileOperations.readTextFile(this,appDataDir+"/app_data/dnscrypt-proxy/forwarding-rules.txt",rules_tag);

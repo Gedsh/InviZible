@@ -94,6 +94,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         etLogsPath.setOnClickListener(this);
         btnSaveLogs = findViewById(R.id.btnSaveLogs);
         btnSaveLogs.setOnClickListener(this);
+        btnSaveLogs.requestFocus();
         swRootCommandsLog = findViewById(R.id.swRootCommandsLog);
         swRootCommandsLog.setChecked(new PrefManager(this).getBoolPref("swRootCommandsLog"));
         swRootCommandsLog.setOnCheckedChangeListener(this);

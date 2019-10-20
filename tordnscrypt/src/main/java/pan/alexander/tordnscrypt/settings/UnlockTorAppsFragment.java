@@ -94,13 +94,12 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
 
         View view = inflater.inflate(R.layout.fragment_preferences_tor_apps, container, false);
 
-        ((Switch)view.findViewById(R.id.swTorAppSellectorAll)).setOnCheckedChangeListener(this);
-        ((SearchView)view.findViewById(R.id.searhTorApp)).setOnQueryTextListener(this);
+        ((Switch) view.findViewById(R.id.swTorAppSellectorAll)).setOnCheckedChangeListener(this);
+        ((SearchView) view.findViewById(R.id.searhTorApp)).setOnQueryTextListener(this);
         pbTorApp = view.findViewById(R.id.pbTorApp);
 
         return view;
     }
-
 
 
     @Override
@@ -113,13 +112,12 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
         //////////////////////////////////////////////////////////////////////////////////
 
 
-
         isChanged = false;
         appsUnlock = new ArrayList<>();
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        torTethering = shPref.getBoolean("pref_common_tor_tethering",false);
-        routeAllThroughTorDevice = shPref.getBoolean("pref_fast_all_through_tor",true);
+        torTethering = shPref.getBoolean("pref_common_tor_tethering", false);
+        routeAllThroughTorDevice = shPref.getBoolean("pref_fast_all_through_tor", true);
 
         if (!routeAllThroughTorDevice) {
             Objects.requireNonNull(getActivity()).setTitle(R.string.pref_tor_unlock_app);
@@ -148,21 +146,21 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
                 try {
                     Verifier verifier = new Verifier(getActivity());
                     String appSignAlt = verifier.getApkSignature();
-                    if (!verifier.decryptStr(wrongSign,appSign,appSignAlt).equals(TOP_BROADCAST)) {
+                    if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                         NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                getActivity(),getText(R.string.verifier_error).toString(),"11");
+                                getActivity(), getText(R.string.verifier_error).toString(), "11");
                         if (notificationHelper != null) {
-                            notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                            notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                         }
                     }
 
                 } catch (Exception e) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                            getActivity(),getText(R.string.verifier_error).toString(),"188");
+                            getActivity(), getText(R.string.verifier_error).toString(), "188");
                     if (notificationHelper != null) {
-                        notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                        notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                     }
-                    Log.e(LOG_TAG,"UnlockTorAppsFragment fault "+e.getMessage() + " " + e.getCause() + System.lineSeparator() +
+                    Log.e(LOG_TAG, "UnlockTorAppsFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                             Arrays.toString(e.getStackTrace()));
                 }
             }
@@ -204,14 +202,14 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
             if (app.active)
                 setAppUIDtoSave.add(app.uid);
         }
-        new PrefManager(getActivity()).setSetStrPref(unlockAppsStr,setAppUIDtoSave);
+        new PrefManager(getActivity()).setSetStrPref(unlockAppsStr, setAppUIDtoSave);
 
         List<String> listAppUIDtoSave = new LinkedList<>(setAppUIDtoSave);
-        FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/tor/"+unlockAppsStr, listAppUIDtoSave,"ignored");
-        Toast.makeText(getActivity(),getString(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
+        FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/" + unlockAppsStr, listAppUIDtoSave, "ignored");
+        Toast.makeText(getActivity(), getString(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
 
         /////////////Refresh iptables rules/////////////////////////
-        TorRefreshIPsWork torRefreshIPsWork = new TorRefreshIPsWork(getActivity(),null);
+        TorRefreshIPsWork torRefreshIPsWork = new TorRefreshIPsWork(getActivity(), null);
         torRefreshIPsWork.refreshIPs();
     }
 
@@ -372,7 +370,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
                 cardTorApps.setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
             }
 
-            void bind(int position){
+            void bind(int position) {
                 AppUnlock app = getItem(position);
                 tvTorAppName.setText(app.name);
                 imgTorApp.setImageDrawable(app.icon);
@@ -390,7 +388,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
             CompoundButton.OnCheckedChangeListener onCheckedChangeListener = new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton compoundButton, boolean newValue) {
-                    setActive(getAdapterPosition(),newValue);
+                    setActive(getAdapterPosition(), newValue);
                     isChanged = true;
                 }
             };
@@ -400,7 +398,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
                 public void onClick(View view) {
                     int appPosition = getAdapterPosition();
                     boolean appActive = getItem(appPosition).active;
-                    setActive(appPosition,!appActive);
+                    setActive(appPosition, !appActive);
                     mAdapter.notifyItemChanged(appPosition);
                     isChanged = true;
                 }
@@ -410,9 +408,9 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
                 @Override
                 public void onFocusChange(View view, boolean inFocus) {
                     if (inFocus) {
-                        ((CardView)view).setCardBackgroundColor(getResources().getColor(R.color.colorSecond));
+                        ((CardView) view).setCardBackgroundColor(getResources().getColor(R.color.colorSecond));
                     } else {
-                        ((CardView)view).setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
+                        ((CardView) view).setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
                     }
                 }
             };
@@ -432,13 +430,11 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
         final Iterator<ApplicationInfo> itAppInfo = lAppInfo.iterator();
 
 
-
         Runnable fillAppsList = new Runnable() {
             @Override
             public void run() {
 
-                while (itAppInfo.hasNext())
-                {
+                while (itAppInfo.hasNext()) {
                     ApplicationInfo aInfo = itAppInfo.next();
                     boolean appUseInternet = false;
                     boolean system = false;
@@ -447,12 +443,9 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
                     try {
                         PackageInfo pInfo = pMgr.getPackageInfo(aInfo.packageName, PackageManager.GET_PERMISSIONS);
 
-                        if (pInfo != null && pInfo.requestedPermissions != null)
-                        {
-                            for (String permInfo:pInfo.requestedPermissions)
-                            {
-                                if (permInfo.equals("android.permission.INTERNET"))
-                                {
+                        if (pInfo != null && pInfo.requestedPermissions != null) {
+                            for (String permInfo : pInfo.requestedPermissions) {
+                                if (permInfo.equals("android.permission.INTERNET")) {
                                     appUseInternet = true;
 
                                 }
@@ -464,8 +457,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
                         e.printStackTrace();
                     }
 
-                    if ((aInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 1)
-                    {
+                    if ((aInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 1) {
                         //System app
                         appUseInternet = true;
                         system = true;
@@ -474,11 +466,9 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
 
                     if (appUseInternet) {
                         String name;
-                        try
-                        {
+                        try {
                             name = pMgr.getApplicationLabel(aInfo).toString();
-                        }
-                        catch (Exception e) {
+                        } catch (Exception e) {
                             name = aInfo.packageName;
                         }
                         String pack = aInfo.packageName;
@@ -492,7 +482,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
 
                         final AppUnlock app = new AppUnlock(name, pack, uid, icon, system, active);
 
-                        if (getActivity()==null)
+                        if (getActivity() == null)
                             return;
 
                         getActivity().runOnUiThread(new Runnable() {

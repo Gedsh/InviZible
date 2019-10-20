@@ -2,7 +2,7 @@
 <resources>
     <color name="colorPrimary">#1A224C</color>
     <color name="colorPrimaryDark">#13193E</color>
-    <color name="colorAccent">#3F51B5</color>
+    <color name="colorAccent">#2979FF</color>
     <color name="colorBackground">#121212</color>
     <color name="colorSelected">#1A3F51B5</color>
     <!-- colorFirst same as cardsColor -->
