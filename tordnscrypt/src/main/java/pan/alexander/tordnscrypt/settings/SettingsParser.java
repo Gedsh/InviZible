@@ -48,9 +48,6 @@ public class SettingsParser implements FileOperations.OnFileOperationsCompleteLi
                         case SettingsActivity.public_resolvers_md_tag:
                             readPublicResolversMd(path);
                             break;
-                        case SettingsActivity.dnscrypt_proxy_log_tag:
-                            readDNSCryptLogs(path);
-                            break;
                         case SettingsActivity.rules_tag:
                             readRules(path);
                             break;
@@ -60,9 +57,7 @@ public class SettingsParser implements FileOperations.OnFileOperationsCompleteLi
             });
 
         } else if(!FileOperations.fileOperationResult && currentFileOperation.equals(FileOperations.readTextFileCurrentOperation)) {
-            if (tag.equals(SettingsActivity.dnscrypt_proxy_log_tag)) {
-                readDNSCryptLogs(path);
-            } else if (tag.equals(SettingsActivity.rules_tag)) {
+            if (tag.equals(SettingsActivity.rules_tag)) {
                 readRules(path);
             }
         } else if (FileOperations.fileOperationResult && currentFileOperation.equals(FileOperations.writeToTextFileCurrentOperation)) {
@@ -464,24 +459,6 @@ public class SettingsParser implements FileOperations.OnFileOperationsCompleteLi
                 fTrans.commit();
             }
         }
-    }
-
-    private void readDNSCryptLogs(String path) {
-        List<String> log_list = FileOperations.linesListMap.get(path);
-        ArrayList<String> log_file = new ArrayList<>();
-        if (log_list != null) {
-            log_file.addAll(log_list);
-        } else {
-            log_file.add("");
-        }
-        FragmentTransaction fTrans = settingsActivity.getFragmentManager().beginTransaction();
-        Bundle bundle = new Bundle();
-        bundle.putStringArrayList("log_file", log_file);
-        bundle.putString("path",path);
-        ShowLogFragment frag = new ShowLogFragment();
-        frag.setArguments(bundle);
-        fTrans.replace(android.R.id.content, frag);
-        fTrans.commit();
     }
 
     private void readRules(String path) {

@@ -19,32 +19,40 @@ package pan.alexander.tordnscrypt.settings;
 */
 
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.utils.FileOperations;
 
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ShowLogFragment extends android.app.Fragment implements View.OnClickListener {
+public class ShowLogFragment extends android.app.Fragment implements View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
 
-    ArrayList<String> log_file;
-    String file_path;
-    TextView tvLogFile;
-    String appDataDir;
-    String busyboxPath;
+    private final static int MAX_LINES_QUANTITY = 1000;
+    private String file_path;
+    private TextView tvLogFile;
+    private SwipeRefreshLayout swipeRefreshDNSQueries;
 
 
     public ShowLogFragment() {
@@ -56,14 +64,12 @@ public class ShowLogFragment extends android.app.Fragment implements View.OnClic
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
 
-        log_file = getArguments().getStringArrayList("log_file");
         file_path = getArguments().getString("path");
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_show_log, container, false);
     }
 
@@ -71,28 +77,29 @@ public class ShowLogFragment extends android.app.Fragment implements View.OnClic
     public void onResume() {
         super.onResume();
 
-        PathVars pathVars = new PathVars(getActivity());
-        appDataDir = pathVars.appDataDir;
-        busyboxPath = pathVars.busyboxPath;
-
         tvLogFile = getActivity().findViewById(R.id.tvLogFile);
+
         FloatingActionButton floatingBtnClearLog = getActivity().findViewById(R.id.floatingBtnClearLog);
         floatingBtnClearLog.setAlpha(0.8f);
         floatingBtnClearLog.setOnClickListener(this);
+        floatingBtnClearLog.requestFocus();
 
-        if(file_path.contains("query.log")){
+        swipeRefreshDNSQueries = getActivity().findViewById(R.id.swipeRefreshDNSQueries);
+        swipeRefreshDNSQueries.setOnRefreshListener(this);
+
+        if (file_path.contains("query.log")) {
             getActivity().setTitle(R.string.title_dnscrypt_query_log);
-        } else if(file_path.contains("nx.log")){
+        } else if (file_path.contains("nx.log")) {
             getActivity().setTitle(R.string.title_dnscrypt_nx_log);
         }
 
-        if (log_file.size() > 1){
-            StringBuilder sb = new StringBuilder();
-            for (int i=0;i<log_file.size();i++){
-                sb.append(log_file.get(i)).append((char)10);
-            }
-            tvLogFile.setText(sb);
-        } else {
+        refreshDNSQueries(file_path);
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v.getId() == R.id.floatingBtnClearLog) {
+            FileOperations.writeToTextFile(getActivity(), file_path, Collections.singletonList(""), "ignored");
             tvLogFile.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
             tvLogFile.setText(R.string.dnscrypt_empty_log);
         }
@@ -100,15 +107,72 @@ public class ShowLogFragment extends android.app.Fragment implements View.OnClic
     }
 
     @Override
-    public void onClick(View v) {
-        List<String> emptyString = new LinkedList<>();
-        emptyString.add("");
-
-        if(v.getId()==R.id.floatingBtnClearLog){
-            FileOperations.writeToTextFile(getActivity(),file_path,emptyString,"ignored");
-            tvLogFile.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-            tvLogFile.setText(R.string.dnscrypt_empty_log);
-        }
-
+    public void onRefresh() {
+        refreshDNSQueries(file_path);
+        swipeRefreshDNSQueries.setRefreshing(false);
     }
+
+    private void refreshDNSQueries(final String path) {
+
+        try(FileReader reader = new FileReader(path);
+            BufferedReader bufferedReader = new BufferedReader(reader)) {
+
+            List<String> lines = new ArrayList<>();
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                lines.add(line);
+            }
+
+            final String tvLogFileText = shortenToLongFile(path, lines);
+
+            Activity activity = getActivity();
+            if (activity != null) {
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (tvLogFileText.isEmpty()) {
+                            if (tvLogFile.getTextAlignment() != View.TEXT_ALIGNMENT_CENTER) {
+                                tvLogFile.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                            }
+                            tvLogFile.setText(R.string.dnscrypt_empty_log);
+                        } else {
+                            if (tvLogFile.getTextAlignment() != View.TEXT_ALIGNMENT_TEXT_START) {
+                                tvLogFile.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
+                            }
+                            if (!tvLogFile.getText().toString().trim().equals(tvLogFileText)) {
+                                tvLogFile.setText(tvLogFileText);
+                            }
+                        }
+
+                    }
+                });
+            }
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "DNSCrypt startReadAndRefreshLogs fault " + e.getMessage() + e.getCause());
+        }
+    }
+
+    private String shortenToLongFile(String path, List<String> lines) {
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        int i = 0;
+        if (lines.size() > MAX_LINES_QUANTITY) {
+            i = lines.size() - MAX_LINES_QUANTITY;
+        }
+        for (; i < lines.size(); i++) {
+            stringBuilder.append(lines.get(i)).append(System.lineSeparator());
+        }
+        String tvLogFileText = stringBuilder.toString().trim();
+
+        if (lines.size() > MAX_LINES_QUANTITY * 2) {
+            try(FileWriter fileWriter = new FileWriter(path)) {
+                fileWriter.write(tvLogFileText);
+            } catch (IOException e) {
+                Log.e(LOG_TAG, "DNSCrypt ShowLogTimer shorten file fault " + e.getMessage() + e.getCause());
+            }
+        }
+        return tvLogFileText;
+    }
+
 }

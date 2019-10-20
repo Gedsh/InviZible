@@ -10,8 +10,8 @@
     <item android:state_focused="true">
         <shape android:shape="rectangle"  >
             <corners android:radius="5dp" />
-            <stroke android:width="2dp" android:color="@color/buttonItemColorFocusedHighlight" />
-            <solid android:color="@color/buttonItemColorFocusedHighlight"/>
+            <stroke android:width="2dp" android:color="@color/buttonColorFocusedHighlightStroke" />
+            <solid android:color="@color/buttonColorFocusedHighlight"/>
         </shape>
     </item>
     <item >

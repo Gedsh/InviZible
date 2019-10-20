@@ -32,6 +32,7 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -79,7 +80,9 @@ public class BackupActivity extends LangAppCompatActivity implements View.OnClic
 
         setContentView(R.layout.activity_backup);
         findViewById(R.id.btnRestoreBackup).setOnClickListener(this);
-        findViewById(R.id.btnSaveBackup).setOnClickListener(this);
+        Button btnSaveBackup = findViewById(R.id.btnSaveBackup);
+        btnSaveBackup.setOnClickListener(this);
+        btnSaveBackup.requestFocus();
         pbBackup = findViewById(R.id.pbBackup);
         pbBackup.setVisibility(View.INVISIBLE);
         etFilePath=findViewById(R.id.etPathBackup);

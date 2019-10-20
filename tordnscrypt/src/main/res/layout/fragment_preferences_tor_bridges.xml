@@ -20,7 +20,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:focusableInTouchMode="true"
+            android:focusable="false"
             app:cardBackgroundColor="@color/cardsColor"
             app:cardCornerRadius="5dp"
             app:cardUseCompatPadding="true"
@@ -33,14 +33,14 @@
                 android:layout_gravity="center_horizontal"
                 android:checked="true"
                 android:text="@string/pref_fast_use_tor_bridges_no"
-                android:typeface="normal" />
+                android:typeface="serif" />
         </android.support.v7.widget.CardView>
 
         <android.support.v7.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:focusableInTouchMode="true"
+            android:focusable="false"
             app:cardBackgroundColor="@color/cardsColor"
             app:cardCornerRadius="5dp"
             app:cardUseCompatPadding="true"
@@ -57,7 +57,8 @@
                     android:layout_height="match_parent"
                     android:layout_marginEnd="8dp"
                     android:layout_weight="1"
-                    android:text="@string/pref_fast_use_tor_bridges_default" />
+                    android:text="@string/pref_fast_use_tor_bridges_default"
+                    android:typeface="serif" />
 
                 <Spinner
                     android:id="@+id/spDefaultBridges"
@@ -75,7 +76,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:focusableInTouchMode="true"
+            android:focusable="false"
             app:cardBackgroundColor="@color/cardsColor"
             app:cardCornerRadius="5dp"
             app:cardUseCompatPadding="true"
@@ -92,7 +93,8 @@
                     android:layout_height="match_parent"
                     android:layout_marginEnd="8dp"
                     android:layout_weight="1"
-                    android:text="@string/pref_fast_use_tor_bridges_own" />
+                    android:text="@string/pref_fast_use_tor_bridges_own"
+                    android:typeface="serif" />
 
                 <Spinner
                     android:id="@+id/spOwnBridges"
