@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt;
+package pan.alexander.tordnscrypt.backup;
 /*
     This file is part of InviZible Pro.
 
@@ -20,16 +20,13 @@ package pan.alexander.tordnscrypt;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
+import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -45,22 +42,28 @@ import com.github.angads25.filepicker.view.FilePickerDialog;
 import java.io.File;
 import java.util.Objects;
 
+import pan.alexander.tordnscrypt.LangAppCompatActivity;
+import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
+import pan.alexander.tordnscrypt.utils.fileOperations.ExternalStoragePermissions;
+import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
+import pan.alexander.tordnscrypt.utils.fileOperations.OnBinaryFileOperationsCompleteListener;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.deleteFile;
+import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
 
-public class BackupActivity extends LangAppCompatActivity implements View.OnClickListener {
+public class BackupActivity extends LangAppCompatActivity implements View.OnClickListener, OnBinaryFileOperationsCompleteListener {
 
     EditText etFilePath = null;
     String pathBackup = null;
     ProgressBar pbBackup = null;
-    BroadcastReceiver br = null;
-    private boolean flagSave = false;
-    private boolean flagRestore = false;
     String appDataDir;
     String busyboxPath;
+    DialogInterface progress;
+
+    private BackupHelper backupHelper;
+    private RestoreHelper restoreHelper;
 
     @SuppressLint("SetTextI18n")
     @Override
@@ -68,13 +71,6 @@ public class BackupActivity extends LangAppCompatActivity implements View.OnClic
         super.onCreate(savedInstanceState);
 
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    1);
-        }
 
 
         setContentView(R.layout.activity_backup);
@@ -92,150 +88,105 @@ public class BackupActivity extends LangAppCompatActivity implements View.OnClic
         appDataDir = pathVars.appDataDir;
         busyboxPath = pathVars.busyboxPath;
 
-        br = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Log.i(LOG_TAG,"BackupActivity onReceive");
+        backupHelper = new BackupHelper(this, appDataDir, pathBackup);
+        restoreHelper = new RestoreHelper(this, appDataDir, pathBackup);
 
-                if (intent != null) {
-                    final String action = intent.getAction();
-                    if ((action == null) || (action.equals("") || intent.getIntExtra("Mark",0)!=
-                            RootExecService.BackupActivityMark)) return;
-
-                    if(action.equals(RootExecService.COMMAND_RESULT)){
-                        RootCommands comResult = (RootCommands) intent.getSerializableExtra("CommandsResult");
-
-                        if(comResult.getCommands().length == 0){
-                            Toast.makeText(context,R.string.wrong,Toast.LENGTH_LONG).show();
-                            return;
-                        }
-
-
-                        StringBuilder sb = new StringBuilder();
-                        for (String com:comResult.getCommands()){
-                            Log.i(LOG_TAG,com);
-                            sb.append(com).append((char)10);
-                        }
-
-                        TopFragment.NotificationDialogFragment commandResult = TopFragment.NotificationDialogFragment.newInstance(sb.toString());
-                        commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
-
-
-                        pbBackup.setVisibility(View.INVISIBLE);
-                        pbBackup.setIndeterminate(false);
-
-                        if(flagSave) Toast.makeText(context,"Backup OK",Toast.LENGTH_SHORT).show();
-                        if(flagRestore) Toast.makeText(context,"Restore OK",Toast.LENGTH_SHORT).show();
-
-                    }
-                }
-            }
-        };
-
+        FileOperations.setOnFileOperationCompleteListener(this);
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.btnRestoreBackup:
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-                        != PackageManager.PERMISSION_GRANTED) {
-                    return;
-                }
-
-                String[] commandsRestore = {
-                        busyboxPath+ "killall dnscrypt-proxy",
-                        busyboxPath+ "killall tor",
-                        busyboxPath+ "killall i2pd",
-                        busyboxPath+ "sleep 5",
-                        "cd "+appDataDir,
-                        //busyboxPath+ "mkdir -p cache",
-                        //busyboxPath+ "chmod -R 755 cache",
-                        busyboxPath+ "sleep 1",
-                        "app_bin/gnutar -xvzpf "+pathBackup+"/Backup.arch app_bin app_data",
-                        busyboxPath+ "sleep 3",
-                        "restorecon -R "+appDataDir,
-                };
-                RootCommands rootCommands = new RootCommands(commandsRestore );
-                Intent intent = new Intent(this, RootExecService.class);
-                intent.setAction(RootExecService.RUN_COMMAND);
-                intent.putExtra("Commands",rootCommands);
-                intent.putExtra("Mark", RootExecService.BackupActivityMark);
-                RootExecService.performAction(this,intent);
-                flagRestore = true;
-                flagSave = false;
-
-                pbBackup.setVisibility(View.VISIBLE);
-                pbBackup.setIndeterminate(true);
-
+                restoreBackup();
                 break;
             case R.id.btnSaveBackup:
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                        != PackageManager.PERMISSION_GRANTED) {
-                    return;
-                }
-
-                String[] commandsSave = {
-                        "cd "+appDataDir,
-                        //busyboxPath+ "mkdir -p cache",
-                        //busyboxPath+ "chmod -R 755 cache",
-                        busyboxPath+ "sleep 1",
-                        busyboxPath+ "mkdir -p "+pathBackup,
-                        "app_bin/gnutar -cvzpf "+pathBackup+"/Backup.arch app_bin app_data/dnscrypt-proxy" +
-                                " app_data/tor/bridges_custom.lst app_data/tor/bridges_default.lst " +
-                                "app_data/tor/geoip app_data/tor/geoip6 app_data/tor/tor.conf app_data/i2pd",
-                        busyboxPath+ "sleep 3"
-                };
-                rootCommands = new RootCommands(commandsSave);
-                intent = new Intent(this, RootExecService.class);
-                intent.setAction(RootExecService.RUN_COMMAND);
-                intent.putExtra("Commands",rootCommands);
-                intent.putExtra("Mark", RootExecService.BackupActivityMark);
-                RootExecService.performAction(this,intent);
-                flagSave = true;
-                flagRestore = false;
-
-                pbBackup.setVisibility(View.VISIBLE);
-                pbBackup.setIndeterminate(true);
-
+                saveBackup();
                 break;
             case R.id.etPathBackup:
-
-                DialogProperties properties = new DialogProperties();
-                properties.selection_mode = DialogConfigs.SINGLE_MODE;
-                properties.selection_type = DialogConfigs.DIR_SELECT;
-                properties.root = new File(Environment.getExternalStorageDirectory().toURI());
-                properties.error_dir = new File(Environment.getExternalStorageDirectory().toURI());
-                properties.offset = new File(Environment.getExternalStorageDirectory().toURI());
-                properties.extensions = new String[]{"arch:"};
-                FilePickerDialog dial = new FilePickerDialog(this,properties);
-                dial.setTitle(R.string.backupFolder);
-                dial.setDialogSelectionListener(new DialogSelectionListener() {
-                    @Override
-                    public void onSelectedFilePaths(String[] files) {
-                        pathBackup = files[0];
-                        etFilePath.setText(pathBackup);
-                    }
-                });
-                dial.show();
+                selectBackupPath();
                 break;
         }
 
     }
 
+    private void restoreBackup() {
+        ExternalStoragePermissions permissions = new ExternalStoragePermissions(this);
+        if (!permissions.isWritePermissions()) {
+            permissions.requestReadWritePermissions();
+            return;
+        }
+
+        progress = FileOperations.fileOperationProgressDialog(this);
+
+        restoreHelper.restoreAll();
+    }
+
+    private void saveBackup() {
+        ExternalStoragePermissions permissions = new ExternalStoragePermissions(this);
+        if (!permissions.isWritePermissions()) {
+            permissions.requestReadWritePermissions();
+            return;
+        }
+
+        progress = FileOperations.fileOperationProgressDialog(this);
+
+        backupHelper.saveAll();
+    }
+
+    private void selectBackupPath() {
+        DialogProperties properties = new DialogProperties();
+        properties.selection_mode = DialogConfigs.SINGLE_MODE;
+        properties.selection_type = DialogConfigs.DIR_SELECT;
+        properties.root = new File(Environment.getExternalStorageDirectory().toURI());
+        properties.error_dir = new File(Environment.getExternalStorageDirectory().toURI());
+        properties.offset = new File(Environment.getExternalStorageDirectory().toURI());
+        properties.extensions = new String[]{"arch:"};
+        FilePickerDialog dial = new FilePickerDialog(this,properties);
+        dial.setTitle(R.string.backupFolder);
+        dial.setDialogSelectionListener(new DialogSelectionListener() {
+            @Override
+            public void onSelectedFilePaths(String[] files) {
+                pathBackup = files[0];
+                etFilePath.setText(pathBackup);
+                backupHelper.setPathBackup(pathBackup);
+                restoreHelper.setPathBackup(pathBackup);
+            }
+        });
+        dial.show();
+    }
+
+    void closeProgress() {
+        progress.dismiss();
+    }
+
+    void showToast(final Activity activity, final String text) {
+        if (activity == null) {
+            return;
+        }
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(activity, text, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
     @Override
     public void onResume() {
         super.onResume();
-        IntentFilter intentFilter = new IntentFilter(RootExecService.COMMAND_RESULT);
-        this.registerReceiver(br,intentFilter);
+
         setTitle(R.string.drawer_menu_backup);
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        this.unregisterReceiver(br);
+
+        FileOperations.deleteOnFileOperationCompleteListener();
     }
+
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -246,4 +197,14 @@ public class BackupActivity extends LangAppCompatActivity implements View.OnClic
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void OnFileOperationComplete(FileOperationsVariants currentFileOperation, boolean fileOperationResult, String path, String tag) {
+        if (currentFileOperation == moveBinaryFile && tag.equals("InvizibleBackup.zip")) {
+            closeProgress();
+            showToast(this, "Backup OK");
+        } else if (currentFileOperation == deleteFile && tag.equals("sharedPreferences")) {
+            closeProgress();
+            showToast(this, "Restore OK");
+        }
+    }
 }
