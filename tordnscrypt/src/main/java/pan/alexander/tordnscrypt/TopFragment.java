@@ -18,7 +18,6 @@ package pan.alexander.tordnscrypt;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -29,7 +28,6 @@ import android.app.FragmentTransaction;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
@@ -37,7 +35,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -62,6 +59,7 @@ import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.UpdateCheck;
 import pan.alexander.tordnscrypt.utils.UpdateService;
 import pan.alexander.tordnscrypt.utils.Verifier;
+import pan.alexander.tordnscrypt.utils.installer.Installer;
 
 
 public class TopFragment extends Fragment implements View.OnClickListener {
@@ -73,7 +71,7 @@ public class TopFragment extends Fragment implements View.OnClickListener {
 
     public static String appProcVersion = "armv7a";
     public static String appVersion = "lite";
-    final static String LOG_TAG = RootExecService.LOG_TAG;
+    public final static String LOG_TAG = RootExecService.LOG_TAG;
     public boolean rootOK = false;
     public boolean bbOK = false;
     public  String verSU = null;
@@ -561,37 +559,7 @@ public class TopFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    private void requestStoragePermissions(MainActivity activity) {
-        // Storage Permissions variables
-        final int REQUEST_EXTERNAL_STORAGE = 1;
-        String[] PERMISSIONS_STORAGE = {
-                Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-        };
-
-        int writePermission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        int readPermission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE);
-
-        if (writePermission != PackageManager.PERMISSION_GRANTED || readPermission != PackageManager.PERMISSION_GRANTED) {
-            // We don't have permission so prompt the user
-            ActivityCompat.requestPermissions(
-                    activity,
-                    PERMISSIONS_STORAGE,
-                    REQUEST_EXTERNAL_STORAGE
-            );
-        }
-
-        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.INTERNET)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(activity,
-                    new String[]{Manifest.permission.INTERNET},
-                    2);
-        }
-    }
-
     public void startInstallation() {
-
-        requestStoragePermissions((MainActivity) getActivity());
 
         if (timer != null) {
             timer.cancel();
@@ -613,26 +581,14 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                     Log.w(LOG_TAG, "TopFragment Timer cancel, loop > 10");
                 }
 
-                getActivity().runOnUiThread(new Runnable() {
 
-                    @Override
-                    public void run() {
-                        int writePermission = ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
-                        int readPermission = ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE);
-                        if (rootOK && writePermission == PackageManager.PERMISSION_GRANTED && readPermission == PackageManager.PERMISSION_GRANTED) {
+                if (rootOK) {
 
-                            FragmentManager fm = getFragmentManager();
-                            DNSCryptRunFragment frgDNScrypt = (DNSCryptRunFragment) fm.findFragmentById(R.id.DNSCryptfrg);
-                            if (frgDNScrypt!=null) {
-                                frgDNScrypt.installDNSCrypt();
-                                Log.i(LOG_TAG, "TopFragment Timer startInstallation() frgDNScrypt.installDNSCrypt()");
-                                if (timer!=null)timer.cancel();
-                            }
-
-
-                        }
-                    }
-                });
+                    Installer installer = new Installer(getActivity());
+                    installer.installModules();
+                    Log.i(LOG_TAG, "TopFragment Timer start Modules Installation");
+                    if (timer!=null)timer.cancel();
+                }
             }
         }, 3000, 1000);
     }
