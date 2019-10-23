@@ -1,44 +1,4 @@
-package pan.alexander.tordnscrypt.utils;
-
-import android.annotation.SuppressLint;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.graphics.Color;
-import android.support.v7.app.AlertDialog;
-import android.util.Log;
-import android.widget.ProgressBar;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Stack;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.Enums.FileOperationsVariants;
-
-import static pan.alexander.tordnscrypt.utils.Enums.FileOperationsVariants.copyBinaryFile;
-import static pan.alexander.tordnscrypt.utils.Enums.FileOperationsVariants.deleteFile;
-import static pan.alexander.tordnscrypt.utils.Enums.FileOperationsVariants.moveBinaryFile;
-import static pan.alexander.tordnscrypt.utils.Enums.FileOperationsVariants.readTextFile;
-import static pan.alexander.tordnscrypt.utils.Enums.FileOperationsVariants.writeToTextFile;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+package pan.alexander.tordnscrypt.utils.fileOperations;
 
 /*
     This file is part of InviZible Pro.
@@ -59,15 +19,54 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.graphics.Color;
+import android.support.v7.app.AlertDialog;
+import android.util.Log;
+import android.widget.ProgressBar;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Stack;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.RootCommands;
+import pan.alexander.tordnscrypt.utils.RootExecService;
+
+import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.copyBinaryFile;
+import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.deleteFile;
+import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
+import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
+import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.writeToTextFile;
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+
 public class FileOperations {
-    private boolean stopThread = false;
-    private static Map<String,List<String>> linesListMap = new HashMap<>();
+    private final CountDownLatch latch = new CountDownLatch(1);
+    private static Map<String, List<String>> linesListMap = new HashMap<>();
     private static OnFileOperationsCompleteListener callback;
     private static Stack<OnFileOperationsCompleteListener> stackCallbacks;
-    public static String copyBinaryFileCurrentOperation = "pan.alexander.tordnscrypt.copyBinaryFile";
-    public static String deleteFileCurrentOperation = "pan.alexander.tordnscrypt.deleteFile";
-    public static String readTextFileCurrentOperation = "pan.alexander.tordnscrypt.readTextFile";
-    public static String writeToTextFileCurrentOperation = "pan.alexander.tordnscrypt.writeToTextFile";
     private static ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     private BroadcastReceiver br = new BroadcastReceiver() {
@@ -80,8 +79,8 @@ public class FileOperations {
                 Log.i(LOG_TAG, "FileOperations onReceive");
 
                 if (action.equals(RootExecService.COMMAND_RESULT)) {
-                    stopThread = false;
-                    if (br!=null)
+                    continueFileOperations();
+                    if (br != null)
                         context.unregisterReceiver(br);
                     br = null;
                 }
@@ -98,8 +97,7 @@ public class FileOperations {
             public void run() {
 
 
-                try(InputStream in = new FileInputStream(inputPath + "/" + inputFile);
-                    OutputStream out = new FileOutputStream(outputPath + "/" + inputFile)) {
+                try {
 
                     File dir = new File(outputPath);
                     if (!dir.isDirectory()) {
@@ -110,7 +108,7 @@ public class FileOperations {
 
                     File oldFile = new File(outputPath + "/" + inputFile);
                     if (oldFile.exists()) {
-                        if (deleteFileInternal(context, outputPath, inputFile)) {
+                        if (deleteFileSynchronous(context, outputPath, inputFile)) {
                             throw new IllegalStateException("Unable to delete file " + oldFile.toString());
                         }
                     }
@@ -128,8 +126,12 @@ public class FileOperations {
 
                     byte[] buffer = new byte[1024];
                     int read;
-                    while ((read = in.read(buffer)) != -1) {
-                        out.write(buffer, 0, read);
+
+                    try (FileInputStream in = new FileInputStream(inputPath + "/" + inputFile);
+                         FileOutputStream out = new FileOutputStream(outputPath + "/" + inputFile)) {
+                        while ((read = in.read(buffer)) != -1) {
+                            out.write(buffer, 0, read);
+                        }
                     }
 
                     File newFile = new File(outputPath + "/" + inputFile);
@@ -144,20 +146,30 @@ public class FileOperations {
                     }
 
                     // delete the unwanted file
-                    if (deleteFileInternal(context, inputPath, inputFile)) {
+                    if (deleteFileSynchronous(context, inputPath, inputFile)) {
                         throw new IllegalStateException("Unable to delete file " + inputFile);
                     }
 
-                    if (callback!=null && !tag.equals("ignored"))
-                        ((OnBinaryFileOperationsCompleteListener)callback).OnFileOperationComplete(moveBinaryFile, true,outputPath + "/" + inputFile, tag);
+                    if (callback != null && !tag.contains("ignored")) {
+                        if (callback instanceof OnBinaryFileOperationsCompleteListener) {
+                            ((OnBinaryFileOperationsCompleteListener) callback).OnFileOperationComplete(
+                                    moveBinaryFile, true, outputPath + "/" + inputFile, tag);
+                        } else {
+                            throw new ClassCastException("Wrong File operations type. Choose binary type.");
+                        }
+                    }
 
                 } catch (Exception e) {
-                    Log.e(LOG_TAG,"replaceBinaryFile function fault " + e.getMessage());
-                    if (callback!=null && !tag.equals("ignored"))
-                        ((OnBinaryFileOperationsCompleteListener)callback).OnFileOperationComplete(moveBinaryFile, false,outputPath + "/" + inputFile, tag);
+                    Log.e(LOG_TAG, "replaceBinaryFile function fault " + e.getMessage() + " " + e.getCause());
+                    if (callback != null && !tag.contains("ignored")) {
+                        if (callback instanceof OnBinaryFileOperationsCompleteListener) {
+                            ((OnBinaryFileOperationsCompleteListener) callback).OnFileOperationComplete(
+                                    moveBinaryFile, false, outputPath + "/" + inputFile, tag);
+                        } else {
+                            throw new ClassCastException("Wrong File operations type. Choose binary type.");
+                        }
+                    }
                 }
-
-
             }
         };
 
@@ -171,8 +183,7 @@ public class FileOperations {
             public void run() {
 
 
-                try(InputStream in = new FileInputStream(inputPath + "/" + inputFile);
-                    OutputStream out = new FileOutputStream(outputPath + "/" + inputFile)) {
+                try {
 
                     File dir = new File(outputPath);
                     if (!dir.isDirectory()) {
@@ -183,7 +194,7 @@ public class FileOperations {
 
                     File oldFile = new File(outputPath + "/" + inputFile);
                     if (oldFile.exists()) {
-                        if (deleteFileInternal(context, outputPath, inputFile)) {
+                        if (deleteFileSynchronous(context, outputPath, inputFile)) {
                             throw new IllegalStateException("Unable to delete file " + oldFile.toString());
                         }
                     }
@@ -197,8 +208,12 @@ public class FileOperations {
 
                     byte[] buffer = new byte[1024];
                     int read;
-                    while ((read = in.read(buffer)) != -1) {
-                        out.write(buffer, 0, read);
+
+                    try (InputStream in = new FileInputStream(inputPath + "/" + inputFile);
+                         OutputStream out = new FileOutputStream(outputPath + "/" + inputFile)) {
+                        while ((read = in.read(buffer)) != -1) {
+                            out.write(buffer, 0, read);
+                        }
                     }
 
                     File newFile = new File(outputPath + "/" + inputFile);
@@ -206,13 +221,27 @@ public class FileOperations {
                         throw new IllegalStateException("New file not exist " + oldFile.toString());
                     }
 
-                    if (callback!=null && !tag.equals("ignored"))
-                        ((OnBinaryFileOperationsCompleteListener)callback).OnFileOperationComplete(copyBinaryFile, true, outputPath + "/" + inputFile, tag);
+                    if (callback != null && !tag.contains("ignored")) {
+                        if (callback instanceof OnBinaryFileOperationsCompleteListener) {
+                            ((OnBinaryFileOperationsCompleteListener) callback).OnFileOperationComplete(
+                                    copyBinaryFile, true, outputPath + "/" + inputFile, tag);
+                        } else {
+                            throw new ClassCastException("Wrong File operations type. Choose binary type.");
+                        }
+
+                    }
+
 
                 } catch (Exception e) {
-                    if (callback!=null && !tag.equals("ignored"))
-                        ((OnBinaryFileOperationsCompleteListener)callback).OnFileOperationComplete(copyBinaryFile, false, outputPath + "/" + inputFile, tag);
-                    Log.e(LOG_TAG,"copyBinaryFile function fault " + e.getMessage());
+                    if (callback != null && !tag.contains("ignored")) {
+                        if (callback instanceof OnBinaryFileOperationsCompleteListener) {
+                            ((OnBinaryFileOperationsCompleteListener) callback).OnFileOperationComplete(
+                                    copyBinaryFile, false, outputPath + "/" + inputFile, tag);
+                        } else {
+                            throw new ClassCastException("Wrong File operations type. Choose binary type.");
+                        }
+                    }
+                    Log.e(LOG_TAG, "copyBinaryFile function fault " + e.getMessage() + " " + e.getCause());
                 }
 
             }
@@ -221,7 +250,7 @@ public class FileOperations {
         executorService.execute(runnable);
     }
 
-    private static boolean deleteFileInternal(final Context context, final String inputPath, final String inputFile) {
+    public static boolean deleteFileSynchronous(final Context context, final String inputPath, final String inputFile) {
         try {
             File usedFile = new File(inputPath + "/" + inputFile);
             if (usedFile.exists()) {
@@ -236,15 +265,15 @@ public class FileOperations {
                     }
                 }
                 if (!usedFile.delete()) {
-                    Log.e(LOG_TAG, "Unable to delete file " + usedFile.toString());
+                    Log.w(LOG_TAG, "Unable to delete file " + usedFile.toString());
                     return true;
                 }
             } else {
-                Log.e(LOG_TAG, "Unable to delete file. No file " + usedFile.toString());
-                return true;
+                Log.w(LOG_TAG, "Unable to delete file internal function. No file " + usedFile.toString());
+                return false;
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG,"deleteFileInternal function fault " + e.getMessage());
+            Log.e(LOG_TAG, "deleteFileSynchronous function fault " + e.getMessage());
             return true;
         }
         return false;
@@ -270,20 +299,77 @@ public class FileOperations {
                             throw new IllegalStateException("Unable to delete file " + usedFile.toString());
                         }
                     } else {
-                        throw new IllegalStateException("Unable to delete file. No file " + usedFile.toString());
+                        Log.w(LOG_TAG, "Unable to delete file. No file " + usedFile.toString());
                     }
 
-                    if (callback!=null && !tag.equals("ignored"))
-                        ((OnBinaryFileOperationsCompleteListener)callback).OnFileOperationComplete(deleteFile, true, inputPath + "/" + inputFile, tag);
-
+                    if (callback != null && !tag.contains("ignored")) {
+                        if (callback instanceof OnBinaryFileOperationsCompleteListener) {
+                            ((OnBinaryFileOperationsCompleteListener) callback).OnFileOperationComplete(
+                                    deleteFile, true, inputPath + "/" + inputFile, tag);
+                        } else {
+                            throw new ClassCastException("Wrong File operations type. Choose binary type.");
+                        }
+                    }
                 } catch (Exception e) {
-                    Log.e(LOG_TAG,"deleteFile function fault " + e.getMessage());
-                    if (callback!=null && !tag.equals("ignored"))
-                        ((OnBinaryFileOperationsCompleteListener)callback).OnFileOperationComplete(deleteFile, false,inputPath + "/" + inputFile, tag);
+                    Log.e(LOG_TAG, "deleteFile function fault " + e.getMessage() + " " + e.getCause());
+                    if (callback != null && !tag.contains("ignored")) {
+                        if (callback instanceof OnBinaryFileOperationsCompleteListener) {
+                            ((OnBinaryFileOperationsCompleteListener) callback).OnFileOperationComplete(
+                                    deleteFile, false, inputPath + "/" + inputFile, tag);
+                        } else {
+                            throw new ClassCastException("Wrong File operations type. Choose binary type.");
+                        }
+                    }
                 }
             }
         };
         executorService.execute(runnable);
+    }
+
+    public static boolean deleteDirSynchronous(final Context context, final String inputPath) {
+        boolean result = false;
+        try{
+            File usedDir = new File(inputPath);
+            if (usedDir.isDirectory()) {
+                if (!usedDir.canRead() || !usedDir.canWrite()) {
+                    if (!usedDir.setReadable(true) || !usedDir.setWritable(true)) {
+                        Log.w(LOG_TAG, "Unable to chmod dir " + inputPath);
+                        FileOperations fileOperations = new FileOperations();
+                        fileOperations.restoreAccess(context, inputPath);
+                    } else if (!usedDir.setReadable(true) || !usedDir.setWritable(true)) {
+                        throw new IllegalStateException("Unable to chmod dir " + inputPath);
+                    }
+                }
+            } else {
+                throw new IllegalStateException(inputPath + " is not Dir");
+            }
+
+            File[] files = usedDir.listFiles();
+
+            if (files.length == 0) {
+                if (!usedDir.delete()) {
+                    throw new IllegalStateException("Impossible to delete empty dir " + inputPath);
+                }
+            } else {
+                for (File file: files) {
+                    if (file.isFile()) {
+                        deleteFileSynchronous(context, file.getParent(), file.getName());
+                    } else if (file.isDirectory()) {
+                        deleteDirSynchronous(context, file.getAbsolutePath());
+                    }
+                }
+            }
+
+            if (!usedDir.delete()) {
+                throw new IllegalStateException("Impossible to delete empty dir " + inputPath);
+            }
+
+            result = true;
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "delete Dir function fault " + e.getMessage() + " " + e.getCause());
+        }
+
+        return result;
     }
 
     @SuppressLint("SetWorldReadable")
@@ -294,18 +380,17 @@ public class FileOperations {
 
                 linesListMap.remove(filePath);
 
-                try(FileInputStream fstream = new FileInputStream(filePath);
-                    BufferedReader br = new BufferedReader(new InputStreamReader(fstream))) {
+                try {
 
                     File f = new File(filePath);
                     if (f.isFile()) {
-                        if (f.setReadable(true,false)) {
+                        if (f.setReadable(true, false)) {
                             Log.i(LOG_TAG, "readTextFile take " + filePath + " success");
                         } else {
                             Log.w(LOG_TAG, "readTextFile take " + filePath + " warning");
                             FileOperations fileOperations = new FileOperations();
-                            fileOperations.restoreAccess(context,filePath);
-                            if (f.setReadable(true,false)) {
+                            fileOperations.restoreAccess(context, filePath);
+                            if (f.setReadable(true, false)) {
                                 Log.i(LOG_TAG, "readTextFile take " + filePath + " success");
                             } else {
                                 throw new IllegalStateException("readTextFile take " + filePath + " error");
@@ -317,19 +402,36 @@ public class FileOperations {
 
                     List<String> linesList = new LinkedList<>();
 
-                    for(String tmp; (tmp = br.readLine()) != null;) {
-                        linesList.add(tmp.trim());
+                    try (FileInputStream fstream = new FileInputStream(filePath);
+                         BufferedReader br = new BufferedReader(new InputStreamReader(fstream))) {
+
+                        for (String tmp; (tmp = br.readLine()) != null; ) {
+                            linesList.add(tmp.trim());
+                        }
                     }
 
-                    linesListMap.put(filePath,linesList);
 
-                    if (callback != null)
-                        ((OnTextFileOperationsCompleteListener)callback).OnFileOperationComplete(readTextFile, true, filePath, tag, linesListMap.get(filePath));
+                    linesListMap.put(filePath, linesList);
 
-                } catch (IOException e) {
-                    Log.e(LOG_TAG,"readTextFile Exception " + e.getMessage() + e.getCause());
-                    if (callback != null)
-                        ((OnTextFileOperationsCompleteListener)callback).OnFileOperationComplete(readTextFile, false, filePath, tag, null);
+                    if (callback != null) {
+                        if (callback instanceof OnTextFileOperationsCompleteListener) {
+                            ((OnTextFileOperationsCompleteListener) callback).OnFileOperationComplete(
+                                    readTextFile, true, filePath, tag, linesListMap.get(filePath));
+                        } else {
+                            throw new ClassCastException("Wrong File operations type. Choose text type.");
+                        }
+                    }
+
+                } catch (Exception e) {
+                    Log.e(LOG_TAG, "readTextFile Exception " + e.getMessage() + " " + e.getCause());
+                    if (callback != null) {
+                        if (callback instanceof OnTextFileOperationsCompleteListener) {
+                            ((OnTextFileOperationsCompleteListener) callback).OnFileOperationComplete(
+                                    readTextFile, false, filePath, tag, null);
+                        } else {
+                            throw new ClassCastException("Wrong File operations type. Choose text type.");
+                        }
+                    }
                 }
             }
         };
@@ -343,48 +445,139 @@ public class FileOperations {
             @Override
             public void run() {
 
-                try(PrintWriter writer = new PrintWriter(filePath)) {
+                try {
 
                     File f = new File(filePath);
 
                     if (f.isFile()) {
-                        if (f.setReadable(true,false) && f.setWritable(true)) {
-                            Log.i(LOG_TAG,"writeToTextFile writeTo " + filePath + " success");
+                        if (f.setReadable(true, false) && f.setWritable(true)) {
+                            Log.i(LOG_TAG, "writeToTextFile writeTo " + filePath + " success");
                         } else {
                             Log.w(LOG_TAG, "writeToTextFile writeTo " + filePath + " warning");
                             FileOperations fileOperations = new FileOperations();
-                            fileOperations.restoreAccess(context,filePath);
-                            if (f.setReadable(true,false) && f.setWritable(true)) {
-                                Log.i(LOG_TAG,"writeToTextFile writeTo " + filePath + " success");
+                            fileOperations.restoreAccess(context, filePath);
+                            if (f.setReadable(true, false) && f.setWritable(true)) {
+                                Log.i(LOG_TAG, "writeToTextFile writeTo " + filePath + " success");
                             } else {
                                 throw new IllegalStateException("writeToTextFile writeTo " + filePath + " error");
                             }
                         }
                     }
 
-                    for (String line:lines) {
-                        writer.println(line);
+                    try (PrintWriter writer = new PrintWriter(filePath)) {
+
+                        for (String line : lines) {
+                            writer.println(line);
+                        }
+
                     }
 
                     linesListMap.remove(filePath);
 
-                    if (callback != null && !tag.equals("ignored"))
-                        ((OnBinaryFileOperationsCompleteListener)callback).OnFileOperationComplete(writeToTextFile, true, filePath, tag);
-
-                } catch (IOException e) {
-                    Log.e(LOG_TAG,"writeToTextFile Exception " + e.getMessage() + e.getCause());
-                    if (callback != null && !tag.equals("ignored"))
-                        ((OnBinaryFileOperationsCompleteListener)callback).OnFileOperationComplete(writeToTextFile, false, filePath, tag);
+                    if (callback != null && !tag.contains("ignored")) {
+                        if (callback instanceof OnTextFileOperationsCompleteListener) {
+                            ((OnTextFileOperationsCompleteListener) callback).OnFileOperationComplete(
+                                    writeToTextFile, true, filePath, tag, null);
+                        } else {
+                            throw new ClassCastException("Wrong File operations type. Choose text type.");
+                        }
+                    }
+                } catch (Exception e) {
+                    Log.e(LOG_TAG, "writeToTextFile Exception " + e.getMessage() + " " + e.getCause());
+                    if (callback != null && !tag.contains("ignored")) {
+                        if (callback instanceof OnTextFileOperationsCompleteListener) {
+                            ((OnTextFileOperationsCompleteListener) callback).OnFileOperationComplete(
+                                    writeToTextFile, false, filePath, tag, null);
+                        } else {
+                            throw new ClassCastException("Wrong File operations type. Choose text type.");
+                        }
+                    }
                 }
             }
         };
         executorService.execute(runnable);
     }
 
+    @SuppressLint("SetWorldReadable")
+    public static List<String> readTextFileSynchronous(final Context context, final String filePath) {
+        List<String> lines = null;
+        try {
+            File f = new File(filePath);
+            if (f.isFile()) {
+                if (f.setReadable(true, false)) {
+                    Log.i(LOG_TAG, "readTextFileSynchronous take " + filePath + " success");
+                } else {
+                    Log.w(LOG_TAG, "readTextFileSynchronous take " + filePath + " warning");
+                    FileOperations fileOperations = new FileOperations();
+                    fileOperations.restoreAccess(context, filePath);
+                    if (f.setReadable(true, false)) {
+                        Log.i(LOG_TAG, "readTextFileSynchronous take " + filePath + " success");
+                    } else {
+                        throw new IllegalStateException("readTextFileSynchronous take " + filePath + " error");
+                    }
+                }
+            } else {
+                throw new IllegalStateException("readTextFileSynchronous no file " + filePath);
+            }
+
+            lines = new LinkedList<>();
+
+            try (FileInputStream fstream = new FileInputStream(filePath);
+                 BufferedReader br = new BufferedReader(new InputStreamReader(fstream))) {
+
+                for (String tmp; (tmp = br.readLine()) != null; ) {
+                    lines.add(tmp.trim());
+                }
+            }
+
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "readTextFileSynchronous Exception " + e.getMessage() + " " + e.getCause());
+        }
+
+        return lines;
+    }
+
+    @SuppressLint("SetWorldReadable")
+    public static boolean writeTextFileSynchronous(final Context context, final String filePath, final List<String> lines) {
+        boolean result = true;
+        try {
+
+            File f = new File(filePath);
+
+            if (f.isFile()) {
+                if (f.setReadable(true, false) && f.setWritable(true)) {
+                    Log.i(LOG_TAG, "writeTextFileSynchronous writeTo " + filePath + " success");
+                } else {
+                    Log.w(LOG_TAG, "writeTextFileSynchronous writeTo " + filePath + " warning");
+                    FileOperations fileOperations = new FileOperations();
+                    fileOperations.restoreAccess(context, filePath);
+                    if (f.setReadable(true, false) && f.setWritable(true)) {
+                        Log.i(LOG_TAG, "writeTextFileSynchronous writeTo " + filePath + " success");
+                    } else {
+                        throw new IllegalStateException("writeTextFileSynchronous writeTo " + filePath + " error");
+                    }
+                }
+            }
+
+            try (PrintWriter writer = new PrintWriter(filePath)) {
+
+                for (String line : lines) {
+                    writer.println(line);
+                }
+
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "writeTextFileSynchronous Exception " + e.getMessage() + " " + e.getCause());
+            result = false;
+        }
+
+        return result;
+    }
+
     private void restoreAccess(Context context, String filePath) {
-        if(context!=null){
+        if (context != null) {
             IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
-            context.registerReceiver(br,intentFilterBckgIntSer);
+            context.registerReceiver(br, intentFilterBckgIntSer);
 
             String appUID = new PrefManager(context).getStrPref("appUID");
             PathVars pathVars = new PathVars(context);
@@ -393,44 +586,32 @@ public class FileOperations {
             RootCommands rootCommands = new RootCommands(commands);
             Intent intent = new Intent(context, RootExecService.class);
             intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands",rootCommands);
+            intent.putExtra("Commands", rootCommands);
             intent.putExtra("Mark", RootExecService.FileOperationsMark);
-            RootExecService.performAction(context,intent);
+            RootExecService.performAction(context, intent);
 
-            try {
-                stopThread = true;
-                int count = 0;
-                while (stopThread) {
-                    Thread.sleep(100);
-                    count++;
-                    if (count>100) {
-                        Log.e(LOG_TAG,"FileOperations root delay finished");
-                        break;
-                    }
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            waitRestoreAccessWithRoot();
         }
     }
 
     public static DialogInterface fileOperationProgressDialog(Context context) {
-        final android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(context,R.style.CustomDialogTheme);
+        final android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(context, R.style.CustomDialogTheme);
         builder.setTitle(R.string.please_wait);
         builder.setCancelable(false);
         builder.setPositiveButton(R.string.cancel, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
+
                 dialogInterface.dismiss();
             }
         });
 
-        ProgressBar progressBar = new ProgressBar(context,null,android.R.attr.progressBarStyleHorizontal);
+        ProgressBar progressBar = new ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal);
         progressBar.setBackgroundResource(R.drawable.background_10dp_padding);
         progressBar.setIndeterminate(true);
         builder.setView(progressBar);
         builder.setCancelable(false);
-        AlertDialog view  = builder.show();
+        AlertDialog view = builder.show();
         Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
         return view;
     }
@@ -463,16 +644,26 @@ public class FileOperations {
             FileOperations.stackCallbacks.removeAllElements();
 
         executorService.shutdown();
+        if (!executorService.isShutdown()) {
+            try {
+                executorService.awaitTermination(10, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                executorService.shutdownNow();
+                Log.w(LOG_TAG, "FileOperations executorService awaitTermination has interrupted " + e.getMessage());
+            }
+
+        }
     }
 
-    public interface OnFileOperationsCompleteListener {
+    private void waitRestoreAccessWithRoot() {
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            Log.w(LOG_TAG, "FileOperations latch interrupted " + e.getMessage() + " " + e.getCause());
+        }
     }
 
-    public interface OnBinaryFileOperationsCompleteListener extends OnFileOperationsCompleteListener {
-        void OnFileOperationComplete(FileOperationsVariants currentFileOperation, boolean fileOperationResult, String path, String tag);
-    }
-
-    public interface OnTextFileOperationsCompleteListener extends OnFileOperationsCompleteListener {
-        void OnFileOperationComplete(FileOperationsVariants currentFileOperation, boolean fileOperationResult, String path, String tag, List<String> lines);
+    private void continueFileOperations() {
+        latch.countDown();
     }
 }
