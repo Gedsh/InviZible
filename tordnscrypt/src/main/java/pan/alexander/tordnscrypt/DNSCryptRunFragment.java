@@ -20,7 +20,6 @@ package pan.alexander.tordnscrypt;
 
 import android.annotation.SuppressLint;
 import android.app.Fragment;
-import android.app.FragmentManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -43,10 +42,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Objects;
@@ -95,7 +91,6 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
     String itpdPath;
     String obfsPath;
     String busyboxPath;
-    String busyboxNative;
     String iptablesPath;
     String rejectAddress;
     boolean runDNSCryptWithRoot = false;
@@ -104,11 +99,9 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
     boolean blockHttp = false;
 
 
-
     public DNSCryptRunFragment() {
         // Required empty public constructor
     }
-
 
 
     @Override
@@ -120,23 +113,26 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
             @Override
             public void onReceive(Context context, Intent intent) {
 
+                if (getActivity() == null) {
+                    return;
+                }
+
 
                 if (intent != null) {
                     final String action = intent.getAction();
-                    if (action == null || action.equals("") || ((intent.getIntExtra("Mark",0)!=
+                    if (action == null || action.equals("") || ((intent.getIntExtra("Mark", 0) !=
                             RootExecService.DNSCryptRunFragmentMark) &&
                             !action.equals(TOP_BROADCAST))) return;
-                    Log.i(LOG_TAG,"DNSCryptRunFragment onReceive");
+                    Log.i(LOG_TAG, "DNSCryptRunFragment onReceive");
 
-                    if(action.equals(RootExecService.COMMAND_RESULT)){
-
+                    if (action.equals(RootExecService.COMMAND_RESULT)) {
 
 
                         RootCommands comResult = (RootCommands) intent.getSerializableExtra("CommandsResult");
 
                         pbDNSCrypt.setIndeterminate(false);
 
-                        if(comResult.getCommands().length == 0){
+                        if (comResult.getCommands().length == 0) {
 
                             tvDNSStatus.setText(R.string.wrong);
                             tvDNSStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
@@ -147,9 +143,9 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                         mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
 
                         StringBuilder sb = new StringBuilder();
-                        for (String com:comResult.getCommands()){
-                            Log.i(LOG_TAG,com);
-                            sb.append(com).append((char)10);
+                        for (String com : comResult.getCommands()) {
+                            Log.i(LOG_TAG, com);
+                            sb.append(com).append((char) 10);
                         }
 
                         //TopFragment.NotificationDialogFragment commandResult = TopFragment.NotificationDialogFragment.newInstance(sb.toString());
@@ -157,14 +153,14 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
                         if (sb.toString().contains("DNSCrypt_version")) {
                             String[] strArr = sb.toString().split("DNSCrypt_version");
-                            if (strArr.length > 1 && strArr[1].trim().matches("\\d+\\.\\d+\\.\\d+")){
+                            if (strArr.length > 1 && strArr[1].trim().matches("\\d+\\.\\d+\\.\\d+")) {
                                 DNSCryptVersion = strArr[1].trim();
-                                new PrefManager(getActivity()).setStrPref("DNSCryptVersion",DNSCryptVersion);
+                                new PrefManager(getActivity()).setStrPref("DNSCryptVersion", DNSCryptVersion);
                             }
                         }
 
-                        if(sb.toString().toLowerCase().contains(dnscryptPath)
-                                && sb.toString().contains("checkDNSRunning")){
+                        if (sb.toString().toLowerCase().contains(dnscryptPath)
+                                && sb.toString().contains("checkDNSRunning")) {
                             /////////////For correct display dnscrypt bootstrap/////////////////////
                             if (sb.toString().contains("DNSCrypt_version")) {
                                 tvDNSStatus.setText(R.string.tvDNSRunning);
@@ -173,7 +169,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                                 pbDNSCrypt.setIndeterminate(true);
                             }
                             btnDNSCryptStart.setText(R.string.btnDNSCryptStop);
-                            new PrefManager(getActivity()).setBoolPref("DNSCrypt Running",true);
+                            new PrefManager(getActivity()).setBoolPref("DNSCrypt Running", true);
                             displayLog(5000);
                         } else if (!sb.toString().toLowerCase().contains(dnscryptPath)
                                 && sb.toString().contains("checkDNSRunning")) {
@@ -186,38 +182,38 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                                     && !sb.toString().contains("stopProcess"))
                                     || (!new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")
                                     && sb.toString().contains("startProcess"))) {
-                                NotificationHelper  notificationHelper = NotificationHelper.setHelperMessage(
-                                        getActivity(),getText(R.string.helper_dnscrypt_stopped).toString(),"dnscrypt_suddenly_stopped");
+                                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                                        getActivity(), getText(R.string.helper_dnscrypt_stopped).toString(), "dnscrypt_suddenly_stopped");
                                 if (notificationHelper != null) {
-                                    notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                                    notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                                 }
 
-                                Log.e(LOG_TAG,getText(R.string.helper_dnscrypt_stopped).toString());
+                                Log.e(LOG_TAG, getText(R.string.helper_dnscrypt_stopped).toString());
 
-                                String[] commandsReset = new String[] {
+                                String[] commandsReset = new String[]{
                                         busyboxPath + "echo 'stopProcess'",
-                                        busyboxPath+ "killall dnscrypt-proxy",
-                                        busyboxPath+ "killall tor",
+                                        busyboxPath + "killall dnscrypt-proxy",
+                                        busyboxPath + "killall tor",
                                         busyboxPath + "sleep 3",
-                                        iptablesPath+ "iptables -t nat -F tordnscrypt_nat_output",
-                                        iptablesPath+ "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                                        iptablesPath+ "iptables -F tordnscrypt",
-                                        iptablesPath+ "iptables -D OUTPUT -j tordnscrypt || true",
+                                        iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
+                                        iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
+                                        iptablesPath + "iptables -F tordnscrypt",
+                                        iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
                                         busyboxPath + "echo 'checkTrRunning'"
-                                        };
+                                };
                                 rootCommands = new RootCommands(commandsReset);
                                 Intent intentReset = new Intent(getActivity(), RootExecService.class);
                                 intentReset.setAction(RootExecService.RUN_COMMAND);
-                                intentReset.putExtra("Commands",rootCommands);
+                                intentReset.putExtra("Commands", rootCommands);
                                 intentReset.putExtra("Mark", RootExecService.TorRunFragmentMark);
-                                RootExecService.performAction(getActivity(),intentReset);
+                                RootExecService.performAction(getActivity(), intentReset);
                             }
 
-                            new PrefManager(getActivity()).setBoolPref("DNSCryptFallBackResolverRemoved",false);
+                            new PrefManager(getActivity()).setBoolPref("DNSCryptFallBackResolverRemoved", false);
 
-                            new PrefManager(getActivity()).setBoolPref("DNSCrypt Running",false);
+                            new PrefManager(getActivity()).setBoolPref("DNSCrypt Running", false);
 
-                            if (timer!=null) {
+                            if (timer != null) {
                                 timer.cancel();
                                 timer = null;
                             }
@@ -225,23 +221,6 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                             tvDNSCryptLog.setText(getText(R.string.tvDNSDefaultLog) + " " + DNSCryptVersion);
 
                             safeStopNoRootService();
-                        } else if (sb.toString().contains("DNSCrypt Installed")) {
-                            File file = new File(dnscryptPath);
-                            if (file.isFile()){
-                                tvDNSStatus.setText(R.string.tvDNSInstalled);
-                                tvDNSStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorInstalled));
-                                new PrefManager(Objects.requireNonNull(getActivity())).setBoolPref("DNSCrypt Installed",true);
-                                FragmentManager fm = getFragmentManager();
-                                TorRunFragment frgTor = (TorRunFragment) fm.findFragmentById(R.id.Torfrg);
-                                if (frgTor!=null) {
-                                    frgTor.installTor();
-                                    Log.i(LOG_TAG, "DNSCryptFragment frgTor.installTor");
-                                }
-                            } else {
-                                tvDNSStatus.setText(R.string.wrong);
-                                tvDNSStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
-                            }
-
                         } else if (sb.toString().contains("Something went wrong!")) {
                             tvDNSStatus.setText(R.string.wrong);
                             tvDNSStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
@@ -249,15 +228,15 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
                     }
 
-                    if(action.equals(TOP_BROADCAST)){
+                    if (action.equals(TOP_BROADCAST)) {
                         if (TOP_BROADCAST.contains("TOP_BROADCAST")) {
-                            Log.i(LOG_TAG,"DNSCryptRunFragment onReceive TOP_BROADCAST");
+                            Log.i(LOG_TAG, "DNSCryptRunFragment onReceive TOP_BROADCAST");
                             checkDNSRunning();
                         } else {
                             tvDNSStatus.setText(R.string.wrong);
                             tvDNSStatus.setTextColor(Color.RED);
                             btnDNSCryptStart.setEnabled(false);
-                            Log.i(LOG_TAG,"DNSCryptRunFragment onReceive wrong TOP_BROADCAST");
+                            Log.i(LOG_TAG, "DNSCryptRunFragment onReceive wrong TOP_BROADCAST");
                         }
                         Thread thread = new Thread(new Runnable() {
                             @Override
@@ -265,21 +244,21 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                                 try {
                                     Verifier verifier = new Verifier(getActivity());
                                     String appSignAlt = verifier.getApkSignature();
-                                    if (!verifier.decryptStr(wrongSign,appSign,appSignAlt).equals(TOP_BROADCAST)) {
+                                    if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                                         NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                                getActivity(),getText(R.string.verifier_error).toString(),"15");
+                                                getActivity(), getText(R.string.verifier_error).toString(), "15");
                                         if (notificationHelper != null) {
-                                            notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                                            notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                                         }
                                     }
 
                                 } catch (Exception e) {
                                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                            getActivity(),getText(R.string.verifier_error).toString(),"18");
+                                            getActivity(), getText(R.string.verifier_error).toString(), "18");
                                     if (notificationHelper != null) {
-                                        notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                                        notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                                     }
-                                    Log.e(LOG_TAG,"DNSCryptRunFragment fault "+e.getMessage() + " " + e.getCause() + System.lineSeparator() +
+                                    Log.e(LOG_TAG, "DNSCryptRunFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                                             Arrays.toString(e.getStackTrace()));
                                 }
                             }
@@ -312,7 +291,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
         tvDNSStatus = view.findViewById(R.id.tvDNSStatus);
 
-        if(new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")){
+        if (new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
             tvDNSStatus.setText(R.string.tvDNSRunning);
             tvDNSStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorRunning));
             btnDNSCryptStart.setText(R.string.btnDNSCryptStop);
@@ -324,7 +303,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
             btnDNSCryptStart.setText(R.string.btnDNSCryptStart);
         }
 
-        if(new PrefManager(getActivity()).getBoolPref("DNSCrypt Installed")){
+        if (new PrefManager(getActivity()).getBoolPref("DNSCrypt Installed")) {
             btnDNSCryptStart.setEnabled(true);
         } else {
             tvDNSStatus.setText(getText(R.string.tvDNSNotInstalled));
@@ -357,26 +336,26 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
         rejectAddress = pathVars.rejectAddress;
 
 
-
         IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
         IntentFilter intentFilterTopFrg = new IntentFilter(TOP_BROADCAST);
-        if(getActivity()!=null){
-            getActivity().registerReceiver(br,intentFilterBckgIntSer);
-            getActivity().registerReceiver(br,intentFilterTopFrg);
+        if (getActivity() != null) {
+            getActivity().registerReceiver(br, intentFilterBckgIntSer);
+            getActivity().registerReceiver(br, intentFilterTopFrg);
         }
 
-        if(new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("DNSCrypt Running"))
+        if (new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("DNSCrypt Running"))
             displayLog(5000);
 
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        runDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot",false);
+        if (getActivity() != null) {
+            SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            runDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot", false);
 
-        routeAllThroughTor = shPref.getBoolean("pref_fast_all_through_tor",true);
-        blockHttp = shPref.getBoolean("pref_fast_block_http",false);
+            routeAllThroughTor = shPref.getBoolean("pref_fast_all_through_tor", true);
+            blockHttp = shPref.getBoolean("pref_fast_block_http", false);
+        }
 
         /////////////////////////// HOTSPOT///////////////////////////////////
-       tethering = new Tethering(getActivity());
-
+        tethering = new Tethering(getActivity());
 
 
     }
@@ -385,8 +364,8 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
     public void onStop() {
         super.onStop();
         try {
-            if (timer!=null) timer.cancel();
-            if (br!=null) Objects.requireNonNull(getActivity()).unregisterReceiver(br);
+            if (timer != null) timer.cancel();
+            if (br != null) Objects.requireNonNull(getActivity()).unregisterReceiver(br);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -395,7 +374,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
     @Override
     public void onClick(View v) {
         if (RootExecService.lockStartStop) {
-            Toast.makeText(getActivity(),getText(R.string.please_wait),Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), getText(R.string.please_wait), Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -403,9 +382,8 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
         mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
 
 
-
-        if (((MainActivity)getActivity()).childLockActive) {
-            Toast.makeText(getActivity(),getText(R.string.action_mode_dialog_locked),Toast.LENGTH_LONG).show();
+        if (((MainActivity) getActivity()).childLockActive) {
+            Toast.makeText(getActivity(), getText(R.string.action_mode_dialog_locked), Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -432,7 +410,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
             String restoreSEContext = "restorecon -R " + appDataDir + "/app_data/dnscrypt-proxy";
 
             if (runDNSCryptWithRoot) {
-                startCommandDNSCrypt = busyboxPath+ "nohup " + dnscryptPath+" --config "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml >/dev/null 2>&1 &";
+                startCommandDNSCrypt = busyboxPath + "nohup " + dnscryptPath + " --config " + appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml >/dev/null 2>&1 &";
                 killall = busyboxPath + "killall dnscrypt-proxy";
                 restoreUID = busyboxPath + "chown -R 0.0 " + appDataDir + "/app_data/dnscrypt-proxy";
                 restoreSEContext = "";
@@ -462,9 +440,9 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
             String blockHttpRuleNatTCP = "";
             String blockHttpRuleNatUDP = "";
             if (blockHttp) {
-                blockHttpRuleFilterAll = iptablesPath + "iptables -A tordnscrypt -d +"+ rejectAddress +" -j REJECT";
-                blockHttpRuleNatTCP = iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 80 -j DNAT --to-destination "+rejectAddress;
-                blockHttpRuleNatUDP = iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 80 -j DNAT --to-destination "+rejectAddress;
+                blockHttpRuleFilterAll = iptablesPath + "iptables -A tordnscrypt -d +" + rejectAddress + " -j REJECT";
+                blockHttpRuleNatTCP = iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 80 -j DNAT --to-destination " + rejectAddress;
+                blockHttpRuleNatUDP = iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 80 -j DNAT --to-destination " + rejectAddress;
             }
 
 
@@ -558,7 +536,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                             torSitesBypassNatUDP,
                             torAppsBypassNatTCP,
                             torAppsBypassNatUDP,
-                            iptablesPath+ "iptables -t nat -A tordnscrypt_nat_output -p tcp -j DNAT --to-destination 127.0.0.1:"+torTransPort,
+                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -j DNAT --to-destination 127.0.0.1:" + torTransPort,
                             iptablesPath + "iptables -N tordnscrypt",
                             iptablesPath + "iptables -A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
                             iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torSOCKSPort + " -j RETURN",
@@ -750,167 +728,42 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
     }
 
 
-
-    private void checkDNSRunning(){
-        if( new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("DNSCrypt Installed")){
+    private void checkDNSRunning() {
+        if (new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("DNSCrypt Installed")) {
             String[] commandsCheck = {
-                    busyboxPath+ "pgrep -l /dnscrypt-proxy",
-                    busyboxPath+ "echo 'checkDNSRunning'",
-                    busyboxPath+ "echo 'DNSCrypt_version'",
-                    dnscryptPath+ " --version"
+                    busyboxPath + "pgrep -l /dnscrypt-proxy",
+                    busyboxPath + "echo 'checkDNSRunning'",
+                    busyboxPath + "echo 'DNSCrypt_version'",
+                    dnscryptPath + " --version"
             };
             rootCommands = new RootCommands(commandsCheck);
             Intent intent = new Intent(getActivity(), RootExecService.class);
             intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands",rootCommands);
+            intent.putExtra("Commands", rootCommands);
             intent.putExtra("Mark", RootExecService.DNSCryptRunFragmentMark);
-            RootExecService.performAction(getActivity(),intent);
+            RootExecService.performAction(getActivity(), intent);
 
             pbDNSCrypt.setIndeterminate(true);
         }
     }
 
-    @SuppressLint({"SetWorldReadable", "SetWorldWritable"})
-    public void installDNSCrypt(){
+    public void setDNSCryptStatus(int resourceText, int resourceColor) {
+        tvDNSStatus.setText(resourceText);
+        tvDNSStatus.setTextColor(getResources().getColor(resourceColor));
+    }
 
-        if (new PrefManager(getActivity()).getBoolPref("bbOK") && busyboxPath.equals("busybox ")) {
-            busyboxNative = "busybox ";
-        } else {
-            busyboxNative = "";
-        }
+    public void setStartButtonEnabled(boolean enabled) {
+        btnDNSCryptStart.setEnabled(enabled);
+    }
 
-        File cacheDir = getActivity().getCacheDir();
-        if (!cacheDir.isDirectory()) {
-            if (cacheDir.mkdirs()) {
-                Log.i(LOG_TAG,"installDNSCrypt() create cache dir success");
-                if (cacheDir.setReadable(true,false)
-                        && cacheDir.setWritable(true)
-                        && cacheDir.setExecutable(true,false)) {
-                    Log.i(LOG_TAG,"installDNSCrypt() chmod cache dir success");
-                } else {
-                    Log.e(LOG_TAG,"installDNSCrypt() chmod cache dir failed");
-                }
-            } else {
-                Log.e(LOG_TAG,"installDNSCrypt() create cache dir failed");
-            }
-        }
-
-        String path = cacheDir+"/Backup.arch";
-        try {
-            InputStream is = getActivity().getAssets().open("Backup.mp3");
-            OutputStream out = new FileOutputStream(path);
-            byte[] buf = new byte[1024];
-            int len;
-            while ((len = is.read(buf)) > 0) {
-                out.write(buf, 0, len);
-            }
-            is.close();
-            out.close();
-        }
-        catch (IOException ex) {
-            Log.e(LOG_TAG,"Unable extract assets file Backup " + ex.toString());
-            return;
-        }
-
-        String pathGNU = getActivity().getCacheDir()+"/gnutar";
-        try {
-            InputStream is = getActivity().getAssets().open("gnutar.mp3");
-            OutputStream out = new FileOutputStream(pathGNU);
-            byte[] buf = new byte[1024];
-            int len;
-            while ((len = is.read(buf)) > 0) {
-                out.write(buf, 0, len);
-            }
-            is.close();
-            out.close();
-        }
-        catch (IOException ex) {
-            Toast.makeText(getActivity(),"Error unpack assets gnutar",Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        File gnuTAR = new File(pathGNU);
-        if (gnuTAR.isFile()) {
-            if (gnuTAR.setReadable(true, false)
-                    && gnuTAR.setWritable(true)
-                    && gnuTAR.setExecutable(true, false)) {
-                Log.i(LOG_TAG, "installDNSCrypt() chmod gnuTAR success");
-            } else {
-                Log.e(LOG_TAG, "installDNSCrypt() chmod gnuTAR failed");
-            }
-        }
-
-        File backupFile = new File(path);
-        if (backupFile.isFile()) {
-            if (backupFile.setReadable(true, true)) {
-                Log.i(LOG_TAG, "installDNSCrypt() chmod backupFile success");
-            } else {
-                Log.e(LOG_TAG, "installDNSCrypt() chmod backupFile failed");
-            }
-        }
-
-        File logDir = new File(appDataDir+"/logs");
-        if (!logDir.isDirectory()) {
-            if (logDir.mkdir()) {
-                Log.i(LOG_TAG, "installDNSCrypt() create log dir success");
-                if (logDir.setReadable(true, false)
-                        && logDir.setWritable(true, false)) {
-                    Log.i(LOG_TAG, "installDNSCrypt() chmod logDir success");
-                } else {
-                    Log.e(LOG_TAG, "installDNSCrypt() chmod logDir failed");
-                }
-            } else {
-                Log.e(LOG_TAG, "installDNSCrypt() create log dir failed");
-            }
-        }
-
-
-        String[] commandsInstall = {
-                busyboxNative+ "killall dnscrypt-proxy",
-                busyboxNative+ "killall tor",
-                busyboxNative+ "killall i2pd",
-                busyboxNative+ "sleep 1",
-                "cd "+appDataDir,
-                busyboxNative+ "chmod -R 755 cache",
-                busyboxNative+ "sleep 1",
-                busyboxNative+ "rm -rf app_data app_bin",
-                busyboxNative+ "sleep 1",
-                "cache/gnutar -xvzpf "+path+" app_bin/dnscrypt-proxy app_bin/busybox" +
-                        " app_bin/iptables app_data/dnscrypt-proxy",
-                busyboxNative+ "chmod 755 app_bin",
-                busyboxNative+ "chmod 755 app_bin/busybox",
-                busyboxNative+ "sleep 1",
-                busyboxPath+ "chmod 755 app_data",
-                busyboxPath+ "mkdir -p "+appDataDir+"/logs",
-                busyboxPath+ "echo 'Beginning of log' > "+appDataDir+"/logs/DnsCrypt.log",
-                "restorecon -R "+appDataDir+"/app_bin",
-                busyboxPath+ "chmod 755 app_data/dnscrypt-proxy",
-                busyboxPath+"echo 'DNSCrypt Installed'"};
-        rootCommands = new RootCommands(commandsInstall);
-        Intent intent = new Intent(getActivity(), RootExecService.class);
-        intent.setAction(RootExecService.RUN_COMMAND);
-        intent.putExtra("Commands",rootCommands);
-        intent.putExtra("Mark", RootExecService.DNSCryptRunFragmentMark);
-        RootExecService.performAction(getActivity(),intent);
-
-        Log.i(LOG_TAG,"DNSCryptRunFragment Installing DNSCrypt");
-
-        pbDNSCrypt.setIndeterminate(true);
-
-        tvDNSStatus.setText(R.string.tvDNSInstalling);
-        tvDNSStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorInstalling));
-
-        btnDNSCryptStart.setEnabled(true);
-
-        DrawerLayout mDrawerLayout = getActivity().findViewById(R.id.drawer_layout);
-        mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-
+    public void setProgressBarIndeterminate(boolean indeterminate) {
+        pbDNSCrypt.setIndeterminate(indeterminate);
     }
 
 
-    private void displayLog(int period){
+    private void displayLog(int period) {
 
-        if(timer!=null){
+        if (timer != null) {
             timer.cancel();
             timer = null;
         }
@@ -920,12 +773,17 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
         timer.schedule(new TimerTask() {
             int loop = 0;
             String previousLastLines = "";
+
             @Override
             public void run() {
-                OwnFileReader logFile = new OwnFileReader(appDataDir+"/logs/DnsCrypt.log");
+                if (getActivity() == null) {
+                    return;
+                }
+
+                OwnFileReader logFile = new OwnFileReader(appDataDir + "/logs/DnsCrypt.log");
                 final String lastLines = logFile.readLastLines();
 
-                if(++loop > 120){
+                if (++loop > 120) {
                     loop = 0;
                     displayLog(10000);
                 }
@@ -934,7 +792,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
                     @Override
                     public void run() {
-                        if (!previousLastLines.contentEquals(lastLines)){
+                        if (!previousLastLines.contentEquals(lastLines)) {
 
                             if (lastLines.contains("lowest initial latency")
                                     && new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")
@@ -948,50 +806,50 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                             if ((lastLines.contains("connect: connection refused")
                                     || lastLines.contains("ERROR"))
                                     && !lastLines.contains(" OK ")) {
-                                Log.e(LOG_TAG,"DNSCrypt Error: " + lastLines);
-                                NotificationHelper  notificationHelper = NotificationHelper.setHelperMessage(
-                                        getActivity(),getText(R.string.helper_dnscrypt_no_internet).toString(),"helper_dnscrypt_no_internet");
+                                Log.e(LOG_TAG, "DNSCrypt Error: " + lastLines);
+                                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                                        getActivity(), getText(R.string.helper_dnscrypt_no_internet).toString(), "helper_dnscrypt_no_internet");
                                 if (notificationHelper != null) {
-                                    notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                                    notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                                 }
 
                             } else if (lastLines.contains("dnscrypt-proxy is ready")
                                     && !new PrefManager(getActivity()).getBoolPref("DNSCryptFallBackResolverRemoved")) {
 
-                                new PrefManager(getActivity()).setBoolPref("DNSCryptFallBackResolverRemoved",true);
-                                String[] commandsResolver = {iptablesPath+ "iptables -t nat -D tordnscrypt_nat_output -p udp -d "+dnsCryptFallbackRes+" --dport 53 -j ACCEPT || true"};
+                                new PrefManager(getActivity()).setBoolPref("DNSCryptFallBackResolverRemoved", true);
+                                String[] commandsResolver = {iptablesPath + "iptables -t nat -D tordnscrypt_nat_output -p udp -d " + dnsCryptFallbackRes + " --dport 53 -j ACCEPT || true"};
                                 RootCommands commands = new RootCommands(commandsResolver);
                                 Intent intent = new Intent(getActivity(), RootExecService.class);
                                 intent.setAction(RootExecService.RUN_COMMAND);
-                                intent.putExtra("Commands",commands);
+                                intent.putExtra("Commands", commands);
                                 intent.putExtra("Mark", RootExecService.NullMark);
-                                RootExecService.performAction(getActivity(),intent);
+                                RootExecService.performAction(getActivity(), intent);
 
                             } else if (lastLines.contains("[CRITICAL]") && lastLines.contains("[FATAL]")) {
 
-                                NotificationHelper  notificationHelper = NotificationHelper.setHelperMessage(
-                                        getActivity(),getText(R.string.helper_dnscrypt_no_internet).toString(),"helper_dnscrypt_no_internet");
+                                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                                        getActivity(), getText(R.string.helper_dnscrypt_no_internet).toString(), "helper_dnscrypt_no_internet");
                                 if (notificationHelper != null) {
-                                    notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                                    notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                                 }
 
-                                Log.e(LOG_TAG,"DNSCrypt FATAL Error: " + lastLines);
+                                Log.e(LOG_TAG, "DNSCrypt FATAL Error: " + lastLines);
 
-                                String[] commandsReset = new String[] {
-                                        busyboxPath+ "killall dnscrypt-proxy",
-                                        busyboxPath+ "killall tor",
-                                        busyboxPath+ "killall i2pd",
-                                        iptablesPath+ "iptables -t nat -F tordnscrypt_nat_output",
-                                        iptablesPath+ "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                                        iptablesPath+ "iptables -F tordnscrypt",
-                                        iptablesPath+ "iptables -D OUTPUT -j tordnscrypt || true"
+                                String[] commandsReset = new String[]{
+                                        busyboxPath + "killall dnscrypt-proxy",
+                                        busyboxPath + "killall tor",
+                                        busyboxPath + "killall i2pd",
+                                        iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
+                                        iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
+                                        iptablesPath + "iptables -F tordnscrypt",
+                                        iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true"
                                 };
                                 rootCommands = new RootCommands(commandsReset);
                                 Intent intentReset = new Intent(getActivity(), RootExecService.class);
                                 intentReset.setAction(RootExecService.RUN_COMMAND);
-                                intentReset.putExtra("Commands",rootCommands);
+                                intentReset.putExtra("Commands", rootCommands);
                                 intentReset.putExtra("Mark", RootExecService.NullMark);
-                                RootExecService.performAction(getActivity(),intentReset);
+                                RootExecService.performAction(getActivity(), intentReset);
                             }
 
                             tvDNSCryptLog.setText(Html.fromHtml(lastLines));
@@ -1002,16 +860,16 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                 });
 
             }
-        }, 0, period);
+        }, 1, period);
 
     }
 
     private void runDNSCryptNoRoot() {
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean showNotification = shPref.getBoolean("swShowNotification",true);
+        boolean showNotification = shPref.getBoolean("swShowNotification", true);
         Intent intent = new Intent(getActivity(), NoRootService.class);
         intent.setAction(NoRootService.actionStartDnsCrypt);
-        intent.putExtra("showNotification",showNotification);
+        intent.putExtra("showNotification", showNotification);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             getActivity().startForegroundService(intent);
         } else {
@@ -1021,9 +879,9 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
     private void safeStopNoRootService() {
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean rnDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot",false);
-        boolean rnTorWithRoot = shPref.getBoolean("swUseModulesRoot",false);
-        boolean rnI2PDWithRoot = shPref.getBoolean("swUseModulesRoot",false);
+        boolean rnDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+        boolean rnTorWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+        boolean rnI2PDWithRoot = shPref.getBoolean("swUseModulesRoot", false);
         boolean dnsCryptRunning = new PrefManager(getActivity()).getBoolPref("DNSCrypt Running");
         boolean torRunning = new PrefManager(getActivity()).getBoolPref("Tor Running");
         boolean itpdRunning = new PrefManager(getActivity()).getBoolPref("I2PD Running");
@@ -1036,7 +894,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
             canSafeStopService = false;
         }
         if (canSafeStopService) {
-            Intent intent = new Intent(getActivity(),NoRootService.class);
+            Intent intent = new Intent(getActivity(), NoRootService.class);
             getActivity().stopService(intent);
         }
     }

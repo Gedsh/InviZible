@@ -50,9 +50,10 @@ import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import pan.alexander.tordnscrypt.backup.BackupActivity;
+import pan.alexander.tordnscrypt.help.HelpActivity;
 import pan.alexander.tordnscrypt.utils.ApManager;
-import pan.alexander.tordnscrypt.utils.FileOperations;
-import pan.alexander.tordnscrypt.utils.LangAppCompatActivity;
+import pan.alexander.tordnscrypt.utils.AppExitDetectService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Registration;
 import pan.alexander.tordnscrypt.utils.RootExecService;
@@ -67,12 +68,16 @@ public class MainActivity extends LangAppCompatActivity
     private static final int CODE_IS_AP_ON = 100;
     public static DialogInterface modernDialog = null;
 
+    private DNSCryptRunFragment dNSCryptRunFragment;
+    private TorRunFragment torRunFragment;
+    private ITPDRunFragment iTPDRunFragment;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         SharedPreferences defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         try {
             String theme = defaultSharedPreferences.getString("pref_fast_theme","4");
-            switch (theme) {
+            switch (Objects.requireNonNull(theme)) {
                 case "1":
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
                     break;
@@ -116,6 +121,8 @@ public class MainActivity extends LangAppCompatActivity
         }
 
         new PrefManager(this).setBoolPref("MainActivityActive", true);
+
+        startAppExitDetectService();
     }
 
     @Override
@@ -126,6 +133,31 @@ public class MainActivity extends LangAppCompatActivity
             new PrefManager(this).setBoolPref("refresh_main_activity", false);
             recreate();
         }
+    }
+
+    @Override
+    public void onAttachFragment(android.app.Fragment fragment) {
+        super.onAttachFragment(fragment);
+
+        if (fragment instanceof DNSCryptRunFragment) {
+            dNSCryptRunFragment = (DNSCryptRunFragment)fragment;
+        } else if (fragment instanceof TorRunFragment) {
+            torRunFragment = (TorRunFragment)fragment;
+        } else if (fragment instanceof ITPDRunFragment) {
+            iTPDRunFragment = (ITPDRunFragment)fragment;
+        }
+    }
+
+    public DNSCryptRunFragment getDNSCryptRunFragment() {
+        return dNSCryptRunFragment;
+    }
+
+    public TorRunFragment getTorRunFragment() {
+        return torRunFragment;
+    }
+
+    public ITPDRunFragment getITPDRunFragment() {
+        return iTPDRunFragment;
     }
 
     @Override
@@ -435,7 +467,7 @@ public class MainActivity extends LangAppCompatActivity
         }
 
         if (id == R.id.nav_backup) {
-            Intent intent = new Intent(this,BackupActivity.class);
+            Intent intent = new Intent(this, BackupActivity.class);
             startActivity(intent);
         } else if (id == R.id.nav_DNS_Pref) {
             Intent intent = new Intent(this,SettingsActivity.class);
@@ -538,6 +570,11 @@ public class MainActivity extends LangAppCompatActivity
         return view;
     }
 
+    private void startAppExitDetectService() {
+        Intent intent = new Intent(this, AppExitDetectService.class);
+        startService(intent);
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -546,8 +583,6 @@ public class MainActivity extends LangAppCompatActivity
         if (modernDialog!=null) {
             modernDialog.dismiss();
         }
-
-        FileOperations.removeAllOnFileOperationsListeners();
 
         new PrefManager(this).setBoolPref("MainActivityActive", false);
     }

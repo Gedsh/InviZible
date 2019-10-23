@@ -26,7 +26,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -50,14 +49,12 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.Arr;
-import pan.alexander.tordnscrypt.utils.FileOperations;
 import pan.alexander.tordnscrypt.utils.NoRootService;
 import pan.alexander.tordnscrypt.utils.NotificationHelper;
 import pan.alexander.tordnscrypt.utils.OwnFileReader;
@@ -74,7 +71,7 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ITPDRunFragment extends Fragment implements View.OnClickListener, FileOperations.OnFileOperationsCompleteListener {
+public class ITPDRunFragment extends Fragment implements View.OnClickListener {
 
     BroadcastReceiver br = null;
     RootCommands rootCommands = null;
@@ -85,7 +82,6 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
     TextView tvITPDinfoLog = null;
     Timer timer = null;
     String appDataDir;
-    String storageDir;
     String mediaDir;
     String dnsCryptPort;
     String itpdHttpProxyPort;
@@ -113,23 +109,25 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
             @Override
             public void onReceive(Context context, Intent intent) {
 
+                if (getActivity() == null) {
+                    return;
+                }
 
                 if (intent != null) {
                     final String action = intent.getAction();
-                    if (action == null || action.equals("") || ((intent.getIntExtra("Mark",0)!=
+                    if (action == null || action.equals("") || ((intent.getIntExtra("Mark", 0) !=
                             RootExecService.I2PDRunFragmentMark) &&
                             !action.equals(TOP_BROADCAST))) return;
-                    Log.i(LOG_TAG,"I2PDFragment onReceive");
+                    Log.i(LOG_TAG, "I2PDFragment onReceive");
 
-                    if(action.equals(RootExecService.COMMAND_RESULT)){
-
+                    if (action.equals(RootExecService.COMMAND_RESULT)) {
 
 
                         RootCommands comResult = (RootCommands) intent.getSerializableExtra("CommandsResult");
 
                         pbITPD.setIndeterminate(false);
 
-                        if(comResult.getCommands().length == 0){
+                        if (comResult.getCommands().length == 0) {
 
                             tvITPDStatus.setText(R.string.wrong);
                             tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
@@ -140,39 +138,39 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
                         mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
 
                         StringBuilder sb = new StringBuilder();
-                        for (String com:comResult.getCommands()){
-                            Log.i(LOG_TAG,com);
-                            sb.append(com).append((char)10);
+                        for (String com : comResult.getCommands()) {
+                            Log.i(LOG_TAG, com);
+                            sb.append(com).append((char) 10);
                         }
 
-                       //TopFragment.NotificationDialogFragment commandResult = TopFragment.NotificationDialogFragment.newInstance(sb.toString());
-                       //commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
+                        //TopFragment.NotificationDialogFragment commandResult = TopFragment.NotificationDialogFragment.newInstance(sb.toString());
+                        //commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
 
                         if (sb.toString().contains("ITPD_version")) {
                             String[] strArr = sb.toString().split("ITPD_version");
                             if (strArr.length > 1) {
                                 String[] verArr = strArr[1].trim().split(" ");
-                                if (verArr.length > 2 && verArr[1].contains("version")){
+                                if (verArr.length > 2 && verArr[1].contains("version")) {
                                     ITPDVersion = verArr[2].trim();
-                                    new PrefManager(getActivity()).setStrPref("ITPDVersion",ITPDVersion);
+                                    new PrefManager(getActivity()).setStrPref("ITPDVersion", ITPDVersion);
                                 }
                             }
 
                         }
 
-                        if(sb.toString().toLowerCase().contains(itpdPath)
-                                && sb.toString().contains("checkITPDRunning")){
+                        if (sb.toString().toLowerCase().contains(itpdPath)
+                                && sb.toString().contains("checkITPDRunning")) {
                             tvITPDStatus.setText(R.string.tvITPDRunning);
                             tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorRunning));
                             btnITPDStart.setText(R.string.btnITPDStop);
-                            new PrefManager(Objects.requireNonNull(getActivity())).setBoolPref("I2PD Running",true);
+                            new PrefManager(Objects.requireNonNull(getActivity())).setBoolPref("I2PD Running", true);
                             displayLog();
                         } else if (!sb.toString().toLowerCase().contains(itpdPath)
                                 && sb.toString().contains("checkITPDRunning")) {
                             tvITPDStatus.setText(R.string.tvITPDStop);
                             tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStopped));
                             btnITPDStart.setText(R.string.btnITPDStart);
-                            if (timer!=null) {
+                            if (timer != null) {
                                 timer.cancel();
                                 timer = null;
                             }
@@ -185,54 +183,17 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
                                     && !sb.toString().contains("stopProcess"))
                                     || (!new PrefManager(getActivity()).getBoolPref("I2PD Running")
                                     && sb.toString().contains("startProcess"))) {
-                                Log.e(LOG_TAG,getText(R.string.helper_itpd_stopped).toString());
-                                NotificationHelper  notificationHelper = NotificationHelper.setHelperMessage(
-                                        getActivity(),getText(R.string.helper_itpd_stopped).toString(),"itpd_suddenly_stopped");
+                                Log.e(LOG_TAG, getText(R.string.helper_itpd_stopped).toString());
+                                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                                        getActivity(), getText(R.string.helper_itpd_stopped).toString(), "itpd_suddenly_stopped");
                                 if (notificationHelper != null) {
-                                    notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                                    notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                                 }
                             }
 
-                            new PrefManager(Objects.requireNonNull(getActivity())).setBoolPref("I2PD Running",false);
+                            new PrefManager(Objects.requireNonNull(getActivity())).setBoolPref("I2PD Running", false);
 
                             safeStopNoRootService();
-                        }  else if (sb.toString().contains("I2PD Installed")
-                                && !new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("I2PD Installed")) {
-                            File file = new File(itpdPath);
-                            if (file.exists()){
-
-                                /////////////////////Correcting Application Dir/////////////////////////////////////////////
-                                if (!appDataDir.equals("/data/user/0/pan.alexander.tordnscrypt")) {
-                                    Log.i(LOG_TAG,"Correcting appDataDir");
-                                    FileOperations.readTextFile(getActivity(),appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml","dnscrypt-proxy.toml");
-                                    FileOperations.readTextFile(getActivity(),appDataDir+"/app_data/tor/tor.conf","tor.conf");
-                                    FileOperations.readTextFile(getActivity(),appDataDir+"/app_data/i2pd/i2pd.conf","i2pd.conf");
-                                } else {
-                                    tvITPDStatus.setText(R.string.tvITPDInstalled);
-                                    tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorInstalled));
-                                    new PrefManager(Objects.requireNonNull(getActivity())).setBoolPref("I2PD Installed",true);
-
-                                    NotificationHelper  notificationHelper = NotificationHelper.setHelperMessage(
-                                            getActivity(),getText(R.string.helper_after_install).toString(),"after_install");
-                                    if (notificationHelper != null) {
-                                        notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
-                                    }
-
-                                    FileOperations.deleteOnFileOperationCompleteListener();
-
-                                    /////////////////////////TO RENEW MODULES VERSIONS/////////////////////////////////////
-                                    getActivity().recreate();
-                                }
-                            } else {
-                                tvITPDStatus.setText(R.string.wrong);
-                                tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
-                            }
-
-
-
-
-
-
                         } else if (sb.toString().contains("Something went wrong!")) {
                             tvITPDStatus.setText(R.string.wrong);
                             tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
@@ -240,15 +201,15 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
 
                     }
 
-                    if(action.equals(TOP_BROADCAST)){
+                    if (action.equals(TOP_BROADCAST)) {
                         if (TopFragment.TOP_BROADCAST.contains("TOP_BROADCAST")) {
                             checkITPDRunning();
-                            Log.i(LOG_TAG,"ITPDRunFragment onReceive TOP_BROADCAST");
+                            Log.i(LOG_TAG, "ITPDRunFragment onReceive TOP_BROADCAST");
                         } else {
                             tvITPDStatus.setText(R.string.wrong);
                             tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
                             btnITPDStart.setEnabled(false);
-                            Log.i(LOG_TAG,"ITPDRunFragment onReceive wrong TOP_BROADCAST");
+                            Log.i(LOG_TAG, "ITPDRunFragment onReceive wrong TOP_BROADCAST");
                         }
 
                     }
@@ -279,12 +240,12 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
         tvITPDLog.setMovementMethod(ScrollingMovementMethod.getInstance());
 
         tvITPDinfoLog = view.findViewById(R.id.tvITPDinfoLog);
-        if (tvITPDinfoLog!=null)
+        if (tvITPDinfoLog != null)
             tvITPDinfoLog.setMovementMethod(ScrollingMovementMethod.getInstance());
 
         tvITPDStatus = view.findViewById(R.id.tvI2PDStatus);
 
-        if(new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("I2PD Running")){
+        if (new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("I2PD Running")) {
             tvITPDStatus.setText(R.string.tvITPDRunning);
             tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorRunning));
             btnITPDStart.setText(R.string.btnITPDStop);
@@ -295,7 +256,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
             btnITPDStart.setText(R.string.btnITPDStart);
         }
 
-        if(new PrefManager(getActivity()).getBoolPref("I2PD Installed")){
+        if (new PrefManager(getActivity()).getBoolPref("I2PD Installed")) {
             btnITPDStart.setEnabled(true);
         } else {
             tvITPDStatus.setText(getText(R.string.tvITPDNotInstalled));
@@ -309,7 +270,6 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
 
         PathVars pathVars = new PathVars(getActivity());
         appDataDir = pathVars.appDataDir;
-        storageDir = pathVars.storageDir;
         mediaDir = pathVars.mediaDir;
         dnsCryptPort = pathVars.dnsCryptPort;
         itpdHttpProxyPort = pathVars.itpdHttpProxyPort;
@@ -325,19 +285,16 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
         IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
         IntentFilter intentFilterTopFrg = new IntentFilter(TOP_BROADCAST);
 
-        if(getActivity()!=null){
-            getActivity().registerReceiver(br,intentFilterBckgIntSer);
-            getActivity().registerReceiver(br,intentFilterTopFrg);
+        if (getActivity() != null) {
+            getActivity().registerReceiver(br, intentFilterBckgIntSer);
+            getActivity().registerReceiver(br, intentFilterTopFrg);
+
+            if (new PrefManager(getActivity()).getBoolPref("I2PD Running"))
+                displayLog();
+
+            SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            runI2PDWithRoot = shPref.getBoolean("swUseModulesRoot", false);
         }
-
-        if(new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("I2PD Running"))
-            displayLog();
-
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        runI2PDWithRoot = shPref.getBoolean("swUseModulesRoot",false);
-
-        if (!new PrefManager(getActivity()).getBoolPref("I2PD Installed"))
-            FileOperations.setOnFileOperationCompleteListener(this);
 
         /////////////////////////// HOTSPOT///////////////////////////////////
         tethering = new Tethering(getActivity());
@@ -349,8 +306,8 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
         super.onStop();
 
         try {
-            if (timer!=null) timer.cancel();
-            if (br!=null) Objects.requireNonNull(getActivity()).unregisterReceiver(br);
+            if (timer != null) timer.cancel();
+            if (br != null) Objects.requireNonNull(getActivity()).unregisterReceiver(br);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -359,15 +316,15 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
     @Override
     public void onClick(View v) {
         if (RootExecService.lockStartStop) {
-            Toast.makeText(getActivity(),getText(R.string.please_wait),Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), getText(R.string.please_wait), Toast.LENGTH_SHORT).show();
             return;
         }
 
         DrawerLayout mDrawerLayout = getActivity().findViewById(R.id.drawer_layout);
         mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
 
-        if (((MainActivity)getActivity()).childLockActive) {
-            Toast.makeText(getActivity(),getText(R.string.action_mode_dialog_locked),Toast.LENGTH_LONG).show();
+        if (((MainActivity) getActivity()).childLockActive) {
+            Toast.makeText(getActivity(), getText(R.string.action_mode_dialog_locked), Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -547,7 +504,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
 
                 tvITPDStatus.setText(R.string.tvITPDStopping);
                 tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStopping));
-                OwnFileReader ofr = new OwnFileReader(appDataDir+"/logs/i2pd.log");
+                OwnFileReader ofr = new OwnFileReader(appDataDir + "/logs/i2pd.log");
                 ofr.shortenToToLongFile();
             }
 
@@ -565,67 +522,40 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
     }
 
 
-
-    private void checkITPDRunning(){
-        if( new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("I2PD Installed")){
+    private void checkITPDRunning() {
+        if (new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("I2PD Installed")) {
             String[] commandsCheck = {
-                    busyboxPath+ "pgrep -l /i2pd",
-                    busyboxPath+ "echo 'checkITPDRunning'",
-                    busyboxPath+ "echo 'ITPD_version'",
-                    itpdPath+ " --version"};
+                    busyboxPath + "pgrep -l /i2pd",
+                    busyboxPath + "echo 'checkITPDRunning'",
+                    busyboxPath + "echo 'ITPD_version'",
+                    itpdPath + " --version"};
             rootCommands = new RootCommands(commandsCheck);
             Intent intent = new Intent(getActivity(), RootExecService.class);
             intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands",rootCommands);
+            intent.putExtra("Commands", rootCommands);
             intent.putExtra("Mark", RootExecService.I2PDRunFragmentMark);
-            RootExecService.performAction(getActivity(),intent);
+            RootExecService.performAction(getActivity(), intent);
 
             pbITPD.setIndeterminate(true);
         }
     }
 
-    public void installITPD(){
-        String appUID = new PrefManager(getActivity()).getStrPref("appUID");
-
-        String path = Objects.requireNonNull(getActivity()).getCacheDir()+"/Backup.arch";
-        String pathGNU = getActivity().getCacheDir()+"/gnutar";
-        String[] commandsInstall = {
-                "cd "+appDataDir,
-                "cache/gnutar -xvzpf "+path+" app_bin/i2pd" +
-                        " app_data/i2pd",
-                busyboxPath+ "sleep 3",
-                busyboxPath+ "chmod 755 app_data/i2pd",
-                busyboxPath+ "cp -f " + pathGNU + " app_bin",
-                busyboxPath+ "chmod -R 755 app_bin",
-                busyboxPath+ "rm -rf " + path,
-                busyboxPath+ "rm -rf " + pathGNU,
-                "restorecon -R "+appDataDir,
-                busyboxPath+ "chown -R "+appUID+"."+appUID+" "+appDataDir,
-                busyboxPath+"echo 'I2PD Installed'"};
-        rootCommands = new RootCommands(commandsInstall);
-        Intent intent = new Intent(getActivity(), RootExecService.class);
-        intent.setAction(RootExecService.RUN_COMMAND);
-        intent.putExtra("Commands",rootCommands);
-        intent.putExtra("Mark", RootExecService.I2PDRunFragmentMark);
-        RootExecService.performAction(getActivity(),intent);
-
-        Log.i(LOG_TAG,"ITPDRunFragment Installing I2PD");
-
-        pbITPD.setIndeterminate(true);
-
-        tvITPDStatus.setText(R.string.tvITPDInstalling);
-        tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorInstalling));
-
-        btnITPDStart.setEnabled(true);
-
-        DrawerLayout mDrawerLayout = getActivity().findViewById(R.id.drawer_layout);
-        mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-
+    public void setITPDStatus(int resourceText, int resourceColor) {
+        tvITPDStatus.setText(resourceText);
+        tvITPDStatus.setTextColor(getResources().getColor(resourceColor));
     }
 
-    private void displayLog(){
+    public void setStartButtonEnabled(boolean enabled) {
+        btnITPDStart.setEnabled(enabled);
+    }
 
-        if(timer!=null){
+    public void setProgressBarIndeterminate(boolean indeterminate) {
+        pbITPD.setIndeterminate(indeterminate);
+    }
+
+    private void displayLog() {
+
+        if (timer != null) {
             timer.cancel();
             timer = null;
         }
@@ -636,23 +566,24 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
         timer.schedule(new TimerTask() {
             String htmlData = getResources().getString(R.string.tvITPDDefaultLog) + " " + ITPDVersion;
             String previousLastLines = "";
+
             @Override
             public void run() {
 
-                OwnFileReader logFile = new OwnFileReader(appDataDir+"/logs/i2pd.log");
+                OwnFileReader logFile = new OwnFileReader(appDataDir + "/logs/i2pd.log");
                 final String lastLines = logFile.readLastLines();
 
                 try {
                     StringBuilder sb = new StringBuilder();
 
                     URL url = new URL("http://127.0.0.1:7070/");
-                    HttpURLConnection huc =  (HttpURLConnection)  url.openConnection ();
-                    huc.setRequestMethod ("GET");  //OR  huc.setRequestMethod ("HEAD");
+                    HttpURLConnection huc = (HttpURLConnection) url.openConnection();
+                    huc.setRequestMethod("GET");  //OR  huc.setRequestMethod ("HEAD");
                     huc.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 9.0.1; " +
                             "Mi Mi) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Mobile Safari/537.36");
-                    huc.connect () ;
-                    int code = huc.getResponseCode() ;
-                    if(code != HttpURLConnection.HTTP_OK){
+                    huc.connect();
+                    int code = huc.getResponseCode();
+                    if (code != HttpURLConnection.HTTP_OK) {
                         huc.disconnect();
                         return;
                     }
@@ -664,12 +595,12 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
                                     url.openStream()));
 
                     String inputLine;
-                    while ((inputLine = in.readLine()) != null){
-                        if (inputLine.contains("<b>Network status:</b>")||inputLine.contains("<b>Tunnel creation success rate:</b>")||
-                                inputLine.contains("<b>Received:</b> ")||inputLine.contains("<b>Sent:</b>")||inputLine.contains("<b>Transit:</b>")||
-                                inputLine.contains("<b>Routers:</b>")||inputLine.contains("<b>Client Tunnels:</b>")||inputLine.contains("<b>Uptime:</b>")) {
-                            inputLine = inputLine.replace("<div class=right>","");
-                            inputLine = inputLine.replace("<br>","<br />");
+                    while ((inputLine = in.readLine()) != null) {
+                        if (inputLine.contains("<b>Network status:</b>") || inputLine.contains("<b>Tunnel creation success rate:</b>") ||
+                                inputLine.contains("<b>Received:</b> ") || inputLine.contains("<b>Sent:</b>") || inputLine.contains("<b>Transit:</b>") ||
+                                inputLine.contains("<b>Routers:</b>") || inputLine.contains("<b>Client Tunnels:</b>") || inputLine.contains("<b>Uptime:</b>")) {
+                            inputLine = inputLine.replace("<div class=right>", "");
+                            inputLine = inputLine.replace("<br>", "<br />");
                             sb.append(inputLine);
                         }
                     }
@@ -679,9 +610,8 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
 
 
                 } catch (Exception e) {
-                    Log.e(LOG_TAG,"Unable to read I2PD html" + e.toString());
+                    Log.e(LOG_TAG, "Unable to read I2PD html" + e.toString());
                 }
-
 
 
                 if (getActivity() == null) return;
@@ -689,11 +619,11 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
 
                     @Override
                     public void run() {
-                        if (tvITPDinfoLog!=null)
+                        if (tvITPDinfoLog != null)
                             tvITPDinfoLog.setText(Html.fromHtml(lastLines));
                         previousLastLines = lastLines;
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            tvITPDLog.setText(Html.fromHtml(htmlData,Html.FROM_HTML_MODE_LEGACY));
+                            tvITPDLog.setText(Html.fromHtml(htmlData, Html.FROM_HTML_MODE_LEGACY));
                         } else {
                             tvITPDLog.setText(Html.fromHtml(htmlData));
                         }
@@ -706,10 +636,10 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
 
     private void runITPDNoRoot() {
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean showNotification = shPref.getBoolean("swShowNotification",true);
+        boolean showNotification = shPref.getBoolean("swShowNotification", true);
         Intent intent = new Intent(getActivity(), NoRootService.class);
         intent.setAction(NoRootService.actionStartITPD);
-        intent.putExtra("showNotification",showNotification);
+        intent.putExtra("showNotification", showNotification);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             getActivity().startForegroundService(intent);
         } else {
@@ -719,9 +649,9 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
 
     private void safeStopNoRootService() {
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean rnDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot",false);
-        boolean rnTorWithRoot = shPref.getBoolean("swUseModulesRoot",false);
-        boolean rnI2PDWithRoot = shPref.getBoolean("swUseModulesRoot",false);
+        boolean rnDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+        boolean rnTorWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+        boolean rnI2PDWithRoot = shPref.getBoolean("swUseModulesRoot", false);
         boolean dnsCryptRunning = new PrefManager(getActivity()).getBoolPref("DNSCrypt Running");
         boolean torRunning = new PrefManager(getActivity()).getBoolPref("Tor Running");
         boolean itpdRunning = new PrefManager(getActivity()).getBoolPref("I2PD Running");
@@ -734,62 +664,8 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener, F
             canSafeStopService = false;
         }
         if (canSafeStopService) {
-            Intent intent = new Intent(getActivity(),NoRootService.class);
+            Intent intent = new Intent(getActivity(), NoRootService.class);
             getActivity().stopService(intent);
-        }
-    }
-
-    @Override
-    public void OnFileOperationComplete(String currentFileOperation, String path, final String tag) {
-        if (currentFileOperation.equals(FileOperations.readTextFileCurrentOperation)) {
-            if (FileOperations.fileOperationResult) {
-                List<String> list = FileOperations.linesListMap.get(path);
-                if (list != null) {
-                    String line;
-                    for (int i = 0; i < list.size(); i++) {
-                        line = list.get(i);
-                        if (line.contains("/data/user/0/pan.alexander.tordnscrypt")) {
-                            line = line.replace("/data/user/0/pan.alexander.tordnscrypt", appDataDir);
-                            list.set(i, line);
-                        }
-                    }
-                    FileOperations.writeToTextFile(getActivity(), path, list, "No tag");
-                } else {
-                    tvITPDStatus.setText(R.string.wrong);
-                    tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
-                    Log.e(LOG_TAG, "correctAppDir readTextFile return null " + path);
-                }
-            } else {
-                tvITPDStatus.setText(R.string.wrong);
-                tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
-                Log.e(LOG_TAG, "correctAppDir readTextFile fault " + path);
-            }
-        } else if (currentFileOperation.equals(FileOperations.writeToTextFileCurrentOperation)) {
-
-            if (!FileOperations.fileOperationResult) {
-                tvITPDStatus.setText(R.string.wrong);
-                tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
-                Log.e(LOG_TAG, "correctAppDir writeTextFile return fault " + path);
-            } else if (path.equals(appDataDir+"/app_data/i2pd/i2pd.conf")){
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        tvITPDStatus.setText(R.string.tvITPDInstalled);
-                        tvITPDStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorInstalled));
-                        new PrefManager(Objects.requireNonNull(getActivity())).setBoolPref("I2PD Installed",true);
-                        NotificationHelper  notificationHelper = NotificationHelper.setHelperMessage(
-                                getActivity(),getText(R.string.helper_after_install).toString(),"after_install");
-                        if (notificationHelper != null) {
-                            notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
-                        }
-
-                        FileOperations.deleteOnFileOperationCompleteListener();
-
-                        /////////////////////////TO RENEW MODULES VERSIONS/////////////////////////////////////
-                        getActivity().recreate();
-                    }
-                });
-            }
         }
     }
 }
