@@ -75,5 +75,7 @@ public class PrefManager {
         return sPref.getStringSet(stringID,stringSetDef);
     }
 
-
+    public static String getPrefName() {
+        return PREF_NAME;
+    }
 }

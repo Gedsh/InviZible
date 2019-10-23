@@ -33,8 +33,7 @@ import pan.alexander.tordnscrypt.utils.PrefManager;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class PathVars {
-    public String appDataDir;
-    public String SharedPreferences;
+    public final String appDataDir;
     public String dnsCryptPort;
     public String itpdHttpProxyPort;
     public String torTransPort;
@@ -47,7 +46,6 @@ public class PathVars {
     public String obfsPath;
     public String busyboxPath;
     public String iptablesPath;
-    public String storageDir;
     public String mediaDir;
     public String pathBackup;
     public String torSOCKSPort;
@@ -57,36 +55,36 @@ public class PathVars {
 
     public PathVars (Context context) {
 
-        if(!new PrefManager(Objects.requireNonNull(context)).getBoolPref("DNSCrypt Installed")
-                && !new PrefManager(Objects.requireNonNull(context)).getBoolPref("Tor Installed")
-                && !new PrefManager(Objects.requireNonNull(context)).getBoolPref("I2PD Installed")){
-            String dataDir = context.getApplicationInfo().dataDir;
-            String storageDir = Environment.getExternalStorageDirectory().getPath();
-            new PrefManager(Objects.requireNonNull(context)).setStrPref("AppDataDir",dataDir);
-            new PrefManager(Objects.requireNonNull(context)).setStrPref("StorageDir",storageDir);
-
-            String appUID = "";
-            try {
-                ApplicationInfo applicationInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(),0);
-                appUID = String.valueOf(applicationInfo.uid);
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
-            }
-
-            new PrefManager(Objects.requireNonNull(context)).setStrPref("appUID",appUID);
-
-            Log.i(LOG_TAG, "PathVars AppDataDir " + dataDir + " AppUID " + appUID);
+        if(!isModulesInstalled(context)){
+            saveAppUID(context);
         }
 
-        appDataDir = context.getApplicationInfo().dataDir;
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
+
+        appDataDir = context.getApplicationInfo().dataDir;
+
+        setAuxPaths(shPref);
+
+        busyboxPath = getBusyBoxPath(context, shPref);
+
+        iptablesPath = getIptablesPath(shPref);
+
+        pathBackup = getDefaultBackupPath();
+    }
+
+    private void setAuxPaths(SharedPreferences shPref) {
         dnsCryptPort = shPref.getString("listen_port","5354");
         torSOCKSPort = shPref.getString("SOCKSPort","9050");
         torHTTPTunnelPort = shPref.getString("HTTPTunnelPort","8118");
         itpdSOCKSPort = shPref.getString("Socks proxy port","4447");
 
         itpdHttpProxyPort = shPref.getString("HTTP proxy port","4444");
-        torTransPort = shPref.getString("TransPort","9040").replaceAll(".+:","");
+
+        torTransPort = shPref.getString("TransPort","9040");
+        if (torTransPort != null) {
+            torTransPort = torTransPort.replaceAll(".+:","");
+        }
+
         dnsCryptFallbackRes = shPref.getString("fallback_resolver","9.9.9.9");
         torDNSPort = shPref.getString("DNSPort","5400");
         torVirtAdrNet = shPref.getString("VirtualAddrNetworkIPv4","10.0.0.0/10");
@@ -94,55 +92,84 @@ public class PathVars {
         torPath = appDataDir+"/app_bin/tor";
         itpdPath = appDataDir+"/app_bin/i2pd";
         obfsPath = appDataDir+"/app_bin/obfs4proxy";
+    }
 
-        String selectBusyBox = shPref.getString("pref_common_use_busybox","1");
+    private String getDefaultBackupPath() {
+        String storageDir = Environment.getExternalStorageDirectory().getPath();
+        return storageDir +"/TorDNSCrypt";
+    }
 
-        switch (selectBusyBox) {
-            case "1":
-                if (new PrefManager(context).getBoolPref("bbOK")) {
-                    busyboxPath = "busybox ";
-                } else {
-                    busyboxPath = appDataDir+"/app_bin/busybox ";
-                }
-                break;
+    private String getIptablesPath(SharedPreferences shPref) {
+        String iptablesSelector = shPref.getString("pref_common_use_iptables","1");
+
+        if (iptablesSelector == null) {
+            return "";
+        }
+
+        String path;
+        switch (iptablesSelector) {
             case "2":
-                busyboxPath = "busybox ";
+                path = "";
+                break;
+            case "1":
+
+            default:
+                path = appDataDir+"/app_bin/";
+                break;
+        }
+
+        return path;
+    }
+
+    private String getBusyBoxPath(Context context, SharedPreferences shPref) {
+
+        String busyBoxSelector = shPref.getString("pref_common_use_busybox","1");
+
+        if (busyBoxSelector == null) {
+            return "";
+        }
+
+        String path;
+        switch (busyBoxSelector) {
+            case "2":
+                path = "busybox ";
                 break;
             case "3":
-                busyboxPath = appDataDir+"/app_bin/busybox ";
+                path = appDataDir+"/app_bin/busybox ";
                 break;
             case "4":
-                busyboxPath = "";
+                path = "";
                 break;
-
-                default:
-                    if (new PrefManager(context).getBoolPref("bbOK")) {
-                        busyboxPath = "busybox ";
-                    } else {
-                        busyboxPath = appDataDir+"/app_bin/busybox ";
-                    }
-                    break;
-        }
-
-        String selectIptables = shPref.getString("pref_common_use_iptables","1");
-        switch (selectIptables) {
             case "1":
-                iptablesPath = appDataDir+"/app_bin/";
-                break;
-            case "2":
-                iptablesPath = "";
-                break;
 
-                default:
-                    iptablesPath = appDataDir+"/app_bin/";
-                    break;
+            default:
+                if (new PrefManager(context).getBoolPref("bbOK")) {
+                    path = "busybox ";
+                } else {
+                    path = appDataDir+"/app_bin/busybox ";
+                }
+                break;
+        }
+        return path;
+    }
+
+    private boolean isModulesInstalled(Context context) {
+        return new PrefManager(Objects.requireNonNull(context)).getBoolPref("DNSCrypt Installed")
+                && new PrefManager(Objects.requireNonNull(context)).getBoolPref("Tor Installed")
+                && new PrefManager(Objects.requireNonNull(context)).getBoolPref("I2PD Installed");
+    }
+
+    public void saveAppUID(Context context) {
+        String appUID = "";
+        try {
+            ApplicationInfo applicationInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(),0);
+            appUID = String.valueOf(applicationInfo.uid);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "saveAppUID function fault " + e.getMessage() + " " + e.getCause());
         }
 
+        new PrefManager(Objects.requireNonNull(context)).setStrPref("appUID",appUID);
 
-
-        storageDir = Environment.getExternalStorageDirectory().getPath();
-        //StringBuilder sb = new StringBuilder();
-        //mediaDir = sb.append("/data/media/").append(storageDir.replaceAll("\\D+","")).toString();
-        pathBackup = storageDir+"/TorDNSCrypt";
+        Log.i(LOG_TAG, "PathVars AppDataDir " + appDataDir + " AppUID " + appUID);
     }
 }

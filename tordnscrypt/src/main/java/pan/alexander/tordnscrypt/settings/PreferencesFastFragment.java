@@ -69,7 +69,11 @@ public class PreferencesFastFragment extends PreferenceFragment implements Prefe
         findPreference("pref_fast_language").setOnPreferenceChangeListener(this);
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        refreshPeriodHours = Integer.parseInt(shPref.getString("pref_fast_site_refresh_interval", "12"));
+        String refreshPeriod = shPref.getString("pref_fast_site_refresh_interval", "12");
+        if (refreshPeriod != null) {
+            refreshPeriodHours = Integer.parseInt(refreshPeriod);
+        }
+
         if (shPref.getBoolean("pref_fast_all_through_tor", true)) {
             findPreference("prefTorSiteUnlock").setEnabled(false);
             findPreference("prefTorAppUnlock").setEnabled(false);
@@ -151,6 +155,10 @@ public class PreferencesFastFragment extends PreferenceFragment implements Prefe
                 SharedPreferences defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
                 try {
                     String theme = defaultSharedPreferences.getString("pref_fast_theme", "4");
+                    if (theme == null) {
+                        return;
+                    }
+
                     switch (theme) {
                         case "1":
                             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);

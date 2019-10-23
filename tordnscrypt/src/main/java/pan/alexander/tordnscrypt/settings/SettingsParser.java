@@ -12,9 +12,14 @@ import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
-import pan.alexander.tordnscrypt.utils.FileOperations;
+import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
+import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
+import pan.alexander.tordnscrypt.utils.fileOperations.OnTextFileOperationsCompleteListener;
 
-public class SettingsParser implements FileOperations.OnFileOperationsCompleteListener {
+import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
+import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.writeToTextFile;
+
+public class SettingsParser implements OnTextFileOperationsCompleteListener {
     private SettingsActivity settingsActivity;
     private String appDataDir;
     private Bundle bundleForReadPublicResolversMdFunction;
@@ -23,54 +28,7 @@ public class SettingsParser implements FileOperations.OnFileOperationsCompleteLi
         this.settingsActivity = settingsActivity;
     }
 
-
-    @Override
-    public void OnFileOperationComplete(String currentFileOperation, final String path, final String tag) {
-        if (SettingsActivity.dialogInterface != null) {
-            SettingsActivity.dialogInterface.dismiss();
-            SettingsActivity.dialogInterface = null;
-        }
-
-        if (FileOperations.fileOperationResult && currentFileOperation.equals(FileOperations.readTextFileCurrentOperation)) {
-            settingsActivity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    switch (tag) {
-                        case SettingsActivity.dnscrypt_proxy_toml_tag:
-                            readDnscryptProxyToml(path);
-                            break;
-                        case SettingsActivity.tor_conf_tag:
-                            readTorConf(path);
-                            break;
-                        case SettingsActivity.itpd_conf_tag:
-                            readITPDconf(path);
-                            break;
-                        case SettingsActivity.public_resolvers_md_tag:
-                            readPublicResolversMd(path);
-                            break;
-                        case SettingsActivity.rules_tag:
-                            readRules(path);
-                            break;
-                    }
-
-                }
-            });
-
-        } else if(!FileOperations.fileOperationResult && currentFileOperation.equals(FileOperations.readTextFileCurrentOperation)) {
-            if (tag.equals(SettingsActivity.rules_tag)) {
-                readRules(path);
-            }
-        } else if (FileOperations.fileOperationResult && currentFileOperation.equals(FileOperations.writeToTextFileCurrentOperation)) {
-            settingsActivity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(settingsActivity,settingsActivity.getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
-    }
-
-    private void readDnscryptProxyToml(String path) {
+    private void readDnscryptProxyToml(List<String> lines) {
         ArrayList<String> key_toml = new ArrayList<>();
         ArrayList<String> val_toml = new ArrayList<>();
         String key = "";
@@ -78,7 +36,6 @@ public class SettingsParser implements FileOperations.OnFileOperationsCompleteLi
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(settingsActivity);
         SharedPreferences.Editor editor = sp.edit();
 
-        List<String> lines = FileOperations.linesListMap.get(path);
         if (lines != null) {
             for (String line : lines) {
                 if (!line.isEmpty()) {
@@ -157,7 +114,7 @@ public class SettingsParser implements FileOperations.OnFileOperationsCompleteLi
         }
     }
 
-    private void readTorConf(String path) {
+    private void readTorConf(List<String> lines) {
         ArrayList<String> key_tor = new ArrayList<>();
         ArrayList<String> val_tor = new ArrayList<>();
         String key = "";
@@ -165,7 +122,6 @@ public class SettingsParser implements FileOperations.OnFileOperationsCompleteLi
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(settingsActivity);
         SharedPreferences.Editor editor = sp.edit();
 
-        List<String> lines = FileOperations.linesListMap.get(path);
         if (lines != null) {
             for (String line:lines) {
                 if (!line.isEmpty()) {
@@ -266,7 +222,7 @@ public class SettingsParser implements FileOperations.OnFileOperationsCompleteLi
         }
     }
 
-    private void readITPDconf(String path) {
+    private void readITPDconf(List<String> lines) {
         ArrayList<String> key_itpd = new ArrayList<>();
         ArrayList<String> val_itpd = new ArrayList<>();
         String key = "";
@@ -274,7 +230,7 @@ public class SettingsParser implements FileOperations.OnFileOperationsCompleteLi
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(settingsActivity);
         SharedPreferences.Editor editor = sp.edit();
         String header = "common";
-        List<String> lines = FileOperations.linesListMap.get(path);
+
         if (lines != null) {
             for (String line:lines) {
                 if (!line.isEmpty()) {
@@ -367,7 +323,7 @@ public class SettingsParser implements FileOperations.OnFileOperationsCompleteLi
         }
     }
 
-    private void readPublicResolversMd(String path) {
+    private void readPublicResolversMd(String path, List<String> lines) {
         StringBuilder sb = new StringBuilder();
         boolean lockServer = false;
         boolean lockMD = false;
@@ -377,7 +333,7 @@ public class SettingsParser implements FileOperations.OnFileOperationsCompleteLi
         ArrayList<String> dnsServerSDNS = new ArrayList<>();
         ArrayList<String> dnscrypt_proxy_toml = new ArrayList<>();
         ArrayList<String> dnscrypt_servers = new ArrayList<>();
-        List<String> lines = FileOperations.linesListMap.get(path);
+
         if (lines != null) {
             for (String line : lines) {
 
@@ -461,11 +417,10 @@ public class SettingsParser implements FileOperations.OnFileOperationsCompleteLi
         }
     }
 
-    private void readRules(String path) {
-        List<String> list = FileOperations.linesListMap.get(path);
+    private void readRules(String path, List<String> lines) {
         ArrayList<String> rules_file = new ArrayList<>();
-        if (list!=null) {
-            rules_file.addAll(list);
+        if (lines !=null) {
+            rules_file.addAll(lines);
         } else {
             rules_file.add("");
         }
@@ -490,5 +445,51 @@ public class SettingsParser implements FileOperations.OnFileOperationsCompleteLi
         if (bundleForReadPublicResolversMdFunction!=null)
             bundleForReadPublicResolversMdFunction.clear();
         FileOperations.deleteOnFileOperationCompleteListener();
+    }
+
+    @Override
+    public void OnFileOperationComplete(FileOperationsVariants currentFileOperation, boolean fileOperationResult, final String path, final String tag, final List<String> lines) {
+        if (SettingsActivity.dialogInterface != null) {
+            SettingsActivity.dialogInterface.dismiss();
+            SettingsActivity.dialogInterface = null;
+        }
+
+        if (fileOperationResult && currentFileOperation == readTextFile) {
+            settingsActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    switch (tag) {
+                        case SettingsActivity.dnscrypt_proxy_toml_tag:
+                            readDnscryptProxyToml(lines);
+                            break;
+                        case SettingsActivity.tor_conf_tag:
+                            readTorConf(lines);
+                            break;
+                        case SettingsActivity.itpd_conf_tag:
+                            readITPDconf(lines);
+                            break;
+                        case SettingsActivity.public_resolvers_md_tag:
+                            readPublicResolversMd(path, lines);
+                            break;
+                        case SettingsActivity.rules_tag:
+                            readRules(path, lines);
+                            break;
+                    }
+
+                }
+            });
+
+        } else if(!fileOperationResult && currentFileOperation == readTextFile) {
+            if (tag.equals(SettingsActivity.rules_tag)) {
+                readRules(path, lines);
+            }
+        } else if (fileOperationResult && currentFileOperation == writeToTextFile) {
+            settingsActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(settingsActivity,settingsActivity.getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 }

@@ -40,7 +40,7 @@ import java.util.Collections;
 import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.utils.FileOperations;
+import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
@@ -114,13 +114,18 @@ public class ShowLogFragment extends android.app.Fragment implements View.OnClic
 
     private void refreshDNSQueries(final String path) {
 
-        try(FileReader reader = new FileReader(path);
-            BufferedReader bufferedReader = new BufferedReader(reader)) {
+        try {
 
             List<String> lines = new ArrayList<>();
             String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                lines.add(line);
+
+            try (FileReader reader = new FileReader(path);
+                 BufferedReader bufferedReader = new BufferedReader(reader)) {
+
+                while ((line = bufferedReader.readLine()) != null) {
+                    lines.add(line);
+                }
+
             }
 
             final String tvLogFileText = shortenToLongFile(path, lines);

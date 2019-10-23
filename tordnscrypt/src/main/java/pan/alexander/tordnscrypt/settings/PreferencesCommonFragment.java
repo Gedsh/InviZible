@@ -48,7 +48,9 @@ import java.util.Objects;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.TopFragment;
-import pan.alexander.tordnscrypt.utils.FileOperations;
+import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
+import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
+import pan.alexander.tordnscrypt.utils.fileOperations.OnTextFileOperationsCompleteListener;
 import pan.alexander.tordnscrypt.utils.NoRootService;
 import pan.alexander.tordnscrypt.utils.NotificationHelper;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -58,13 +60,14 @@ import pan.alexander.tordnscrypt.utils.Verifier;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
+import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 /**
  * A simple {@link Fragment} subclass.
  */
 public class PreferencesCommonFragment extends PreferenceFragment
-        implements Preference.OnPreferenceChangeListener,FileOperations.OnFileOperationsCompleteListener {
+        implements Preference.OnPreferenceChangeListener, OnTextFileOperationsCompleteListener {
     private String torTransPort;
     private String appDataDir;
     private String iptablesPath;
@@ -311,10 +314,8 @@ public class PreferencesCommonFragment extends PreferenceFragment
     }
 
     @Override
-    public void OnFileOperationComplete(String currentFileOperation, String path, final String tag) {
-
-        if (FileOperations.fileOperationResult && currentFileOperation.equals(FileOperations.readTextFileCurrentOperation)) {
-            final List<String> lines = FileOperations.linesListMap.get(path);
+    public void OnFileOperationComplete(FileOperationsVariants currentFileOperation, boolean fileOperationResult, String path, final String tag, final List<String> lines) {
+        if (fileOperationResult && currentFileOperation == readTextFile) {
             getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {

@@ -23,7 +23,6 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -35,8 +34,6 @@ import java.io.InputStream;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Objects;
-
-import pan.alexander.tordnscrypt.utils.LangAppCompatActivity;
 
 public class AboutActivity extends LangAppCompatActivity implements View.OnClickListener {
 

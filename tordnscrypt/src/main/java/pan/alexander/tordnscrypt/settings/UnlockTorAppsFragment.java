@@ -56,7 +56,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.utils.FileOperations;
+import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 import pan.alexander.tordnscrypt.utils.NotificationHelper;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.TorRefreshIPsWork;

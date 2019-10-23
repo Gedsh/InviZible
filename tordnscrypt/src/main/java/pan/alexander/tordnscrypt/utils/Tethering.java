@@ -63,6 +63,10 @@ public class Tethering {
 
     public String[] activateTethering(boolean privacyMode) {
 
+        if (context == null) {
+            return new String[]{""};
+        }
+
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
         boolean torTethering = shPref.getBoolean("pref_common_tor_tethering", false);
         boolean itpdTethering = shPref.getBoolean("pref_common_itpd_tethering", false);

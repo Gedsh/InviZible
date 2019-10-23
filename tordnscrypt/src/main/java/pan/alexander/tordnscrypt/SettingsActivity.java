@@ -42,8 +42,7 @@ import pan.alexander.tordnscrypt.settings.ShowLogFragment;
 import pan.alexander.tordnscrypt.settings.ShowRulesRecycleFrag;
 import pan.alexander.tordnscrypt.settings.UnlockTorAppsFragment;
 import pan.alexander.tordnscrypt.settings.UnlockTorIpsFrag;
-import pan.alexander.tordnscrypt.utils.FileOperations;
-import pan.alexander.tordnscrypt.utils.LangAppCompatActivity;
+import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 
 import static pan.alexander.tordnscrypt.TopFragment.LOG_TAG;
 
@@ -74,103 +73,103 @@ public class SettingsActivity extends LangAppCompatActivity
         PathVars pathVars = new PathVars(this);
         String appDataDir = pathVars.appDataDir;
 
-        if (savedInstanceState!=null) return;
+        if (savedInstanceState != null) return;
 
         settingsParser = new SettingsParser(this);
         settingsParser.activateSettingsParser();
 
         FragmentTransaction fTrans = getFragmentManager().beginTransaction();
         Intent intent = getIntent();
-        Log.d(LOG_TAG,"SettingsActivity getAction " + intent.getAction());
+        Log.d(LOG_TAG, "SettingsActivity getAction " + intent.getAction());
 
-        if(Objects.equals(intent.getAction(), "DNS_Pref")){
+        if (Objects.equals(intent.getAction(), "DNS_Pref")) {
             dialogInterface = FileOperations.fileOperationProgressDialog(this);
-            FileOperations.readTextFile(this,appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml",dnscrypt_proxy_toml_tag);
-        } else if (Objects.equals(intent.getAction(), "Tor_Pref")){
+            FileOperations.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml", dnscrypt_proxy_toml_tag);
+        } else if (Objects.equals(intent.getAction(), "Tor_Pref")) {
             dialogInterface = FileOperations.fileOperationProgressDialog(this);
-            FileOperations.readTextFile(this,appDataDir+"/app_data/tor/tor.conf",tor_conf_tag);
+            FileOperations.readTextFile(this, appDataDir + "/app_data/tor/tor.conf", tor_conf_tag);
 
-        } else if (Objects.equals(intent.getAction(), "I2PD_Pref")){
+        } else if (Objects.equals(intent.getAction(), "I2PD_Pref")) {
             dialogInterface = FileOperations.fileOperationProgressDialog(this);
-            FileOperations.readTextFile(this,appDataDir+"/app_data/i2pd/i2pd.conf",itpd_conf_tag);
-        } else if (Objects.equals(intent.getAction(), "fast_Pref")){
+            FileOperations.readTextFile(this, appDataDir + "/app_data/i2pd/i2pd.conf", itpd_conf_tag);
+        } else if (Objects.equals(intent.getAction(), "fast_Pref")) {
             preferencesFastFragment = new PreferencesFastFragment();
-            fTrans.replace(android.R.id.content, preferencesFastFragment,"fastSettingsFragment");
+            fTrans.replace(android.R.id.content, preferencesFastFragment, "fastSettingsFragment");
             fTrans.commit();
-        } else if (Objects.equals(intent.getAction(), "common_Pref")){
+        } else if (Objects.equals(intent.getAction(), "common_Pref")) {
             fTrans.replace(android.R.id.content, new PreferencesCommonFragment());
             fTrans.commit();
-        } else if (Objects.equals(intent.getAction(), "DNS_servers_Pref")){
+        } else if (Objects.equals(intent.getAction(), "DNS_servers_Pref")) {
             dialogInterface = FileOperations.fileOperationProgressDialog(this);
-            FileOperations.readTextFile(this,appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml",public_resolvers_md_tag);
-            FileOperations.readTextFile(this,appDataDir+"/app_data/dnscrypt-proxy/public-resolvers.md",public_resolvers_md_tag);
+            FileOperations.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml", public_resolvers_md_tag);
+            FileOperations.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/public-resolvers.md", public_resolvers_md_tag);
 
-        } else if (Objects.equals(intent.getAction(), "open_qery_log")){
+        } else if (Objects.equals(intent.getAction(), "open_qery_log")) {
             Bundle bundle = new Bundle();
-            String path = appDataDir+"/cache/query.log";
+            String path = appDataDir + "/cache/query.log";
             bundle.putString("path", path);
             ShowLogFragment frag = new ShowLogFragment();
             frag.setArguments(bundle);
             fTrans.replace(android.R.id.content, frag);
             fTrans.commit();
-        }  else if (Objects.equals(intent.getAction(), "open_nx_log")){
+        } else if (Objects.equals(intent.getAction(), "open_nx_log")) {
             Bundle bundle = new Bundle();
-            String path = appDataDir+"/cache/nx.log";
+            String path = appDataDir + "/cache/nx.log";
             bundle.putString("path", path);
             ShowLogFragment frag = new ShowLogFragment();
             frag.setArguments(bundle);
             fTrans.replace(android.R.id.content, frag);
             fTrans.commit();
-        } else if (Objects.equals(intent.getAction(), "forwarding_rules_Pref")){
+        } else if (Objects.equals(intent.getAction(), "forwarding_rules_Pref")) {
             dialogInterface = FileOperations.fileOperationProgressDialog(this);
-            FileOperations.readTextFile(this,appDataDir+"/app_data/dnscrypt-proxy/forwarding-rules.txt",rules_tag);
-        } else if (Objects.equals(intent.getAction(), "cloaking_rules_Pref")){
+            FileOperations.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/forwarding-rules.txt", rules_tag);
+        } else if (Objects.equals(intent.getAction(), "cloaking_rules_Pref")) {
             dialogInterface = FileOperations.fileOperationProgressDialog(this);
-            FileOperations.readTextFile(this,appDataDir+"/app_data/dnscrypt-proxy/cloaking-rules.txt",rules_tag);
-        } else if (Objects.equals(intent.getAction(), "blacklist_Pref")){
+            FileOperations.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/cloaking-rules.txt", rules_tag);
+        } else if (Objects.equals(intent.getAction(), "blacklist_Pref")) {
             dialogInterface = FileOperations.fileOperationProgressDialog(this);
-            FileOperations.readTextFile(this,appDataDir+"/app_data/dnscrypt-proxy/blacklist.txt",rules_tag);
-        } else if (Objects.equals(intent.getAction(), "ipblacklist_Pref")){
+            FileOperations.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/blacklist.txt", rules_tag);
+        } else if (Objects.equals(intent.getAction(), "ipblacklist_Pref")) {
             dialogInterface = FileOperations.fileOperationProgressDialog(this);
-            FileOperations.readTextFile(this,appDataDir+"/app_data/dnscrypt-proxy/ip-blacklist.txt",rules_tag);
-        } else if (Objects.equals(intent.getAction(), "whitelist_Pref")){
+            FileOperations.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/ip-blacklist.txt", rules_tag);
+        } else if (Objects.equals(intent.getAction(), "whitelist_Pref")) {
             dialogInterface = FileOperations.fileOperationProgressDialog(this);
-            FileOperations.readTextFile(this,appDataDir+"/app_data/dnscrypt-proxy/whitelist.txt",rules_tag);
-        } else if (Objects.equals(intent.getAction(), "pref_itpd_addressbook_subscriptions")){
+            FileOperations.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/whitelist.txt", rules_tag);
+        } else if (Objects.equals(intent.getAction(), "pref_itpd_addressbook_subscriptions")) {
             SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
             ArrayList<String> rules_file = new ArrayList<>();
             String[] arr = sp.getString("subscriptions", "").split(",");
             String subscriptions = "subscriptions";
-            for (String str:arr){
+            for (String str : arr) {
                 rules_file.add(str.trim());
             }
             fTrans = getFragmentManager().beginTransaction();
             Bundle bundle = new Bundle();
-            bundle.putStringArrayList("rules_file",rules_file);
-            bundle.putString("path",subscriptions);
+            bundle.putStringArrayList("rules_file", rules_file);
+            bundle.putString("path", subscriptions);
             ShowRulesRecycleFrag frag = new ShowRulesRecycleFrag();
             frag.setArguments(bundle);
             fTrans.replace(android.R.id.content, frag);
             fTrans.commit();
-        } else if (Objects.equals(intent.getAction(), "tor_sites_unlock")){
+        } else if (Objects.equals(intent.getAction(), "tor_sites_unlock")) {
             Bundle bundle = new Bundle();
-            bundle.putString("deviceOrTether","device");
+            bundle.putString("deviceOrTether", "device");
             UnlockTorIpsFrag unlockTorIpsFrag = new UnlockTorIpsFrag();
             unlockTorIpsFrag.setArguments(bundle);
             fTrans.replace(android.R.id.content, unlockTorIpsFrag);
             fTrans.commit();
-        } else if (Objects.equals(intent.getAction(), "tor_sites_unlock_tether")){
+        } else if (Objects.equals(intent.getAction(), "tor_sites_unlock_tether")) {
             Bundle bundle = new Bundle();
-            bundle.putString("deviceOrTether","tether");
+            bundle.putString("deviceOrTether", "tether");
             UnlockTorIpsFrag unlockTorIpsFrag = new UnlockTorIpsFrag();
             unlockTorIpsFrag.setArguments(bundle);
             fTrans.replace(android.R.id.content, unlockTorIpsFrag);
             fTrans.commit();
-        } else if (Objects.equals(intent.getAction(), "tor_apps_unlock")){
+        } else if (Objects.equals(intent.getAction(), "tor_apps_unlock")) {
             fTrans.replace(android.R.id.content, new UnlockTorAppsFragment());
             fTrans.commit();
-        } else if (Objects.equals(intent.getAction(), "tor_bridges")){
-            fTrans.replace(android.R.id.content, new PreferencesTorBridges(),"PreferencesTorBridges");
+        } else if (Objects.equals(intent.getAction(), "tor_bridges")) {
+            fTrans.replace(android.R.id.content, new PreferencesTorBridges(), "PreferencesTorBridges");
             fTrans.commit();
         }
 
@@ -186,14 +185,14 @@ public class SettingsActivity extends LangAppCompatActivity
         super.onAttachFragment(fragment);
 
         if (fragment instanceof PreferencesDNSCryptServersRv) {
-            PreferencesDNSCryptServersRv preferencesDNSCryptServersRv = (PreferencesDNSCryptServersRv)fragment;
+            PreferencesDNSCryptServersRv preferencesDNSCryptServersRv = (PreferencesDNSCryptServersRv) fragment;
             preferencesDNSCryptServersRv.setOnServersChangeListener(this);
         }
     }
 
     @Override
     public void onServersChange() {
-        if (preferencesFastFragment!=null)
+        if (preferencesFastFragment != null)
             preferencesFastFragment.setDnsCryptServersSumm();
     }
 
@@ -201,7 +200,7 @@ public class SettingsActivity extends LangAppCompatActivity
     protected void onDestroy() {
         super.onDestroy();
 
-        if (settingsParser!=null)
+        if (settingsParser != null)
             settingsParser.deactivateSettingsParser();
     }
 
@@ -217,10 +216,10 @@ public class SettingsActivity extends LangAppCompatActivity
     @Override
     public void onBackPressed() {
         Fragment frgCountry = getFragmentManager().findFragmentByTag("CountrySelectFragment");
-        if (frgCountry!=null && frgCountry.isVisible() && key_tor!=null && val_tor!=null){
+        if (frgCountry != null && frgCountry.isVisible() && key_tor != null && val_tor != null) {
             Bundle bundle = new Bundle();
-            bundle.putStringArrayList("key_tor",key_tor);
-            bundle.putStringArrayList("val_tor",val_tor);
+            bundle.putStringArrayList("key_tor", key_tor);
+            bundle.putStringArrayList("val_tor", val_tor);
             PreferencesTorFragment frag = new PreferencesTorFragment();
             frag.setArguments(bundle);
             FragmentTransaction fTrans = getFragmentManager().beginTransaction();

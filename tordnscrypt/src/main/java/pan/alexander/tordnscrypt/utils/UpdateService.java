@@ -45,6 +45,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.CRC32;
 
@@ -53,7 +54,9 @@ import javax.net.ssl.HttpsURLConnection;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 
+import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class UpdateService extends Service {
@@ -261,7 +264,7 @@ public class UpdateService extends Service {
                         } else {
                             allowActivityRestartAfterUpdate = true;
 
-                            FileOperations.moveBinaryFile(getApplicationContext(), cacheDir.getPath(), fileToDownload, appDataDir + "/app_bin", "executable");
+                            FileOperations.moveBinaryFile(getApplicationContext(), cacheDir.getPath(), fileToDownload, appDataDir + "/app_bin", "executable_ignored");
                             runPreviousStoppedModules(fileToDownload);
 
                             new PrefManager(getApplicationContext()).setStrPref("UpdateResultMessage", getString(R.string.update_installed));
@@ -301,11 +304,27 @@ public class UpdateService extends Service {
     }
 
     private void restartMainActivity() {
+
+        try {
+            TimeUnit.SECONDS.sleep(5);
+        } catch (InterruptedException ignored){
+
+        }
+
         boolean mainActivityActive = new PrefManager(this).getBoolPref("MainActivityActive");
         if (mainActivityActive && allowActivityRestartAfterUpdate) {
             Intent dialogIntent = new Intent(getApplicationContext(), MainActivity.class);
-            dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(dialogIntent);
+
+            try {
+                TimeUnit.SECONDS.sleep(3);
+            } catch (InterruptedException ignored){
+
+            }
+
+            Intent refreshModulesRunningStatus = new Intent(TOP_BROADCAST);
+            sendBroadcast(refreshModulesRunningStatus);
         }
     }
 

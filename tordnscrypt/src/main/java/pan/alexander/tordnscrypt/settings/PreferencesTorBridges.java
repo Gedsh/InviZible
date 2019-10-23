@@ -35,7 +35,6 @@ import android.support.annotation.Nullable;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -59,7 +58,9 @@ import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
-import pan.alexander.tordnscrypt.utils.FileOperations;
+import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
+import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
+import pan.alexander.tordnscrypt.utils.fileOperations.OnTextFileOperationsCompleteListener;
 import pan.alexander.tordnscrypt.utils.GetNewBridges;
 import pan.alexander.tordnscrypt.utils.NoRootService;
 import pan.alexander.tordnscrypt.utils.NotificationHelper;
@@ -71,13 +72,14 @@ import pan.alexander.tordnscrypt.utils.Verifier;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
+import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.GetNewBridges.dialogPleaseWait;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class PreferencesTorBridges extends Fragment implements View.OnClickListener,FileOperations.OnFileOperationsCompleteListener {
+public class PreferencesTorBridges extends Fragment implements View.OnClickListener, OnTextFileOperationsCompleteListener {
     RadioButton rbNoBridges;
     RadioButton rbDefaultBridges;
     Spinner spDefaultBridges;
@@ -671,15 +673,15 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     };
 
     @Override
-    public void OnFileOperationComplete(String currentFileOperation, String path, String tag) {
+    public void OnFileOperationComplete(FileOperationsVariants currentFileOperation, boolean fileOperationResult, String path, String tag, List<String> lines) {
         if (dialogInterface!=null) {
             dialogInterface.dismiss();
             dialogInterface = null;
         }
-        if (FileOperations.fileOperationResult && currentFileOperation.equals(FileOperations.readTextFileCurrentOperation)) {
+        if (fileOperationResult && currentFileOperation == readTextFile) {
             switch (tag) {
                 case torConfTag:
-                    tor_conf = FileOperations.linesListMap.get(path);
+                    tor_conf = lines;
 
                     if (tor_conf == null) return;
 
@@ -710,7 +712,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     }
                     break;
                 case addBridgesTag: {
-                    final List<String> bridges_lst = FileOperations.linesListMap.get(path);
+                    final List<String> bridges_lst = lines;
                     if (bridges_lst != null) {
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
@@ -722,7 +724,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     break;
                 }
                 case defaultBridgesOperationTag: {
-                    final List<String> bridges_lst = FileOperations.linesListMap.get(path);
+                    final List<String> bridges_lst = lines;
                     if (bridges_lst != null) {
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
@@ -734,7 +736,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     break;
                 }
                 case ownBridgesOperationTag: {
-                    final List<String> bridges_lst = FileOperations.linesListMap.get(path);
+                    final List<String> bridges_lst = lines;
                     if (bridges_lst != null) {
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
@@ -746,7 +748,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     break;
                 }
                 case addRequestedBridgesTag: {
-                    final List<String> bridges_lst = FileOperations.linesListMap.get(path);
+                    final List<String> bridges_lst = lines;
                     if (bridges_lst != null) {
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
@@ -759,9 +761,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 }
             }
         }
-
     }
-
 
 
     class ObfsBridge {

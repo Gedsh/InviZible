@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.utils;
+package pan.alexander.tordnscrypt;
 /*
     This file is part of InviZible Pro.
 
@@ -24,7 +24,6 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
 import pan.alexander.tordnscrypt.language.Language;
-import pan.alexander.tordnscrypt.utils.FileOperations.FileOperations;
 
 
 public abstract class LangAppCompatActivity extends AppCompatActivity {
@@ -41,10 +40,5 @@ public abstract class LangAppCompatActivity extends AppCompatActivity {
         super.onConfigurationChanged(newConfig);
 
         Language.setFromPreference(this, "pref_fast_language");
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
     }
 }

@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt;
+package pan.alexander.tordnscrypt.settings;
 /*
     This file is part of InviZible Pro.
 
@@ -37,6 +37,8 @@ import android.widget.SearchView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+
+import pan.alexander.tordnscrypt.R;
 
 public class CountrySelectFragment extends Fragment implements CompoundButton.OnCheckedChangeListener, SearchView.OnQueryTextListener {
 
