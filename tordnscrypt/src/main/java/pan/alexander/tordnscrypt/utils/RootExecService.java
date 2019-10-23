@@ -61,13 +61,14 @@ public class RootExecService extends Service {
     public static final int SettingsActivityMark = 700;
     public static final int NullMark = 800;
     public static final int FileOperationsMark = 900;
+    public static final int InstallerMark = 1000;
     public final static String LOG_TAG = "pan.alexander.TPDCLogs";
-    ExecutorService executorService;
+    private ExecutorService executorService;
     public static boolean lockStartStop = false;
     private static boolean saveRootLogs = false;
     private static String autostartDelay = "0";
 
-    public final String ANDROID_CHANNEL_ID = "GOTO Invisible";
+    private final String ANDROID_CHANNEL_ID = "GOTO Invisible";
     private NotificationManager notificationManager;
     public static final int DEFAULT_NOTIFICATION_ID = 102;
 
@@ -75,9 +76,15 @@ public class RootExecService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        executorService = Executors.newFixedThreadPool(1);
 
+        executorService = Executors.newSingleThreadExecutor();
         notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        executorService.shutdown();
     }
 
     public static void performAction(Context context, Intent intent) {
@@ -224,24 +231,12 @@ public class RootExecService extends Service {
             }
             sendResult(runCommands(rootCommands.getCommands()), mark);
 
-            /*if (mark==BootBroadcastMark) {
-                try {
-                    Thread.sleep(3000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }*/
-
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
                 stopForeground(true);
             }
 
-            if (executorService.isShutdown()) {
-                stopSelf();
-            } else {
-                stopSelf(startID);
-            }
+            stopSelf(startID);
         }
     }
 
