@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt;
+package pan.alexander.tordnscrypt.help;
 /*
     This file is part of InviZible Pro.
 
@@ -18,17 +18,13 @@ package pan.alexander.tordnscrypt;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -46,8 +42,13 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Objects;
 
+import pan.alexander.tordnscrypt.BuildConfig;
+import pan.alexander.tordnscrypt.LangAppCompatActivity;
+import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
+import pan.alexander.tordnscrypt.utils.fileOperations.ExternalStoragePermissions;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 import pan.alexander.tordnscrypt.utils.fileOperations.OnBinaryFileOperationsCompleteListener;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -58,7 +59,8 @@ import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.delet
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
-public class HelpActivity extends LangAppCompatActivity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener, OnBinaryFileOperationsCompleteListener {
+public class HelpActivity extends LangAppCompatActivity implements View.OnClickListener,
+        CompoundButton.OnCheckedChangeListener, OnBinaryFileOperationsCompleteListener {
 
     EditText etLogsPath;
     Button btnSaveLogs;
@@ -71,7 +73,6 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     String iptablesPath;
     String appUID;
     DialogInterface dialogInterface;
-    String info = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,13 +80,6 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         setContentView(R.layout.activity_help);
 
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    1);
-        }
 
         etLogsPath = findViewById(R.id.etLogsPath);
         etLogsPath.setOnClickListener(this);
@@ -112,11 +106,11 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     @Override
     protected void onResume() {
         super.onResume();
+
         IntentFilter intentFilter = new IntentFilter(RootExecService.COMMAND_RESULT);
         this.registerReceiver(br, intentFilter);
+
         setTitle(R.string.drawer_menu_help);
-
-
 
         etLogsPath.setText(pathToSaveLogs);
 
@@ -129,104 +123,126 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         switch (view.getId()) {
 
             case R.id.btnSaveLogs:
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-                        != PackageManager.PERMISSION_GRANTED) {
-                    break;
+                if (!isWriteExternalStoragePermissions()) {
+                    requestWriteExternalStoragePermissions();
+                    return;
                 }
 
-
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                    info = "BRAND " + Build.BRAND + (char) 10 +
-                            "MODEL " + Build.MODEL + (char) 10 +
-                            "MANUFACTURER " + Build.MANUFACTURER + (char) 10 +
-                            "PRODUCT " + Build.PRODUCT + (char) 10 +
-                            "DEVICE " + Build.DEVICE + (char) 10 +
-                            "BOARD " + Build.BOARD + (char) 10 +
-                            "HARDWARE " + Build.HARDWARE + (char) 10 +
-                            "SUPPORTED_ABIS " + Arrays.toString(Build.SUPPORTED_ABIS) + (char) 10 +
-                            "SUPPORTED_32_BIT_ABIS " + Arrays.toString(Build.SUPPORTED_32_BIT_ABIS) + (char) 10 +
-                            "SUPPORTED_64_BIT_ABIS " + Arrays.toString(Build.SUPPORTED_64_BIT_ABIS) + (char) 10 +
-                            "SDK_INT " + Build.VERSION.SDK_INT + (char) 10 +
-                            "APP_VERSION_CODE " + BuildConfig.VERSION_CODE + (char) 10 +
-                            "APP_VERSION_NAME " + BuildConfig.VERSION_NAME + (char) 10 +
-                            "APP_PROC_VERSION " + TopFragment.appProcVersion + (char) 10 +
-                            "APP_VERSION " + TopFragment.appVersion + (char) 10 +
-                            "DNSCRYPT_INTERNAL_VERSION " + TopFragment.DNSCryptVersion + (char) 10 +
-                            "TOR_INTERNAL_VERSION " + TopFragment.TorVersion + (char) 10 +
-                            "I2PD_INTERNAL_VERSION " + TopFragment.ITPDVersion + (char) 10 +
-                            "SIGN_VERSION " + TopFragment.appSign;
-                } else {
-                    info = "BRAND " + Build.BRAND + (char) 10 +
-                            "MODEL " + Build.MODEL + (char) 10 +
-                            "MANUFACTURER " + Build.MANUFACTURER + (char) 10 +
-                            "PRODUCT " + Build.PRODUCT + (char) 10 +
-                            "DEVICE " + Build.DEVICE + (char) 10 +
-                            "BOARD " + Build.BOARD + (char) 10 +
-                            "HARDWARE " + Build.HARDWARE + (char) 10 +
-                            "SDK_INT " + Build.VERSION.SDK_INT + (char) 10 +
-                            "APP_VERSION_CODE " + BuildConfig.VERSION_CODE + (char) 10 +
-                            "APP_VERSION_NAME " + BuildConfig.VERSION_NAME + (char) 10 +
-                            "APP_PROC_VERSION " + TopFragment.appProcVersion + (char) 10 +
-                            "APP_VERSION " + TopFragment.appVersion + (char) 10 +
-                            "DNSCRYPT_INTERNAL_VERSION " + TopFragment.DNSCryptVersion + (char) 10 +
-                            "TOR_INTERNAL_VERSION " + TopFragment.TorVersion + (char) 10 +
-                            "I2PD_INTERNAL_VERSION " + TopFragment.ITPDVersion + (char) 10 +
-                            "SIGN_VERSION " + TopFragment.appSign;
-                }
-
+                String info = collectInfo();
                 br.setInfo(info);
 
-                int pid = android.os.Process.myPid();
-
-                String[] logcatCommands = {
-                        "cd " + appDataDir,
-                        busyboxPath + "mkdir -m 655 -p logs_dir",
-                        busyboxPath + "cp -R logs logs_dir",
-                        "logcat -d | grep " + pid + " > logs_dir/logcat.log",
-                        iptablesPath + "iptables -L > logs_dir/filter.log",
-                        iptablesPath + "iptables -t nat -L > logs_dir/nat.log",
-                        busyboxPath + "cp -R shared_prefs logs_dir",
-                        busyboxPath + "sleep 1",
-                        busyboxPath + "echo \"" + info + "\" > logs_dir/device_info.log",
-                        busyboxPath + "mkdir -p " + pathToSaveLogs,
-                        "app_bin/gnutar -czf " + "logs/InvizibleLogs.txt logs_dir",
-
-                        "restorecon -R logs_dir",
-                        busyboxPath + "chown -R " + appUID + "." + appUID + " logs_dir",
-                        busyboxPath + "chmod -R 755 logs_dir",
-                        busyboxPath + "echo 'Logs Saved'"
-                };
-                RootCommands rootCommands = new RootCommands(logcatCommands);
-                Intent intent = new Intent(this, RootExecService.class);
-                intent.setAction(RootExecService.RUN_COMMAND);
-                intent.putExtra("Commands", rootCommands);
-                intent.putExtra("Mark", RootExecService.HelpActivityMark);
-                RootExecService.performAction(this, intent);
+                collectLogsMethodOne(info);
 
                 dialogInterface = FileOperations.fileOperationProgressDialog(this);
                 br.setProgressDialog(dialogInterface);
                 break;
             case R.id.etLogsPath:
-
-                DialogProperties properties = new DialogProperties();
-                properties.selection_mode = DialogConfigs.SINGLE_MODE;
-                properties.selection_type = DialogConfigs.DIR_SELECT;
-                properties.root = new File(Environment.getExternalStorageDirectory().toURI());
-                properties.error_dir = new File(Environment.getExternalStorageDirectory().toURI());
-                properties.offset = new File(Environment.getExternalStorageDirectory().toURI());
-                FilePickerDialog dial = new FilePickerDialog(this, properties);
-                dial.setTitle(R.string.backupFolder);
-                dial.setDialogSelectionListener(new DialogSelectionListener() {
-                    @Override
-                    public void onSelectedFilePaths(String[] files) {
-                        pathToSaveLogs = files[0];
-                        etLogsPath.setText(pathToSaveLogs);
-                        br.setPathToSaveLogs(pathToSaveLogs);
-                    }
-                });
-                dial.show();
+                chooseOutputFolder();
                 break;
         }
+    }
+
+    private void chooseOutputFolder() {
+        DialogProperties properties = new DialogProperties();
+        properties.selection_mode = DialogConfigs.SINGLE_MODE;
+        properties.selection_type = DialogConfigs.DIR_SELECT;
+        properties.root = new File(Environment.getExternalStorageDirectory().toURI());
+        properties.error_dir = new File(Environment.getExternalStorageDirectory().toURI());
+        properties.offset = new File(Environment.getExternalStorageDirectory().toURI());
+        FilePickerDialog dial = new FilePickerDialog(this, properties);
+        dial.setTitle(R.string.backupFolder);
+        dial.setDialogSelectionListener(new DialogSelectionListener() {
+            @Override
+            public void onSelectedFilePaths(String[] files) {
+                pathToSaveLogs = files[0];
+                etLogsPath.setText(pathToSaveLogs);
+                br.setPathToSaveLogs(pathToSaveLogs);
+            }
+        });
+        dial.show();
+    }
+
+    private void requestWriteExternalStoragePermissions() {
+        ExternalStoragePermissions permissions = new ExternalStoragePermissions(this);
+        permissions.requestReadWritePermissions();
+    }
+
+    private boolean isWriteExternalStoragePermissions() {
+        ExternalStoragePermissions permissions = new ExternalStoragePermissions(this);
+        return permissions.isWritePermissions();
+    }
+
+    private void collectLogsMethodOne (String info) {
+        int pid = android.os.Process.myPid();
+
+        String[] logcatCommands = {
+                "cd " + appDataDir,
+                busyboxPath + "mkdir -m 655 -p logs_dir",
+                busyboxPath + "cp -R logs logs_dir",
+                "logcat -d | grep " + pid + " > logs_dir/logcat.log",
+                iptablesPath + "iptables -L > logs_dir/filter.log",
+                iptablesPath + "iptables -t nat -L > logs_dir/nat.log",
+                busyboxPath + "cp -R shared_prefs logs_dir",
+                busyboxPath + "sleep 1",
+                busyboxPath + "echo \"" + info + "\" > logs_dir/device_info.log",
+                busyboxPath + "mkdir -p " + pathToSaveLogs,
+                "app_bin/gnutar -czf " + "logs/InvizibleLogs.txt logs_dir",
+
+                "restorecon -R logs_dir",
+                busyboxPath + "chown -R " + appUID + "." + appUID + " logs_dir",
+                busyboxPath + "chmod -R 755 logs_dir",
+                busyboxPath + "echo 'Logs Saved'"
+        };
+        RootCommands rootCommands = new RootCommands(logcatCommands);
+        Intent intent = new Intent(this, RootExecService.class);
+        intent.setAction(RootExecService.RUN_COMMAND);
+        intent.putExtra("Commands", rootCommands);
+        intent.putExtra("Mark", RootExecService.HelpActivityMark);
+        RootExecService.performAction(this, intent);
+    }
+
+    private String collectInfo() {
+        String info;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            info = "BRAND " + Build.BRAND + (char) 10 +
+                    "MODEL " + Build.MODEL + (char) 10 +
+                    "MANUFACTURER " + Build.MANUFACTURER + (char) 10 +
+                    "PRODUCT " + Build.PRODUCT + (char) 10 +
+                    "DEVICE " + Build.DEVICE + (char) 10 +
+                    "BOARD " + Build.BOARD + (char) 10 +
+                    "HARDWARE " + Build.HARDWARE + (char) 10 +
+                    "SUPPORTED_ABIS " + Arrays.toString(Build.SUPPORTED_ABIS) + (char) 10 +
+                    "SUPPORTED_32_BIT_ABIS " + Arrays.toString(Build.SUPPORTED_32_BIT_ABIS) + (char) 10 +
+                    "SUPPORTED_64_BIT_ABIS " + Arrays.toString(Build.SUPPORTED_64_BIT_ABIS) + (char) 10 +
+                    "SDK_INT " + Build.VERSION.SDK_INT + (char) 10 +
+                    "APP_VERSION_CODE " + BuildConfig.VERSION_CODE + (char) 10 +
+                    "APP_VERSION_NAME " + BuildConfig.VERSION_NAME + (char) 10 +
+                    "APP_PROC_VERSION " + TopFragment.appProcVersion + (char) 10 +
+                    "APP_VERSION " + TopFragment.appVersion + (char) 10 +
+                    "DNSCRYPT_INTERNAL_VERSION " + TopFragment.DNSCryptVersion + (char) 10 +
+                    "TOR_INTERNAL_VERSION " + TopFragment.TorVersion + (char) 10 +
+                    "I2PD_INTERNAL_VERSION " + TopFragment.ITPDVersion + (char) 10 +
+                    "SIGN_VERSION " + TopFragment.appSign;
+        } else {
+            info = "BRAND " + Build.BRAND + (char) 10 +
+                    "MODEL " + Build.MODEL + (char) 10 +
+                    "MANUFACTURER " + Build.MANUFACTURER + (char) 10 +
+                    "PRODUCT " + Build.PRODUCT + (char) 10 +
+                    "DEVICE " + Build.DEVICE + (char) 10 +
+                    "BOARD " + Build.BOARD + (char) 10 +
+                    "HARDWARE " + Build.HARDWARE + (char) 10 +
+                    "SDK_INT " + Build.VERSION.SDK_INT + (char) 10 +
+                    "APP_VERSION_CODE " + BuildConfig.VERSION_CODE + (char) 10 +
+                    "APP_VERSION_NAME " + BuildConfig.VERSION_NAME + (char) 10 +
+                    "APP_PROC_VERSION " + TopFragment.appProcVersion + (char) 10 +
+                    "APP_VERSION " + TopFragment.appVersion + (char) 10 +
+                    "DNSCRYPT_INTERNAL_VERSION " + TopFragment.DNSCryptVersion + (char) 10 +
+                    "TOR_INTERNAL_VERSION " + TopFragment.TorVersion + (char) 10 +
+                    "I2PD_INTERNAL_VERSION " + TopFragment.ITPDVersion + (char) 10 +
+                    "SIGN_VERSION " + TopFragment.appSign;
+        }
+
+        return info;
     }
 
 
