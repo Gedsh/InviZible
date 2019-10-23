@@ -77,7 +77,7 @@ public class NoRootService extends Service {
         dnscryptPath = pathVars.dnscryptPath;
         torPath = pathVars.torPath;
         itpdPath = pathVars.itpdPath;
-        mHandler = new Handler();
+
         notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -92,6 +92,9 @@ public class NoRootService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
+        mHandler = new Handler();
+
         String action = intent.getAction();
         boolean showNotification = intent.getBooleanExtra("showNotification",false);
         if (action == null) {
