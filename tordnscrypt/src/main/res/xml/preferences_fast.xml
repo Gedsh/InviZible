@@ -5,7 +5,7 @@
 
         <SwitchPreference
             android:id="@+id/swAutostartDNS"
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="swAutostartDNS"
             android:title="@string/pref_fast_dns_autostart" />
         <SwitchPreference

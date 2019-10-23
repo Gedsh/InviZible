@@ -23,41 +23,31 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:focusable="false"
-            android:orientation="vertical">
+            android:orientation="horizontal">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:focusable="false"
-                android:orientation="horizontal">
+            <EditText
+                android:id="@+id/etRule"
+                style="@android:style/Widget.Holo.EditText"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginBottom="8dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:fontFamily="serif"
+                android:gravity="center_vertical"
+                android:inputType="textNoSuggestions"
+                android:singleLine="true"
+                android:textAlignment="center" />
 
-                <EditText
-                    android:id="@+id/etRule"
-                    style="@android:style/Widget.Holo.EditText"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginBottom="8dp"
-                    android:layout_weight="1"
-                    android:editable="true"
-                    android:ellipsize="end"
-                    android:fontFamily="serif"
-                    android:gravity="center_vertical"
-                    android:inputType="text"
-                    android:singleLine="true"
-                    android:text="Text"
-                    android:textAlignment="center" />
-
-                <Switch
-                    android:id="@+id/swRuleActive"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_margin="5dp"
-                    android:checked="false"
-                    tools:checked="true" />
-
-            </LinearLayout>
+            <Switch
+                android:id="@+id/swRuleActive"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_margin="5dp"
+                android:checked="false"
+                tools:checked="true" />
 
         </LinearLayout>
 

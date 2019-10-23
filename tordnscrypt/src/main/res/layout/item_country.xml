@@ -27,7 +27,6 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:gravity="center_vertical"
-                android:text="TextView"
                 android:textAlignment="gravity"
                 android:textSize="@dimen/fragment_counry_select_text_size" />
 

@@ -42,7 +42,6 @@
                     android:layout_weight="1"
                     android:fontFamily="serif"
                     android:gravity="fill"
-                    android:text="Host:"
                     android:textStyle="bold"
                     tools:ignore="NestedWeights" />
 
@@ -64,8 +63,7 @@
                     android:layout_margin="4dp"
                     android:layout_weight="1"
                     android:fontFamily="serif"
-                    android:gravity="fill"
-                    android:text="IP:" />
+                    android:gravity="fill" />
             </LinearLayout>
 
             <Switch

@@ -43,7 +43,6 @@
                     android:layout_marginEnd="8dp"
                     android:layout_weight="1"
                     android:singleLine="true"
-                    android:text="name"
                     android:textStyle="bold"
                     tools:ignore="HardcodedText" />
 
@@ -60,9 +59,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
                 android:layout_weight="1"
-                android:text="TextView"
-                tools:ignore="HardcodedText"
-                tools:text="description" />
+                tools:ignore="HardcodedText" />
 
             <TextView
                 android:id="@+id/tvDNSServerFlags"
@@ -71,7 +68,6 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
                 android:layout_weight="1"
-                android:text="flags"
                 android:textAlignment="center"
                 tools:ignore="HardcodedText" />
         </LinearLayout>

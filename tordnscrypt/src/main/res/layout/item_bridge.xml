@@ -35,7 +35,6 @@
                 android:layout_weight="1"
                 android:fontFamily="serif"
                 android:gravity="center_vertical"
-                android:text="Bridge"
                 android:textAlignment="center" />
 
             <Switch
