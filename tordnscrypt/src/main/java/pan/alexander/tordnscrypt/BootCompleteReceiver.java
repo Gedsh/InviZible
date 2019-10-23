@@ -69,8 +69,13 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
         String BOOT_COMPLETE = "android.intent.action.BOOT_COMPLETED";
         this.context = context.getApplicationContext();
+
         shPref = PreferenceManager.getDefaultSharedPreferences(this.context);
-        refreshPeriodHours = Integer.parseInt(shPref.getString("pref_fast_site_refresh_interval","12"));
+        String refreshPeriod = shPref.getString("pref_fast_site_refresh_interval","12");
+        if (refreshPeriod != null && !refreshPeriod.isEmpty()) {
+            refreshPeriodHours = Integer.parseInt(refreshPeriod);
+        }
+
 
         PathVars pathVars = new PathVars(context.getApplicationContext());
         appDataDir = pathVars.appDataDir;
@@ -107,7 +112,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
             routeAllThroughTor = shPref.getBoolean("pref_fast_all_through_tor",true);
             blockHttp = shPref.getBoolean("pref_fast_block_http",false);
 
-            boolean autoStartDNSCrypt = shPref.getBoolean("swAutostartDNS",true);
+            boolean autoStartDNSCrypt = shPref.getBoolean("swAutostartDNS",false);
             boolean autoStartTor = shPref.getBoolean("swAutostartTor",false);
             boolean autoStartITPD = shPref.getBoolean("swAutostartITPD",false);
 
