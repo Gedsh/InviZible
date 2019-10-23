@@ -14,7 +14,6 @@ import android.widget.ProgressBar;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +31,13 @@ import java.util.concurrent.Executors;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.Enums.FileOperationsVariants;
 
+import static pan.alexander.tordnscrypt.utils.Enums.FileOperationsVariants.copyBinaryFile;
+import static pan.alexander.tordnscrypt.utils.Enums.FileOperationsVariants.deleteFile;
+import static pan.alexander.tordnscrypt.utils.Enums.FileOperationsVariants.moveBinaryFile;
+import static pan.alexander.tordnscrypt.utils.Enums.FileOperationsVariants.readTextFile;
+import static pan.alexander.tordnscrypt.utils.Enums.FileOperationsVariants.writeToTextFile;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 /*
@@ -56,16 +61,14 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class FileOperations {
     private boolean stopThread = false;
-    public static boolean fileOperationResult = false;
-    public static Map<String,List<String>> linesListMap = new HashMap<>();
+    private static Map<String,List<String>> linesListMap = new HashMap<>();
     private static OnFileOperationsCompleteListener callback;
     private static Stack<OnFileOperationsCompleteListener> stackCallbacks;
-    public static String moveBinaryFileCurrentOperation = "pan.alexander.tordnscrypt.moveBinaryFile";
     public static String copyBinaryFileCurrentOperation = "pan.alexander.tordnscrypt.copyBinaryFile";
     public static String deleteFileCurrentOperation = "pan.alexander.tordnscrypt.deleteFile";
     public static String readTextFileCurrentOperation = "pan.alexander.tordnscrypt.readTextFile";
     public static String writeToTextFileCurrentOperation = "pan.alexander.tordnscrypt.writeToTextFile";
-    private static ExecutorService executorService = Executors.newFixedThreadPool(1);
+    private static ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     private BroadcastReceiver br = new BroadcastReceiver() {
         @Override
@@ -93,25 +96,22 @@ public class FileOperations {
             @SuppressLint("SetWorldReadable")
             @Override
             public void run() {
-                fileOperationResult = false;
-                InputStream in;
-                OutputStream out;
-                try {
+
+
+                try(InputStream in = new FileInputStream(inputPath + "/" + inputFile);
+                    OutputStream out = new FileOutputStream(outputPath + "/" + inputFile)) {
+
                     File dir = new File(outputPath);
                     if (!dir.isDirectory()) {
                         if (!dir.mkdirs() || !dir.setReadable(true) || !dir.setWritable(true)) {
-                            Log.e(LOG_TAG,"Unable to create dir " + dir.toString());
-                            if (callback!=null && !tag.equals("ignored"))
-                                callback.OnFileOperationComplete(moveBinaryFileCurrentOperation, outputPath, tag);
-                            return;
+                            throw new IllegalStateException("Unable to create dir " + dir.toString());
                         }
                     }
 
                     File oldFile = new File(outputPath + "/" + inputFile);
                     if (oldFile.exists()) {
                         if (deleteFileInternal(context, outputPath, inputFile)) {
-                            Log.e(LOG_TAG, "Unable to delete file " + oldFile.toString());
-                            return;
+                            throw new IllegalStateException("Unable to delete file " + oldFile.toString());
                         }
                     }
 
@@ -122,64 +122,42 @@ public class FileOperations {
                             FileOperations fileOperations = new FileOperations();
                             fileOperations.restoreAccess(context, inFile.getPath());
                         } else if (!inFile.canRead()) {
-                            Log.e(LOG_TAG, "Unable to chmod file " + oldFile.toString());
-                            if (callback!=null && !tag.equals("ignored"))
-                                callback.OnFileOperationComplete(moveBinaryFileCurrentOperation, inputPath + "/" + inputFile, tag);
-                            return;
+                            throw new IllegalStateException("Unable to chmod file " + oldFile.toString());
                         }
                     }
-
-                    in = new FileInputStream(inputPath + "/" + inputFile);
-                    out = new FileOutputStream(outputPath + "/" + inputFile);
 
                     byte[] buffer = new byte[1024];
                     int read;
                     while ((read = in.read(buffer)) != -1) {
                         out.write(buffer, 0, read);
                     }
-                    in.close();
-
-                    // write the output file
-                    out.flush();
-                    out.close();
 
                     File newFile = new File(outputPath + "/" + inputFile);
                     if (!newFile.exists()) {
-                        Log.e(LOG_TAG,"New file not exist " + oldFile.toString());
-                        if (callback!=null && !tag.equals("ignored"))
-                            callback.OnFileOperationComplete(moveBinaryFileCurrentOperation, outputPath + "/" + inputFile, tag);
-                        return;
+                        throw new IllegalStateException("New file not exist " + oldFile.toString());
                     }
 
                     if (tag.contains("executable")) {
                         if (!newFile.setReadable(true, false) || !newFile.setWritable(true) || !newFile.setExecutable(true, false)) {
-                            Log.e(LOG_TAG, "Chmod exec file fault " + outputPath + "/" + inputFile);
+                            throw new IllegalStateException("Chmod exec file fault " + outputPath + "/" + inputFile);
                         }
                     }
 
                     // delete the unwanted file
                     if (deleteFileInternal(context, inputPath, inputFile)) {
-                        Log.e(LOG_TAG, "Unable to delete file " + inputFile);
-                        return;
+                        throw new IllegalStateException("Unable to delete file " + inputFile);
                     }
-                }
 
-                catch (FileNotFoundException fnfe1) {
-                    Log.e(LOG_TAG,"File not found " + fnfe1.getMessage());
                     if (callback!=null && !tag.equals("ignored"))
-                        callback.OnFileOperationComplete(moveBinaryFileCurrentOperation, inputPath + "/" + inputFile, tag);
-                    return;
-                }
-                catch (Exception e) {
+                        ((OnBinaryFileOperationsCompleteListener)callback).OnFileOperationComplete(moveBinaryFile, true,outputPath + "/" + inputFile, tag);
+
+                } catch (Exception e) {
                     Log.e(LOG_TAG,"replaceBinaryFile function fault " + e.getMessage());
                     if (callback!=null && !tag.equals("ignored"))
-                        callback.OnFileOperationComplete(moveBinaryFileCurrentOperation, inputPath + "/" + inputFile, tag);
-                    return;
+                        ((OnBinaryFileOperationsCompleteListener)callback).OnFileOperationComplete(moveBinaryFile, false,outputPath + "/" + inputFile, tag);
                 }
 
-                fileOperationResult = true;
-                if (callback!=null && !tag.equals("ignored"))
-                    callback.OnFileOperationComplete(moveBinaryFileCurrentOperation, outputPath + "/" + inputFile, tag);
+
             }
         };
 
@@ -191,78 +169,55 @@ public class FileOperations {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                fileOperationResult = false;
-                InputStream in;
-                OutputStream out;
-                try {
+
+
+                try(InputStream in = new FileInputStream(inputPath + "/" + inputFile);
+                    OutputStream out = new FileOutputStream(outputPath + "/" + inputFile)) {
+
                     File dir = new File(outputPath);
                     if (!dir.isDirectory()) {
                         if (!dir.mkdirs() || !dir.setReadable(true) || !dir.setWritable(true)) {
-                            Log.e(LOG_TAG,"Unable to create dir " + dir.toString());
-                            if (callback!=null && !tag.equals("ignored"))
-                                callback.OnFileOperationComplete(copyBinaryFileCurrentOperation, outputPath, tag);
-                            return;
+                            throw new IllegalStateException("Unable to create dir " + dir.toString());
                         }
                     }
 
                     File oldFile = new File(outputPath + "/" + inputFile);
                     if (oldFile.exists()) {
                         if (deleteFileInternal(context, outputPath, inputFile)) {
-                            Log.e(LOG_TAG, "Unable to delete file " + oldFile.toString());
-                            return;
+                            throw new IllegalStateException("Unable to delete file " + oldFile.toString());
                         }
                     }
 
                     File inFile = new File(inputPath + "/" + inputFile);
                     if (!inFile.canRead()) {
                         if (!inFile.setReadable(true)) {
-                            if (callback!=null && !tag.equals("ignored"))
-                                callback.OnFileOperationComplete(copyBinaryFileCurrentOperation, inputPath + "/" + inputFile, tag);
-                            Log.e(LOG_TAG, "Unable to chmod file " + oldFile.toString());
-                            return;
+                            throw new IllegalStateException("Unable to chmod file " + oldFile.toString());
                         }
                     }
-
-                    in = new FileInputStream(inputPath + "/" + inputFile);
-                    out = new FileOutputStream(outputPath + "/" + inputFile);
 
                     byte[] buffer = new byte[1024];
                     int read;
                     while ((read = in.read(buffer)) != -1) {
                         out.write(buffer, 0, read);
                     }
-                    in.close();
-
-                    // write the output file
-                    out.flush();
-                    out.close();
 
                     File newFile = new File(outputPath + "/" + inputFile);
                     if (!newFile.exists()) {
-                        if (callback!=null && !tag.equals("ignored"))
-                            callback.OnFileOperationComplete(copyBinaryFileCurrentOperation, outputPath + "/" + inputFile, tag);
-                        Log.e(LOG_TAG,"New file not exist " + oldFile.toString());
-                        return;
+                        throw new IllegalStateException("New file not exist " + oldFile.toString());
                     }
+
+                    if (callback!=null && !tag.equals("ignored"))
+                        ((OnBinaryFileOperationsCompleteListener)callback).OnFileOperationComplete(copyBinaryFile, true, outputPath + "/" + inputFile, tag);
+
+                } catch (Exception e) {
+                    if (callback!=null && !tag.equals("ignored"))
+                        ((OnBinaryFileOperationsCompleteListener)callback).OnFileOperationComplete(copyBinaryFile, false, outputPath + "/" + inputFile, tag);
+                    Log.e(LOG_TAG,"copyBinaryFile function fault " + e.getMessage());
                 }
 
-                catch (FileNotFoundException fnfe1) {
-                    Log.e(LOG_TAG,"File not found " + fnfe1.getMessage());
-                    if (callback!=null && !tag.equals("ignored"))
-                        callback.OnFileOperationComplete(copyBinaryFileCurrentOperation, outputPath + "/" + inputFile, tag);
-                    return;
-                }
-                catch (Exception e) {
-                    if (callback!=null && !tag.equals("ignored"))
-                        callback.OnFileOperationComplete(copyBinaryFileCurrentOperation, outputPath + "/" + inputFile, tag);
-                    Log.e(LOG_TAG,"copyBinaryFile function fault " + e.getMessage());
-                    return;
-                }
-                fileOperationResult = true;
-                if (callback!=null && !tag.equals("ignored"))
-                    callback.OnFileOperationComplete(copyBinaryFileCurrentOperation, outputPath + "/" + inputFile, tag);
             }
         };
+
         executorService.execute(runnable);
     }
 
@@ -299,7 +254,6 @@ public class FileOperations {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                fileOperationResult = false;
                 try {
                     File usedFile = new File(inputPath + "/" + inputFile);
                     if (usedFile.exists()) {
@@ -309,33 +263,24 @@ public class FileOperations {
                                 FileOperations fileOperations = new FileOperations();
                                 fileOperations.restoreAccess(context, inputPath + "/" + inputFile);
                             } else if (!usedFile.setReadable(true) || !usedFile.setWritable(true)) {
-                                Log.e(LOG_TAG, "Unable to chmod file " + inputPath + "/" + inputFile);
-                                if (callback!=null && !tag.equals("ignored"))
-                                    callback.OnFileOperationComplete(deleteFileCurrentOperation, inputPath + "/" + inputFile, tag);
-                                return;
+                                throw new IllegalStateException("Unable to chmod file " + inputPath + "/" + inputFile);
                             }
                         }
                         if (!usedFile.delete()) {
-                            Log.e(LOG_TAG, "Unable to delete file " + usedFile.toString());
-                            if (callback!=null && !tag.equals("ignored"))
-                                callback.OnFileOperationComplete(deleteFileCurrentOperation, inputPath + "/" + inputFile, tag);
-                            return;
+                            throw new IllegalStateException("Unable to delete file " + usedFile.toString());
                         }
                     } else {
-                        Log.e(LOG_TAG, "Unable to delete file. No file " + usedFile.toString());
-                        if (callback!=null && !tag.equals("ignored"))
-                            callback.OnFileOperationComplete(deleteFileCurrentOperation, inputPath + "/" + inputFile, tag);
-                        return;
+                        throw new IllegalStateException("Unable to delete file. No file " + usedFile.toString());
                     }
+
+                    if (callback!=null && !tag.equals("ignored"))
+                        ((OnBinaryFileOperationsCompleteListener)callback).OnFileOperationComplete(deleteFile, true, inputPath + "/" + inputFile, tag);
+
                 } catch (Exception e) {
                     Log.e(LOG_TAG,"deleteFile function fault " + e.getMessage());
                     if (callback!=null && !tag.equals("ignored"))
-                        callback.OnFileOperationComplete(deleteFileCurrentOperation, inputPath + "/" + inputFile, tag);
-                    return;
+                        ((OnBinaryFileOperationsCompleteListener)callback).OnFileOperationComplete(deleteFile, false,inputPath + "/" + inputFile, tag);
                 }
-                fileOperationResult = true;
-                if (callback!=null && !tag.equals("ignored"))
-                    callback.OnFileOperationComplete(deleteFileCurrentOperation, inputPath + "/" + inputFile, tag);
             }
         };
         executorService.execute(runnable);
@@ -346,12 +291,12 @@ public class FileOperations {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                fileOperationResult = false;
+
                 linesListMap.remove(filePath);
 
-                BufferedReader br = null;
-                FileInputStream fstream = null;
-                try {
+                try(FileInputStream fstream = new FileInputStream(filePath);
+                    BufferedReader br = new BufferedReader(new InputStreamReader(fstream))) {
+
                     File f = new File(filePath);
                     if (f.isFile()) {
                         if (f.setReadable(true,false)) {
@@ -363,47 +308,32 @@ public class FileOperations {
                             if (f.setReadable(true,false)) {
                                 Log.i(LOG_TAG, "readTextFile take " + filePath + " success");
                             } else {
-                                Log.e(LOG_TAG, "readTextFile take " + filePath + " error");
-                                if (callback!=null)
-                                    callback.OnFileOperationComplete(readTextFileCurrentOperation, filePath, tag);
-                                return;
+                                throw new IllegalStateException("readTextFile take " + filePath + " error");
                             }
                         }
                     } else {
-                        Log.e(LOG_TAG, "readTextFile no file " + filePath);
-                        if (callback!=null)
-                            callback.OnFileOperationComplete(readTextFileCurrentOperation, filePath, tag);
-                        return;
+                        throw new IllegalStateException("readTextFile no file " + filePath);
                     }
 
-
-                    fstream = new FileInputStream(filePath);
-                    br = new BufferedReader(new InputStreamReader(fstream));
                     List<String> linesList = new LinkedList<>();
 
                     for(String tmp; (tmp = br.readLine()) != null;) {
                         linesList.add(tmp.trim());
                     }
-                    fstream.close();
-                    fstream = null;
-                    br.close();
-                    br = null;
+
                     linesListMap.put(filePath,linesList);
-                    fileOperationResult = true;
+
+                    if (callback != null)
+                        ((OnTextFileOperationsCompleteListener)callback).OnFileOperationComplete(readTextFile, true, filePath, tag, linesListMap.get(filePath));
+
                 } catch (IOException e) {
                     Log.e(LOG_TAG,"readTextFile Exception " + e.getMessage() + e.getCause());
-                } finally {
-                    if (callback!=null)
-                        callback.OnFileOperationComplete(readTextFileCurrentOperation, filePath, tag);
-                    try {
-                        if (fstream!= null)fstream.close();
-                        if (br != null)br.close();
-                    } catch (IOException ex) {
-                        Log.e(LOG_TAG,"readTextFile Error when close file" + ex.getMessage() + ex.getCause());
-                    }
+                    if (callback != null)
+                        ((OnTextFileOperationsCompleteListener)callback).OnFileOperationComplete(readTextFile, false, filePath, tag, null);
                 }
             }
         };
+
         executorService.execute(runnable);
     }
 
@@ -412,10 +342,11 @@ public class FileOperations {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                fileOperationResult = false;
-                PrintWriter writer = null;
-                try {
+
+                try(PrintWriter writer = new PrintWriter(filePath)) {
+
                     File f = new File(filePath);
+
                     if (f.isFile()) {
                         if (f.setReadable(true,false) && f.setWritable(true)) {
                             Log.i(LOG_TAG,"writeToTextFile writeTo " + filePath + " success");
@@ -426,28 +357,24 @@ public class FileOperations {
                             if (f.setReadable(true,false) && f.setWritable(true)) {
                                 Log.i(LOG_TAG,"writeToTextFile writeTo " + filePath + " success");
                             } else {
-                                Log.e(LOG_TAG, "writeToTextFile writeTo " + filePath + " error");
-                                if (callback!=null && !tag.equals("ignored"))
-                                    callback.OnFileOperationComplete(writeToTextFileCurrentOperation, filePath, tag);
-                                return;
+                                throw new IllegalStateException("writeToTextFile writeTo " + filePath + " error");
                             }
                         }
                     }
 
-                    writer = new PrintWriter(filePath);
                     for (String line:lines) {
                         writer.println(line);
                     }
-                    writer.close();
-                    writer = null;
-                    fileOperationResult = true;
+
                     linesListMap.remove(filePath);
+
+                    if (callback != null && !tag.equals("ignored"))
+                        ((OnBinaryFileOperationsCompleteListener)callback).OnFileOperationComplete(writeToTextFile, true, filePath, tag);
+
                 } catch (IOException e) {
                     Log.e(LOG_TAG,"writeToTextFile Exception " + e.getMessage() + e.getCause());
-                } finally {
-                    if (writer != null)writer.close();
-                    if (callback!=null && !tag.equals("ignored"))
-                        callback.OnFileOperationComplete(writeToTextFileCurrentOperation, filePath, tag);
+                    if (callback != null && !tag.equals("ignored"))
+                        ((OnBinaryFileOperationsCompleteListener)callback).OnFileOperationComplete(writeToTextFile, false, filePath, tag);
                 }
             }
         };
@@ -534,9 +461,18 @@ public class FileOperations {
             callback = null;
         if (stackCallbacks != null && !stackCallbacks.empty())
             FileOperations.stackCallbacks.removeAllElements();
+
+        executorService.shutdown();
     }
 
     public interface OnFileOperationsCompleteListener {
-        void OnFileOperationComplete(String currentFileOperation, String path, String tag);
+    }
+
+    public interface OnBinaryFileOperationsCompleteListener extends OnFileOperationsCompleteListener {
+        void OnFileOperationComplete(FileOperationsVariants currentFileOperation, boolean fileOperationResult, String path, String tag);
+    }
+
+    public interface OnTextFileOperationsCompleteListener extends OnFileOperationsCompleteListener {
+        void OnFileOperationComplete(FileOperationsVariants currentFileOperation, boolean fileOperationResult, String path, String tag, List<String> lines);
     }
 }

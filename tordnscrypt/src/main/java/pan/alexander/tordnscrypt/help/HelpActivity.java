@@ -19,8 +19,6 @@ package pan.alexander.tordnscrypt;
 */
 
 import android.Manifest;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -38,36 +36,34 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Switch;
-import android.widget.Toast;
 
 import com.github.angads25.filepicker.controller.DialogSelectionListener;
 import com.github.angads25.filepicker.model.DialogConfigs;
 import com.github.angads25.filepicker.model.DialogProperties;
 import com.github.angads25.filepicker.view.FilePickerDialog;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Objects;
 
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.FileOperations;
-import pan.alexander.tordnscrypt.utils.LangAppCompatActivity;
+import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
+import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
+import pan.alexander.tordnscrypt.utils.fileOperations.OnBinaryFileOperationsCompleteListener;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 
+import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.deleteFile;
+import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
-public class HelpActivity extends LangAppCompatActivity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener, FileOperations.OnFileOperationsCompleteListener {
+public class HelpActivity extends LangAppCompatActivity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener, OnBinaryFileOperationsCompleteListener {
 
     EditText etLogsPath;
     Button btnSaveLogs;
     Switch swRootCommandsLog;
-    BroadcastReceiver br;
+    HelpActivityReceiver br;
     Handler mHandler;
     String appDataDir;
     String busyboxPath;
@@ -75,6 +71,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     String iptablesPath;
     String appUID;
     DialogInterface dialogInterface;
+    String info = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,88 +98,25 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
         mHandler = new Handler();
 
-        br = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Log.i(LOG_TAG,"BackupActivity onReceive");
-
-                if (intent != null) {
-                    final String action = intent.getAction();
-                    if ((action == null) || (action.equals("") || intent.getIntExtra("Mark",0)!=
-                            RootExecService.HelpActivityMark)) return;
-
-                    if(action.equals(RootExecService.COMMAND_RESULT)){
-
-                        RootCommands comResult = (RootCommands) intent.getSerializableExtra("CommandsResult");
-
-                        if(comResult.getCommands().length == 0){
-                            if (dialogInterface!=null)
-                                dialogInterface.dismiss();
-                            Toast.makeText(context,R.string.wrong,Toast.LENGTH_LONG).show();
-                            return;
-                        }
-
-                        if (new PrefManager(context).getBoolPref("swRootCommandsLog")) {
-                            FileOperations.deleteFile(getApplicationContext(),appDataDir + "/logs","RootExec.log", "RootExec.log");
-                            Log.e(LOG_TAG,"deleteFile function fault " + appDataDir + "logs/RootExec.log");
-                        }
-
-                        File invizibleLogs = new File(appDataDir + "/logs/InvizibleLogs.txt");
-                        if (!Arrays.toString(comResult.getCommands()).contains("Logs Saved") || !invizibleLogs.exists()) {
-                            Log.e(LOG_TAG,"Collect logs first method fault");
-                            try {
-                                Process process = Runtime.getRuntime().exec("logcat -d");
-                                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
-                                StringBuilder log = new StringBuilder();
-                                String line;
-                                while ((line = bufferedReader.readLine()) != null) {
-                                    log.append(line);
-                                    log.append("\n");
-                                }
-                                bufferedReader.close();
-
-                                FileWriter out = new FileWriter(appDataDir + "/logs/InvizibleLogs.txt");
-                                out.write(log.toString());
-                                out.close();
-
-                            } catch (IOException e) {
-                                Log.e(LOG_TAG,"Collect logs alternative method fault " + e.getMessage());
-                                Toast.makeText(context,R.string.wrong,Toast.LENGTH_LONG).show();
-                            }
-
-                        }
-
-                        invizibleLogs = new File(appDataDir + "/logs/InvizibleLogs.txt");
-                        if (!invizibleLogs.exists()) {
-                            Toast.makeText(context,R.string.wrong,Toast.LENGTH_LONG).show();
-                            Log.e(LOG_TAG,"Collect logs alternative method fault");
-                            if (dialogInterface!=null)
-                                dialogInterface.dismiss();
-                            return;
-                        }
-
-                        FileOperations.moveBinaryFile(getApplicationContext(),appDataDir
-                                + "/logs","InvizibleLogs.txt",pathToSaveLogs,"InvizibleLogs.txt");
-                    }
-                }
-            }
-        };
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        IntentFilter intentFilter = new IntentFilter(RootExecService.COMMAND_RESULT);
-        this.registerReceiver(br,intentFilter);
-        setTitle(R.string.drawer_menu_help);
-
         PathVars pathVars = new PathVars(this);
         appDataDir = pathVars.appDataDir;
         busyboxPath = pathVars.busyboxPath;
         pathToSaveLogs = pathVars.pathBackup;
         iptablesPath = pathVars.iptablesPath;
         appUID = new PrefManager(this).getStrPref("appUID");
+
+        br = new HelpActivityReceiver(mHandler, appDataDir, pathToSaveLogs);
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        IntentFilter intentFilter = new IntentFilter(RootExecService.COMMAND_RESULT);
+        this.registerReceiver(br, intentFilter);
+        setTitle(R.string.drawer_menu_help);
+
+
 
         etLogsPath.setText(pathToSaveLogs);
 
@@ -201,7 +135,6 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                 }
 
 
-                String info;
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                     info = "BRAND " + Build.BRAND + (char) 10 +
                             "MODEL " + Build.MODEL + (char) 10 +
@@ -214,13 +147,13 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                             "SUPPORTED_32_BIT_ABIS " + Arrays.toString(Build.SUPPORTED_32_BIT_ABIS) + (char) 10 +
                             "SUPPORTED_64_BIT_ABIS " + Arrays.toString(Build.SUPPORTED_64_BIT_ABIS) + (char) 10 +
                             "SDK_INT " + Build.VERSION.SDK_INT + (char) 10 +
-                            "APP_VERSION_CODE " + BuildConfig.VERSION_CODE + (char) 10  +
-                            "APP_VERSION_NAME " + BuildConfig.VERSION_NAME + (char) 10  +
-                            "APP_PROC_VERSION " + TopFragment.appProcVersion + (char) 10  +
-                            "APP_VERSION " + TopFragment.appVersion + (char) 10  +
-                            "DNSCRYPT_INTERNAL_VERSION " + TopFragment.DNSCryptVersion + (char) 10  +
-                            "TOR_INTERNAL_VERSION " + TopFragment.TorVersion + (char) 10  +
-                            "I2PD_INTERNAL_VERSION " + TopFragment.ITPDVersion + (char) 10  +
+                            "APP_VERSION_CODE " + BuildConfig.VERSION_CODE + (char) 10 +
+                            "APP_VERSION_NAME " + BuildConfig.VERSION_NAME + (char) 10 +
+                            "APP_PROC_VERSION " + TopFragment.appProcVersion + (char) 10 +
+                            "APP_VERSION " + TopFragment.appVersion + (char) 10 +
+                            "DNSCRYPT_INTERNAL_VERSION " + TopFragment.DNSCryptVersion + (char) 10 +
+                            "TOR_INTERNAL_VERSION " + TopFragment.TorVersion + (char) 10 +
+                            "I2PD_INTERNAL_VERSION " + TopFragment.ITPDVersion + (char) 10 +
                             "SIGN_VERSION " + TopFragment.appSign;
                 } else {
                     info = "BRAND " + Build.BRAND + (char) 10 +
@@ -231,45 +164,47 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                             "BOARD " + Build.BOARD + (char) 10 +
                             "HARDWARE " + Build.HARDWARE + (char) 10 +
                             "SDK_INT " + Build.VERSION.SDK_INT + (char) 10 +
-                            "APP_VERSION_CODE " + BuildConfig.VERSION_CODE + (char) 10  +
-                            "APP_VERSION_NAME " + BuildConfig.VERSION_NAME + (char) 10  +
-                            "APP_PROC_VERSION " + TopFragment.appProcVersion + (char) 10  +
-                            "APP_VERSION " + TopFragment.appVersion + (char) 10  +
-                            "DNSCRYPT_INTERNAL_VERSION " + TopFragment.DNSCryptVersion + (char) 10  +
-                            "TOR_INTERNAL_VERSION " + TopFragment.TorVersion + (char) 10  +
-                            "I2PD_INTERNAL_VERSION " + TopFragment.ITPDVersion + (char) 10  +
+                            "APP_VERSION_CODE " + BuildConfig.VERSION_CODE + (char) 10 +
+                            "APP_VERSION_NAME " + BuildConfig.VERSION_NAME + (char) 10 +
+                            "APP_PROC_VERSION " + TopFragment.appProcVersion + (char) 10 +
+                            "APP_VERSION " + TopFragment.appVersion + (char) 10 +
+                            "DNSCRYPT_INTERNAL_VERSION " + TopFragment.DNSCryptVersion + (char) 10 +
+                            "TOR_INTERNAL_VERSION " + TopFragment.TorVersion + (char) 10 +
+                            "I2PD_INTERNAL_VERSION " + TopFragment.ITPDVersion + (char) 10 +
                             "SIGN_VERSION " + TopFragment.appSign;
                 }
+
+                br.setInfo(info);
 
                 int pid = android.os.Process.myPid();
 
                 String[] logcatCommands = {
                         "cd " + appDataDir,
-                        busyboxPath + "mkdir -m 655 -p tmp",
-                        busyboxPath + "cp -R logs tmp",
-                        "logcat -d | grep " + pid + " > tmp/logcat.log",
-                        iptablesPath + "iptables -L > tmp/filter.log",
-                        iptablesPath + "iptables -t nat -L > tmp/nat.log",
-                        busyboxPath + "cp -R shared_prefs tmp",
+                        busyboxPath + "mkdir -m 655 -p logs_dir",
+                        busyboxPath + "cp -R logs logs_dir",
+                        "logcat -d | grep " + pid + " > logs_dir/logcat.log",
+                        iptablesPath + "iptables -L > logs_dir/filter.log",
+                        iptablesPath + "iptables -t nat -L > logs_dir/nat.log",
+                        busyboxPath + "cp -R shared_prefs logs_dir",
                         busyboxPath + "sleep 1",
-                        busyboxPath + "echo \"" + info + "\" > tmp/device_info.log",
+                        busyboxPath + "echo \"" + info + "\" > logs_dir/device_info.log",
                         busyboxPath + "mkdir -p " + pathToSaveLogs,
-                        "app_bin/gnutar -czf " + "logs/InvizibleLogs.txt tmp",
-                        //busyboxPath + "cp -f logs/InvizibleLogs.txt " + pathToSaveLogs,
-                        "restorecon logs/InvizibleLogs.txt",
-                        busyboxPath+ "chown "+appUID+"."+appUID+" "+"logs/InvizibleLogs.txt",
-                        busyboxPath+ "chmod 644 logs/InvizibleLogs.txt",
-                        busyboxPath + "rm -rf tmp",
+                        "app_bin/gnutar -czf " + "logs/InvizibleLogs.txt logs_dir",
+
+                        "restorecon -R logs_dir",
+                        busyboxPath + "chown -R " + appUID + "." + appUID + " logs_dir",
+                        busyboxPath + "chmod -R 755 logs_dir",
                         busyboxPath + "echo 'Logs Saved'"
                 };
                 RootCommands rootCommands = new RootCommands(logcatCommands);
                 Intent intent = new Intent(this, RootExecService.class);
                 intent.setAction(RootExecService.RUN_COMMAND);
-                intent.putExtra("Commands",rootCommands);
+                intent.putExtra("Commands", rootCommands);
                 intent.putExtra("Mark", RootExecService.HelpActivityMark);
-                RootExecService.performAction(this,intent);
+                RootExecService.performAction(this, intent);
 
                 dialogInterface = FileOperations.fileOperationProgressDialog(this);
+                br.setProgressDialog(dialogInterface);
                 break;
             case R.id.etLogsPath:
 
@@ -279,13 +214,14 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                 properties.root = new File(Environment.getExternalStorageDirectory().toURI());
                 properties.error_dir = new File(Environment.getExternalStorageDirectory().toURI());
                 properties.offset = new File(Environment.getExternalStorageDirectory().toURI());
-                FilePickerDialog dial = new FilePickerDialog(this,properties);
+                FilePickerDialog dial = new FilePickerDialog(this, properties);
                 dial.setTitle(R.string.backupFolder);
                 dial.setDialogSelectionListener(new DialogSelectionListener() {
                     @Override
                     public void onSelectedFilePaths(String[] files) {
                         pathToSaveLogs = files[0];
                         etLogsPath.setText(pathToSaveLogs);
+                        br.setPathToSaveLogs(pathToSaveLogs);
                     }
                 });
                 dial.show();
@@ -294,11 +230,10 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     }
 
 
-
     @Override
     public void onStop() {
         super.onStop();
-        if (dialogInterface!=null)
+        if (dialogInterface != null)
             dialogInterface.dismiss();
         this.unregisterReceiver(br);
         FileOperations.deleteOnFileOperationCompleteListener();
@@ -316,33 +251,33 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     @Override
     public void onCheckedChanged(CompoundButton compoundButton, boolean newValue) {
         if (compoundButton.getId() == R.id.swRootCommandsLog) {
-            new PrefManager(this).setBoolPref("swRootCommandsLog",newValue);
+            new PrefManager(this).setBoolPref("swRootCommandsLog", newValue);
 
             if (!newValue) {
-                FileOperations.deleteFile(getApplicationContext(),appDataDir + "/logs","RootExec.log","RootExec.log");
+                FileOperations.deleteFile(getApplicationContext(), appDataDir + "/logs", "RootExec.log", "RootExec.log");
             }
         }
     }
 
     @Override
-    public void OnFileOperationComplete(String currentFileOperation, String path, String tag) {
-        if (currentFileOperation.equals(FileOperations.deleteFileCurrentOperation) && !FileOperations.fileOperationResult) {
+    public void OnFileOperationComplete(FileOperationsVariants currentFileOperation, boolean fileOperationResult, String path, String tag) {
+        if (currentFileOperation == deleteFile && !fileOperationResult) {
             Log.e(LOG_TAG, "Unable to delete file " + path);
-        } else if (currentFileOperation.equals(FileOperations.moveBinaryFileCurrentOperation)) {
+        } else if (currentFileOperation == moveBinaryFile) {
 
-            if (dialogInterface!=null)
+            if (dialogInterface != null)
                 dialogInterface.dismiss();
-            if (FileOperations.fileOperationResult) {
+            if (fileOperationResult) {
 
                 TopFragment.NotificationDialogFragment commandResult =
                         TopFragment.NotificationDialogFragment.newInstance(getText(R.string.help_activity_logs_saved).toString()
                                 + " " + pathToSaveLogs);
-                commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
+                commandResult.show(getFragmentManager(), TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
             } else {
                 TopFragment.NotificationDialogFragment commandResult =
                         TopFragment.NotificationDialogFragment.newInstance(getText(R.string.help_activity_logs_saved).toString()
                                 + " " + appDataDir + "/logs/InvizibleLogs.txt");
-                commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
+                commandResult.show(getFragmentManager(), TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
             }
         }
     }
