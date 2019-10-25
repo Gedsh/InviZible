@@ -20,7 +20,6 @@ package pan.alexander.tordnscrypt.utils;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
@@ -28,6 +27,8 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
+import android.support.v4.app.DialogFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,13 +38,14 @@ import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 
-public class NotificationHelper extends DialogFragment{
+public class NotificationHelper extends DialogFragment {
 
     private String tag = "";
     private static String message = "";
     public static final String TAG_HELPER = "pan.alexander.tordnscrypt.HELPER_NOTIFICATION";
     private static NotificationHelper notificationHelper = null;
 
+    @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         // Use the Builder class for convenient dialog construction

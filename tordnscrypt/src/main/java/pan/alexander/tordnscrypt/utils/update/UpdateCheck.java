@@ -18,11 +18,11 @@ package pan.alexander.tordnscrypt.utils;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.app.FragmentManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.preference.PreferenceManager;
+import android.support.v4.app.FragmentManager;
 import android.util.Base64;
 import android.util.Log;
 
@@ -224,7 +224,7 @@ public class UpdateCheck {
 
         FragmentManager fm = null;
         try {
-            fm = ((MainActivity) context).getFragmentManager();
+            fm = ((MainActivity) context).getSupportFragmentManager();
         } catch (Exception e) {
             if (context !=null) {
                 if (MainActivity.modernDialog!=null)
