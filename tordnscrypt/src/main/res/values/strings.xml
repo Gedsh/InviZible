@@ -95,7 +95,6 @@
     <string name="menu_show_command_result" translatable="false">Show command result info</string>
 
 
-
     <string name="title_activity_settings">Settings</string>
 
     <string name="pref_fast_categ_autostart">Autostart</string>
