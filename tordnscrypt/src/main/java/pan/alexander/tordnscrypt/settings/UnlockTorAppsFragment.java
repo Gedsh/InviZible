@@ -18,8 +18,6 @@ package pan.alexander.tordnscrypt.settings;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-
-import android.app.Fragment;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -29,6 +27,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -57,7 +56,7 @@ import java.util.Set;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
-import pan.alexander.tordnscrypt.utils.NotificationHelper;
+import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.TorRefreshIPsWork;
 import pan.alexander.tordnscrypt.utils.Verifier;

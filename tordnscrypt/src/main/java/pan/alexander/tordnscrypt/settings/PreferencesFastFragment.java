@@ -26,17 +26,18 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.preference.Preference;
-import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
+import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatDelegate;
+import android.support.v7.preference.Preference;
+import android.support.v7.preference.PreferenceFragmentCompat;
+import android.support.v7.preference.PreferenceManager;
 
 import java.util.Date;
 import java.util.Objects;
 
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.TopFragment;
+import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.language.Language;
 import pan.alexander.tordnscrypt.utils.GetIPsJobService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -44,7 +45,7 @@ import pan.alexander.tordnscrypt.utils.PrefManager;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 
 
-public class PreferencesFastFragment extends PreferenceFragment implements Preference.OnPreferenceChangeListener {
+public class PreferencesFastFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
 
     public static final int mJobId = 1;
     private int refreshPeriodHours = 12;
@@ -54,6 +55,11 @@ public class PreferencesFastFragment extends PreferenceFragment implements Prefe
         super.onCreate(savedInstanceState);
 
         addPreferencesFromResource(R.xml.preferences_fast);
+    }
+
+    @Override
+    public void onCreatePreferences(Bundle bundle, String s) {
+
     }
 
     @Override
@@ -231,9 +237,11 @@ public class PreferencesFastFragment extends PreferenceFragment implements Prefe
             case "pref_fast_all_through_tor":
 
                 if (new PrefManager(getActivity()).getBoolPref("Tor Running")) {
-                    TopFragment.NotificationDialogFragment commandResult =
-                            TopFragment.NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_tor).toString());
-                    commandResult.show(getFragmentManager(), TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
+                    DialogFragment commandResult =
+                            NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_tor).toString());
+                    if (getFragmentManager() != null) {
+                        commandResult.show(getFragmentManager(), "NotificationDialogFragment");
+                    }
                 }
 
                 if (Boolean.valueOf(newValue.toString())) {
@@ -246,13 +254,17 @@ public class PreferencesFastFragment extends PreferenceFragment implements Prefe
                 return true;
             case "pref_fast_block_http":
                 if (new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
-                    TopFragment.NotificationDialogFragment commandResult =
-                            TopFragment.NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_dnscrypt).toString());
-                    commandResult.show(getFragmentManager(), TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
+                    DialogFragment commandResult =
+                            NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_dnscrypt).toString());
+                    if (getFragmentManager() != null) {
+                        commandResult.show(getFragmentManager(), "NotificationDialogFragment");
+                    }
                 } else if (new PrefManager(getActivity()).getBoolPref("Tor Running")) {
-                    TopFragment.NotificationDialogFragment commandResult =
-                            TopFragment.NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_tor).toString());
-                    commandResult.show(getFragmentManager(), TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
+                    DialogFragment commandResult =
+                            NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_tor).toString());
+                    if (getFragmentManager() != null) {
+                        commandResult.show(getFragmentManager(), "NotificationDialogFragment");
+                    }
                 }
                 return true;
             case "pref_fast_theme":

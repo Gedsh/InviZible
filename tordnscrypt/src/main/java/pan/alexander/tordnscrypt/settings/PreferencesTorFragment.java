@@ -18,16 +18,15 @@ package pan.alexander.tordnscrypt.settings;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-
-import android.app.Fragment;
-import android.app.FragmentTransaction;
+import android.support.v7.preference.Preference;
+import android.support.v7.preference.PreferenceManager;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.Preference;
-import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
+import android.support.v7.preference.PreferenceFragmentCompat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -47,7 +46,7 @@ import pan.alexander.tordnscrypt.utils.RootExecService;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 
-public class PreferencesTorFragment extends PreferenceFragment implements Preference.OnPreferenceChangeListener {
+public class PreferencesTorFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
 
     static ArrayList<String> key_tor;
     static ArrayList<String> val_tor;
@@ -98,6 +97,11 @@ public class PreferencesTorFragment extends PreferenceFragment implements Prefer
         val_tor_orig = new ArrayList<>(val_tor);
         SettingsActivity.key_tor = key_tor;
         SettingsActivity.val_tor = val_tor;
+    }
+
+    @Override
+    public void onCreatePreferences(Bundle bundle, String s) {
+
     }
 
     @Override
@@ -192,14 +196,17 @@ public class PreferencesTorFragment extends PreferenceFragment implements Prefer
             if(Objects.equals(preference.getKey(), "ExcludeExitNodes")){
                 if (Boolean.valueOf(newValue.toString())){
                     key_tor.set(key_tor.indexOf("#ExcludeExitNodes"),"ExcludeExitNodes");
-                    FragmentTransaction fTrans = getActivity().getFragmentManager().beginTransaction();
-                    Fragment frg = new CountrySelectFragment();
-                    Bundle bndl = new Bundle();
-                    bndl.putInt("nodes_type",CountrySelectFragment.excludeExitNodes);
-                    bndl.putString("countries",val_tor.get(key_tor.indexOf("ExcludeExitNodes")));
-                    frg.setArguments(bndl);
-                    fTrans.replace(android.R.id.content, frg,"CountrySelectFragment");
-                    fTrans.commit();
+                    FragmentTransaction fTrans;
+                    if (getFragmentManager() != null) {
+                        fTrans = getFragmentManager().beginTransaction();
+                        Fragment frg = new CountrySelectFragment();
+                        Bundle bndl = new Bundle();
+                        bndl.putInt("nodes_type",CountrySelectFragment.excludeExitNodes);
+                        bndl.putString("countries",val_tor.get(key_tor.indexOf("ExcludeExitNodes")));
+                        frg.setArguments(bndl);
+                        fTrans.replace(android.R.id.content, frg,"CountrySelectFragment");
+                        fTrans.commit();
+                    }
                 } else {
                     key_tor.set(key_tor.indexOf("ExcludeExitNodes"),"#ExcludeExitNodes");
                 }
@@ -208,14 +215,17 @@ public class PreferencesTorFragment extends PreferenceFragment implements Prefer
             if(Objects.equals(preference.getKey(), "ExitNodes")){
                 if (Boolean.valueOf(newValue.toString())){
                     key_tor.set(key_tor.indexOf("#ExitNodes"),"ExitNodes");
-                    FragmentTransaction fTrans = getActivity().getFragmentManager().beginTransaction();
-                    Fragment frg = new CountrySelectFragment();
-                    Bundle bndl = new Bundle();
-                    bndl.putInt("nodes_type",CountrySelectFragment.exitNodes);
-                    bndl.putString("countries",val_tor.get(key_tor.indexOf("ExitNodes")));
-                    frg.setArguments(bndl);
-                    fTrans.replace(android.R.id.content, frg,"CountrySelectFragment");
-                    fTrans.commit();
+                    FragmentTransaction fTrans;
+                    if (getFragmentManager() != null) {
+                        fTrans = getFragmentManager().beginTransaction();
+                        Fragment frg = new CountrySelectFragment();
+                        Bundle bndl = new Bundle();
+                        bndl.putInt("nodes_type",CountrySelectFragment.exitNodes);
+                        bndl.putString("countries",val_tor.get(key_tor.indexOf("ExitNodes")));
+                        frg.setArguments(bndl);
+                        fTrans.replace(android.R.id.content, frg,"CountrySelectFragment");
+                        fTrans.commit();
+                    }
                 } else {
                     key_tor.set(key_tor.indexOf("ExitNodes"),"#ExitNodes");
                 }
@@ -224,14 +234,17 @@ public class PreferencesTorFragment extends PreferenceFragment implements Prefer
             if(Objects.equals(preference.getKey(), "ExcludeNodes")){
                 if (Boolean.valueOf(newValue.toString())){
                     key_tor.set(key_tor.indexOf("#ExcludeNodes"),"ExcludeNodes");
-                    FragmentTransaction fTrans = getActivity().getFragmentManager().beginTransaction();
-                    Fragment frg = new CountrySelectFragment();
-                    Bundle bndl = new Bundle();
-                    bndl.putInt("nodes_type",CountrySelectFragment.excludeNodes);
-                    bndl.putString("countries",val_tor.get(key_tor.indexOf("ExcludeNodes")));
-                    frg.setArguments(bndl);
-                    fTrans.replace(android.R.id.content, frg,"CountrySelectFragment");
-                    fTrans.commit();
+                    FragmentTransaction fTrans;
+                    if (getFragmentManager() != null) {
+                        fTrans = getFragmentManager().beginTransaction();
+                        Fragment frg = new CountrySelectFragment();
+                        Bundle bndl = new Bundle();
+                        bndl.putInt("nodes_type",CountrySelectFragment.excludeNodes);
+                        bndl.putString("countries",val_tor.get(key_tor.indexOf("ExcludeNodes")));
+                        frg.setArguments(bndl);
+                        fTrans.replace(android.R.id.content, frg,"CountrySelectFragment");
+                        fTrans.commit();
+                    }
                 } else {
                     key_tor.set(key_tor.indexOf("ExcludeNodes"),"#ExcludeNodes");
                 }
@@ -240,14 +253,17 @@ public class PreferencesTorFragment extends PreferenceFragment implements Prefer
             if(Objects.equals(preference.getKey(), "EntryNodes")){
                 if (Boolean.valueOf(newValue.toString())){
                     key_tor.set(key_tor.indexOf("#EntryNodes"),"EntryNodes");
-                    FragmentTransaction fTrans = getActivity().getFragmentManager().beginTransaction();
-                    Fragment frg = new CountrySelectFragment();
-                    Bundle bndl = new Bundle();
-                    bndl.putInt("nodes_type",CountrySelectFragment.entryNodes);
-                    bndl.putString("countries",val_tor.get(key_tor.indexOf("EntryNodes")));
-                    frg.setArguments(bndl);
-                    fTrans.replace(android.R.id.content, frg,"CountrySelectFragment");
-                    fTrans.commit();
+                    FragmentTransaction fTrans = null;
+                    if (getFragmentManager() != null) {
+                        fTrans = getFragmentManager().beginTransaction();
+                        Fragment frg = new CountrySelectFragment();
+                        Bundle bndl = new Bundle();
+                        bndl.putInt("nodes_type",CountrySelectFragment.entryNodes);
+                        bndl.putString("countries",val_tor.get(key_tor.indexOf("EntryNodes")));
+                        frg.setArguments(bndl);
+                        fTrans.replace(android.R.id.content, frg,"CountrySelectFragment");
+                        fTrans.commit();
+                    }
                 } else {
                     key_tor.set(key_tor.indexOf("EntryNodes"),"#EntryNodes");
                 }

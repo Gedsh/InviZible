@@ -1,9 +1,9 @@
 package pan.alexander.tordnscrypt.settings;
 
-import android.app.FragmentTransaction;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v7.preference.PreferenceManager;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -103,7 +103,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
             }
             editor.apply();
 
-            FragmentTransaction fTrans = settingsActivity.getFragmentManager().beginTransaction();
+            FragmentTransaction fTrans = settingsActivity.getSupportFragmentManager().beginTransaction();
             Bundle bundle = new Bundle();
             bundle.putStringArrayList("key_toml", key_toml);
             bundle.putStringArrayList("val_toml", val_toml);
@@ -216,7 +216,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
             bundle.putStringArrayList("val_tor", val_tor);
             PreferencesTorFragment frag = new PreferencesTorFragment();
             frag.setArguments(bundle);
-            FragmentTransaction fTrans = settingsActivity.getFragmentManager().beginTransaction();
+            FragmentTransaction fTrans = settingsActivity.getSupportFragmentManager().beginTransaction();
             fTrans.replace(android.R.id.content, frag);
             fTrans.commit();
         }
@@ -312,7 +312,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
             }
             editor.apply();
 
-            FragmentTransaction fTrans = settingsActivity.getFragmentManager().beginTransaction();
+            FragmentTransaction fTrans = settingsActivity.getSupportFragmentManager().beginTransaction();
             Bundle bundle = new Bundle();
             bundle.putStringArrayList("key_itpd", key_itpd);
             bundle.putStringArrayList("val_itpd", val_itpd);
@@ -410,7 +410,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     && bundleForReadPublicResolversMdFunction.get("dnscrypt_servers")!=null) {
                 PreferencesDNSCryptServersRv frag = new PreferencesDNSCryptServersRv();
                 frag.setArguments(bundleForReadPublicResolversMdFunction);
-                FragmentTransaction fTrans = settingsActivity.getFragmentManager().beginTransaction();
+                FragmentTransaction fTrans = settingsActivity.getSupportFragmentManager().beginTransaction();
                 fTrans.replace(android.R.id.content, frag);
                 fTrans.commit();
             }
@@ -424,7 +424,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
         } else {
             rules_file.add("");
         }
-        FragmentTransaction fTrans = settingsActivity.getFragmentManager().beginTransaction();
+        FragmentTransaction fTrans = settingsActivity.getSupportFragmentManager().beginTransaction();
         Bundle bundle = new Bundle();
         bundle.putStringArrayList("rules_file", rules_file);
         bundle.putString("path",path);
@@ -449,9 +449,9 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
 
     @Override
     public void OnFileOperationComplete(FileOperationsVariants currentFileOperation, boolean fileOperationResult, final String path, final String tag, final List<String> lines) {
-        if (SettingsActivity.dialogInterface != null) {
-            SettingsActivity.dialogInterface.dismiss();
-            SettingsActivity.dialogInterface = null;
+        if (SettingsActivity.dialogFragment != null) {
+            SettingsActivity.dialogFragment.dismiss();
+            SettingsActivity.dialogFragment = null;
         }
 
         if (fileOperationResult && currentFileOperation == readTextFile) {

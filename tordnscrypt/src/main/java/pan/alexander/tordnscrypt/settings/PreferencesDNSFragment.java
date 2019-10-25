@@ -22,9 +22,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.Preference;
-import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
+import android.support.v7.preference.Preference;
+import android.support.v7.preference.PreferenceFragmentCompat;
+import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -43,7 +43,7 @@ import pan.alexander.tordnscrypt.utils.RootExecService;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
-public class PreferencesDNSFragment extends PreferenceFragment implements Preference.OnPreferenceChangeListener {
+public class PreferencesDNSFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
 
     ArrayList<String> key_toml;
     ArrayList<String> val_toml;
@@ -100,6 +100,11 @@ public class PreferencesDNSFragment extends PreferenceFragment implements Prefer
         val_toml = getArguments().getStringArrayList("val_toml");
         key_toml_orig = new ArrayList<>(key_toml);
         val_toml_orig = new ArrayList<>(val_toml);
+
+    }
+
+    @Override
+    public void onCreatePreferences(Bundle bundle, String s) {
 
     }
 

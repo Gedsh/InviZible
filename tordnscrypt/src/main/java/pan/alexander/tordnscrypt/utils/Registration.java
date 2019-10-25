@@ -39,7 +39,7 @@ import pan.alexander.tordnscrypt.TopFragment;
 
 public class Registration {
     Context context;
-    static boolean wrongRegistrationCode = true;
+    public static boolean wrongRegistrationCode = true;
 
     public Registration(Context context) {
         this.context = context;
@@ -97,7 +97,7 @@ public class Registration {
 
                         wrongRegistrationCode = false;
 
-                        TopFragment topFragment = (TopFragment) ((MainActivity)context).getFragmentManager().findFragmentByTag("topFragmentTAG");
+                        TopFragment topFragment = (TopFragment) ((MainActivity)context).getSupportFragmentManager().findFragmentByTag("topFragmentTAG");
                         if (topFragment!=null) {
                             topFragment.checkNewVer();
                             MainActivity.modernDialog = ((MainActivity)context).modernProgressDialog();

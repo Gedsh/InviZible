@@ -10,8 +10,8 @@
         <item name="android:windowBackground">@color/colorBackground</item>
 
         <!-- AppCompat Dialog Attributes -->
-        <item name="android:dialogTheme">@style/AppCompatDialog</item>
-        <item name="android:alertDialogTheme">@style/AppCompatAlert</item>
+        <item name="dialogTheme">@style/AppCompatDialog</item>
+        <item name="alertDialogTheme">@style/AppCompatAlert</item>
     </style>
 
     <style name="AppTheme.NoActionBar" parent="AppTheme">
@@ -40,7 +40,6 @@
         <!-- Used for the background -->
         <item name="android:colorBackground">@color/alertWindowColor</item>
         <item name="android:windowBackground">@color/alertWindowColor</item>
-
     </style>
 
 </resources>

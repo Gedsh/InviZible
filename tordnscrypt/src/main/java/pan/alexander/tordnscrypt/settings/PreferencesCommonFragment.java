@@ -21,7 +21,6 @@ package pan.alexander.tordnscrypt.settings;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -31,11 +30,12 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
-import android.preference.Preference;
-import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.support.v4.app.Fragment;
+import android.support.annotation.NonNull;
+import android.support.v4.app.DialogFragment;
+import android.support.v7.preference.Preference;
+import android.support.v7.preference.PreferenceFragmentCompat;
+import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -47,12 +47,12 @@ import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
-import pan.alexander.tordnscrypt.TopFragment;
+import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 import pan.alexander.tordnscrypt.utils.fileOperations.OnTextFileOperationsCompleteListener;
 import pan.alexander.tordnscrypt.utils.NoRootService;
-import pan.alexander.tordnscrypt.utils.NotificationHelper;
+import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
@@ -63,10 +63,8 @@ import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
-/**
- * A simple {@link Fragment} subclass.
- */
-public class PreferencesCommonFragment extends PreferenceFragment
+
+public class PreferencesCommonFragment extends PreferenceFragmentCompat
         implements Preference.OnPreferenceChangeListener, OnTextFileOperationsCompleteListener {
     private String torTransPort;
     private String appDataDir;
@@ -87,6 +85,11 @@ public class PreferencesCommonFragment extends PreferenceFragment
         addPreferencesFromResource(R.xml.preferences_common);
 
         FileOperations.setOnFileOperationCompleteListener(this);
+    }
+
+    @Override
+    public void onCreatePreferences(Bundle bundle, String s) {
+
     }
 
     @Override
@@ -135,7 +138,9 @@ public class PreferencesCommonFragment extends PreferenceFragment
                         NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                                 getActivity(),getText(R.string.verifier_error).toString(),"5889");
                         if (notificationHelper != null) {
-                            notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                            if (getFragmentManager() != null) {
+                                notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                            }
                         }
                     }
 
@@ -143,7 +148,9 @@ public class PreferencesCommonFragment extends PreferenceFragment
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             getActivity(),getText(R.string.verifier_error).toString(),"5804");
                     if (notificationHelper != null) {
-                        notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                        if (getFragmentManager() != null) {
+                            notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                        }
                     }
                     Log.e(LOG_TAG,"PreferencesCommonFragment fault "+e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                             Arrays.toString(e.getStackTrace()));
@@ -162,25 +169,31 @@ public class PreferencesCommonFragment extends PreferenceFragment
                     intent.setAction(NoRootService.actionDismissNotification);
                     getActivity().startService(intent);
                     InfoNotificationProtectService infoNotification = new InfoNotificationProtectService();
-                    infoNotification.show(getFragmentManager(), "dialogProtectService");
+                    if (getFragmentManager() != null) {
+                        infoNotification.show(getFragmentManager(), "dialogProtectService");
+                    }
                 }
                 break;
             case "pref_common_tor_tethering":
                 allowTorTether = Boolean.valueOf(newValue.toString());
                 readTorConf();
                 if (new PrefManager(getActivity()).getBoolPref("Tor Running")) {
-                    TopFragment.NotificationDialogFragment commandResult =
-                            TopFragment.NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_tor).toString());
-                    commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
+                    DialogFragment commandResult =
+                            NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_tor).toString());
+                    if (getFragmentManager() != null) {
+                        commandResult.show(getFragmentManager(),"NotificationDialogFragment");
+                    }
                 }
                 break;
             case "pref_common_itpd_tethering":
                 allowITPDtether = Boolean.valueOf(newValue.toString());
                 readITPDConf();
                 if (new PrefManager(getActivity()).getBoolPref("I2PD Running")) {
-                    TopFragment.NotificationDialogFragment commandResult =
-                            TopFragment.NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_itpd).toString());
-                    commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
+                    DialogFragment commandResult =
+                            NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_itpd).toString());
+                    if (getFragmentManager() != null) {
+                        commandResult.show(getFragmentManager(),"NotificationDialogFragment");
+                    }
                 }
                 break;
             case "pref_common_tor_route_all":
@@ -190,20 +203,26 @@ public class PreferencesCommonFragment extends PreferenceFragment
                     findPreference("prefTorSiteUnlockTether").setEnabled(true);
                 }
                 if (new PrefManager(getActivity()).getBoolPref("Tor Running")) {
-                    TopFragment.NotificationDialogFragment commandResult =
-                            TopFragment.NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_tor).toString());
-                    commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
+                    DialogFragment commandResult =
+                            NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_tor).toString());
+                    if (getFragmentManager() != null) {
+                        commandResult.show(getFragmentManager(),"NotificationDialogFragment");
+                    }
                 }
                 break;
             case "pref_common_block_http":
                 if (new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
-                    TopFragment.NotificationDialogFragment commandResult =
-                            TopFragment.NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_dnscrypt).toString());
-                    commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
+                    DialogFragment commandResult =
+                            NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_dnscrypt).toString());
+                    if (getFragmentManager() != null) {
+                        commandResult.show(getFragmentManager(),"NotificationDialogFragment");
+                    }
                 } else if (new PrefManager(getActivity()).getBoolPref("Tor Running")) {
-                    TopFragment.NotificationDialogFragment commandResult =
-                            TopFragment.NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_tor).toString());
-                    commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
+                    DialogFragment commandResult =
+                            NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_tor).toString());
+                    if (getFragmentManager() != null) {
+                        commandResult.show(getFragmentManager(),"NotificationDialogFragment");
+                    }
                 }
                 break;
         }
@@ -363,7 +382,7 @@ public class PreferencesCommonFragment extends PreferenceFragment
         }
 
         @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             Objects.requireNonNull(getDialog().getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             return super.onCreateView(inflater, container, savedInstanceState);
         }

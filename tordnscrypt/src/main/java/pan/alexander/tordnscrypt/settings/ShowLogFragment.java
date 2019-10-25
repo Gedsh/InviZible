@@ -47,7 +47,7 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ShowLogFragment extends android.app.Fragment implements View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
+public class ShowLogFragment extends Fragment implements View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
 
     private final static int MAX_LINES_QUANTITY = 1000;
     private String file_path;

@@ -18,14 +18,13 @@ package pan.alexander.tordnscrypt.settings;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.Preference;
-import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
+import android.support.v7.preference.PreferenceFragmentCompat;
+import android.support.v7.preference.Preference;
+import android.support.v7.preference.PreferenceManager;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -41,7 +40,7 @@ import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 
-public class PreferencesITPDFragment extends PreferenceFragment implements Preference.OnPreferenceChangeListener {
+public class PreferencesITPDFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
 
     ArrayList<String> key_itpd;
     ArrayList<String> val_itpd;
@@ -92,6 +91,11 @@ public class PreferencesITPDFragment extends PreferenceFragment implements Prefe
         val_itpd = getArguments().getStringArrayList("val_itpd");
         key_itpd_orig = new ArrayList<>(key_itpd);
         val_itpd_orig = new ArrayList<>(val_itpd);
+    }
+
+    @Override
+    public void onCreatePreferences(Bundle bundle, String s) {
+
     }
 
     @Override

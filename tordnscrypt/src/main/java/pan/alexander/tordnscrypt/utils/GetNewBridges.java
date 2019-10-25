@@ -19,9 +19,10 @@ package pan.alexander.tordnscrypt.utils;
 */
 
 import android.annotation.SuppressLint;
+
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.FragmentManager;
+import android.support.v4.app.FragmentManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
@@ -50,6 +51,7 @@ import java.util.List;
 import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.settings.PreferencesTorBridges;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -495,7 +497,7 @@ public class GetNewBridges {
         builder.setPositiveButton(R.string.pref_fast_use_tor_bridges_add_dialog, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                FragmentManager fm = activity.getFragmentManager();
+                FragmentManager fm = ((SettingsActivity)activity).getSupportFragmentManager();
                 PreferencesTorBridges frgPreferencesTorBridges = (PreferencesTorBridges) fm.findFragmentByTag("PreferencesTorBridges");
                 if (frgPreferencesTorBridges!=null) {
                     frgPreferencesTorBridges.readCurrentCustomBridges(bridges);

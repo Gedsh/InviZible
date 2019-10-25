@@ -20,7 +20,7 @@ package pan.alexander.tordnscrypt.language;
 
 import android.content.Context;
 import android.os.Build;
-import android.preference.ListPreference;
+import android.support.v7.preference.ListPreference;
 import android.util.AttributeSet;
 
 public class LanguagePreference extends ListPreference {

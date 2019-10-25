@@ -18,10 +18,8 @@ package pan.alexander.tordnscrypt.settings;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -29,9 +27,11 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
+import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -57,13 +57,14 @@ import java.util.List;
 import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.TopFragment;
+import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
+import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 import pan.alexander.tordnscrypt.utils.fileOperations.OnTextFileOperationsCompleteListener;
 import pan.alexander.tordnscrypt.utils.GetNewBridges;
 import pan.alexander.tordnscrypt.utils.NoRootService;
-import pan.alexander.tordnscrypt.utils.NotificationHelper;
+import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
@@ -106,7 +107,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     final String addBridgesTag = "pan.alexander.tordnscrypt/abstract_add_bridges";
     final String addRequestedBridgesTag = "pan.alexander.tordnscrypt/abstract_add_requested_bridges";
     private String requestedBridgesToAdd;
-    private DialogInterface dialogInterface;
+    private DialogFragment dialogFragment;
 
 
     public PreferencesTorBridges() {
@@ -133,7 +134,10 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         FileOperations.setOnFileOperationCompleteListener(this);
 
-        dialogInterface = FileOperations.fileOperationProgressDialog(getActivity());
+        dialogFragment = PleaseWaitProgressDialog.getInstance();
+        if (getFragmentManager() != null) {
+            dialogFragment.show(getFragmentManager(), "PleaseWaitProgressDialog");
+        }
         FileOperations.readTextFile(getActivity(),pathVars.appDataDir+"/app_data/tor/tor.conf", torConfTag);
        }
 
@@ -199,14 +203,14 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             noBridgesOperation();
             rbNoBridges.setChecked(true);
         } else if (useDefaultBridges) {
-            if (dialogInterface == null)
-                dialogInterface = FileOperations.fileOperationProgressDialog(getActivity());
+            if (dialogFragment == null)
+                dialogFragment = PleaseWaitProgressDialog.getInstance();
             FileOperations.readTextFile(getActivity(),bridges_file_path, defaultBridgesOperationTag);
             rbDefaultBridges.setChecked(true);
         } else {
             bridges_file_path = pathVars.appDataDir+"/app_data/tor/bridges_custom.lst";
-            if (dialogInterface == null)
-                dialogInterface = FileOperations.fileOperationProgressDialog(getActivity());
+            if (dialogFragment == null)
+                dialogFragment = PleaseWaitProgressDialog.getInstance();
             FileOperations.readTextFile(getActivity(),bridges_file_path,ownBridgesOperationTag);
 
             rbOwnBridges.setChecked(true);
@@ -222,7 +226,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                         NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                                 getActivity(),getText(R.string.verifier_error).toString(),"3458");
                         if (notificationHelper != null) {
-                            notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                            if (getFragmentManager() != null) {
+                                notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                            }
                         }
                     }
 
@@ -230,7 +236,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             getActivity(),getText(R.string.verifier_error).toString(),"64539");
                     if (notificationHelper != null) {
-                        notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                        if (getFragmentManager() != null) {
+                            notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                        }
                     }
                     Log.e(LOG_TAG,"PreferencesTorBridges fault "+e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                             Arrays.toString(e.getStackTrace()));
@@ -333,8 +341,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btnAddBridges:
-                if (dialogInterface == null)
-                    dialogInterface = FileOperations.fileOperationProgressDialog(getActivity());
+                if (dialogFragment == null)
+                    dialogFragment = PleaseWaitProgressDialog.getInstance();
                 FileOperations.readTextFile(getActivity(),pathVars.appDataDir+"/app_data/tor/bridges_custom.lst", addBridgesTag);
                 break;
             case R.id.btnRequestBridges:
@@ -471,8 +479,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
     public void readCurrentCustomBridges(String bridges) {
         requestedBridgesToAdd = bridges;
-        if (dialogInterface == null)
-            dialogInterface = FileOperations.fileOperationProgressDialog(getActivity());
+        if (dialogFragment == null)
+            dialogFragment = PleaseWaitProgressDialog.getInstance();
         FileOperations.readTextFile(getActivity(),bridges_custom_file_path,addRequestedBridgesTag);
     }
 
@@ -511,8 +519,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
                         bridges_file_path = pathVars.appDataDir+"/app_data/tor/bridges_default.lst";
 
-                        if (dialogInterface == null)
-                            dialogInterface = FileOperations.fileOperationProgressDialog(getActivity());
+                        if (dialogFragment == null)
+                            dialogFragment = PleaseWaitProgressDialog.getInstance();
                         FileOperations.readTextFile(getActivity(),bridges_file_path, defaultBridgesOperationTag);
 
                         for (int i=0;i<tor_conf.size();i++) {
@@ -534,8 +542,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                         new PrefManager(getActivity()).setBoolPref("useOwnBridges",true);
 
                         bridges_file_path = pathVars.appDataDir+"/app_data/tor/bridges_custom.lst";
-                        if (dialogInterface == null)
-                            dialogInterface = FileOperations.fileOperationProgressDialog(getActivity());
+                        if (dialogFragment == null)
+                            dialogFragment = PleaseWaitProgressDialog.getInstance();
                         FileOperations.readTextFile(getActivity(),bridges_file_path,ownBridgesOperationTag);
 
                         for (int i=0;i<tor_conf.size();i++) {
@@ -649,8 +657,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     new PrefManager(getActivity()).setStrPref("defaultBridgesObfs",String.valueOf(i));
                     if (rbDefaultBridges.isChecked()) {
                         bridges_file_path = pathVars.appDataDir+"/app_data/tor/bridges_default.lst";
-                        if (dialogInterface == null)
-                            dialogInterface = FileOperations.fileOperationProgressDialog(getActivity());
+                        if (dialogFragment == null)
+                            dialogFragment = PleaseWaitProgressDialog.getInstance();
                         FileOperations.readTextFile(getActivity(), bridges_file_path, defaultBridgesOperationTag);
                     }
                     break;
@@ -658,8 +666,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     new PrefManager(getActivity()).setStrPref("ownBridgesObfs",String.valueOf(i));
                     if (rbOwnBridges.isChecked()) {
                         bridges_file_path = pathVars.appDataDir+"/app_data/tor/bridges_custom.lst";
-                        if (dialogInterface == null)
-                            dialogInterface = FileOperations.fileOperationProgressDialog(getActivity());
+                        if (dialogFragment == null)
+                            dialogFragment = PleaseWaitProgressDialog.getInstance();
                         FileOperations.readTextFile(getActivity(),bridges_file_path,ownBridgesOperationTag);
                     }
                     break;
@@ -674,9 +682,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
     @Override
     public void OnFileOperationComplete(FileOperationsVariants currentFileOperation, boolean fileOperationResult, String path, String tag, List<String> lines) {
-        if (dialogInterface!=null) {
-            dialogInterface.dismiss();
-            dialogInterface = null;
+        if (dialogFragment !=null) {
+            dialogFragment.dismiss();
+            dialogFragment = null;
         }
         if (fileOperationResult && currentFileOperation == readTextFile) {
             switch (tag) {
@@ -910,9 +918,11 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 final String obfsTypeEdit = bridgeList.get(position).obfsType;
                 final boolean activeEdit = bridgeList.get(position).active;
                 if (activeEdit) {
-                    TopFragment.NotificationDialogFragment commandResult
-                            = TopFragment.NotificationDialogFragment.newInstance(getString(R.string.pref_fast_use_tor_bridges_deactivate));
-                    commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
+                    DialogFragment commandResult
+                            = NotificationDialogFragment.newInstance(getString(R.string.pref_fast_use_tor_bridges_deactivate));
+                    if (getFragmentManager() != null) {
+                        commandResult.show(getFragmentManager(), "NotificationDialogFragment");
+                    }
                     return;
                 }
                 input.setText(brgEdit,TextView.BufferType.EDITABLE);
@@ -947,9 +957,11 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
             void deleteBridge(int position) {
                 if (bridgeList.get(position).active) {
-                    TopFragment.NotificationDialogFragment commandResult
-                            = TopFragment.NotificationDialogFragment.newInstance(getString(R.string.pref_fast_use_tor_bridges_deactivate));
-                    commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
+                    DialogFragment commandResult
+                            = NotificationDialogFragment.newInstance(getString(R.string.pref_fast_use_tor_bridges_deactivate));
+                    if (getFragmentManager() != null) {
+                        commandResult.show(getFragmentManager(), "NotificationDialogFragment");
+                    }
                     return;
                 }
                 bridgeList.remove(position);

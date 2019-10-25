@@ -18,8 +18,6 @@ package pan.alexander.tordnscrypt.settings;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-
-import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -28,6 +26,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -50,7 +49,7 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 import pan.alexander.tordnscrypt.utils.NoRootService;
-import pan.alexander.tordnscrypt.utils.NotificationHelper;
+import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
@@ -115,7 +114,9 @@ public class PreferencesDNSCryptServersRv extends Fragment {
                         NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                                 getActivity(),getText(R.string.verifier_error).toString(),"6787");
                         if (notificationHelper != null) {
-                            notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                            if (getFragmentManager() != null) {
+                                notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                            }
                         }
                     }
 
@@ -123,7 +124,9 @@ public class PreferencesDNSCryptServersRv extends Fragment {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             getActivity(),getText(R.string.verifier_error).toString(),"8990");
                     if (notificationHelper != null) {
-                        notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                        if (getFragmentManager() != null) {
+                            notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                        }
                     }
                     Log.e(LOG_TAG,"PreferencesDNSCryptServersRv fault "+e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                             Arrays.toString(e.getStackTrace()));
