@@ -29,6 +29,8 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -51,6 +53,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import pan.alexander.tordnscrypt.backup.BackupActivity;
+import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.help.HelpActivity;
 import pan.alexander.tordnscrypt.utils.ApManager;
 import pan.alexander.tordnscrypt.utils.AppExitDetectService;
@@ -68,6 +71,7 @@ public class MainActivity extends LangAppCompatActivity
     private static final int CODE_IS_AP_ON = 100;
     public static DialogInterface modernDialog = null;
 
+    private TopFragment topFragment;
     private DNSCryptRunFragment dNSCryptRunFragment;
     private TorRunFragment torRunFragment;
     private ITPDRunFragment iTPDRunFragment;
@@ -76,7 +80,7 @@ public class MainActivity extends LangAppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         SharedPreferences defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         try {
-            String theme = defaultSharedPreferences.getString("pref_fast_theme","4");
+            String theme = defaultSharedPreferences.getString("pref_fast_theme", "4");
             switch (Objects.requireNonNull(theme)) {
                 case "1":
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
@@ -111,18 +115,36 @@ public class MainActivity extends LangAppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+        new PrefManager(this).setBoolPref("MainActivityActive", true);
+
+        startAppExitDetectService();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        try {
+            String saved_pass = new String(Base64.decode(new PrefManager(this).getStrPref("passwd"), 16));
+            childLockActive = saved_pass.contains("-l-o-c-k-e-d");
+        } catch (IllegalArgumentException e) {
+            Log.e(LOG_TAG, "MainActivity Child Lock Exeption " + e.getMessage());
+        }
+
         Intent intent = getIntent();
         if (Objects.equals(intent.getAction(), "check_update")) {
-            TopFragment topFragment = (TopFragment) getFragmentManager().findFragmentByTag("topFragmentTAG");
-            if (topFragment!=null) {
+            if (topFragment != null) {
                 topFragment.checkNewVer();
                 modernDialog = modernProgressDialog();
             }
         }
 
-        new PrefManager(this).setBoolPref("MainActivityActive", true);
+        String updateResultMessage = new PrefManager(this).getStrPref("UpdateResultMessage");
+        if (!updateResultMessage.isEmpty()) {
+            showUpdateMessage(updateResultMessage);
+            new PrefManager(this).setStrPref("UpdateResultMessage", "");
+        }
 
-        startAppExitDetectService();
     }
 
     @Override
@@ -136,16 +158,22 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     @Override
-    public void onAttachFragment(android.app.Fragment fragment) {
+    public void onAttachFragment(Fragment fragment) {
         super.onAttachFragment(fragment);
 
         if (fragment instanceof DNSCryptRunFragment) {
-            dNSCryptRunFragment = (DNSCryptRunFragment)fragment;
+            dNSCryptRunFragment = (DNSCryptRunFragment) fragment;
         } else if (fragment instanceof TorRunFragment) {
-            torRunFragment = (TorRunFragment)fragment;
+            torRunFragment = (TorRunFragment) fragment;
         } else if (fragment instanceof ITPDRunFragment) {
-            iTPDRunFragment = (ITPDRunFragment)fragment;
+            iTPDRunFragment = (ITPDRunFragment) fragment;
+        } else if (fragment instanceof TopFragment) {
+            topFragment = (TopFragment) fragment;
         }
+    }
+
+    public TopFragment getTopFragment() {
+        return topFragment;
     }
 
     public DNSCryptRunFragment getDNSCryptRunFragment() {
@@ -163,7 +191,7 @@ public class MainActivity extends LangAppCompatActivity
     @Override
     public void onBackPressed() {
         if (RootExecService.lockStartStop) {
-            Toast.makeText(this,R.string.please_wait,Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.please_wait, Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -224,7 +252,6 @@ public class MainActivity extends LangAppCompatActivity
     }*/
 
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.action_mode, menu);
@@ -240,7 +267,7 @@ public class MainActivity extends LangAppCompatActivity
                 menu.findItem(R.id.item_unlock).setIcon(R.drawable.ic_lock_open_white_24dp);
             }
         } catch (IllegalArgumentException e) {
-            Log.e(LOG_TAG,"MainActivity Child Lock Exeption "+e.getMessage());
+            Log.e(LOG_TAG, "MainActivity Child Lock Exeption " + e.getMessage());
         }
 
         ApManager apManager = new ApManager(this);
@@ -252,24 +279,21 @@ public class MainActivity extends LangAppCompatActivity
                 boolean torRunning = new PrefManager(this).getBoolPref("Tor Running");
                 boolean itpdRunning = new PrefManager(this).getBoolPref("I2PD Running");
                 if (dnsCryptRunning) {
-                    TopFragment.NotificationDialogFragment commandResult =
-                            TopFragment.NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_dnscrypt).toString());
-                    commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
+                    DialogFragment commandResult = NotificationDialogFragment.newInstance(R.string.pref_common_restart_dnscrypt);
+                    commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
                 } else if (torRunning) {
-                    TopFragment.NotificationDialogFragment commandResult =
-                            TopFragment.NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_tor).toString());
-                    commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
+                    DialogFragment commandResult = NotificationDialogFragment.newInstance(R.string.pref_common_restart_tor);
+                    commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
                 } else if (itpdRunning) {
-                    TopFragment.NotificationDialogFragment commandResult =
-                            TopFragment.NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_itpd).toString());
-                    commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
+                    DialogFragment commandResult = NotificationDialogFragment.newInstance(R.string.pref_common_restart_itpd);
+                    commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
                 }
-                new PrefManager(this).setBoolPref("APisON",true);
+                new PrefManager(this).setBoolPref("APisON", true);
             }
 
-        } else if (apState == ApManager.apStateOFF){
+        } else if (apState == ApManager.apStateOFF) {
             menu.findItem(R.id.item_hotspot).setIcon(R.drawable.ic_portable_wifi_off_white_24dp);
-            new PrefManager(this).setBoolPref("APisON",false);
+            new PrefManager(this).setBoolPref("APisON", false);
         } else {
             menu.findItem(R.id.item_hotspot).setVisible(false);
         }
@@ -285,14 +309,14 @@ public class MainActivity extends LangAppCompatActivity
             case R.id.item_unlock:
 
                 try {
-                    String saved_pass = new String(Base64.decode(new PrefManager(getApplicationContext()).getStrPref("passwd"),16));
+                    String saved_pass = new String(Base64.decode(new PrefManager(getApplicationContext()).getStrPref("passwd"), 16));
                     if (saved_pass.contains("-l-o-c-k-e-d")) {
                         childUnlock(item);
                     } else {
                         childLock(item);
                     }
                 } catch (IllegalArgumentException e) {
-                    Log.e(LOG_TAG,"MainActivity Child Lock Exeption "+e.getMessage());
+                    Log.e(LOG_TAG, "MainActivity Child Lock Exeption " + e.getMessage());
                 }
                 break;
             case R.id.item_hotspot:
@@ -307,7 +331,7 @@ public class MainActivity extends LangAppCompatActivity
                         ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.TetherSettings");
                         intent.setComponent(cn);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        this.startActivityForResult(intent,CODE_IS_AP_ON);
+                        this.startActivityForResult(intent, CODE_IS_AP_ON);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -343,7 +367,7 @@ public class MainActivity extends LangAppCompatActivity
                     }
                 });
             }
-        },3000,5000);
+        }, 3000, 5000);
     }
 
     @Override
@@ -372,7 +396,7 @@ public class MainActivity extends LangAppCompatActivity
 
         String saved_pass = new PrefManager(getApplicationContext()).getStrPref("passwd");
         if (!saved_pass.isEmpty()) {
-            saved_pass = new String(Base64.decode(saved_pass,16));
+            saved_pass = new String(Base64.decode(saved_pass, 16));
             input.setText(saved_pass);
             input.setSelection(saved_pass.length());
         }
@@ -383,7 +407,7 @@ public class MainActivity extends LangAppCompatActivity
             public void onClick(DialogInterface dialogInterface, int i) {
                 if (input.getText().toString().equals("debug")) {
                     TopFragment.debug = !TopFragment.debug;
-                    Toast.makeText(getApplicationContext(),"Debug mode " + TopFragment.debug,Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Debug mode " + TopFragment.debug, Toast.LENGTH_LONG).show();
                 } else {
                     String pass = Base64.encodeToString((input.getText().toString() + "-l-o-c-k-e-d").getBytes(), 16);
                     new PrefManager(getApplicationContext()).setStrPref("passwd", pass);
@@ -404,7 +428,7 @@ public class MainActivity extends LangAppCompatActivity
             }
         });
 
-        AlertDialog view  = builder.show();
+        AlertDialog view = builder.show();
         Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
     }
 
@@ -425,11 +449,11 @@ public class MainActivity extends LangAppCompatActivity
         builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                String saved_pass = new String(Base64.decode(new PrefManager(getApplicationContext()).getStrPref("passwd"),16));
-                if (saved_pass.replace("-l-o-c-k-e-d","").equals(input.getText().toString())) {
-                    String pass = Base64.encodeToString((input.getText().toString()).getBytes(),16);
+                String saved_pass = new String(Base64.decode(new PrefManager(getApplicationContext()).getStrPref("passwd"), 16));
+                if (saved_pass.replace("-l-o-c-k-e-d", "").equals(input.getText().toString())) {
+                    String pass = Base64.encodeToString((input.getText().toString()).getBytes(), 16);
                     new PrefManager(getApplicationContext()).setStrPref("passwd", pass);
-                    Toast.makeText(getApplicationContext(),getText(R.string.action_mode_dialog_unlocked),Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), getText(R.string.action_mode_dialog_unlocked), Toast.LENGTH_SHORT).show();
                     item.setIcon(R.drawable.ic_lock_open_white_24dp);
                     childLockActive = false;
 
@@ -437,7 +461,7 @@ public class MainActivity extends LangAppCompatActivity
                     mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
                 } else {
                     childUnlock(item);
-                    Toast.makeText(getApplicationContext(),getText(R.string.action_mode_dialog_wrong_pass),Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), getText(R.string.action_mode_dialog_wrong_pass), Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -449,7 +473,7 @@ public class MainActivity extends LangAppCompatActivity
             }
         });
 
-        AlertDialog view  = builder.show();
+        AlertDialog view = builder.show();
         Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
     }
 
@@ -460,7 +484,7 @@ public class MainActivity extends LangAppCompatActivity
         int id = item.getItemId();
 
         if (childLockActive) {
-            Toast.makeText(this,getText(R.string.action_mode_dialog_locked),Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getText(R.string.action_mode_dialog_locked), Toast.LENGTH_LONG).show();
             DrawerLayout drawer = findViewById(R.id.drawer_layout);
             drawer.closeDrawer(GravityCompat.START);
             return false;
@@ -470,23 +494,23 @@ public class MainActivity extends LangAppCompatActivity
             Intent intent = new Intent(this, BackupActivity.class);
             startActivity(intent);
         } else if (id == R.id.nav_DNS_Pref) {
-            Intent intent = new Intent(this,SettingsActivity.class);
+            Intent intent = new Intent(this, SettingsActivity.class);
             intent.setAction("DNS_Pref");
             startActivity(intent);
         } else if (id == R.id.nav_Tor_Pref) {
-            Intent intent = new Intent(this,SettingsActivity.class);
+            Intent intent = new Intent(this, SettingsActivity.class);
             intent.setAction("Tor_Pref");
             startActivity(intent);
         } else if (id == R.id.nav_I2PD_Pref) {
-            Intent intent = new Intent(this,SettingsActivity.class);
+            Intent intent = new Intent(this, SettingsActivity.class);
             intent.setAction("I2PD_Pref");
             startActivity(intent);
         } else if (id == R.id.nav_fast_Pref) {
-            Intent intent = new Intent(this,SettingsActivity.class);
+            Intent intent = new Intent(this, SettingsActivity.class);
             intent.setAction("fast_Pref");
             startActivity(intent);
         } else if (id == R.id.nav_about) {
-            Intent intent = new Intent(this,AboutActivity.class);
+            Intent intent = new Intent(this, AboutActivity.class);
             startActivity(intent);
         } else if (id == R.id.nav_common_Pref) {
             Intent intent = new Intent(this, SettingsActivity.class);
@@ -495,10 +519,10 @@ public class MainActivity extends LangAppCompatActivity
         } else if (id == R.id.nav_help) {
             Intent intent = new Intent(this, HelpActivity.class);
             startActivity(intent);
-        } else if (id==R.id.nav_Donate) {
+        } else if (id == R.id.nav_Donate) {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://invizible.net/donate"));
             startActivity(intent);
-        } else if (id==R.id.nav_Code) {
+        } else if (id == R.id.nav_Code) {
             Registration registration = new Registration(this);
             registration.showEnterCodeDialog();
         }
@@ -508,32 +532,14 @@ public class MainActivity extends LangAppCompatActivity
         return true;
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
 
-        try {
-            String saved_pass = new String(Base64.decode(new PrefManager(this).getStrPref("passwd"),16));
-            childLockActive = saved_pass.contains("-l-o-c-k-e-d");
-        } catch (IllegalArgumentException e) {
-            Log.e(LOG_TAG,"MainActivity Child Lock Exeption "+e.getMessage());
-        }
-
-        String updateResultMessage = new PrefManager(this).getStrPref("UpdateResultMessage");
-        if (!updateResultMessage.isEmpty()) {
-            showUpdateMessage(updateResultMessage);
-            new PrefManager(this).setStrPref("UpdateResultMessage", "");
-        }
-
-    }
-
-
-    public void showUpdateMessage(String message){
-        if (modernDialog!=null)
+    public void showUpdateMessage(String message) {
+        if (modernDialog != null)
             modernDialog.dismiss();
         modernDialog = null;
-        TopFragment.NotificationDialogFragment commandResult = TopFragment.NotificationDialogFragment.newInstance(message);
-        commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
+
+        DialogFragment commandResult = NotificationDialogFragment.newInstance(message);
+        commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
     }
 
     public DialogInterface modernProgressDialog() {
@@ -544,13 +550,13 @@ public class MainActivity extends LangAppCompatActivity
         builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                if (modernDialog!=null) {
+                if (modernDialog != null) {
                     modernDialog.dismiss();
                     modernDialog = null;
 
                     //////////////To STOP UPDATES CHECK/////////////////////////////////////////////////////
-                    TopFragment topFragment = (TopFragment) getFragmentManager().findFragmentByTag("topFragmentTAG");
-                    if (topFragment!=null) {
+                    TopFragment topFragment = (TopFragment) getSupportFragmentManager().findFragmentByTag("topFragmentTAG");
+                    if (topFragment != null) {
                         topFragment.updateCheck.context = null;
                     }
 
@@ -558,13 +564,13 @@ public class MainActivity extends LangAppCompatActivity
             }
         });
 
-        ProgressBar progressBar = new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);
+        ProgressBar progressBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         progressBar.setBackgroundResource(R.drawable.background_10dp_padding);
         progressBar.setIndeterminate(true);
         builder.setView(progressBar);
         builder.setCancelable(false);
 
-        AlertDialog view  = builder.show();
+        AlertDialog view = builder.show();
         Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
 
         return view;
@@ -578,15 +584,13 @@ public class MainActivity extends LangAppCompatActivity
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (timer!=null)
+        if (timer != null)
             timer.cancel();
-        if (modernDialog!=null) {
+        if (modernDialog != null) {
             modernDialog.dismiss();
         }
 
         new PrefManager(this).setBoolPref("MainActivityActive", false);
     }
-
-
 
 }

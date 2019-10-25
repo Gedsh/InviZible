@@ -20,7 +20,6 @@ package pan.alexander.tordnscrypt;
 
 
 import android.annotation.SuppressLint;
-import android.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -28,9 +27,10 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.preference.PreferenceManager;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -56,7 +56,7 @@ import java.util.TimerTask;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.Arr;
 import pan.alexander.tordnscrypt.utils.NoRootService;
-import pan.alexander.tordnscrypt.utils.NotificationHelper;
+import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.utils.OwnFileReader;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
@@ -103,6 +103,8 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        setRetainInstance(true);
 
         br = new BroadcastReceiver() {
             @SuppressLint("SetTextI18n")
@@ -187,7 +189,9 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                                         getActivity(), getText(R.string.helper_itpd_stopped).toString(), "itpd_suddenly_stopped");
                                 if (notificationHelper != null) {
-                                    notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                                    if (getFragmentManager() != null) {
+                                        notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                                    }
                                 }
                             }
 
@@ -364,7 +368,9 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                         getActivity(), getText(R.string.helper_tor_itpd).toString(), "tor_itpd");
                 if (notificationHelper != null) {
-                    notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                    if (getFragmentManager() != null) {
+                        notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                    }
                 }
 
                 commandsI2PD = new String[]{
@@ -398,7 +404,9 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                         getActivity(), getText(R.string.helper_itpd).toString(), "itpd");
                 if (notificationHelper != null) {
-                    notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                    if (getFragmentManager() != null) {
+                        notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                    }
                 }
 
                 commandsI2PD = new String[]{
@@ -432,7 +440,9 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                         getActivity(), getText(R.string.helper_dnscrypt_itpd).toString(), "dnscrypt_itpd");
                 if (notificationHelper != null) {
-                    notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                    if (getFragmentManager() != null) {
+                        notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                    }
                 }
 
                 commandsI2PD = new String[]{
@@ -467,7 +477,9 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                         getActivity(), getText(R.string.helper_dnscrypt_tor_itpd).toString(), "dnscrypt_tor_itpd");
                 if (notificationHelper != null) {
-                    notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                    if (getFragmentManager() != null) {
+                        notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                    }
                 }
 
                 commandsI2PD = new String[]{

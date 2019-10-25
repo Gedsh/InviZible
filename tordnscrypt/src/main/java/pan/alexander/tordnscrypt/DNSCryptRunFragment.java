@@ -19,7 +19,7 @@ package pan.alexander.tordnscrypt;
 */
 
 import android.annotation.SuppressLint;
-import android.app.Fragment;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -28,8 +28,9 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import android.support.v4.app.Fragment;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.preference.PreferenceManager;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -52,7 +53,7 @@ import java.util.TimerTask;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.Arr;
 import pan.alexander.tordnscrypt.utils.NoRootService;
-import pan.alexander.tordnscrypt.utils.NotificationHelper;
+import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.utils.OwnFileReader;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
@@ -107,6 +108,8 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        setRetainInstance(true);
 
         br = new BroadcastReceiver() {
             @SuppressLint("SetTextI18n")
@@ -184,7 +187,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                                     && sb.toString().contains("startProcess"))) {
                                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                                         getActivity(), getText(R.string.helper_dnscrypt_stopped).toString(), "dnscrypt_suddenly_stopped");
-                                if (notificationHelper != null) {
+                                if (notificationHelper != null && getFragmentManager() != null) {
                                     notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                                 }
 
@@ -247,7 +250,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                                     if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                                         NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                                                 getActivity(), getText(R.string.verifier_error).toString(), "15");
-                                        if (notificationHelper != null) {
+                                        if (notificationHelper != null && getFragmentManager() != null) {
                                             notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                                         }
                                     }
@@ -255,7 +258,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                                 } catch (Exception e) {
                                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                                             getActivity(), getText(R.string.verifier_error).toString(), "18");
-                                    if (notificationHelper != null) {
+                                    if (notificationHelper != null && getFragmentManager() != null) {
                                         notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                                     }
                                     Log.e(LOG_TAG, "DNSCryptRunFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
@@ -452,7 +455,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                 if (!routeAllThroughTor) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             getActivity(), getText(R.string.helper_dnscrypt_tor).toString(), "dnscrypt_tor");
-                    if (notificationHelper != null) {
+                    if (notificationHelper != null && getFragmentManager() != null) {
                         notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                     }
 
@@ -499,7 +502,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                 } else {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             getActivity(), getText(R.string.helper_dnscrypt_tor_privacy).toString(), "dnscrypt_tor_privacy");
-                    if (notificationHelper != null) {
+                    if (notificationHelper != null && getFragmentManager() != null) {
                         notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                     }
 
@@ -583,7 +586,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                         getActivity(), getText(R.string.helper_dnscrypt).toString(), "dnscrypt");
-                if (notificationHelper != null) {
+                if (notificationHelper != null && getFragmentManager() != null) {
                     notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                 }
 
@@ -656,7 +659,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                         getActivity(), getText(R.string.helper_tor).toString(), "tor");
-                if (notificationHelper != null) {
+                if (notificationHelper != null && getFragmentManager() != null) {
                     notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                 }
 
@@ -809,7 +812,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                                 Log.e(LOG_TAG, "DNSCrypt Error: " + lastLines);
                                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                                         getActivity(), getText(R.string.helper_dnscrypt_no_internet).toString(), "helper_dnscrypt_no_internet");
-                                if (notificationHelper != null) {
+                                if (notificationHelper != null && getFragmentManager() != null) {
                                     notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                                 }
 
@@ -829,7 +832,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
                                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                                         getActivity(), getText(R.string.helper_dnscrypt_no_internet).toString(), "helper_dnscrypt_no_internet");
-                                if (notificationHelper != null) {
+                                if (notificationHelper != null && getFragmentManager() != null) {
                                     notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                                 }
 
