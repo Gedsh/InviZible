@@ -19,29 +19,21 @@ package pan.alexander.tordnscrypt;
 */
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.DialogFragment;
-import android.app.Fragment;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.preference.PreferenceManager;
+
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
+import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import java.util.Arrays;
 import java.util.List;
@@ -50,19 +42,21 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import eu.chainfire.libsuperuser.Shell;
-import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.NotificationHelper;
+import pan.alexander.tordnscrypt.dialogs.InstallAppDialogFragment;
+import pan.alexander.tordnscrypt.dialogs.NewUpdateDialogFragment;
+import pan.alexander.tordnscrypt.dialogs.NoRootDialogFragment;
+import pan.alexander.tordnscrypt.dialogs.UpdateModulesDialogFragment;
+import pan.alexander.tordnscrypt.dialogs.progressDialogs.RootCheckingProgressDialog;
+import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Registration;
-import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
-import pan.alexander.tordnscrypt.utils.UpdateCheck;
-import pan.alexander.tordnscrypt.utils.UpdateService;
+import pan.alexander.tordnscrypt.utils.update.UpdateCheck;
 import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.utils.installer.Installer;
 
 
-public class TopFragment extends Fragment implements View.OnClickListener {
+public class TopFragment extends Fragment {
 
 
     public static String DNSCryptVersion = "2.0.25";
@@ -79,56 +73,55 @@ public class TopFragment extends Fragment implements View.OnClickListener {
     private String suVersion = null;
     private List<String> suResult = null;
     private List<String> bbResult = null;
-    private View view = null;
     public static String TOP_BROADCAST = "pan.alexander.tordnscrypt.action.TOP_BROADCAST";
     private Timer timer;
-    private static DialogInterface dialogInterface;
+    private static android.support.v4.app.DialogFragment dialogInterface;
     public static String appSign;
     public final int UPDATES_CHECK_INTERVAL_HOURS = 24;
     public UpdateCheck updateCheck;
     public static String wrongSign;
     public static boolean debug = false;
 
+    private OnActivityChangeListener onActivityChangeListener;
+
+    public interface OnActivityChangeListener {
+        void OnActivityChange(MainActivity mainActivity);
+    }
+
+    public void setOnActivityChangeListener(OnActivityChangeListener onActivityChangeListener) {
+        this.onActivityChangeListener = onActivityChangeListener;
+    }
+
+    private void removeOnActivityChangeListener() {
+        onActivityChangeListener = null;
+    }
+
 
 
     public TopFragment() {
-        // Required empty public constructor
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setRetainInstance(true);
 
         appVersion = getString(R.string.appVersion);
         appProcVersion = getString(R.string.appProcVersion);
 
+        if (onActivityChangeListener != null && getActivity() instanceof MainActivity) {
+            onActivityChangeListener.OnActivityChange((MainActivity) getActivity());
+        }
+
         Chkroot ckroot = new Chkroot();
         ckroot.execute();
     }
 
+    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        view = inflater.inflate(R.layout.fragment_top, container, false);
-
-        TextView tvDeviceRoot =  view.findViewById(R.id.tvDeviceRoot);
-        TextView tvBBox =  view.findViewById(R.id.tvBBox);
-
-        tvDeviceRoot.setOnClickListener(this);
-        tvBBox.setOnClickListener(this);
-
-        return view;
-    }
-
-    public void onResume() {
-        super.onResume();
-
-        if (new PrefManager(getActivity()).getBoolPref("rootOK"))
-            ((ImageView)view.findViewById(R.id.imDeviceRoot)).setImageResource(R.drawable.ic_top_good);
-
-        if (new PrefManager(getActivity()).getBoolPref("bbOK"))
-            ((ImageView)view.findViewById(R.id.imBBox)).setImageResource(R.drawable.ic_top_good);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return new View(getActivity());
     }
 
     @Override
@@ -144,21 +137,27 @@ public class TopFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onDestroy() {
         super.onDestroy();
+
         if (timer!=null)
             timer.cancel();
+
+        removeOnActivityChangeListener();
     }
 
     //Check if root available
     @SuppressLint("StaticFieldLeak")
+    @SuppressWarnings("deprecation")
     private class Chkroot extends AsyncTask<Void, Void, Void> {
         private boolean suAvailable = false;
 
         @Override
         protected void onPreExecute() {
-            dialogInterface = modernProgressDialog();
+            dialogInterface = RootCheckingProgressDialog.getInstance();
+            if (getFragmentManager() != null) {
+                dialogInterface.show(getFragmentManager(), "rootCheckingProgressDialog");
+            }
         }
 
-        @SuppressWarnings("deprecation")
         @Override
         protected Void doInBackground(Void... params) {
             try {
@@ -169,8 +168,10 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            DialogFragment dialogCheckRoot = new CheckRoot();
-                            dialogCheckRoot.show(getFragmentManager(), "dialogCheckRoot");
+                            DialogFragment dialogCheckRoot = NoRootDialogFragment.getInstance();
+                            if (getFragmentManager() != null) {
+                                dialogCheckRoot.show(getFragmentManager(), "NoRootDialogFragment");
+                            }
                         }
                     });
                 }
@@ -194,8 +195,10 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                DialogFragment dialogCheckRoot = new CheckRoot();
-                                dialogCheckRoot.show(getFragmentManager(), "dialogCheckRoot");
+                                DialogFragment dialogCheckRoot = NoRootDialogFragment.getInstance();
+                                if (getFragmentManager() != null) {
+                                    dialogCheckRoot.show(getFragmentManager(), "NoRootDialogFragment");
+                                }
                             }
                         });
                     }
@@ -213,7 +216,9 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                         NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                                 getActivity(),getText(R.string.verifier_error).toString(),"1112");
                         if (notificationHelper != null) {
-                            notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                            if (getFragmentManager() != null) {
+                                notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                            }
                         }
                     }
 
@@ -221,7 +226,9 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             getActivity(),getText(R.string.verifier_error).toString(),"2235");
                     if (notificationHelper != null) {
-                        notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                        if (getFragmentManager() != null) {
+                            notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                        }
                     }
                     Log.e(LOG_TAG,"Top Fragment comparator fault "+e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                             Arrays.toString(e.getStackTrace()));
@@ -250,8 +257,10 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                         PreferenceManager.setDefaultValues(getActivity(),R.xml.preferences_tor,true);
                         PreferenceManager.setDefaultValues(getActivity(),R.xml.preferences_i2pd,true);
 
-                        DialogFragment installAll = new InstallApp();
-                        installAll.show(getFragmentManager(),"dialogInstall");
+                        DialogFragment installAll = InstallAppDialogFragment.getInstance();
+                        if (getFragmentManager() != null) {
+                            installAll.show(getFragmentManager(),"InstallAppDialogFragment");
+                        }
 
                         //For core update purposes
                         new PrefManager(getActivity()).setStrPref("DNSCryptVersion",DNSCryptVersion);
@@ -278,8 +287,10 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                                     || currentTorVersion < Integer.parseInt(TorVersion.replaceAll("\\D+", ""))
                                     || currentITPDVersion < Integer.parseInt(ITPDVersion.replaceAll("\\D+", ""))
                                     && !new PrefManager(getActivity()).getBoolPref("UpdateNotAllowed"))) {
-                                UpdateCore updateCore = new UpdateCore();
-                                updateCore.show(getFragmentManager(), "UpdateCore");
+                                DialogFragment updateCore = UpdateModulesDialogFragment.getInstance();
+                                if (getFragmentManager() != null) {
+                                    updateCore.show(getFragmentManager(), "UpdateModulesDialogFragment");
+                                }
                                 return;
                             }
                         }
@@ -312,8 +323,10 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                 }
 
             } catch (Exception e) {
-                DialogFragment dialogCheckRoot = new CheckRoot();
-                dialogCheckRoot.show(getFragmentManager(), "dialogCheckRoot");
+                DialogFragment dialogCheckRoot = NoRootDialogFragment.getInstance();
+                if (getFragmentManager() != null) {
+                    dialogCheckRoot.show(getFragmentManager(), "NoRootDialogFragment");
+                }
                 Log.w(LOG_TAG, "Chkroot onPostExecute "+e.getMessage() + " " + e.getCause());
             }
         }
@@ -337,16 +350,15 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                         "Super User Version: Unknown" +
                         fSuResult.get(0);
             }
-            ((ImageView)view.findViewById(R.id.imDeviceRoot)).setImageResource(R.drawable.ic_top_good);
             Log.i(LOG_TAG,verSU);
         } else {
             rootOK = false;
             new PrefManager(getActivity()).setBoolPref("rootOK",false);
-            TextView tvDeviceRoot=view.findViewById(R.id.tvDeviceRoot);
-            tvDeviceRoot.setText(R.string.no_root);
 
-            DialogFragment dialogCheckRoot = new CheckRoot();
-            dialogCheckRoot.show(getFragmentManager(), "dialogCheckRoot");
+            DialogFragment dialogCheckRoot = NoRootDialogFragment.getInstance();
+            if (getFragmentManager() != null) {
+                dialogCheckRoot.show(getFragmentManager(), "NoRootDialogFragment");
+            }
 
         }
     }
@@ -363,199 +375,19 @@ public class TopFragment extends Fragment implements View.OnClickListener {
         } else {
             bbOK = false;
             new PrefManager(getActivity()).setBoolPref("bbOK",false);
-            TextView tvBBox=view.findViewById(R.id.tvBBox);
-            tvBBox.setText(R.string.no_bb);
             return;
         }
-
-
 
         if (!verBB.toLowerCase().contains("not found")) {
             bbOK = true;
             new PrefManager(getActivity()).setBoolPref("bbOK",true);
-            ((ImageView)view.findViewById(R.id.imBBox)).setImageResource(R.drawable.ic_top_good);
 
             Log.i(LOG_TAG,"BusyBox is available " + verBB);
 
         } else {
             bbOK = false;
             new PrefManager(getActivity()).setBoolPref("bbOK",false);
-            TextView tvBBox=view.findViewById(R.id.tvBBox);
-            tvBBox.setText(R.string.no_bb);
 
-        }
-    }
-
-
-
-
-
-
-    //Alert if root or busybox not available
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()){
-            case R.id.tvDeviceRoot:
-                if(!rootOK) {
-                    DialogFragment dialogCheckRoot = new CheckRoot();
-                    dialogCheckRoot.show(getFragmentManager(), "dialogCheckRoot");
-                } else {
-                    NotificationDialogFragment dialogShowSU = NotificationDialogFragment.newInstance(verSU);
-                    dialogShowSU.show(getFragmentManager(), NotificationDialogFragment.TAG_NOT_FRAG);
-                }
-
-                break;
-            case R.id.tvBBox:
-                if(!bbOK) {
-                    DialogFragment dialogCheckBB = new CheckBB();
-                    dialogCheckBB.show(getFragmentManager(), "dialogCheckBB");
-                } else {
-                    NotificationDialogFragment dialogShowBB = NotificationDialogFragment.newInstance(verBB);
-                    dialogShowBB.show(getFragmentManager(), NotificationDialogFragment.TAG_NOT_FRAG);
-                }
-
-                break;
-        }
-    }
-
-    //Dialog Install
-    public static class InstallApp extends DialogFragment {
-
-        @Override
-        public void show(FragmentManager manager, String tag) {
-            try {
-                FragmentTransaction ft = manager.beginTransaction();
-                ft.add(this, tag);
-                ft.commitAllowingStateLoss();
-                //ft.commit();
-            } catch (IllegalStateException e) {
-                Log.w("TPDCLogs", "Top Frag InstallApp Exception "+e.getMessage() + " " + e.getCause());
-            }
-        }
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
-            builder.setMessage(R.string.install_title)
-                    .setTitle(R.string.install)
-                    .setPositiveButton(R.string.install, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            FragmentManager fm = getFragmentManager();
-                            TopFragment frgTop = (TopFragment) fm.findFragmentById(R.id.Topfrg);
-                            frgTop.startInstallation();
-                        }
-                    })
-                    .setNegativeButton(R.string.exit, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            getActivity().finish();
-                        }
-                    });
-            return builder.create();
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            Objects.requireNonNull(getDialog().getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            return super.onCreateView(inflater, container, savedInstanceState);
-        }
-    }
-
-    //Dialog Root not available
-    public static class CheckRoot extends DialogFragment {
-
-        @Override
-        public void show(FragmentManager manager, String tag) {
-            try {
-                FragmentTransaction ft = manager.beginTransaction();
-                ft.add(this, tag);
-                ft.commitAllowingStateLoss();
-            } catch (IllegalStateException e) {
-                Log.w(LOG_TAG, "Top Fragment CheckRoot Exception"+e.getMessage() + " " + e.getCause());
-            }
-        }
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
-            builder.setMessage(R.string.check_root)
-                    .setTitle(R.string.sorry)
-                    .setIcon(R.drawable.ic_no_root)
-                    .setNegativeButton(R.string.exit, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            getActivity().finish();
-                        }
-                    });
-            return builder.create();
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            Objects.requireNonNull(getDialog().getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            return super.onCreateView(inflater, container, savedInstanceState);
-        }
-    }
-
-    //Dialog BusyBox not available
-    public static class CheckBB extends DialogFragment {
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
-            builder.setMessage(R.string.install_bb)
-                    .setTitle(R.string.warning)
-                    .setPositiveButton(R.string.install, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Intent callBB = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=stericson.busybox"));
-                            startActivity(callBB);
-                        }
-                    })
-                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            dismiss();
-                        }
-                    });
-            return builder.create();
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            Objects.requireNonNull(getDialog().getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            return super.onCreateView(inflater, container, savedInstanceState);
-        }
-    }
-
-    public static class NotificationDialogFragment extends DialogFragment {
-
-        public static final String TAG_NOT_FRAG = "NotificationDialogFragment";
-
-        private static String mMessageToDisplay;
-
-        public static NotificationDialogFragment newInstance(String message) {
-
-            NotificationDialogFragment infoDialog = new NotificationDialogFragment();
-            mMessageToDisplay = message;
-            return infoDialog;
-        }
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            AlertDialog.Builder alertDialog = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
-
-            alertDialog.setMessage(mMessageToDisplay)
-                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            dismiss();
-                        }
-                    });
-            return alertDialog.create();
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            Objects.requireNonNull(getDialog().getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            return super.onCreateView(inflater, container, savedInstanceState);
         }
     }
 
@@ -582,8 +414,7 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                 }
 
 
-                if (rootOK) {
-
+                if (rootOK && getActivity() instanceof MainActivity) {
                     Installer installer = new Installer(getActivity());
                     installer.installModules();
                     Log.i(LOG_TAG, "TopFragment Timer start Modules Installation");
@@ -591,157 +422,6 @@ public class TopFragment extends Fragment implements View.OnClickListener {
                 }
             }
         }, 3000, 1000);
-    }
-
-    private DialogInterface modernProgressDialog() {
-        android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
-        builder.setTitle(R.string.root);
-        builder.setMessage(R.string.root_available);
-        builder.setIcon(R.drawable.ic_visibility_off_black_24dp);
-
-        ProgressBar progressBar = new ProgressBar(getActivity(),null, android.R.attr.progressBarStyleHorizontal);
-        progressBar.setBackgroundResource(R.drawable.background_10dp_padding);
-        progressBar.setIndeterminate(true);
-        builder.setView(progressBar);
-        builder.setCancelable(false);
-        android.support.v7.app.AlertDialog view  = builder.show();
-        Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
-        return view;
-    }
-
-    public static class UpdateCore extends DialogFragment {
-
-        @Override
-        public void show(FragmentManager manager, String tag) {
-            try {
-                FragmentTransaction ft = manager.beginTransaction();
-                ft.add(this, tag);
-                ft.commitAllowingStateLoss();
-            } catch (IllegalStateException e) {
-                Log.w("TPDCLogs", "UpdateCore Dialog Exception "+e.getMessage() + " " + e.getCause());
-            }
-        }
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
-            builder.setMessage(R.string.update_core_message)
-                    .setTitle(R.string.update_core_title)
-                    .setPositiveButton(R.string.update_core_yes, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dismiss();
-
-                            PathVars pathVars = new PathVars(getActivity());
-                            String iptablesPath = pathVars.iptablesPath;
-                            String busyboxPath = pathVars.busyboxPath;
-                            String[] commandsReset = new String[] {
-                                    iptablesPath+ "iptables -t nat -F tordnscrypt_nat_output",
-                                    iptablesPath+ "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                                    iptablesPath+ "iptables -F tordnscrypt",
-                                    iptablesPath+ "iptables -D OUTPUT -j tordnscrypt || true",
-                                    busyboxPath + "sleep 1",
-                                    busyboxPath + "killall dnscrypt-proxy",
-                                    busyboxPath + "killall tor",
-                                    busyboxPath + "killall i2pd"
-                            };
-                            RootCommands rootCommands = new RootCommands(commandsReset);
-                            Intent intentReset = new Intent(getActivity(), RootExecService.class);
-                            intentReset.setAction(RootExecService.RUN_COMMAND);
-                            intentReset.putExtra("Commands",rootCommands);
-                            intentReset.putExtra("Mark", RootExecService.NullMark);
-                            RootExecService.performAction(getActivity(),intentReset);
-
-                            new PrefManager(getActivity()).setBoolPref("DNSCrypt Installed",false);
-                            new PrefManager(getActivity()).setBoolPref("Tor Installed",false);
-                            new PrefManager(getActivity()).setBoolPref("I2PD Installed",false);
-                            NotificationDialogFragment dialogShowSU = NotificationDialogFragment.newInstance(getString(R.string.update_core_restart));
-                            dialogShowSU.show(getFragmentManager(), NotificationDialogFragment.TAG_NOT_FRAG);
-                        }
-                    })
-                    .setNegativeButton(R.string.update_core_no, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            dismiss();
-                        }
-                    })
-                    .setNeutralButton(R.string.update_core_not_show_again, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            dismiss();
-                            new PrefManager(getActivity()).setBoolPref("UpdateNotAllowed",true);
-                        }
-                    });
-            // Create the AlertDialog object and return it
-            return builder.create();
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            Objects.requireNonNull(getDialog().getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            return super.onCreateView(inflater, container, savedInstanceState);
-        }
-    }
-
-    public static class NewUpdateDialogFragment extends DialogFragment {
-
-        public static final String TAG_NOT_FRAG = "NewUpdateDialogFragment";
-
-        private String mMessageToDisplay;
-        private String updateStr;
-        private String updateFile;
-        private String hash;
-
-        public static NewUpdateDialogFragment newInstance(String message, String updateStr, String updateFile, String hash) {
-
-            NewUpdateDialogFragment updateDialog = new NewUpdateDialogFragment();
-            updateDialog.mMessageToDisplay = message;
-            updateDialog.updateStr = updateStr;
-            updateDialog.updateFile = updateFile;
-            updateDialog.hash = hash;
-
-            return updateDialog;
-        }
-
-        @Override
-        public void show(FragmentManager manager, String tag) {
-            try {
-                FragmentTransaction ft = manager.beginTransaction();
-                ft.add(this, tag);
-                ft.commitAllowingStateLoss();
-
-            } catch (IllegalStateException e) {
-                Log.w(LOG_TAG, "NewUpdateDialogFragment dialog Exception "+e.getMessage() + " " + e.getCause());
-            }
-        }
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            AlertDialog.Builder alertDialog = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
-            alertDialog.setMessage(mMessageToDisplay)
-                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            Intent intent = new Intent(getActivity(), UpdateService.class);
-                            intent.setAction(UpdateService.DOWNLOAD_ACTION);
-                            intent.putExtra("url", "https://invizible.net/?wpdmdl="+updateStr);
-                            intent.putExtra("file", updateFile);
-                            intent.putExtra("hash",hash);
-                            getActivity().startService(intent);
-                        }
-                    })
-                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            dismiss();
-                        }
-                    });
-            return alertDialog.create();
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            Objects.requireNonNull(getDialog().getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            return super.onCreateView(inflater, container, savedInstanceState);
-        }
     }
 
     public void checkUpdates() {
@@ -808,8 +488,10 @@ public class TopFragment extends Fragment implements View.OnClickListener {
 
         new PrefManager(getActivity()).setStrPref("LastUpdateResult",getActivity().getText(R.string.update_found).toString());
 
-        NewUpdateDialogFragment newUpdateDialogFragment = NewUpdateDialogFragment.newInstance(message,updateStr,fileName,hash);
-        newUpdateDialogFragment.show(getFragmentManager(), NewUpdateDialogFragment.TAG_NOT_FRAG);
+        DialogFragment newUpdateDialogFragment = NewUpdateDialogFragment.newInstance(message,updateStr,fileName,hash);
+        if (getFragmentManager() != null) {
+            newUpdateDialogFragment.show(getFragmentManager(), NewUpdateDialogFragment.TAG_NOT_FRAG);
+        }
     }
 
 

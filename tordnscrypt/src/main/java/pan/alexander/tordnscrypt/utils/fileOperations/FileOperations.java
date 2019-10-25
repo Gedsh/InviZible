@@ -594,28 +594,6 @@ public class FileOperations {
         }
     }
 
-    public static DialogInterface fileOperationProgressDialog(Context context) {
-        final android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(context, R.style.CustomDialogTheme);
-        builder.setTitle(R.string.please_wait);
-        builder.setCancelable(false);
-        builder.setPositiveButton(R.string.cancel, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-
-                dialogInterface.dismiss();
-            }
-        });
-
-        ProgressBar progressBar = new ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal);
-        progressBar.setBackgroundResource(R.drawable.background_10dp_padding);
-        progressBar.setIndeterminate(true);
-        builder.setView(progressBar);
-        builder.setCancelable(false);
-        AlertDialog view = builder.show();
-        Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
-        return view;
-    }
-
     public static void setOnFileOperationCompleteListener(OnFileOperationsCompleteListener callback) {
         if (stackCallbacks == null)
             stackCallbacks = new Stack<>();

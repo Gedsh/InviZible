@@ -38,10 +38,10 @@ import javax.net.ssl.HttpsURLConnection;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
-class HttpsRequest {
+public class HttpsRequest {
     private static final int READTIMEOUT = 30;
     private static final int CONNECTTIMEOUT = 30;
-    static String post(String serverUrl, String dataToSend) throws IOException {
+    public static String post(String serverUrl, String dataToSend) throws IOException {
         URL url = new URL(serverUrl);
         HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
         //set timeout of 30 seconds
@@ -89,7 +89,7 @@ class HttpsRequest {
         }
     }
 
-    static String hashMapToUrl(HashMap<String, String> params) throws UnsupportedEncodingException {
+    public static String hashMapToUrl(HashMap<String, String> params) throws UnsupportedEncodingException {
         StringBuilder result = new StringBuilder();
         boolean first = true;
         for(Map.Entry<String, String> entry : params.entrySet()){

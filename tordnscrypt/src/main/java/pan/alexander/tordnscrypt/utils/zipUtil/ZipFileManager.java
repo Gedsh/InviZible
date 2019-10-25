@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.utils.ZipUtil;
+package pan.alexander.tordnscrypt.utils.zipUtil;
 
 /*
     This file is part of InviZible Pro.

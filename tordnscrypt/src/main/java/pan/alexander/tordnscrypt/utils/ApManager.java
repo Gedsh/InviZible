@@ -187,7 +187,7 @@ public class ApManager {
                     false);
         } catch (NoSuchMethodException e) {
             // Newer devices have "callingPkg" String argument at the end of this method.
-            Method startTetheringMethod = internalConnectivityManagerClass.getDeclaredMethod("startTethering",
+            @SuppressLint("SoonBlockedPrivateApi") Method startTetheringMethod = internalConnectivityManagerClass.getDeclaredMethod("startTethering",
                     int.class,
                     ResultReceiver.class,
                     boolean.class,

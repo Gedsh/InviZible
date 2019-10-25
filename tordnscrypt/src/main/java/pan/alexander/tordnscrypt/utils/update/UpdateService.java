@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.utils;
+package pan.alexander.tordnscrypt.utils.update;
 /*
     This file is part of InviZible Pro.
 
@@ -54,6 +54,10 @@ import javax.net.ssl.HttpsURLConnection;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.NoRootService;
+import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.RootCommands;
+import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
@@ -238,7 +242,8 @@ public class UpdateService extends Service {
                     output.close();
                     input.close();
 
-                    if (Objects.requireNonNull(crc32(new File(path))).equalsIgnoreCase(hash)) {
+                    if (Objects.requireNonNull(crc32(new File(path))).equalsIgnoreCase(hash)
+                            && !new PrefManager(getApplicationContext()).getStrPref("UpdateResultMessage").equals(getString(R.string.update_fault))) {
                         new PrefManager(getApplicationContext()).setStrPref("LastUpdateResult",
                                 getApplicationContext().getText(R.string.update_installed).toString());
 
@@ -267,7 +272,9 @@ public class UpdateService extends Service {
                             FileOperations.moveBinaryFile(getApplicationContext(), cacheDir.getPath(), fileToDownload, appDataDir + "/app_bin", "executable_ignored");
                             runPreviousStoppedModules(fileToDownload);
 
-                            new PrefManager(getApplicationContext()).setStrPref("UpdateResultMessage", getString(R.string.update_installed));
+                            if (!new PrefManager(getApplicationContext()).getStrPref("UpdateResultMessage").equals(getString(R.string.update_fault))) {
+                                new PrefManager(getApplicationContext()).setStrPref("UpdateResultMessage", getString(R.string.update_installed));
+                            }
                         }
 
                     } else {

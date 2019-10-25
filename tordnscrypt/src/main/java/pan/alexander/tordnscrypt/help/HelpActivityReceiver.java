@@ -21,9 +21,9 @@ package pan.alexander.tordnscrypt.help;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Handler;
+import android.support.v4.app.DialogFragment;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -37,7 +37,7 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
-import pan.alexander.tordnscrypt.utils.ZipUtil.ZipFileManager;
+import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -47,7 +47,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
     private String appDataDir;
     private String info;
     private String pathToSaveLogs;
-    private DialogInterface progressDialog;
+    private DialogFragment progressDialog;
 
     public HelpActivityReceiver(Handler mHandler, String appDataDir, String pathToSaveLogs) {
         this.mHandler = mHandler;
@@ -66,7 +66,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
         RootCommands comResult = (RootCommands) intent.getSerializableExtra("CommandsResult");
 
         if (comResult.getCommands().length == 0) {
-            closeProgressBar();
+            closeProgressDialog();
             showSomethingWrongToast(context);
             return;
         }
@@ -91,7 +91,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
                     FileOperations.moveBinaryFile(context, appDataDir
                             + "/logs", "InvizibleLogs.txt", pathToSaveLogs, "InvizibleLogs.txt");
                 } else {
-                    closeProgressBar();
+                    closeProgressDialog();
                     showSomethingWrongToast(context);
                     Log.e(LOG_TAG, "Collect logs alternative method fault");
                 }
@@ -161,7 +161,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
         return intent.getIntExtra("Mark", 0) == RootExecService.HelpActivityMark;
     }
 
-    private void closeProgressBar() {
+    private void closeProgressDialog() {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -201,7 +201,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
         this.info = info;
     }
 
-    public void setProgressDialog(DialogInterface progressDialog) {
+    public void setProgressDialog(DialogFragment progressDialog) {
         this.progressDialog = progressDialog;
     }
 }

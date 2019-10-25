@@ -18,13 +18,13 @@ package pan.alexander.tordnscrypt.help;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.support.v4.app.DialogFragment;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -46,6 +46,8 @@ import pan.alexander.tordnscrypt.BuildConfig;
 import pan.alexander.tordnscrypt.LangAppCompatActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
+import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
+import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.fileOperations.ExternalStoragePermissions;
@@ -72,7 +74,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     String pathToSaveLogs;
     String iptablesPath;
     String appUID;
-    DialogInterface dialogInterface;
+    static DialogFragment dialogFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,8 +135,9 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
                 collectLogsMethodOne(info);
 
-                dialogInterface = FileOperations.fileOperationProgressDialog(this);
-                br.setProgressDialog(dialogInterface);
+                dialogFragment = PleaseWaitProgressDialog.getInstance();
+                dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
+                br.setProgressDialog(dialogFragment);
                 break;
             case R.id.etLogsPath:
                 chooseOutputFolder();
@@ -249,8 +252,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     @Override
     public void onStop() {
         super.onStop();
-        if (dialogInterface != null)
-            dialogInterface.dismiss();
+
         this.unregisterReceiver(br);
         FileOperations.deleteOnFileOperationCompleteListener();
     }
@@ -281,19 +283,19 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
             Log.e(LOG_TAG, "Unable to delete file " + path);
         } else if (currentFileOperation == moveBinaryFile) {
 
-            if (dialogInterface != null)
-                dialogInterface.dismiss();
+            if (dialogFragment != null)
+                dialogFragment.dismiss();
             if (fileOperationResult) {
 
-                TopFragment.NotificationDialogFragment commandResult =
-                        TopFragment.NotificationDialogFragment.newInstance(getText(R.string.help_activity_logs_saved).toString()
+                DialogFragment commandResult =
+                        NotificationDialogFragment.newInstance(getText(R.string.help_activity_logs_saved).toString()
                                 + " " + pathToSaveLogs);
-                commandResult.show(getFragmentManager(), TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
+                commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
             } else {
-                TopFragment.NotificationDialogFragment commandResult =
-                        TopFragment.NotificationDialogFragment.newInstance(getText(R.string.help_activity_logs_saved).toString()
+                DialogFragment commandResult =
+                        NotificationDialogFragment.newInstance(getText(R.string.help_activity_logs_saved).toString()
                                 + " " + appDataDir + "/logs/InvizibleLogs.txt");
-                commandResult.show(getFragmentManager(), TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
+                commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
             }
         }
     }

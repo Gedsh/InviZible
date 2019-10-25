@@ -21,8 +21,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="0"
-            android:tag="topFragmentTAG"
-            tools:layout="@layout/fragment_top" />
+            android:tag="topFragmentTAG" />
     </LinearLayout>
 
     <android.support.v7.widget.CardView

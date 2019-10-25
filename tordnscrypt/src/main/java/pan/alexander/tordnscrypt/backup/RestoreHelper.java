@@ -23,6 +23,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
 
 import java.io.File;
@@ -35,7 +36,7 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootExecService;
-import pan.alexander.tordnscrypt.utils.ZipUtil.ZipFileManager;
+import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 import pan.alexander.tordnscrypt.utils.installer.Installer;
 
@@ -95,13 +96,24 @@ class RestoreHelper extends Installer {
 
                     restoreOldInfo(code);
 
+                    refreshModulesStatus(activity);
+
                 } catch (Exception e) {
                     Log.e(LOG_TAG, "Restore fault " + e.getMessage() + " " + e.getCause());
 
                     if (activity instanceof BackupActivity) {
-                        BackupActivity backupActivity = (BackupActivity)activity;
-                        backupActivity.closeProgress();
-                        backupActivity.showToast(backupActivity, activity.getString(R.string.wrong));
+                        try {
+                            BackupActivity backupActivity = (BackupActivity)activity;
+                            FragmentManager manager = backupActivity.getSupportFragmentManager();
+                            BackupFragment fragment = (BackupFragment) manager.findFragmentById(R.id.backupFragment);
+                            if (fragment != null) {
+                                fragment.closePleaseWaitDialog();
+                                fragment.showToast(activity.getString(R.string.wrong));
+                            }
+                        } catch (Exception ex) {
+                            Log.e(LOG_TAG, "RestoreHelper close progress fault " + ex.getMessage() + " " +ex.getCause());
+                        }
+
                     }
                 }
             }
@@ -178,5 +190,9 @@ class RestoreHelper extends Installer {
 
     void setPathBackup(String pathBackup) {
         this.pathBackup = pathBackup;
+    }
+
+    public void setActivity(Activity activity) {
+        this.activity = activity;
     }
 }

@@ -49,7 +49,7 @@
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".utils.UpdateService"
+            android:name=".utils.update.UpdateService"
             android:enabled="true"
             android:exported="false" />
 

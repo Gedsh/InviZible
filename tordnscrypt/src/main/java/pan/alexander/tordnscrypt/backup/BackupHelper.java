@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.backup;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
 
 import java.io.File;
@@ -30,7 +31,7 @@ import java.io.ObjectOutputStream;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.ZipUtil.ZipFileManager;
+import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 
 import static pan.alexander.tordnscrypt.TopFragment.LOG_TAG;
@@ -74,9 +75,17 @@ class BackupHelper {
                     Log.e(LOG_TAG, "BackupHelper saveAllToInternalDir fault " + e.getMessage() + " " +e.getCause());
 
                     if (context instanceof BackupActivity) {
-                        BackupActivity backupActivity = (BackupActivity)context;
-                        backupActivity.closeProgress();
-                        backupActivity.showToast(backupActivity, context.getString(R.string.wrong));
+                        try {
+                            BackupActivity backupActivity = (BackupActivity)context;
+                            FragmentManager manager = backupActivity.getSupportFragmentManager();
+                            BackupFragment fragment = (BackupFragment) manager.findFragmentById(R.id.backupFragment);
+                            if (fragment != null) {
+                                fragment.closePleaseWaitDialog();
+                                fragment.showToast(context.getString(R.string.wrong));
+                            }
+                        } catch (Exception ex) {
+                            Log.e(LOG_TAG, "BackupHelper close progress fault " + ex.getMessage() + " " +ex.getCause());
+                        }
                     }
 
                 }
@@ -102,5 +111,9 @@ class BackupHelper {
 
     void setPathBackup(String pathBackup) {
         this.pathBackup = pathBackup;
+    }
+
+    public void setContext(Context context) {
+        this.context = context;
     }
 }

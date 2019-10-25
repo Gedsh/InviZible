@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.utils;
+package pan.alexander.tordnscrypt.utils.update;
 /*
     This file is part of InviZible Pro.
 
@@ -43,6 +43,8 @@ import pan.alexander.tordnscrypt.BuildConfig;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
+import pan.alexander.tordnscrypt.utils.HttpsRequest;
+import pan.alexander.tordnscrypt.utils.PrefManager;
 
 import static pan.alexander.tordnscrypt.TopFragment.appProcVersion;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
@@ -360,6 +362,7 @@ public class UpdateCheck {
                     String url = domainName + "/ru/update";
                     String serverAnswerEncoded = HttpsRequest.post(url,HttpsRequest.hashMapToUrl(request));
 
+                    //Uses for testing purposes:
                     //((MainActivity) context).showUpdateMessage(serverAnswerEncoded);
 
                     if (serverAnswerEncoded.isEmpty()) {

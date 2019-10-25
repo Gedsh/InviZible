@@ -19,7 +19,6 @@ package pan.alexander.tordnscrypt.utils.installer;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.app.Activity;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 
@@ -28,7 +27,7 @@ import pan.alexander.tordnscrypt.ITPDRunFragment;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TorRunFragment;
-import pan.alexander.tordnscrypt.utils.NotificationHelper;
+import pan.alexander.tordnscrypt.dialogs.DialogAfterInstallation;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
@@ -38,22 +37,22 @@ class InstallerUIChanger {
     private TorRunFragment torRunFragment;
     private ITPDRunFragment itpdRunFragment;
 
-    InstallerUIChanger(Activity activity) {
-        getViews(activity);
+    InstallerUIChanger(MainActivity mainActivity) {
+        getViews(mainActivity);
     }
 
-    private void getViews(Activity activity) {
-        if (activity instanceof MainActivity) {
-            mainActivity = (MainActivity) activity;
+    private void getViews(MainActivity mainActivity) {
+        this.mainActivity = mainActivity;
+
+        if (mainActivity == null) {
+            throw new IllegalStateException("Installer: InstallerUIChanger is null, interrupt installation");
         }
 
-        if (mainActivity != null) {
-            dnsCryptRunFragment = mainActivity.getDNSCryptRunFragment();
-            torRunFragment = mainActivity.getTorRunFragment();
-            itpdRunFragment = mainActivity.getITPDRunFragment();
+        dnsCryptRunFragment = mainActivity.getDNSCryptRunFragment();
+        torRunFragment = mainActivity.getTorRunFragment();
+        itpdRunFragment = mainActivity.getITPDRunFragment();
 
-            Log.i(LOG_TAG, "Installer: getViews() OK");
-        }
+        Log.i(LOG_TAG, "Installer: getViews() OK");
     }
 
     Runnable lockDrawerMenu(final boolean lock) {
@@ -241,26 +240,7 @@ class InstallerUIChanger {
         return new Runnable() {
             @Override
             public void run() {
-                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                        mainActivity, mainActivity.getText(R.string.helper_after_install).toString(),"after_install");
-                if (notificationHelper != null) {
-                    notificationHelper.show(mainActivity.getFragmentManager(),NotificationHelper.TAG_HELPER);
-                }
-
-                Log.i(LOG_TAG, "Installer: showDialogAfterInstallation");
-            }
-        };
-    }
-
-    Runnable recreateMainActivity() {
-        return new Runnable() {
-            @Override
-            public void run() {
-                if (mainActivity != null) {
-                    mainActivity.recreate();
-
-                    Log.i(LOG_TAG, "Installer: recreateMainActivity");
-                }
+                DialogAfterInstallation.getDialogBuilder(mainActivity).show();
             }
         };
     }
@@ -286,7 +266,7 @@ class InstallerUIChanger {
         };
     }
 
-    MainActivity getMainActivity() {
-        return mainActivity;
+    void setMainActivity(MainActivity mainActivity) {
+        this.mainActivity = mainActivity;
     }
 }

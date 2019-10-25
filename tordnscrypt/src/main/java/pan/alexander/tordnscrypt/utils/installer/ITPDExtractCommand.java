@@ -21,7 +21,7 @@ package pan.alexander.tordnscrypt.utils.installer;
 
 import android.content.Context;
 
-import pan.alexander.tordnscrypt.utils.ZipUtil.ZipFileManager;
+import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
 
 public class ITPDExtractCommand extends AssetsExtractCommand {
     private String appDataDir;

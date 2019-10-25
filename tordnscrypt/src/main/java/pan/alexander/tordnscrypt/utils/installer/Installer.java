@@ -21,15 +21,19 @@ package pan.alexander.tordnscrypt.utils.installer;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
 
 import java.io.File;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.MainActivity;
+import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
@@ -37,14 +41,13 @@ import pan.alexander.tordnscrypt.utils.PrefManager;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
-public class Installer {
+public class Installer implements TopFragment.OnActivityChangeListener {
     private Activity activity;
-    private String appDataDir;
+    private MainActivity mainActivity;
     private static CountDownLatch countDownLatch;
+    private String appDataDir;
     private PathVars pathVars;
     protected static boolean interruptInstallation = false;
-
-    private MainActivity mainActivity;
 
     private InstallerUIChanger installerUIChanger;
 
@@ -54,16 +57,22 @@ public class Installer {
         pathVars = new PathVars(activity);
         appDataDir = pathVars.appDataDir;
 
-        installerUIChanger = new InstallerUIChanger(activity);
+        if (activity instanceof MainActivity) {
+            mainActivity = (MainActivity) activity;
+            installerUIChanger = new InstallerUIChanger(mainActivity);
+        }
+
+
     }
 
     public void installModules() {
-        mainActivity = installerUIChanger.getMainActivity();
 
         try {
             if (mainActivity == null) {
                 throw new IllegalStateException("Installer: MainActivity is null, interrupt installation");
             }
+
+            setOnMainActivityChangeListener();
 
             mainActivity.runOnUiThread(installerUIChanger.lockDrawerMenu(true));
             mainActivity.runOnUiThread(installerUIChanger.setModulesStatusTextInstalling());
@@ -97,11 +106,16 @@ public class Installer {
             mainActivity.runOnUiThread(installerUIChanger.stopModulesProgressBarIndeterminate());
             mainActivity.runOnUiThread(installerUIChanger.setModulesStartButtonsEnabled());
             mainActivity.runOnUiThread(installerUIChanger.lockDrawerMenu(false));
-            mainActivity.runOnUiThread(installerUIChanger.showDialogAfterInstallation());
+
 
             savePreferencesModulesInstalled(true);
 
-            mainActivity.runOnUiThread(installerUIChanger.recreateMainActivity());
+            refreshModulesStatus(activity);
+
+            TimeUnit.SECONDS.sleep(1);
+
+            mainActivity.runOnUiThread(installerUIChanger.showDialogAfterInstallation());
+
         } catch (Exception e) {
             Log.e(LOG_TAG, "Installation fault " + e.getMessage() + " " + e.getCause());
 
@@ -139,7 +153,7 @@ public class Installer {
         mainActivity.runOnUiThread(installerUIChanger.torProgressBarIndeterminate(false));
         mainActivity.runOnUiThread(installerUIChanger.setTorInstalledStatus());
 
-        Log.i(LOG_TAG, "Installer: extractTort OK");
+        Log.i(LOG_TAG, "Installer: extractTor OK");
     }
 
     private void extractITPD() throws Exception {
@@ -156,14 +170,18 @@ public class Installer {
     }
 
     private void savePreferencesModulesInstalled(boolean installed) {
+        if (activity == null) {
+            return;
+        }
+
         if (installed) {
-            new PrefManager(Objects.requireNonNull(activity)).setBoolPref("DNSCrypt Installed",true);
-            new PrefManager(Objects.requireNonNull(activity)).setBoolPref("Tor Installed",true);
-            new PrefManager(Objects.requireNonNull(activity)).setBoolPref("I2PD Installed",true);
+            new PrefManager(activity).setBoolPref("DNSCrypt Installed",true);
+            new PrefManager(activity).setBoolPref("Tor Installed",true);
+            new PrefManager(activity).setBoolPref("I2PD Installed",true);
         } else {
-            new PrefManager(Objects.requireNonNull(activity)).setBoolPref("DNSCrypt Installed",false);
-            new PrefManager(Objects.requireNonNull(activity)).setBoolPref("Tor Installed",false);
-            new PrefManager(Objects.requireNonNull(activity)).setBoolPref("I2PD Installed",false);
+            new PrefManager(activity).setBoolPref("DNSCrypt Installed",false);
+            new PrefManager(activity).setBoolPref("Tor Installed",false);
+            new PrefManager(activity).setBoolPref("I2PD Installed",false);
         }
 
     }
@@ -299,5 +317,25 @@ public class Installer {
         }
 
         Log.i(LOG_TAG, "Installer: createLogsDir OK");
+    }
+
+    protected void refreshModulesStatus(Activity activity) {
+        ModulesStatus modulesStatus = ModulesStatus.getInstance();
+        modulesStatus.refresh(activity);
+    }
+
+    private void setOnMainActivityChangeListener() {
+        FragmentManager manager = mainActivity.getSupportFragmentManager();
+        TopFragment topFragment = (TopFragment) manager.findFragmentById(R.id.Topfrg);
+        if (topFragment != null) {
+            topFragment.setOnActivityChangeListener(this);
+        }
+    }
+
+    @Override
+    public void OnActivityChange(MainActivity mainActivity) {
+        this.activity = mainActivity;
+        this.mainActivity = mainActivity;
+        installerUIChanger.setMainActivity(mainActivity);
     }
 }

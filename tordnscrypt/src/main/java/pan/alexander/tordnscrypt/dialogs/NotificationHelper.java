@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.utils;
+package pan.alexander.tordnscrypt.dialogs;
 /*
     This file is part of InviZible Pro.
 
@@ -18,62 +18,50 @@ package pan.alexander.tordnscrypt.utils;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.v4.app.DialogFragment;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-
-import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.utils.PrefManager;
 
-public class NotificationHelper extends DialogFragment {
+public class NotificationHelper extends ExtendedDialogFragment {
 
     private String tag = "";
     private static String message = "";
     public static final String TAG_HELPER = "pan.alexander.tordnscrypt.HELPER_NOTIFICATION";
     private static NotificationHelper notificationHelper = null;
 
-    @NonNull
     @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        // Use the Builder class for convenient dialog construction
+    public AlertDialog.Builder assignBuilder() {
+
+        if (getActivity() == null) {
+            return null;
+        }
+
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
         builder.setMessage(message)
                 .setTitle(R.string.helper_dialog_title)
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        dismiss();
                         notificationHelper = null;
                     }
                 })
                 .setNegativeButton(R.string.dont_show, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        new PrefManager(getActivity()).setBoolPref("helper_no_show_"+tag,true);
-                        dismiss();
+                        if (getActivity() != null) {
+                            new PrefManager(getActivity()).setBoolPref("helper_no_show_" + tag, true);
+                        }
                         notificationHelper = null;
+                        dismiss();
                     }
                 });
-        // Create the AlertDialog object and return it
-        return builder.create();
-    }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Objects.requireNonNull(getDialog().getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        return super.onCreateView(inflater, container, savedInstanceState);
+        return builder;
     }
 
     public static NotificationHelper setHelperMessage(Context context, String message, String preferenceTag) {
