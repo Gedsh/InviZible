@@ -1,8 +1,8 @@
 package pan.alexander.tordnscrypt.utils.modulesStatus;
 
-import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 /*
     This file is part of InviZible Pro.
@@ -23,37 +23,48 @@ import android.content.Intent;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import java.util.List;
+import com.jrummyapps.android.shell.CommandResult;
+import com.jrummyapps.android.shell.Shell;
+import com.jrummyapps.android.shell.ShellNotFoundException;
 
+import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 
+import static pan.alexander.tordnscrypt.TopFragment.LOG_TAG;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
-public final class Status {
-    private final String DNSCRYPT_MODULE_REGEX = "pan.alexander.tordnscrypt.*/app_bin/dnscrypt-proxy";
-    private final String TOR_MODULE_REGEX = "pan.alexander.tordnscrypt.*/app_bin/tor";
-    private final String ITPD_MODULE_REGEX = "pan.alexander.tordnscrypt.*/app_bin/i2pd";
+public final class ModulesStatus {
 
-    private ModuleState dnsCryptState = STOPPED;
-    private ModuleState torState = STOPPED;
-    private ModuleState itpdState = STOPPED;
+    private volatile ModuleState dnsCryptState = STOPPED;
+    private volatile ModuleState torState = STOPPED;
+    private volatile ModuleState itpdState = STOPPED;
+    private volatile boolean fresh = false;
 
-    private static volatile Status modulesStatus;
+    private ModuleState dnsCryptStateLocal = STOPPED;
+    private ModuleState torStateLocal = STOPPED;
+    private ModuleState itpdStateLocal = STOPPED;
 
-    private Status() {
+    private Shell.Console console;
+    private boolean shellIsOpened;
+
+    private PathVars pathVars;
+
+    private static volatile ModulesStatus modulesStatus;
+
+    private ModulesStatus() {
     }
 
-    public static Status getInstance() {
+    public static ModulesStatus getInstance() {
         if (modulesStatus == null) {
-            synchronized (Status.class) {
+            synchronized (ModulesStatus.class) {
                 if (modulesStatus == null) {
-                    modulesStatus = new Status();
+                    modulesStatus = new ModulesStatus();
                 }
             }
         }
-        return new Status();
+        return modulesStatus;
     }
 
     public void refreshViews(Context context) {
@@ -61,28 +72,82 @@ public final class Status {
         context.sendBroadcast(intent);
     }
 
-    void refresh(final Context context) {
-        final ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        final List<ActivityManager.RunningAppProcessInfo> procInfos = activityManager.getRunningAppProcesses();
-        if (procInfos != null)
-        {
-            ModuleState dnsCryptStateLocal = STOPPED;
-            ModuleState torStateLocal = STOPPED;
-            ModuleState itpdStateLocal = STOPPED;
+    void refresh(final PathVars pathVars) {
+        if (console == null) {
+            try {
+                console = Shell.SH.getConsole();
+                shellIsOpened = true;
+            } catch (ShellNotFoundException e) {
+                shellIsOpened = false;
+                Log.e(LOG_TAG, "ModulesStatus: SH shell not found! " + e.getMessage() + e.getCause());
+            }
+        }
 
-            for (final ActivityManager.RunningAppProcessInfo processInfo : procInfos) {
-                if (processInfo.processName.matches(DNSCRYPT_MODULE_REGEX)) {
-                    dnsCryptStateLocal = RUNNING;
-                } else if (processInfo.processName.matches(TOR_MODULE_REGEX)) {
-                    torStateLocal = RUNNING;
-                } else if (processInfo.processName.matches(ITPD_MODULE_REGEX)) {
-                    itpdStateLocal = RUNNING;
-                }
+        if (shellIsOpened) {
+            dnsCryptStateLocal = STOPPED;
+            torStateLocal = STOPPED;
+            itpdStateLocal = STOPPED;
+
+            this.pathVars = pathVars;
+
+            String busyBoxPath = pathVars.busyboxPath;
+            String toolBoxPath = "toolbox ";
+
+            String psCmdStringBusyBox = busyBoxPath + "ps";
+            String psCmdStringToolBox = toolBoxPath + "ps";
+
+
+            CommandResult shellResult = console.run(psCmdStringToolBox);
+            if (!shellResult.isSuccessful()) {
+                Log.w(LOG_TAG,"Error " + psCmdStringToolBox + " " + shellResult.exitCode
+                        + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
+
+                shellResult = Shell.run(psCmdStringBusyBox);
             }
 
-            dnsCryptState = dnsCryptStateLocal;
-            torState = torStateLocal;
-            itpdState = itpdStateLocal;
+            String stdOut = shellResult.getStdout();
+
+            checkModulesStatus(stdOut);
+
+            if (dnsCryptState == RUNNING || dnsCryptState == STOPPED) {
+                dnsCryptState = dnsCryptStateLocal;
+            }
+
+            if (torState == RUNNING || torState == STOPPED) {
+                torState = torStateLocal;
+            }
+
+            if (itpdState == RUNNING || itpdState == STOPPED) {
+                itpdState = itpdStateLocal;
+            }
+
+            fresh = true;
+
+            Log.i(LOG_TAG, "DNSCrypt is " + dnsCryptState + " Tor is " + torState + " I2P is " + itpdState);
+        }
+    }
+
+    void closeSHShell() {
+        fresh = false;
+
+        console.run("exit");
+        console.close();
+
+        shellIsOpened = false;
+        console = null;
+    }
+
+    private void checkModulesStatus(String stdOut) {
+        if (stdOut.contains(pathVars.dnscryptPath)) {
+            dnsCryptStateLocal = RUNNING;
+        }
+
+        if (stdOut.contains(pathVars.torPath)) {
+            torStateLocal = RUNNING;
+        }
+
+        if (stdOut.contains(pathVars.itpdPath)) {
+            itpdStateLocal = RUNNING;
         }
     }
 
@@ -96,5 +161,21 @@ public final class Status {
 
     public ModuleState getItpdState() {
         return itpdState;
+    }
+
+    public boolean isFresh() {
+        return fresh;
+    }
+
+    public void setDnsCryptState(ModuleState dnsCryptState) {
+        this.dnsCryptState = dnsCryptState;
+    }
+
+    public void setTorState(ModuleState torState) {
+        this.torState = torState;
+    }
+
+    public void setItpdState(ModuleState itpdState) {
+        this.itpdState = itpdState;
     }
 }

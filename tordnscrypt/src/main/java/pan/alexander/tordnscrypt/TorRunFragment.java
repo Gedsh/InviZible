@@ -65,11 +65,18 @@ import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.Tethering;
 import pan.alexander.tordnscrypt.utils.TorRefreshIPsWork;
 import pan.alexander.tordnscrypt.utils.Verifier;
+import pan.alexander.tordnscrypt.utils.enums.ModuleState;
+import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 
 
 public class TorRunFragment extends Fragment implements View.OnClickListener {
@@ -104,6 +111,10 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
     boolean routeAllThroughTor = true;
     boolean blockHttp = false;
 
+    private ModulesStatus modulesStatus;
+    private ModuleState fixedModuleState;
+    private ModuleState currentModuleState;
+
 
     public TorRunFragment() {
         // Required empty public constructor
@@ -136,17 +147,14 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
                         RootCommands comResult = (RootCommands) intent.getSerializableExtra("CommandsResult");
 
-                        pbTor.setIndeterminate(false);
+                        setProgressBarIndeterminate(false);
 
                         if (comResult.getCommands().length == 0) {
-
-                            tvTorStatus.setText(R.string.wrong);
-                            tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
+                            setTorSomethingWrong();
                             return;
                         }
 
-                        DrawerLayout mDrawerLayout = getActivity().findViewById(R.id.drawer_layout);
-                        mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+                        lockDrawer(false);
 
                         StringBuilder sb = new StringBuilder();
                         for (String com : comResult.getCommands()) {
@@ -161,6 +169,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                                 if (verArr.length > 2 && verArr[1].contains("version")) {
                                     TorVersion = verArr[2].trim();
                                     new PrefManager(getActivity()).setStrPref("TorVersion", TorVersion);
+                                    refreshTorState();
                                 }
                             }
                         }
@@ -168,85 +177,23 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                         if (sb.toString().toLowerCase().contains(torPath)
                                 && sb.toString().contains("checkTrRunning")) {
                             /////////////For correct display tor bootstrap/////////////////////
-                            if (sb.toString().contains("Tor_version")) {
-                                tvTorStatus.setText(R.string.tvTorRunning);
-                                tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorRunning));
-                            }
-
-                            btnTorStart.setText(R.string.btnTorStop);
-                            new PrefManager(getActivity()).setBoolPref("Tor Running", true);
                             displayLog(5000);
                             startRefreshTorUnlockIPs();
                         } else if (!sb.toString().toLowerCase().contains(torPath)
                                 && sb.toString().contains("checkTrRunning")) {
-                            tvTorStatus.setText(R.string.tvTorStop);
-                            tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStopped));
-                            btnTorStart.setText(R.string.btnTorStart);
+                            setTorStopped();
                             pbTor.setProgress(0);
-
-                            if ((new PrefManager(getActivity()).getBoolPref("Tor Running")
-                                    && !sb.toString().contains("stopProcess"))
-                                    || (!new PrefManager(getActivity()).getBoolPref("Tor Running")
-                                    && sb.toString().contains("startProcess"))) {
-                                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                        getActivity(), getText(R.string.helper_tor_stopped).toString(), "tor_suddenly_stopped");
-                                if (notificationHelper != null) {
-                                    if (getFragmentManager() != null) {
-                                        notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
-                                    }
-                                }
-
-                                Log.e(LOG_TAG, getText(R.string.helper_tor_stopped).toString());
-
-                                String[] commandsReset = new String[]{
-                                        busyboxPath + "echo 'stopProcess'",
-                                        busyboxPath + "killall dnscrypt-proxy",
-                                        busyboxPath + "killall tor",
-                                        busyboxPath + "sleep 3",
-                                        iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
-                                        iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
-                                        iptablesPath + "iptables -F tordnscrypt",
-                                        iptablesPath + "iptables -D OUTPUT -j tordnscrypt",
-                                        busyboxPath + "echo 'checkDNSRunning'"
-                                };
-                                rootCommands = new RootCommands(commandsReset);
-                                Intent intentReset = new Intent(getActivity(), RootExecService.class);
-                                intentReset.setAction(RootExecService.RUN_COMMAND);
-                                intentReset.putExtra("Commands", rootCommands);
-                                intentReset.putExtra("Mark", RootExecService.DNSCryptRunFragmentMark);
-                                RootExecService.performAction(getActivity(), intentReset);
-                            }
-
-                            if (timer != null) {
-                                timer.cancel();
-                                timer = null;
-                            }
-
-                            new PrefManager(getActivity()).setBoolPref("Tor Running", false);
-                            new PrefManager(Objects.requireNonNull(getActivity())).setBoolPref("Tor Ready", false);
-
-                            tvTorLog.setText(getText(R.string.tvTorDefaultLog) + " " + TorVersion);
-
-                            safeStopNoRootService();
-
-                            stopRefreshTorUnlockIPs();
-
                         } else if (sb.toString().contains("Something went wrong!")) {
-                            tvTorStatus.setText(R.string.wrong);
-                            tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
+                            setTorSomethingWrong();
                         }
 
                     }
 
                     if (action.equals(TopFragment.TOP_BROADCAST)) {
                         if (TopFragment.TOP_BROADCAST.contains("TOP_BROADCAST")) {
-                            checkTorRunning();
                             Log.i(LOG_TAG, "TorRunFragment onReceive TOP_BROADCAST");
-                        } else {
-                            tvTorStatus.setText(R.string.wrong);
-                            tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorAlert));
-                            btnTorStart.setEnabled(false);
-                            Log.i(LOG_TAG, "TorRunFragment onReceive wrong TOP_BROADCAST");
+
+                            checkTorRunning();
                         }
 
                     }
@@ -264,6 +211,10 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_tor_run, container, false);
+
+        if (getActivity() == null) {
+            return view;
+        }
 
         btnTorStart = view.findViewById(R.id.btnTorStart);
         btnTorStart.setOnClickListener(this);
@@ -289,18 +240,17 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
             btnTorStart.setText(R.string.btnTorStart);
         }
 
-        if (new PrefManager(getActivity()).getBoolPref("Tor Installed")) {
-            btnTorStart.setEnabled(true);
-        } else {
-            tvTorStatus.setText(getText(R.string.tvTorNotInstalled));
-        }
-
         return view;
     }
 
     @Override
     public void onResume() {
         super.onResume();
+
+        if (getActivity() == null) {
+            return;
+        }
+
         PathVars pathVars = new PathVars(getActivity());
         appDataDir = pathVars.appDataDir;
         dnsCryptPort = pathVars.dnsCryptPort;
@@ -318,6 +268,23 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
         busyboxPath = pathVars.busyboxPath;
         iptablesPath = pathVars.iptablesPath;
         rejectAddress = pathVars.rejectAddress;
+
+        modulesStatus = ModulesStatus.getInstance();
+
+        if (isTorInstalled()) {
+            setTorInstalled(true);
+
+            if (isSavedTorStatusRunning()) {
+                setTorRunning();
+                displayLog(5000);
+            } else if (modulesStatus.getTorState() != STARTING){
+                setTorStopped();
+            }
+        } else {
+            setTorInstalled(false);
+        }
+
+
 
         IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
         IntentFilter intentFilterTopFrg = new IntentFilter(TopFragment.TOP_BROADCAST);
@@ -349,7 +316,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
     public void onStop() {
         super.onStop();
         try {
-            if (timer != null) timer.cancel();
+            stopDisplayLog();
             if (br != null) Objects.requireNonNull(getActivity()).unregisterReceiver(br);
         } catch (Exception e) {
             e.printStackTrace();
@@ -364,13 +331,17 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
     @Override
     public void onClick(View v) {
+
+        if (getActivity() == null) {
+            return;
+        }
+
         if (RootExecService.lockStartStop) {
             Toast.makeText(getActivity(), getText(R.string.please_wait), Toast.LENGTH_SHORT).show();
             return;
         }
 
-        DrawerLayout mDrawerLayout = getActivity().findViewById(R.id.drawer_layout);
-        mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        lockDrawer(true);
 
         if (((MainActivity) getActivity()).childLockActive) {
             Toast.makeText(getActivity(), getText(R.string.action_mode_dialog_locked), Toast.LENGTH_LONG).show();
@@ -593,8 +564,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                 }
 
 
-                tvTorStatus.setText(R.string.tvTorStarting);
-                tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStarting));
+                setTorStarting();
 
                 if (!runTorWithRoot) {
                     runTorNoRoot();
@@ -603,7 +573,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                 String[] commandsTether = tethering.activateTethering(false);
                 if (commandsTether != null && commandsTether.length > 0)
                     commandsTor = Arr.ADD2(commandsTor, commandsTether);
-            } else if (!new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("Tor Running") &&
+            } else if (!new PrefManager(getActivity()).getBoolPref("Tor Running") &&
                     !new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
@@ -676,8 +646,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                         busyboxPath + "echo 'startProcess'"
                 };
 
-                tvTorStatus.setText(R.string.tvTorStarting);
-                tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStarting));
+                setTorStarting();
                 if (!runTorWithRoot) {
                     runTorNoRoot();
                 }
@@ -718,8 +687,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                         busyboxPath + "echo 'checkTrRunning'",
                         busyboxPath + "echo 'stopProcess'"};
 
-                tvTorStatus.setText(R.string.tvTorStopping);
-                tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStopping));
+                setTorStopping();
                 String[] commandsTether = tethering.activateTethering(false);
                 if (commandsTether != null && commandsTether.length > 0)
                     commandsTor = Arr.ADD2(commandsTor, commandsTether);
@@ -739,8 +707,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                         busyboxPath + "echo 'checkTrRunning'",
                         busyboxPath + "echo 'stopProcess'"};
 
-                tvTorStatus.setText(R.string.tvTorStopping);
-                tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStopping));
+                setTorStopping();
                 String[] commandsTether = tethering.activateTethering(false);
                 if (commandsTether != null && commandsTether.length > 0)
                     commandsTor = Arr.ADD2(commandsTor, commandsTether);
@@ -759,11 +726,12 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
     }
 
+    private void checkTorRunning() {
+        if (isTorInstalled() && getActivity() != null) {
 
-    public void checkTorRunning() {
-        if (new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("Tor Installed")) {
-            String[] commandsCheck = {busyboxPath + "pgrep -l /tor",
-                    busyboxPath + "echo 'checkTrRunning'",
+            String[] commandsCheck = {
+                    //busyboxPath + "pgrep -l /tor",
+                    //busyboxPath + "echo 'checkTrRunning'",
                     busyboxPath + "echo 'Tor_version'",
                     torPath + " --version"
             };
@@ -774,9 +742,145 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
             intent.putExtra("Mark", RootExecService.TorRunFragmentMark);
             RootExecService.performAction(getActivity(), intent);
 
-            pbTor.setIndeterminate(true);
+            setProgressBarIndeterminate(true);
+        }
+    }
+
+    private void refreshTorState() {
+
+        if (modulesStatus == null) {
+            return;
         }
 
+        currentModuleState = modulesStatus.getTorState();
+
+        if (!modulesStatus.isFresh() || currentModuleState.equals(fixedModuleState)) {
+            return;
+        }
+
+        if (currentModuleState == STARTING) {
+            setTorStarting();
+            displayLog(1000);
+        } else if (currentModuleState == RUNNING) {
+            setTorRunning();
+        } else if (currentModuleState == STOPPED) {
+            if (isSavedTorStatusRunning()) {
+                setTorStoppedBySystem();
+            } else {
+                setTorStopped();
+            }
+        }
+
+        fixedModuleState = currentModuleState;
+    }
+
+    private void setTorStarting() {
+        setTorStatus(R.string.tvTorStarting, R.color.textModuleStatusColorStarting);
+        modulesStatus.setTorState(STARTING);
+    }
+
+    private void setTorRunning() {
+        setTorStatus(R.string.tvTorRunning, R.color.textModuleStatusColorRunning);
+        btnTorStart.setText(R.string.btnTorStop);
+        saveTorStatusRunning(true);
+        modulesStatus.setTorState(RUNNING);
+    }
+
+    private void setTorStopping() {
+        setTorStatus(R.string.tvTorStopping, R.color.textModuleStatusColorStopping);
+        modulesStatus.setTorState(STOPPING);
+    }
+
+    private void setTorStopped() {
+        stopDisplayLog();
+
+        stopRefreshTorUnlockIPs();
+
+        setTorStatus(R.string.tvTorStop, R.color.textModuleStatusColorStopped);
+        btnTorStart.setText(R.string.btnTorStart);
+        String tvTorLogText = getText(R.string.tvTorDefaultLog) + " " + TorVersion;
+        tvTorLog.setText(tvTorLogText);
+
+        if (getActivity() != null) {
+            new PrefManager(Objects.requireNonNull(getActivity())).setBoolPref("Tor Ready", false);
+            saveTorStatusRunning(false);
+        }
+
+        safeStopNoRootService();
+        modulesStatus.setTorState(STOPPED);
+    }
+
+    private void setTorStoppedBySystem() {
+
+        setTorStopped();
+
+        if (getActivity() != null) {
+
+            new PrefManager(getActivity()).setBoolPref("DNSCrypt Running", false);
+            modulesStatus.setDnsCryptState(STOPPED);
+
+            NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                    getActivity(), getText(R.string.helper_tor_stopped).toString(), "tor_suddenly_stopped");
+            if (notificationHelper != null) {
+                if (getFragmentManager() != null) {
+                    notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                }
+            }
+
+            Log.e(LOG_TAG, getText(R.string.helper_tor_stopped).toString());
+
+            String[] commandsReset = new String[]{
+                    busyboxPath + "echo 'stopProcess'",
+                    busyboxPath + "killall dnscrypt-proxy",
+                    busyboxPath + "killall tor",
+                    busyboxPath + "sleep 3",
+                    iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
+                    iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
+                    iptablesPath + "iptables -F tordnscrypt",
+                    iptablesPath + "iptables -D OUTPUT -j tordnscrypt",
+                    //busyboxPath + "echo 'checkTrRunning'"
+            };
+            rootCommands = new RootCommands(commandsReset);
+            Intent intentReset = new Intent(getActivity(), RootExecService.class);
+            intentReset.setAction(RootExecService.RUN_COMMAND);
+            intentReset.putExtra("Commands", rootCommands);
+            intentReset.putExtra("Mark", RootExecService.TorRunFragmentMark);
+            RootExecService.performAction(getActivity(), intentReset);
+        }
+
+    }
+
+    private void setTorInstalled(boolean installed) {
+        if (installed) {
+            btnTorStart.setEnabled(true);
+        } else {
+            tvTorStatus.setText(getText(R.string.tvDNSNotInstalled));
+        }
+    }
+
+    private void setTorSomethingWrong() {
+        setTorStatus(R.string.wrong, R.color.textModuleStatusColorAlert);
+        modulesStatus.setTorState(FAULT);
+    }
+
+    private boolean isTorInstalled() {
+        if (getActivity() != null) {
+            return new PrefManager(getActivity()).getBoolPref("Tor Installed");
+        }
+        return false;
+    }
+
+    private boolean isSavedTorStatusRunning() {
+        if (getActivity() != null) {
+            return new PrefManager(getActivity()).getBoolPref("Tor Running");
+        }
+        return false;
+    }
+
+    private void saveTorStatusRunning(boolean running) {
+        if (getActivity() != null) {
+            new PrefManager(getActivity()).setBoolPref("Tor Running", running);
+        }
     }
 
     public void setTorStatus(int resourceText, int resourceColor) {
@@ -792,12 +896,27 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
         pbTor.setIndeterminate(indeterminate);
     }
 
+    private void lockDrawer(boolean lock) {
+        if (getActivity() == null) {
+            return;
+        }
+
+        if (lock) {
+            DrawerLayout mDrawerLayout = getActivity().findViewById(R.id.drawer_layout);
+            mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        } else {
+            DrawerLayout mDrawerLayout = getActivity().findViewById(R.id.drawer_layout);
+            mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+        }
+    }
+
+
+
+
+
     private void displayLog(int period) {
 
-        if (timer != null) {
-            timer.cancel();
-            timer = null;
-        }
+        stopDisplayLog();
 
         timer = new Timer();
 
@@ -824,73 +943,17 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
                     @Override
                     public void run() {
+
+                        refreshTorState();
+
                         if (!previousLastLines.contentEquals(lastLines)) {
 
                             if (!new PrefManager(getActivity()).getBoolPref("Tor Ready")) {
-                                int lastPersIndex = lastLines.lastIndexOf("%");
-                                if (lastPersIndex >= 16 && !new PrefManager(getActivity()).getBoolPref("Tor Ready")) {
-                                    String bootstrapPerc = lastLines.substring(lastPersIndex - 16, lastPersIndex);
-                                    if (bootstrapPerc.contains("Bootstrapped ")) {
-                                        bootstrapPerc = bootstrapPerc.substring(bootstrapPerc.lastIndexOf(" ") + 1);
-
-                                        if (!bootstrapPerc.isEmpty() && bootstrapPerc.matches("\\d+")) {
-                                            int perc = Integer.valueOf(bootstrapPerc);
-
-                                            if (!pbTor.isIndeterminate()) {
-                                                if (0 <= perc && perc < 100) {
-                                                    pbTor.setProgress(perc);
-                                                    tvTorStatus.setText(R.string.tvTorStarting);
-                                                    tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorStarting));
-                                                } else if (!tvTorStatus.getText().equals(getString(R.string.tvTorRunning))) {
-                                                    pbTor.setProgress(0);
-                                                    tvTorStatus.setText(R.string.tvTorRunning);
-                                                    tvTorStatus.setTextColor(getResources().getColor(R.color.textModuleStatusColorRunning));
-                                                    new PrefManager(Objects.requireNonNull(getActivity())).setBoolPref("Tor Ready", true);
-
-                                                    /////////////////Check Updates///////////////////////////////////////////////
-                                                    SharedPreferences spref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-                                                    boolean throughTorUpdate = spref.getBoolean("pref_fast through_tor_update", false);
-                                                    if (throughTorUpdate) {
-                                                        FragmentManager fm = getActivity().getSupportFragmentManager();
-                                                        if (fm != null) {
-                                                            TopFragment topFragment = (TopFragment) fm.findFragmentByTag("topFragmentTAG");
-                                                            if (topFragment != null) {
-                                                                topFragment.checkUpdates();
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-
-                                        }
-                                    }
-
-                                }
+                                torStartedSuccessfully(lastLines);
                             }
 
-                            if (lastLines.contains("Problem bootstrapping.") && !lastLines.contains("Bootstrapped")) {
+                            torStartedWithError(lastLines);
 
-                                Log.e(LOG_TAG, "Problem bootstrapping Tor: " + lastLines);
-
-                                if (lastLines.contains("Stuck at 0%") || lastLines.contains("Stuck at 5%")) {
-                                    NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                            getActivity(), getText(R.string.helper_dnscrypt_no_internet).toString(), "helper_dnscrypt_no_internet");
-                                    if (notificationHelper != null) {
-                                        if (getFragmentManager() != null) {
-                                            notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
-                                        }
-                                    }
-                                } else {
-                                    NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                            getActivity(), getText(R.string.helper_tor_use_bridges).toString(), "helper_tor_use_bridges");
-                                    if (notificationHelper != null) {
-                                        if (getFragmentManager() != null) {
-                                            notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
-                                        }
-                                    }
-                                }
-
-                            }
                             tvTorLog.setText(Html.fromHtml(lastLines));
                             previousLastLines = lastLines;
                         }
@@ -900,6 +963,101 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
             }
         }, 1, period);
 
+    }
+
+    private void stopDisplayLog() {
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
+        }
+    }
+
+    private void torStartedSuccessfully(String lastLines) {
+
+        if (getActivity() == null) {
+            return;
+        }
+
+        int lastPersIndex = lastLines.lastIndexOf("%");
+
+        if (lastPersIndex < 16 || new PrefManager(getActivity()).getBoolPref("Tor Ready")) {
+            return;
+        }
+
+        String bootstrapPerc = lastLines.substring(lastPersIndex - 16, lastPersIndex);
+
+        if (!bootstrapPerc.contains("Bootstrapped ")) {
+            return;
+        }
+
+        bootstrapPerc = bootstrapPerc.substring(bootstrapPerc.lastIndexOf(" ") + 1);
+
+        if (bootstrapPerc.isEmpty() || !bootstrapPerc.matches("\\d+")) {
+            return;
+        }
+
+        int perc = Integer.valueOf(bootstrapPerc);
+
+        if (pbTor.isIndeterminate()) {
+            return;
+        }
+
+        if (0 <= perc && perc < 100) {
+            pbTor.setProgress(perc);
+            setTorStarting();
+        } else if (currentModuleState == STARTING) {
+            pbTor.setProgress(0);
+            setTorRunning();
+            new PrefManager(Objects.requireNonNull(getActivity())).setBoolPref("Tor Ready", true);
+
+            /////////////////Check Updates///////////////////////////////////////////////
+            checkInvizibleUpdates();
+        }
+    }
+
+    private void torStartedWithError(String lastLines) {
+        if (lastLines.contains("Problem bootstrapping.") && !lastLines.contains("Bootstrapped")) {
+
+            Log.e(LOG_TAG, "Problem bootstrapping Tor: " + lastLines);
+
+            if (lastLines.contains("Stuck at 0%") || lastLines.contains("Stuck at 5%")) {
+                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                        getActivity(), getText(R.string.helper_dnscrypt_no_internet).toString(), "helper_dnscrypt_no_internet");
+                if (notificationHelper != null) {
+                    if (getFragmentManager() != null) {
+                        notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                    }
+                }
+            } else {
+                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                        getActivity(), getText(R.string.helper_tor_use_bridges).toString(), "helper_tor_use_bridges");
+                if (notificationHelper != null) {
+                    if (getFragmentManager() != null) {
+                        notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                    }
+                }
+            }
+
+        }
+    }
+
+    private void checkInvizibleUpdates() {
+
+        if (getActivity() == null) {
+            return;
+        }
+
+        SharedPreferences spref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        boolean throughTorUpdate = spref.getBoolean("pref_fast through_tor_update", false);
+        if (throughTorUpdate) {
+            FragmentManager fm = getActivity().getSupportFragmentManager();
+            if (fm != null) {
+                TopFragment topFragment = (TopFragment) fm.findFragmentByTag("topFragmentTAG");
+                if (topFragment != null) {
+                    topFragment.checkUpdates();
+                }
+            }
+        }
     }
 
     /*private void checkINetAvailable(){
@@ -922,10 +1080,14 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
             }
         });
 
-        thread.start();
+        thread.startRefreshModulesStatus();
     }*/
 
     private void startRefreshTorUnlockIPs() {
+        if (getActivity() == null) {
+            return;
+        }
+
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP || refreshPeriodHours == 0) {
             TorRefreshIPsWork torRefreshIPsWork = new TorRefreshIPsWork(getActivity(), null);
             torRefreshIPsWork.refreshIPs();
@@ -945,6 +1107,11 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
     }
 
     private void stopRefreshTorUnlockIPs() {
+
+        if (getActivity() == null) {
+            return;
+        }
+
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP || refreshPeriodHours == 0) {
             return;
         }
@@ -958,6 +1125,11 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
     }
 
     private void runTorNoRoot() {
+
+        if (getActivity() == null) {
+            return;
+        }
+
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
         boolean showNotification = shPref.getBoolean("swShowNotification", true);
         Intent intent = new Intent(getActivity(), NoRootService.class);
@@ -971,6 +1143,12 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
     }
 
     private void safeStopNoRootService() {
+
+        if (getActivity() == null) {
+            return;
+        }
+
+
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
         boolean rnDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot", false);
         boolean rnTorWithRoot = shPref.getBoolean("swUseModulesRoot", false);

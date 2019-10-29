@@ -51,6 +51,10 @@ public class UpdateModulesDialogFragment extends ExtendedDialogFragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
 
+                        if (getActivity() == null) {
+                            return;
+                        }
+
                         PathVars pathVars = new PathVars(getActivity());
                         String iptablesPath = pathVars.iptablesPath;
                         String busyboxPath = pathVars.busyboxPath;

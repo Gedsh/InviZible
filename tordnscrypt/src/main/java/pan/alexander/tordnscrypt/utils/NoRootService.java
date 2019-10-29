@@ -134,7 +134,7 @@ public class NoRootService extends Service {
                     }
                     thread.start();
                 } catch (Exception e) {
-                    Log.e(LOG_TAG, "DnsCrypt was unable to start: " + e.getMessage());
+                    Log.e(LOG_TAG, "DnsCrypt was unable to startRefreshModulesStatus: " + e.getMessage());
                     Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
                 }
 
@@ -151,7 +151,7 @@ public class NoRootService extends Service {
                     }
                     thread.start();
                 } catch (Exception e) {
-                    Log.e(LOG_TAG, "Tor was unable to start: " + e.getMessage());
+                    Log.e(LOG_TAG, "Tor was unable to startRefreshModulesStatus: " + e.getMessage());
                     Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
                 }
 
@@ -168,7 +168,7 @@ public class NoRootService extends Service {
                     }
                     thread.start();
                 } catch (Exception e) {
-                    Log.e(LOG_TAG, "I2PD was unable to start: " + e.getMessage());
+                    Log.e(LOG_TAG, "I2PD was unable to startRefreshModulesStatus: " + e.getMessage());
                     Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
                 }
 
@@ -240,13 +240,13 @@ public class NoRootService extends Service {
             String dnsCmdString = dnscryptPath+" --config "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml";
             final CommandResult shellResult = Shell.run(dnsCmdString);
             if (!shellResult.isSuccessful()) {
+                Log.e(LOG_TAG,"Error DNSCrypt: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         Toast.makeText(NoRootService.this,"Error DNSCrypt: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout(),Toast.LENGTH_LONG).show();
                     }
                 });
-                Log.e(LOG_TAG,"Error DNSCrypt: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
             }
         }
     };
@@ -265,13 +265,13 @@ public class NoRootService extends Service {
             String torCmdString = torPath+" -f "+appDataDir+"/app_data/tor/tor.conf";
             final CommandResult shellResult = Shell.run(torCmdString);
             if (!shellResult.isSuccessful()) {
+                Log.e(LOG_TAG,"Error Tor: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         Toast.makeText(NoRootService.this,"Error Tor: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout(),Toast.LENGTH_LONG).show();
                     }
                 });
-                Log.e(LOG_TAG,"Error Tor: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
             }
         }
     };
@@ -290,13 +290,13 @@ public class NoRootService extends Service {
             String itpdCmdString = itpdPath+" --conf "+appDataDir+"/app_data/i2pd/i2pd.conf --datadir "+appDataDir+"/i2pd_data";
             final CommandResult shellResult = Shell.run(itpdCmdString);
             if (!shellResult.isSuccessful()) {
+                Log.e(LOG_TAG,"Error ITPD: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         Toast.makeText(NoRootService.this,"Error ITPD: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout(),Toast.LENGTH_LONG).show();
                     }
                 });
-                Log.e(LOG_TAG,"Error ITPD: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
             }
         }
     };

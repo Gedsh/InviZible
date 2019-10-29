@@ -130,6 +130,8 @@ public class HelpActivityReceiver extends BroadcastReceiver {
                 }
             }
 
+            process.destroy();
+
         } catch (Exception e) {
             Log.e(LOG_TAG, "Collect logs alternative method fault " + e.getMessage() + " " + e.getCause());
             showSomethingWrongToast(context);

@@ -58,10 +58,14 @@ import pan.alexander.tordnscrypt.utils.NoRootService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
+import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UPDATED;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UPDATING;
 
 public class UpdateService extends Service {
     private final String ANDROID_CHANNEL_ID = "InviZible";
@@ -80,6 +84,7 @@ public class UpdateService extends Service {
     private final AtomicInteger currentNotificationId = new AtomicInteger(DEFAULT_NOTIFICATION_ID) ;
     private volatile SparseArray<DownloadThread> sparseArray;
     private boolean allowActivityRestartAfterUpdate = true;
+    private ModulesStatus currentModuleStatus;
 
     public UpdateService() {
     }
@@ -102,6 +107,7 @@ public class UpdateService extends Service {
         torPath = pathVars.torPath;
         itpdPath = pathVars.itpdPath;
         iptablesPath = pathVars.iptablesPath;
+        currentModuleStatus = ModulesStatus.getInstance();
     }
 
     @Override
@@ -441,6 +447,7 @@ public class UpdateService extends Service {
     private void stopRunningModules(String fileName) {
         String[] commandsStop = new String[0];
         if (fileName.contains("dnscrypt-proxy")) {
+            currentModuleStatus.setDnsCryptState(UPDATING);
             boolean dnsCryptRunning = new PrefManager(getApplicationContext()).getBoolPref("DNSCrypt Running");
             if (dnsCryptRunning) {
                 commandsStop = new String[]{
@@ -448,6 +455,7 @@ public class UpdateService extends Service {
                 };
             }
         } else if (fileName.contains("tor")) {
+            currentModuleStatus.setTorState(UPDATING);
             boolean torRunning = new PrefManager(getApplicationContext()).getBoolPref("Tor Running");
             if (torRunning) {
                 while (sparseArray.size() > 1) {
@@ -462,6 +470,7 @@ public class UpdateService extends Service {
                 };
             }
         } else if (fileName.contains("i2pd")) {
+            currentModuleStatus.setItpdState(UPDATING);
             boolean itpdRunning = new PrefManager(getApplicationContext()).getBoolPref("I2PD Running");
             if (itpdRunning) {
                 commandsStop = new String[]{
@@ -510,6 +519,12 @@ public class UpdateService extends Service {
             } else if (dnsCryptRunning) {
                 runDNSCryptNoRoot();
             }
+
+            try {
+                TimeUnit.SECONDS.sleep(3);
+            } catch (InterruptedException ignored) {}
+            currentModuleStatus.setDnsCryptState(UPDATED);
+
         } else if (fileName.contains("tor")) {
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             boolean rnTorWithRoot = shPref.getBoolean("swUseModulesRoot", false);
@@ -521,6 +536,12 @@ public class UpdateService extends Service {
             } else if (torRunning) {
                 runTorNoRoot();
             }
+
+            try {
+                TimeUnit.SECONDS.sleep(3);
+            } catch (InterruptedException ignored) {}
+            currentModuleStatus.setDnsCryptState(UPDATED);
+
         } else if (fileName.contains("i2pd")) {
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             boolean rnI2PDWithRoot = shPref.getBoolean("swUseModulesRoot", false);
@@ -532,6 +553,12 @@ public class UpdateService extends Service {
             } else if (itpdRunning) {
                 runITPDNoRoot();
             }
+
+            try {
+                TimeUnit.SECONDS.sleep(3);
+            } catch (InterruptedException ignored) {}
+            currentModuleStatus.setDnsCryptState(UPDATED);
+
         }
 
         if (commandsRun.length != 0) {
