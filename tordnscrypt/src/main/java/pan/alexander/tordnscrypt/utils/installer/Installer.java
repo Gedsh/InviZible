@@ -20,7 +20,9 @@ package pan.alexander.tordnscrypt.utils.installer;
 */
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
 
@@ -33,7 +35,7 @@ import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.ModulesStatus;
+import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
@@ -44,6 +46,7 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 public class Installer implements TopFragment.OnActivityChangeListener {
     private Activity activity;
     private MainActivity mainActivity;
+    private InstallerReceiver br;
     private static CountDownLatch countDownLatch;
     private String appDataDir;
     private PathVars pathVars;
@@ -79,6 +82,8 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             mainActivity.runOnUiThread(installerUIChanger.setModulesStartButtonsDisabled());
             mainActivity.runOnUiThread(installerUIChanger.startModulesProgressBarIndeterminate());
 
+            registerReceiver();
+
             stopAllRunningModulesWithRootCommand();
 
             if (!waitUntilAllModulesStopped()) {
@@ -88,6 +93,8 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             if (interruptInstallation) {
                 throw new IllegalStateException("Installation interrupted");
             }
+
+            unRegisterReceiver();
 
             removeInstallationDirsIfExists();
             createLogsDir();
@@ -321,7 +328,23 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
     protected void refreshModulesStatus(Activity activity) {
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
-        modulesStatus.refresh(activity);
+        modulesStatus.refreshViews(activity);
+    }
+
+    private void registerReceiver() {
+        br = new InstallerReceiver();
+        IntentFilter intentFilter = new IntentFilter(RootExecService.COMMAND_RESULT);
+        activity.registerReceiver(br, intentFilter);
+
+        Log.i(LOG_TAG, "Installer: registerReceiver OK");
+    }
+
+    private void unRegisterReceiver() {
+        if (br != null) {
+            activity.unregisterReceiver(br);
+
+            Log.i(LOG_TAG, "Installer: unregisterReceiver OK");
+        }
     }
 
     private void setOnMainActivityChangeListener() {

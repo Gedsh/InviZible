@@ -35,14 +35,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="AllowBackup">
-        <receiver
-            android:name=".utils.installer.InstallerReceiver"
-            android:enabled="true"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="pan.alexander.tordnscrypt.action.COMMANDS_RESULT"/>
-            </intent-filter>
-        </receiver>
 
         <service
             android:name=".utils.AppExitDetectService"
@@ -96,6 +88,8 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="android.intent.action.REBOOT" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
