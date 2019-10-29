@@ -21,7 +21,6 @@ package pan.alexander.tordnscrypt.settings;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -33,7 +32,7 @@ import pan.alexander.tordnscrypt.utils.PrefManager;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class PathVars {
-    public final String appDataDir;
+    public String appDataDir;
     public String dnsCryptPort;
     public String itpdHttpProxyPort;
     public String torTransPort;
@@ -55,13 +54,17 @@ public class PathVars {
 
     public PathVars (Context context) {
 
+        appDataDir = context.getApplicationInfo().dataDir;
+
+        if (appDataDir == null) {
+            appDataDir = "/data/data/" + context.getPackageName();
+        }
+
         if(!isModulesInstalled(context)){
             saveAppUID(context);
         }
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-
-        appDataDir = context.getApplicationInfo().dataDir;
 
         setAuxPaths(shPref);
 
