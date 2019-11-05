@@ -12,6 +12,8 @@ Just press a three buttons in **InviZible Pro** , and you turn from a simple use
 to an invisible one, which is very difficult to find, block, impose on you unnecessary products and 
 services in the form of ubiquitous advertising.
 
+## [Download the latest release](https://github.com/Gedsh/InviZible/releases/latest)
+
 ### DNSCrypt
 * Encrypts DNS requests
 * Protects against DNS spoofing
