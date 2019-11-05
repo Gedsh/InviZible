@@ -4,3 +4,19 @@
 * Add correct processing when no bridges available on tor bridges site
 * Add correct processing when unable to start module
 * Add Polish language
+
+
+**Invizible Pro beta 0.3.0**
+
+* Material design
+* Update day/night theme
+* UI/UX improvements
+* Fix hotspot on non-standard tether interface name devices
+* Update Purple I2P tunnels.conf to add Telegram proxy support
+* Add continuous modules status checking when app running in no root mode
+* Add wakelock option for additional modules service protection
+* No more read/write permission required on first app startup
+* Change root installation method with no root
+* Change root backup/restore method with no root and file format to zip
+* Change save logs method and file format to zip
+* Total code refactoring and optimization
