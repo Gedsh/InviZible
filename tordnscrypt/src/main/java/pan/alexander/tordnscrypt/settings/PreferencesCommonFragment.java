@@ -18,8 +18,6 @@ package pan.alexander.tordnscrypt.settings;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -33,6 +31,7 @@ import android.os.PowerManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceFragmentCompat;
 import android.support.v7.preference.PreferenceManager;
@@ -51,12 +50,13 @@ import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 import pan.alexander.tordnscrypt.utils.fileOperations.OnTextFileOperationsCompleteListener;
-import pan.alexander.tordnscrypt.utils.NoRootService;
+import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesStarterService;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.Verifier;
+import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
@@ -95,6 +95,11 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     @Override
     public void onResume() {
         super.onResume();
+
+        if (getActivity() == null) {
+            return;
+        }
+
         getActivity().setTitle(R.string.drawer_menu_commonSettings);
 
         Preference swShowNotification = findPreference("swShowNotification");
@@ -114,6 +119,9 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         Preference pref_common_block_http = findPreference("pref_common_block_http");
         pref_common_block_http.setOnPreferenceChangeListener(this);
+
+        Preference pref_common_use_modules_with_root = findPreference("swUseModulesRoot");
+        pref_common_use_modules_with_root.setOnPreferenceChangeListener(this);
 
         PathVars pathVars = new PathVars(getActivity());
         appDataDir = pathVars.appDataDir;
@@ -162,11 +170,16 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
+
+        if (getActivity() == null) {
+            return false;
+        }
+
         switch (preference.getKey()) {
             case "swShowNotification":
                 if (!Boolean.valueOf(newValue.toString())) {
-                    Intent intent = new Intent(getActivity(), NoRootService.class);
-                    intent.setAction(NoRootService.actionDismissNotification);
+                    Intent intent = new Intent(getActivity(), ModulesStarterService.class);
+                    intent.setAction(ModulesStarterService.actionDismissNotification);
                     getActivity().startService(intent);
                     InfoNotificationProtectService infoNotification = new InfoNotificationProtectService();
                     if (getFragmentManager() != null) {
@@ -225,11 +238,19 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                     }
                 }
                 break;
+            case "pref_common_use_modules_with_root" :
+                ModulesStatus modulesStatus = ModulesStatus.getInstance();
+                modulesStatus.setUseModulesWithRoot(Boolean.valueOf(newValue.toString()));
+                break;
         }
         return true;
     }
 
     private void allowTorTethering(List<String> torConf) {
+
+        if (getActivity() == null) {
+            return;
+        }
 
         boolean itpdTethering = PreferenceManager.getDefaultSharedPreferences(getActivity()).getBoolean("pref_common_itpd_tethering",false);
 
@@ -282,6 +303,10 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
     private void allowITPDTethering(List<String> itpdConf) {
 
+        if (getActivity() == null) {
+            return;
+        }
+
         String[] tetheringCommands;
         boolean torTethering = PreferenceManager.getDefaultSharedPreferences(getActivity()).getBoolean("pref_common_tor_tethering",false);
 
@@ -333,7 +358,13 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     }
 
     @Override
-    public void OnFileOperationComplete(FileOperationsVariants currentFileOperation, boolean fileOperationResult, String path, final String tag, final List<String> lines) {
+    public void OnFileOperationComplete(FileOperationsVariants currentFileOperation,
+                                        boolean fileOperationResult, String path, final String tag, final List<String> lines) {
+
+        if (getActivity() == null) {
+            return;
+        }
+
         if (fileOperationResult && currentFileOperation == readTextFile) {
             getActivity().runOnUiThread(new Runnable() {
                 @Override
@@ -355,15 +386,25 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
     public static class InfoNotificationProtectService extends DialogFragment {
 
+        @NonNull
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            // Use the Builder class for convenient dialog construction
+
+            if (getActivity() == null) {
+                return super.onCreateDialog(savedInstanceState);
+            }
+
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
             builder.setMessage(R.string.pref_common_notification_helper)
                     .setTitle(R.string.helper_dialog_title)
                     .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+
+                            if (getActivity() == null) {
+                                return;
+                            }
+
                             final String packageName = getActivity().getPackageName();
                             final PowerManager pm = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
                             try {

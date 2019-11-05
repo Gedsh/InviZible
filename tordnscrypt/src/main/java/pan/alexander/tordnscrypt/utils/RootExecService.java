@@ -28,8 +28,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
+import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 
 import java.io.BufferedWriter;
@@ -55,20 +55,19 @@ public class RootExecService extends Service {
     public static final int DNSCryptRunFragmentMark = 100;
     public static final int TorRunFragmentMark = 200;
     public static final int I2PDRunFragmentMark = 300;
-    public static final int BackupActivityMark = 400;
-    public static final int HelpActivityMark = 500;
-    public static final int BootBroadcastMark = 600;
-    public static final int SettingsActivityMark = 700;
-    public static final int NullMark = 800;
-    public static final int FileOperationsMark = 900;
-    public static final int InstallerMark = 1000;
+    public static final int HelpActivityMark = 400;
+    public static final int BootBroadcastMark = 500;
+    public static final int SettingsActivityMark = 600;
+    public static final int NullMark = 700;
+    public static final int FileOperationsMark = 800;
+    public static final int InstallerMark = 900;
     public final static String LOG_TAG = "pan.alexander.TPDCLogs";
     private ExecutorService executorService;
     public static boolean lockStartStop = false;
     private static boolean saveRootLogs = false;
     private static String autostartDelay = "0";
 
-    private final String ANDROID_CHANNEL_ID = "GOTO Invisible";
+    private final String ANDROID_CHANNEL_ID = "InviZible";
     private NotificationManager notificationManager;
     public static final int DEFAULT_NOTIFICATION_ID = 102;
 
@@ -154,10 +153,16 @@ public class RootExecService extends Service {
             try {
                 File f = new File(appDataDir+"/logs");
 
-                if (f.mkdirs() && f.setReadable(true) && f.setWritable(true)) {
-                    Log.i(LOG_TAG, "RootExecService log dir created");
-                } else {
-                    Log.e(LOG_TAG, "RootExecService Unable to create and chmod log dir");
+                if (!f.isDirectory()) {
+                    if (f.mkdirs()) {
+                        Log.i(LOG_TAG, "RootExecService log dir created");
+                    } else {
+                        Log.e(LOG_TAG, "RootExecService Unable to create log dir");
+                    }
+                }
+
+                if (!f.setReadable(true) || !f.setWritable(true)) {
+                    Log.e(LOG_TAG, "RootExecService Unable to chmod log dir");
                 }
 
                 PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(appDataDir+"/logs/RootExec.log", true)));

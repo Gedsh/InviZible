@@ -23,11 +23,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
@@ -45,14 +45,17 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
-import pan.alexander.tordnscrypt.utils.NoRootService;
+import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesRunner;
+import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesStarterService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
 
 /**
@@ -81,8 +84,11 @@ public class ShowRulesRecycleFrag extends Fragment {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
 
-        rules_file = getArguments().getStringArrayList("rules_file");
-        file_path = getArguments().getString("path");
+        if (getArguments() != null) {
+            rules_file = getArguments().getStringArrayList("rules_file");
+            file_path = getArguments().getString("path");
+        }
+
     }
 
 
@@ -91,6 +97,10 @@ public class ShowRulesRecycleFrag extends Fragment {
                              Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_show_rules_recycle, container, false);
+
+        if (getActivity() == null) {
+            return view;
+        }
 
         PathVars pathVars = new PathVars(getActivity());
         appDataDir = pathVars.appDataDir;
@@ -138,6 +148,10 @@ public class ShowRulesRecycleFrag extends Fragment {
     public void onResume() {
         super.onResume();
 
+        if (getActivity() == null) {
+            return;
+        }
+
         mRecyclerView = getActivity().findViewById(R.id.rvRules);
 
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
@@ -180,6 +194,10 @@ public class ShowRulesRecycleFrag extends Fragment {
     public void onStop() {
         super.onStop();
 
+        if (getActivity() == null) {
+            return;
+        }
+
         List<String> rules_file_new = new LinkedList<>();
 
         for (Rules rule : rules_list) {
@@ -208,52 +226,38 @@ public class ShowRulesRecycleFrag extends Fragment {
             FileOperations.writeToTextFile(getActivity(), file_path, others_list, SettingsActivity.rules_tag);
         }
 
-        PathVars pathVars = new PathVars(getActivity());
-        String dnscryptPath = pathVars.dnscryptPath;
-        String itpdPath = pathVars.itpdPath;
-
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
         boolean runDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot", false);
         boolean dnsCryptRunning = new PrefManager(getActivity()).getBoolPref("DNSCrypt Running");
         boolean itpdRunning = new PrefManager(getActivity()).getBoolPref("I2PD Running");
-        String[] commandsEcho;
-        if (runDNSCryptWithRoot) {
-            if (file_path.contains("subscriptions")) {
-                commandsEcho = new String[]{
-                        busyboxPath + "killall i2pd; if [[ $? -eq 0 ]] ; " +
-                                "then " + itpdPath + " --conf " + appDataDir + "/app_data/i2pd/i2pd.conf --datadir /data/media/0/i2pd & fi"
-                };
-            } else {
-                commandsEcho = new String[]{
-                        busyboxPath + "killall dnscrypt-proxy; if [[ $? -eq 0 ]] ; then " + busyboxPath +
-                                "nohup " + dnscryptPath + " --config " + appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml >/dev/null 2>&1 & fi"
-                };
-            }
-        } else {
-            if (file_path.contains("subscriptions")) {
-                commandsEcho = new String[]{
-                        busyboxPath + "killall i2pd"
-                };
-            } else {
-                commandsEcho = new String[]{
-                        busyboxPath + "killall dnscrypt-proxy"
-                };
-            }
 
-            if (itpdRunning && file_path.contains("subscriptions")) {
-                runITPDNoRoot();
-            } else if (dnsCryptRunning) {
-                runDNSCryptNoRoot();
-            }
+        String[] commandsEcho = null;
+        if (itpdRunning && file_path.contains("subscriptions")) {
+            ModulesStatus.getInstance().setItpdRestarting(10);
+
+            commandsEcho = new String[]{
+                    busyboxPath + "killall i2pd"
+            };
+
+            runITPD();
+        } else if (dnsCryptRunning){
+            ModulesStatus.getInstance().setDnsCryptRestarting(15);
+
+            commandsEcho = new String[]{
+                    busyboxPath + "killall dnscrypt-proxy"
+            };
+
+            runDNSCrypt();
         }
 
-
-        RootCommands rootCommands = new RootCommands(commandsEcho);
-        Intent intent = new Intent(getActivity(), RootExecService.class);
-        intent.setAction(RootExecService.RUN_COMMAND);
-        intent.putExtra("Commands", rootCommands);
-        intent.putExtra("Mark", RootExecService.SettingsActivityMark);
-        RootExecService.performAction(getActivity(), intent);
+        if (commandsEcho != null) {
+            RootCommands rootCommands = new RootCommands(commandsEcho);
+            Intent intent = new Intent(getActivity(), RootExecService.class);
+            intent.setAction(RootExecService.RUN_COMMAND);
+            intent.putExtra("Commands", rootCommands);
+            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
+            RootExecService.performAction(getActivity(), intent);
+        }
     }
 
     public class Rules {
@@ -275,7 +279,7 @@ public class ShowRulesRecycleFrag extends Fragment {
     public class RulesAdapter extends RecyclerView.Adapter<RulesAdapter.RuleViewHolder> {
 
         ArrayList<Rules> list_rules_adapter;
-        LayoutInflater lInflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        LayoutInflater lInflater = (LayoutInflater) Objects.requireNonNull(getActivity()).getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         RulesAdapter(ArrayList<Rules> rules_list) {
             list_rules_adapter = rules_list;
@@ -411,30 +415,22 @@ public class ShowRulesRecycleFrag extends Fragment {
         }
     }
 
-    private void runDNSCryptNoRoot() {
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean showNotification = shPref.getBoolean("swShowNotification", true);
-        Intent intent = new Intent(getActivity(), NoRootService.class);
-        intent.setAction(NoRootService.actionStartDnsCrypt);
-        intent.putExtra("showNotification", showNotification);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            getActivity().startForegroundService(intent);
-        } else {
-            getActivity().startService(intent);
+    private void runDNSCrypt() {
+
+        if (getActivity() == null) {
+            return;
         }
+
+        ModulesRunner.runDNSCrypt(getActivity());
     }
 
-    private void runITPDNoRoot() {
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean showNotification = shPref.getBoolean("swShowNotification", true);
-        Intent intent = new Intent(getActivity(), NoRootService.class);
-        intent.setAction(NoRootService.actionStartITPD);
-        intent.putExtra("showNotification", showNotification);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            getActivity().startForegroundService(intent);
-        } else {
-            getActivity().startService(intent);
+    private void runITPD() {
+
+        if (getActivity() == null) {
+            return;
         }
+
+        ModulesRunner.runITPD(getActivity());
     }
 
 }

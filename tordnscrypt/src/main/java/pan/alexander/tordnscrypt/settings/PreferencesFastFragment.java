@@ -65,6 +65,11 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
     @Override
     public void onResume() {
         super.onResume();
+
+        if (getActivity() == null) {
+            return;
+        }
+
         getActivity().setTitle(R.string.drawer_menu_fastSettings);
         findPreference("prefDNSCryptServer").setSummary(new PrefManager(Objects.requireNonNull(getActivity())).getStrPref("DNSCrypt Servers"));
 
@@ -100,6 +105,11 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
     }
 
     public void setUpdateTimeLast() {
+
+        if (getActivity() == null) {
+            return;
+        }
+
         String updateTimeLastStr = new PrefManager(getActivity()).getStrPref("updateTimeLast");
         String lastUpdateResult = new PrefManager(getActivity()).getStrPref("LastUpdateResult");
         final Preference prefLastUpdate = findPreference("pref_fast_chek_update");
@@ -134,8 +144,14 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
                         @Override
                         public void run() {
+
+                            if (getActivity() == null) {
+                                return;
+                            }
+
                             Intent intent = new Intent(getActivity(), MainActivity.class);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK
+                                    | Intent.FLAG_ACTIVITY_NO_ANIMATION);
                             intent.setAction("check_update");
                             getActivity().overridePendingTransition(0, 0);
                             getActivity().finish();
@@ -158,6 +174,11 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
             @Override
             public void run() {
+
+                if (getActivity() == null) {
+                    return;
+                }
+
                 SharedPreferences defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
                 try {
                     String theme = defaultSharedPreferences.getString("pref_fast_theme", "4");
@@ -190,8 +211,14 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
     }
 
     private void activityCurrentRecreate() {
+
+        if (getActivity() == null) {
+            return;
+        }
+
         Intent intent = getActivity().getIntent();
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
         getActivity().overridePendingTransition(0, 0);
         getActivity().finish();
 
@@ -210,6 +237,11 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
+
+        if (getActivity() == null) {
+            return false;
+        }
+
         switch (preference.getKey()) {
             case "swAutostartTor":
                 if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP || refreshPeriodHours == 0) {

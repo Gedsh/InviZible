@@ -38,10 +38,12 @@ import java.util.Objects;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
-import pan.alexander.tordnscrypt.utils.NoRootService;
+import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesRunner;
+import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesStarterService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
@@ -91,12 +93,14 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         findPreference("ClientUseIPv6").setOnPreferenceChangeListener(this);
 
 
-        key_tor = getArguments().getStringArrayList("key_tor");
-        val_tor = getArguments().getStringArrayList("val_tor");
-        key_tor_orig = new ArrayList<>(key_tor);
-        val_tor_orig = new ArrayList<>(val_tor);
-        SettingsActivity.key_tor = key_tor;
-        SettingsActivity.val_tor = val_tor;
+        if (getArguments() != null) {
+            key_tor = getArguments().getStringArrayList("key_tor");
+            val_tor = getArguments().getStringArrayList("val_tor");
+            key_tor_orig = new ArrayList<>(key_tor);
+            val_tor_orig = new ArrayList<>(val_tor);
+            SettingsActivity.key_tor = key_tor;
+            SettingsActivity.val_tor = val_tor;
+        }
     }
 
     @Override
@@ -107,6 +111,11 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
     @Override
     public void onResume() {
         super.onResume();
+
+        if (getActivity() == null) {
+            return;
+        }
+
         getActivity().setTitle(R.string.drawer_menu_TorSettings);
 
         PathVars pathVars = new PathVars(getActivity());
@@ -159,34 +168,31 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
         }
 
-        if(!isChanged) return;
+        if(!isChanged || getActivity() == null) return;
 
         FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/tor/tor.conf",tor_conf,SettingsActivity.tor_conf_tag);
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
         boolean rnTorWithRoot = shPref.getBoolean("swUseModulesRoot",false);
         boolean torRunning = new PrefManager(getActivity()).getBoolPref("Tor Running");
-        String[] commandsEcho;
-        if (rnTorWithRoot) {
-            commandsEcho = new String[] {
-                    busyboxPath+ "killall tor; if [[ $? -eq 0 ]] ; " +
-                            "then "+torPath+" -f "+appDataDir+"/app_data/tor/tor.conf; fi"
-            };
-        } else {
-            commandsEcho = new String[] {
+
+        if (torRunning) {
+            ModulesStatus.getInstance().setTorRestarting(15);
+
+            String[] commandsEcho = new String[] {
                     busyboxPath+ "killall tor"
             };
-            if (torRunning)
-                runTorNoRoot();
+
+            runTor();
+
+            RootCommands rootCommands  = new RootCommands(commandsEcho);
+            Intent intent = new Intent(getActivity(), RootExecService.class);
+            intent.setAction(RootExecService.RUN_COMMAND);
+            intent.putExtra("Commands",rootCommands);
+            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
+            RootExecService.performAction(getActivity(),intent);
         }
 
-
-        RootCommands rootCommands  = new RootCommands(commandsEcho);
-        Intent intent = new Intent(getActivity(), RootExecService.class);
-        intent.setAction(RootExecService.RUN_COMMAND);
-        intent.putExtra("Commands",rootCommands);
-        intent.putExtra("Mark", RootExecService.SettingsActivityMark);
-        RootExecService.performAction(getActivity(),intent);
     }
 
     @Override
@@ -253,7 +259,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             if(Objects.equals(preference.getKey(), "EntryNodes")){
                 if (Boolean.valueOf(newValue.toString())){
                     key_tor.set(key_tor.indexOf("#EntryNodes"),"EntryNodes");
-                    FragmentTransaction fTrans = null;
+                    FragmentTransaction fTrans;
                     if (getFragmentManager() != null) {
                         fTrans = getFragmentManager().beginTransaction();
                         Fragment frg = new CountrySelectFragment();
@@ -317,16 +323,12 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         return false;
     }
 
-    private void runTorNoRoot() {
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean showNotification = shPref.getBoolean("swShowNotification",true);
-        Intent intent = new Intent(getActivity(), NoRootService.class);
-        intent.setAction(NoRootService.actionStartTor);
-        intent.putExtra("showNotification",showNotification);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            getActivity().startForegroundService(intent);
-        } else {
-            getActivity().startService(intent);
+    private void runTor() {
+
+        if (getActivity() == null) {
+            return;
         }
+
+        ModulesRunner.runTor(getActivity());
     }
 }

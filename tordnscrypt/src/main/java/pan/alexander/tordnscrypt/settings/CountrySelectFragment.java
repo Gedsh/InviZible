@@ -21,10 +21,10 @@ package pan.alexander.tordnscrypt.settings;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -37,6 +37,7 @@ import android.widget.SearchView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 
@@ -74,8 +75,10 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
             countriesListCurrent.add(new Countries(countriesFullListTitles[i], countriesFullListValues[i]));
         }
 
-        current_nodes_type = getArguments().getInt("nodes_type");
-        countries = getArguments().getString("countries");
+        if (getArguments() != null) {
+            current_nodes_type = getArguments().getInt("nodes_type");
+            countries = getArguments().getString("countries");
+        }
     }
 
     @Override
@@ -88,6 +91,10 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
     @Override
     public void onResume() {
         super.onResume();
+
+        if (getActivity() == null) {
+            return;
+        }
 
         if (current_nodes_type == entryNodes){
             getActivity().setTitle(R.string.pref_tor_entry_nodes);
@@ -170,6 +177,11 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
     @Override
     public void onStop() {
         super.onStop();
+
+        if (getActivity() == null) {
+            return;
+        }
+
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
         SharedPreferences.Editor editor = sp.edit();
         countries = ((CountriesAdapter)rvAdapter).getCheckedCountries();
@@ -220,7 +232,7 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
 
 
         SelectedCountries selectedCountries = new SelectedCountries(countries);
-        LayoutInflater lInflater = (LayoutInflater)getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        LayoutInflater lInflater = (LayoutInflater) Objects.requireNonNull(getActivity()).getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         @NonNull
         @Override

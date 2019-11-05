@@ -25,7 +25,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.preference.PreferenceManager;
+import android.support.v7.preference.PreferenceManager;
 
 import java.util.Objects;
 
@@ -34,7 +34,8 @@ import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
 import pan.alexander.tordnscrypt.utils.ApManager;
 import pan.alexander.tordnscrypt.utils.Arr;
 import pan.alexander.tordnscrypt.utils.GetIPsJobService;
-import pan.alexander.tordnscrypt.utils.NoRootService;
+import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesRunner;
+import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesStarterService;
 import pan.alexander.tordnscrypt.utils.OwnFileReader;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
@@ -177,7 +178,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
             String restoreSEContextDNS = "restorecon -R "+appDataDir+"/app_data/dnscrypt-proxy";
             String killallDNS = busyboxPath + "killall dnscrypt-proxy";
             if (rnDNSCryptWithRoot) {
-                startCommandDNSCrypt = busyboxPath+ "nohup " + dnscryptPath+" --config "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml >/dev/null 2>&1 &";
+                //startCommandDNSCrypt = busyboxPath+ "nohup " + dnscryptPath+" --config "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml >/dev/null 2>&1 &";
                 restoreUIDDNS = busyboxPath+"chown -R 0.0 "+appDataDir+"/app_data/dnscrypt-proxy";
                 restoreSEContextDNS = "";
                 killallDNS = busyboxPath + "killall dnscrypt-proxy";
@@ -189,7 +190,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
             String restoreSEContextTor = "restorecon -R "+appDataDir+"/tor_data";
             String killallTor = busyboxPath + "killall tor";
             if (rnTorWithRoot) {
-                startCommandTor = torPath+" -f "+appDataDir+"/app_data/tor/tor.conf";
+                //startCommandTor = torPath+" -f "+appDataDir+"/app_data/tor/tor.conf";
                 restoreUIDTor = busyboxPath+"chown -R 0.0 "+appDataDir+"/tor_data";
                 restoreSEContextTor = "";
                 appUIDTor ="0";
@@ -202,7 +203,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
             String restoreSEContextITPD = "restorecon -R "+appDataDir+"/i2pd_data";
             String killallITPD = busyboxPath + "killall i2pd";
             if (rnI2PDWithRoot) {
-                startCommandI2PD = itpdPath+" --conf "+appDataDir+"/app_data/i2pd/i2pd.conf --datadir "+appDataDir+"/i2pd_data &";
+                //startCommandI2PD = itpdPath+" --conf "+appDataDir+"/app_data/i2pd/i2pd.conf --datadir "+appDataDir+"/i2pd_data &";
                 restoreUIDITPD = busyboxPath+"chown -R 0.0 "+appDataDir+"/i2pd_data";
                 restoreSEContextITPD = "";
                 killallITPD = busyboxPath + "killall i2pd";
@@ -334,15 +335,10 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                             iptablesPath+ "iptables -I OUTPUT -j tordnscrypt"};
                 }
 
-                if (!rnDNSCryptWithRoot) {
-                    runDNSCryptNoRoot();
-                }
-                if (!rnTorWithRoot) {
-                    runTorNoRoot();
-                }
-                if (!rnI2PDWithRoot) {
-                    runITPDNoRoot();
-                }
+                runDNSCrypt();
+                runTor();
+                runITPD();
+
                 startRefreshTorUnlockIPs(context);
                 if (tethering_autostart){
                     String[] commandsTether = tethering.activateTethering(false);
@@ -469,13 +465,9 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                     };
                 }
 
+                runDNSCrypt();
+                runTor();
 
-                if (!rnDNSCryptWithRoot) {
-                    runDNSCryptNoRoot();
-                }
-                if (!rnTorWithRoot) {
-                    runTorNoRoot();
-                }
                 startRefreshTorUnlockIPs(context);
                 if (tethering_autostart){
                     String[] commandsTether = tethering.activateTethering(false);
@@ -525,9 +517,9 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                         busyboxPath+ "sleep 10",
                         iptablesPath+ "iptables -t nat -D tordnscrypt_nat_output -p udp -d "+dnsCryptFallbackRes+" --dport 53 -j ACCEPT"
                 };
-                if (!rnDNSCryptWithRoot) {
-                    runDNSCryptNoRoot();
-                }
+
+                runDNSCrypt();
+
                 stopRefreshTorUnlockIPs(context);
                 if (tethering_autostart){
                     String[] commandsTether = tethering.activateTethering(false);
@@ -597,9 +589,8 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                         iptablesPath+ "iptables -A tordnscrypt -j REJECT",
                         iptablesPath+ "iptables -I OUTPUT -j tordnscrypt"};
 
-                if (!rnTorWithRoot) {
-                    runTorNoRoot();
-                }
+                runTor();
+
                 startRefreshTorUnlockIPs(context);
                 if (tethering_autostart){
                     String[] commandsTether = tethering.activateTethering(true);
@@ -618,9 +609,8 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                         restoreUIDITPD,
                         restoreSEContextITPD,
                         startCommandI2PD};
-                if (!rnI2PDWithRoot) {
-                    runITPDNoRoot();
-                }
+                runITPD();
+
                 stopRefreshTorUnlockIPs(context);
                 if (tethering_autostart){
                     String[] commandsTether = tethering.activateTethering(false);
@@ -693,12 +683,9 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                         iptablesPath+ "iptables -A tordnscrypt -j REJECT",
                         iptablesPath+ "iptables -I OUTPUT -j tordnscrypt"};
 
-                if (!rnTorWithRoot) {
-                    runTorNoRoot();
-                }
-                if (!rnI2PDWithRoot) {
-                    runITPDNoRoot();
-                }
+                runTor();
+                runITPD();
+
                 startRefreshTorUnlockIPs(context);
                 if (tethering_autostart){
                     String[] commandsTether = tethering.activateTethering(true);
@@ -752,13 +739,10 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                         iptablesPath+ "iptables -t nat -D tordnscrypt_nat_output -p udp -d "+dnsCryptFallbackRes+" --dport 53 -j ACCEPT"
                 };
 
-                if (!rnDNSCryptWithRoot) {
-                    runDNSCryptNoRoot();
-                }
+                runDNSCrypt();
 
-                if (!rnI2PDWithRoot) {
-                    runITPDNoRoot();
-                }
+                runITPD();
+
                 stopRefreshTorUnlockIPs(context);
                 if (tethering_autostart){
                     String[] commandsTether = tethering.activateTethering(false);
@@ -778,43 +762,16 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         }
     }
 
-    private void runDNSCryptNoRoot() {
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean showNotification = shPref.getBoolean("swShowNotification",true);
-        Intent intent = new Intent(context, NoRootService.class);
-        intent.setAction(NoRootService.actionStartDnsCrypt);
-        intent.putExtra("showNotification",showNotification);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(intent);
-        } else {
-            context.startService(intent);
-        }
+    private void runDNSCrypt() {
+        ModulesRunner.runDNSCrypt(context);
     }
 
-    private void runTorNoRoot() {
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean showNotification = shPref.getBoolean("swShowNotification",true);
-        Intent intent = new Intent(context, NoRootService.class);
-        intent.setAction(NoRootService.actionStartTor);
-        intent.putExtra("showNotification",showNotification);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(intent);
-        } else {
-            context.startService(intent);
-        }
+    private void runTor() {
+        ModulesRunner.runTor(context);
     }
 
-    private void runITPDNoRoot() {
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean showNotification = shPref.getBoolean("swShowNotification",true);
-        Intent intent = new Intent(context, NoRootService.class);
-        intent.setAction(NoRootService.actionStartITPD);
-        intent.putExtra("showNotification",showNotification);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(intent);
-        } else {
-            context.startService(intent);
-        }
+    private void runITPD() {
+        ModulesRunner.runITPD(context);
     }
 
     private void startRefreshTorUnlockIPs(Context context) {

@@ -35,10 +35,12 @@ import java.util.Objects;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
-import pan.alexander.tordnscrypt.utils.NoRootService;
+import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesRunner;
+import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesStarterService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
 public class PreferencesITPDFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
 
@@ -87,10 +89,12 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
         findPreference("ntcphard").setOnPreferenceChangeListener(this);
         findPreference("defaulturl").setOnPreferenceChangeListener(this);
 
-        key_itpd = getArguments().getStringArrayList("key_itpd");
-        val_itpd = getArguments().getStringArrayList("val_itpd");
-        key_itpd_orig = new ArrayList<>(key_itpd);
-        val_itpd_orig = new ArrayList<>(val_itpd);
+        if (getArguments() != null) {
+            key_itpd = getArguments().getStringArrayList("key_itpd");
+            val_itpd = getArguments().getStringArrayList("val_itpd");
+            key_itpd_orig = new ArrayList<>(key_itpd);
+            val_itpd_orig = new ArrayList<>(val_itpd);
+        }
     }
 
     @Override
@@ -101,6 +105,11 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
     @Override
     public void onResume() {
         super.onResume();
+
+        if (getActivity() == null) {
+            return;
+        }
+
         getActivity().setTitle(R.string.drawer_menu_I2PDSettings);
 
         PathVars pathVars = new PathVars(getActivity());
@@ -111,6 +120,10 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
 
     public void onStop() {
         super.onStop();
+
+        if (getActivity() == null) {
+            return;
+        }
 
         List<String> itpd_conf = new LinkedList<>();
         boolean isChanged = false;
@@ -176,27 +189,26 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
 
         boolean rnI2PDWithRoot = sp.getBoolean("swUseModulesRoot",false);
         boolean itpdRunning = new PrefManager(getActivity()).getBoolPref("I2PD Running");
-        String[] commandsEcho;
-        if (rnI2PDWithRoot) {
-            commandsEcho = new String[] {
-                    busyboxPath+ "killall i2pd; if [[ $? -eq 0 ]] ; " +
-                            "then "+itpdPath+" --conf "+appDataDir+"/app_data/i2pd/i2pd.conf --datadir /data/media/0/i2pd & fi"
-            };
-        } else {
-            commandsEcho = new String[] {
+
+        if (itpdRunning) {
+            ModulesStatus.getInstance().setItpdRestarting(15);
+
+            String[] commandsEcho = new String[] {
                     busyboxPath+ "killall i2pd"
             };
-            if (itpdRunning)
-                runITPDNoRoot();
+
+            runITPD();
+
+
+            RootCommands rootCommands  = new RootCommands(commandsEcho);
+            Intent intent = new Intent(getActivity(), RootExecService.class);
+            intent.setAction(RootExecService.RUN_COMMAND);
+            intent.putExtra("Commands",rootCommands);
+            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
+            RootExecService.performAction(getActivity(),intent);
         }
 
 
-        RootCommands rootCommands  = new RootCommands(commandsEcho);
-        Intent intent = new Intent(getActivity(), RootExecService.class);
-        intent.setAction(RootExecService.RUN_COMMAND);
-        intent.putExtra("Commands",rootCommands);
-        intent.putExtra("Mark", RootExecService.SettingsActivityMark);
-        RootExecService.performAction(getActivity(),intent);
     }
 
     @Override
@@ -235,16 +247,12 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
         return false;
     }
 
-    private void runITPDNoRoot() {
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean showNotification = shPref.getBoolean("swShowNotification",true);
-        Intent intent = new Intent(getActivity(), NoRootService.class);
-        intent.setAction(NoRootService.actionStartITPD);
-        intent.putExtra("showNotification",showNotification);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            getActivity().startForegroundService(intent);
-        } else {
-            getActivity().startService(intent);
+    private void runITPD() {
+
+        if (getActivity() == null) {
+            return;
         }
+
+        ModulesRunner.runITPD(getActivity());
     }
 }

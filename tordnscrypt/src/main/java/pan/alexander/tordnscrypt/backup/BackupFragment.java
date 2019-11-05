@@ -76,7 +76,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
         btnSaveBackup.setOnClickListener(this);
         btnSaveBackup.requestFocus();
         etFilePath = view.findViewById(R.id.etPathBackup);
-        PathVars pathVars = new PathVars(getActivity());
+        PathVars pathVars = new PathVars(view.getContext());
         pathBackup = pathVars.pathBackup;
         etFilePath.setText(pathBackup);
         etFilePath.setOnClickListener(this);
@@ -191,7 +191,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
     }
 
     void closePleaseWaitDialog() {
-        if (getActivity() !=null) {
+        if (getActivity() != null) {
             try {
                 progress.dismiss();
             } catch (Exception ex) {

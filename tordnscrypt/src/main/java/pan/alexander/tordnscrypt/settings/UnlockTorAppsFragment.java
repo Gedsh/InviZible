@@ -25,9 +25,9 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -55,11 +55,11 @@ import java.util.Objects;
 import java.util.Set;
 
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.TorRefreshIPsWork;
 import pan.alexander.tordnscrypt.utils.Verifier;
+import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
@@ -105,6 +105,10 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
     public void onResume() {
         super.onResume();
 
+        if (getActivity() == null) {
+            return;
+        }
+
 
         ////////////////////////////////////////////////////////////////////////////////////
         ///////////////////////Reverse logic when route all through Tor!///////////////////
@@ -148,7 +152,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
                     if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                         NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                                 getActivity(), getText(R.string.verifier_error).toString(), "11");
-                        if (notificationHelper != null) {
+                        if (notificationHelper != null && getFragmentManager() != null) {
                             notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                         }
                     }
@@ -156,7 +160,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
                 } catch (Exception e) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             getActivity(), getText(R.string.verifier_error).toString(), "188");
-                    if (notificationHelper != null) {
+                    if (notificationHelper != null && getFragmentManager() != null) {
                         notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                     }
                     Log.e(LOG_TAG, "UnlockTorAppsFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
@@ -175,6 +179,10 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
     @Override
     public void onStop() {
         super.onStop();
+
+        if (getActivity() == null) {
+            return;
+        }
 
         if (thread.isAlive()) {
             try {
@@ -501,10 +509,14 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
                     }
                 }
 
+                if (getActivity() == null) {
+                    return;
+                }
+
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        pbTorApp.setIndeterminate(true);
+                        pbTorApp.setIndeterminate(false);
                         pbTorApp.setVisibility(View.GONE);
                     }
                 });

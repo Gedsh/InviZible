@@ -22,7 +22,7 @@ import android.content.ContextWrapper;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.preference.PreferenceManager;
+import android.support.v7.preference.PreferenceManager;
 
 import java.util.Locale;
 

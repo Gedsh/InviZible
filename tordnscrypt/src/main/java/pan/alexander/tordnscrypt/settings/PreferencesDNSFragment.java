@@ -35,11 +35,13 @@ import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
-import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
-import pan.alexander.tordnscrypt.utils.NoRootService;
+import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesRunner;
+import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesStarterService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
+import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
@@ -96,11 +98,12 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
         findPreference("refresh_delay").setOnPreferenceChangeListener(this);
         findPreference("minisign_key").setOnPreferenceChangeListener(this);
 
-        key_toml = getArguments().getStringArrayList("key_toml");
-        val_toml = getArguments().getStringArrayList("val_toml");
-        key_toml_orig = new ArrayList<>(key_toml);
-        val_toml_orig = new ArrayList<>(val_toml);
-
+        if (getArguments() != null) {
+            key_toml = getArguments().getStringArrayList("key_toml");
+            val_toml = getArguments().getStringArrayList("val_toml");
+            key_toml_orig = new ArrayList<>(key_toml);
+            val_toml_orig = new ArrayList<>(val_toml);
+        }
     }
 
     @Override
@@ -111,6 +114,11 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
     @Override
     public void onResume() {
         super.onResume();
+
+        if (getActivity() == null) {
+            return;
+        }
+
         getActivity().setTitle(R.string.drawer_menu_DNSSettings);
 
         PathVars pathVars = new PathVars(getActivity());
@@ -119,20 +127,23 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
         busyboxPath = pathVars.busyboxPath;
 
 
-
     }
 
     @Override
     public void onStop() {
         super.onStop();
 
+        if (getActivity() == null) {
+            return;
+        }
+
         List<String> dnscrypt_proxy_toml = new LinkedList<>();
-        for (int i=0;i<key_toml.size();i++){
-            if(!(key_toml_orig.get(i).equals(key_toml.get(i))&&val_toml_orig.get(i).equals(val_toml.get(i)))&&!isChanged){
+        for (int i = 0; i < key_toml.size(); i++) {
+            if (!(key_toml_orig.get(i).equals(key_toml.get(i)) && val_toml_orig.get(i).equals(val_toml.get(i))) && !isChanged) {
                 isChanged = true;
             }
 
-            if(val_toml.get(i).isEmpty()){
+            if (val_toml.get(i).isEmpty()) {
                 dnscrypt_proxy_toml.add(key_toml.get(i));
             } else {
                 dnscrypt_proxy_toml.add(key_toml.get(i) + " = " + val_toml.get(i));
@@ -140,105 +151,97 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
 
         }
 
-        if(!isChanged) return;
+        if (!isChanged) return;
 
-        FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml",dnscrypt_proxy_toml, SettingsActivity.dnscrypt_proxy_toml_tag);
+        FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml", dnscrypt_proxy_toml, SettingsActivity.dnscrypt_proxy_toml_tag);
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean runDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot",false);
+        boolean runDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot", false);
         boolean dnsCryptRunning = new PrefManager(getActivity()).getBoolPref("DNSCrypt Running");
-        String[] commandsEcho;
-        if (runDNSCryptWithRoot) {
-            commandsEcho = new String[] {
-                    busyboxPath+ "killall dnscrypt-proxy; if [[ $? -eq 0 ]] ; then "+busyboxPath+
-                            "nohup " + dnscryptPath+" --config "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml >/dev/null 2>&1 & fi"
-            };
-        } else {
-            commandsEcho = new String[] {
-                    busyboxPath+ "killall dnscrypt-proxy"
-            };
-            if (dnsCryptRunning)
-                runDNSCryptNoRoot();
+
+        if (dnsCryptRunning) {
+            ModulesStatus.getInstance().setDnsCryptRestarting(15);
+
+            String[] commandsEcho = new String[]{
+                    busyboxPath + "killall dnscrypt-proxy"};
+
+            runDNSCrypt();
+
+            RootCommands rootCommands = new RootCommands(commandsEcho);
+            Intent intent = new Intent(getActivity(), RootExecService.class);
+            intent.setAction(RootExecService.RUN_COMMAND);
+            intent.putExtra("Commands", rootCommands);
+            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
+            RootExecService.performAction(getActivity(), intent);
         }
-
-
-        RootCommands rootCommands  = new RootCommands(commandsEcho);
-        Intent intent = new Intent(getActivity(), RootExecService.class);
-        intent.setAction(RootExecService.RUN_COMMAND);
-        intent.putExtra("Commands",rootCommands);
-        intent.putExtra("Mark", RootExecService.SettingsActivityMark);
-        RootExecService.performAction(getActivity(),intent);
     }
+
 
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
 
         try {
-            if(Objects.equals(preference.getKey(), "listen_port")){
-                String val = "[\"127.0.0.1:"+newValue.toString()+"\"]";
-                val_toml.set(key_toml.indexOf("listen_addresses"),val);
+            if (Objects.equals(preference.getKey(), "listen_port")) {
+                String val = "[\"127.0.0.1:" + newValue.toString() + "\"]";
+                val_toml.set(key_toml.indexOf("listen_addresses"), val);
                 return true;
-            } else if(Objects.equals(preference.getKey(), "fallback_resolver")){
-                String val = "\""+newValue.toString()+":53\"";
-                val_toml.set(key_toml.indexOf("fallback_resolver"),val);
+            } else if (Objects.equals(preference.getKey(), "fallback_resolver")) {
+                String val = "\"" + newValue.toString() + ":53\"";
+                val_toml.set(key_toml.indexOf("fallback_resolver"), val);
                 return true;
-            } else if(Objects.equals(preference.getKey(), "proxy_port")){
-                String val = "\"socks5://127.0.0.1:"+newValue.toString()+"\"";
-                val_toml.set(key_toml.indexOf("proxy"),val);
+            } else if (Objects.equals(preference.getKey(), "proxy_port")) {
+                String val = "\"socks5://127.0.0.1:" + newValue.toString() + "\"";
+                val_toml.set(key_toml.indexOf("proxy"), val);
                 return true;
-            }else if(Objects.equals(preference.getKey(), "Enable DNS cache")){
-                val_toml.set(key_toml.indexOf("cache"),newValue.toString());
+            } else if (Objects.equals(preference.getKey(), "Enable DNS cache")) {
+                val_toml.set(key_toml.indexOf("cache"), newValue.toString());
                 return true;
-            } else if(Objects.equals(preference.getKey(), "Sources")){
-                val_toml.set(key_toml.indexOf("urls"),newValue.toString());
+            } else if (Objects.equals(preference.getKey(), "Sources")) {
+                val_toml.set(key_toml.indexOf("urls"), newValue.toString());
                 return true;
-            } else if(Objects.equals(preference.getKey(), "Enable proxy")){
-                if(Boolean.valueOf(newValue.toString())){
-                    key_toml.set(key_toml.indexOf("#proxy"),"proxy");
+            } else if (Objects.equals(preference.getKey(), "Enable proxy")) {
+                if (Boolean.valueOf(newValue.toString())) {
+                    key_toml.set(key_toml.indexOf("#proxy"), "proxy");
                 } else {
-                    key_toml.set(key_toml.indexOf("proxy"),"#proxy");
+                    key_toml.set(key_toml.indexOf("proxy"), "#proxy");
                 }
                 return true;
-            } else if(Objects.equals(preference.getKey().trim(), "Enable Query logging")){
-                if(Boolean.valueOf(newValue.toString())){
-                    key_toml.set(val_toml.indexOf("\""+appDataDir+"/cache/query.log\""),"file");
+            } else if (Objects.equals(preference.getKey().trim(), "Enable Query logging")) {
+                if (Boolean.valueOf(newValue.toString())) {
+                    key_toml.set(val_toml.indexOf("\"" + appDataDir + "/cache/query.log\""), "file");
                 } else {
-                    key_toml.set(val_toml.indexOf("\""+appDataDir+"/cache/query.log\""),"#file");
+                    key_toml.set(val_toml.indexOf("\"" + appDataDir + "/cache/query.log\""), "#file");
                 }
                 return true;
-            } else if(Objects.equals(preference.getKey().trim(), "Enable Suspicious logging")){
-                if(Boolean.valueOf(newValue.toString())){
-                    key_toml.set(val_toml.indexOf("\""+appDataDir+"/cache/nx.log\""),"file");
+            } else if (Objects.equals(preference.getKey().trim(), "Enable Suspicious logging")) {
+                if (Boolean.valueOf(newValue.toString())) {
+                    key_toml.set(val_toml.indexOf("\"" + appDataDir + "/cache/nx.log\""), "file");
                 } else {
-                    key_toml.set(val_toml.indexOf("\""+appDataDir+"/cache/nx.log\""),"#file");
+                    key_toml.set(val_toml.indexOf("\"" + appDataDir + "/cache/nx.log\""), "#file");
                 }
                 return true;
             }
 
             if (key_toml.contains(preference.getKey().trim())) {
-                val_toml.set(key_toml.indexOf(preference.getKey()),newValue.toString());
+                val_toml.set(key_toml.indexOf(preference.getKey()), newValue.toString());
                 return true;
             } else {
-                Toast.makeText(getActivity(),R.string.pref_dnscrypt_not_exist,Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), R.string.pref_dnscrypt_not_exist, Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG,"PreferencesDNSFragment exception " + e.getMessage() + " " + e.getCause());
-            Toast.makeText(getActivity(),R.string.wrong,Toast.LENGTH_LONG).show();
+            Log.e(LOG_TAG, "PreferencesDNSFragment exception " + e.getMessage() + " " + e.getCause());
+            Toast.makeText(getActivity(), R.string.wrong, Toast.LENGTH_LONG).show();
         }
 
         return false;
     }
 
-    private void runDNSCryptNoRoot() {
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean showNotification = shPref.getBoolean("swShowNotification",true);
-        Intent intent = new Intent(getActivity(), NoRootService.class);
-        intent.setAction(NoRootService.actionStartDnsCrypt);
-        intent.putExtra("showNotification",showNotification);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            getActivity().startForegroundService(intent);
-        } else {
-            getActivity().startService(intent);
+    private void runDNSCrypt() {
+
+        if (getActivity() == null) {
+            return;
         }
+
+        ModulesRunner.runDNSCrypt(getActivity());
     }
 }

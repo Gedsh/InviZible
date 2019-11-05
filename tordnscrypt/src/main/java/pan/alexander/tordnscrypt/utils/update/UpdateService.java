@@ -23,14 +23,15 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.FileProvider;
+import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 import android.util.SparseArray;
 
@@ -54,15 +55,14 @@ import javax.net.ssl.HttpsURLConnection;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.NoRootService;
+import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesRunner;
+import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesStarterService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
-import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
-import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UPDATED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UPDATING;
@@ -317,27 +317,16 @@ public class UpdateService extends Service {
     }
 
     private void restartMainActivity() {
-
-        try {
-            TimeUnit.SECONDS.sleep(5);
-        } catch (InterruptedException ignored){
-
-        }
-
         boolean mainActivityActive = new PrefManager(this).getBoolPref("MainActivityActive");
         if (mainActivityActive && allowActivityRestartAfterUpdate) {
+
+            try {
+                TimeUnit.SECONDS.sleep(5);
+            } catch (InterruptedException ignored){}
+
             Intent dialogIntent = new Intent(getApplicationContext(), MainActivity.class);
             dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(dialogIntent);
-
-            try {
-                TimeUnit.SECONDS.sleep(3);
-            } catch (InterruptedException ignored){
-
-            }
-
-            Intent refreshModulesRunningStatus = new Intent(TOP_BROADCAST);
-            sendBroadcast(refreshModulesRunningStatus);
         }
     }
 
@@ -478,6 +467,9 @@ public class UpdateService extends Service {
                 };
             }
         } else if (fileName.contains("InviZible")) {
+
+            saveAllModulesStopped(getApplicationContext());
+
             commandsStop = new String[]{
                     iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
                     iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
@@ -507,17 +499,12 @@ public class UpdateService extends Service {
     }
 
     private void runPreviousStoppedModules(String fileName) {
-        String[] commandsRun = new String[0];
         if (fileName.contains("dnscrypt-proxy")) {
             boolean dnsCryptRunning = new PrefManager(getApplicationContext()).getBoolPref("DNSCrypt Running");
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             boolean runDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot", false);
-            if (dnsCryptRunning && runDNSCryptWithRoot) {
-                commandsRun = new String[]{
-                        busyboxPath + "nohup " + dnscryptPath + " --config " + appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml >/dev/null 2>&1 &"
-                };
-            } else if (dnsCryptRunning) {
-                runDNSCryptNoRoot();
+            if (dnsCryptRunning) {
+                runDNSCrypt();
             }
 
             try {
@@ -529,12 +516,8 @@ public class UpdateService extends Service {
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             boolean rnTorWithRoot = shPref.getBoolean("swUseModulesRoot", false);
             boolean torRunning = new PrefManager(getApplicationContext()).getBoolPref("Tor Running");
-            if (torRunning && rnTorWithRoot) {
-                commandsRun = new String[]{
-                        torPath + " -f " + appDataDir + "/app_data/tor/tor.conf"
-                };
-            } else if (torRunning) {
-                runTorNoRoot();
+            if (torRunning) {
+                runTor();
             }
 
             try {
@@ -546,12 +529,8 @@ public class UpdateService extends Service {
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             boolean rnI2PDWithRoot = shPref.getBoolean("swUseModulesRoot", false);
             boolean itpdRunning = new PrefManager(getApplicationContext()).getBoolPref("I2PD Running");
-            if (itpdRunning && rnI2PDWithRoot) {
-                commandsRun = new String[]{
-                        itpdPath + " --conf " + appDataDir + "/app_data/i2pd/i2pd.conf --datadir " + appDataDir + "/i2pd_data &"
-                };
-            } else if (itpdRunning) {
-                runITPDNoRoot();
+            if (itpdRunning) {
+                runITPD();
             }
 
             try {
@@ -561,53 +540,18 @@ public class UpdateService extends Service {
 
         }
 
-        if (commandsRun.length != 0) {
-            RootCommands rootCommands = new RootCommands(commandsRun);
-            Intent intent = new Intent(getApplicationContext(), RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands", rootCommands);
-            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
-            RootExecService.performAction(getApplicationContext(), intent);
-        }
     }
 
-    private void runDNSCryptNoRoot() {
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        boolean showNotification = shPref.getBoolean("swShowNotification", true);
-        Intent intent = new Intent(getApplicationContext(), NoRootService.class);
-        intent.setAction(NoRootService.actionStartDnsCrypt);
-        intent.putExtra("showNotification", showNotification);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            getApplicationContext().startForegroundService(intent);
-        } else {
-            getApplicationContext().startService(intent);
-        }
+    private void runDNSCrypt() {
+        ModulesRunner.runDNSCrypt(getApplicationContext());
     }
 
-    private void runTorNoRoot() {
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        boolean showNotification = shPref.getBoolean("swShowNotification", true);
-        Intent intent = new Intent(getApplicationContext(), NoRootService.class);
-        intent.setAction(NoRootService.actionStartTor);
-        intent.putExtra("showNotification", showNotification);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            getApplicationContext().startForegroundService(intent);
-        } else {
-            getApplicationContext().startService(intent);
-        }
+    private void runTor() {
+        ModulesRunner.runTor(getApplicationContext());
     }
 
-    private void runITPDNoRoot() {
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        boolean showNotification = shPref.getBoolean("swShowNotification", true);
-        Intent intent = new Intent(getApplicationContext(), NoRootService.class);
-        intent.setAction(NoRootService.actionStartITPD);
-        intent.putExtra("showNotification", showNotification);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            getApplicationContext().startForegroundService(intent);
-        } else {
-            getApplicationContext().startService(intent);
-        }
+    private void runITPD() {
+       ModulesRunner.runITPD(getApplicationContext());
     }
 
     @SuppressWarnings("unused")
@@ -621,6 +565,12 @@ public class UpdateService extends Service {
         } catch (Exception e) {
             Log.e(LOG_TAG, "Unable to remove old InviZible.apk file during update" + e.getMessage() + " " + e.getCause());
         }
+    }
+
+    private void saveAllModulesStopped(Context context) {
+        new PrefManager(context).setBoolPref("DNSCrypt Running", false);
+        new PrefManager(context).setBoolPref("Tor Running", false);
+        new PrefManager(context).setBoolPref("I2PD Running", false);
     }
 
 

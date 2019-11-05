@@ -1,9 +1,5 @@
 package pan.alexander.tordnscrypt.utils.modulesStatus;
 
-import android.content.Context;
-import android.content.Intent;
-import android.util.Log;
-
 /*
     This file is part of InviZible Pro.
 
@@ -23,16 +19,17 @@ import android.util.Log;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import com.jrummyapps.android.shell.CommandResult;
-import com.jrummyapps.android.shell.Shell;
-import com.jrummyapps.android.shell.ShellNotFoundException;
+import android.content.Context;
+import android.content.Intent;
 
-import pan.alexander.tordnscrypt.settings.PathVars;
+import java.util.concurrent.TimeUnit;
+
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 
-import static pan.alexander.tordnscrypt.TopFragment.LOG_TAG;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
-import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTED;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
 public final class ModulesStatus {
@@ -40,16 +37,8 @@ public final class ModulesStatus {
     private volatile ModuleState dnsCryptState = STOPPED;
     private volatile ModuleState torState = STOPPED;
     private volatile ModuleState itpdState = STOPPED;
-    private volatile boolean fresh = false;
 
-    private ModuleState dnsCryptStateLocal = STOPPED;
-    private ModuleState torStateLocal = STOPPED;
-    private ModuleState itpdStateLocal = STOPPED;
-
-    private Shell.Console console;
-    private boolean shellIsOpened;
-
-    private PathVars pathVars;
+    private boolean useModulesWithRoot;
 
     private static volatile ModulesStatus modulesStatus;
 
@@ -68,87 +57,18 @@ public final class ModulesStatus {
     }
 
     public void refreshViews(Context context) {
-        Intent intent = new Intent(TOP_BROADCAST);
-        context.sendBroadcast(intent);
+        if (isUseModulesWithRoot()) {
+            Intent intent = new Intent(TOP_BROADCAST);
+            context.sendBroadcast(intent);
+        } else {
+            ModulesVersions.getInstance().refreshVersions(context);
+        }
+
     }
 
-    void refresh(final PathVars pathVars) {
-        if (console == null) {
-            try {
-                console = Shell.SH.getConsole();
-                shellIsOpened = true;
-            } catch (ShellNotFoundException e) {
-                shellIsOpened = false;
-                Log.e(LOG_TAG, "ModulesStatus: SH shell not found! " + e.getMessage() + e.getCause());
-            }
-        }
+    public void setUseModulesWithRoot(boolean useModulesWithRoot) {
+        this.useModulesWithRoot = useModulesWithRoot;
 
-        if (shellIsOpened) {
-            dnsCryptStateLocal = STOPPED;
-            torStateLocal = STOPPED;
-            itpdStateLocal = STOPPED;
-
-            this.pathVars = pathVars;
-
-            String busyBoxPath = pathVars.busyboxPath;
-            String toolBoxPath = "toolbox ";
-
-            String psCmdStringBusyBox = busyBoxPath + "ps";
-            String psCmdStringToolBox = toolBoxPath + "ps";
-
-
-            CommandResult shellResult = console.run(psCmdStringToolBox);
-            if (!shellResult.isSuccessful()) {
-                Log.w(LOG_TAG,"Error " + psCmdStringToolBox + " " + shellResult.exitCode
-                        + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
-
-                shellResult = Shell.run(psCmdStringBusyBox);
-            }
-
-            String stdOut = shellResult.getStdout();
-
-            checkModulesStatus(stdOut);
-
-            if (dnsCryptState == RUNNING || dnsCryptState == STOPPED) {
-                dnsCryptState = dnsCryptStateLocal;
-            }
-
-            if (torState == RUNNING || torState == STOPPED) {
-                torState = torStateLocal;
-            }
-
-            if (itpdState == RUNNING || itpdState == STOPPED) {
-                itpdState = itpdStateLocal;
-            }
-
-            fresh = true;
-
-            Log.i(LOG_TAG, "DNSCrypt is " + dnsCryptState + " Tor is " + torState + " I2P is " + itpdState);
-        }
-    }
-
-    void closeSHShell() {
-        fresh = false;
-
-        console.run("exit");
-        console.close();
-
-        shellIsOpened = false;
-        console = null;
-    }
-
-    private void checkModulesStatus(String stdOut) {
-        if (stdOut.contains(pathVars.dnscryptPath)) {
-            dnsCryptStateLocal = RUNNING;
-        }
-
-        if (stdOut.contains(pathVars.torPath)) {
-            torStateLocal = RUNNING;
-        }
-
-        if (stdOut.contains(pathVars.itpdPath)) {
-            itpdStateLocal = RUNNING;
-        }
     }
 
     public ModuleState getDnsCryptState() {
@@ -163,10 +83,6 @@ public final class ModulesStatus {
         return itpdState;
     }
 
-    public boolean isFresh() {
-        return fresh;
-    }
-
     public void setDnsCryptState(ModuleState dnsCryptState) {
         this.dnsCryptState = dnsCryptState;
     }
@@ -177,5 +93,53 @@ public final class ModulesStatus {
 
     public void setItpdState(ModuleState itpdState) {
         this.itpdState = itpdState;
+    }
+
+    public void setDnsCryptRestarting(final int timeSec) {
+
+        setDnsCryptState(RESTARTING);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    TimeUnit.SECONDS.sleep(timeSec);
+                    setDnsCryptState(RESTARTED);
+                } catch (InterruptedException ignored){}
+
+            }
+        }).start();
+    }
+
+    public void setTorRestarting(final int timeSec) {
+        setTorState(RESTARTING);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    TimeUnit.SECONDS.sleep(timeSec);
+                    setTorState(STARTING);
+                } catch (InterruptedException ignored){}
+            }
+        }).start();
+    }
+
+    public void setItpdRestarting(final int timeSec) {
+        setItpdState(RESTARTING);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    TimeUnit.SECONDS.sleep(timeSec);
+                    setItpdState(RESTARTED);
+                } catch (InterruptedException ignored){}
+            }
+        }).start();
+    }
+
+    public boolean isUseModulesWithRoot() {
+        return useModulesWithRoot;
     }
 }

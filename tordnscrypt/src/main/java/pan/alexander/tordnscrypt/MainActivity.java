@@ -26,7 +26,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.DialogFragment;
@@ -36,6 +36,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatDelegate;
+import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
 import android.util.Base64;
@@ -70,6 +71,7 @@ public class MainActivity extends LangAppCompatActivity
     private Timer timer;
     private static final int CODE_IS_AP_ON = 100;
     public static DialogInterface modernDialog = null;
+    private Handler handler;
 
     private TopFragment topFragment;
     private DNSCryptRunFragment dNSCryptRunFragment;
@@ -78,26 +80,8 @@ public class MainActivity extends LangAppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        SharedPreferences defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        try {
-            String theme = defaultSharedPreferences.getString("pref_fast_theme", "4");
-            switch (Objects.requireNonNull(theme)) {
-                case "1":
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-                    break;
-                case "2":
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-                    break;
-                case "3":
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO);
-                    break;
-                case "4":
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-                    break;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
+        setDayNightTheme();
 
         super.onCreate(savedInstanceState);
 
@@ -115,7 +99,7 @@ public class MainActivity extends LangAppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        new PrefManager(this).setBoolPref("MainActivityActive", true);
+        saveMainActivityActiveState(true);
 
         startAppExitDetectService();
     }
@@ -124,27 +108,13 @@ public class MainActivity extends LangAppCompatActivity
     public void onResume() {
         super.onResume();
 
-        try {
-            String saved_pass = new String(Base64.decode(new PrefManager(this).getStrPref("passwd"), 16));
-            childLockActive = saved_pass.contains("-l-o-c-k-e-d");
-        } catch (IllegalArgumentException e) {
-            Log.e(LOG_TAG, "MainActivity Child Lock Exeption " + e.getMessage());
-        }
+        handler = new Handler();
 
-        Intent intent = getIntent();
-        if (Objects.equals(intent.getAction(), "check_update")) {
-            if (topFragment != null) {
-                topFragment.checkNewVer();
-                modernDialog = modernProgressDialog();
-            }
-        }
+        childLockActive = isInterfaceLocked();
 
-        String updateResultMessage = new PrefManager(this).getStrPref("UpdateResultMessage");
-        if (!updateResultMessage.isEmpty()) {
-            showUpdateMessage(updateResultMessage);
-            new PrefManager(this).setStrPref("UpdateResultMessage", "");
-        }
+        checkUpdates();
 
+        showUpdateResultMessage();
     }
 
     @Override
@@ -170,6 +140,66 @@ public class MainActivity extends LangAppCompatActivity
         } else if (fragment instanceof TopFragment) {
             topFragment = (TopFragment) fragment;
         }
+    }
+
+    private void setDayNightTheme() {
+        SharedPreferences defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        try {
+            String theme = defaultSharedPreferences.getString("pref_fast_theme", "4");
+            switch (Objects.requireNonNull(theme)) {
+                case "1":
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                    break;
+                case "2":
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                    break;
+                case "3":
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO);
+                    break;
+                case "4":
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                    break;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void saveMainActivityActiveState(boolean active) {
+        new PrefManager(this).setBoolPref("MainActivityActive", active);
+    }
+
+    private void checkUpdates() {
+        Intent intent = getIntent();
+        if (Objects.equals(intent.getAction(), "check_update")) {
+            if (topFragment != null) {
+                topFragment.checkNewVer();
+                modernDialog = modernProgressDialog();
+            }
+
+            intent.setAction(null);
+            setIntent(intent);
+        }
+    }
+
+    private void showUpdateResultMessage() {
+        String updateResultMessage = new PrefManager(this).getStrPref("UpdateResultMessage");
+        if (!updateResultMessage.isEmpty()) {
+            showUpdateMessage(updateResultMessage);
+
+            new PrefManager(this).setStrPref("UpdateResultMessage", "");
+        }
+    }
+
+    private boolean isInterfaceLocked() {
+        boolean locked = false;
+        try {
+            String saved_pass = new String(Base64.decode(new PrefManager(this).getStrPref("passwd"), 16));
+            locked = saved_pass.contains("-l-o-c-k-e-d");
+        } catch (IllegalArgumentException e) {
+            Log.e(LOG_TAG, "MainActivity Child Lock Exception " + e.getMessage());
+        }
+        return locked;
     }
 
     public TopFragment getTopFragment() {
@@ -309,8 +339,7 @@ public class MainActivity extends LangAppCompatActivity
             case R.id.item_unlock:
 
                 try {
-                    String saved_pass = new String(Base64.decode(new PrefManager(getApplicationContext()).getStrPref("passwd"), 16));
-                    if (saved_pass.contains("-l-o-c-k-e-d")) {
+                    if (isInterfaceLocked()) {
                         childUnlock(item);
                     } else {
                         childLock(item);
@@ -533,13 +562,19 @@ public class MainActivity extends LangAppCompatActivity
     }
 
 
-    public void showUpdateMessage(String message) {
+    public void showUpdateMessage(final String message) {
         if (modernDialog != null)
             modernDialog.dismiss();
         modernDialog = null;
 
-        DialogFragment commandResult = NotificationDialogFragment.newInstance(message);
-        commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                DialogFragment commandResult = NotificationDialogFragment.newInstance(message);
+                commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
+            }
+        }, 500);
+
     }
 
     public DialogInterface modernProgressDialog() {
@@ -590,7 +625,7 @@ public class MainActivity extends LangAppCompatActivity
             modernDialog.dismiss();
         }
 
-        new PrefManager(this).setBoolPref("MainActivityActive", false);
+        saveMainActivityActiveState(false);
     }
 
 }

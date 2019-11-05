@@ -21,13 +21,13 @@ package pan.alexander.tordnscrypt.utils;
 import android.annotation.SuppressLint;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.support.v4.app.FragmentManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.support.v7.app.AlertDialog;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -191,7 +191,7 @@ public class GetNewBridges {
 
 
     private DialogInterface modernProgressDialog() {
-        android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(activity, R.style.CustomDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomDialogTheme);
         builder.setTitle(R.string.pref_fast_use_tor_bridges_request_dialog);
         builder.setMessage(R.string.please_wait);
         builder.setIcon(R.drawable.ic_visibility_off_black_24dp);

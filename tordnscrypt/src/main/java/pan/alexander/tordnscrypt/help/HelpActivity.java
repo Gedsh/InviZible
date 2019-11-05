@@ -188,9 +188,6 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                 busyboxPath + "cp -R shared_prefs logs_dir",
                 busyboxPath + "sleep 1",
                 busyboxPath + "echo \"" + info + "\" > logs_dir/device_info.log",
-                busyboxPath + "mkdir -p " + pathToSaveLogs,
-                "app_bin/gnutar -czf " + "logs/InvizibleLogs.txt logs_dir",
-
                 "restorecon -R logs_dir",
                 busyboxPath + "chown -R " + appUID + "." + appUID + " logs_dir",
                 busyboxPath + "chmod -R 755 logs_dir",

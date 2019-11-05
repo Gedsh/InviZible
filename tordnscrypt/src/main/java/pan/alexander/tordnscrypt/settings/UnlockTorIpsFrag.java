@@ -19,7 +19,6 @@ package pan.alexander.tordnscrypt.settings;
 */
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -27,10 +26,11 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -126,6 +126,10 @@ public class UnlockTorIpsFrag extends Fragment {
     public void onResume() {
         super.onResume();
 
+        if (getActivity() == null) {
+            return;
+        }
+
         PathVars pathVars = new PathVars(getActivity());
         appDataDir = pathVars.appDataDir;
         dnsCryptPort = pathVars.dnsCryptPort;
@@ -151,7 +155,9 @@ public class UnlockTorIpsFrag extends Fragment {
         runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
         blockHttp = shPref.getBoolean("pref_fast_block_http", false);
 
-        deviceOrTether = this.getArguments().getString("deviceOrTether");
+        if (this.getArguments() != null) {
+            deviceOrTether = this.getArguments().getString("deviceOrTether");
+        }
 
         ArrayList<String> unlockHosts;
         ArrayList<String> unlockIPs;
@@ -244,6 +250,10 @@ public class UnlockTorIpsFrag extends Fragment {
     @Override
     public void onStop() {
         super.onStop();
+
+        if (getActivity() == null) {
+            return;
+        }
 
         if (unlockHostIP == null || !isChanged) return;
 
@@ -526,6 +536,10 @@ public class UnlockTorIpsFrag extends Fragment {
 
         void delItem(int position) {
 
+            if (getActivity() == null) {
+                return;
+            }
+
             isChanged = true;
 
             if (getItem(position).inputIP) {
@@ -630,6 +644,11 @@ public class UnlockTorIpsFrag extends Fragment {
             CompoundButton.OnCheckedChangeListener onCheckedChangeListener = new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+
+                    if (getActivity() == null) {
+                        return;
+                    }
+
                     setActive(getAdapterPosition(), isChecked);
                     llHostIP.setEnabled(isChecked);
                     isChanged = true;
@@ -698,6 +717,11 @@ public class UnlockTorIpsFrag extends Fragment {
             };
 
             void editHostIPDialog(final int position) {
+
+                if (getActivity() == null) {
+                    return;
+                }
+
                 AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
                 builder.setTitle(R.string.pref_tor_unlock_edit);
 
@@ -768,6 +792,11 @@ public class UnlockTorIpsFrag extends Fragment {
     }
 
     void addHostIPDialog() {
+
+        if (getActivity() == null) {
+            return;
+        }
+
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
 
         if (deviceOrTether.equals("device")) {
@@ -796,10 +825,11 @@ public class UnlockTorIpsFrag extends Fragment {
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                /*InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-                if (imm != null) {
-                    imm.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT);
-                }*/
+
+                if (getActivity() == null) {
+                    return;
+                }
+
                 isChanged = true;
                 if (input.getText().toString().matches("[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}")) {
                     unlockHostIP.add(new HostIP(getText(R.string.please_wait).toString(), input.getText().toString(), false, true, true));

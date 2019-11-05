@@ -20,7 +20,6 @@ package pan.alexander.tordnscrypt.utils.installer;
 */
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v4.app.FragmentManager;
@@ -82,7 +81,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             mainActivity.runOnUiThread(installerUIChanger.setModulesStartButtonsDisabled());
             mainActivity.runOnUiThread(installerUIChanger.startModulesProgressBarIndeterminate());
 
-            registerReceiver();
+            registerReceiver(activity);
 
             stopAllRunningModulesWithRootCommand();
 
@@ -94,7 +93,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
                 throw new IllegalStateException("Installation interrupted");
             }
 
-            unRegisterReceiver();
+            unRegisterReceiver(activity);
 
             removeInstallationDirsIfExists();
             createLogsDir();
@@ -216,14 +215,6 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         }
     }
 
-    private boolean isModulesRunning() {
-        boolean dnsCryptRunning = new PrefManager(activity).getBoolPref("DNSCrypt Running");
-        boolean torRunning = new PrefManager(activity).getBoolPref("Tor Running");
-        boolean itpdRunning = new PrefManager(activity).getBoolPref("I2PD Running");
-
-        return !dnsCryptRunning && !torRunning && !itpdRunning;
-    }
-
     protected void removeInstallationDirsIfExists() {
         File app_bin = new File(appDataDir + "/app_bin");
         File app_data = new File(appDataDir + "/app_data");
@@ -331,7 +322,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         modulesStatus.refreshViews(activity);
     }
 
-    private void registerReceiver() {
+    protected void registerReceiver(Activity activity) {
         br = new InstallerReceiver();
         IntentFilter intentFilter = new IntentFilter(RootExecService.COMMAND_RESULT);
         activity.registerReceiver(br, intentFilter);
@@ -339,7 +330,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         Log.i(LOG_TAG, "Installer: registerReceiver OK");
     }
 
-    private void unRegisterReceiver() {
+    protected void unRegisterReceiver(Activity activity) {
         if (br != null) {
             activity.unregisterReceiver(br);
 

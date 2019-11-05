@@ -19,6 +19,7 @@ package pan.alexander.tordnscrypt;
 */
 
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -35,27 +36,28 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.jrummyapps.android.shell.Shell;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import eu.chainfire.libsuperuser.Shell;
 import pan.alexander.tordnscrypt.dialogs.InstallAppDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NewUpdateDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NoRootDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.dialogs.UpdateModulesDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.RootCheckingProgressDialog;
-import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Registration;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.utils.installer.Installer;
-import pan.alexander.tordnscrypt.utils.modulesStatus.ContinuousRefresher;
+import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesRunner;
+import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesStarterService;
+import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
+import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesVersions;
 import pan.alexander.tordnscrypt.utils.update.UpdateCheck;
 
 
@@ -126,8 +128,18 @@ public class TopFragment extends Fragment {
         super.onResume();
 
         if (getActivity() != null) {
-            ContinuousRefresher.startRefreshModulesStatus(new PathVars(getActivity()), 10);
+            SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            boolean runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+
+            ModulesStatus.getInstance().setUseModulesWithRoot(runModulesWithRoot);
+
+            if (!runModulesWithRoot && haveModulesSavedStateRunning() && !isModulesStarterServiceRunning()) {
+                startModulesStarterServiceIfStoppedBySystem();
+                Log.e(LOG_TAG, "ModulesStarterService stopped by system!");
+            }
         }
+
+
     }
 
     @Nullable
@@ -154,11 +166,7 @@ public class TopFragment extends Fragment {
     public void onDestroy() {
         super.onDestroy();
 
-        if (timer != null) {
-            timer.cancel();
-        }
-
-        ContinuousRefresher.stopRefreshModulesStatus();
+        stopInstallationTimer();
 
         removeOnActivityChangeListener();
     }
@@ -177,6 +185,7 @@ public class TopFragment extends Fragment {
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         protected Void doInBackground(Void... params) {
             try {
                 suAvailable = Shell.SU.available();
@@ -197,19 +206,13 @@ public class TopFragment extends Fragment {
 
             if (suAvailable) {
 
-                try {/*
+                try {
                     suVersion = Shell.SU.version(false);
-                    suResult = Shell.SU.run(new String[]{
-                            "id"
-                    });
-
-
-                    bbResult = Shell.SU.run(new String[]{
-                            "busybox | head -1"
-                    });*/
-                    suVersion= Shell.SU.version(false);
+                    suResult = Shell.SU.run("id");
+                    bbResult = Shell.SU.run("busybox | head -1");
+                    /*suVersion= Shell.SU.version(false);
                     suResult = Shell.SU.run("id").stdout;
-                    bbResult = Shell.SU.run("busybox | head -1").stdout;
+                    bbResult = Shell.SU.run("busybox | head -1").stdout;*/
 
                 } catch (Exception e) {
                     Log.e(LOG_TAG, "Top Fragment doInBackground suParam Exception " + e.getMessage() + " " + e.getCause());
@@ -261,81 +264,35 @@ public class TopFragment extends Fragment {
 
         @Override
         protected void onPostExecute(Void result) {
-            if (dialogInterface != null)
-                dialogInterface.dismiss();
+            try {
+                if (dialogInterface != null)
+                    dialogInterface.dismiss();
+            } catch (Exception ignored){}
+
 
             try {
+
+
+
                 setSUinfo(suResult, suVersion);
                 setBBinfo(bbResult);
                 if (rootOK && getActivity() != null) {
                     if (!isModulesInstalled(getActivity())) {
-                        PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences_common, true);
-                        PreferenceManager.setDefaultValues(Objects.requireNonNull(getActivity()), R.xml.preferences_dnscrypt, true);
-                        PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences_dnscrypt_servers, true);
-                        PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences_fast, true);
-                        PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences_tor, true);
-                        PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences_i2pd, true);
-
-                        DialogFragment installAll = InstallAppDialogFragment.getInstance();
-                        if (getFragmentManager() != null) {
-                            installAll.show(getFragmentManager(), "InstallAppDialogFragment");
-                        }
-
-                        //For core update purposes
-                        new PrefManager(getActivity()).setStrPref("DNSCryptVersion", DNSCryptVersion);
-                        new PrefManager(getActivity()).setStrPref("TorVersion", TorVersion);
-                        new PrefManager(getActivity()).setStrPref("ITPDVersion", ITPDVersion);
-                        new PrefManager(getActivity()).setStrPref("DNSCrypt Servers", "");
-                        SharedPreferences sPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-                        SharedPreferences.Editor editor = sPref.edit();
-                        editor.putBoolean("pref_common_tor_tethering", false);
-                        editor.putBoolean("pref_common_itpd_tethering", false);
-                        editor.apply();
-
+                        actionModulesNotInstalled();
                     } else {
-
-                        String currentDNSCryptVersionStr = new PrefManager(getActivity()).getStrPref("DNSCryptVersion");
-                        String currentTorVersionStr = new PrefManager(getActivity()).getStrPref("TorVersion");
-                        String currentITPDVersionStr = new PrefManager(getActivity()).getStrPref("ITPDVersion");
-                        if (!(currentDNSCryptVersionStr.isEmpty() && currentTorVersionStr.isEmpty() && currentITPDVersionStr.isEmpty())) {
-                            int currentDNSCryptVersion = Integer.parseInt(currentDNSCryptVersionStr.replaceAll("\\D+", ""));
-                            int currentTorVersion = Integer.parseInt(currentTorVersionStr.replaceAll("\\D+", ""));
-                            int currentITPDVersion = Integer.parseInt(currentITPDVersionStr.replaceAll("\\D+", ""));
-
-                            if ((currentDNSCryptVersion < Integer.parseInt(DNSCryptVersion.replaceAll("\\D+", ""))
-                                    || currentTorVersion < Integer.parseInt(TorVersion.replaceAll("\\D+", ""))
-                                    || currentITPDVersion < Integer.parseInt(ITPDVersion.replaceAll("\\D+", ""))
-                                    && !new PrefManager(getActivity()).getBoolPref("UpdateNotAllowed"))) {
-                                DialogFragment updateCore = UpdateModulesDialogFragment.getInstance();
-                                if (getFragmentManager() != null) {
-                                    updateCore.show(getFragmentManager(), "UpdateModulesDialogFragment");
-                                }
-                                return;
-                            }
+                        if (coreUpdateReady()) {
+                            return;
                         }
 
-                        Intent intent = new Intent(TOP_BROADCAST);
-                        getActivity().sendBroadcast(intent);
-                        Log.i(LOG_TAG, "TopFragment Send TOP_BROADCAST");
-                        if (timer != null) timer.cancel();
+                        refreshModulesVersions();
+
+                        stopInstallationTimer();
 
                         ////////////////////////////CHECK UPDATES///////////////////////////////////////////
                         checkUpdates();
 
-                        /////////////////////////////REGISTRATION////////////////////////////////////////////
-                        if (appVersion.endsWith("e")) {
-                            Handler handler = new Handler();
-                            Runnable performRegistration = new Runnable() {
-                                @Override
-                                public void run() {
-                                    Registration registration = new Registration(getActivity());
-                                    registration.showDonateDialog();
-                                }
-                            };
-                            handler.postDelayed(performRegistration, 5000);
-                        }
-
-
+                        /////////////////////////////DONATION////////////////////////////////////////////
+                        showDonDialog();
                     }
 
                 } else {
@@ -347,12 +304,100 @@ public class TopFragment extends Fragment {
                 if (getFragmentManager() != null) {
                     dialogCheckRoot.show(getFragmentManager(), "NoRootDialogFragment");
                 }
-                Log.w(LOG_TAG, "Chkroot onPostExecute " + e.getMessage() + " " + e.getCause());
+                Log.e(LOG_TAG, "Chkroot onPostExecute " + e.getMessage() + " " + e.getCause());
             }
         }
     }
 
-    public void setSUinfo(List<String> fSuResult, String fSuVersion) {
+    private void showDonDialog() {
+        if (appVersion.endsWith("e")) {
+            Handler handler = new Handler();
+            Runnable performRegistration = new Runnable() {
+                @Override
+                public void run() {
+                    Registration registration = new Registration(getActivity());
+                    registration.showDonateDialog();
+                }
+            };
+            handler.postDelayed(performRegistration, 5000);
+        }
+    }
+
+    private void refreshModulesVersions() {
+
+        if (getActivity() == null) {
+            return;
+        }
+
+        if (ModulesStatus.getInstance().isUseModulesWithRoot()) {
+            Intent intent = new Intent(TOP_BROADCAST);
+            getActivity().sendBroadcast(intent);
+            Log.i(LOG_TAG, "TopFragment Send TOP_BROADCAST");
+        } else {
+            ModulesVersions.getInstance().refreshVersions(getActivity());
+        }
+    }
+
+    private boolean coreUpdateReady() {
+
+        if (getActivity() == null) {
+            return false;
+        }
+
+        String currentDNSCryptVersionStr = new PrefManager(getActivity()).getStrPref("DNSCryptVersion");
+        String currentTorVersionStr = new PrefManager(getActivity()).getStrPref("TorVersion");
+        String currentITPDVersionStr = new PrefManager(getActivity()).getStrPref("ITPDVersion");
+        if (!(currentDNSCryptVersionStr.isEmpty() && currentTorVersionStr.isEmpty() && currentITPDVersionStr.isEmpty())) {
+            int currentDNSCryptVersion = Integer.parseInt(currentDNSCryptVersionStr.replaceAll("\\D+", ""));
+            int currentTorVersion = Integer.parseInt(currentTorVersionStr.replaceAll("\\D+", ""));
+            int currentITPDVersion = Integer.parseInt(currentITPDVersionStr.replaceAll("\\D+", ""));
+
+            if ((currentDNSCryptVersion < Integer.parseInt(DNSCryptVersion.replaceAll("\\D+", ""))
+                    || currentTorVersion < Integer.parseInt(TorVersion.replaceAll("\\D+", ""))
+                    || currentITPDVersion < Integer.parseInt(ITPDVersion.replaceAll("\\D+", ""))
+                    && !new PrefManager(getActivity()).getBoolPref("UpdateNotAllowed"))) {
+                DialogFragment updateCore = UpdateModulesDialogFragment.getInstance();
+                if (getFragmentManager() != null) {
+                    updateCore.show(getFragmentManager(), "UpdateModulesDialogFragment");
+                }
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void actionModulesNotInstalled() {
+
+        if (getActivity() == null) {
+            return;
+        }
+
+        PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences_common, true);
+        PreferenceManager.setDefaultValues(Objects.requireNonNull(getActivity()), R.xml.preferences_dnscrypt, true);
+        PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences_dnscrypt_servers, true);
+        PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences_fast, true);
+        PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences_tor, true);
+        PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences_i2pd, true);
+
+        DialogFragment installAll = InstallAppDialogFragment.getInstance();
+        if (getFragmentManager() != null) {
+            installAll.show(getFragmentManager(), "InstallAppDialogFragment");
+        }
+
+        //For core update purposes
+        new PrefManager(getActivity()).setStrPref("DNSCryptVersion", DNSCryptVersion);
+        new PrefManager(getActivity()).setStrPref("TorVersion", TorVersion);
+        new PrefManager(getActivity()).setStrPref("ITPDVersion", ITPDVersion);
+        new PrefManager(getActivity()).setStrPref("DNSCrypt Servers", "");
+        SharedPreferences sPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        SharedPreferences.Editor editor = sPref.edit();
+        editor.putBoolean("pref_common_tor_tethering", false);
+        editor.putBoolean("pref_common_itpd_tethering", false);
+        editor.apply();
+    }
+
+    private void setSUinfo(List<String> fSuResult, String fSuVersion) {
         if (getActivity() == null) {
             return;
         }
@@ -385,7 +430,7 @@ public class TopFragment extends Fragment {
         }
     }
 
-    public void setBBinfo(List<String> fBbResult) {
+    private void setBBinfo(List<String> fBbResult) {
 
         if (getActivity() == null) {
             return;
@@ -419,9 +464,7 @@ public class TopFragment extends Fragment {
 
     public void startInstallation() {
 
-        if (timer != null) {
-            timer.cancel();
-        }
+        stopInstallationTimer();
 
         timer = new Timer();
 
@@ -434,7 +477,7 @@ public class TopFragment extends Fragment {
                 Log.i(LOG_TAG, "TopFragment Timer loop = " + loop);
 
                 if (++loop > 15) {
-                    timer.cancel();
+                    stopInstallationTimer();
                     Log.w(LOG_TAG, "TopFragment Timer cancel, loop > 10");
                 }
 
@@ -447,6 +490,14 @@ public class TopFragment extends Fragment {
                 }
             }
         }, 3000, 1000);
+    }
+
+    private void stopInstallationTimer() {
+        if (timer != null) {
+            timer.purge();
+            timer.cancel();
+            timer = null;
+        }
     }
 
     public void checkUpdates() {
@@ -533,6 +584,43 @@ public class TopFragment extends Fragment {
         return new PrefManager(context).getBoolPref("DNSCrypt Installed")
                 && new PrefManager(context).getBoolPref("Tor Installed")
                 && new PrefManager(context).getBoolPref("I2PD Installed");
+    }
+
+    private void startModulesStarterServiceIfStoppedBySystem() {
+
+        if (getActivity() == null) {
+            return;
+        }
+
+        ModulesRunner.recoverService(getActivity());
+    }
+
+    private boolean isModulesStarterServiceRunning() {
+
+        if (getActivity() == null) {
+            return false;
+        }
+
+        ActivityManager manager = (ActivityManager) getActivity().getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (ModulesStarterService.class.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean haveModulesSavedStateRunning() {
+
+        if (getActivity() == null) {
+            return false;
+        }
+
+        boolean dnsCryptRunning = new PrefManager(getActivity()).getBoolPref("DNSCrypt Running");
+        boolean torRunning = new PrefManager(getActivity()).getBoolPref("Tor Running");
+        boolean itpdRunning = new PrefManager(getActivity()).getBoolPref("I2PD Running");
+
+        return dnsCryptRunning || torRunning || itpdRunning;
     }
 
 }

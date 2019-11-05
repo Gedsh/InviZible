@@ -20,12 +20,12 @@ package pan.alexander.tordnscrypt.utils;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
+import android.support.v7.app.AlertDialog;
 import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,7 +38,7 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 
 public class Registration {
-    Context context;
+    private Context context;
     public static boolean wrongRegistrationCode = true;
 
     public Registration(Context context) {

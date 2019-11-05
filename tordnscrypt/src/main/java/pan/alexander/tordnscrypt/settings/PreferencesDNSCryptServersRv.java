@@ -23,10 +23,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -47,13 +47,15 @@ import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
-import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
-import pan.alexander.tordnscrypt.utils.NoRootService;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
+import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesRunner;
+import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesStarterService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.Verifier;
+import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
+import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
@@ -97,10 +99,9 @@ public class PreferencesDNSCryptServersRv extends Fragment {
             dnscrypt_proxy_toml = getArguments().getStringArrayList("dnscrypt_proxy_toml");
             dnscrypt_servers_current = getArguments().getStringArrayList("dnscrypt_servers");
 
-
             assert dnscrypt_servers_current != null;
         } else {
-            Log.e(LOG_TAG,"PreferencesDNSCryptServersRv getArguments() nullpointer");
+            Log.e(LOG_TAG, "PreferencesDNSCryptServersRv getArguments() nullpointer");
         }
 
         Thread thread = new Thread(new Runnable() {
@@ -110,25 +111,25 @@ public class PreferencesDNSCryptServersRv extends Fragment {
                     Verifier verifier = new Verifier(getActivity());
                     String appSign = verifier.getApkSignatureZipModern();
                     String appSignAlt = verifier.getApkSignature();
-                    if (!verifier.decryptStr(wrongSign,appSign,appSignAlt).equals(TOP_BROADCAST)) {
+                    if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                         NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                getActivity(),getText(R.string.verifier_error).toString(),"6787");
+                                getActivity(), getText(R.string.verifier_error).toString(), "6787");
                         if (notificationHelper != null) {
                             if (getFragmentManager() != null) {
-                                notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                                notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                             }
                         }
                     }
 
                 } catch (Exception e) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                            getActivity(),getText(R.string.verifier_error).toString(),"8990");
+                            getActivity(), getText(R.string.verifier_error).toString(), "8990");
                     if (notificationHelper != null) {
                         if (getFragmentManager() != null) {
-                            notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                            notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                         }
                     }
-                    Log.e(LOG_TAG,"PreferencesDNSCryptServersRv fault "+e.getMessage() + " " + e.getCause() + System.lineSeparator() +
+                    Log.e(LOG_TAG, "PreferencesDNSCryptServersRv fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                             Arrays.toString(e.getStackTrace()));
                 }
             }
@@ -150,17 +151,17 @@ public class PreferencesDNSCryptServersRv extends Fragment {
 
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
-        require_dnssec = sp.getBoolean("require_dnssec",false);
-        require_nofilter = sp.getBoolean("require_nofilter",false);
-        require_nolog = sp.getBoolean("require_nolog",false);
-        use_dns_servers = sp.getBoolean("dnscrypt_servers",true);
-        use_doh_servers = sp.getBoolean("doh_servers",true);
-        use_ipv4 = sp.getBoolean("ipv4_servers",true);
-        use_ipv6 = sp.getBoolean("ipv6_servers",false);
+        require_dnssec = sp.getBoolean("require_dnssec", false);
+        require_nofilter = sp.getBoolean("require_nofilter", false);
+        require_nolog = sp.getBoolean("require_nolog", false);
+        use_dns_servers = sp.getBoolean("dnscrypt_servers", true);
+        use_doh_servers = sp.getBoolean("doh_servers", true);
+        use_ipv4 = sp.getBoolean("ipv4_servers", true);
+        use_ipv6 = sp.getBoolean("ipv6_servers", false);
 
         list_dns_servers = new ArrayList<>();
         for (int i = 0; i < dnsServerNames.size(); i++) {
-            DNSServers dnsServer = new DNSServers(dnsServerNames.get(i),dnsServerDescr.get(i),dnsServerSDNS.get(i));
+            DNSServers dnsServer = new DNSServers(dnsServerNames.get(i), dnsServerDescr.get(i), dnsServerSDNS.get(i));
             if (dnsServer.visibility && !dnsServerNames.get(i).contains("repeat_server"))
                 list_dns_servers.add(dnsServer);
         }
@@ -173,7 +174,7 @@ public class PreferencesDNSCryptServersRv extends Fragment {
         try {
             rvDNSServers.setAdapter(dNSServersAdapter);
         } catch (IllegalStateException e) {
-            Log.e(LOG_TAG, "PreferencesDNSCryptServersRv setAdapter Exception "+e.getMessage());
+            Log.e(LOG_TAG, "PreferencesDNSCryptServersRv setAdapter Exception " + e.getMessage());
         }
     }
 
@@ -196,68 +197,63 @@ public class PreferencesDNSCryptServersRv extends Fragment {
     public void onStop() {
         super.onStop();
 
-        if (getActivity()==null)
+        if (getActivity() == null)
             return;
 
-        if(list_dns_servers.size()==0)
+        if (list_dns_servers.size() == 0)
             return;
 
         StringBuilder dnscrypt_servers = new StringBuilder();
         dnscrypt_servers.append("[\"");
-        for(int i = 0; i < list_dns_servers.size(); i++){
+        for (int i = 0; i < list_dns_servers.size(); i++) {
             if (list_dns_servers.get(i).checked) {
                 dnscrypt_servers.append(list_dns_servers.get(i).name);
                 dnscrypt_servers.append("\", \"");
             }
         }
         if (dnscrypt_servers.toString().equals("[\"")) {
-            Toast.makeText(getActivity(),getText(R.string.pref_dnscrypt_select_server_names),Toast.LENGTH_LONG).show();
+            Toast.makeText(getActivity(), getText(R.string.pref_dnscrypt_select_server_names), Toast.LENGTH_LONG).show();
             return;
         }
-        dnscrypt_servers.delete(dnscrypt_servers.length()-4,dnscrypt_servers.length()).append("\"]");
+        dnscrypt_servers.delete(dnscrypt_servers.length() - 4, dnscrypt_servers.length()).append("\"]");
 
-        new PrefManager(getActivity()).setStrPref("DNSCrypt Servers",dnscrypt_servers.toString());
+        new PrefManager(getActivity()).setStrPref("DNSCrypt Servers", dnscrypt_servers.toString());
 
-        for (int i=0; i<dnscrypt_proxy_toml.size();i++){
+        for (int i = 0; i < dnscrypt_proxy_toml.size(); i++) {
             String str = dnscrypt_proxy_toml.get(i);
-            if(str.contains("server_names")){
+            if (str.contains("server_names")) {
                 String strTemp = str;
-                str = str.replaceFirst("\\[.+]",dnscrypt_servers.toString());
-                if(strTemp.equals(str))
+                str = str.replaceFirst("\\[.+]", dnscrypt_servers.toString());
+                if (strTemp.equals(str))
                     return;
-                dnscrypt_proxy_toml.set(i,str);
+                dnscrypt_proxy_toml.set(i, str);
                 break;
             }
         }
 
-        FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml",dnscrypt_proxy_toml, SettingsActivity.public_resolvers_md_tag);
+        FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml", dnscrypt_proxy_toml, SettingsActivity.public_resolvers_md_tag);
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean runDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot",true);
+        boolean runDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot", true);
         boolean dnsCryptRunning = new PrefManager(getActivity()).getBoolPref("DNSCrypt Running");
-        String[] commandsEcho;
-        if (runDNSCryptWithRoot) {
-            commandsEcho = new String[] {
-                    busyboxPath+ "killall dnscrypt-proxy; if [[ $? -eq 0 ]] ; then "+busyboxPath+
-                            "nohup " + dnscryptPath+" --config "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml >/dev/null 2>&1 & fi"
-            };
-        } else {
-            commandsEcho = new String[] {
-                    busyboxPath+ "killall dnscrypt-proxy"
-            };
 
-            if (dnsCryptRunning)
-                runDNSCryptNoRoot();
+        if (dnsCryptRunning) {
+            ModulesStatus.getInstance().setDnsCryptRestarting(15);
+
+            String[] commandsEcho = new String[]{
+                    busyboxPath + "killall dnscrypt-proxy"
+            };
+            runDNSCrypt();
+
+            RootCommands rootCommands = new RootCommands(commandsEcho);
+            Intent intent = new Intent(getActivity(), RootExecService.class);
+            intent.setAction(RootExecService.RUN_COMMAND);
+            intent.putExtra("Commands", rootCommands);
+            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
+            RootExecService.performAction(getActivity(), intent);
         }
 
-        RootCommands rootCommands  = new RootCommands(commandsEcho);
-        Intent intent = new Intent(getActivity(), RootExecService.class);
-        intent.setAction(RootExecService.RUN_COMMAND);
-        intent.putExtra("Commands",rootCommands);
-        intent.putExtra("Mark", RootExecService.SettingsActivityMark);
-        RootExecService.performAction(getActivity(),intent);
-
-        if (callback!=null)
+        if (callback != null)
             callback.onServersChange();
     }
 
@@ -279,20 +275,20 @@ public class PreferencesDNSCryptServersRv extends Fragment {
             this.name = name;
             this.description = description;
 
-            byte[] bin = Base64.decode(sdns.substring(0,7).getBytes(),16);
-            if (bin[0]==0x01) {
+            byte[] bin = Base64.decode(sdns.substring(0, 7).getBytes(), 16);
+            if (bin[0] == 0x01) {
                 protoDNSCrypt = true;
-            } else if (bin[0]==0x02) {
+            } else if (bin[0] == 0x02) {
                 protoDoH = true;
             }
 
-            if (((bin[1]) & 1)==1){
+            if (((bin[1]) & 1) == 1) {
                 this.dnssec = true;
             }
-            if (((bin[1] >> 1) & 1)==1) {
+            if (((bin[1] >> 1) & 1) == 1) {
                 this.nolog = true;
             }
-            if (((bin[1] >> 2) & 1)==1) {
+            if (((bin[1] >> 2) & 1) == 1) {
                 this.nofilter = true;
             }
 
@@ -360,11 +356,11 @@ public class PreferencesDNSCryptServersRv extends Fragment {
         }
 
         void setItem(int position, DNSServers dnsServer) {
-            list_dns_servers.set(position,dnsServer);
+            list_dns_servers.set(position, dnsServer);
         }
 
 
-        class DNSServersViewHolder extends RecyclerView.ViewHolder{
+        class DNSServersViewHolder extends RecyclerView.ViewHolder {
 
             CardView cardDNSServer;
             TextView tvDNSServerName;
@@ -388,7 +384,7 @@ public class PreferencesDNSCryptServersRv extends Fragment {
                 tvDNSServerFlags = itemView.findViewById(R.id.tvDNSServerFlags);
             }
 
-            void bind(int position){
+            void bind(int position) {
 
 
                 DNSServers dnsServer = list_dns_servers.get(position);
@@ -425,9 +421,9 @@ public class PreferencesDNSCryptServersRv extends Fragment {
                 public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                     int position = getAdapterPosition();
                     DNSServers dnsServer = getItem(position);
-                    if (dnsServer.checked!=checked) {
+                    if (dnsServer.checked != checked) {
                         dnsServer.checked = checked;
-                        setItem(position,dnsServer);
+                        setItem(position, dnsServer);
                     }
                 }
             };
@@ -438,7 +434,7 @@ public class PreferencesDNSCryptServersRv extends Fragment {
                     int position = getAdapterPosition();
                     DNSServers dnsServer = getItem(position);
                     dnsServer.checked = !dnsServer.checked;
-                    setItem(position,dnsServer);
+                    setItem(position, dnsServer);
                     notifyItemChanged(position);
                 }
             };
@@ -447,9 +443,9 @@ public class PreferencesDNSCryptServersRv extends Fragment {
                 @Override
                 public void onFocusChange(View view, boolean b) {
                     if (b) {
-                        ((CardView)view).setCardBackgroundColor(getResources().getColor(R.color.colorSecond));
+                        ((CardView) view).setCardBackgroundColor(getResources().getColor(R.color.colorSecond));
                     } else {
-                        ((CardView)view).setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
+                        ((CardView) view).setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
                     }
                 }
             };
@@ -457,17 +453,13 @@ public class PreferencesDNSCryptServersRv extends Fragment {
         }
     }
 
-    private void runDNSCryptNoRoot() {
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean showNotification = shPref.getBoolean("swShowNotification",true);
-        Intent intent = new Intent(getActivity(), NoRootService.class);
-        intent.setAction(NoRootService.actionStartDnsCrypt);
-        intent.putExtra("showNotification",showNotification);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Objects.requireNonNull(getActivity()).startForegroundService(intent);
-        } else {
-            Objects.requireNonNull(getActivity()).startService(intent);
+    private void runDNSCrypt() {
+
+        if (getActivity() == null) {
+            return;
         }
+
+        ModulesRunner.runDNSCrypt(getActivity());
     }
 
 

@@ -22,8 +22,8 @@ package pan.alexander.tordnscrypt.backup;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 
 import java.io.File;
@@ -64,6 +64,8 @@ class RestoreHelper extends Installer {
                         throw new IllegalStateException("No file to restore " + pathBackup + "/InvizibleBackup.zip");
                     }
 
+                    registerReceiver(activity);
+
                     stopAllRunningModulesWithRootCommand();
 
                     if (!waitUntilAllModulesStopped()) {
@@ -73,6 +75,8 @@ class RestoreHelper extends Installer {
                     if (interruptInstallation) {
                         throw new IllegalStateException("Installation interrupted");
                     }
+
+                    unRegisterReceiver(activity);
 
                     removeInstallationDirsIfExists();
                     createLogsDir();

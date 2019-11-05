@@ -9,6 +9,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
@@ -68,7 +69,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                 boolean isbool = false;
 
                 try {
-                    val_saved_str = sp.getString(key, "").trim();
+                    val_saved_str = Objects.requireNonNull(sp.getString(key, "")).trim();
                 } catch (ClassCastException e) {
                     isbool = true;
                     val_saved_bool = sp.getBoolean(key, false);
@@ -144,7 +145,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                 boolean isbool = false;
 
                 try {
-                    val_saved_str = sp.getString(key, "").trim();
+                    val_saved_str = Objects.requireNonNull(sp.getString(key, "")).trim();
                 } catch (ClassCastException e) {
                     isbool = true;
                     val_saved_bool = sp.getBoolean(key, false);
@@ -281,7 +282,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                 }
 
                 try {
-                    val_saved_str = sp.getString(key, "").trim();
+                    val_saved_str = Objects.requireNonNull(sp.getString(key, "")).trim();
                 } catch (ClassCastException e) {
                     isbool = true;
                     val_saved_bool = sp.getBoolean(key, false);
@@ -362,7 +363,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                 if (lockTOML) {
                     if (!line.isEmpty()) {
                         dnscrypt_proxy_toml.add(line);
-                        if (line.contains("server_names")) {
+                        if (line.matches("server_names .+")) {
                             String temp = line.substring(line.indexOf("[") + 1, line.indexOf("]")).trim();
                             temp = temp.replace("\"", "").trim();
                             dnscrypt_servers = new ArrayList<>(Arrays.asList(temp.trim().split(", ?")));
