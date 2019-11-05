@@ -52,10 +52,9 @@
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".utils.NoRootService"
+            android:name=".utils.modulesStarter.ModulesStarterService"
             android:enabled="true"
-            android:exported="false"
-            android:process=":inviz.NoRootService" />
+            android:exported="false"/>
 
         <activity
             android:name=".MainActivity"
