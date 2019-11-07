@@ -61,7 +61,7 @@ public class FileOperations {
     private static Map<String, List<String>> linesListMap = new HashMap<>();
     private static OnFileOperationsCompleteListener callback;
     private static Stack<OnFileOperationsCompleteListener> stackCallbacks;
-    private static ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private static final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     private BroadcastReceiver br = new BroadcastReceiver() {
         @Override
