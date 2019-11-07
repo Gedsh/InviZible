@@ -61,6 +61,7 @@ public class RootExecService extends Service {
     public static final int NullMark = 700;
     public static final int FileOperationsMark = 800;
     public static final int InstallerMark = 900;
+    public static final int TopFragmentMark = 1000;
     public final static String LOG_TAG = "pan.alexander.TPDCLogs";
     private ExecutorService executorService;
     public static boolean lockStartStop = false;

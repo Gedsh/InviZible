@@ -99,8 +99,6 @@ public class MainActivity extends LangAppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        saveMainActivityActiveState(true);
-
         startAppExitDetectService();
     }
 
@@ -165,10 +163,6 @@ public class MainActivity extends LangAppCompatActivity
         }
     }
 
-    private void saveMainActivityActiveState(boolean active) {
-        new PrefManager(this).setBoolPref("MainActivityActive", active);
-    }
-
     private void checkUpdates() {
         Intent intent = getIntent();
         if (Objects.equals(intent.getAction(), "check_update")) {
@@ -182,7 +176,7 @@ public class MainActivity extends LangAppCompatActivity
         }
     }
 
-    private void showUpdateResultMessage() {
+    public void showUpdateResultMessage() {
         String updateResultMessage = new PrefManager(this).getStrPref("UpdateResultMessage");
         if (!updateResultMessage.isEmpty()) {
             showUpdateMessage(updateResultMessage);
@@ -624,8 +618,6 @@ public class MainActivity extends LangAppCompatActivity
         if (modernDialog != null) {
             modernDialog.dismiss();
         }
-
-        saveMainActivityActiveState(false);
     }
 
 }

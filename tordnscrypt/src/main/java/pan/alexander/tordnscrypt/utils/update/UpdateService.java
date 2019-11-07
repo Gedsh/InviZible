@@ -56,7 +56,6 @@ import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesRunner;
-import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesStarterService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
@@ -64,10 +63,13 @@ import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.RootExecService.TopFragmentMark;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UPDATED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UPDATING;
 
 public class UpdateService extends Service {
+    private static final String STOP_DOWNLOAD_ACTION = "pan.alexander.tordnscrypt.STOP_DOWNLOAD_ACTION";
+    public static final String UPDATE_RESULT = "pan.alexander.tordnscrypt.action.UPDATE_RESULT";
     private final String ANDROID_CHANNEL_ID = "InviZible";
     private NotificationManager notificationManager;
     private static final int DEFAULT_NOTIFICATION_ID = 103;
@@ -75,15 +77,11 @@ public class UpdateService extends Service {
     private static final int CONNECTTIMEOUT = 60;
     private String appDataDir;
     private String busyboxPath;
-    private String dnscryptPath;
-    private String torPath;
-    private String itpdPath;
     private String iptablesPath;
     public static final String DOWNLOAD_ACTION = "pan.alexander.tordnscrypt.DOWNLOAD_ACTION";
-    private static final String STOP_DOWNLOAD_ACTION = "pan.alexander.tordnscrypt.STOP_DOWNLOAD_ACTION";
     private final AtomicInteger currentNotificationId = new AtomicInteger(DEFAULT_NOTIFICATION_ID) ;
     private volatile SparseArray<DownloadThread> sparseArray;
-    private boolean allowActivityRestartAfterUpdate = true;
+    private boolean allowSendBroadcastAfterUpdate = true;
     private ModulesStatus currentModuleStatus;
 
     public UpdateService() {
@@ -103,9 +101,6 @@ public class UpdateService extends Service {
         sparseArray = new SparseArray<>();
         appDataDir = pathVars.appDataDir;
         busyboxPath = pathVars.busyboxPath;
-        dnscryptPath = pathVars.dnscryptPath;
-        torPath = pathVars.torPath;
-        itpdPath = pathVars.itpdPath;
         iptablesPath = pathVars.iptablesPath;
         currentModuleStatus = ModulesStatus.getInstance();
     }
@@ -256,7 +251,7 @@ public class UpdateService extends Service {
                         stopRunningModules(fileToDownload);
 
                         if (fileToDownload.contains("InviZible")) {
-                            allowActivityRestartAfterUpdate = false;
+                            allowSendBroadcastAfterUpdate = false;
 
                             File file = new File(path);
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -273,7 +268,7 @@ public class UpdateService extends Service {
                                 getApplicationContext().startActivity(intent);
                             }
                         } else {
-                            allowActivityRestartAfterUpdate = true;
+                            allowSendBroadcastAfterUpdate = true;
 
                             FileOperations.moveBinaryFile(getApplicationContext(), cacheDir.getPath(), fileToDownload, appDataDir + "/app_bin", "executable_ignored");
                             runPreviousStoppedModules(fileToDownload);
@@ -299,7 +294,7 @@ public class UpdateService extends Service {
                     if (currentNotificationId.get() - 1 == DEFAULT_NOTIFICATION_ID) {
                         stopForeground(true);
                         notificationManager.cancel(notificationId);
-                        restartMainActivity();
+                        sendUpdateResultBroadcast();
                         stopSelf();
                     } else {
                         notificationManager.cancel(notificationId);
@@ -310,23 +305,15 @@ public class UpdateService extends Service {
 
             }
         };
-
-
-
-
     }
 
-    private void restartMainActivity() {
-        boolean mainActivityActive = new PrefManager(this).getBoolPref("MainActivityActive");
-        if (mainActivityActive && allowActivityRestartAfterUpdate) {
+    private void sendUpdateResultBroadcast() {
+        if (allowSendBroadcastAfterUpdate) {
+            makeDelay(5);
 
-            try {
-                TimeUnit.SECONDS.sleep(5);
-            } catch (InterruptedException ignored){}
-
-            Intent dialogIntent = new Intent(getApplicationContext(), MainActivity.class);
-            dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(dialogIntent);
+            Intent intent = new Intent(UPDATE_RESULT);
+            intent.putExtra("Mark", TopFragmentMark);
+            sendBroadcast(intent);
         }
     }
 
@@ -448,11 +435,7 @@ public class UpdateService extends Service {
             boolean torRunning = new PrefManager(getApplicationContext()).getBoolPref("Tor Running");
             if (torRunning) {
                 while (sparseArray.size() > 1) {
-                    try {
-                        Thread.sleep(5000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    makeDelay(5);
                 }
                 commandsStop = new String[]{
                         busyboxPath + "killall tor"
@@ -490,11 +473,7 @@ public class UpdateService extends Service {
             intent.putExtra("Mark", RootExecService.SettingsActivityMark);
             RootExecService.performAction(getApplicationContext(), intent);
 
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            makeDelay(3);
         }
     }
 
@@ -504,40 +483,47 @@ public class UpdateService extends Service {
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             boolean runDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot", false);
             if (dnsCryptRunning) {
-                runDNSCrypt();
-            }
 
-            try {
-                TimeUnit.SECONDS.sleep(3);
-            } catch (InterruptedException ignored) {}
-            currentModuleStatus.setDnsCryptState(UPDATED);
+                makeDelay(3);
+
+                runDNSCrypt();
+
+                makeDelay(10);
+
+                currentModuleStatus.setDnsCryptState(UPDATED);
+            }
 
         } else if (fileName.contains("tor")) {
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             boolean rnTorWithRoot = shPref.getBoolean("swUseModulesRoot", false);
             boolean torRunning = new PrefManager(getApplicationContext()).getBoolPref("Tor Running");
             if (torRunning) {
-                runTor();
-            }
 
-            try {
-                TimeUnit.SECONDS.sleep(3);
-            } catch (InterruptedException ignored) {}
-            currentModuleStatus.setDnsCryptState(UPDATED);
+                makeDelay(3);
+
+                runTor();
+
+                makeDelay(10);
+
+                currentModuleStatus.setTorState(UPDATED);
+            }
 
         } else if (fileName.contains("i2pd")) {
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             boolean rnI2PDWithRoot = shPref.getBoolean("swUseModulesRoot", false);
             boolean itpdRunning = new PrefManager(getApplicationContext()).getBoolPref("I2PD Running");
             if (itpdRunning) {
+
+                makeDelay(3);
+
                 runITPD();
+
+                makeDelay(10);
+
+                currentModuleStatus.setItpdState(UPDATED);
+
+
             }
-
-            try {
-                TimeUnit.SECONDS.sleep(3);
-            } catch (InterruptedException ignored) {}
-            currentModuleStatus.setDnsCryptState(UPDATED);
-
         }
 
     }
@@ -573,5 +559,10 @@ public class UpdateService extends Service {
         new PrefManager(context).setBoolPref("I2PD Running", false);
     }
 
+    private void makeDelay(int sec) {
+        try {
+            TimeUnit.SECONDS.sleep(sec);
+        } catch (InterruptedException ignored) {}
+    }
 
 }

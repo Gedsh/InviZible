@@ -20,8 +20,10 @@ package pan.alexander.tordnscrypt;
 
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -59,6 +61,7 @@ import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesStarterService;
 import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesVersions;
 import pan.alexander.tordnscrypt.utils.update.UpdateCheck;
+import pan.alexander.tordnscrypt.utils.update.UpdateService;
 
 
 public class TopFragment extends Fragment {
@@ -86,6 +89,7 @@ public class TopFragment extends Fragment {
     public UpdateCheck updateCheck;
     public static String wrongSign;
     public static boolean debug = false;
+    private BroadcastReceiver br;
 
     private OnActivityChangeListener onActivityChangeListener;
 
@@ -137,6 +141,8 @@ public class TopFragment extends Fragment {
                 startModulesStarterServiceIfStoppedBySystem();
                 Log.e(LOG_TAG, "ModulesStarterService stopped by system!");
             }
+
+            registerReceiver();
         }
 
 
@@ -151,15 +157,13 @@ public class TopFragment extends Fragment {
     @Override
     public void onStop() {
         super.onStop();
-        if (dialogInterface != null) {
-            dialogInterface.dismiss();
-        }
+
+        closePleaseWaitDialog();
+
         if (updateCheck != null && updateCheck.context != null)
             updateCheck.context = null;
 
-
-
-
+        unRegisterReceiver();
     }
 
     @Override
@@ -178,8 +182,8 @@ public class TopFragment extends Fragment {
 
         @Override
         protected void onPreExecute() {
-            dialogInterface = RootCheckingProgressDialog.getInstance();
             if (getFragmentManager() != null) {
+                dialogInterface = RootCheckingProgressDialog.getInstance();
                 dialogInterface.show(getFragmentManager(), "rootCheckingProgressDialog");
             }
         }
@@ -195,8 +199,8 @@ public class TopFragment extends Fragment {
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            DialogFragment dialogCheckRoot = NoRootDialogFragment.getInstance();
                             if (getFragmentManager() != null) {
+                                DialogFragment dialogCheckRoot = NoRootDialogFragment.getInstance();
                                 dialogCheckRoot.show(getFragmentManager(), "NoRootDialogFragment");
                             }
                         }
@@ -220,8 +224,8 @@ public class TopFragment extends Fragment {
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                DialogFragment dialogCheckRoot = NoRootDialogFragment.getInstance();
                                 if (getFragmentManager() != null) {
+                                    DialogFragment dialogCheckRoot = NoRootDialogFragment.getInstance();
                                     dialogCheckRoot.show(getFragmentManager(), "NoRootDialogFragment");
                                 }
                             }
@@ -264,15 +268,9 @@ public class TopFragment extends Fragment {
 
         @Override
         protected void onPostExecute(Void result) {
-            try {
-                if (dialogInterface != null)
-                    dialogInterface.dismiss();
-            } catch (Exception ignored){}
-
+            closePleaseWaitDialog();
 
             try {
-
-
 
                 setSUinfo(suResult, suVersion);
                 setBBinfo(bbResult);
@@ -300,8 +298,8 @@ public class TopFragment extends Fragment {
                 }
 
             } catch (Exception e) {
-                DialogFragment dialogCheckRoot = NoRootDialogFragment.getInstance();
                 if (getFragmentManager() != null) {
+                    DialogFragment dialogCheckRoot = NoRootDialogFragment.getInstance();
                     dialogCheckRoot.show(getFragmentManager(), "NoRootDialogFragment");
                 }
                 Log.e(LOG_TAG, "Chkroot onPostExecute " + e.getMessage() + " " + e.getCause());
@@ -356,8 +354,8 @@ public class TopFragment extends Fragment {
                     || currentTorVersion < Integer.parseInt(TorVersion.replaceAll("\\D+", ""))
                     || currentITPDVersion < Integer.parseInt(ITPDVersion.replaceAll("\\D+", ""))
                     && !new PrefManager(getActivity()).getBoolPref("UpdateNotAllowed"))) {
-                DialogFragment updateCore = UpdateModulesDialogFragment.getInstance();
                 if (getFragmentManager() != null) {
+                    DialogFragment updateCore = UpdateModulesDialogFragment.getInstance();
                     updateCore.show(getFragmentManager(), "UpdateModulesDialogFragment");
                 }
                 return true;
@@ -380,8 +378,8 @@ public class TopFragment extends Fragment {
         PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences_tor, true);
         PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences_i2pd, true);
 
-        DialogFragment installAll = InstallAppDialogFragment.getInstance();
         if (getFragmentManager() != null) {
+            DialogFragment installAll = InstallAppDialogFragment.getInstance();
             installAll.show(getFragmentManager(), "InstallAppDialogFragment");
         }
 
@@ -422,8 +420,8 @@ public class TopFragment extends Fragment {
             rootOK = false;
             new PrefManager(getActivity()).setBoolPref("rootOK", false);
 
-            DialogFragment dialogCheckRoot = NoRootDialogFragment.getInstance();
             if (getFragmentManager() != null) {
+                DialogFragment dialogCheckRoot = NoRootDialogFragment.getInstance();
                 dialogCheckRoot.show(getFragmentManager(), "NoRootDialogFragment");
             }
 
@@ -567,17 +565,23 @@ public class TopFragment extends Fragment {
         if (getActivity() == null)
             return;
 
-        if (MainActivity.modernDialog != null) {
-            MainActivity.modernDialog.dismiss();
-            MainActivity.modernDialog = null;
-        }
+        closeMainActivityModernDialog();
 
         new PrefManager(getActivity()).setStrPref("LastUpdateResult", getActivity().getText(R.string.update_found).toString());
 
-        DialogFragment newUpdateDialogFragment = NewUpdateDialogFragment.newInstance(message, updateStr, fileName, hash);
         if (getFragmentManager() != null) {
+            DialogFragment newUpdateDialogFragment = NewUpdateDialogFragment.newInstance(message, updateStr, fileName, hash);
             newUpdateDialogFragment.show(getFragmentManager(), NewUpdateDialogFragment.TAG_NOT_FRAG);
         }
+    }
+
+    private void closeMainActivityModernDialog() {
+        try {
+            if (MainActivity.modernDialog != null) {
+                MainActivity.modernDialog.dismiss();
+                MainActivity.modernDialog = null;
+            }
+        } catch (Exception ignored) {}
     }
 
     private boolean isModulesInstalled(Context context) {
@@ -623,4 +627,68 @@ public class TopFragment extends Fragment {
         return dnsCryptRunning || torRunning || itpdRunning;
     }
 
+    private void closePleaseWaitDialog() {
+        try {
+            if (dialogInterface != null) {
+                dialogInterface.dismiss();
+                dialogInterface = null;
+            }
+        } catch (Exception ignored){}
+    }
+
+    private void receiverOnReceive(Context context, Intent intent) {
+
+        if (getActivity() == null || !isBroadcastMatch(intent)) {
+            return;
+        }
+
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity)getActivity()).showUpdateResultMessage();
+        }
+
+        refreshModulesVersions();
+    }
+
+    private boolean isBroadcastMatch(Intent intent) {
+        if (intent == null) {
+            return false;
+        }
+
+        String action = intent.getAction();
+
+        if ((action == null) || (action.equals(""))) {
+            return false;
+        }
+
+        if (!action.equals(UpdateService.UPDATE_RESULT)) {
+            return false;
+        }
+
+        return intent.getIntExtra("Mark", 0) == RootExecService.TopFragmentMark;
+    }
+
+    protected void registerReceiver() {
+
+        if (getActivity() == null) {
+            return;
+        }
+
+        br = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                receiverOnReceive(context, intent);
+            }
+        };
+        IntentFilter intentFilter = new IntentFilter(UpdateService.UPDATE_RESULT);
+        getActivity().registerReceiver(br, intentFilter);
+    }
+
+    protected void unRegisterReceiver() {
+        try {
+            if (br != null && getActivity() != null) {
+                getActivity().unregisterReceiver(br);
+            }
+        } catch (Exception ignored){}
+
+    }
 }
