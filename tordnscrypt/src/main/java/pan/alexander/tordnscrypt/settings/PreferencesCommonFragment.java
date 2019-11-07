@@ -190,23 +190,21 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             case "pref_common_tor_tethering":
                 allowTorTether = Boolean.valueOf(newValue.toString());
                 readTorConf();
-                if (new PrefManager(getActivity()).getBoolPref("Tor Running")) {
+                if (new PrefManager(getActivity()).getBoolPref("Tor Running")
+                        && getFragmentManager() != null) {
                     DialogFragment commandResult =
                             NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_tor).toString());
-                    if (getFragmentManager() != null) {
-                        commandResult.show(getFragmentManager(),"NotificationDialogFragment");
-                    }
+                    commandResult.show(getFragmentManager(),"NotificationDialogFragment");
                 }
                 break;
             case "pref_common_itpd_tethering":
                 allowITPDtether = Boolean.valueOf(newValue.toString());
                 readITPDConf();
-                if (new PrefManager(getActivity()).getBoolPref("I2PD Running")) {
+                if (new PrefManager(getActivity()).getBoolPref("I2PD Running")
+                        && getFragmentManager() != null) {
                     DialogFragment commandResult =
                             NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_itpd).toString());
-                    if (getFragmentManager() != null) {
-                        commandResult.show(getFragmentManager(),"NotificationDialogFragment");
-                    }
+                    commandResult.show(getFragmentManager(),"NotificationDialogFragment");
                 }
                 break;
             case "pref_common_tor_route_all":
@@ -215,27 +213,24 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 } else {
                     findPreference("prefTorSiteUnlockTether").setEnabled(true);
                 }
-                if (new PrefManager(getActivity()).getBoolPref("Tor Running")) {
+                if (new PrefManager(getActivity()).getBoolPref("Tor Running")
+                        && getFragmentManager() != null) {
                     DialogFragment commandResult =
                             NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_tor).toString());
-                    if (getFragmentManager() != null) {
-                        commandResult.show(getFragmentManager(),"NotificationDialogFragment");
-                    }
+                    commandResult.show(getFragmentManager(),"NotificationDialogFragment");
                 }
                 break;
             case "pref_common_block_http":
-                if (new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
+                if (new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")
+                        && getFragmentManager() != null) {
                     DialogFragment commandResult =
                             NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_dnscrypt).toString());
-                    if (getFragmentManager() != null) {
-                        commandResult.show(getFragmentManager(),"NotificationDialogFragment");
-                    }
-                } else if (new PrefManager(getActivity()).getBoolPref("Tor Running")) {
+                    commandResult.show(getFragmentManager(),"NotificationDialogFragment");
+                } else if (new PrefManager(getActivity()).getBoolPref("Tor Running")
+                        && getFragmentManager() != null) {
                     DialogFragment commandResult =
                             NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_tor).toString());
-                    if (getFragmentManager() != null) {
-                        commandResult.show(getFragmentManager(),"NotificationDialogFragment");
-                    }
+                    commandResult.show(getFragmentManager(),"NotificationDialogFragment");
                 }
                 break;
             case "pref_common_use_modules_with_root" :

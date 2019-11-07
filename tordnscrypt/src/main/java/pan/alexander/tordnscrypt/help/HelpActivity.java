@@ -280,8 +280,11 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
             Log.e(LOG_TAG, "Unable to delete file " + path);
         } else if (currentFileOperation == moveBinaryFile) {
 
-            if (dialogFragment != null)
+            if (dialogFragment != null) {
                 dialogFragment.dismiss();
+                dialogFragment = null;
+            }
+
             if (fileOperationResult) {
 
                 DialogFragment commandResult =

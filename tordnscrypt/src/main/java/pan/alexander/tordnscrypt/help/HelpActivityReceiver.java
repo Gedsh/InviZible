@@ -167,8 +167,11 @@ public class HelpActivityReceiver extends BroadcastReceiver {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (progressDialog != null)
+                if (progressDialog != null) {
                     progressDialog.dismiss();
+                    progressDialog = null;
+                }
+
             }
         });
     }
