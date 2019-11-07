@@ -180,6 +180,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                                 && sb.toString().contains("checkITPDRunning")) {
                             setITPDRunning();
                             saveITPDStatusRunning(true);
+                            modulesStatus.setItpdState(RUNNING);
                         } else if (!sb.toString().toLowerCase().contains(itpdPath)
                                 && sb.toString().contains("checkITPDRunning")) {
                             if (modulesStatus.getItpdState() == STOPPING) {

@@ -74,10 +74,12 @@ import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UPDATING;
 
 
 public class TorRunFragment extends Fragment implements View.OnClickListener {
@@ -1032,9 +1034,20 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
         }
 
         if (0 <= perc && perc < 100) {
+
+            if (modulesStatus.getTorState() == STOPPED) {
+                return;
+            }
+
             pbTor.setProgress(perc);
             setTorStarting();
-        } else if (currentModuleState == STARTING || isSavedTorStatusRunning()) {
+        } else if (modulesStatus.getTorState() == STARTING || isSavedTorStatusRunning()) {
+
+            if (modulesStatus.getTorState() == RESTARTING
+                    || modulesStatus.getTorState() == UPDATING) {
+                return;
+            }
+
             pbTor.setProgress(0);
             modulesStatus.setTorState(RUNNING);
             new PrefManager(Objects.requireNonNull(getActivity())).setBoolPref("Tor Ready", true);

@@ -67,10 +67,12 @@ import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UPDATING;
 
 
 public class DNSCryptRunFragment extends Fragment implements View.OnClickListener {
@@ -949,9 +951,17 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
     }
 
     private void dnsCryptStartedSuccessfully(String lines) {
-        if (lines.contains("lowest initial latency")
-                && (modulesStatus.getDnsCryptState() == STARTING
-                || isSavedDNSStatusRunning())) {
+        if (modulesStatus.getDnsCryptState() == RESTARTING
+                || modulesStatus.getDnsCryptState() == UPDATING) {
+            return;
+        }
+
+        if (modulesStatus.getDnsCryptState() != STARTING
+                && !isSavedDNSStatusRunning()) {
+            return;
+        }
+
+        if (lines.contains("lowest initial latency")) {
             modulesStatus.setDnsCryptState(RUNNING);
         }
     }

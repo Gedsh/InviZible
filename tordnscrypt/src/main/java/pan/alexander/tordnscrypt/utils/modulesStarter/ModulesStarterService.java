@@ -50,6 +50,7 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UPDATED;
 
 public class ModulesStarterService extends Service {
     PathVars pathVars;
@@ -123,6 +124,9 @@ public class ModulesStarterService extends Service {
                 break;
             case actionDismissNotification:
                 dismissNotification(startId);
+                break;
+            case actionRecoverService:
+                setAllModulesStateStopped();
                 break;
         }
 
@@ -299,31 +303,49 @@ public class ModulesStarterService extends Service {
             }
 
             if (dnsCryptThread != null && dnsCryptThread.isAlive()) {
-                if (modulesStatus.getDnsCryptState() == STOPPED || modulesStatus.getDnsCryptState() == RESTARTED) {
+                if (modulesStatus.getDnsCryptState() == STOPPED
+                        || modulesStatus.getDnsCryptState() == RESTARTED
+                        || modulesStatus.getDnsCryptState() == UPDATED) {
+
                     modulesStatus.setDnsCryptState(ModuleState.RUNNING);
                 }
             } else {
-                if (modulesStatus.getDnsCryptState() == RUNNING || modulesStatus.getDnsCryptState() == RESTARTED) {
+                if (modulesStatus.getDnsCryptState() == RUNNING
+                        || modulesStatus.getDnsCryptState() == RESTARTED
+                        || modulesStatus.getDnsCryptState() == UPDATED) {
+
                     modulesStatus.setDnsCryptState(STOPPED);
                 }
             }
 
             if (torThread != null && torThread.isAlive()) {
-                if (modulesStatus.getTorState() == STOPPED || modulesStatus.getTorState() == RESTARTED) {
+                if (modulesStatus.getTorState() == STOPPED
+                        || modulesStatus.getTorState() == RESTARTED
+                        || modulesStatus.getTorState() == UPDATED) {
+
                     modulesStatus.setTorState(ModuleState.RUNNING);
                 }
             } else {
-                if (modulesStatus.getTorState() == RUNNING || modulesStatus.getTorState() == RESTARTED) {
+                if (modulesStatus.getTorState() == RUNNING
+                        || modulesStatus.getTorState() == RESTARTED
+                        || modulesStatus.getTorState() == UPDATED) {
+
                     modulesStatus.setTorState(STOPPED);
                 }
             }
 
             if (itpdThread != null && itpdThread.isAlive()) {
-                if (modulesStatus.getItpdState() == STOPPED || modulesStatus.getItpdState() == RESTARTED) {
+                if (modulesStatus.getItpdState() == STOPPED
+                        || modulesStatus.getItpdState() == RESTARTED
+                        || modulesStatus.getItpdState() == UPDATED) {
+
                     modulesStatus.setItpdState(ModuleState.RUNNING);
                 }
             } else {
-                if (modulesStatus.getItpdState() == RUNNING || modulesStatus.getItpdState() == RESTARTED) {
+                if (modulesStatus.getItpdState() == RUNNING
+                        || modulesStatus.getItpdState() == RESTARTED
+                        || modulesStatus.getItpdState() == UPDATED) {
+
                     modulesStatus.setItpdState(STOPPED);
                 }
             }
@@ -340,5 +362,11 @@ public class ModulesStarterService extends Service {
         }
 
         stopSelf(startID);
+    }
+
+    private void setAllModulesStateStopped() {
+        modulesStatus.setDnsCryptState(STOPPED);
+        modulesStatus.setTorState(STOPPED);
+        modulesStatus.setItpdState(STOPPED);
     }
 }

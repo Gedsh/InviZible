@@ -35,9 +35,10 @@ import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
-public class ModulesStarterHelper {
+class ModulesStarterHelper {
 
-    private ModulesStarterHelper() {}
+    private ModulesStarterHelper() {
+    }
 
     static Runnable getDNSCryptStarterRunnable(final Context context, final PathVars pathVars, final Handler handler, final boolean useModulesWithRoot) {
         return new Runnable() {
@@ -45,29 +46,25 @@ public class ModulesStarterHelper {
             public void run() {
                 //new experiment
                 android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
-                try {
-                    TimeUnit.SECONDS.sleep(3);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
 
+                makeDelay(3);
 
                 String dnsCmdString;
                 final CommandResult shellResult;
                 if (useModulesWithRoot) {
-                    dnsCmdString = pathVars.busyboxPath+ "nohup " + pathVars.dnscryptPath+" --config "+pathVars.appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml >/dev/null 2>&1 &";
+                    dnsCmdString = pathVars.busyboxPath + "nohup " + pathVars.dnscryptPath + " --config " + pathVars.appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml >/dev/null 2>&1 &";
                     shellResult = Shell.SU.run(dnsCmdString);
                 } else {
-                    dnsCmdString = pathVars.dnscryptPath+" --config "+pathVars.appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml";
+                    dnsCmdString = pathVars.dnscryptPath + " --config " + pathVars.appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml";
                     shellResult = Shell.run(dnsCmdString);
                 }
 
                 if (!shellResult.isSuccessful()) {
-                    Log.e(LOG_TAG,"Error DNSCrypt: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
+                    Log.e(LOG_TAG, "Error DNSCrypt: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(context,"Error DNSCrypt: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout(),Toast.LENGTH_LONG).show();
+                            Toast.makeText(context, "Error DNSCrypt: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout(), Toast.LENGTH_LONG).show();
                         }
                     });
                 }
@@ -81,11 +78,8 @@ public class ModulesStarterHelper {
             public void run() {
                 //new experiment
                 android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
-                try {
-                    TimeUnit.SECONDS.sleep(3);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+
+                makeDelay(3);
 
                 String torCmdString;
                 final CommandResult shellResult;
@@ -95,16 +89,16 @@ public class ModulesStarterHelper {
                     shellResult = Shell.SU.run(torCmdString);
                 } else {
                     correctTorConfRunAsDaemon(context, pathVars.appDataDir, false);
-                    torCmdString = pathVars.torPath+" -f "+pathVars.appDataDir+"/app_data/tor/tor.conf";
+                    torCmdString = pathVars.torPath + " -f " + pathVars.appDataDir + "/app_data/tor/tor.conf";
                     shellResult = Shell.run(torCmdString);
                 }
 
                 if (!shellResult.isSuccessful()) {
-                    Log.e(LOG_TAG,"Error Tor: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
+                    Log.e(LOG_TAG, "Error Tor: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(context,"Error Tor: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout(),Toast.LENGTH_LONG).show();
+                            Toast.makeText(context, "Error Tor: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout(), Toast.LENGTH_LONG).show();
                         }
                     });
                 }
@@ -118,11 +112,8 @@ public class ModulesStarterHelper {
             public void run() {
                 //new experiment
                 android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
-                try {
-                    TimeUnit.SECONDS.sleep(3);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+
+                makeDelay(3);
 
                 String itpdCmdString;
 
@@ -133,16 +124,16 @@ public class ModulesStarterHelper {
                     shellResult = Shell.SU.run(itpdCmdString);
                 } else {
                     correctITPDConfRunAsDaemon(context, pathVars.appDataDir, false);
-                    itpdCmdString = pathVars.itpdPath+" --conf "+pathVars.appDataDir+"/app_data/i2pd/i2pd.conf --datadir "+pathVars.appDataDir+"/i2pd_data";
+                    itpdCmdString = pathVars.itpdPath + " --conf " + pathVars.appDataDir + "/app_data/i2pd/i2pd.conf --datadir " + pathVars.appDataDir + "/i2pd_data";
                     shellResult = Shell.run(itpdCmdString);
                 }
 
                 if (!shellResult.isSuccessful()) {
-                    Log.e(LOG_TAG,"Error ITPD: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
+                    Log.e(LOG_TAG, "Error ITPD: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(context,"Error ITPD: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout(),Toast.LENGTH_LONG).show();
+                            Toast.makeText(context, "Error ITPD: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout(), Toast.LENGTH_LONG).show();
                         }
                     });
                 }
@@ -151,7 +142,7 @@ public class ModulesStarterHelper {
     }
 
     private static void correctTorConfRunAsDaemon(Context context, String appDataDir, boolean runAsDaemon) {
-        String path = appDataDir+"/app_data/tor/tor.conf";
+        String path = appDataDir + "/app_data/tor/tor.conf";
         List<String> lines = FileOperations.readTextFileSynchronous(context, path);
 
         for (int i = 0; i < lines.size(); i++) {
@@ -169,7 +160,7 @@ public class ModulesStarterHelper {
     }
 
     private static void correctITPDConfRunAsDaemon(Context context, String appDataDir, boolean runAsDaemon) {
-        String path = appDataDir+"/app_data/i2pd/i2pd.conf";
+        String path = appDataDir + "/app_data/i2pd/i2pd.conf";
         List<String> lines = FileOperations.readTextFileSynchronous(context, path);
 
         for (int i = 0; i < lines.size(); i++) {
@@ -184,5 +175,11 @@ public class ModulesStarterHelper {
                 return;
             }
         }
+    }
+
+    private static void makeDelay(int sec) {
+        try {
+            TimeUnit.SECONDS.sleep(sec);
+        } catch (InterruptedException ignored) {}
     }
 }

@@ -29,6 +29,7 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
@@ -119,7 +120,9 @@ public final class ModulesStatus {
             public void run() {
                 try {
                     TimeUnit.SECONDS.sleep(timeSec);
-                    setTorState(STARTING);
+                    if (getTorState() != RUNNING) {
+                        setTorState(STARTING);
+                    }
                 } catch (InterruptedException ignored){}
             }
         }).start();
