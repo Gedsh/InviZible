@@ -3,6 +3,8 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/gedsh/invizible?style=plastic)
 ![GitHub Releases](https://img.shields.io/github/downloads/gedsh/invizible/latest/total?color=blue&style=plastic)
 
+## [Download the latest release](https://github.com/Gedsh/InviZible/releases/latest)
+
 ## Android application for Internet privacy and security
 
 *Protect your device from dangerous sites, get rid of annoying ads, get access to blocked resources in your country*
@@ -14,8 +16,6 @@ This application is designed for Android devices with **Root access** .
 Just press a three buttons in **InviZible Pro** , and you turn from a simple user 
 to an invisible one, which is very difficult to find, block, impose on you unnecessary products and 
 services in the form of ubiquitous advertising.
-
-## [Download the latest release](https://github.com/Gedsh/InviZible/releases/latest)
 
 ### DNSCrypt
 * Encrypts DNS requests
