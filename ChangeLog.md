@@ -1,4 +1,4 @@
-**Invizible Pro 2.0.1 (beta 0.2.9)**
+**InviZible Pro 2.0.1 (beta 0.2.9)**
 
 * Change Root read/write file operations with no root
 * Add correct processing when no bridges available on tor bridges site
@@ -6,7 +6,7 @@
 * Add Polish language
 
 
-**Invizible Pro beta 0.3.0**
+**InviZible Pro beta 0.3.0**
 
 * Material design
 * Update day/night theme
@@ -20,3 +20,10 @@
 * Change root backup/restore method with no root and file format to zip
 * Change save logs method and file format to zip
 * Total code refactoring and optimization
+
+
+**InviZible Pro beta 0.3.1**
+
+* Fix modules update result message
+* Fix modules restart after modules updates
+* Fix dialog fragments illegal state
