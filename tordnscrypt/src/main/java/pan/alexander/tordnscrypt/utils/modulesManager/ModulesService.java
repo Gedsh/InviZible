@@ -58,6 +58,9 @@ public class ModulesStarterService extends Service {
     public static final String actionStartDnsCrypt = "pan.alexander.tordnscrypt.action.START_DNSCRYPT";
     public static final String actionStartTor = "pan.alexander.tordnscrypt.action.START_TOR";
     public static final String actionStartITPD = "pan.alexander.tordnscrypt.action.START_ITPD";
+    public static final String actionStopDnsCrypt = "pan.alexander.tordnscrypt.action.STOP_DNSCRYPT";
+    public static final String actionStopTor = "pan.alexander.tordnscrypt.action.STOP_TOR";
+    public static final String actionStopITPD = "pan.alexander.tordnscrypt.action.STOP_ITPD";
     public static final String actionDismissNotification= "pan.alexander.tordnscrypt.action.DISMISS_NOTIFICATION";
     public static final String actionRecoverService= "pan.alexander.tordnscrypt.action.RECOVER_SERVICE";
     public final String ANDROID_CHANNEL_ID = "InviZible";
@@ -71,6 +74,7 @@ public class ModulesStarterService extends Service {
 
     private Timer checkModulesThreadsTimer;
     private ModulesStatus modulesStatus;
+    private ModulesKiller modulesKiller;
 
     public ModulesStarterService() {
     }
@@ -84,6 +88,8 @@ public class ModulesStarterService extends Service {
         notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
 
         modulesStatus = ModulesStatus.getInstance();
+
+        modulesKiller = new ModulesKiller(getApplicationContext(), pathVars);
 
         if (!modulesStatus.isUseModulesWithRoot()) {
             startModulesThreadsTimer();
@@ -122,6 +128,15 @@ public class ModulesStarterService extends Service {
             case actionStartITPD:
                 startITPD(startId);
                 break;
+            case actionStopDnsCrypt:
+                stopDNSCrypt(startId);
+                break;
+            case actionStopTor:
+                stopTor(startId);
+                break;
+            case actionStopITPD:
+                stopITPD(startId);
+                break;
             case actionDismissNotification:
                 dismissNotification(startId);
                 break;
@@ -148,6 +163,8 @@ public class ModulesStarterService extends Service {
             }
             dnsCryptThread.start();
 
+            modulesKiller.setDnsCryptThread(dnsCryptThread);
+
             if (modulesStatus.isUseModulesWithRoot()) {
                 stopService(startId);
             }
@@ -170,6 +187,8 @@ public class ModulesStarterService extends Service {
                 e.printStackTrace();
             }
             torThread.start();
+
+            modulesKiller.setTorThread(torThread);
 
             if (modulesStatus.isUseModulesWithRoot()) {
                 stopService(startId);
@@ -195,6 +214,8 @@ public class ModulesStarterService extends Service {
             }
             itpdThread.start();
 
+            modulesKiller.setItpdThread(itpdThread);
+
             if (modulesStatus.isUseModulesWithRoot()) {
                 stopService(startId);
             }
@@ -202,6 +223,33 @@ public class ModulesStarterService extends Service {
         } catch (Exception e) {
             Log.e(LOG_TAG, "I2PD was unable to startRefreshModulesStatus: " + e.getMessage());
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void stopDNSCrypt(int startId) {
+        if (modulesKiller != null) {
+            new Thread(modulesKiller.killDNSCrypt).start();
+        }
+        if (modulesStatus.isUseModulesWithRoot()) {
+            stopService(startId);
+        }
+    }
+
+    private void stopTor(int startId) {
+        if (modulesKiller != null) {
+            new Thread(modulesKiller.killTor).start();
+        }
+        if (modulesStatus.isUseModulesWithRoot()) {
+            stopService(startId);
+        }
+    }
+
+    private void stopITPD(int startId) {
+        if (modulesKiller != null) {
+            new Thread(modulesKiller.killITPD).start();
+        }
+        if (modulesStatus.isUseModulesWithRoot()) {
+            stopService(startId);
         }
     }
 

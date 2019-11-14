@@ -56,7 +56,7 @@ class ModulesStarterHelper {
                     shellResult = Shell.SU.run(dnsCmdString);
                 } else {
                     dnsCmdString = pathVars.dnscryptPath + " --config " + pathVars.appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml";
-                    shellResult = Shell.run(dnsCmdString);
+                    shellResult = Shell.SH.run(dnsCmdString);
                 }
 
                 if (!shellResult.isSuccessful()) {
@@ -90,7 +90,7 @@ class ModulesStarterHelper {
                 } else {
                     correctTorConfRunAsDaemon(context, pathVars.appDataDir, false);
                     torCmdString = pathVars.torPath + " -f " + pathVars.appDataDir + "/app_data/tor/tor.conf";
-                    shellResult = Shell.run(torCmdString);
+                    shellResult = Shell.SH.run(torCmdString);
                 }
 
                 if (!shellResult.isSuccessful()) {
@@ -125,7 +125,7 @@ class ModulesStarterHelper {
                 } else {
                     correctITPDConfRunAsDaemon(context, pathVars.appDataDir, false);
                     itpdCmdString = pathVars.itpdPath + " --conf " + pathVars.appDataDir + "/app_data/i2pd/i2pd.conf --datadir " + pathVars.appDataDir + "/i2pd_data";
-                    shellResult = Shell.run(itpdCmdString);
+                    shellResult = Shell.SH.run(itpdCmdString);
                 }
 
                 if (!shellResult.isSuccessful()) {
