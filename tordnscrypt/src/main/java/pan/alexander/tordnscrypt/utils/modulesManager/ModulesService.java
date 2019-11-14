@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.utils.modulesStarter;
+package pan.alexander.tordnscrypt.utils.modulesManager;
 /*
     This file is part of InviZible Pro.
 
@@ -19,10 +19,7 @@ package pan.alexander.tordnscrypt.utils.modulesStarter;
 */
 
 import android.annotation.SuppressLint;
-import android.app.Notification;
-import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -31,65 +28,63 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
-import android.support.v4.app.NotificationCompat;
 import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
 import java.util.Objects;
 import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
-import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTED;
-import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
-import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UPDATED;
 
-public class ModulesStarterService extends Service {
-    PathVars pathVars;
-    Handler mHandler;
-    public static final String actionStartDnsCrypt = "pan.alexander.tordnscrypt.action.START_DNSCRYPT";
-    public static final String actionStartTor = "pan.alexander.tordnscrypt.action.START_TOR";
-    public static final String actionStartITPD = "pan.alexander.tordnscrypt.action.START_ITPD";
-    public static final String actionStopDnsCrypt = "pan.alexander.tordnscrypt.action.STOP_DNSCRYPT";
-    public static final String actionStopTor = "pan.alexander.tordnscrypt.action.STOP_TOR";
-    public static final String actionStopITPD = "pan.alexander.tordnscrypt.action.STOP_ITPD";
+public class ModulesService extends Service {
     public static final String actionDismissNotification= "pan.alexander.tordnscrypt.action.DISMISS_NOTIFICATION";
-    public static final String actionRecoverService= "pan.alexander.tordnscrypt.action.RECOVER_SERVICE";
-    public final String ANDROID_CHANNEL_ID = "InviZible";
-    private NotificationManager notificationManager;
+
+    static final String actionStartDnsCrypt = "pan.alexander.tordnscrypt.action.START_DNSCRYPT";
+    static final String actionStartTor = "pan.alexander.tordnscrypt.action.START_TOR";
+    static final String actionStartITPD = "pan.alexander.tordnscrypt.action.START_ITPD";
+    static final String actionStopDnsCrypt = "pan.alexander.tordnscrypt.action.STOP_DNSCRYPT";
+    static final String actionStopTor = "pan.alexander.tordnscrypt.action.STOP_TOR";
+    static final String actionStopITPD = "pan.alexander.tordnscrypt.action.STOP_ITPD";
+    static final String actionRestartDnsCrypt = "pan.alexander.tordnscrypt.action.RESTART_DNSCRYPT";
+    static final String actionRestartTor = "pan.alexander.tordnscrypt.action.RESTART_TOR";
+    static final String actionRestartITPD = "pan.alexander.tordnscrypt.action.RESTART_ITPD";
+    static final String actionRecoverService= "pan.alexander.tordnscrypt.action.RECOVER_SERVICE";
+
+    static final String DNSCRYPT_KEYWORD = "checkDNSRunning";
+    static final String TOR_KEYWORD = "checkTrRunning";
+    static final String ITPD_KEYWORD = "checkITPDRunning";
     public static final int DEFAULT_NOTIFICATION_ID = 101;
     private static PowerManager.WakeLock wakeLock = null;
 
-    private Thread dnsCryptThread;
-    private Thread torThread;
-    private Thread itpdThread;
+    private PathVars pathVars;
+    private Handler mHandler;
+    private NotificationManager notificationManager;
 
     private Timer checkModulesThreadsTimer;
+    private CheckModulesStateTimerTask checkModulesStateTask;
     private ModulesStatus modulesStatus;
     private ModulesKiller modulesKiller;
 
-    public ModulesStarterService() {
+    public ModulesService() {
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
 
-        pathVars = new PathVars(getApplicationContext());
-
         notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
 
         modulesStatus = ModulesStatus.getInstance();
-
-        modulesKiller = new ModulesKiller(getApplicationContext(), pathVars);
 
         if (!modulesStatus.isUseModulesWithRoot()) {
             startModulesThreadsTimer();
@@ -100,8 +95,10 @@ public class ModulesStarterService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
+        pathVars = new PathVars(getApplicationContext());
         mHandler = new Handler();
+
+        modulesKiller = new ModulesKiller(this, pathVars);
 
         String action = intent.getAction();
 
@@ -114,7 +111,8 @@ public class ModulesStarterService extends Service {
 
 
         if (showNotification) {
-            sendNotification(getText(R.string.notification_text).toString(),getString(R.string.app_name),getText(R.string.notification_text).toString());
+            ServiceNotification notification = new ServiceNotification(this, notificationManager);
+            notification.sendNotification(getText(R.string.notification_text).toString(),getString(R.string.app_name),getText(R.string.notification_text).toString());
         }
 
 
@@ -137,6 +135,15 @@ public class ModulesStarterService extends Service {
             case actionStopITPD:
                 stopITPD(startId);
                 break;
+            case actionRestartDnsCrypt:
+                restartDNSCrypt(startId);
+                break;
+            case actionRestartTor:
+                restartTor(startId);
+                break;
+            case actionRestartITPD:
+                restartITPD(startId);
+                break;
             case actionDismissNotification:
                 dismissNotification(startId);
                 break;
@@ -151,19 +158,22 @@ public class ModulesStarterService extends Service {
 
     private void startDNSCrypt(int startId) {
         try {
-            dnsCryptThread = new Thread(ModulesStarterHelper.getDNSCryptStarterRunnable
-                    (getApplicationContext(), pathVars, mHandler, ModulesStatus.getInstance()
-                            .isUseModulesWithRoot()));
+            ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(getApplicationContext(), mHandler, pathVars);
+            Thread dnsCryptThread = new Thread(modulesStarterHelper.getDNSCryptStarterRunnable());
             dnsCryptThread.setDaemon(false);
             try {
                 //new experiment
                 dnsCryptThread.setPriority(Thread.NORM_PRIORITY);
             } catch (SecurityException e) {
-                e.printStackTrace();
+                Log.e(LOG_TAG, "ModulesService startDNSCrypt exception " + e.getMessage() + " " + e.getCause());
             }
             dnsCryptThread.start();
 
             modulesKiller.setDnsCryptThread(dnsCryptThread);
+
+            if (checkModulesStateTask != null) {
+                checkModulesStateTask.setDnsCryptThread(dnsCryptThread);
+            }
 
             if (modulesStatus.isUseModulesWithRoot()) {
                 stopService(startId);
@@ -176,19 +186,22 @@ public class ModulesStarterService extends Service {
 
     private void startTor(int startId) {
         try {
-            torThread = new Thread(ModulesStarterHelper.getTorStarterRunnable
-                    (getApplicationContext(), pathVars, mHandler, ModulesStatus.getInstance()
-                            .isUseModulesWithRoot()));
+            ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(getApplicationContext(), mHandler, pathVars);
+            Thread torThread = new Thread(modulesStarterHelper.getTorStarterRunnable());
             torThread.setDaemon(false);
             try {
                 //new experiment
                 torThread.setPriority(Thread.NORM_PRIORITY);
             } catch (SecurityException e) {
-                e.printStackTrace();
+                Log.e(LOG_TAG, "ModulesService startTor exception " + e.getMessage() + " " + e.getCause());
             }
             torThread.start();
 
             modulesKiller.setTorThread(torThread);
+
+            if (checkModulesStateTask != null) {
+                checkModulesStateTask.setTorThread(torThread);
+            }
 
             if (modulesStatus.isUseModulesWithRoot()) {
                 stopService(startId);
@@ -202,19 +215,22 @@ public class ModulesStarterService extends Service {
 
     private void startITPD(int startId) {
         try {
-            itpdThread = new Thread(ModulesStarterHelper.getITPDStarterRunnable
-                    (getApplicationContext(), pathVars, mHandler, ModulesStatus.getInstance()
-                            .isUseModulesWithRoot()));
+            ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(getApplicationContext(), mHandler, pathVars);
+            Thread itpdThread = new Thread(modulesStarterHelper.getITPDStarterRunnable());
             itpdThread.setDaemon(false);
             try {
                 //new experiment
                 itpdThread.setPriority(Thread.NORM_PRIORITY);
             } catch (SecurityException e) {
-                e.printStackTrace();
+                Log.e(LOG_TAG, "ModulesService startITPD exception " + e.getMessage() + " " + e.getCause());
             }
             itpdThread.start();
 
             modulesKiller.setItpdThread(itpdThread);
+
+            if (checkModulesStateTask != null) {
+                checkModulesStateTask.setItpdThread(itpdThread);
+            }
 
             if (modulesStatus.isUseModulesWithRoot()) {
                 stopService(startId);
@@ -227,30 +243,96 @@ public class ModulesStarterService extends Service {
     }
 
     private void stopDNSCrypt(int startId) {
-        if (modulesKiller != null) {
-            new Thread(modulesKiller.killDNSCrypt).start();
-        }
+        new Thread(modulesKiller.getDNSCryptKillerRunnable()).start();
+
         if (modulesStatus.isUseModulesWithRoot()) {
             stopService(startId);
         }
     }
 
     private void stopTor(int startId) {
-        if (modulesKiller != null) {
-            new Thread(modulesKiller.killTor).start();
-        }
+        new Thread(modulesKiller.getTorKillerRunnable()).start();
+
         if (modulesStatus.isUseModulesWithRoot()) {
             stopService(startId);
         }
     }
 
     private void stopITPD(int startId) {
-        if (modulesKiller != null) {
-            new Thread(modulesKiller.killITPD).start();
-        }
+        new Thread(modulesKiller.getITPDKillerRunnable()).start();
+
         if (modulesStatus.isUseModulesWithRoot()) {
             stopService(startId);
         }
+    }
+
+    private void restartDNSCrypt(final int startId) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    modulesStatus.setDnsCryptState(RESTARTING);
+
+                    Thread killerThread = new Thread(modulesKiller.getDNSCryptKillerRunnable());
+                    killerThread.start();
+                    killerThread.join();
+
+                    startDNSCrypt(startId);
+
+                    makeDelay();
+                    modulesStatus.setDnsCryptState(RESTARTED);
+                } catch (InterruptedException e) {
+                    Log.e(LOG_TAG, "ModulesService restartDNSCrypt join interrupted!");
+                }
+
+            }
+        }).start();
+    }
+
+    private void restartTor(final int startId) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    modulesStatus.setTorState(RESTARTING);
+
+                    Thread killerThread = new Thread(modulesKiller.getTorKillerRunnable());
+                    killerThread.start();
+                    killerThread.join();
+
+                    startTor(startId);
+
+                    makeDelay();
+                    modulesStatus.setTorState(RESTARTED);
+                } catch (InterruptedException e) {
+                    Log.e(LOG_TAG, "ModulesService restartTor join interrupted!");
+                }
+
+            }
+        }).start();
+    }
+
+    private void restartITPD(final int startId) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    modulesStatus.setItpdState(RESTARTING);
+
+                    Thread killerThread = new Thread(modulesKiller.getITPDKillerRunnable());
+                    killerThread.start();
+                    killerThread.join();
+
+                    startITPD(startId);
+
+                    makeDelay();
+                    modulesStatus.setItpdState(RESTARTED);
+                } catch (InterruptedException e) {
+                    Log.e(LOG_TAG, "ModulesService restartITPD join interrupted!");
+                }
+
+            }
+        }).start();
     }
 
     private void dismissNotification(int startId) {
@@ -261,7 +343,8 @@ public class ModulesStarterService extends Service {
 
     private void startModulesThreadsTimer() {
         checkModulesThreadsTimer = new Timer();
-        checkModulesThreadsTimer.schedule(task, 1, 1000);
+        checkModulesStateTask = new CheckModulesStateTimerTask();
+        checkModulesThreadsTimer.schedule(checkModulesStateTask, 1, 1000);
     }
 
     private void stopModulesThreadsTimer() {
@@ -291,44 +374,6 @@ public class ModulesStarterService extends Service {
         }
     }
 
-    private void sendNotification(String Ticker, String Title, String Text) {
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel notificationChannel = new NotificationChannel
-                    (ANDROID_CHANNEL_ID, "NOTIFICATION_CHANNEL_INVIZIBLE", NotificationManager.IMPORTANCE_LOW);
-            notificationChannel.setDescription("Protect InviZible Pro");
-            notificationChannel.enableLights(false);
-            notificationChannel.enableVibration(false);
-            notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-            assert notificationManager != null;
-            notificationManager.createNotificationChannel(notificationChannel);
-        }
-
-        //These three lines makes Notification to open main activity after clicking on it
-        Intent notificationIntent = new Intent(this, MainActivity.class);
-        notificationIntent.setAction(Intent.ACTION_MAIN);
-        notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-
-        PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this,ANDROID_CHANNEL_ID);
-        builder.setContentIntent(contentIntent)
-                .setOngoing(true)   //Can't be swiped out
-                .setSmallIcon(R.drawable.ic_visibility_off_white_24dp)
-                //.setLargeIcon(BitmapFactory.decodeResource(res, R.drawable.large))   // большая картинка
-                .setTicker(Ticker)
-                .setContentTitle(Title) //Заголовок
-                .setContentText(Text) // Текст уведомления
-                .setWhen(System.currentTimeMillis())
-                //new experiment
-                .setPriority(Notification.PRIORITY_MIN)
-                .setOnlyAlertOnce(true);
-
-        Notification notification = builder.build();
-
-        startForeground(DEFAULT_NOTIFICATION_ID, notification);
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
         return null;
@@ -343,66 +388,6 @@ public class ModulesStarterService extends Service {
         super.onDestroy();
     }
 
-    private TimerTask task = new TimerTask() {
-        @Override
-        public void run() {
-            if (modulesStatus == null) {
-                return;
-            }
-
-            if (dnsCryptThread != null && dnsCryptThread.isAlive()) {
-                if (modulesStatus.getDnsCryptState() == STOPPED
-                        || modulesStatus.getDnsCryptState() == RESTARTED
-                        || modulesStatus.getDnsCryptState() == UPDATED) {
-
-                    modulesStatus.setDnsCryptState(ModuleState.RUNNING);
-                }
-            } else {
-                if (modulesStatus.getDnsCryptState() == RUNNING
-                        || modulesStatus.getDnsCryptState() == RESTARTED
-                        || modulesStatus.getDnsCryptState() == UPDATED) {
-
-                    modulesStatus.setDnsCryptState(STOPPED);
-                }
-            }
-
-            if (torThread != null && torThread.isAlive()) {
-                if (modulesStatus.getTorState() == STOPPED
-                        || modulesStatus.getTorState() == RESTARTED
-                        || modulesStatus.getTorState() == UPDATED) {
-
-                    modulesStatus.setTorState(ModuleState.RUNNING);
-                }
-            } else {
-                if (modulesStatus.getTorState() == RUNNING
-                        || modulesStatus.getTorState() == RESTARTED
-                        || modulesStatus.getTorState() == UPDATED) {
-
-                    modulesStatus.setTorState(STOPPED);
-                }
-            }
-
-            if (itpdThread != null && itpdThread.isAlive()) {
-                if (modulesStatus.getItpdState() == STOPPED
-                        || modulesStatus.getItpdState() == RESTARTED
-                        || modulesStatus.getItpdState() == UPDATED) {
-
-                    modulesStatus.setItpdState(ModuleState.RUNNING);
-                }
-            } else {
-                if (modulesStatus.getItpdState() == RUNNING
-                        || modulesStatus.getItpdState() == RESTARTED
-                        || modulesStatus.getItpdState() == UPDATED) {
-
-                    modulesStatus.setItpdState(STOPPED);
-                }
-            }
-
-            Log.i(LOG_TAG, "DNSCrypt is " + modulesStatus.getDnsCryptState() +
-                    " Tor is " + modulesStatus.getTorState() + " I2P is " + modulesStatus.getItpdState());
-        }
-    };
-
     private void stopService(int startID) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
@@ -416,5 +401,13 @@ public class ModulesStarterService extends Service {
         modulesStatus.setDnsCryptState(STOPPED);
         modulesStatus.setTorState(STOPPED);
         modulesStatus.setItpdState(STOPPED);
+    }
+
+    private void makeDelay() {
+        try {
+            TimeUnit.SECONDS.sleep(3);
+        } catch (InterruptedException e) {
+            Log.e(LOG_TAG, "ModulesService makeDelay interrupted! " + e.getMessage() + " " + e.getCause());
+        }
     }
 }

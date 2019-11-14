@@ -50,27 +50,27 @@ public class RootExecService extends Service {
     public RootExecService() {
     }
 
-    public static final String RUN_COMMAND = "pan.alexander.tordnscrypt.action.RUN_COMMAND";
-    public static final String COMMAND_RESULT = "pan.alexander.tordnscrypt.action.COMMANDS_RESULT";
+    public static boolean lockStartStop = false;
+    private static boolean saveRootLogs = false;
     public static final int DNSCryptRunFragmentMark = 100;
     public static final int TorRunFragmentMark = 200;
     public static final int I2PDRunFragmentMark = 300;
     public static final int HelpActivityMark = 400;
     public static final int BootBroadcastMark = 500;
-    public static final int SettingsActivityMark = 600;
-    public static final int NullMark = 700;
-    public static final int FileOperationsMark = 800;
-    public static final int InstallerMark = 900;
-    public static final int TopFragmentMark = 1000;
-    public final static String LOG_TAG = "pan.alexander.TPDCLogs";
-    private ExecutorService executorService;
-    public static boolean lockStartStop = false;
-    private static boolean saveRootLogs = false;
-    private static String autostartDelay = "0";
+    public static final int NullMark = 600;
+    public static final int FileOperationsMark = 700;
+    public static final int InstallerMark = 800;
+    public static final int TopFragmentMark = 900;
+    public static final int DEFAULT_NOTIFICATION_ID = 102;
+    public static final String RUN_COMMAND = "pan.alexander.tordnscrypt.action.RUN_COMMAND";
+    public static final String COMMAND_RESULT = "pan.alexander.tordnscrypt.action.COMMANDS_RESULT";
+    public static final String LOG_TAG = "pan.alexander.TPDCLogs";
+
+    private static String autoStartDelay = "0";
 
     private final String ANDROID_CHANNEL_ID = "InviZible";
+    private ExecutorService executorService;
     private NotificationManager notificationManager;
-    public static final int DEFAULT_NOTIFICATION_ID = 102;
 
 
     @Override
@@ -89,16 +89,16 @@ public class RootExecService extends Service {
 
     public static void performAction(Context context, Intent intent) {
 
-        boolean rootOK = new PrefManager(context.getApplicationContext()).getBoolPref("rootOK");
+        boolean rootIsAvailable = new PrefManager(context.getApplicationContext()).getBoolPref("rootIsAvailable");
         saveRootLogs = new PrefManager(context).getBoolPref("swRootCommandsLog");
 
-        if ((intent == null) || Objects.equals(intent.getAction(), "") || !rootOK) return;
+        if ((intent == null) || Objects.equals(intent.getAction(), "") || !rootIsAvailable) return;
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        autostartDelay = shPref.getString("pref_fast_autostart_delay","0");
+        autoStartDelay = shPref.getString("pref_fast_autostart_delay", "0");
 
 
-        Log.i(LOG_TAG,"RootExecService Root = " + true + " performAction");
+        Log.i(LOG_TAG, "RootExecService Root = " + true + " performAction");
         lockStartStop = true;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent);
@@ -117,7 +117,7 @@ public class RootExecService extends Service {
                 return START_NOT_STICKY;
             }
 
-            if(action.equals(RUN_COMMAND)){
+            if (action.equals(RUN_COMMAND)) {
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
@@ -131,13 +131,13 @@ public class RootExecService extends Service {
                     notificationManager.createNotificationChannel(notificationChannel);
 
                     sendNotification(getText(R.string.notification_temp_text).toString(),
-                            getString(R.string.app_name),getText(R.string.notification_temp_text).toString());
+                            getString(R.string.app_name), getText(R.string.notification_temp_text).toString());
 
                 }
 
                 RootCommands rootCommands = (RootCommands) intent.getSerializableExtra("Commands");
-                int mark = intent.getIntExtra("Mark",0);
-                ExecRunnable execCommands = new ExecRunnable(rootCommands,mark,startId);
+                int mark = intent.getIntExtra("Mark", 0);
+                ExecRunnable execCommands = new ExecRunnable(rootCommands, mark, startId);
                 executorService.execute(execCommands);
             }
         }
@@ -146,13 +146,13 @@ public class RootExecService extends Service {
 
 
     @SuppressWarnings("deprecation")
-    private List<String> runCommands(String[] runcommands){
+    private List<String> runCommands(String[] runcommands) {
         List<String> result = Shell.SU.run(runcommands);
 
         if (saveRootLogs) {
             String appDataDir = getApplicationContext().getApplicationInfo().dataDir;
             try {
-                File f = new File(appDataDir+"/logs");
+                File f = new File(appDataDir + "/logs");
 
                 if (!f.isDirectory()) {
                     if (f.mkdirs()) {
@@ -162,47 +162,43 @@ public class RootExecService extends Service {
                     }
                 }
 
-                if (!f.setReadable(true) || !f.setWritable(true)) {
-                    Log.e(LOG_TAG, "RootExecService Unable to chmod log dir");
-                }
-
-                PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(appDataDir+"/logs/RootExec.log", true)));
+                PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(appDataDir + "/logs/RootExec.log", true)));
                 writer.println("********************");
                 writer.println("COMMANDS");
-                for (String command:runcommands)
+                for (String command : runcommands)
                     writer.println(command);
 
                 writer.println("--------------------");
                 writer.println("RESULT");
 
                 if (result != null) {
-                    for (String res:result) {
+                    for (String res : result) {
                         writer.println(res);
-                        Log.i(LOG_TAG,"ROOT COMMANDS RESULT "+res);
+                        Log.i(LOG_TAG, "ROOT COMMANDS RESULT " + res);
                     }
                 }
                 writer.println("********************");
 
                 writer.close();
             } catch (IOException e) {
-                Log.e(LOG_TAG,"RootExecService Unable to create RootExec log file "+e.getMessage());
+                Log.e(LOG_TAG, "RootExecService Unable to create RootExec log file " + e.getMessage());
             }
         }
         return result;
 
     }
 
-    private void sendResult(List<String> commandsResult, int mark){
+    private void sendResult(List<String> commandsResult, int mark) {
 
-        if (commandsResult==null || mark==NullMark) {
+        if (commandsResult == null || mark == NullMark) {
             lockStartStop = false;
             return;
         }
 
         RootCommands comResult = new RootCommands(commandsResult.toArray(new String[0]));
         Intent intent = new Intent(COMMAND_RESULT);
-        intent.putExtra("CommandsResult",comResult);
-        intent.putExtra("Mark",mark);
+        intent.putExtra("CommandsResult", comResult);
+        intent.putExtra("Mark", mark);
         sendBroadcast(intent);
 
         lockStartStop = false;
@@ -210,7 +206,7 @@ public class RootExecService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-       return null;
+        return null;
     }
 
     class ExecRunnable implements Runnable {
@@ -226,12 +222,12 @@ public class RootExecService extends Service {
 
         @Override
         public void run() {
-            if (mark==BootBroadcastMark) {
-                if (!autostartDelay.equals("0")) {
+            if (mark == BootBroadcastMark) {
+                if (!autoStartDelay.equals("0")) {
                     try {
-                        Thread.sleep(Integer.parseInt(autostartDelay));
+                        Thread.sleep(Integer.parseInt(autoStartDelay));
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        Log.e(LOG_TAG, "RootExecService interrupt boot delay exception " + e.getMessage() + " " + e.getCause());
                     }
                 }
             }
@@ -255,7 +251,7 @@ public class RootExecService extends Service {
 
         PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this,ANDROID_CHANNEL_ID);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ANDROID_CHANNEL_ID);
         builder.setContentIntent(contentIntent)
                 .setOngoing(true)   //Can't be swiped out
                 .setSmallIcon(R.drawable.ic_visibility_off_black_24dp)

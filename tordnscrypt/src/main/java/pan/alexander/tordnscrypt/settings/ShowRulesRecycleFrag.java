@@ -19,9 +19,7 @@ package pan.alexander.tordnscrypt.settings;
 */
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -32,6 +30,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -50,12 +49,10 @@ import java.util.Objects;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
-import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesRunner;
-import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesStarterService;
+import pan.alexander.tordnscrypt.utils.modulesManager.ModulesRestarter;
 import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.RootExecService;
-import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
+
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 
 /**
@@ -74,9 +71,7 @@ public class ShowRulesRecycleFrag extends Fragment {
     FloatingActionButton btnAddRule;
 
 
-    public ShowRulesRecycleFrag() {
-        // Required empty public constructor
-    }
+    public ShowRulesRecycleFrag() {}
 
 
     @Override
@@ -226,37 +221,13 @@ public class ShowRulesRecycleFrag extends Fragment {
             FileOperations.writeToTextFile(getActivity(), file_path, others_list, SettingsActivity.rules_tag);
         }
 
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean runDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot", false);
         boolean dnsCryptRunning = new PrefManager(getActivity()).getBoolPref("DNSCrypt Running");
         boolean itpdRunning = new PrefManager(getActivity()).getBoolPref("I2PD Running");
 
-        String[] commandsEcho = null;
         if (itpdRunning && file_path.contains("subscriptions")) {
-            ModulesStatus.getInstance().setItpdRestarting(10);
-
-            commandsEcho = new String[]{
-                    busyboxPath + "killall i2pd"
-            };
-
-            runITPD();
+           ModulesRestarter.restartITPD(getActivity());
         } else if (dnsCryptRunning){
-            ModulesStatus.getInstance().setDnsCryptRestarting(15);
-
-            commandsEcho = new String[]{
-                    busyboxPath + "killall dnscrypt-proxy"
-            };
-
-            runDNSCrypt();
-        }
-
-        if (commandsEcho != null) {
-            RootCommands rootCommands = new RootCommands(commandsEcho);
-            Intent intent = new Intent(getActivity(), RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands", rootCommands);
-            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
-            RootExecService.performAction(getActivity(), intent);
+            ModulesRestarter.restartDNSCrypt(getActivity());
         }
     }
 
@@ -312,7 +283,7 @@ public class ShowRulesRecycleFrag extends Fragment {
             try {
                 list_rules_adapter.remove(position);
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.e(LOG_TAG, "ShowRulesRecycleFrag getItemCount exception " + e.getMessage() + " " + e.getCause());
             }
 
 
@@ -413,24 +384,6 @@ public class ShowRulesRecycleFrag extends Fragment {
                 }
             };
         }
-    }
-
-    private void runDNSCrypt() {
-
-        if (getActivity() == null) {
-            return;
-        }
-
-        ModulesRunner.runDNSCrypt(getActivity());
-    }
-
-    private void runITPD() {
-
-        if (getActivity() == null) {
-            return;
-        }
-
-        ModulesRunner.runITPD(getActivity());
     }
 
 }

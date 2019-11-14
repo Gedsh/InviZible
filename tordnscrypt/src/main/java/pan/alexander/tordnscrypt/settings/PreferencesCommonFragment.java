@@ -33,13 +33,16 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.preference.Preference;
+import android.support.v7.preference.PreferenceCategory;
 import android.support.v7.preference.PreferenceFragmentCompat;
 import android.support.v7.preference.PreferenceManager;
+import android.support.v7.preference.PreferenceScreen;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -47,21 +50,22 @@ import java.util.Objects;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
-import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
-import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
-import pan.alexander.tordnscrypt.utils.fileOperations.OnTextFileOperationsCompleteListener;
-import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesStarterService;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.Verifier;
+import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
+import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
+import pan.alexander.tordnscrypt.utils.fileOperations.OnTextFileOperationsCompleteListener;
+import pan.alexander.tordnscrypt.utils.modulesManager.ModulesKiller;
+import pan.alexander.tordnscrypt.utils.modulesManager.ModulesService;
 import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
-import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 
 
 public class PreferencesCommonFragment extends PreferenceFragmentCompat
@@ -70,11 +74,11 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     private String appDataDir;
     private String iptablesPath;
     private String itpdHttpProxyPort;
+    private String busyboxPath;
     private boolean allowTorTether = false;
     private boolean allowITPDtether = false;
 
     public PreferencesCommonFragment() {
-        // Required empty public constructor
     }
 
 
@@ -85,6 +89,52 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         addPreferencesFromResource(R.xml.preferences_common);
 
         FileOperations.setOnFileOperationCompleteListener(this);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+        if (getActivity() == null) {
+            super.onCreateView(inflater, container, savedInstanceState);
+        }
+
+        getActivity().setTitle(R.string.drawer_menu_commonSettings);
+
+        PreferenceCategory others = (PreferenceCategory) findPreference("common_other");
+        Preference swShowNotification = findPreference("swShowNotification");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            others.removePreference(swShowNotification);
+        } else {
+            swShowNotification.setOnPreferenceChangeListener(this);
+        }
+
+        if (ModulesStatus.getInstance().isRootAvailable()) {
+            Preference swTorTethering = findPreference("pref_common_tor_tethering");
+            swTorTethering.setOnPreferenceChangeListener(this);
+
+            Preference swRouteAllThroughTor = findPreference("pref_common_tor_route_all");
+            swRouteAllThroughTor.setOnPreferenceChangeListener(this);
+
+            Preference swITPDTethering = findPreference("pref_common_itpd_tethering");
+            swITPDTethering.setOnPreferenceChangeListener(this);
+
+            Preference pref_common_block_http = findPreference("pref_common_block_http");
+            pref_common_block_http.setOnPreferenceChangeListener(this);
+
+            Preference pref_common_use_modules_with_root = findPreference("swUseModulesRoot");
+            pref_common_use_modules_with_root.setOnPreferenceChangeListener(this);
+
+            SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            if (shPref.getBoolean("pref_common_tor_route_all", false)) {
+                findPreference("prefTorSiteUnlockTether").setEnabled(false);
+            } else {
+                findPreference("prefTorSiteUnlockTether").setEnabled(true);
+            }
+        } else {
+            removePreferencesWithFullNoRootMode();
+        }
+
+        return super.onCreateView(inflater, container, savedInstanceState);
     }
 
     @Override
@@ -100,41 +150,13 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             return;
         }
 
-        getActivity().setTitle(R.string.drawer_menu_commonSettings);
-
-        Preference swShowNotification = findPreference("swShowNotification");
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            swShowNotification.setEnabled(false);
-        }
-        swShowNotification.setOnPreferenceChangeListener(this);
-
-        Preference swTorTethering = findPreference("pref_common_tor_tethering");
-        swTorTethering.setOnPreferenceChangeListener(this);
-
-        Preference swRouteAllThroughTor = findPreference("pref_common_tor_route_all");
-        swRouteAllThroughTor.setOnPreferenceChangeListener(this);
-
-        Preference swITPDTethering = findPreference("pref_common_itpd_tethering");
-        swITPDTethering.setOnPreferenceChangeListener(this);
-
-        Preference pref_common_block_http = findPreference("pref_common_block_http");
-        pref_common_block_http.setOnPreferenceChangeListener(this);
-
-        Preference pref_common_use_modules_with_root = findPreference("swUseModulesRoot");
-        pref_common_use_modules_with_root.setOnPreferenceChangeListener(this);
-
         PathVars pathVars = new PathVars(getActivity());
         appDataDir = pathVars.appDataDir;
         torTransPort = pathVars.torTransPort;
         iptablesPath = pathVars.iptablesPath;
         itpdHttpProxyPort = pathVars.itpdHttpProxyPort;
+        busyboxPath = pathVars.busyboxPath;
 
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        if (shPref.getBoolean("pref_common_tor_route_all",false)) {
-            findPreference("prefTorSiteUnlockTether").setEnabled(false);
-        } else {
-            findPreference("prefTorSiteUnlockTether").setEnabled(true);
-        }
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -142,25 +164,25 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                     Verifier verifier = new Verifier(getActivity());
                     String appSign = verifier.getApkSignatureZipModern();
                     String appSignAlt = verifier.getApkSignature();
-                    if (!verifier.decryptStr(wrongSign,appSign,appSignAlt).equals(TOP_BROADCAST)) {
+                    if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                         NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                getActivity(),getText(R.string.verifier_error).toString(),"5889");
+                                getActivity(), getText(R.string.verifier_error).toString(), "5889");
                         if (notificationHelper != null) {
                             if (getFragmentManager() != null) {
-                                notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                                notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                             }
                         }
                     }
 
                 } catch (Exception e) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                            getActivity(),getText(R.string.verifier_error).toString(),"5804");
+                            getActivity(), getText(R.string.verifier_error).toString(), "5804");
                     if (notificationHelper != null) {
                         if (getFragmentManager() != null) {
-                            notificationHelper.show(getFragmentManager(),NotificationHelper.TAG_HELPER);
+                            notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                         }
                     }
-                    Log.e(LOG_TAG,"PreferencesCommonFragment fault "+e.getMessage() + " " + e.getCause() + System.lineSeparator() +
+                    Log.e(LOG_TAG, "PreferencesCommonFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                             Arrays.toString(e.getStackTrace()));
                 }
             }
@@ -178,8 +200,8 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         switch (preference.getKey()) {
             case "swShowNotification":
                 if (!Boolean.valueOf(newValue.toString())) {
-                    Intent intent = new Intent(getActivity(), ModulesStarterService.class);
-                    intent.setAction(ModulesStarterService.actionDismissNotification);
+                    Intent intent = new Intent(getActivity(), ModulesService.class);
+                    intent.setAction(ModulesService.actionDismissNotification);
                     getActivity().startService(intent);
                     InfoNotificationProtectService infoNotification = new InfoNotificationProtectService();
                     if (getFragmentManager() != null) {
@@ -194,7 +216,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                         && getFragmentManager() != null) {
                     DialogFragment commandResult =
                             NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_tor).toString());
-                    commandResult.show(getFragmentManager(),"NotificationDialogFragment");
+                    commandResult.show(getFragmentManager(), "NotificationDialogFragment");
                 }
                 break;
             case "pref_common_itpd_tethering":
@@ -204,7 +226,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                         && getFragmentManager() != null) {
                     DialogFragment commandResult =
                             NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_itpd).toString());
-                    commandResult.show(getFragmentManager(),"NotificationDialogFragment");
+                    commandResult.show(getFragmentManager(), "NotificationDialogFragment");
                 }
                 break;
             case "pref_common_tor_route_all":
@@ -217,7 +239,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                         && getFragmentManager() != null) {
                     DialogFragment commandResult =
                             NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_tor).toString());
-                    commandResult.show(getFragmentManager(),"NotificationDialogFragment");
+                    commandResult.show(getFragmentManager(), "NotificationDialogFragment");
                 }
                 break;
             case "pref_common_block_http":
@@ -225,15 +247,17 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                         && getFragmentManager() != null) {
                     DialogFragment commandResult =
                             NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_dnscrypt).toString());
-                    commandResult.show(getFragmentManager(),"NotificationDialogFragment");
+                    commandResult.show(getFragmentManager(), "NotificationDialogFragment");
                 } else if (new PrefManager(getActivity()).getBoolPref("Tor Running")
                         && getFragmentManager() != null) {
                     DialogFragment commandResult =
                             NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_tor).toString());
-                    commandResult.show(getFragmentManager(),"NotificationDialogFragment");
+                    commandResult.show(getFragmentManager(), "NotificationDialogFragment");
                 }
                 break;
-            case "pref_common_use_modules_with_root" :
+            case "swUseModulesRoot":
+                setAppropriateContextAndUID(Boolean.valueOf(newValue.toString()));
+
                 ModulesStatus modulesStatus = ModulesStatus.getInstance();
                 modulesStatus.setUseModulesWithRoot(Boolean.valueOf(newValue.toString()));
                 break;
@@ -247,24 +271,24 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             return;
         }
 
-        boolean itpdTethering = PreferenceManager.getDefaultSharedPreferences(getActivity()).getBoolean("pref_common_itpd_tethering",false);
+        boolean itpdTethering = PreferenceManager.getDefaultSharedPreferences(getActivity()).getBoolean("pref_common_itpd_tethering", false);
 
         String[] tetheringCommands;
 
         String line;
-        for (int i=0; i<torConf.size(); i++) {
+        for (int i = 0; i < torConf.size(); i++) {
             line = torConf.get(i);
             if (line.contains("TransPort")) {
                 if (allowTorTether) {
                     line = "TransPort " + "0.0.0.0:" + torTransPort;
                 } else {
-                    line = line.trim().replaceAll(" .+:"," ");
+                    line = line.trim().replaceAll(" .+:", " ");
                 }
-                torConf.set(i,line);
+                torConf.set(i, line);
             }
         }
 
-        FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/tor/tor.conf",torConf,"ignored");
+        FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/tor.conf", torConf, "ignored");
 
         if (!allowTorTether) {
             if (!itpdTethering) {
@@ -278,22 +302,22 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 tetheringCommands = new String[]{
                         iptablesPath + "iptables -t nat -F tordnscrypt_prerouting",
                         iptablesPath + "iptables -F tordnscrypt_forward",
-                        iptablesPath + "iptables -t nat -A tordnscrypt_prerouting -i wlan0 -p tcp -d 10.191.0.1 -j REDIRECT --to-ports "+ itpdHttpProxyPort,
-                        iptablesPath + "iptables -t nat -A tordnscrypt_prerouting -i wlan0 -p udp -d 10.191.0.1 -j REDIRECT --to-ports "+ itpdHttpProxyPort,
+                        iptablesPath + "iptables -t nat -A tordnscrypt_prerouting -i wlan0 -p tcp -d 10.191.0.1 -j REDIRECT --to-ports " + itpdHttpProxyPort,
+                        iptablesPath + "iptables -t nat -A tordnscrypt_prerouting -i wlan0 -p udp -d 10.191.0.1 -j REDIRECT --to-ports " + itpdHttpProxyPort,
                         iptablesPath + "iptables -A tordnscrypt_forward -p udp --dport 53 -j ACCEPT"
                 };
             }
             RootCommands rootCommands = new RootCommands(tetheringCommands);
             Intent intent = new Intent(getActivity(), RootExecService.class);
             intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands",rootCommands);
+            intent.putExtra("Commands", rootCommands);
             intent.putExtra("Mark", RootExecService.NullMark);
-            RootExecService.performAction(getActivity(),intent);
+            RootExecService.performAction(getActivity(), intent);
         }
     }
 
     public void readTorConf() {
-        FileOperations.readTextFile(getActivity(),appDataDir+"/app_data/tor/tor.conf", SettingsActivity.tor_conf_tag);
+        FileOperations.readTextFile(getActivity(), appDataDir + "/app_data/tor/tor.conf", SettingsActivity.tor_conf_tag);
     }
 
     private void allowITPDTethering(List<String> itpdConf) {
@@ -303,25 +327,25 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         }
 
         String[] tetheringCommands;
-        boolean torTethering = PreferenceManager.getDefaultSharedPreferences(getActivity()).getBoolean("pref_common_tor_tethering",false);
+        boolean torTethering = PreferenceManager.getDefaultSharedPreferences(getActivity()).getBoolean("pref_common_tor_tethering", false);
 
         String line;
         String head = "";
-        for (int i=0; i<itpdConf.size(); i++) {
+        for (int i = 0; i < itpdConf.size(); i++) {
             line = itpdConf.get(i);
             if (line.matches("\\[.+]"))
-                head = line.replace("[","").replace("]","");
+                head = line.replace("[", "").replace("]", "");
             if (head.equals("httpproxy") && line.contains("address")) {
                 if (allowITPDtether) {
-                    line = line.replace("127.0.0.1","0.0.0.0");
+                    line = line.replace("127.0.0.1", "0.0.0.0");
                 } else {
-                    line = line.replace("0.0.0.0","127.0.0.1");
+                    line = line.replace("0.0.0.0", "127.0.0.1");
                 }
-                itpdConf.set(i,line);
+                itpdConf.set(i, line);
             }
         }
 
-        FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/i2pd/i2pd.conf",itpdConf,"ignored");
+        FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/i2pd/i2pd.conf", itpdConf, "ignored");
 
 
         if (!allowITPDtether) {
@@ -334,22 +358,22 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 };
             } else {
                 tetheringCommands = new String[]{
-                        iptablesPath + "iptables -t nat -D tordnscrypt_prerouting -i wlan0 -p tcp -d 10.191.0.1 -j REDIRECT --to-ports "+ itpdHttpProxyPort,
-                        iptablesPath + "iptables -t nat -D tordnscrypt_prerouting -i wlan0 -p udp -d 10.191.0.1 -j REDIRECT --to-ports "+ itpdHttpProxyPort,
+                        iptablesPath + "iptables -t nat -D tordnscrypt_prerouting -i wlan0 -p tcp -d 10.191.0.1 -j REDIRECT --to-ports " + itpdHttpProxyPort,
+                        iptablesPath + "iptables -t nat -D tordnscrypt_prerouting -i wlan0 -p udp -d 10.191.0.1 -j REDIRECT --to-ports " + itpdHttpProxyPort,
                 };
             }
 
             RootCommands rootCommands = new RootCommands(tetheringCommands);
             Intent intent = new Intent(getActivity(), RootExecService.class);
             intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands",rootCommands);
+            intent.putExtra("Commands", rootCommands);
             intent.putExtra("Mark", RootExecService.NullMark);
-            RootExecService.performAction(getActivity(),intent);
+            RootExecService.performAction(getActivity(), intent);
         }
     }
 
     public void readITPDConf() {
-        FileOperations.readTextFile(getActivity(),appDataDir+"/app_data/i2pd/i2pd.conf", SettingsActivity.itpd_conf_tag);
+        FileOperations.readTextFile(getActivity(), appDataDir + "/app_data/i2pd/i2pd.conf", SettingsActivity.itpd_conf_tag);
     }
 
     @Override
@@ -364,7 +388,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    if (lines!=null) {
+                    if (lines != null) {
                         switch (tag) {
                             case SettingsActivity.tor_conf_tag:
                                 allowTorTethering(lines);
@@ -409,7 +433,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                                     getActivity().startActivity(intent);
                                 }
                             } catch (Exception e) {
-                                Log.e(LOG_TAG,"PreferencesCommonFragment InfoNotificationProtectService Exception "+e.getMessage());
+                                Log.e(LOG_TAG, "PreferencesCommonFragment InfoNotificationProtectService Exception " + e.getMessage());
                             }
                         }
                     });
@@ -422,6 +446,77 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             Objects.requireNonNull(getDialog().getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             return super.onCreateView(inflater, container, savedInstanceState);
         }
+    }
+
+    private void setAppropriateContextAndUID(boolean useModulesWithRoot) {
+
+        if (getActivity() == null) {
+            return;
+        }
+
+        boolean dnsCryptRunning = new PrefManager(getActivity()).getBoolPref("DNSCrypt Running");
+        boolean torRunning = new PrefManager(getActivity()).getBoolPref("Tor Running");
+        boolean itpdRunning = new PrefManager(getActivity()).getBoolPref("I2PD Running");
+
+        if (dnsCryptRunning) {
+            new PrefManager(getActivity()).setBoolPref("DNSCrypt Running", false);
+            ModulesKiller.stopDNSCrypt(getActivity());
+        }
+
+        if (torRunning) {
+            new PrefManager(getActivity()).setBoolPref("Tor Running", false);
+            ModulesKiller.stopTor(getActivity());
+        }
+
+        if (itpdRunning) {
+            new PrefManager(getActivity()).setBoolPref("I2PD Running", false);
+            ModulesKiller.stopITPD(getActivity());
+        }
+
+        String appUID = new PrefManager(getActivity()).getStrPref("appUID");
+        String[] commands;
+        if (useModulesWithRoot) {
+            commands = new String[]{
+                    busyboxPath + "chown -R 0.0 " + appDataDir + "/app_data/dnscrypt-proxy",
+                    busyboxPath + "chown -R 0.0 " + appDataDir + "/tor_data",
+                    busyboxPath + "chown -R 0.0 " + appDataDir + "/i2pd_data"
+            };
+        } else {
+            commands = new String[]{
+                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/app_data/dnscrypt-proxy",
+                    "restorecon -R " + appDataDir + "/app_data/dnscrypt-proxy",
+
+                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/tor_data",
+                    "restorecon -R " + appDataDir + "/tor_data",
+
+                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/i2pd_data",
+                    "restorecon -R " + appDataDir + "/i2pd_data",
+
+                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/logs",
+                    "restorecon -R " + appDataDir + "/logs"
+            };
+        }
+
+        RootCommands rootCommands = new RootCommands(commands);
+        Intent intent = new Intent(getActivity(), RootExecService.class);
+        intent.setAction(RootExecService.RUN_COMMAND);
+        intent.putExtra("Commands", rootCommands);
+        intent.putExtra("Mark", RootExecService.NullMark);
+        RootExecService.performAction(getActivity(), intent);
+    }
+
+    private void removePreferencesWithFullNoRootMode() {
+        PreferenceScreen preferenceScreen = (PreferenceScreen) findPreference("pref_common");
+        PreferenceCategory hotspotSettingsCategory = (PreferenceCategory) findPreference("HOTSPOT");
+        PreferenceCategory categoryUseModulesRoot = (PreferenceCategory) findPreference("categoryUseModulesRoot");
+        preferenceScreen.removePreference(hotspotSettingsCategory);
+        preferenceScreen.removePreference(categoryUseModulesRoot);
+
+        PreferenceCategory categoryOther = (PreferenceCategory) findPreference("common_other");
+        Preference selectIptables = findPreference("pref_common_use_iptables");
+        Preference selectBusybox = findPreference("pref_common_use_busybox");
+        categoryOther.removePreference(selectIptables);
+        categoryOther.removePreference(selectBusybox);
     }
 
     @Override

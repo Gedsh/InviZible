@@ -61,8 +61,9 @@ import pan.alexander.tordnscrypt.utils.AppExitDetectService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Registration;
 import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
-import static pan.alexander.tordnscrypt.TopFragment.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class MainActivity extends LangAppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -159,7 +160,7 @@ public class MainActivity extends LangAppCompatActivity
                     break;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(LOG_TAG, "MainActivity setDayNightTheme exception " + e.getMessage() + " " + e.getCause());
         }
     }
 
@@ -284,6 +285,21 @@ public class MainActivity extends LangAppCompatActivity
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
+        boolean busyBoxIsAvailable = new PrefManager(this).getBoolPref("bbOK");
+
+        if (ModulesStatus.getInstance().isRootAvailable()) {
+            if (busyBoxIsAvailable) {
+                menu.findItem(R.id.item_root).setIcon(R.drawable.ic_done_all_white_24dp);
+            } else {
+                menu.findItem(R.id.item_root).setIcon(R.drawable.ic_done_white_24dp);
+            }
+        } else {
+            menu.findItem(R.id.item_root).setIcon(R.drawable.ic_vpn_key_white_24dp);
+
+            menu.findItem(R.id.item_hotspot).setVisible(false);
+            menu.findItem(R.id.item_hotspot).setEnabled(false);
+        }
+
         try {
             if (childLockActive) {
                 menu.findItem(R.id.item_unlock).setIcon(R.drawable.ic_lock_white_24dp);
@@ -320,6 +336,7 @@ public class MainActivity extends LangAppCompatActivity
             new PrefManager(this).setBoolPref("APisON", false);
         } else {
             menu.findItem(R.id.item_hotspot).setVisible(false);
+            menu.findItem(R.id.item_hotspot).setEnabled(false);
         }
 
         return super.onPrepareOptionsMenu(menu);
@@ -331,7 +348,6 @@ public class MainActivity extends LangAppCompatActivity
         int id = item.getItemId();
         switch (id) {
             case R.id.item_unlock:
-
                 try {
                     if (isInterfaceLocked()) {
                         childUnlock(item);
@@ -343,7 +359,6 @@ public class MainActivity extends LangAppCompatActivity
                 }
                 break;
             case R.id.item_hotspot:
-
                 try {
                     ApManager apManager = new ApManager(this);
                     if (apManager.configApState()) {
@@ -357,8 +372,11 @@ public class MainActivity extends LangAppCompatActivity
                         this.startActivityForResult(intent, CODE_IS_AP_ON);
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    Log.e(LOG_TAG, "MainActivity onOptionsItemSelected exception " + e.getMessage() + " " + e.getCause());
                 }
+                break;
+            case R.id.item_root:
+                showInfoAboutRoot();
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -608,6 +626,23 @@ public class MainActivity extends LangAppCompatActivity
     private void startAppExitDetectService() {
         Intent intent = new Intent(this, AppExitDetectService.class);
         startService(intent);
+    }
+
+    private void showInfoAboutRoot() {
+        boolean busyBoxIsAvailable = new PrefManager(this).getBoolPref("bbOK");
+
+        if (ModulesStatus.getInstance().isRootAvailable()) {
+            DialogFragment commandResult;
+            if (busyBoxIsAvailable) {
+                commandResult = NotificationDialogFragment.newInstance(TopFragment.verSU + "\n\t\n" + TopFragment.verBB);
+            } else {
+                commandResult = NotificationDialogFragment.newInstance(TopFragment.verSU);
+            }
+            commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
+        } else {
+            DialogFragment commandResult = NotificationDialogFragment.newInstance(R.string.message_no_root_used);
+            commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
+        }
     }
 
     @Override

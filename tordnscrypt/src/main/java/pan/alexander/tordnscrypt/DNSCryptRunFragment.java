@@ -26,7 +26,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.widget.DrawerLayout;
 import android.support.v7.preference.PreferenceManager;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
@@ -50,8 +49,9 @@ import java.util.TimerTask;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.Arr;
-import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesRunner;
-import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesStarterService;
+import pan.alexander.tordnscrypt.utils.modulesManager.ModulesKiller;
+import pan.alexander.tordnscrypt.utils.modulesManager.ModulesRunner;
+import pan.alexander.tordnscrypt.utils.modulesManager.ModulesService;
 import pan.alexander.tordnscrypt.utils.OwnFileReader;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
@@ -62,17 +62,16 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
-import static pan.alexander.tordnscrypt.TopFragment.LOG_TAG;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
-import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UPDATING;
 
 
 public class DNSCryptRunFragment extends Fragment implements View.OnClickListener {
@@ -147,16 +146,11 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                             return;
                         }
 
-                        lockDrawer(false);
-
                         StringBuilder sb = new StringBuilder();
                         for (String com : comResult.getCommands()) {
                             Log.i(LOG_TAG, com);
                             sb.append(com).append((char) 10);
                         }
-
-                        //TopFragment.NotificationDialogFragment commandResult = TopFragment.NotificationDialogFragment.newInstance(sb.toString());
-                        //commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
 
                         if (sb.toString().contains("DNSCrypt_version")) {
                             String[] strArr = sb.toString().split("DNSCrypt_version");
@@ -179,8 +173,10 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
                         if (sb.toString().toLowerCase().contains(dnscryptPath)
                                 && sb.toString().contains("checkDNSRunning")) {
+
                             setDnsCryptRunning();
                             saveDNSStatusRunning(true);
+
                         } else if (!sb.toString().toLowerCase().contains(dnscryptPath)
                                 && sb.toString().contains("checkDNSRunning")) {
                             if (modulesStatus.getDnsCryptState() == STOPPING) {
@@ -202,7 +198,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                         if (TOP_BROADCAST.contains("TOP_BROADCAST")) {
                             Log.i(LOG_TAG, "DNSCryptRunFragment onReceive TOP_BROADCAST");
 
-                            checkDNSVersion();
+                            checkDNSVersionWithRoot();
                         }
                         Thread thread = new Thread(new Runnable() {
                             @Override
@@ -290,7 +286,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
         modulesStatus = ModulesStatus.getInstance();
 
-        logFile = new OwnFileReader(appDataDir + "/logs/DnsCrypt.log");
+        logFile = new OwnFileReader(getActivity(), appDataDir + "/logs/DnsCrypt.log");
 
         if (isDNSCryptInstalled()) {
             setDNSCryptInstalled(true);
@@ -302,10 +298,14 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                     tvDNSCryptLog.setText(Html.fromHtml(logFile.readLastLines()));
                 }
 
-                modulesStatus.setDnsCryptState(RUNNING);
+                if (modulesStatus.getDnsCryptState() != RESTARTING) {
+                    modulesStatus.setDnsCryptState(RUNNING);
+                }
+
                 displayLog(1000);
             } else {
                 setDnsCryptStopped();
+                modulesStatus.setDnsCryptState(STOPPED);
             }
 
         } else {
@@ -340,7 +340,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
             stopDisplayLog();
             if (br != null) Objects.requireNonNull(getActivity()).unregisterReceiver(br);
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(LOG_TAG, "DNSCryptRunFragment onStop exception " + e.getMessage() + " " + e.getCause());;
         }
     }
 
@@ -356,8 +356,6 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
             return;
         }
 
-        lockDrawer(true);
-
 
         if (((MainActivity) getActivity()).childLockActive) {
             Toast.makeText(getActivity(), getText(R.string.action_mode_dialog_locked), Toast.LENGTH_LONG).show();
@@ -366,31 +364,13 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
 
         if (v.getId() == R.id.btnDNSCryptStart) {
+
+            cleanLogFileNoRootMethod();
+
             String[] commandsDNS = new String[]{"echo 'Something went wrong!'"};
-            try {
-                File f = new File(appDataDir + "/logs");
 
-                if (f.mkdirs() && f.setReadable(true) && f.setWritable(true))
-                    Log.i(LOG_TAG, "log dir created");
-
-                PrintWriter writer = new PrintWriter(appDataDir + "/logs/DnsCrypt.log", "UTF-8");
-                writer.println(getResources().getString(R.string.tvDNSDefaultLog) + " " + DNSCryptVersion);
-                writer.close();
-            } catch (IOException e) {
-                Log.e(LOG_TAG, "Unable to create dnsCrypt log file " + e.getMessage());
-            }
-
-            String startCommandDNSCrypt = "";
-            String killall = busyboxPath + "killall dnscrypt-proxy";
             String appUID = new PrefManager(getActivity()).getStrPref("appUID");
-            String restoreUID = busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/app_data/dnscrypt-proxy";
-            String restoreSEContext = "restorecon -R " + appDataDir + "/app_data/dnscrypt-proxy";
-
             if (runDNSCryptWithRoot) {
-                //startCommandDNSCrypt = busyboxPath+ "nohup " + dnscryptPath+" --config "+appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml >/dev/null 2>&1 &";
-                killall = busyboxPath + "killall dnscrypt-proxy";
-                restoreUID = busyboxPath + "chown -R 0.0 " + appDataDir + "/app_data/dnscrypt-proxy";
-                restoreSEContext = "";
                 appUID = "0";
             }
 
@@ -434,7 +414,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                     }
 
                     commandsDNS = new String[]{
-                            killall,
+                            //killall,
                             "ip6tables -D OUTPUT -j DROP || true",
                             "ip6tables -I OUTPUT -j DROP",
                             iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
@@ -442,19 +422,14 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                             iptablesPath + "iptables -F tordnscrypt",
                             iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
                             busyboxPath + "sleep 1",
-                            restoreUID,
-                            restoreSEContext,
-                            busyboxPath + "echo 'Beginning of log' > " + appDataDir + "/logs/DnsCrypt.log",
-                            busyboxPath + "sleep 1",
-                            startCommandDNSCrypt,
-                            busyboxPath + "sleep 1",
+                            "TOR_UID=" + appUID,
                             iptablesPath + "iptables -t nat -N tordnscrypt_nat_output",
                             iptablesPath + "iptables -t nat -I OUTPUT -j tordnscrypt_nat_output",
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d " + dnsCryptFallbackRes + " --dport 53 -j ACCEPT",
+                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d " + dnsCryptFallbackRes + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d " + torVirtAdrNet + " -j DNAT --to-destination 127.0.0.1:" + torTransPort,
@@ -464,14 +439,11 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                             iptablesPath + "iptables -A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
                             iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
                             iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
+                            iptablesPath + "iptables -A tordnscrypt -p udp -d " + dnsCryptFallbackRes + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                             blockHttpRuleFilterAll,
                             iptablesPath + "iptables -I OUTPUT -j tordnscrypt",
                             busyboxPath + "cat " + appDataDir + "/app_data/tor/unlock | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + torTransPort + "; done",
                             busyboxPath + "cat " + appDataDir + "/app_data/tor/unlockApps | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j REDIRECT --to-port " + torTransPort + "; done",
-                            busyboxPath + "sleep 3",
-                            busyboxPath + "pgrep -l /dnscrypt-proxy",
-                            busyboxPath + "echo 'checkDNSRunning'",
-                            busyboxPath + "echo 'startProcess'"
                     };
                 } else {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
@@ -481,19 +453,13 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                     }
 
                     commandsDNS = new String[]{
-                            killall,
+                            //killall,
                             "ip6tables -D OUTPUT -j DROP || true",
                             "ip6tables -I OUTPUT -j DROP",
                             iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
                             iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
                             iptablesPath + "iptables -F tordnscrypt",
                             iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
-                            busyboxPath + "sleep 1",
-                            restoreUID,
-                            restoreSEContext,
-                            busyboxPath + "echo 'Beginning of log' > " + appDataDir + "/logs/DnsCrypt.log",
-                            busyboxPath + "sleep 1",
-                            startCommandDNSCrypt,
                             busyboxPath + "sleep 1",
                             "TOR_UID=" + appUID,
                             iptablesPath + "iptables -t nat -N tordnscrypt_nat_output",
@@ -502,7 +468,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d " + dnsCryptFallbackRes + " --dport 53 -j ACCEPT",
+                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d " + dnsCryptFallbackRes + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
                             iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -m owner --uid-owner $TOR_UID -j RETURN",
@@ -530,6 +496,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                             iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + dnsCryptPort + " -j RETURN",
                             iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + dnsCryptPort + " -j RETURN",
                             iptablesPath + "iptables -A tordnscrypt -m owner --uid-owner $TOR_UID -j RETURN",
+                            iptablesPath + "iptables -A tordnscrypt -p udp -d " + dnsCryptFallbackRes + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                             blockHttpRuleFilterAll,
                             torSitesBypassFilterTCP,
                             torSitesBypassFilterUDP,
@@ -537,10 +504,6 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                             torAppsBypassFilterUDP,
                             iptablesPath + "iptables -A tordnscrypt -j REJECT",
                             iptablesPath + "iptables -I OUTPUT -j tordnscrypt",
-                            busyboxPath + "sleep 3",
-                            busyboxPath + "pgrep -l /dnscrypt-proxy",
-                            busyboxPath + "echo 'checkDNSRunning'",
-                            busyboxPath + "echo 'startProcess'"
                     };
                 }
 
@@ -563,7 +526,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                 }
 
                 commandsDNS = new String[]{
-                        killall,
+                        //killall,
                         "ip6tables -D OUTPUT -j DROP || true",
                         "ip6tables -I OUTPUT -j DROP",
                         iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
@@ -571,19 +534,14 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                         iptablesPath + "iptables -F tordnscrypt",
                         iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
                         busyboxPath + "sleep 1",
-                        restoreUID,
-                        restoreSEContext,
-                        busyboxPath + "echo 'Beginning of log' > " + appDataDir + "/logs/DnsCrypt.log",
-                        busyboxPath + "sleep 1",
-                        startCommandDNSCrypt,
-                        busyboxPath + "sleep 1",
+                        "TOR_UID=" + appUID,
                         iptablesPath + "iptables -t nat -N tordnscrypt_nat_output",
                         iptablesPath + "iptables -t nat -I OUTPUT -j tordnscrypt_nat_output",
                         iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
                         iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
                         iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
                         iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d " + dnsCryptFallbackRes + " --dport 53 -j ACCEPT",
+                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d " + dnsCryptFallbackRes + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                         iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
                         iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
                         blockHttpRuleNatTCP,
@@ -592,12 +550,10 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                         iptablesPath + "iptables -A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
                         iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
                         iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
+                        iptablesPath + "iptables -A tordnscrypt -p udp -d " + dnsCryptFallbackRes + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                         blockHttpRuleFilterAll,
                         iptablesPath + "iptables -I OUTPUT -j tordnscrypt",
-                        busyboxPath + "sleep 3",
-                        busyboxPath + "pgrep -l /dnscrypt-proxy",
-                        busyboxPath + "echo 'checkDNSRunning'",
-                        busyboxPath + "echo 'startProcess'"};
+                };
                 setDnsCryptStarting();
 
                 runDNSCrypt();
@@ -608,18 +564,17 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                     commandsDNS = Arr.ADD2(commandsDNS, commandsTether);
             } else if (!new PrefManager(getActivity()).getBoolPref("Tor Running")
                     && new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
+
                 commandsDNS = new String[]{
-                        killall,
+                        //killall,
                         iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
                         iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
                         iptablesPath + "iptables -F tordnscrypt",
                         iptablesPath + "iptables -A tordnscrypt -j RETURN",
                         iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
-                        busyboxPath + "sleep 3",
-                        busyboxPath + "pgrep -l /dnscrypt-proxy",
-                        busyboxPath + "echo 'checkDNSRunning'",
-                        busyboxPath + "echo 'stopProcess'"};
+                };
                 setDnsCryptStopping();
+                stopDNSCrypt();
                 String[] commandsTether = tethering.activateTethering(false);
                 if (commandsTether != null && commandsTether.length > 0)
                     commandsDNS = Arr.ADD2(commandsDNS, commandsTether);
@@ -633,7 +588,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                 }
 
                 commandsDNS = new String[]{
-                        killall,
+                        //killall,
                         iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
                         iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
                         iptablesPath + "iptables -F tordnscrypt",
@@ -677,11 +632,10 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                         torAppsBypassFilterUDP,
                         iptablesPath + "iptables -A tordnscrypt -j REJECT",
                         iptablesPath + "iptables -I OUTPUT -j tordnscrypt",
-                        busyboxPath + "sleep 3",
-                        busyboxPath + "pgrep -l /dnscrypt-proxy",
-                        busyboxPath + "echo 'checkDNSRunning'",
-                        busyboxPath + "echo 'stopProcess'"};
+                };
+
                 setDnsCryptStopping();
+                stopDNSCrypt();
                 String[] commandsTether = tethering.activateTethering(true);
                 if (commandsTether != null && commandsTether.length > 0)
                     commandsDNS = Arr.ADD2(commandsDNS, commandsTether);
@@ -690,7 +644,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
             Intent intent = new Intent(getActivity(), RootExecService.class);
             intent.setAction(RootExecService.RUN_COMMAND);
             intent.putExtra("Commands", rootCommands);
-            intent.putExtra("Mark", RootExecService.DNSCryptRunFragmentMark);
+            intent.putExtra("Mark", RootExecService.NullMark);
             RootExecService.performAction(getActivity(), intent);
 
             setProgressBarIndeterminate(true);
@@ -699,7 +653,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
     }
 
 
-    private void checkDNSVersion() {
+    private void checkDNSVersionWithRoot() {
         if (isDNSCryptInstalled() && getActivity() != null) {
 
             String[] commandsCheck = {
@@ -810,11 +764,10 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
             Log.e(LOG_TAG, getText(R.string.helper_dnscrypt_stopped).toString());
 
+            stopDNSCrypt();
+            stopTor();
+
             String[] commandsReset = new String[]{
-                    busyboxPath + "echo 'stopProcess'",
-                    busyboxPath + "killall dnscrypt-proxy",
-                    busyboxPath + "killall tor",
-                    busyboxPath + "sleep 3",
                     iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
                     iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
                     iptablesPath + "iptables -F tordnscrypt",
@@ -824,7 +777,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
             Intent intentReset = new Intent(getActivity(), RootExecService.class);
             intentReset.setAction(RootExecService.RUN_COMMAND);
             intentReset.putExtra("Commands", rootCommands);
-            intentReset.putExtra("Mark", RootExecService.TorRunFragmentMark);
+            intentReset.putExtra("Mark", RootExecService.NullMark);
             RootExecService.performAction(getActivity(), intentReset);
         }
 
@@ -880,20 +833,6 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
         }
     }
 
-    private void lockDrawer(boolean lock) {
-        if (getActivity() == null) {
-            return;
-        }
-
-        if (lock) {
-            DrawerLayout mDrawerLayout = getActivity().findViewById(R.id.drawer_layout);
-            mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-        } else {
-            DrawerLayout mDrawerLayout = getActivity().findViewById(R.id.drawer_layout);
-            mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-        }
-    }
-
 
     private void displayLog(int period) {
 
@@ -927,6 +866,11 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
                         if (!previousLastLines.contentEquals(lastLines)) {
 
+                            if (modulesStatus.getDnsCryptState() == STARTING && !lastLines.trim().isEmpty()) {
+                                saveDNSStatusRunning(true);
+                                btnDNSCryptStart.setText(R.string.btnDNSCryptStop);
+                            }
+
                             dnsCryptStartedSuccessfully(lastLines);
 
                             dnsCryptStartedWithError(lastLines);
@@ -951,8 +895,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
     }
 
     private void dnsCryptStartedSuccessfully(String lines) {
-        if (modulesStatus.getDnsCryptState() == RESTARTING
-                || modulesStatus.getDnsCryptState() == UPDATING) {
+        if (modulesStatus.getDnsCryptState() == RESTARTING) {
             return;
         }
 
@@ -963,6 +906,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
         if (lines.contains("lowest initial latency")) {
             modulesStatus.setDnsCryptState(RUNNING);
+            saveDNSStatusRunning(true);
         }
     }
 
@@ -988,7 +932,10 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                 && !new PrefManager(getActivity()).getBoolPref("DNSCryptFallBackResolverRemoved")) {
 
             new PrefManager(getActivity()).setBoolPref("DNSCryptFallBackResolverRemoved", true);
-            commands = new String[]{iptablesPath + "iptables -t nat -D tordnscrypt_nat_output -p udp -d " + dnsCryptFallbackRes + " --dport 53 -j ACCEPT || true"};
+            commands = new String[]{
+                    iptablesPath + "iptables -t nat -D tordnscrypt_nat_output -p udp -d " + dnsCryptFallbackRes + " --dport 53  -m owner  --uid-owner $TOR_UID -j ACCEPT || true",
+                    iptablesPath + "iptables -D tordnscrypt -p udp -d " + dnsCryptFallbackRes + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT || true",
+            };
 
         } else if (lastLines.contains("[CRITICAL]") && lastLines.contains("[FATAL]")) {
 
@@ -1000,14 +947,14 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
             Log.e(LOG_TAG, "DNSCrypt FATAL Error: " + lastLines);
 
+            stopDNSCrypt();
+            stopTor();
+
             commands = new String[]{
-                    busyboxPath + "killall dnscrypt-proxy",
-                    busyboxPath + "killall tor",
-                    busyboxPath + "killall i2pd",
                     iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
                     iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
                     iptablesPath + "iptables -F tordnscrypt",
-                    iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true"
+                    iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
             };
         }
 
@@ -1027,6 +974,22 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
         }
 
         ModulesRunner.runDNSCrypt(getActivity());
+    }
+
+    private void stopDNSCrypt() {
+        if (getActivity() == null) {
+            return;
+        }
+
+        ModulesKiller.stopDNSCrypt(getActivity());
+    }
+
+    private void stopTor() {
+        if (getActivity() == null) {
+            return;
+        }
+
+        ModulesKiller.stopTor(getActivity());
     }
 
     private void safeStopModulesStarterService() {
@@ -1051,8 +1014,23 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
             canSafeStopService = false;
         }
         if (canSafeStopService) {
-            Intent intent = new Intent(getActivity(), ModulesStarterService.class);
+            Intent intent = new Intent(getActivity(), ModulesService.class);
             getActivity().stopService(intent);
+        }
+    }
+
+    private void cleanLogFileNoRootMethod() {
+        try {
+            File f = new File(appDataDir + "/logs");
+
+            if (f.mkdirs() && f.setReadable(true) && f.setWritable(true))
+                Log.i(LOG_TAG, "log dir created");
+
+            PrintWriter writer = new PrintWriter(appDataDir + "/logs/DnsCrypt.log", "UTF-8");
+            writer.println(getResources().getString(R.string.tvDNSDefaultLog) + " " + DNSCryptVersion);
+            writer.close();
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Unable to create dnsCrypt log file " + e.getMessage());
         }
     }
 

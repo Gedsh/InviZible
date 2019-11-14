@@ -111,7 +111,20 @@ public class HelpActivityReceiver extends BroadcastReceiver {
 
     private void saveLogsMethodTwo(Context context) {
         Log.e(LOG_TAG, "Collect logs first method fault");
+
+        String logsDirPath = appDataDir + "/logs_dir";
+        File logsDir = new File(logsDirPath);
+
+        if (!logsDir.isDirectory()) {
+            if (!logsDir.mkdirs()) {
+                throw new IllegalStateException("HelpActivityReceiver unablr to create logs dir");
+            }
+        }
+
         try {
+            FileOperations.copyFolderSynchronous(context, appDataDir + "/logs", logsDirPath);
+            FileOperations.copyFolderSynchronous(context, appDataDir + "/shared_prefs", logsDirPath);
+
             Process process = Runtime.getRuntime().exec("logcat -d");
             StringBuilder log = new StringBuilder();
             try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
@@ -122,15 +135,19 @@ public class HelpActivityReceiver extends BroadcastReceiver {
                 }
             }
 
-            try (FileWriter out = new FileWriter(appDataDir + "/logs/InvizibleLogs.txt")) {
+            try (FileWriter out = new FileWriter(logsDirPath + "/logcat.log")) {
                 out.write(log.toString());
+            }
 
+            process.destroy();
+
+            try (FileWriter out = new FileWriter(logsDirPath + "/device_info.log")) {
                 if (info != null) {
                     out.write(info);
                 }
             }
 
-            process.destroy();
+            saveLogsMethodOne(context);
 
         } catch (Exception e) {
             Log.e(LOG_TAG, "Collect logs alternative method fault " + e.getMessage() + " " + e.getCause());
@@ -186,6 +203,10 @@ public class HelpActivityReceiver extends BroadcastReceiver {
     }
 
     private boolean isRootMethodWroteLogs(RootCommands comResult) {
+        if (comResult == null) {
+            return false;
+        }
+
         File invizibleLogs = new File(appDataDir + "/logs_dir");
 
         return Arrays.toString(comResult.getCommands()).contains("Logs Saved")

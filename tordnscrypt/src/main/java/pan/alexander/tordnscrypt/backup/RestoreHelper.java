@@ -36,11 +36,12 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 import pan.alexander.tordnscrypt.utils.installer.Installer;
 
-import static pan.alexander.tordnscrypt.TopFragment.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 class RestoreHelper extends Installer {
     private String appDataDir;
@@ -64,19 +65,24 @@ class RestoreHelper extends Installer {
                         throw new IllegalStateException("No file to restore " + pathBackup + "/InvizibleBackup.zip");
                     }
 
-                    registerReceiver(activity);
+                    if (ModulesStatus.getInstance().isUseModulesWithRoot()) {
+                        registerReceiver(activity);
 
-                    stopAllRunningModulesWithRootCommand();
+                        stopAllRunningModulesWithRootCommand();
 
-                    if (!waitUntilAllModulesStopped()) {
-                        throw new IllegalStateException("Unexpected interruption");
+                        if (!waitUntilAllModulesStopped()) {
+                            throw new IllegalStateException("Unexpected interruption");
+                        }
+
+                        if (interruptInstallation) {
+                            throw new IllegalStateException("Installation interrupted");
+                        }
+
+                        unRegisterReceiver(activity);
+
+                    } else {
+                        stopAllRunningModulesWithNoRootCommand();
                     }
-
-                    if (interruptInstallation) {
-                        throw new IllegalStateException("Installation interrupted");
-                    }
-
-                    unRegisterReceiver(activity);
 
                     removeInstallationDirsIfExists();
                     createLogsDir();
@@ -153,7 +159,7 @@ class RestoreHelper extends Installer {
         ZipFileManager zipFileManager = new ZipFileManager(pathBackup + "/InvizibleBackup.zip");
         zipFileManager.extractZip(appDataDir);
 
-        Log.i(RootExecService.LOG_TAG, "RestoreHelper: extractBackup OK");
+        Log.i(LOG_TAG, "RestoreHelper: extractBackup OK");
     }
 
     private void restoreSharedPreferencesFromFile(SharedPreferences sharedPref, String src) throws Exception {
@@ -161,7 +167,7 @@ class RestoreHelper extends Installer {
         loadSharedPreferencesFromFile(editor, src);
         editor.apply();
 
-        Log.i(RootExecService.LOG_TAG, "RestoreHelper: sharedPreferences restore OK");
+        Log.i(LOG_TAG, "RestoreHelper: sharedPreferences restore OK");
     }
 
     @SuppressWarnings({ "unchecked" })

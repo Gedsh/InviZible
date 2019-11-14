@@ -18,6 +18,7 @@ package pan.alexander.tordnscrypt.utils;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.content.Context;
 import android.text.Html;
 import android.util.Log;
 
@@ -30,23 +31,45 @@ import java.io.PrintWriter;
 import java.util.LinkedList;
 import java.util.List;
 
+import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
+
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class OwnFileReader {
 
+    private Context context;
     private String filePath;
     private BufferedReader br = null;
     private FileInputStream fstream = null;
     private List<String> lines;
 
-    public OwnFileReader(String filePath) {
+    public OwnFileReader(Context context, String filePath) {
+        this.context = context;
         this.filePath = filePath;
     }
 
     public String readLastLines() {
+
         File file = new File(filePath);
-        if (!file.exists())
+
+        if (!file.exists()) {
             return "";
+        }
+
+        if (!file.canRead()) {
+            if (!file.setReadable(true)) {
+                Log.w(LOG_TAG, "Impossible to read file " + filePath + " Try restore access");
+
+                FileOperations fileOperations = new FileOperations();
+                fileOperations.restoreAccess(context, filePath);
+            }
+
+            if (file.canRead()) {
+                Log.i(LOG_TAG, "Access to " + filePath + " restored");
+            } else {
+                Log.e(LOG_TAG, "Impossible to read file " + filePath);
+            }
+        }
 
         lines = new LinkedList<>();
         StringBuilder sb = new StringBuilder();

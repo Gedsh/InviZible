@@ -22,9 +22,7 @@ import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.preference.PreferenceFragmentCompat;
 import android.util.Log;
@@ -38,12 +36,8 @@ import java.util.Objects;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
-import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesRunner;
-import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesStarterService;
+import pan.alexander.tordnscrypt.utils.modulesManager.ModulesRestarter;
 import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.RootExecService;
-import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
@@ -56,8 +50,6 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
     ArrayList<String> val_tor_orig;
     SharedPreferences sp;
     String appDataDir;
-    String torPath;
-    String busyboxPath;
 
 
     @Override
@@ -120,10 +112,6 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
         PathVars pathVars = new PathVars(getActivity());
         appDataDir = pathVars.appDataDir;
-        torPath = pathVars.torPath;
-        busyboxPath = pathVars.busyboxPath;
-
-        //PreferenceManager.setDefaultValues(getActivity(),R.xml.preferences_tor,false);
 
         sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
     }
@@ -172,25 +160,10 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
         FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/tor/tor.conf",tor_conf,SettingsActivity.tor_conf_tag);
 
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean rnTorWithRoot = shPref.getBoolean("swUseModulesRoot",false);
         boolean torRunning = new PrefManager(getActivity()).getBoolPref("Tor Running");
 
         if (torRunning) {
-            ModulesStatus.getInstance().setTorRestarting(15);
-
-            String[] commandsEcho = new String[] {
-                    busyboxPath+ "killall tor"
-            };
-
-            runTor();
-
-            RootCommands rootCommands  = new RootCommands(commandsEcho);
-            Intent intent = new Intent(getActivity(), RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands",rootCommands);
-            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
-            RootExecService.performAction(getActivity(),intent);
+            ModulesRestarter.restartTor(getActivity());
         }
 
     }
@@ -321,14 +294,5 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
 
         return false;
-    }
-
-    private void runTor() {
-
-        if (getActivity() == null) {
-            return;
-        }
-
-        ModulesRunner.runTor(getActivity());
     }
 }

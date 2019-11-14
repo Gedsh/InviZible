@@ -1,4 +1,5 @@
 package pan.alexander.tordnscrypt;
+
 /*
     This file is part of InviZible Pro.
 
@@ -27,11 +28,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.widget.DrawerLayout;
 import android.support.v7.preference.PreferenceManager;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
@@ -56,8 +55,9 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
 import pan.alexander.tordnscrypt.utils.Arr;
 import pan.alexander.tordnscrypt.utils.GetIPsJobService;
-import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesRunner;
-import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesStarterService;
+import pan.alexander.tordnscrypt.utils.modulesManager.ModulesKiller;
+import pan.alexander.tordnscrypt.utils.modulesManager.ModulesRunner;
+import pan.alexander.tordnscrypt.utils.modulesManager.ModulesService;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.utils.OwnFileReader;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -79,7 +79,6 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
-import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UPDATING;
 
 
 public class TorRunFragment extends Fragment implements View.OnClickListener {
@@ -116,13 +115,11 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
     private ModulesStatus modulesStatus;
     private ModuleState fixedModuleState = STOPPED;
-    private ModuleState currentModuleState;
 
     private OwnFileReader logFile;
 
 
     public TorRunFragment() {
-        // Required empty public constructor
     }
 
 
@@ -158,8 +155,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                             return;
                         }
 
-                        lockDrawer(false);
-
                         StringBuilder sb = new StringBuilder();
                         for (String com : comResult.getCommands()) {
                             Log.i(LOG_TAG, com);
@@ -189,10 +184,12 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
                         if (sb.toString().toLowerCase().contains(torPath)
                                 && sb.toString().contains("checkTrRunning")) {
-                            /////////////For correct display tor bootstrap/////////////////////
+
                             saveTorStatusRunning(true);
+                            btnTorStart.setText(R.string.btnTorStop);
                             setProgressBarIndeterminate(false);
                             startRefreshTorUnlockIPs();
+
                         } else if (!sb.toString().toLowerCase().contains(torPath)
                                 && sb.toString().contains("checkTrRunning")) {
                             if (modulesStatus.getTorState() == STOPPING) {
@@ -214,7 +211,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                         if (TopFragment.TOP_BROADCAST.contains("TOP_BROADCAST")) {
                             Log.i(LOG_TAG, "TorRunFragment onReceive TOP_BROADCAST");
 
-                            checkTorVersion();
+                            checkTorVersionWithRoot();
                         }
 
                     }
@@ -230,7 +227,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_tor_run, container, false);
 
         if (getActivity() == null) {
@@ -281,7 +277,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
         modulesStatus = ModulesStatus.getInstance();
 
-        logFile = new OwnFileReader(appDataDir + "/logs/Tor.log");
+        logFile = new OwnFileReader(getActivity(), appDataDir + "/logs/Tor.log");
 
         if (isTorInstalled()) {
             setTorInstalled(true);
@@ -293,10 +289,13 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                     tvTorLog.setText(Html.fromHtml(logFile.readLastLines()));
                 }
 
-                modulesStatus.setTorState(RUNNING);
+                if (modulesStatus.getTorState() != RESTARTING) {
+                    modulesStatus.setTorState(RUNNING);
+                }
                 displayLog(1000);
             } else {
                 setTorStopped();
+                modulesStatus.setTorState(STOPPED);
             }
         } else {
             setTorInstalled(false);
@@ -334,7 +333,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
             stopDisplayLog();
             if (br != null) Objects.requireNonNull(getActivity()).unregisterReceiver(br);
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(LOG_TAG, "TorFragment onStop exception " + e.getMessage() + " " + e.getCause());
         }
     }
 
@@ -356,8 +355,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
             return;
         }
 
-        lockDrawer(true);
-
         if (((MainActivity) getActivity()).childLockActive) {
             Toast.makeText(getActivity(), getText(R.string.action_mode_dialog_locked), Toast.LENGTH_LONG).show();
             return;
@@ -365,19 +362,10 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
 
         if (v.getId() == R.id.btnTorStart) {
+
+            cleanLogFileNoRootMethod();
+
             String[] commandsTor = new String[]{"echo 'Something went wrong!'"};
-            try {
-                File d = new File(appDataDir + "/logs");
-
-                if (d.mkdirs() && d.setReadable(true) && d.setWritable(true))
-                    Log.i(LOG_TAG, "log dir created");
-
-                PrintWriter writer = new PrintWriter(appDataDir + "/logs/Tor.log", "UTF-8");
-                writer.println(getResources().getString(R.string.tvTorDefaultLog) + " " + TorVersion);
-                writer.close();
-            } catch (IOException e) {
-                Log.e(LOG_TAG, "Unable to create Tor log file " + e.getMessage());
-            }
 
             Thread thread = new Thread(new Runnable() {
                 @Override
@@ -404,23 +392,15 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                                 notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                             }
                         }
-                        Log.e(TopFragment.LOG_TAG, "TorRunFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
+                        Log.e(LOG_TAG, "TorRunFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                                 Arrays.toString(e.getStackTrace()));
                     }
                 }
             });
             thread.start();
 
-            String startCommandTor = "";
-            String killall = busyboxPath + "killall tor";
             String appUID = new PrefManager(getActivity()).getStrPref("appUID");
-            String restoreUID = busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/tor_data";
-            String restoreSEContext = "restorecon -R " + appDataDir + "/tor_data";
             if (runTorWithRoot) {
-                //startCommandTor = torPath + " -f " + appDataDir + "/app_data/tor/tor.conf";
-                killall = busyboxPath + "killall tor";
-                restoreUID = busyboxPath + "chown -R 0.0 " + appDataDir + "/tor_data";
-                restoreSEContext = "";
                 appUID = "0";
             }
 
@@ -468,19 +448,13 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                     }
 
                     commandsTor = new String[]{
-                            killall,
+                            //killall,
                             "ip6tables -D OUTPUT -j DROP || true",
                             "ip6tables -I OUTPUT -j DROP",
                             iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
                             iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
                             iptablesPath + "iptables -F tordnscrypt",
                             iptablesPath + "iptables -D OUTPUT -j tordnscrypt",
-                            busyboxPath + "sleep 1",
-                            restoreUID,
-                            restoreSEContext,
-                            busyboxPath + "echo 'Beginning of log' > " + appDataDir + "/logs/Tor.log",
-                            busyboxPath + "sleep 1",
-                            startCommandTor,
                             busyboxPath + "sleep 1",
                             iptablesPath + "iptables -t nat -N tordnscrypt_nat_output",
                             iptablesPath + "iptables -t nat -I OUTPUT -j tordnscrypt_nat_output",
@@ -501,10 +475,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                             iptablesPath + "iptables -I OUTPUT -j tordnscrypt",
                             busyboxPath + "cat " + appDataDir + "/app_data/tor/unlock | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + torTransPort + "; done",
                             busyboxPath + "cat " + appDataDir + "/app_data/tor/unlockApps | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j REDIRECT --to-port " + torTransPort + "; done",
-                            busyboxPath + "sleep 3",
-                            busyboxPath + "pgrep -l /tor",
-                            busyboxPath + "echo 'checkTrRunning'",
-                            busyboxPath + "echo 'startProcess'"
                     };
                 } else {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
@@ -516,19 +486,13 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                     }
 
                     commandsTor = new String[]{
-                            killall,
+                            //killall,
                             "ip6tables -D OUTPUT -j DROP || true",
                             "ip6tables -I OUTPUT -j DROP",
                             iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
                             iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
                             iptablesPath + "iptables -F tordnscrypt",
                             iptablesPath + "iptables -D OUTPUT -j tordnscrypt",
-                            busyboxPath + "sleep 1",
-                            restoreUID,
-                            restoreSEContext,
-                            busyboxPath + "echo 'Beginning of log' > " + appDataDir + "/logs/Tor.log",
-                            busyboxPath + "sleep 1",
-                            startCommandTor,
                             busyboxPath + "sleep 1",
                             "TOR_UID=" + appUID,
                             iptablesPath + "iptables -t nat -N tordnscrypt_nat_output",
@@ -571,10 +535,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                             torAppsBypassFilterUDP,
                             iptablesPath + "iptables -A tordnscrypt -j REJECT",
                             iptablesPath + "iptables -I OUTPUT -j tordnscrypt",
-                            busyboxPath + "sleep 3",
-                            busyboxPath + "pgrep -l /tor",
-                            busyboxPath + "echo 'checkTrRunning'",
-                            busyboxPath + "echo 'startProcess'"
                     };
                 }
 
@@ -601,19 +561,13 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                 startRefreshTorUnlockIPs();
 
                 commandsTor = new String[]{
-                        killall,
+                        //killall,
                         "ip6tables -D OUTPUT -j DROP || true",
                         "ip6tables -I OUTPUT -j DROP",
                         iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
                         iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
                         iptablesPath + "iptables -F tordnscrypt",
                         iptablesPath + "iptables -D OUTPUT -j tordnscrypt",
-                        busyboxPath + "sleep 1",
-                        restoreUID,
-                        restoreSEContext,
-                        busyboxPath + "echo 'Beginning of log' > " + appDataDir + "/logs/Tor.log",
-                        busyboxPath + "sleep 1",
-                        startCommandTor,
                         busyboxPath + "sleep 1",
                         "TOR_UID=" + appUID,
                         iptablesPath + "iptables -t nat -N tordnscrypt_nat_output",
@@ -654,10 +608,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                         torAppsBypassFilterUDP,
                         iptablesPath + "iptables -A tordnscrypt -j REJECT",
                         iptablesPath + "iptables -I OUTPUT -j tordnscrypt",
-                        busyboxPath + "sleep 3",
-                        busyboxPath + "pgrep -l /tor",
-                        busyboxPath + "echo 'checkTrRunning'",
-                        busyboxPath + "echo 'startProcess'"
                 };
 
                 setTorStarting();
@@ -674,7 +624,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                 stopRefreshTorUnlockIPs();
 
                 commandsTor = new String[]{
-                        killall,
+                        //killall,
                         iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
                         iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
                         iptablesPath + "iptables -F tordnscrypt",
@@ -697,11 +647,10 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                         blockHttpRuleFilterAll,
                         iptablesPath + "iptables -I OUTPUT -j tordnscrypt",
                         busyboxPath + "sleep 3",
-                        busyboxPath + "pgrep -l /tor",
-                        busyboxPath + "echo 'checkTrRunning'",
-                        busyboxPath + "echo 'stopProcess'"};
+                };
 
                 setTorStopping();
+                stopTor();
                 String[] commandsTether = tethering.activateTethering(false);
                 if (commandsTether != null && commandsTether.length > 0)
                     commandsTor = Arr.ADD2(commandsTor, commandsTether);
@@ -711,17 +660,16 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                 stopRefreshTorUnlockIPs();
 
                 commandsTor = new String[]{
-                        killall,
+                        //killall,
                         iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
                         iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
                         iptablesPath + "iptables -F tordnscrypt",
                         iptablesPath + "iptables -D OUTPUT -j tordnscrypt",
                         busyboxPath + "sleep 3",
-                        busyboxPath + "pgrep -l /tor",
-                        busyboxPath + "echo 'checkTrRunning'",
-                        busyboxPath + "echo 'stopProcess'"};
+                };
 
                 setTorStopping();
+                stopTor();
                 String[] commandsTether = tethering.activateTethering(false);
                 if (commandsTether != null && commandsTether.length > 0)
                     commandsTor = Arr.ADD2(commandsTor, commandsTether);
@@ -732,7 +680,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
             Intent intent = new Intent(getActivity(), RootExecService.class);
             intent.setAction(RootExecService.RUN_COMMAND);
             intent.putExtra("Commands", rootCommands);
-            intent.putExtra("Mark", RootExecService.TorRunFragmentMark);
+            intent.putExtra("Mark", RootExecService.NullMark);
             RootExecService.performAction(getActivity(), intent);
 
             setProgressBarIndeterminate(true);
@@ -740,7 +688,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
     }
 
-    private void checkTorVersion() {
+    private void checkTorVersionWithRoot() {
         if (isTorInstalled() && getActivity() != null) {
 
             String[] commandsCheck = {
@@ -766,9 +714,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
             return;
         }
 
-        currentModuleState = modulesStatus.getTorState();
-
-        //Log.e(LOG_TAG, " Tor state " + currentModuleState + " isFresh " + modulesStatus.isFresh() + " " + fixedModuleState);
+        ModuleState currentModuleState = modulesStatus.getTorState();
 
         if ((currentModuleState.equals(fixedModuleState)) && currentModuleState != STOPPED) {
             return;
@@ -857,22 +803,20 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
             Log.e(LOG_TAG, getText(R.string.helper_tor_stopped).toString());
 
+            stopTor();
+            stopDNSCrypt();
+
             String[] commandsReset = new String[]{
-                    busyboxPath + "echo 'stopProcess'",
-                    busyboxPath + "killall dnscrypt-proxy",
-                    busyboxPath + "killall tor",
-                    busyboxPath + "sleep 3",
                     iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
                     iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
                     iptablesPath + "iptables -F tordnscrypt",
                     iptablesPath + "iptables -D OUTPUT -j tordnscrypt",
-                    //busyboxPath + "echo 'checkTrRunning'"
             };
             rootCommands = new RootCommands(commandsReset);
             Intent intentReset = new Intent(getActivity(), RootExecService.class);
             intentReset.setAction(RootExecService.RUN_COMMAND);
             intentReset.putExtra("Commands", rootCommands);
-            intentReset.putExtra("Mark", RootExecService.TorRunFragmentMark);
+            intentReset.putExtra("Mark", RootExecService.NullMark);
             RootExecService.performAction(getActivity(), intentReset);
         }
 
@@ -929,24 +873,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
     }
 
-    private void lockDrawer(boolean lock) {
-        if (getActivity() == null) {
-            return;
-        }
-
-        if (lock) {
-            DrawerLayout mDrawerLayout = getActivity().findViewById(R.id.drawer_layout);
-            mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-        } else {
-            DrawerLayout mDrawerLayout = getActivity().findViewById(R.id.drawer_layout);
-            mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-        }
-    }
-
-
-
-
-
     private void displayLog(int period) {
 
         stopDisplayLog();
@@ -978,6 +904,11 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                         refreshTorState();
 
                         if (!previousLastLines.contentEquals(lastLines)) {
+
+                            if (modulesStatus.getTorState() == STARTING && !lastLines.trim().isEmpty()) {
+                                saveTorStatusRunning(true);
+                                btnTorStart.setText(R.string.btnTorStop);
+                            }
 
                             if (!new PrefManager(getActivity()).getBoolPref("Tor Ready")) {
                                 torStartedSuccessfully(lastLines);
@@ -1029,9 +960,9 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
         int perc = Integer.valueOf(bootstrapPerc);
 
-        if (pbTor.isIndeterminate()) {
+        /*if (pbTor.isIndeterminate()) {
             return;
-        }
+        }*/
 
         if (0 <= perc && perc < 100) {
 
@@ -1039,12 +970,14 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                 return;
             }
 
+            setProgressBarIndeterminate(false);
+
             pbTor.setProgress(perc);
             setTorStarting();
+
         } else if (modulesStatus.getTorState() == STARTING || isSavedTorStatusRunning()) {
 
-            if (modulesStatus.getTorState() == RESTARTING
-                    || modulesStatus.getTorState() == UPDATING) {
+            if (modulesStatus.getTorState() == RESTARTING) {
                 return;
             }
 
@@ -1102,7 +1035,9 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    /*private void checkINetAvailable(){
+    /* Just leave this there
+
+    private void checkINetAvailable(){
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -1175,6 +1110,22 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
         ModulesRunner.runTor(getActivity());
     }
 
+    private void stopTor() {
+        if (getActivity() == null) {
+            return;
+        }
+
+        ModulesKiller.stopTor(getActivity());
+    }
+
+    private void stopDNSCrypt() {
+        if (getActivity() == null) {
+            return;
+        }
+
+        ModulesKiller.stopDNSCrypt(getActivity());
+    }
+
     private void safeStopModulesStarterService() {
 
         if (getActivity() == null) {
@@ -1198,10 +1149,24 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
             canSafeStopService = false;
         }
         if (canSafeStopService) {
-            Intent intent = new Intent(getActivity(), ModulesStarterService.class);
+            Intent intent = new Intent(getActivity(), ModulesService.class);
             getActivity().stopService(intent);
         }
     }
 
+    private void cleanLogFileNoRootMethod() {
+        try {
+            File d = new File(appDataDir + "/logs");
+
+            if (d.mkdirs() && d.setReadable(true) && d.setWritable(true))
+                Log.i(LOG_TAG, "log dir created");
+
+            PrintWriter writer = new PrintWriter(appDataDir + "/logs/Tor.log", "UTF-8");
+            writer.println(getResources().getString(R.string.tvTorDefaultLog) + " " + TorVersion);
+            writer.close();
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Unable to create Tor log file " + e.getMessage());
+        }
+    }
 
 }

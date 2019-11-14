@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.utils.modulesStarter;
+package pan.alexander.tordnscrypt.utils.modulesManager;
 
 /*
     This file is part of InviZible Pro.
@@ -20,6 +20,7 @@ package pan.alexander.tordnscrypt.utils.modulesStarter;
 */
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
@@ -30,17 +31,37 @@ import com.jrummyapps.android.shell.Shell;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
+import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
+import static pan.alexander.tordnscrypt.utils.RootExecService.COMMAND_RESULT;
+import static pan.alexander.tordnscrypt.utils.RootExecService.DNSCryptRunFragmentMark;
+import static pan.alexander.tordnscrypt.utils.RootExecService.I2PDRunFragmentMark;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.RootExecService.TorRunFragmentMark;
+import static pan.alexander.tordnscrypt.utils.modulesManager.ModulesService.DNSCRYPT_KEYWORD;
+import static pan.alexander.tordnscrypt.utils.modulesManager.ModulesService.ITPD_KEYWORD;
+import static pan.alexander.tordnscrypt.utils.modulesManager.ModulesService.TOR_KEYWORD;
 
 class ModulesStarterHelper {
 
-    private ModulesStarterHelper() {
+    private final Context context;
+    private final Handler handler;
+    private final PathVars pathVars;
+
+    private boolean useModulesWithRoot;
+
+    ModulesStarterHelper(Context context, Handler handler, PathVars pathVars) {
+        this.context = context;
+        this.handler = handler;
+        this.pathVars = pathVars;
+        this.useModulesWithRoot = ModulesStatus.getInstance().isUseModulesWithRoot();
     }
 
-    static Runnable getDNSCryptStarterRunnable(final Context context, final PathVars pathVars, final Handler handler, final boolean useModulesWithRoot) {
+    Runnable getDNSCryptStarterRunnable() {
         return new Runnable() {
             @Override
             public void run() {
@@ -52,14 +73,26 @@ class ModulesStarterHelper {
                 String dnsCmdString;
                 final CommandResult shellResult;
                 if (useModulesWithRoot) {
+
                     dnsCmdString = pathVars.busyboxPath + "nohup " + pathVars.dnscryptPath + " --config " + pathVars.appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml >/dev/null 2>&1 &";
-                    shellResult = Shell.SU.run(dnsCmdString);
+                    String waitString = pathVars.busyboxPath + "sleep 3";
+                    String checkIfModuleRunning = pathVars.busyboxPath + "pgrep -l /dnscrypt-proxy";
+
+                    shellResult = Shell.SU.run(dnsCmdString, waitString, checkIfModuleRunning);
+
+                    if (shellResult.getStdout().contains(pathVars.dnscryptPath)) {
+                        sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, pathVars.dnscryptPath);
+                    } else {
+                        sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
+                    }
+
                 } else {
                     dnsCmdString = pathVars.dnscryptPath + " --config " + pathVars.appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml";
                     shellResult = Shell.SH.run(dnsCmdString);
                 }
 
                 if (!shellResult.isSuccessful()) {
+                    sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
                     Log.e(LOG_TAG, "Error DNSCrypt: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
                     handler.post(new Runnable() {
                         @Override
@@ -72,7 +105,7 @@ class ModulesStarterHelper {
         };
     }
 
-    static Runnable getTorStarterRunnable(final Context context, final PathVars pathVars, final Handler handler, final boolean useModulesWithRoot) {
+    Runnable getTorStarterRunnable() {
         return new Runnable() {
             @Override
             public void run() {
@@ -84,9 +117,21 @@ class ModulesStarterHelper {
                 String torCmdString;
                 final CommandResult shellResult;
                 if (useModulesWithRoot) {
+
                     correctTorConfRunAsDaemon(context, pathVars.appDataDir, true);
+
                     torCmdString = pathVars.torPath + " -f " + pathVars.appDataDir + "/app_data/tor/tor.conf";
-                    shellResult = Shell.SU.run(torCmdString);
+                    String waitString = pathVars.busyboxPath + "sleep 3";
+                    String checkIfModuleRunning = pathVars.busyboxPath + "pgrep -l /tor";
+
+                    shellResult = Shell.SU.run(torCmdString, waitString, checkIfModuleRunning);
+
+                    if (shellResult.getStdout().contains(pathVars.torPath)) {
+                        sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, pathVars.torPath);
+                    } else {
+                        sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
+                    }
+
                 } else {
                     correctTorConfRunAsDaemon(context, pathVars.appDataDir, false);
                     torCmdString = pathVars.torPath + " -f " + pathVars.appDataDir + "/app_data/tor/tor.conf";
@@ -94,6 +139,7 @@ class ModulesStarterHelper {
                 }
 
                 if (!shellResult.isSuccessful()) {
+                    sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
                     Log.e(LOG_TAG, "Error Tor: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
                     handler.post(new Runnable() {
                         @Override
@@ -106,7 +152,7 @@ class ModulesStarterHelper {
         };
     }
 
-    static Runnable getITPDStarterRunnable(final Context context, final PathVars pathVars, final Handler handler, final boolean useModulesWithRoot) {
+    Runnable getITPDStarterRunnable() {
         return new Runnable() {
             @Override
             public void run() {
@@ -120,8 +166,19 @@ class ModulesStarterHelper {
                 final CommandResult shellResult;
                 if (useModulesWithRoot) {
                     correctITPDConfRunAsDaemon(context, pathVars.appDataDir, true);
+
                     itpdCmdString = pathVars.itpdPath + " --conf " + pathVars.appDataDir + "/app_data/i2pd/i2pd.conf --datadir " + pathVars.appDataDir + "/i2pd_data &";
-                    shellResult = Shell.SU.run(itpdCmdString);
+                    String waitString = pathVars.busyboxPath + "sleep 3";
+                    String checkIfModuleRunning = pathVars.busyboxPath + "pgrep -l /i2pd";
+
+                    shellResult = Shell.SU.run(itpdCmdString, waitString, checkIfModuleRunning);
+
+                    if (shellResult.getStdout().contains(pathVars.itpdPath)) {
+                        sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, pathVars.itpdPath);
+                    } else {
+                        sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
+                    }
+
                 } else {
                     correctITPDConfRunAsDaemon(context, pathVars.appDataDir, false);
                     itpdCmdString = pathVars.itpdPath + " --conf " + pathVars.appDataDir + "/app_data/i2pd/i2pd.conf --datadir " + pathVars.appDataDir + "/i2pd_data";
@@ -129,6 +186,7 @@ class ModulesStarterHelper {
                 }
 
                 if (!shellResult.isSuccessful()) {
+                    sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
                     Log.e(LOG_TAG, "Error ITPD: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
                     handler.post(new Runnable() {
                         @Override
@@ -141,7 +199,7 @@ class ModulesStarterHelper {
         };
     }
 
-    private static void correctTorConfRunAsDaemon(Context context, String appDataDir, boolean runAsDaemon) {
+    private void correctTorConfRunAsDaemon(Context context, String appDataDir, boolean runAsDaemon) {
         String path = appDataDir + "/app_data/tor/tor.conf";
         List<String> lines = FileOperations.readTextFileSynchronous(context, path);
 
@@ -159,7 +217,7 @@ class ModulesStarterHelper {
         }
     }
 
-    private static void correctITPDConfRunAsDaemon(Context context, String appDataDir, boolean runAsDaemon) {
+    private void correctITPDConfRunAsDaemon(Context context, String appDataDir, boolean runAsDaemon) {
         String path = appDataDir + "/app_data/i2pd/i2pd.conf";
         List<String> lines = FileOperations.readTextFileSynchronous(context, path);
 
@@ -177,9 +235,19 @@ class ModulesStarterHelper {
         }
     }
 
-    private static void makeDelay(int sec) {
+    private void makeDelay(int sec) {
         try {
             TimeUnit.SECONDS.sleep(sec);
-        } catch (InterruptedException ignored) {}
+        } catch (InterruptedException e) {
+            Log.e(LOG_TAG, "ModulesStarterHelper makeDelay interrupted! " + e.getMessage() + " " + e.getCause());
+        }
+    }
+
+    private void sendResultIntent(int moduleMark, String moduleKeyWord, String binaryPath) {
+        RootCommands comResult = new RootCommands(new String[]{moduleKeyWord, binaryPath});
+        Intent intent = new Intent(COMMAND_RESULT);
+        intent.putExtra("CommandsResult",comResult);
+        intent.putExtra("Mark" ,moduleMark);
+        context.sendBroadcast(intent);
     }
 }

@@ -83,9 +83,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
     Thread thread;
 
 
-    public UnlockTorAppsFragment() {
-        // Required empty public constructor
-    }
+    public UnlockTorAppsFragment() {}
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -188,7 +186,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
             try {
                 thread.interrupt();
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.e(LOG_TAG, "UnlockTorAppsFragment onStop exception " + e.getMessage() + " " + e.getCause());
             }
             return;
         }
@@ -461,7 +459,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
                         }
 
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        Log.e(LOG_TAG, "UnlockTorAppsFragment getDeviceApps exception " + e.getMessage() + " " + e.getCause());
                     }
 
                     if ((aInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 1) {

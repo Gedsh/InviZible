@@ -19,9 +19,7 @@ package pan.alexander.tordnscrypt.settings;
 */
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -48,14 +46,10 @@ import java.util.Objects;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
-import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesRunner;
-import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesStarterService;
+import pan.alexander.tordnscrypt.utils.modulesManager.ModulesRestarter;
 import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
-import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
@@ -233,24 +227,10 @@ public class PreferencesDNSCryptServersRv extends Fragment {
 
         FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml", dnscrypt_proxy_toml, SettingsActivity.public_resolvers_md_tag);
 
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean runDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot", true);
         boolean dnsCryptRunning = new PrefManager(getActivity()).getBoolPref("DNSCrypt Running");
 
         if (dnsCryptRunning) {
-            ModulesStatus.getInstance().setDnsCryptRestarting(15);
-
-            String[] commandsEcho = new String[]{
-                    busyboxPath + "killall dnscrypt-proxy"
-            };
-            runDNSCrypt();
-
-            RootCommands rootCommands = new RootCommands(commandsEcho);
-            Intent intent = new Intent(getActivity(), RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands", rootCommands);
-            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
-            RootExecService.performAction(getActivity(), intent);
+            ModulesRestarter.restartDNSCrypt(getActivity());
         }
 
         if (callback != null)
@@ -452,15 +432,4 @@ public class PreferencesDNSCryptServersRv extends Fragment {
 
         }
     }
-
-    private void runDNSCrypt() {
-
-        if (getActivity() == null) {
-            return;
-        }
-
-        ModulesRunner.runDNSCrypt(getActivity());
-    }
-
-
 }

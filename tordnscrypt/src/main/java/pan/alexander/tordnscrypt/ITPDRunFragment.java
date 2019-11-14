@@ -29,7 +29,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.support.v4.widget.DrawerLayout;
 import android.support.v7.preference.PreferenceManager;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
@@ -55,8 +54,10 @@ import java.util.TimerTask;
 
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.Arr;
-import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesRunner;
-import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesStarterService;
+import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
+import pan.alexander.tordnscrypt.utils.modulesManager.ModulesKiller;
+import pan.alexander.tordnscrypt.utils.modulesManager.ModulesRunner;
+import pan.alexander.tordnscrypt.utils.modulesManager.ModulesService;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.utils.OwnFileReader;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -70,6 +71,7 @@ import static pan.alexander.tordnscrypt.TopFragment.ITPDVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -147,8 +149,6 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                             return;
                         }
 
-                        lockDrawer(false);
-
                         StringBuilder sb = new StringBuilder();
                         for (String com : comResult.getCommands()) {
                             Log.i(LOG_TAG, com);
@@ -178,9 +178,11 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
 
                         if (sb.toString().toLowerCase().contains(itpdPath)
                                 && sb.toString().contains("checkITPDRunning")) {
+
                             setITPDRunning();
                             saveITPDStatusRunning(true);
                             modulesStatus.setItpdState(RUNNING);
+
                         } else if (!sb.toString().toLowerCase().contains(itpdPath)
                                 && sb.toString().contains("checkITPDRunning")) {
                             if (modulesStatus.getItpdState() == STOPPING) {
@@ -198,7 +200,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
 
                     if (action.equals(TOP_BROADCAST)) {
                         if (TopFragment.TOP_BROADCAST.contains("TOP_BROADCAST")) {
-                            checkITPDVersion();
+                            checkITPDVersionWithRoot();
                             Log.i(LOG_TAG, "ITPDRunFragment onReceive TOP_BROADCAST");
                         }
 
@@ -266,7 +268,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
 
         modulesStatus = ModulesStatus.getInstance();
 
-        logFile = new OwnFileReader(appDataDir + "/logs/i2pd.log");
+        logFile = new OwnFileReader(getActivity(), appDataDir + "/logs/i2pd.log");
 
         if (isITPDInstalled()) {
             setITPDInstalled(true);
@@ -277,10 +279,14 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                 if (tvITPDinfoLog != null)
                     tvITPDinfoLog.setText(Html.fromHtml(logFile.readLastLines()));
 
-                modulesStatus.setItpdState(RUNNING);
+                if (modulesStatus.getItpdState() != RESTARTING) {
+                    modulesStatus.setItpdState(RUNNING);
+                }
+
                 displayLog();
             } else {
                 setITPDStopped();
+                modulesStatus.setItpdState(STOPPED);
             }
         } else {
             setITPDInstalled(false);
@@ -314,7 +320,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
             stopDisplayLog();
             if (br != null) Objects.requireNonNull(getActivity()).unregisterReceiver(br);
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(LOG_TAG, "ITPDRunFragment onStop exception " + e.getMessage() + " " + e.getCause());;
         }
     }
 
@@ -330,8 +336,6 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
             return;
         }
 
-        lockDrawer(true);
-
         if (((MainActivity) getActivity()).childLockActive) {
             Toast.makeText(getActivity(), getText(R.string.action_mode_dialog_locked), Toast.LENGTH_LONG).show();
             return;
@@ -340,31 +344,13 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
 
         if (v.getId() == R.id.btnITPDStart) {
 
-            String[] commandsI2PD = new String[]{"echo 'Something went wrong!'"};
-            try {
-                File f = new File(appDataDir + "/logs");
+            cleanLogFileNoRootMethod();
 
-                if (f.mkdirs() && f.setReadable(true) && f.setWritable(true))
-                    Log.i(TopFragment.LOG_TAG, "log dir created");
-
-                PrintWriter writer = new PrintWriter(appDataDir + "/logs/i2pd.log", "UTF-8");
-                writer.println(" ");
-                writer.close();
-            } catch (IOException e) {
-                Log.e(TopFragment.LOG_TAG, "Unable to create i2pd log file " + e.getMessage());
-            }
-
-            String startCommandI2PD = "";
-            String killall = busyboxPath + "killall i2pd";
-            String appUID = new PrefManager(getActivity()).getStrPref("appUID");
-            String restoreUID = busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/i2pd_data";
-            String restoreSEContext = "restorecon -R " + appDataDir + "/i2pd_data";
-            if (runI2PDWithRoot) {
-                //startCommandI2PD = itpdPath + " --conf " + appDataDir + "/app_data/i2pd/i2pd.conf --datadir " + appDataDir + "/i2pd_data &";
-                killall = busyboxPath + "killall i2pd";
-                restoreUID = busyboxPath + "chown -R 0.0 " + appDataDir + "/i2pd_data";
-                restoreSEContext = "";
-            }
+            String[] commandsI2PDForRoot = new String[]{
+                    busyboxPath + "mkdir -p " + appDataDir + "/i2pd_data",
+                    "cd " + appDataDir + "/app_data/i2pd",
+                    busyboxPath + "cp -R certificates " + appDataDir + "/i2pd_data",
+            };
 
             if (!new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("I2PD Running")
                     && new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("Tor Running")
@@ -378,19 +364,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                     }
                 }
 
-                commandsI2PD = new String[]{
-                        killall,
-                        busyboxPath + "mkdir -p " + appDataDir + "/i2pd_data",
-                        "cd " + appDataDir + "/app_data/i2pd",
-                        busyboxPath + "cp -R certificates " + appDataDir + "/i2pd_data",
-                        restoreUID,
-                        restoreSEContext,
-                        startCommandI2PD,
-                        busyboxPath + "sleep 7",
-                        busyboxPath + "pgrep -l /i2pd",
-                        busyboxPath + "echo 'checkITPDRunning'",
-                        busyboxPath + "echo 'startProcess'"
-                };
+                copyCertificatesNoRootMethod();
 
                 setITPDStarting();
 
@@ -399,7 +373,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                 displayLog();
                 String[] commandsTether = tethering.activateTethering(true);
                 if (commandsTether != null && commandsTether.length > 0)
-                    commandsI2PD = Arr.ADD2(commandsI2PD, commandsTether);
+                    commandsI2PDForRoot = Arr.ADD2(commandsI2PDForRoot, commandsTether);
             } else if (!new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("I2PD Running") &&
                     !new PrefManager(getActivity()).getBoolPref("Tor Running")
                     && !new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
@@ -412,19 +386,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                     }
                 }
 
-                commandsI2PD = new String[]{
-                        killall,
-                        busyboxPath + "mkdir -p " + appDataDir + "/i2pd_data",
-                        "cd " + appDataDir + "/app_data/i2pd",
-                        busyboxPath + "cp -R certificates " + appDataDir + "/i2pd_data",
-                        restoreUID,
-                        restoreSEContext,
-                        startCommandI2PD,
-                        busyboxPath + "sleep 7",
-                        busyboxPath + "pgrep -l /i2pd",
-                        busyboxPath + "echo 'checkITPDRunning'",
-                        busyboxPath + "echo 'startProcess'"
-                };
+                copyCertificatesNoRootMethod();
 
                 setITPDStarting();
 
@@ -433,7 +395,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                 displayLog();
                 String[] commandsTether = tethering.activateTethering(false);
                 if (commandsTether != null && commandsTether.length > 0)
-                    commandsI2PD = Arr.ADD2(commandsI2PD, commandsTether);
+                    commandsI2PDForRoot = Arr.ADD2(commandsI2PDForRoot, commandsTether);
             } else if (!new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("I2PD Running") &&
                     !new PrefManager(getActivity()).getBoolPref("Tor Running")
                     && new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
@@ -446,20 +408,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                     }
                 }
 
-                commandsI2PD = new String[]{
-                        killall,
-                        busyboxPath + "mkdir -p " + appDataDir + "/i2pd_data",
-                        "cd " + appDataDir + "/app_data/i2pd",
-                        busyboxPath + "cp -R certificates " + appDataDir + "/i2pd_data",
-                        restoreUID,
-                        restoreSEContext,
-                        busyboxPath + "echo 'Beginning of log' > " + appDataDir + "/logs/i2pd.log",
-                        startCommandI2PD,
-                        busyboxPath + "sleep 7",
-                        busyboxPath + "pgrep -l /i2pd",
-                        busyboxPath + "echo 'checkITPDRunning'",
-                        busyboxPath + "echo 'startProcess'"
-                };
+                copyCertificatesNoRootMethod();
 
                 setITPDStarting();
 
@@ -468,7 +417,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                 displayLog();
                 String[] commandsTether = tethering.activateTethering(false);
                 if (commandsTether != null && commandsTether.length > 0)
-                    commandsI2PD = Arr.ADD2(commandsI2PD, commandsTether);
+                    commandsI2PDForRoot = Arr.ADD2(commandsI2PDForRoot, commandsTether);
             } else if (!new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("I2PD Running") &&
                     new PrefManager(getActivity()).getBoolPref("Tor Running")
                     && new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
@@ -481,19 +430,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                     }
                 }
 
-                commandsI2PD = new String[]{
-                        killall,
-                        busyboxPath + "mkdir -p " + appDataDir + "/i2pd_data",
-                        "cd " + appDataDir + "/app_data/i2pd",
-                        busyboxPath + "cp -R certificates " + appDataDir + "/i2pd_data",
-                        restoreUID,
-                        restoreSEContext,
-                        busyboxPath + "echo 'Beginning of log' > " + appDataDir + "/logs/i2pd.log",
-                        startCommandI2PD,
-                        busyboxPath + "sleep 7",
-                        busyboxPath + "pgrep -l /i2pd",
-                        busyboxPath + "echo 'checkITPDRunning'",
-                        busyboxPath + "echo 'startProcess'"};
+                copyCertificatesNoRootMethod();
 
                 setITPDStarting();
 
@@ -502,27 +439,25 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                 displayLog();
                 String[] commandsTether = tethering.activateTethering(false);
                 if (commandsTether != null && commandsTether.length > 0)
-                    commandsI2PD = Arr.ADD2(commandsI2PD, commandsTether);
+                    commandsI2PDForRoot = Arr.ADD2(commandsI2PDForRoot, commandsTether);
             } else if (new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("I2PD Running")) {
-                commandsI2PD = new String[]{
-                        busyboxPath + "killall i2pd",
-                        busyboxPath + "sleep 7",
-                        busyboxPath + "pgrep -l /i2pd",
-                        busyboxPath + "echo 'checkITPDRunning'",
-                        busyboxPath + "echo 'stopProcess'"};
+                commandsI2PDForRoot = null;
 
                 setITPDStopping();
-                OwnFileReader ofr = new OwnFileReader(appDataDir + "/logs/i2pd.log");
+                stopITPD();
+                OwnFileReader ofr = new OwnFileReader(getActivity(), appDataDir + "/logs/i2pd.log");
                 ofr.shortenToToLongFile();
             }
 
 
-            rootCommands = new RootCommands(commandsI2PD);
-            Intent intent = new Intent(getActivity(), RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands", rootCommands);
-            intent.putExtra("Mark", RootExecService.I2PDRunFragmentMark);
-            RootExecService.performAction(getActivity(), intent);
+            if (runI2PDWithRoot && commandsI2PDForRoot != null) {
+                rootCommands = new RootCommands(commandsI2PDForRoot);
+                Intent intent = new Intent(getActivity(), RootExecService.class);
+                intent.setAction(RootExecService.RUN_COMMAND);
+                intent.putExtra("Commands", rootCommands);
+                intent.putExtra("Mark", RootExecService.NullMark);
+                RootExecService.performAction(getActivity(), intent);
+            }
 
             setProgressBarIndeterminate(true);
         }
@@ -530,7 +465,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
     }
 
 
-    private void checkITPDVersion() {
+    private void checkITPDVersionWithRoot() {
         if (isITPDInstalled() && getActivity() != null) {
             String[] commandsCheck = {
                     busyboxPath + "pgrep -l /i2pd",
@@ -685,20 +620,6 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    private void lockDrawer(boolean lock) {
-        if (getActivity() == null) {
-            return;
-        }
-
-        if (lock) {
-            DrawerLayout mDrawerLayout = getActivity().findViewById(R.id.drawer_layout);
-            mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-        } else {
-            DrawerLayout mDrawerLayout = getActivity().findViewById(R.id.drawer_layout);
-            mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-        }
-    }
-
     private void displayLog() {
 
         stopDisplayLog();
@@ -723,6 +644,13 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
 
                     @Override
                     public void run() {
+
+                        if (modulesStatus.getItpdState() == STARTING && !lastLines.trim().isEmpty()) {
+                            setProgressBarIndeterminate(false);
+                            saveITPDStatusRunning(true);
+                            modulesStatus.setItpdState(RUNNING);
+
+                        }
 
                         refreshITPDState();
 
@@ -802,6 +730,15 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
         ModulesRunner.runITPD(getActivity());
     }
 
+    private void stopITPD() {
+
+        if (getActivity() == null) {
+            return;
+        }
+
+        ModulesKiller.stopITPD(getActivity());
+    }
+
     private void safeStopModulesStarterService() {
 
         if (getActivity() == null) {
@@ -824,8 +761,48 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
             canSafeStopService = false;
         }
         if (canSafeStopService) {
-            Intent intent = new Intent(getActivity(), ModulesStarterService.class);
+            Intent intent = new Intent(getActivity(), ModulesService.class);
             getActivity().stopService(intent);
         }
+    }
+
+    private void cleanLogFileNoRootMethod() {
+        try {
+            File f = new File(appDataDir + "/logs");
+
+            if (f.mkdirs() && f.setReadable(true) && f.setWritable(true))
+                Log.i(LOG_TAG, "log dir created");
+
+            PrintWriter writer = new PrintWriter(appDataDir + "/logs/i2pd.log", "UTF-8");
+            writer.println("");
+            writer.close();
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Unable to create i2pd log file " + e.getMessage());
+        }
+    }
+
+    private void copyCertificatesNoRootMethod() {
+
+        if (getActivity() == null || runI2PDWithRoot) {
+            return;
+        }
+
+        final String certificateSource = appDataDir + "/app_data/i2pd/certificates";
+        final String certificateFolder = appDataDir + "/i2pd_data/certificates";
+        final String certificateDestination = appDataDir + "/i2pd_data";
+
+        File certificateFolderDir = new File(certificateFolder);
+
+        if (certificateFolderDir.isDirectory() && certificateFolderDir.listFiles().length > 0) {
+            return;
+        }
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                FileOperations.copyFolderSynchronous(getActivity(), certificateSource, certificateDestination);
+                Log.i(LOG_TAG, "Copy i2p certificates");
+            }
+        }).start();
     }
 }

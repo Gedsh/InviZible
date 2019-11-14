@@ -21,8 +21,6 @@ package pan.alexander.tordnscrypt.settings;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -30,7 +28,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -63,13 +60,10 @@ import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 import pan.alexander.tordnscrypt.utils.fileOperations.OnTextFileOperationsCompleteListener;
 import pan.alexander.tordnscrypt.utils.GetNewBridges;
-import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesRunner;
+import pan.alexander.tordnscrypt.utils.modulesManager.ModulesRestarter;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.Verifier;
-import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
@@ -268,9 +262,6 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             }
         }
 
-        //TopFragment.NotificationDialogFragment commandResult = TopFragment.NotificationDialogFragment.newInstance(tor_conf_clean.toString());
-        //commandResult.show(getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
-
         tor_conf = tor_conf_clean;
 
         String currentBridgesTypeToSave;
@@ -310,24 +301,10 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         FileOperations.writeToTextFile(getActivity(),pathVars.appDataDir+"/app_data/tor/tor.conf",tor_conf,"ignored");
 
         ///////////////////////Tor restart/////////////////////////////////////////////
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean rnTorWithRoot = shPref.getBoolean("swUseModulesRoot",false);
         boolean torRunning = new PrefManager(getActivity()).getBoolPref("Tor Running");
 
         if (torRunning) {
-            ModulesStatus.getInstance().setTorRestarting(15);
-
-            String[] commandsRestart = new String[] {
-                    pathVars.busyboxPath+ "killall tor"};
-
-            runTor();
-
-            RootCommands rootCommands  = new RootCommands(commandsRestart);
-            Intent intent = new Intent(getActivity(), RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands",rootCommands);
-            intent.putExtra("Mark", RootExecService.NullMark);
-            RootExecService.performAction(getActivity(),intent);
+            ModulesRestarter.restartTor(getActivity());
             Toast.makeText(getActivity(),getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
         }
 
@@ -1014,22 +991,13 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         }
     }
 
-    private void runTor() {
-
-        if (getActivity() == null) {
-            return;
-        }
-
-        ModulesRunner.runTor(getActivity());
-    }
-
     void openPleaseWaitDialog() {
         if (dialogFragment == null && getFragmentManager() != null) {
             try {
                 dialogFragment = PleaseWaitProgressDialog.getInstance();
                 dialogFragment.show(getFragmentManager(), "PleaseWaitProgressDialog");
             } catch (Exception ex) {
-                Log.e(TopFragment.LOG_TAG, "PreferencesTorBridges open progress fault " + ex.getMessage() + " " +ex.getCause());
+                Log.e(LOG_TAG, "PreferencesTorBridges open progress fault " + ex.getMessage() + " " +ex.getCause());
             }
         }
     }
@@ -1041,7 +1009,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 dialogFragment = null;
             }
         } catch (Exception ex) {
-            Log.e(TopFragment.LOG_TAG, "PreferencesTorBridges close progress fault " + ex.getMessage() + " " +ex.getCause());
+            Log.e(LOG_TAG, "PreferencesTorBridges close progress fault " + ex.getMessage() + " " +ex.getCause());
         }
     }
 }

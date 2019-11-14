@@ -29,6 +29,7 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.utils.modulesManager.ModulesKiller;
 
 public class UpdateModulesDialogFragment extends ExtendedDialogFragment {
 
@@ -55,18 +56,32 @@ public class UpdateModulesDialogFragment extends ExtendedDialogFragment {
                             return;
                         }
 
+                        boolean dnsCryptRunning = new PrefManager(getActivity()).getBoolPref("DNSCrypt Running");
+                        boolean torRunning = new PrefManager(getActivity()).getBoolPref("Tor Running");
+                        boolean itpdRunning = new PrefManager(getActivity()).getBoolPref("I2PD Running");
+
+                        if (dnsCryptRunning) {
+                            new PrefManager(getActivity()).setBoolPref("DNSCrypt Running", false);
+                            ModulesKiller.stopDNSCrypt(getActivity());
+                        }
+
+                        if (torRunning) {
+                            new PrefManager(getActivity()).setBoolPref("Tor Running", false);
+                            ModulesKiller.stopTor(getActivity());
+                        }
+
+                        if (itpdRunning) {
+                            new PrefManager(getActivity()).setBoolPref("I2PD Running", false);
+                            ModulesKiller.stopITPD(getActivity());
+                        }
+
                         PathVars pathVars = new PathVars(getActivity());
                         String iptablesPath = pathVars.iptablesPath;
-                        String busyboxPath = pathVars.busyboxPath;
                         String[] commandsReset = new String[] {
                                 iptablesPath+ "iptables -t nat -F tordnscrypt_nat_output",
                                 iptablesPath+ "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
                                 iptablesPath+ "iptables -F tordnscrypt",
-                                iptablesPath+ "iptables -D OUTPUT -j tordnscrypt || true",
-                                busyboxPath + "sleep 1",
-                                busyboxPath + "killall dnscrypt-proxy",
-                                busyboxPath + "killall tor",
-                                busyboxPath + "killall i2pd"
+                                iptablesPath+ "iptables -D OUTPUT -j tordnscrypt || true"
                         };
                         RootCommands rootCommands = new RootCommands(commandsReset);
                         Intent intentReset = new Intent(getActivity(), RootExecService.class);

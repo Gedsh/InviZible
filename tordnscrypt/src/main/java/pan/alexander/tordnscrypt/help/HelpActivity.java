@@ -56,6 +56,7 @@ import pan.alexander.tordnscrypt.utils.fileOperations.OnBinaryFileOperationsComp
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.deleteFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
@@ -64,17 +65,15 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 public class HelpActivity extends LangAppCompatActivity implements View.OnClickListener,
         CompoundButton.OnCheckedChangeListener, OnBinaryFileOperationsCompleteListener {
 
-    EditText etLogsPath;
-    Button btnSaveLogs;
-    Switch swRootCommandsLog;
-    HelpActivityReceiver br;
-    Handler mHandler;
-    String appDataDir;
-    String busyboxPath;
-    String pathToSaveLogs;
-    String iptablesPath;
-    String appUID;
-    static DialogFragment dialogFragment;
+    private EditText etLogsPath;
+    private HelpActivityReceiver br;
+    private String appDataDir;
+    private String busyboxPath;
+    private String pathToSaveLogs;
+    private String iptablesPath;
+    private String appUID;
+    private static DialogFragment dialogFragment;
+    private ModulesStatus modulesStatus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,14 +84,14 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
         etLogsPath = findViewById(R.id.etLogsPath);
         etLogsPath.setOnClickListener(this);
-        btnSaveLogs = findViewById(R.id.btnSaveLogs);
+        Button btnSaveLogs = findViewById(R.id.btnSaveLogs);
         btnSaveLogs.setOnClickListener(this);
         btnSaveLogs.requestFocus();
-        swRootCommandsLog = findViewById(R.id.swRootCommandsLog);
+        Switch swRootCommandsLog = findViewById(R.id.swRootCommandsLog);
         swRootCommandsLog.setChecked(new PrefManager(this).getBoolPref("swRootCommandsLog"));
         swRootCommandsLog.setOnCheckedChangeListener(this);
 
-        mHandler = new Handler();
+        Handler mHandler = new Handler();
 
         PathVars pathVars = new PathVars(this);
         appDataDir = pathVars.appDataDir;
@@ -103,14 +102,18 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
         br = new HelpActivityReceiver(mHandler, appDataDir, pathToSaveLogs);
 
+        modulesStatus = ModulesStatus.getInstance();
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        IntentFilter intentFilter = new IntentFilter(RootExecService.COMMAND_RESULT);
-        this.registerReceiver(br, intentFilter);
+        if (modulesStatus.isRootAvailable()) {
+            IntentFilter intentFilter = new IntentFilter(RootExecService.COMMAND_RESULT);
+            this.registerReceiver(br, intentFilter);
+        }
 
         setTitle(R.string.drawer_menu_help);
 
@@ -133,11 +136,15 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                 String info = collectInfo();
                 br.setInfo(info);
 
-                collectLogsMethodOne(info);
-
                 dialogFragment = PleaseWaitProgressDialog.getInstance();
                 dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
                 br.setProgressDialog(dialogFragment);
+
+                if (modulesStatus.isRootAvailable()) {
+                    collectLogsMethodOne(info);
+                } else {
+                    new Thread(br.saveLogs(getApplicationContext(), null)).start();
+                }
                 break;
             case R.id.etLogsPath:
                 chooseOutputFolder();
@@ -250,7 +257,10 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     public void onStop() {
         super.onStop();
 
-        this.unregisterReceiver(br);
+        if (modulesStatus.isRootAvailable()) {
+            this.unregisterReceiver(br);
+        }
+
         FileOperations.deleteOnFileOperationCompleteListener();
     }
 
