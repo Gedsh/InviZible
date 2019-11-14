@@ -18,13 +18,12 @@ package pan.alexander.tordnscrypt.settings;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.v7.preference.PreferenceFragmentCompat;
 import android.support.v7.preference.Preference;
+import android.support.v7.preference.PreferenceFragmentCompat;
 import android.support.v7.preference.PreferenceManager;
+import android.util.Log;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -34,13 +33,11 @@ import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
-import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
-import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesRunner;
-import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesStarterService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.RootExecService;
-import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
+import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
+import pan.alexander.tordnscrypt.utils.modulesManager.ModulesRestarter;
+
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class PreferencesITPDFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
 
@@ -55,39 +52,46 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setRetainInstance(true);
 
         addPreferencesFromResource(R.xml.preferences_i2pd);
 
-        findPreference("Allow incoming connections").setOnPreferenceChangeListener(this);
-        findPreference("incoming port").setOnPreferenceChangeListener(this);
-        findPreference("incoming host").setOnPreferenceChangeListener(this);
-        findPreference("ipv4").setOnPreferenceChangeListener(this);
-        findPreference("ipv6").setOnPreferenceChangeListener(this);
-        findPreference("notransit").setOnPreferenceChangeListener(this);
-        findPreference("floodfill").setOnPreferenceChangeListener(this);
-        findPreference("bandwidth").setOnPreferenceChangeListener(this);
-        findPreference("share").setOnPreferenceChangeListener(this);
-        findPreference("ssu").setOnPreferenceChangeListener(this);
-        findPreference("ntcp").setOnPreferenceChangeListener(this);
-        findPreference("Enable ntcpproxy").setOnPreferenceChangeListener(this);
-        findPreference("ntcpproxy").setOnPreferenceChangeListener(this);
-        findPreference("HTTP proxy").setOnPreferenceChangeListener(this);
-        findPreference("HTTP proxy port").setOnPreferenceChangeListener(this);
-        findPreference("Socks proxy").setOnPreferenceChangeListener(this);
-        findPreference("Socks proxy port").setOnPreferenceChangeListener(this);
-        findPreference("SAM interface").setOnPreferenceChangeListener(this);
-        findPreference("SAM interface port").setOnPreferenceChangeListener(this);
-        findPreference("elgamal").setOnPreferenceChangeListener(this);
-        findPreference("UPNP").setOnPreferenceChangeListener(this);
-        findPreference("ntcp2 enabled").setOnPreferenceChangeListener(this);
-        findPreference("verify").setOnPreferenceChangeListener(this);
-        findPreference("transittunnels").setOnPreferenceChangeListener(this);
-        findPreference("openfiles").setOnPreferenceChangeListener(this);
-        findPreference("coresize").setOnPreferenceChangeListener(this);
-        findPreference("ntcpsoft").setOnPreferenceChangeListener(this);
-        findPreference("ntcphard").setOnPreferenceChangeListener(this);
-        findPreference("defaulturl").setOnPreferenceChangeListener(this);
+        try {
+            findPreference("Allow incoming connections").setOnPreferenceChangeListener(this);
+            findPreference("incoming port").setOnPreferenceChangeListener(this);
+            findPreference("incoming host").setOnPreferenceChangeListener(this);
+            findPreference("ipv4").setOnPreferenceChangeListener(this);
+            findPreference("ipv6").setOnPreferenceChangeListener(this);
+            findPreference("notransit").setOnPreferenceChangeListener(this);
+            findPreference("floodfill").setOnPreferenceChangeListener(this);
+            findPreference("bandwidth").setOnPreferenceChangeListener(this);
+            findPreference("share").setOnPreferenceChangeListener(this);
+            findPreference("ssu").setOnPreferenceChangeListener(this);
+            findPreference("ntcp").setOnPreferenceChangeListener(this);
+            findPreference("Enable ntcpproxy").setOnPreferenceChangeListener(this);
+            findPreference("ntcpproxy").setOnPreferenceChangeListener(this);
+            findPreference("HTTP proxy").setOnPreferenceChangeListener(this);
+            findPreference("HTTP proxy port").setOnPreferenceChangeListener(this);
+            findPreference("Socks proxy").setOnPreferenceChangeListener(this);
+            findPreference("Socks proxy port").setOnPreferenceChangeListener(this);
+            findPreference("SAM interface").setOnPreferenceChangeListener(this);
+            findPreference("SAM interface port").setOnPreferenceChangeListener(this);
+            findPreference("elgamal").setOnPreferenceChangeListener(this);
+            findPreference("UPNP").setOnPreferenceChangeListener(this);
+            findPreference("ntcp2 enabled").setOnPreferenceChangeListener(this);
+            findPreference("verify").setOnPreferenceChangeListener(this);
+            findPreference("transittunnels").setOnPreferenceChangeListener(this);
+            findPreference("openfiles").setOnPreferenceChangeListener(this);
+            findPreference("coresize").setOnPreferenceChangeListener(this);
+            findPreference("ntcpsoft").setOnPreferenceChangeListener(this);
+            findPreference("ntcphard").setOnPreferenceChangeListener(this);
+            findPreference("defaulturl").setOnPreferenceChangeListener(this);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "PreferencesITPDFragment setOnPreferenceChangeListener exception " + e.getMessage() + " " + e.getCause());
+            Toast.makeText(getActivity(), "PreferencesITPDFragment exception " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+
 
         if (getArguments() != null) {
             key_itpd = getArguments().getStringArrayList("key_itpd");
@@ -129,13 +133,12 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
         boolean isChanged = false;
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
-        if (key_itpd.indexOf("subscriptions")>=0)
-            val_itpd.set(key_itpd.indexOf("subscriptions"),sp.getString("subscriptions",""));
+        if (key_itpd.indexOf("subscriptions") >= 0)
+            val_itpd.set(key_itpd.indexOf("subscriptions"), sp.getString("subscriptions", ""));
 
 
-
-        for (int i=0;i<key_itpd.size();i++){
-            if(!(key_itpd_orig.get(i).equals(key_itpd.get(i))&&val_itpd_orig.get(i).equals(val_itpd.get(i)))&&!isChanged){
+        for (int i = 0; i < key_itpd.size(); i++) {
+            if (!(key_itpd_orig.get(i).equals(key_itpd.get(i)) && val_itpd_orig.get(i).equals(val_itpd.get(i))) && !isChanged) {
                 isChanged = true;
             }
 
@@ -144,38 +147,22 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                     key_itpd.set(i, "host");
                     break;
                 case "incoming port":
-                    key_itpd.set(i, "port");
-                    break;
-                case "ntcp2 enabled":
-                    key_itpd.set(i, "enabled");
-                    break;
-                case "http enabled":
-                    key_itpd.set(i, "enabled");
-                    break;
-                case "HTTP proxy":
-                    key_itpd.set(i, "enabled");
-                    break;
-                case "HTTP proxy port":
-                    key_itpd.set(i, "port");
-                    break;
-                case "Socks proxy":
-                    key_itpd.set(i, "enabled");
-                    break;
                 case "Socks proxy port":
-                    key_itpd.set(i, "port");
-                    break;
-                case "SAM interface":
-                    key_itpd.set(i, "enabled");
-                    break;
+                case "HTTP proxy port":
                 case "SAM interface port":
                     key_itpd.set(i, "port");
                     break;
+                case "ntcp2 enabled":
+                case "SAM interface":
+                case "Socks proxy":
+                case "http enabled":
+                case "HTTP proxy":
                 case "UPNP":
                     key_itpd.set(i, "enabled");
                     break;
             }
 
-            if(val_itpd.get(i).isEmpty()){
+            if (val_itpd.get(i).isEmpty()) {
                 itpd_conf.add(key_itpd.get(i));
             } else {
                 itpd_conf.add(key_itpd.get(i) + " = " + val_itpd.get(i));
@@ -183,29 +170,14 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
 
         }
 
-        if(!isChanged) return;
+        if (!isChanged) return;
 
-        FileOperations.writeToTextFile(getActivity(),appDataDir+"/app_data/i2pd/i2pd.conf",itpd_conf, SettingsActivity.itpd_conf_tag);
+        FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/i2pd/i2pd.conf", itpd_conf, SettingsActivity.itpd_conf_tag);
 
-        boolean rnI2PDWithRoot = sp.getBoolean("swUseModulesRoot",false);
         boolean itpdRunning = new PrefManager(getActivity()).getBoolPref("I2PD Running");
 
         if (itpdRunning) {
-            ModulesStatus.getInstance().setItpdRestarting(15);
-
-            String[] commandsEcho = new String[] {
-                    busyboxPath+ "killall i2pd"
-            };
-
-            runITPD();
-
-
-            RootCommands rootCommands  = new RootCommands(commandsEcho);
-            Intent intent = new Intent(getActivity(), RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands",rootCommands);
-            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
-            RootExecService.performAction(getActivity(),intent);
+            ModulesRestarter.restartITPD(getActivity());
         }
 
 
@@ -214,45 +186,36 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
         try {
-            if(Objects.equals(preference.getKey(), "Allow incoming connections")){
-                if (Boolean.valueOf(newValue.toString())){
-                    key_itpd.set(key_itpd.indexOf("#host"),"incoming host");
-                    key_itpd.set(key_itpd.indexOf("#port"),"incoming port");
+            if (Objects.equals(preference.getKey(), "Allow incoming connections")) {
+                if (Boolean.valueOf(newValue.toString())) {
+                    key_itpd.set(key_itpd.indexOf("#host"), "incoming host");
+                    key_itpd.set(key_itpd.indexOf("#port"), "incoming port");
                 } else {
-                    key_itpd.set(key_itpd.indexOf("incoming host"),"#host");
-                    key_itpd.set(key_itpd.indexOf("incoming port"),"#port");
+                    key_itpd.set(key_itpd.indexOf("incoming host"), "#host");
+                    key_itpd.set(key_itpd.indexOf("incoming port"), "#port");
                 }
                 return true;
-            } else if (Objects.equals(preference.getKey(), "Enable ntcpproxy")){
-                if (Boolean.valueOf(newValue.toString())){
-                    key_itpd.set(key_itpd.indexOf("#ntcpproxy"),"ntcpproxy");
+            } else if (Objects.equals(preference.getKey(), "Enable ntcpproxy")) {
+                if (Boolean.valueOf(newValue.toString())) {
+                    key_itpd.set(key_itpd.indexOf("#ntcpproxy"), "ntcpproxy");
                 } else {
-                    key_itpd.set(key_itpd.indexOf("ntcpproxy"),"#ntcpproxy");
+                    key_itpd.set(key_itpd.indexOf("ntcpproxy"), "#ntcpproxy");
                 }
                 return true;
             }
 
             if (key_itpd.contains(preference.getKey().trim())) {
-                val_itpd.set(key_itpd.indexOf(preference.getKey()),newValue.toString());
+                val_itpd.set(key_itpd.indexOf(preference.getKey()), newValue.toString());
                 return true;
             } else {
-                Toast.makeText(getActivity(),R.string.pref_itpd_not_exist,Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), R.string.pref_itpd_not_exist, Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(getActivity(),R.string.wrong,Toast.LENGTH_LONG).show();
+            Log.e(LOG_TAG, "PreferencesITPDFragment onPreferenceChange exception " + e.getMessage() + " " + e.getCause());
+            Toast.makeText(getActivity(), R.string.wrong, Toast.LENGTH_LONG).show();
         }
 
 
         return false;
-    }
-
-    private void runITPD() {
-
-        if (getActivity() == null) {
-            return;
-        }
-
-        ModulesRunner.runITPD(getActivity());
     }
 }

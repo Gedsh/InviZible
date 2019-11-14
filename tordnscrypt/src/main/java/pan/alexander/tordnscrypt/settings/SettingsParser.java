@@ -4,6 +4,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.preference.PreferenceManager;
+import android.util.Log;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 import pan.alexander.tordnscrypt.utils.fileOperations.OnTextFileOperationsCompleteListener;
 
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.writeToTextFile;
 
@@ -282,14 +284,25 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                 }
 
                 try {
-                    val_saved_str = Objects.requireNonNull(sp.getString(key, "")).trim();
+                    val_saved_str = sp.getString(key, "");
+
+                    if (val_saved_str != null) {
+                        val_saved_str = val_saved_str.trim();
+                    }
+
                 } catch (ClassCastException e) {
                     isbool = true;
-                    val_saved_bool = sp.getBoolean(key, false);
+
+                    try {
+                        val_saved_bool = sp.getBoolean(key, false);
+                    } catch (ClassCastException e1) {
+                        Log.e(LOG_TAG, "SettingsParser ClassCastException " + e1.getMessage() + " " + e1.getCause());
+                    }
+
                 }
 
 
-                if (!val_saved_str.isEmpty() && !val_saved_str.equals(val) && !isbool) {
+                if (val_saved_str != null && !val_saved_str.isEmpty() && !val_saved_str.equals(val) && !isbool) {
                     editor.putString(key, val);
                 } else if (isbool && val_saved_bool != Boolean.valueOf(val)) {
                     editor.putBoolean(key, Boolean.valueOf(val));
