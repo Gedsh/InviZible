@@ -50,6 +50,7 @@ import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.copyBinaryFile;
+import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.copyFolder;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.deleteFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
@@ -61,7 +62,7 @@ public class FileOperations {
     private static Map<String, List<String>> linesListMap = new HashMap<>();
     private static OnFileOperationsCompleteListener callback;
     private static Stack<OnFileOperationsCompleteListener> stackCallbacks;
-    private static final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private static ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     private BroadcastReceiver br = new BroadcastReceiver() {
         @Override
@@ -110,11 +111,11 @@ public class FileOperations {
                     File inFile = new File(inputPath + "/" + inputFile);
                     if (!inFile.canRead()) {
                         if (!inFile.setReadable(true)) {
-                            Log.w(LOG_TAG, "Unable to chmod file " + oldFile.toString());
+                            Log.w(LOG_TAG, "Unable to chmod file " + inFile.toString());
                             FileOperations fileOperations = new FileOperations();
                             fileOperations.restoreAccess(context, inFile.getPath());
                         } else if (!inFile.canRead()) {
-                            throw new IllegalStateException("Unable to chmod file " + oldFile.toString());
+                            throw new IllegalStateException("Unable to chmod file " + inFile.toString());
                         }
                     }
 
@@ -167,6 +168,9 @@ public class FileOperations {
             }
         };
 
+        if (executorService == null || executorService.isShutdown()) {
+            executorService = Executors.newSingleThreadExecutor();
+        }
         executorService.execute(runnable);
     }
 
@@ -196,7 +200,11 @@ public class FileOperations {
                     File inFile = new File(inputPath + "/" + inputFile);
                     if (!inFile.canRead()) {
                         if (!inFile.setReadable(true)) {
-                            throw new IllegalStateException("Unable to chmod file " + oldFile.toString());
+                            Log.w(LOG_TAG, "Unable to chmod file " + inFile.toString());
+                            FileOperations fileOperations = new FileOperations();
+                            fileOperations.restoreAccess(context, inFile.getPath());
+                        } else if (!inFile.canRead()) {
+                            throw new IllegalStateException("Unable to chmod file " + inFile.toString());
                         }
                     }
 
@@ -241,7 +249,104 @@ public class FileOperations {
             }
         };
 
+        if (executorService == null || executorService.isShutdown()) {
+            executorService = Executors.newSingleThreadExecutor();
+        }
         executorService.execute(runnable);
+    }
+
+    private static void copyBinaryFileSynchronous(final Context context, final String inputPath,
+                                                  final String inputFile, final String outputPath) {
+
+        try {
+
+            File dir = new File(outputPath);
+            if (!dir.isDirectory()) {
+                if (!dir.mkdirs() || !dir.setReadable(true) || !dir.setWritable(true)) {
+                    throw new IllegalStateException("Unable to create dir " + dir.toString());
+                }
+            }
+
+            File oldFile = new File(outputPath + "/" + inputFile);
+            if (oldFile.exists()) {
+                if (deleteFileSynchronous(context, outputPath, inputFile)) {
+                    throw new IllegalStateException("Unable to delete file " + oldFile.toString());
+                }
+            }
+
+            File inFile = new File(inputPath + "/" + inputFile);
+            if (!inFile.canRead()) {
+                if (!inFile.setReadable(true)) {
+                    Log.w(LOG_TAG, "Unable to chmod file " + inFile.toString());
+                    FileOperations fileOperations = new FileOperations();
+                    fileOperations.restoreAccess(context, inFile.getPath());
+                } else if (!inFile.canRead()) {
+                    throw new IllegalStateException("Unable to chmod file " + inFile.toString());
+                }
+            }
+
+            byte[] buffer = new byte[1024];
+            int read;
+
+            try (InputStream in = new FileInputStream(inputPath + "/" + inputFile);
+                 OutputStream out = new FileOutputStream(outputPath + "/" + inputFile)) {
+                while ((read = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, read);
+                }
+            }
+
+            File newFile = new File(outputPath + "/" + inputFile);
+            if (!newFile.exists()) {
+                throw new IllegalStateException("New file not exist " + oldFile.toString());
+            }
+
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "copyBinaryFileSynchronous function fault " + e.getMessage() + " " + e.getCause());
+        }
+
+    }
+
+    public static void copyFolderSynchronous(final Context context, final String inputPath, final String outputPath) {
+        try {
+
+            File inDir = new File(inputPath);
+            if (!inDir.canRead()) {
+                if (!inDir.setReadable(true)) {
+                    Log.w(LOG_TAG, "Unable to chmod dir " + inDir.toString());
+                    FileOperations fileOperations = new FileOperations();
+                    fileOperations.restoreAccess(context, inDir.getPath());
+                } else if (!inDir.canRead()) {
+                    throw new IllegalStateException("Unable to chmod dir " + inDir.toString());
+                }
+            }
+
+            File outDir = new File(outputPath+ "/" + inDir.getName());
+            if (!outDir.isDirectory()) {
+                if (!outDir.mkdirs()) {
+                    throw new IllegalStateException("Unable to create dir " + outDir.toString());
+                }
+            }
+
+            if (!outDir.setReadable(true) || !outDir.setWritable(true) || !outDir.setExecutable(true)) {
+                throw new IllegalStateException("Unable to chmod dir " + outDir.toString());
+            }
+
+            for (File file: inDir.listFiles()) {
+
+                if (file.isFile()) {
+                    copyBinaryFileSynchronous(context, inputPath, file.getName(), outDir.getCanonicalPath());
+                } else if (file.isDirectory()){
+                    copyFolderSynchronous(context, file.getCanonicalPath(), outDir.getCanonicalPath());
+                } else {
+                    throw new IllegalStateException("copyFolderSynchronous cannot copy "
+                            + inDir.toString() + " because this is no file and no dir");
+                }
+
+            }
+
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "copyFolderSynchronous function fault " + e.getMessage() + " " + e.getCause());
+        }
     }
 
     public static boolean deleteFileSynchronous(final Context context, final String inputPath, final String inputFile) {
@@ -317,6 +422,10 @@ public class FileOperations {
                 }
             }
         };
+
+        if (executorService == null || executorService.isShutdown()) {
+            executorService = Executors.newSingleThreadExecutor();
+        }
         executorService.execute(runnable);
     }
 
@@ -430,6 +539,9 @@ public class FileOperations {
             }
         };
 
+        if (executorService == null || executorService.isShutdown()) {
+            executorService = Executors.newSingleThreadExecutor();
+        }
         executorService.execute(runnable);
     }
 
@@ -489,6 +601,10 @@ public class FileOperations {
                 }
             }
         };
+
+        if (executorService == null || executorService.isShutdown()) {
+            executorService = Executors.newSingleThreadExecutor();
+        }
         executorService.execute(runnable);
     }
 
@@ -568,7 +684,7 @@ public class FileOperations {
         return result;
     }
 
-    private void restoreAccess(Context context, String filePath) {
+    public void restoreAccess(Context context, String filePath) {
         if (context != null) {
             IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
             context.registerReceiver(br, intentFilterBckgIntSer);
@@ -615,8 +731,8 @@ public class FileOperations {
         if (stackCallbacks != null && !stackCallbacks.empty())
             FileOperations.stackCallbacks.removeAllElements();
 
-        executorService.shutdown();
-        if (!executorService.isShutdown()) {
+        if (executorService != null && !executorService.isShutdown()) {
+            executorService.shutdown();
             try {
                 executorService.awaitTermination(10, TimeUnit.SECONDS);
             } catch (InterruptedException e) {

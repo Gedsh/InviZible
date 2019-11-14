@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.utils.enums;
 public enum FileOperationsVariants {
     moveBinaryFile,
     copyBinaryFile,
+    copyFolder,
     deleteFile,
     readTextFile,
     writeToTextFile
