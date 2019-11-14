@@ -15,16 +15,16 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission
-        android:name="android.permission.INTERACT_ACROSS_USERS"
+        android:name="android.permission.WRITE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
     <uses-permission
         android:name="android.permission.MANAGE_USERS"
         tools:ignore="ProtectedPermissions" />
     <uses-permission
-        android:name="android.permission.WRITE_SETTINGS"
+        android:name="android.permission.INTERACT_ACROSS_USERS"
         tools:ignore="ProtectedPermissions" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:allowBackup="true"
@@ -52,7 +52,7 @@
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".utils.modulesStarter.ModulesStarterService"
+            android:name=".utils.modulesManager.ModulesService"
             android:enabled="true"
             android:exported="false"/>
 

@@ -23,6 +23,7 @@ import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -34,6 +35,8 @@ import java.io.InputStream;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Objects;
+
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class AboutActivity extends LangAppCompatActivity implements View.OnClickListener {
 
@@ -135,12 +138,12 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            Log.e(LOG_TAG, "AboutActivity exception " + e.getMessage() + " " + e.getCause());
             try {
                 raw.close();
                 byteArrayOutputStream.close();
             } catch (IOException e1) {
-                e1.printStackTrace();
+                Log.e(LOG_TAG, "AboutActivity exception " + e1.getMessage() + " " + e1.getCause());
             }
         }
     }

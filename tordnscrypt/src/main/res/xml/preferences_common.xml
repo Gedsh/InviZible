@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<android.support.v7.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <PreferenceCategory android:title="@string/pref_common_categ_hotspot">
+<android.support.v7.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="pref_common">
+
+    <PreferenceCategory
+        android:title="@string/pref_common_categ_hotspot"
+        android:key="HOTSPOT">
 
         <SwitchPreference
             android:id="@+id/pref_common_tethering_autostart"
@@ -59,7 +63,8 @@
             android:summary="@string/pref_common_block_http_summ"
             android:title="@string/pref_common_block_http" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_common_categ_run_with_root">
+    <PreferenceCategory android:title="@string/pref_common_categ_run_with_root"
+        android:key="categoryUseModulesRoot">
         <SwitchPreference
             android:id="@+id/swUseModulesRoot"
             android:defaultValue="false"
@@ -67,7 +72,9 @@
             android:summary="@string/pref_common_run_with_root_summ"
             android:title="@string/pref_common_run_with_root" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_common_categ_other">
+    <PreferenceCategory
+        android:title="@string/pref_common_categ_other"
+        android:key="common_other">
 
         <SwitchPreference
             android:id="@+id/swShowNotification"

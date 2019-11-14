@@ -27,7 +27,7 @@ import android.util.Log;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 
-import static pan.alexander.tordnscrypt.TopFragment.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class InstallerReceiver extends BroadcastReceiver {
 

@@ -47,7 +47,7 @@ import pan.alexander.tordnscrypt.utils.fileOperations.ExternalStoragePermissions
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 import pan.alexander.tordnscrypt.utils.fileOperations.OnBinaryFileOperationsCompleteListener;
 
-import static pan.alexander.tordnscrypt.TopFragment.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.deleteFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
 

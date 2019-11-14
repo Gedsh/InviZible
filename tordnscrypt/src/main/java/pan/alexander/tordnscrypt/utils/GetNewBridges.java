@@ -210,7 +210,7 @@ public class GetNewBridges {
                     if (threadRequestBridges.isAlive())
                         threadRequestBridges.interrupt();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    Log.e(LOG_TAG, "GetNewBridges modernProgressDialog exception " + e.getMessage() + " " + e.getCause());
                 }
 
                 dialogInterface.cancel();

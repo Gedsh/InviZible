@@ -23,15 +23,12 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.FileProvider;
-import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 import android.util.SparseArray;
 
@@ -55,7 +52,8 @@ import javax.net.ssl.HttpsURLConnection;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.modulesStarter.ModulesRunner;
+import pan.alexander.tordnscrypt.utils.modulesManager.ModulesKiller;
+import pan.alexander.tordnscrypt.utils.modulesManager.ModulesRunner;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
@@ -64,8 +62,8 @@ import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.RootExecService.TopFragmentMark;
-import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UPDATED;
-import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UPDATING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTED;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 
 public class UpdateService extends Service {
     private static final String STOP_DOWNLOAD_ACTION = "pan.alexander.tordnscrypt.STOP_DOWNLOAD_ACTION";
@@ -76,7 +74,6 @@ public class UpdateService extends Service {
     private static final int READTIMEOUT = 60;
     private static final int CONNECTTIMEOUT = 60;
     private String appDataDir;
-    private String busyboxPath;
     private String iptablesPath;
     public static final String DOWNLOAD_ACTION = "pan.alexander.tordnscrypt.DOWNLOAD_ACTION";
     private final AtomicInteger currentNotificationId = new AtomicInteger(DEFAULT_NOTIFICATION_ID) ;
@@ -100,7 +97,6 @@ public class UpdateService extends Service {
         notificationManager = (NotificationManager) getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
         sparseArray = new SparseArray<>();
         appDataDir = pathVars.appDataDir;
-        busyboxPath = pathVars.busyboxPath;
         iptablesPath = pathVars.iptablesPath;
         currentModuleStatus = ModulesStatus.getInstance();
     }
@@ -423,45 +419,52 @@ public class UpdateService extends Service {
     private void stopRunningModules(String fileName) {
         String[] commandsStop = new String[0];
         if (fileName.contains("dnscrypt-proxy")) {
-            currentModuleStatus.setDnsCryptState(UPDATING);
+            currentModuleStatus.setDnsCryptState(RESTARTING);
             boolean dnsCryptRunning = new PrefManager(getApplicationContext()).getBoolPref("DNSCrypt Running");
             if (dnsCryptRunning) {
-                commandsStop = new String[]{
-                        busyboxPath + "killall dnscrypt-proxy"
-                };
+                ModulesKiller.stopDNSCrypt(this);
             }
         } else if (fileName.contains("tor")) {
-            currentModuleStatus.setTorState(UPDATING);
+            currentModuleStatus.setTorState(RESTARTING);
             boolean torRunning = new PrefManager(getApplicationContext()).getBoolPref("Tor Running");
             if (torRunning) {
                 while (sparseArray.size() > 1) {
                     makeDelay(5);
                 }
-                commandsStop = new String[]{
-                        busyboxPath + "killall tor"
-                };
+                ModulesKiller.stopTor(this);
             }
         } else if (fileName.contains("i2pd")) {
-            currentModuleStatus.setItpdState(UPDATING);
+            currentModuleStatus.setItpdState(RESTARTING);
             boolean itpdRunning = new PrefManager(getApplicationContext()).getBoolPref("I2PD Running");
             if (itpdRunning) {
-                commandsStop = new String[]{
-                        busyboxPath + "killall i2pd"
-                };
+                ModulesKiller.stopITPD(this);
             }
         } else if (fileName.contains("InviZible")) {
 
-            saveAllModulesStopped(getApplicationContext());
+            boolean dnsCryptRunning = new PrefManager(this).getBoolPref("DNSCrypt Running");
+            boolean torRunning = new PrefManager(this).getBoolPref("Tor Running");
+            boolean itpdRunning = new PrefManager(this).getBoolPref("I2PD Running");
+
+            if (dnsCryptRunning) {
+                new PrefManager(this).setBoolPref("DNSCrypt Running", false);
+                ModulesKiller.stopDNSCrypt(this);
+            }
+
+            if (torRunning) {
+                new PrefManager(this).setBoolPref("Tor Running", false);
+                ModulesKiller.stopTor(this);
+            }
+
+            if (itpdRunning) {
+                new PrefManager(this).setBoolPref("I2PD Running", false);
+                ModulesKiller.stopITPD(this);
+            }
 
             commandsStop = new String[]{
                     iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
                     iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
                     iptablesPath + "iptables -F tordnscrypt",
                     iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
-                    busyboxPath + "sleep 1",
-                    busyboxPath + "killall dnscrypt-proxy",
-                    busyboxPath + "killall tor",
-                    busyboxPath + "killall i2pd"
             };
         }
 
@@ -470,7 +473,7 @@ public class UpdateService extends Service {
             Intent intent = new Intent(getApplicationContext(), RootExecService.class);
             intent.setAction(RootExecService.RUN_COMMAND);
             intent.putExtra("Commands", rootCommands);
-            intent.putExtra("Mark", RootExecService.SettingsActivityMark);
+            intent.putExtra("Mark", RootExecService.NullMark);
             RootExecService.performAction(getApplicationContext(), intent);
 
             makeDelay(3);
@@ -480,8 +483,6 @@ public class UpdateService extends Service {
     private void runPreviousStoppedModules(String fileName) {
         if (fileName.contains("dnscrypt-proxy")) {
             boolean dnsCryptRunning = new PrefManager(getApplicationContext()).getBoolPref("DNSCrypt Running");
-            SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-            boolean runDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot", false);
             if (dnsCryptRunning) {
 
                 makeDelay(3);
@@ -490,12 +491,10 @@ public class UpdateService extends Service {
 
                 makeDelay(10);
 
-                currentModuleStatus.setDnsCryptState(UPDATED);
+                currentModuleStatus.setDnsCryptState(RESTARTED);
             }
 
         } else if (fileName.contains("tor")) {
-            SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-            boolean rnTorWithRoot = shPref.getBoolean("swUseModulesRoot", false);
             boolean torRunning = new PrefManager(getApplicationContext()).getBoolPref("Tor Running");
             if (torRunning) {
 
@@ -505,12 +504,10 @@ public class UpdateService extends Service {
 
                 makeDelay(10);
 
-                currentModuleStatus.setTorState(UPDATED);
+                currentModuleStatus.setTorState(RESTARTED);
             }
 
         } else if (fileName.contains("i2pd")) {
-            SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-            boolean rnI2PDWithRoot = shPref.getBoolean("swUseModulesRoot", false);
             boolean itpdRunning = new PrefManager(getApplicationContext()).getBoolPref("I2PD Running");
             if (itpdRunning) {
 
@@ -520,7 +517,7 @@ public class UpdateService extends Service {
 
                 makeDelay(10);
 
-                currentModuleStatus.setItpdState(UPDATED);
+                currentModuleStatus.setItpdState(RESTARTED);
 
 
             }
@@ -551,12 +548,6 @@ public class UpdateService extends Service {
         } catch (Exception e) {
             Log.e(LOG_TAG, "Unable to remove old InviZible.apk file during update" + e.getMessage() + " " + e.getCause());
         }
-    }
-
-    private void saveAllModulesStopped(Context context) {
-        new PrefManager(context).setBoolPref("DNSCrypt Running", false);
-        new PrefManager(context).setBoolPref("Tor Running", false);
-        new PrefManager(context).setBoolPref("I2PD Running", false);
     }
 
     private void makeDelay(int sec) {

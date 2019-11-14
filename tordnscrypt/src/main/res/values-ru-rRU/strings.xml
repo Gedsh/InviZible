@@ -32,14 +32,10 @@
     <string name="cancel">Отмена</string>
     <string name="error">Ошибка!</string>
     <string name="warning">Предупреждение!</string>
-    <string name="sorry">Прошу прощения!</string>
-    <string name="check_root">Вы не можете использовать это приложение без root прав. Пожалуйста убедитесь, что ваше устройство рутированно!</string>
     <string name="install">Установить</string>
     <string name="exit">Выход</string>
     <string name="wrong">Что-то пошло не так!</string>
-    <string name="install_title">Вы хотите завершить установку?</string>
-    <string name="no_bb">Пожалуйста, установите BusyBox!</string>
-    <string name="install_bb">Пожалуйста, установите BusyBox и перезапустите приложение! Установить его с  PlayMarket?</string>
+    <string name="install_message">Вы хотите завершить установку?</string>
     <string name="write_file_error">Ошибка при сохранении файла!</string>
     <string name="drawer_menu_commonSettings">Общие настройки</string>
     <string name="drawer_menu_DNSSettings">Настройки DNS Crypt</string>
@@ -380,4 +376,7 @@
     <string name="update_wrong_code">Похоже Ваш PRO код неверный. Пожалуйста, свяжитесь с разработчиком.</string>
     <string name="pref_common_wakelock">Запретить сон устройства</string>
     <string name="pref_common_wakelock_summ">Дополнительная защита в Безрутовом Режиме, чтоб андроид не закрыл приложение. Может привести к повышенному разряду батареи</string>
+    <string name="install_title_no_root">Рут отсутствует</string>
+    <string name="install_title_root">Рут разрешен</string>
+    <string name="message_no_root_used">Рут доступ не предоставлен. Поэтому вы можете использовать только приложения с функцией прокси вместе с InviZible Pro!</string>
 </resources>

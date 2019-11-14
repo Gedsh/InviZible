@@ -37,7 +37,10 @@
                 android:targetPackage="@string/package_name" />
         </Preference>
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_fast_tor">
+    <PreferenceCategory
+        android:title="@string/pref_fast_tor"
+        android:key="Tor Settings">
+
         <SwitchPreference
             android:id="@+id/pref_fast_all_through_tor"
             android:defaultValue="true"
@@ -117,7 +120,9 @@
             android:summary="@string/pref_fast_chek_update_summ">
         </Preference>
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_common_categ_other">
+    <PreferenceCategory
+        android:title="@string/pref_common_categ_other"
+        android:key="fast_other">
         <SwitchPreference
             android:defaultValue="false"
             android:key="pref_fast_block_http"

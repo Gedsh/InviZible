@@ -23,8 +23,11 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.support.v7.preference.PreferenceManager;
+import android.util.Log;
 
 import java.util.Locale;
+
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class Language {
     private static Locale mOriginalLocale;
@@ -66,7 +69,9 @@ public class Language {
      */
     private static void setFromPreference(final ContextWrapper context, final String languagePreferenceKey, final boolean forceUpdate, final SharedPreferences prefs) {
         final String languageCode = prefs.getString(languagePreferenceKey, "");
-        set(context, languageCode, forceUpdate);
+        if (languageCode != null) {
+            set(context, languageCode, forceUpdate);
+        }
     }
 
     /**
@@ -130,7 +135,7 @@ public class Language {
                 }
             }
             catch (Exception e) {
-                e.printStackTrace();
+                Log.e(LOG_TAG, "Language Set exception " + e.getMessage() + " " + e.getCause());
             }
         }
     }

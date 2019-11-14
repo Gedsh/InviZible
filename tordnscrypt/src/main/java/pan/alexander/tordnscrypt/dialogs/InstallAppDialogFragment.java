@@ -20,6 +20,7 @@ package pan.alexander.tordnscrypt.dialogs;
 */
 
 import android.content.DialogInterface;
+import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 
@@ -42,8 +43,8 @@ public class InstallAppDialogFragment extends ExtendedDialogFragment {
         }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
-        builder.setMessage(R.string.install_title)
-                .setTitle(R.string.install)
+        builder.setMessage(R.string.install_message)
+                .setTitle(getString(R.string.install))
                 .setPositiveButton(R.string.install, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

@@ -27,19 +27,16 @@ import java.util.concurrent.TimeUnit;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
-import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTED;
-import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
-import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
-import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
 public final class ModulesStatus {
 
-    private volatile ModuleState dnsCryptState = STOPPED;
-    private volatile ModuleState torState = STOPPED;
-    private volatile ModuleState itpdState = STOPPED;
+    private ModuleState dnsCryptState = STOPPED;
+    private ModuleState torState = STOPPED;
+    private ModuleState itpdState = STOPPED;
 
-    private boolean useModulesWithRoot;
+    private volatile boolean rootAvailable = false;
+    private volatile boolean useModulesWithRoot;
 
     private static volatile ModulesStatus modulesStatus;
 
@@ -72,77 +69,39 @@ public final class ModulesStatus {
 
     }
 
-    public ModuleState getDnsCryptState() {
+    public synchronized ModuleState getDnsCryptState() {
         return dnsCryptState;
     }
 
-    public ModuleState getTorState() {
+    public synchronized ModuleState getTorState() {
         return torState;
     }
 
-    public ModuleState getItpdState() {
+    public synchronized ModuleState getItpdState() {
         return itpdState;
     }
 
-    public void setDnsCryptState(ModuleState dnsCryptState) {
+    public synchronized void setDnsCryptState(ModuleState dnsCryptState) {
         this.dnsCryptState = dnsCryptState;
     }
 
-    public void setTorState(ModuleState torState) {
+    public synchronized void setTorState(ModuleState torState) {
         this.torState = torState;
     }
 
-    public void setItpdState(ModuleState itpdState) {
+    public synchronized void setItpdState(ModuleState itpdState) {
         this.itpdState = itpdState;
-    }
-
-    public void setDnsCryptRestarting(final int timeSec) {
-
-        setDnsCryptState(RESTARTING);
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    TimeUnit.SECONDS.sleep(timeSec);
-                    setDnsCryptState(RESTARTED);
-                } catch (InterruptedException ignored){}
-
-            }
-        }).start();
-    }
-
-    public void setTorRestarting(final int timeSec) {
-        setTorState(RESTARTING);
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    TimeUnit.SECONDS.sleep(timeSec);
-                    if (getTorState() != RUNNING) {
-                        setTorState(STARTING);
-                    }
-                } catch (InterruptedException ignored){}
-            }
-        }).start();
-    }
-
-    public void setItpdRestarting(final int timeSec) {
-        setItpdState(RESTARTING);
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    TimeUnit.SECONDS.sleep(timeSec);
-                    setItpdState(RESTARTED);
-                } catch (InterruptedException ignored){}
-            }
-        }).start();
     }
 
     public boolean isUseModulesWithRoot() {
         return useModulesWithRoot;
+    }
+
+    public boolean isRootAvailable() {
+        return rootAvailable;
+    }
+
+    public void setRootAvailable(boolean rootIsAvailable) {
+        this.rootAvailable = rootIsAvailable;
     }
 }

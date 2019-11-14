@@ -34,7 +34,7 @@ import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 
-import static pan.alexander.tordnscrypt.TopFragment.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 class BackupHelper {
     private Context context;

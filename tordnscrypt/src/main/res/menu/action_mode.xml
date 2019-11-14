@@ -2,6 +2,11 @@
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
     <item
+        android:id="@+id/item_root"
+        android:icon="@drawable/ic_vpn_key_white_24dp"
+        android:title="Root"
+        app:showAsAction="ifRoom" />
+    <item
         android:id="@+id/item_hotspot"
         android:icon="@drawable/ic_portable_wifi_off_white_24dp"
         android:title="@string/action_mode_hotspot"

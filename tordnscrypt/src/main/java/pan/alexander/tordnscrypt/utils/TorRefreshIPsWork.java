@@ -74,8 +74,8 @@ public class TorRefreshIPsWork {
     }
 
     public void refreshIPs() {
-        boolean rootOK = new PrefManager(context.getApplicationContext()).getBoolPref("rootOK");
-        if (!rootOK) return;
+        boolean rootIsAvailable = new PrefManager(context.getApplicationContext()).getBoolPref("rootIsAvailable");
+        if (!rootIsAvailable) return;
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
         torTethering = shPref.getBoolean("pref_common_tor_tethering",false);
@@ -346,7 +346,7 @@ public class TorRefreshIPsWork {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    Log.e(LOG_TAG, "TorRefreshIPsWork interrupt exception " + e.getMessage() + " " + e.getCause());
                 }
 
                 RootCommands rootCommands = new RootCommands(commandsSaveIPs);
@@ -411,7 +411,7 @@ public class TorRefreshIPsWork {
                 preparedIPs.add(address.getHostAddress());
             }
         } catch (UnknownHostException | MalformedURLException e) {
-            e.printStackTrace();
+            Log.e(LOG_TAG, "TorRefreshIPsWork handleActionGetIP exception " + e.getMessage() + " " + e.getCause());
         }
         return preparedIPs;
     }

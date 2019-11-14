@@ -7,7 +7,7 @@
     android:orientation="vertical"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".MainActivity"
-    tools:showIn="@layout/app_bar_main_alt">
+    tools:showIn="@layout/app_bar_main">
 
     <LinearLayout
         android:layout_width="match_parent"

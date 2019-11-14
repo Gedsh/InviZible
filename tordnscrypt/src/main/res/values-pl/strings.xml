@@ -43,15 +43,10 @@
     <string name="cancel">Anuluj</string>
     <string name="error">Blad!</string>
     <string name="warning">Ostrzezenie!</string>
-    <string name="sorry">Przepraszam!</string>
-    <string name="check_root">Nie mozesz uzywac tej aplikacji bez praw Roota. Upewnij sie ze urzadzenie jest zrootowane!</string>
     <string name="install">Instaluj</string>
     <string name="exit">Wyjdz</string>
     <string name="wrong">Cos poszlo zle!</string>
-    <string name="install_title">Czy chcesz dokonczyc instalacje?</string>
-
-    <string name="no_bb">Prosze zainstalowac BusyBox!</string>
-    <string name="install_bb">Prosze zainstalowac BusyBox i zrestartowac apke! Zainstalowac ze Sklepu Google?</string>
+    <string name="install_message">Czy chcesz dokonczyc instalacje?</string>
 
     <string name="write_file_error">Blad zapisu pliku!</string>
 
@@ -457,4 +452,7 @@
         za wsparcie. Czy chcialbys pobrac i wykonac upgrade do wersji PRO? Aktualizacja będzie kontynuowana w tle.</string>
     <string name="pref_common_wakelock_summ">Dodatkowa ochrona bez trybu rootowania, aby zapobiec śmierci aplikacji przez Androida. Może wyczerpać baterię</string>
     <string name="pref_common_wakelock">Zapobiegaj uśpieniu urządzenia</string>
+    <string name="install_title_no_root">Odmowa roota</string>
+    <string name="install_title_root">Root dostepny</string>
+    <string name="message_no_root_used">" Dostęp root nie został przyznany. Możesz więc korzystać z aplikacji z funkcją proxy tylko dla InviZible Pro!"</string>
 </resources>

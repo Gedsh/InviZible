@@ -59,16 +59,16 @@
     <string name="cancel">Cancel</string>
     <string name="error">Error!</string>
     <string name="warning">Warning!</string>
-    <string name="sorry">My apologies!</string>
-    <string name="check_root">But You can not use this application without root permissions. Pls ensure first that your device is rooted!</string>
     <string name="no_root" translatable="false">NO ROOT!</string>
     <string name="install">Install</string>
     <string name="exit">Exit</string>
     <string name="wrong">Something went wrong!</string>
-    <string name="install_title">Do you want to complete installation?</string>
+    <string name="install_message">Do you want to complete installation?</string>
+    <string name="install_title_root">Root granted</string>
+    <string name="install_title_no_root">Root denied</string>
 
-    <string name="no_bb">Pls install BusyBox!</string>
-    <string name="install_bb">Pls install BusyBox and restart application! Install it from Google PlayMarket?</string>
+    <string name="message_no_root_used">Root access was not granted.
+        So you can use applications with proxy feature only for InviZible Pro!</string>
 
     <string name="write_file_error">Save file Error!</string>
 

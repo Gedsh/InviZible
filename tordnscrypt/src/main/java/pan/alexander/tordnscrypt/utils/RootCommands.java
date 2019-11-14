@@ -1,4 +1,5 @@
 package pan.alexander.tordnscrypt.utils;
+
 /*
     This file is part of InviZible Pro.
 
@@ -33,9 +34,4 @@ public class RootCommands implements Serializable {
     public String[] getCommands() {
         return this.commands;
     }
-
-    //public void setCommands(String[] name) {
-        //this.commands = commands;
-    //}
-
 }

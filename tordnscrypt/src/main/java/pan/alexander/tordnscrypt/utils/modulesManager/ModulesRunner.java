@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.utils.modulesStarter;
+package pan.alexander.tordnscrypt.utils.modulesManager;
 
 /*
     This file is part of InviZible Pro.
@@ -31,23 +31,23 @@ public class ModulesRunner {
     }
 
     public static void runDNSCrypt(Context context) {
-       sendStarterIntent(context, ModulesStarterService.actionStartDnsCrypt);
+       sendStarterIntent(context, ModulesService.actionStartDnsCrypt);
     }
 
     public static void runTor(Context context) {
-        sendStarterIntent(context, ModulesStarterService.actionStartTor);
+        sendStarterIntent(context, ModulesService.actionStartTor);
     }
 
     public static void runITPD(Context context) {
-        sendStarterIntent(context, ModulesStarterService.actionStartITPD);
+        sendStarterIntent(context, ModulesService.actionStartITPD);
     }
 
     public static void recoverService(Context context) {
-        sendStarterIntent(context, ModulesStarterService.actionRecoverService);
+        sendStarterIntent(context, ModulesService.actionRecoverService);
     }
 
     private static void sendStarterIntent(Context context, String action) {
-        Intent intent = new Intent(context, ModulesStarterService.class);
+        Intent intent = new Intent(context, ModulesService.class);
         intent.setAction(action);
         intent.putExtra("showNotification", isShowNotification(context));
 

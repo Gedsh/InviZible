@@ -1,4 +1,5 @@
 package pan.alexander.tordnscrypt.utils;
+
 /*
     This file is part of InviZible Pro.
 
@@ -187,7 +188,8 @@ public class ApManager {
                     false);
         } catch (NoSuchMethodException e) {
             // Newer devices have "callingPkg" String argument at the end of this method.
-            @SuppressLint("SoonBlockedPrivateApi") Method startTetheringMethod = internalConnectivityManagerClass.getDeclaredMethod("startTethering",
+            @SuppressLint("SoonBlockedPrivateApi")
+            Method startTetheringMethod = internalConnectivityManagerClass.getDeclaredMethod("startTethering",
                     int.class,
                     ResultReceiver.class,
                     boolean.class,
@@ -200,110 +202,4 @@ public class ApManager {
                     context.getString(R.string.package_name));
         }
     }
-
-    /*
-
-    public void launchHotspotSettings(){
-        try {
-            final Intent intent = new Intent(Intent.ACTION_MAIN, null);
-            intent.addCategory(Intent.CATEGORY_LAUNCHER);
-            final ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.Settings$TetherSettingsActivity");
-            intent.setComponent(cn);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity( intent);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
-
-
-    public String getHotspotName() {
-        WifiConfiguration netConfig;
-        if (wifiManager != null) {
-            try {
-
-                wifiManager.getClass().getMethod("getWifiApConfiguration");
-                Method wifiApConfigurationMethod;
-                wifiApConfigurationMethod = wifiManager.getClass().getMethod("getWifiApConfiguration");
-                try {
-                    netConfig = (WifiConfiguration)wifiApConfigurationMethod.invoke(wifiManager);
-                    //return netConfig.SSID;
-                    return netConfig.SSID;
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                } catch (InvocationTargetException e) {
-                    e.printStackTrace();
-                }
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            }
-        }
-        return null;
-    }
-
-
-    public String getHotspotPassword() {
-        WifiConfiguration netConfig;
-        if (wifiManager != null) {
-            try {
-                Method wifiApConfigurationMethod;
-                wifiApConfigurationMethod = wifiManager.getClass().getMethod("getWifiApConfiguration");
-                try {
-                    netConfig = (WifiConfiguration)wifiApConfigurationMethod.invoke(wifiManager);
-                    return netConfig.preSharedKey;
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                } catch (InvocationTargetException e) {
-                    e.printStackTrace();
-                }
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            }
-        }
-        return null;
-    }
-
-    public String getCurrentChanel() {
-        WifiConfiguration netConfig;
-        if (wifiManager != null) {
-            try {
-                Method wifiApConfigurationMethod;
-                wifiApConfigurationMethod = wifiManager.getClass().getMethod("getWifiApConfiguration");
-                netConfig = (WifiConfiguration)wifiApConfigurationMethod.invoke(wifiManager);
-                Field wcFreq = WifiConfiguration.class.getField("apChannel");
-                int val = wcFreq.getInt(netConfig);
-                return String.valueOf(val);
-                StringBuilder text= new StringBuilder("NO");
-                Field[] wcefFields = WifiConfiguration.class.getFields();
-                for (Field field:wcefFields) {
-                    text.append(field.getName()).append(" ");
-                }
-                return text.toString();
-            } catch (IllegalAccessException | NoSuchFieldException | NoSuchMethodException | InvocationTargetException e) {
-                e.printStackTrace();
-            }
-        }
-        return null;
-    }
-
-    public void setChannel() {
-        WifiConfiguration netConfig;
-        if (wifiManager != null) {
-            try {
-                Method wifiApConfigurationMethod;
-                wifiApConfigurationMethod = wifiManager.getClass().getMethod("getWifiApConfiguration");
-                netConfig = (WifiConfiguration)wifiApConfigurationMethod.invoke(wifiManager);
-
-                Field wcBand = WifiConfiguration.class.getField("apBand");
-                wcBand.setInt(netConfig, 2); // 2Ghz
-
-                Field wcFreq = WifiConfiguration.class.getField("apChannel");
-                wcFreq.setInt(netConfig,11); // channel 11
-                //wifiManager.saveConfiguration();
-            } catch (IllegalAccessException | NoSuchFieldException | NoSuchMethodException | InvocationTargetException e) {
-                e.printStackTrace();
-            }
-        }
-    }*/
 }

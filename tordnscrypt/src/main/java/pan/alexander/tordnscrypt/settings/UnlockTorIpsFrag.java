@@ -106,9 +106,7 @@ public class UnlockTorIpsFrag extends Fragment {
     String deviceOrTether = "";
 
 
-    public UnlockTorIpsFrag() {
-        // Required empty public constructor
-    }
+    public UnlockTorIpsFrag() {}
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -479,7 +477,7 @@ public class UnlockTorIpsFrag extends Fragment {
         Intent intent = new Intent(getActivity(), RootExecService.class);
         intent.setAction(RootExecService.RUN_COMMAND);
         intent.putExtra("Commands", rootCommands);
-        intent.putExtra("Mark", RootExecService.SettingsActivityMark);
+        intent.putExtra("Mark", RootExecService.NullMark);
         RootExecService.performAction(getActivity(), intent);
     }
 
@@ -952,7 +950,7 @@ public class UnlockTorIpsFrag extends Fragment {
             } catch (UnknownHostException | MalformedURLException e) {
                 String ip = getString(R.string.pref_fast_unlock_host_wrong);
                 unlockHostIP.set(position, new HostIP(host, ip, true, false, active));
-                e.printStackTrace();
+                Log.e(LOG_TAG, "UnlockTorIpsFrag getHostOrIp exception " + e.getMessage() + " " + e.getCause());
 
                 Objects.requireNonNull(getActivity()).runOnUiThread(new Runnable() {
                     @Override
@@ -1011,7 +1009,7 @@ public class UnlockTorIpsFrag extends Fragment {
             } catch (IOException e) {
                 host = "";
                 unlockHostIP.set(position, new HostIP(host, IP, false, true, active));
-                e.printStackTrace();
+                Log.e(LOG_TAG, "UnlockTorIpsFrag getHostOrIp exception " + e.getMessage() + " " + e.getCause());
 
                 Objects.requireNonNull(getActivity()).runOnUiThread(new Runnable() {
                     @Override

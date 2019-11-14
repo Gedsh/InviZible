@@ -45,7 +45,7 @@ import pan.alexander.tordnscrypt.settings.UnlockTorAppsFragment;
 import pan.alexander.tordnscrypt.settings.UnlockTorIpsFrag;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 
-import static pan.alexander.tordnscrypt.TopFragment.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 
 public class SettingsActivity extends LangAppCompatActivity

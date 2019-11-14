@@ -36,7 +36,7 @@ import android.view.ViewGroup;
 
 import java.util.Objects;
 
-import static pan.alexander.tordnscrypt.TopFragment.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public abstract class ExtendedDialogFragment extends DialogFragment {
 
