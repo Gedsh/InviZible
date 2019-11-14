@@ -75,8 +75,13 @@ Depending on rooting method and device specifics application can be incompatible
 
 ## Support
 
-For questions, feature requests and bug reports, you can use GitHub or site [invizible.net](https://invizible.net/ru)
- for Russian-speaking users at the moment.
+For questions, feature requests and bug reports, you can use GitHub.
+ 
+Telegram channel: [InviZiblePro](https://t.me/InviZiblePro)
+
+Telegram group: [InviZiblePro_Group](https://t.me/InviZiblePro_Group)
+
+Site [invizible.net](https://invizible.net/ru) for Russian-speaking users at the moment.
 
 There is support for the latest version of **InviZible Pro** only.
 
