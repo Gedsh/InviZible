@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.utils.modulesManager;
+package pan.alexander.tordnscrypt.modulesManager;
 
 /*
     This file is part of InviZible Pro.
@@ -29,22 +29,21 @@ import com.jrummyapps.android.shell.CommandResult;
 import com.jrummyapps.android.shell.Shell;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
-import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.COMMAND_RESULT;
 import static pan.alexander.tordnscrypt.utils.RootExecService.DNSCryptRunFragmentMark;
 import static pan.alexander.tordnscrypt.utils.RootExecService.I2PDRunFragmentMark;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.RootExecService.TorRunFragmentMark;
-import static pan.alexander.tordnscrypt.utils.modulesManager.ModulesService.DNSCRYPT_KEYWORD;
-import static pan.alexander.tordnscrypt.utils.modulesManager.ModulesService.ITPD_KEYWORD;
-import static pan.alexander.tordnscrypt.utils.modulesManager.ModulesService.TOR_KEYWORD;
+import static pan.alexander.tordnscrypt.modulesManager.ModulesService.DNSCRYPT_KEYWORD;
+import static pan.alexander.tordnscrypt.modulesManager.ModulesService.ITPD_KEYWORD;
+import static pan.alexander.tordnscrypt.modulesManager.ModulesService.TOR_KEYWORD;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 
 class ModulesStarterHelper {
 
@@ -52,13 +51,13 @@ class ModulesStarterHelper {
     private final Handler handler;
     private final PathVars pathVars;
 
-    private boolean useModulesWithRoot;
+    private ModulesStatus modulesStatus;
 
     ModulesStarterHelper(Context context, Handler handler, PathVars pathVars) {
         this.context = context;
         this.handler = handler;
         this.pathVars = pathVars;
-        this.useModulesWithRoot = ModulesStatus.getInstance().isUseModulesWithRoot();
+        this.modulesStatus = ModulesStatus.getInstance();
     }
 
     Runnable getDNSCryptStarterRunnable() {
@@ -68,11 +67,9 @@ class ModulesStarterHelper {
                 //new experiment
                 android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
 
-                makeDelay(3);
-
                 String dnsCmdString;
                 final CommandResult shellResult;
-                if (useModulesWithRoot) {
+                if (modulesStatus.isUseModulesWithRoot()) {
 
                     dnsCmdString = pathVars.busyboxPath + "nohup " + pathVars.dnscryptPath + " --config " + pathVars.appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml >/dev/null 2>&1 &";
                     String waitString = pathVars.busyboxPath + "sleep 3";
@@ -93,11 +90,17 @@ class ModulesStarterHelper {
 
                 if (!shellResult.isSuccessful()) {
                     sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
+
                     Log.e(LOG_TAG, "Error DNSCrypt: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
+
+                    if (modulesStatus.getDnsCryptState() == STOPPING || modulesStatus.getDnsCryptState() == STOPPED) {
+                        return;
+                    }
+
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(context, "Error DNSCrypt: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout(), Toast.LENGTH_LONG).show();
+                            Toast.makeText(context, "DNSCrypt Module Fault: " + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr() + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show();
                         }
                     });
                 }
@@ -112,11 +115,9 @@ class ModulesStarterHelper {
                 //new experiment
                 android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
 
-                makeDelay(3);
-
                 String torCmdString;
                 final CommandResult shellResult;
-                if (useModulesWithRoot) {
+                if (modulesStatus.isUseModulesWithRoot()) {
 
                     correctTorConfRunAsDaemon(context, pathVars.appDataDir, true);
 
@@ -140,11 +141,17 @@ class ModulesStarterHelper {
 
                 if (!shellResult.isSuccessful()) {
                     sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
+
                     Log.e(LOG_TAG, "Error Tor: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
+
+                    if (modulesStatus.getTorState() == STOPPING || modulesStatus.getTorState() == STOPPED) {
+                        return;
+                    }
+
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(context, "Error Tor: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout(), Toast.LENGTH_LONG).show();
+                            Toast.makeText(context, "Tor Module Fault: " + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr() + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show();
                         }
                     });
                 }
@@ -159,12 +166,10 @@ class ModulesStarterHelper {
                 //new experiment
                 android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
 
-                makeDelay(3);
-
                 String itpdCmdString;
 
                 final CommandResult shellResult;
-                if (useModulesWithRoot) {
+                if (modulesStatus.isUseModulesWithRoot()) {
                     correctITPDConfRunAsDaemon(context, pathVars.appDataDir, true);
 
                     Shell.SU.run(pathVars.busyboxPath + "mkdir -p " + pathVars.appDataDir + "/i2pd_data",
@@ -190,12 +195,19 @@ class ModulesStarterHelper {
                 }
 
                 if (!shellResult.isSuccessful()) {
+
                     sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
+
                     Log.e(LOG_TAG, "Error ITPD: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
+
+                    if (modulesStatus.getItpdState() == STOPPING || modulesStatus.getItpdState()  == STOPPED) {
+                        return;
+                    }
+
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(context, "Error ITPD: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout(), Toast.LENGTH_LONG).show();
+                            Toast.makeText(context, "Purple I2P Module Fault: " + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr() + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show();
                         }
                     });
                 }
@@ -236,14 +248,6 @@ class ModulesStarterHelper {
                 }
                 return;
             }
-        }
-    }
-
-    private void makeDelay(int sec) {
-        try {
-            TimeUnit.SECONDS.sleep(sec);
-        } catch (InterruptedException e) {
-            Log.e(LOG_TAG, "ModulesStarterHelper makeDelay interrupted! " + e.getMessage() + " " + e.getCause());
         }
     }
 
