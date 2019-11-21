@@ -56,12 +56,16 @@ import java.util.TimerTask;
 import pan.alexander.tordnscrypt.backup.BackupActivity;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.help.HelpActivity;
+import pan.alexander.tordnscrypt.iptables.IptablesRules;
+import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
+import pan.alexander.tordnscrypt.modulesManager.ModulesKiller;
+import pan.alexander.tordnscrypt.modulesManager.ModulesRestarter;
+import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.ApManager;
 import pan.alexander.tordnscrypt.utils.AppExitDetectService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Registration;
-import pan.alexander.tordnscrypt.utils.RootExecService;
-import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
+import pan.alexander.tordnscrypt.modulesManager.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
@@ -90,6 +94,9 @@ public class MainActivity extends LangAppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -215,11 +222,6 @@ public class MainActivity extends LangAppCompatActivity
 
     @Override
     public void onBackPressed() {
-        if (RootExecService.lockStartStop) {
-            Toast.makeText(this, R.string.please_wait, Toast.LENGTH_SHORT).show();
-            return;
-        }
-
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
@@ -228,83 +230,78 @@ public class MainActivity extends LangAppCompatActivity
         }
     }
 
-    /*@Override
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
-        boolean show_com_res = new PrefManager(this).getBoolPref("Show com result");
-        if(show_com_res){
-            menu.findItem(R.id.menu_com_result).setChecked(true);
-        } else {
-            menu.findItem(R.id.menu_com_result).setChecked(false);
-        }
         return true;
     }
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-
-        return super.onPrepareOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-
-        switch (id){
-            case R.id.menu_com_result:
-
-                break;
-            case R.id.menu_dns_scr:
-
-                break;
-            case R.id.menu_tor_scr:
-
-                break;
-            case R.id.menu_hide_dns_scr:
-
-                break;
-            case R.id.menu_hide_tor_scr:
-                break;
-        }
-
-
-        return super.onOptionsItemSelected(item);
-    }*/
-
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.action_mode, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
+        boolean rootIsAvailable = new PrefManager(this).getBoolPref("rootIsAvailable");
         boolean busyBoxIsAvailable = new PrefManager(this).getBoolPref("bbOK");
+        boolean rootMode = new PrefManager(this).getBoolPref("root_mode");
+        boolean proxyMode = new PrefManager(this).getBoolPref("proxies_mode");
 
-        if (ModulesStatus.getInstance().isRootAvailable()) {
-            if (busyBoxIsAvailable) {
-                menu.findItem(R.id.item_root).setIcon(R.drawable.ic_done_all_white_24dp);
+        MenuItem menuRootMode = menu.findItem(R.id.menu_root_mode);
+        MenuItem menuProxiesMode = menu.findItem(R.id.menu_proxies_mode);
+
+        MenuItem hotSpot = menu.findItem(R.id.item_hotspot);
+        MenuItem rootIcon = menu.findItem(R.id.item_root);
+        MenuItem childLock = menu.findItem(R.id.item_unlock);
+
+        if (rootIsAvailable) {
+
+            if (proxyMode) {
+                rootIcon.setIcon(R.drawable.ic_warning_white_24dp);
+            } else if (busyBoxIsAvailable) {
+                rootIcon.setIcon(R.drawable.ic_done_all_white_24dp);
             } else {
-                menu.findItem(R.id.item_root).setIcon(R.drawable.ic_done_white_24dp);
+                rootIcon.setIcon(R.drawable.ic_done_white_24dp);
             }
-        } else {
-            menu.findItem(R.id.item_root).setIcon(R.drawable.ic_vpn_key_white_24dp);
 
-            menu.findItem(R.id.item_hotspot).setVisible(false);
-            menu.findItem(R.id.item_hotspot).setEnabled(false);
+            if (proxyMode) {
+                hotSpot.setVisible(false);
+                hotSpot.setEnabled(false);
+            } else {
+                hotSpot.setVisible(true);
+                hotSpot.setEnabled(true);
+            }
+
+            menuRootMode.setVisible(true);
+            menuRootMode.setEnabled(true);
+
+            if (rootMode) {
+                menuRootMode.setChecked(true);
+            } else if (proxyMode) {
+                menuProxiesMode.setChecked(true);
+            } else {
+                menuRootMode.setChecked(true);
+            }
+
+        } else {
+
+            if (proxyMode) {
+                rootIcon.setIcon(R.drawable.ic_warning_white_24dp);
+            } else {
+                rootIcon.setIcon(R.drawable.ic_vpn_key_white_24dp);
+            }
+
+            hotSpot.setVisible(false);
+            hotSpot.setEnabled(false);
+
+            menuRootMode.setVisible(false);
+            menuRootMode.setEnabled(false);
+
+            menuProxiesMode.setChecked(true);
         }
 
         try {
             if (childLockActive) {
-                menu.findItem(R.id.item_unlock).setIcon(R.drawable.ic_lock_white_24dp);
+                childLock.setIcon(R.drawable.ic_lock_white_24dp);
             } else {
-                menu.findItem(R.id.item_unlock).setIcon(R.drawable.ic_lock_open_white_24dp);
+                childLock.setIcon(R.drawable.ic_lock_open_white_24dp);
             }
         } catch (IllegalArgumentException e) {
             Log.e(LOG_TAG, "MainActivity Child Lock Exeption " + e.getMessage());
@@ -312,23 +309,18 @@ public class MainActivity extends LangAppCompatActivity
 
         ApManager apManager = new ApManager(this);
         int apState = apManager.isApOn();
+
         if (apState == ApManager.apStateON) {
+
             menu.findItem(R.id.item_hotspot).setIcon(R.drawable.ic_wifi_tethering_green_24dp);
+
             if (!new PrefManager(this).getBoolPref("APisON")) {
-                boolean dnsCryptRunning = new PrefManager(this).getBoolPref("DNSCrypt Running");
-                boolean torRunning = new PrefManager(this).getBoolPref("Tor Running");
-                boolean itpdRunning = new PrefManager(this).getBoolPref("I2PD Running");
-                if (dnsCryptRunning) {
-                    DialogFragment commandResult = NotificationDialogFragment.newInstance(R.string.pref_common_restart_dnscrypt);
-                    commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
-                } else if (torRunning) {
-                    DialogFragment commandResult = NotificationDialogFragment.newInstance(R.string.pref_common_restart_tor);
-                    commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
-                } else if (itpdRunning) {
-                    DialogFragment commandResult = NotificationDialogFragment.newInstance(R.string.pref_common_restart_itpd);
-                    commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
-                }
+
                 new PrefManager(this).setBoolPref("APisON", true);
+
+                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
+                ModulesRestarter.requestModulesStatusUpdateIfUseModulesWithRoot(this);
+
             }
 
         } else if (apState == ApManager.apStateOFF) {
@@ -378,8 +370,63 @@ public class MainActivity extends LangAppCompatActivity
             case R.id.item_root:
                 showInfoAboutRoot();
                 break;
+            case R.id.menu_root_mode:
+                switchToRootMode(item);
+                break;
+            case R.id.menu_proxies_mode:
+                switchToProxyMode(item);
+                break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void switchToRootMode(MenuItem item) {
+        item.setChecked(true);
+
+        new PrefManager(this).setBoolPref("root_mode", true);
+        new PrefManager(this).setBoolPref("proxies_mode", false);
+
+        Log.i(LOG_TAG, "Root mode enabled");
+
+        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+        boolean rootIsAvailable = new PrefManager(this).getBoolPref("rootIsAvailable");
+
+        //To start iptables adaptation
+        ModulesStatus modulesStatus = ModulesStatus.getInstance();
+        modulesStatus.setRootAvailable(rootIsAvailable);
+        modulesStatus.setUseModulesWithRoot(runModulesWithRoot);
+        modulesStatus.setIptablesRulesUpdateRequested(true);
+        ModulesRestarter.requestModulesStatusUpdateIfUseModulesWithRoot(this);
+
+        recreate();
+    }
+
+    private void switchToProxyMode(MenuItem item) {
+        item.setChecked(true);
+
+        new PrefManager(this).setBoolPref("root_mode", false);
+        new PrefManager(this).setBoolPref("proxies_mode", true);
+
+        Log.i(LOG_TAG, "Proxy mode enabled");
+
+        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+        if (runModulesWithRoot) {
+            ModulesKiller.stopModulesWithRootIfRunning(this, new PathVars(this));
+        }
+
+        //To stop iptables adaptation
+        ModulesStatus modulesStatus = ModulesStatus.getInstance();
+        modulesStatus.setRootAvailable(false);
+        modulesStatus.setUseModulesWithRoot(false);
+
+        IptablesRules iptablesRules = new ModulesIptablesRules(this);
+        String[] commands = iptablesRules.clearAll();
+        iptablesRules.sendToRootExecService(commands);
+        Log.i(LOG_TAG, "Iptables rules removed");
+
+        recreate();
     }
 
     private void checkHotspotState() {
@@ -521,7 +568,7 @@ public class MainActivity extends LangAppCompatActivity
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        // Handle navigation view item clicks here.
+
         int id = item.getItemId();
 
         if (childLockActive) {
@@ -629,9 +676,10 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     private void showInfoAboutRoot() {
+        boolean rootIsAvailable = new PrefManager(this).getBoolPref("rootIsAvailable");
         boolean busyBoxIsAvailable = new PrefManager(this).getBoolPref("bbOK");
 
-        if (ModulesStatus.getInstance().isRootAvailable()) {
+        if (rootIsAvailable) {
             DialogFragment commandResult;
             if (busyBoxIsAvailable) {
                 commandResult = NotificationDialogFragment.newInstance(TopFragment.verSU + "\n\t\n" + TopFragment.verBB);
