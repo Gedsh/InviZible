@@ -31,7 +31,7 @@ import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
-import pan.alexander.tordnscrypt.utils.modulesManager.ModulesRestarter;
+import pan.alexander.tordnscrypt.modulesManager.ModulesRestarter;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 
@@ -166,6 +166,9 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
             } else if (Objects.equals(preference.getKey(), "fallback_resolver")) {
                 String val = "\"" + newValue.toString() + ":53\"";
                 val_toml.set(key_toml.indexOf("fallback_resolver"), val);
+                if (key_toml.indexOf("netprobe_address") > 0) {
+                    val_toml.set(key_toml.indexOf("netprobe_address"), val);
+                }
                 return true;
             } else if (Objects.equals(preference.getKey(), "proxy_port")) {
                 String val = "\"socks5://127.0.0.1:" + newValue.toString() + "\"";
