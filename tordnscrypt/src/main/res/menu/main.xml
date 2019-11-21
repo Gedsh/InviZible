@@ -1,26 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/menu_dns_scr"
-        android:orderInCategory="100"
-        android:title="@string/menu_show_DNSCrypt" />
+        android:id="@+id/item_root"
+        android:icon="@drawable/ic_vpn_key_white_24dp"
+        android:orderInCategory="1"
+        android:title="@string/action_mode_root"
+        app:showAsAction="always" />
     <item
-        android:id="@+id/menu_tor_scr"
-        android:orderInCategory="101"
-        android:title="@string/menu_show_tor" />
+        android:id="@+id/item_hotspot"
+        android:icon="@drawable/ic_portable_wifi_off_white_24dp"
+        android:orderInCategory="2"
+        android:title="@string/action_mode_hotspot"
+        app:showAsAction="always" />
     <item
-        android:id="@+id/menu_hide_dns_scr"
-        android:orderInCategory="102"
-        android:title="@string/menu_hide_DNSCrypt_scr" />
-    <item
-        android:id="@+id/menu_hide_tor_scr"
-        android:orderInCategory="103"
-        android:title="@string/menu_hide_tor_scr"/>
-    <item
-        android:id="@+id/menu_com_result"
-        android:checkable="true"
-        android:orderInCategory="104"
-        android:title="@string/menu_show_command_result"
-        app:showAsAction="never" />
+        android:id="@+id/item_unlock"
+        android:icon="@drawable/ic_lock_open_white_24dp"
+        android:orderInCategory="3"
+        android:title="@string/action_mode_child_lock"
+        app:showAsAction="always" />
+    <group
+        android:checkableBehavior="single"
+        android:menuCategory="container"
+        android:orderInCategory="4">
+        <item
+            android:id="@+id/menu_root_mode"
+            android:orderInCategory="5"
+            android:title="@string/menu_use_root"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/menu_proxies_mode"
+            android:orderInCategory="6"
+            android:title="@string/menu_use_proxies"
+            app:showAsAction="never" />
+    </group>
 </menu>
