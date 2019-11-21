@@ -26,7 +26,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatDelegate;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceCategory;
@@ -44,11 +43,11 @@ import java.util.Objects;
 
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.language.Language;
+import pan.alexander.tordnscrypt.modulesManager.ModulesRestarter;
 import pan.alexander.tordnscrypt.utils.GetIPsJobService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
+import pan.alexander.tordnscrypt.modulesManager.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -288,11 +287,9 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 return true;
             case "pref_fast_all_through_tor":
 
-                if (new PrefManager(getActivity()).getBoolPref("Tor Running")
-                        && getFragmentManager() != null) {
-                    DialogFragment commandResult =
-                            NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_tor).toString());
-                    commandResult.show(getFragmentManager(), "NotificationDialogFragment");
+                if (new PrefManager(getActivity()).getBoolPref("Tor Running")) {
+                    ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
+                    ModulesRestarter.requestModulesStatusUpdateIfUseModulesWithRoot(getActivity());
                 }
 
                 if (Boolean.valueOf(newValue.toString())) {
@@ -304,14 +301,10 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 }
                 return true;
             case "pref_fast_block_http":
-                if (new PrefManager(getActivity()).getBoolPref("DNSCrypt Running") && getFragmentManager() != null) {
-                    DialogFragment commandResult =
-                            NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_dnscrypt).toString());
-                    commandResult.show(getFragmentManager(), "NotificationDialogFragment");
-                } else if (new PrefManager(getActivity()).getBoolPref("Tor Running") && getFragmentManager() != null) {
-                    DialogFragment commandResult =
-                            NotificationDialogFragment.newInstance(getText(R.string.pref_common_restart_tor).toString());
-                    commandResult.show(getFragmentManager(), "NotificationDialogFragment");
+                if (new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")
+                        || new PrefManager(getActivity()).getBoolPref("Tor Running")) {
+                    ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
+                    ModulesRestarter.requestModulesStatusUpdateIfUseModulesWithRoot(getActivity());
                 }
                 return true;
             case "pref_fast_theme":
