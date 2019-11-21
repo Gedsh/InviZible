@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.utils.modulesManager;
+package pan.alexander.tordnscrypt.modulesManager;
 /*
     This file is part of InviZible Pro.
 
@@ -37,17 +37,16 @@ import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
-import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
 public class ModulesService extends Service {
     public static final String actionDismissNotification= "pan.alexander.tordnscrypt.action.DISMISS_NOTIFICATION";
+    public static final int DEFAULT_NOTIFICATION_ID = 101;
 
     static final String actionStartDnsCrypt = "pan.alexander.tordnscrypt.action.START_DNSCRYPT";
     static final String actionStartTor = "pan.alexander.tordnscrypt.action.START_TOR";
@@ -58,12 +57,13 @@ public class ModulesService extends Service {
     static final String actionRestartDnsCrypt = "pan.alexander.tordnscrypt.action.RESTART_DNSCRYPT";
     static final String actionRestartTor = "pan.alexander.tordnscrypt.action.RESTART_TOR";
     static final String actionRestartITPD = "pan.alexander.tordnscrypt.action.RESTART_ITPD";
+    static final String actionUpdateModulesStatus = "pan.alexander.tordnscrypt.action.UPDATE_MODULES_STATUS";
     static final String actionRecoverService= "pan.alexander.tordnscrypt.action.RECOVER_SERVICE";
 
     static final String DNSCRYPT_KEYWORD = "checkDNSRunning";
     static final String TOR_KEYWORD = "checkTrRunning";
     static final String ITPD_KEYWORD = "checkITPDRunning";
-    public static final int DEFAULT_NOTIFICATION_ID = 101;
+
     private static PowerManager.WakeLock wakeLock = null;
 
     private PathVars pathVars;
@@ -71,7 +71,7 @@ public class ModulesService extends Service {
     private NotificationManager notificationManager;
 
     private Timer checkModulesThreadsTimer;
-    private CheckModulesStateTimerTask checkModulesStateTask;
+    private ModulesStateTimerTask checkModulesStateTask;
     private ModulesStatus modulesStatus;
     private ModulesKiller modulesKiller;
 
@@ -84,21 +84,20 @@ public class ModulesService extends Service {
 
         notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
 
+        pathVars = new PathVars(this);
+        mHandler = new Handler();
+
+        modulesKiller = new ModulesKiller(this, pathVars);
+
         modulesStatus = ModulesStatus.getInstance();
 
-        if (!modulesStatus.isUseModulesWithRoot()) {
-            startModulesThreadsTimer();
-        }
+        startModulesThreadsTimer();
 
         startPowerWakelock();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        pathVars = new PathVars(getApplicationContext());
-        mHandler = new Handler();
-
-        modulesKiller = new ModulesKiller(this, pathVars);
 
         String action = intent.getAction();
 
@@ -118,31 +117,31 @@ public class ModulesService extends Service {
 
         switch (action) {
             case actionStartDnsCrypt:
-                startDNSCrypt(startId);
+                startDNSCrypt();
                 break;
             case actionStartTor:
-                startTor(startId);
+                startTor();
                 break;
             case actionStartITPD:
-                startITPD(startId);
+                startITPD();
                 break;
             case actionStopDnsCrypt:
-                stopDNSCrypt(startId);
+                stopDNSCrypt();
                 break;
             case actionStopTor:
-                stopTor(startId);
+                stopTor();
                 break;
             case actionStopITPD:
-                stopITPD(startId);
+                stopITPD();
                 break;
             case actionRestartDnsCrypt:
-                restartDNSCrypt(startId);
+                restartDNSCrypt();
                 break;
             case actionRestartTor:
-                restartTor(startId);
+                restartTor();
                 break;
             case actionRestartITPD:
-                restartITPD(startId);
+                restartITPD();
                 break;
             case actionDismissNotification:
                 dismissNotification(startId);
@@ -156,56 +155,56 @@ public class ModulesService extends Service {
 
     }
 
-    private void startDNSCrypt(int startId) {
+    private void startDNSCrypt() {
         try {
             ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(getApplicationContext(), mHandler, pathVars);
             Thread dnsCryptThread = new Thread(modulesStarterHelper.getDNSCryptStarterRunnable());
             dnsCryptThread.setDaemon(false);
             try {
-                //new experiment
                 dnsCryptThread.setPriority(Thread.NORM_PRIORITY);
             } catch (SecurityException e) {
                 Log.e(LOG_TAG, "ModulesService startDNSCrypt exception " + e.getMessage() + " " + e.getCause());
             }
             dnsCryptThread.start();
 
-            modulesKiller.setDnsCryptThread(dnsCryptThread);
+            if (!modulesStatus.isUseModulesWithRoot()) {
+                modulesKiller.setDnsCryptThread(dnsCryptThread);
+            }
 
-            if (checkModulesStateTask != null) {
+            if (checkModulesStateTask != null && !modulesStatus.isUseModulesWithRoot()) {
                 checkModulesStateTask.setDnsCryptThread(dnsCryptThread);
             }
 
-            if (modulesStatus.isUseModulesWithRoot()) {
-                stopService(startId);
-            }
+            modulesStatus.setDnsCryptState(RUNNING);
+
         } catch (Exception e) {
             Log.e(LOG_TAG, "DnsCrypt was unable to startRefreshModulesStatus: " + e.getMessage());
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
-    private void startTor(int startId) {
+    private void startTor() {
         try {
             ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(getApplicationContext(), mHandler, pathVars);
             Thread torThread = new Thread(modulesStarterHelper.getTorStarterRunnable());
             torThread.setDaemon(false);
             try {
-                //new experiment
                 torThread.setPriority(Thread.NORM_PRIORITY);
             } catch (SecurityException e) {
                 Log.e(LOG_TAG, "ModulesService startTor exception " + e.getMessage() + " " + e.getCause());
             }
             torThread.start();
 
-            modulesKiller.setTorThread(torThread);
+            if (!modulesStatus.isUseModulesWithRoot()) {
+                modulesKiller.setTorThread(torThread);
+            }
 
-            if (checkModulesStateTask != null) {
+            if (checkModulesStateTask != null && !modulesStatus.isUseModulesWithRoot()) {
                 checkModulesStateTask.setTorThread(torThread);
             }
 
-            if (modulesStatus.isUseModulesWithRoot()) {
-                stopService(startId);
-            }
+            modulesStatus.setTorState(RUNNING);
+
         } catch (Exception e) {
             Log.e(LOG_TAG, "Tor was unable to startRefreshModulesStatus: " + e.getMessage());
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
@@ -213,28 +212,27 @@ public class ModulesService extends Service {
 
     }
 
-    private void startITPD(int startId) {
+    private void startITPD() {
         try {
             ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(getApplicationContext(), mHandler, pathVars);
             Thread itpdThread = new Thread(modulesStarterHelper.getITPDStarterRunnable());
             itpdThread.setDaemon(false);
             try {
-                //new experiment
                 itpdThread.setPriority(Thread.NORM_PRIORITY);
             } catch (SecurityException e) {
                 Log.e(LOG_TAG, "ModulesService startITPD exception " + e.getMessage() + " " + e.getCause());
             }
             itpdThread.start();
 
-            modulesKiller.setItpdThread(itpdThread);
+            if (!modulesStatus.isUseModulesWithRoot()) {
+                modulesKiller.setItpdThread(itpdThread);
+            }
 
-            if (checkModulesStateTask != null) {
+            if (checkModulesStateTask != null && !modulesStatus.isUseModulesWithRoot()) {
                 checkModulesStateTask.setItpdThread(itpdThread);
             }
 
-            if (modulesStatus.isUseModulesWithRoot()) {
-                stopService(startId);
-            }
+            modulesStatus.setItpdState(RUNNING);
 
         } catch (Exception e) {
             Log.e(LOG_TAG, "I2PD was unable to startRefreshModulesStatus: " + e.getMessage());
@@ -242,31 +240,19 @@ public class ModulesService extends Service {
         }
     }
 
-    private void stopDNSCrypt(int startId) {
+    private void stopDNSCrypt() {
         new Thread(modulesKiller.getDNSCryptKillerRunnable()).start();
-
-        if (modulesStatus.isUseModulesWithRoot()) {
-            stopService(startId);
-        }
     }
 
-    private void stopTor(int startId) {
+    private void stopTor() {
         new Thread(modulesKiller.getTorKillerRunnable()).start();
-
-        if (modulesStatus.isUseModulesWithRoot()) {
-            stopService(startId);
-        }
     }
 
-    private void stopITPD(int startId) {
+    private void stopITPD() {
         new Thread(modulesKiller.getITPDKillerRunnable()).start();
-
-        if (modulesStatus.isUseModulesWithRoot()) {
-            stopService(startId);
-        }
     }
 
-    private void restartDNSCrypt(final int startId) {
+    private void restartDNSCrypt() {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -277,10 +263,10 @@ public class ModulesService extends Service {
                     killerThread.start();
                     killerThread.join();
 
-                    startDNSCrypt(startId);
-
                     makeDelay();
-                    modulesStatus.setDnsCryptState(RESTARTED);
+
+                    startDNSCrypt();
+
                 } catch (InterruptedException e) {
                     Log.e(LOG_TAG, "ModulesService restartDNSCrypt join interrupted!");
                 }
@@ -289,7 +275,7 @@ public class ModulesService extends Service {
         }).start();
     }
 
-    private void restartTor(final int startId) {
+    private void restartTor() {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -300,10 +286,10 @@ public class ModulesService extends Service {
                     killerThread.start();
                     killerThread.join();
 
-                    startTor(startId);
-
                     makeDelay();
-                    modulesStatus.setTorState(RESTARTED);
+
+                    startTor();
+
                 } catch (InterruptedException e) {
                     Log.e(LOG_TAG, "ModulesService restartTor join interrupted!");
                 }
@@ -312,7 +298,7 @@ public class ModulesService extends Service {
         }).start();
     }
 
-    private void restartITPD(final int startId) {
+    private void restartITPD() {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -323,10 +309,10 @@ public class ModulesService extends Service {
                     killerThread.start();
                     killerThread.join();
 
-                    startITPD(startId);
-
                     makeDelay();
-                    modulesStatus.setItpdState(RESTARTED);
+
+                    startITPD();
+
                 } catch (InterruptedException e) {
                     Log.e(LOG_TAG, "ModulesService restartITPD join interrupted!");
                 }
@@ -343,7 +329,7 @@ public class ModulesService extends Service {
 
     private void startModulesThreadsTimer() {
         checkModulesThreadsTimer = new Timer();
-        checkModulesStateTask = new CheckModulesStateTimerTask();
+        checkModulesStateTask = new ModulesStateTimerTask(this);
         checkModulesThreadsTimer.schedule(checkModulesStateTask, 1, 1000);
     }
 
@@ -410,4 +396,5 @@ public class ModulesService extends Service {
             Log.e(LOG_TAG, "ModulesService makeDelay interrupted! " + e.getMessage() + " " + e.getCause());
         }
     }
+
 }
