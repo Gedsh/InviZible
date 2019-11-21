@@ -3,7 +3,7 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="nav_header_vertical_spacing">8dp</dimen>
-    <dimen name="nav_header_height">120dp</dimen>
+    <dimen name="nav_header_height">80dp</dimen>
     <dimen name="run_btns_side_margin">40dp</dimen>
     <dimen name="run_btns_top_margin">4dp</dimen>
     <dimen name="run_btns_min_width">40dip</dimen>
