@@ -26,21 +26,18 @@ import java.util.TimerTask;
 import pan.alexander.tordnscrypt.iptables.IptablesRules;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
-import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
-import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
-public class CheckModulesStateTimerTask extends TimerTask {
+public class ModulesStateTimerTask extends TimerTask {
     //Depends on timer, currently 10 sec
     private final int STOP_COUNTER_DELAY = 10;
 
     private final ModulesStatus modulesStatus;
-
     private final ModulesService modulesService;
-    private IptablesRules iptablesRules;
+    private final IptablesRules iptablesRules;
 
     private Thread dnsCryptThread;
     private Thread torThread;
@@ -53,14 +50,12 @@ public class CheckModulesStateTimerTask extends TimerTask {
     //Delay in sec before service can stop
     private int stopCounter = STOP_COUNTER_DELAY;
 
-    CheckModulesStateTimerTask(ModulesService modulesService) {
+    ModulesStateTimerTask(ModulesService modulesService) {
         this.modulesService = modulesService;
 
         modulesStatus = ModulesStatus.getInstance();
 
-        if (modulesStatus.isRootAvailable()) {
-            iptablesRules = new ModulesIptablesRules(modulesService);
-        }
+        iptablesRules = new ModulesIptablesRules(modulesService);
     }
 
     @Override
@@ -84,43 +79,31 @@ public class CheckModulesStateTimerTask extends TimerTask {
 
     private void updateModulesState() {
         if (dnsCryptThread != null && dnsCryptThread.isAlive()) {
-            if (modulesStatus.getDnsCryptState() == STOPPED
-                    || modulesStatus.getDnsCryptState() == RESTARTED) {
-
+            if (modulesStatus.getDnsCryptState() == STOPPED) {
                 modulesStatus.setDnsCryptState(ModuleState.RUNNING);
             }
         } else {
-            if (modulesStatus.getDnsCryptState() == RUNNING
-                    || modulesStatus.getDnsCryptState() == RESTARTED) {
-
+            if (modulesStatus.getDnsCryptState() == RUNNING) {
                 modulesStatus.setDnsCryptState(STOPPED);
             }
         }
 
         if (torThread != null && torThread.isAlive()) {
-            if (modulesStatus.getTorState() == STOPPED
-                    || modulesStatus.getTorState() == RESTARTED) {
-
+            if (modulesStatus.getTorState() == STOPPED) {
                 modulesStatus.setTorState(ModuleState.RUNNING);
             }
         } else {
-            if (modulesStatus.getTorState() == RUNNING
-                    || modulesStatus.getTorState() == RESTARTED) {
-
+            if (modulesStatus.getTorState() == RUNNING) {
                 modulesStatus.setTorState(STOPPED);
             }
         }
 
         if (itpdThread != null && itpdThread.isAlive()) {
-            if (modulesStatus.getItpdState() == STOPPED
-                    || modulesStatus.getItpdState() == RESTARTED) {
-
+            if (modulesStatus.getItpdState() == STOPPED) {
                 modulesStatus.setItpdState(ModuleState.RUNNING);
             }
         } else {
-            if (modulesStatus.getItpdState() == RUNNING
-                    || modulesStatus.getItpdState() == RESTARTED) {
-
+            if (modulesStatus.getItpdState() == RUNNING) {
                 modulesStatus.setItpdState(STOPPED);
             }
         }
@@ -154,6 +137,8 @@ public class CheckModulesStateTimerTask extends TimerTask {
             if (iptablesRules != null) {
                 String[] commands = iptablesRules.configureIptables(dnsCryptState, torState, itpdState);
                 iptablesRules.sendToRootExecService(commands);
+
+                Log.i(LOG_TAG, "Iptables rules updated");
 
                 stopCounter = STOP_COUNTER_DELAY;
             }
