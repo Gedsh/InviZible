@@ -167,6 +167,10 @@ class ModulesStarterHelper {
                 if (useModulesWithRoot) {
                     correctITPDConfRunAsDaemon(context, pathVars.appDataDir, true);
 
+                    Shell.SU.run(pathVars.busyboxPath + "mkdir -p " + pathVars.appDataDir + "/i2pd_data",
+                            "cd " + pathVars.appDataDir + "/app_data/i2pd",
+                            pathVars.busyboxPath + "cp -R certificates " + pathVars.appDataDir + "/i2pd_data");
+
                     itpdCmdString = pathVars.itpdPath + " --conf " + pathVars.appDataDir + "/app_data/i2pd/i2pd.conf --datadir " + pathVars.appDataDir + "/i2pd_data &";
                     String waitString = pathVars.busyboxPath + "sleep 3";
                     String checkIfModuleRunning = pathVars.busyboxPath + "pgrep -l /i2pd";

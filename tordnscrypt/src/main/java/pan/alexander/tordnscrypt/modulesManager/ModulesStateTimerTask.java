@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.utils.modulesManager;
+package pan.alexander.tordnscrypt.modulesManager;
 
 /*
     This file is part of InviZible Pro.
@@ -23,6 +23,8 @@ import android.util.Log;
 
 import java.util.TimerTask;
 
+import pan.alexander.tordnscrypt.iptables.IptablesRules;
+import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
 
@@ -32,11 +34,34 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
 public class CheckModulesStateTimerTask extends TimerTask {
-    private ModulesStatus modulesStatus = ModulesStatus.getInstance();
+    //Depends on timer, currently 10 sec
+    private final int STOP_COUNTER_DELAY = 10;
+
+    private final ModulesStatus modulesStatus;
+
+    private final ModulesService modulesService;
+    private IptablesRules iptablesRules;
 
     private Thread dnsCryptThread;
     private Thread torThread;
     private Thread itpdThread;
+
+    private ModuleState savedDNSCryptState;
+    private ModuleState savedTorState;
+    private ModuleState savedItpdState;
+
+    //Delay in sec before service can stop
+    private int stopCounter = STOP_COUNTER_DELAY;
+
+    CheckModulesStateTimerTask(ModulesService modulesService) {
+        this.modulesService = modulesService;
+
+        modulesStatus = ModulesStatus.getInstance();
+
+        if (modulesStatus.isRootAvailable()) {
+            iptablesRules = new ModulesIptablesRules(modulesService);
+        }
+    }
 
     @Override
     public void run() {
@@ -44,6 +69,20 @@ public class CheckModulesStateTimerTask extends TimerTask {
             return;
         }
 
+        if (!modulesStatus.isUseModulesWithRoot()) {
+            updateModulesState();
+        }
+
+        if (modulesStatus.isRootAvailable()) {
+            updateIptablesRules();
+        }
+
+        if (stopCounter <= 0) {
+            safeStopModulesService();
+        }
+    }
+
+    private void updateModulesState() {
         if (dnsCryptThread != null && dnsCryptThread.isAlive()) {
             if (modulesStatus.getDnsCryptState() == STOPPED
                     || modulesStatus.getDnsCryptState() == RESTARTED) {
@@ -85,9 +124,54 @@ public class CheckModulesStateTimerTask extends TimerTask {
                 modulesStatus.setItpdState(STOPPED);
             }
         }
+    }
 
-        Log.i(LOG_TAG, "DNSCrypt is " + modulesStatus.getDnsCryptState() +
-                " Tor is " + modulesStatus.getTorState() + " I2P is " + modulesStatus.getItpdState());
+    private void updateIptablesRules() {
+        ModuleState dnsCryptState = modulesStatus.getDnsCryptState();
+        ModuleState torState = modulesStatus.getTorState();
+        ModuleState itpdState = modulesStatus.getItpdState();
+
+        if (dnsCryptState != savedDNSCryptState
+                || torState != savedTorState
+                || itpdState != savedItpdState
+                || modulesStatus.isIptablesRulesUpdateRequested()) {
+
+            savedDNSCryptState = dnsCryptState;
+            savedTorState = torState;
+            savedItpdState = itpdState;
+
+            Log.i(LOG_TAG, "DNSCrypt is " + dnsCryptState +
+                    " Tor is " + torState + " I2P is " + itpdState);
+
+            if (dnsCryptState != STOPPED && dnsCryptState != RUNNING) {
+                return;
+            } else if (torState != STOPPED && torState != RUNNING) {
+                return;
+            } else if (itpdState != STOPPED && itpdState != RUNNING) {
+                return;
+            }
+
+            if (iptablesRules != null) {
+                String[] commands = iptablesRules.configureIptables(dnsCryptState, torState, itpdState);
+                iptablesRules.sendToRootExecService(commands);
+
+                stopCounter = STOP_COUNTER_DELAY;
+            }
+
+            if (modulesStatus.isIptablesRulesUpdateRequested()) {
+                modulesStatus.setIptablesRulesUpdateRequested(false);
+            }
+
+        } else if (modulesStatus.isUseModulesWithRoot()) {
+            stopCounter--;
+        } else if (dnsCryptState == STOPPED && torState == STOPPED && itpdState == STOPPED) {
+            stopCounter--;
+        }
+
+    }
+
+    private void safeStopModulesService() {
+        modulesService.stopSelf();
     }
 
     void setDnsCryptThread(Thread dnsCryptThread) {

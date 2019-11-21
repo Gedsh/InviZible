@@ -22,8 +22,6 @@ package pan.alexander.tordnscrypt.utils.modulesStatus;
 import android.content.Context;
 import android.content.Intent;
 
-import java.util.concurrent.TimeUnit;
-
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
@@ -37,6 +35,7 @@ public final class ModulesStatus {
 
     private volatile boolean rootAvailable = false;
     private volatile boolean useModulesWithRoot;
+    private volatile boolean requestIptablesUpdate;
 
     private static volatile ModulesStatus modulesStatus;
 
@@ -66,7 +65,6 @@ public final class ModulesStatus {
 
     public void setUseModulesWithRoot(boolean useModulesWithRoot) {
         this.useModulesWithRoot = useModulesWithRoot;
-
     }
 
     public synchronized ModuleState getDnsCryptState() {
@@ -103,5 +101,13 @@ public final class ModulesStatus {
 
     public void setRootAvailable(boolean rootIsAvailable) {
         this.rootAvailable = rootIsAvailable;
+    }
+
+    public boolean isIptablesRulesUpdateRequested() {
+        return requestIptablesUpdate;
+    }
+
+    public void setIptablesRulesUpdateRequested(boolean requestIptablesUpdate) {
+        this.requestIptablesUpdate = requestIptablesUpdate;
     }
 }
