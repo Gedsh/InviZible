@@ -53,14 +53,13 @@ import java.util.List;
 import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 import pan.alexander.tordnscrypt.utils.fileOperations.OnTextFileOperationsCompleteListener;
 import pan.alexander.tordnscrypt.utils.GetNewBridges;
-import pan.alexander.tordnscrypt.utils.modulesManager.ModulesRestarter;
+import pan.alexander.tordnscrypt.modulesManager.ModulesRestarter;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Verifier;

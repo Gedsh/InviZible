@@ -57,6 +57,7 @@ public class Verifier {
         this.context = context;
     }
 
+    @SuppressWarnings("unused")
     public String getApkSignatureZip() {
 
         try {

@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.utils.installer;
+package pan.alexander.tordnscrypt.installer;
 
 /*
     This file is part of InviZible Pro.
@@ -34,8 +34,8 @@ import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.modulesManager.ModulesKiller;
-import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
+import pan.alexander.tordnscrypt.modulesManager.ModulesKiller;
+import pan.alexander.tordnscrypt.modulesManager.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;

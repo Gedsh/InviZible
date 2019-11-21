@@ -56,7 +56,7 @@ import pan.alexander.tordnscrypt.utils.fileOperations.OnBinaryFileOperationsComp
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
-import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
+import pan.alexander.tordnscrypt.modulesManager.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.deleteFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;

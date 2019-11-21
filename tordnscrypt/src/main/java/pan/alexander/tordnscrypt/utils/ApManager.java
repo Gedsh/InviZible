@@ -68,7 +68,9 @@ public class ApManager {
 
             }
         }
-        catch (Throwable ignored) {}
+        catch (Exception e) {
+            Log.w(LOG_TAG, "ApManager isApOn Exception " + e.getMessage() + System.lineSeparator() + e.getCause());
+        }
         return 300;
     }
 

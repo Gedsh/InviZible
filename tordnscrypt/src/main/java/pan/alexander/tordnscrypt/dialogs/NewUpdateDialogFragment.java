@@ -25,7 +25,7 @@ import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.utils.update.UpdateService;
+import pan.alexander.tordnscrypt.update.UpdateService;
 
 public class NewUpdateDialogFragment extends ExtendedDialogFragment {
 

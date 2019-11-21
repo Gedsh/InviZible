@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.utils.modulesManager;
+package pan.alexander.tordnscrypt.modulesManager;
 
 /*
     This file is part of InviZible Pro.
@@ -31,7 +31,7 @@ import android.support.v4.app.NotificationCompat;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 
-import static pan.alexander.tordnscrypt.utils.modulesManager.ModulesService.DEFAULT_NOTIFICATION_ID;
+import static pan.alexander.tordnscrypt.modulesManager.ModulesService.DEFAULT_NOTIFICATION_ID;
 
 class ServiceNotification {
     private final String ANDROID_CHANNEL_ID = "InviZible";

@@ -41,7 +41,7 @@
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".utils.update.UpdateService"
+            android:name=".update.UpdateService"
             android:enabled="true"
             android:exported="false" />
 
@@ -52,7 +52,7 @@
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".utils.modulesManager.ModulesService"
+            android:name=".modulesManager.ModulesService"
             android:enabled="true"
             android:exported="false"/>
 
