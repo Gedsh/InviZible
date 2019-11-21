@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.utils.modulesManager;
+package pan.alexander.tordnscrypt.modulesManager;
 
 /*
     This file is part of InviZible Pro.
@@ -27,18 +27,24 @@ import android.support.v7.preference.PreferenceManager;
 
 public class ModulesRestarter {
     public static void restartDNSCrypt(Context context) {
-        sendRestartIntent(context, ModulesService.actionRestartDnsCrypt);
+        sendIntent(context, ModulesService.actionRestartDnsCrypt);
     }
 
     public static void restartTor(Context context) {
-        sendRestartIntent(context, ModulesService.actionRestartTor);
+        sendIntent(context, ModulesService.actionRestartTor);
     }
 
     public static void restartITPD(Context context) {
-        sendRestartIntent(context, ModulesService.actionRestartITPD);
+        sendIntent(context, ModulesService.actionRestartITPD);
     }
 
-    private static void sendRestartIntent(Context context, String action) {
+    public static void requestModulesStatusUpdateIfUseModulesWithRoot(Context context) {
+        if (ModulesStatus.getInstance().isUseModulesWithRoot()) {
+            sendIntent(context, ModulesService.actionUpdateModulesStatus);
+        }
+    }
+
+    private static void sendIntent(Context context, String action) {
         Intent intent = new Intent(context, ModulesService.class);
         intent.setAction(action);
         intent.putExtra("showNotification", isShowNotification(context));
