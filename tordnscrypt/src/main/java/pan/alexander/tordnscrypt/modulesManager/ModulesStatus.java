@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.utils.modulesStatus;
+package pan.alexander.tordnscrypt.modulesManager;
 
 /*
     This file is part of InviZible Pro.
@@ -21,10 +21,14 @@ package pan.alexander.tordnscrypt.utils.modulesStatus;
 
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
+
+import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
 public final class ModulesStatus {
@@ -103,11 +107,33 @@ public final class ModulesStatus {
         this.rootAvailable = rootIsAvailable;
     }
 
-    public boolean isIptablesRulesUpdateRequested() {
+    boolean isIptablesRulesUpdateRequested() {
         return requestIptablesUpdate;
     }
 
-    public void setIptablesRulesUpdateRequested(boolean requestIptablesUpdate) {
-        this.requestIptablesUpdate = requestIptablesUpdate;
+    public void setIptablesRulesUpdateRequested(final boolean requestIptablesUpdate) {
+        if (requestIptablesUpdate) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    makeDelay();
+
+                    ModulesStatus.this.requestIptablesUpdate = true;
+                }
+
+            }).start();
+        } else {
+            this.requestIptablesUpdate = false;
+        }
+
+
+    }
+
+    private void makeDelay() {
+        try {
+            TimeUnit.SECONDS.sleep(1);
+        } catch (InterruptedException e) {
+            Log.e(LOG_TAG, "ModulesStatus setIptablesRulesUpdateRequested makeDelay interrupted! " + e.getMessage() + " " + e.getCause());
+        }
     }
 }
