@@ -27,3 +27,10 @@
 * Fix modules update result message
 * Fix modules restart after modules updates
 * Fix dialog fragments illegal state
+
+
+**InviZible Pro beta 0.3.2**
+
+* Implemented new full no root mode to use InviZible modules as proxy
+* UX improvements
+* Bug fixes
