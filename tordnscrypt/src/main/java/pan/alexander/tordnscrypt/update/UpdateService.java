@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.utils.update;
+package pan.alexander.tordnscrypt.update;
 /*
     This file is part of InviZible Pro.
 
@@ -52,17 +52,14 @@ import javax.net.ssl.HttpsURLConnection;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.modulesManager.ModulesKiller;
-import pan.alexander.tordnscrypt.utils.modulesManager.ModulesRunner;
+import pan.alexander.tordnscrypt.modulesManager.ModulesKiller;
+import pan.alexander.tordnscrypt.modulesManager.ModulesRunner;
 import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
-import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
+import pan.alexander.tordnscrypt.modulesManager.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.RootExecService.TopFragmentMark;
-import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 
 public class UpdateService extends Service {
@@ -74,7 +71,6 @@ public class UpdateService extends Service {
     private static final int READTIMEOUT = 60;
     private static final int CONNECTTIMEOUT = 60;
     private String appDataDir;
-    private String iptablesPath;
     public static final String DOWNLOAD_ACTION = "pan.alexander.tordnscrypt.DOWNLOAD_ACTION";
     private final AtomicInteger currentNotificationId = new AtomicInteger(DEFAULT_NOTIFICATION_ID) ;
     private volatile SparseArray<DownloadThread> sparseArray;
@@ -97,7 +93,6 @@ public class UpdateService extends Service {
         notificationManager = (NotificationManager) getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
         sparseArray = new SparseArray<>();
         appDataDir = pathVars.appDataDir;
-        iptablesPath = pathVars.iptablesPath;
         currentModuleStatus = ModulesStatus.getInstance();
     }
 
@@ -417,7 +412,6 @@ public class UpdateService extends Service {
     }
 
     private void stopRunningModules(String fileName) {
-        String[] commandsStop = new String[0];
         if (fileName.contains("dnscrypt-proxy")) {
             currentModuleStatus.setDnsCryptState(RESTARTING);
             boolean dnsCryptRunning = new PrefManager(getApplicationContext()).getBoolPref("DNSCrypt Running");
@@ -459,25 +453,9 @@ public class UpdateService extends Service {
                 new PrefManager(this).setBoolPref("I2PD Running", false);
                 ModulesKiller.stopITPD(this);
             }
-
-            commandsStop = new String[]{
-                    iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
-                    iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                    iptablesPath + "iptables -F tordnscrypt",
-                    iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
-            };
         }
 
-        if (commandsStop.length != 0) {
-            RootCommands rootCommands = new RootCommands(commandsStop);
-            Intent intent = new Intent(getApplicationContext(), RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands", rootCommands);
-            intent.putExtra("Mark", RootExecService.NullMark);
-            RootExecService.performAction(getApplicationContext(), intent);
-
-            makeDelay(3);
-        }
+        makeDelay(3);
     }
 
     private void runPreviousStoppedModules(String fileName) {
@@ -488,10 +466,6 @@ public class UpdateService extends Service {
                 makeDelay(3);
 
                 runDNSCrypt();
-
-                makeDelay(10);
-
-                currentModuleStatus.setDnsCryptState(RESTARTED);
             }
 
         } else if (fileName.contains("tor")) {
@@ -501,10 +475,6 @@ public class UpdateService extends Service {
                 makeDelay(3);
 
                 runTor();
-
-                makeDelay(10);
-
-                currentModuleStatus.setTorState(RESTARTED);
             }
 
         } else if (fileName.contains("i2pd")) {
@@ -514,12 +484,6 @@ public class UpdateService extends Service {
                 makeDelay(3);
 
                 runITPD();
-
-                makeDelay(10);
-
-                currentModuleStatus.setItpdState(RESTARTED);
-
-
             }
         }
 

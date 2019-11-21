@@ -21,7 +21,6 @@ package pan.alexander.tordnscrypt.settings;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.AsyncTask;
@@ -59,14 +58,12 @@ import java.util.Objects;
 import java.util.Set;
 
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.utils.Arr;
-import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
+import pan.alexander.tordnscrypt.modulesManager.ModulesRestarter;
 import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.RootExecService;
-import pan.alexander.tordnscrypt.utils.Tethering;
 import pan.alexander.tordnscrypt.utils.Verifier;
+import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
+import pan.alexander.tordnscrypt.modulesManager.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
@@ -78,35 +75,22 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
  */
 public class UnlockTorIpsFrag extends Fragment {
 
-    RecyclerView rvListHostip;
-    RecyclerView.Adapter rvAdapter;
-    ArrayList<HostIP> unlockHostIP;
-    FloatingActionButton floatingbtnAddTorIPs;
-    String appDataDir;
-    Boolean isChanged = false;
-    String dnsCryptPort;
-    String itpdHttpProxyPort;
-    String torTransPort;
-    String torDNSPort;
-    String torVirtAdrNet;
-    String busyboxPath;
-    String iptablesPath;
-    String rejectAddress;
-    String torSOCKSPort;
-    String torHTTPTunnelPort;
-    String itpdSOCKSPort;
-    boolean torTethering = false;
-    boolean routeAllThroughTorDevice = true;
-    boolean routeAllThroughTorTether = false;
-    boolean runModulesWithRoot = false;
-    boolean blockHttp = false;
+    private RecyclerView rvListHostip;
+    private RecyclerView.Adapter rvAdapter;
+    private ArrayList<HostIP> unlockHostIP;
+    private FloatingActionButton floatingBtnAddTorIPs;
+    private String appDataDir;
+    private Boolean isChanged = false;
+    private boolean routeAllThroughTorDevice = true;
+    private boolean routeAllThroughTorTether = false;
 
     private String unlockHostsStr;
     private String unlockIPsStr;
-    String deviceOrTether = "";
+    private String deviceOrTether = "";
 
 
-    public UnlockTorIpsFrag() {}
+    public UnlockTorIpsFrag() {
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -130,28 +114,14 @@ public class UnlockTorIpsFrag extends Fragment {
 
         PathVars pathVars = new PathVars(getActivity());
         appDataDir = pathVars.appDataDir;
-        dnsCryptPort = pathVars.dnsCryptPort;
-        itpdHttpProxyPort = pathVars.itpdHttpProxyPort;
-        torTransPort = pathVars.torTransPort;
-        torDNSPort = pathVars.torDNSPort;
-        torVirtAdrNet = pathVars.torVirtAdrNet;
-        busyboxPath = pathVars.busyboxPath;
-        iptablesPath = pathVars.iptablesPath;
-        torSOCKSPort = pathVars.torSOCKSPort;
-        torHTTPTunnelPort = pathVars.torHTTPTunnelPort;
-        itpdSOCKSPort = pathVars.itpdSOCKSPort;
-        rejectAddress = pathVars.rejectAddress;
 
 
         ////////////////////////////////////////////////////////////////////////////////////
         ///////////////////////Reverse logic when route all through Tor!///////////////////
         //////////////////////////////////////////////////////////////////////////////////
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        torTethering = shPref.getBoolean("pref_common_tor_tethering", false);
         routeAllThroughTorDevice = shPref.getBoolean("pref_fast_all_through_tor", true);
         routeAllThroughTorTether = shPref.getBoolean("pref_common_tor_route_all", false);
-        runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
-        blockHttp = shPref.getBoolean("pref_fast_block_http", false);
 
         if (this.getArguments() != null) {
             deviceOrTether = this.getArguments().getString("deviceOrTether");
@@ -233,15 +203,15 @@ public class UnlockTorIpsFrag extends Fragment {
         });
         thread.start();
 
-        floatingbtnAddTorIPs = getActivity().findViewById(R.id.floatingbtnAddTorIPs);
-        floatingbtnAddTorIPs.setAlpha(0.8f);
-        floatingbtnAddTorIPs.setOnClickListener(new View.OnClickListener() {
+        floatingBtnAddTorIPs = getActivity().findViewById(R.id.floatingbtnAddTorIPs);
+        floatingBtnAddTorIPs.setAlpha(0.8f);
+        floatingBtnAddTorIPs.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 addHostIPDialog();
             }
         });
-        floatingbtnAddTorIPs.requestFocus();
+        floatingBtnAddTorIPs.requestFocus();
 
     }
 
@@ -268,186 +238,18 @@ public class UnlockTorIpsFrag extends Fragment {
 
         if (!isChanged) return;
 
-        String[] commandsSaveIPs = null;
         //////////////////////////////////////////////////////////////////////////////////////
         //////////////When open this fragment to add sites for internal applications/////////
         /////////////////////////////////////////////////////////////////////////////////////
         if (deviceOrTether.equals("device")) {
-            String torSitesBypassNatTCP = "";
-            String torSitesBypassFilterTCP = "";
-            String torSitesBypassNatUDP = "";
-            String torSitesBypassFilterUDP = "";
-            String torAppsBypassNatTCP = "";
-            String torAppsBypassNatUDP = "";
-            String torAppsBypassFilterTCP = "";
-            String torAppsBypassFilterUDP = "";
-            if (routeAllThroughTorDevice) {
-                torSitesBypassNatTCP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnet | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j RETURN; done";
-                torSitesBypassFilterTCP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnet | while read var1; do " + iptablesPath + "iptables -A tordnscrypt -p tcp -d $var1 -j RETURN; done";
-                torSitesBypassNatUDP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnet | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d $var1 -j RETURN; done";
-                torSitesBypassFilterUDP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnet | while read var1; do " + iptablesPath + "iptables -A tordnscrypt -p udp -d $var1 -j RETURN; done";
-                torAppsBypassNatTCP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnetApps | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j RETURN; done";
-                torAppsBypassNatUDP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnetApps | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -m owner --uid-owner $var1 -j RETURN; done";
-                torAppsBypassFilterTCP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnetApps | while read var1; do " + iptablesPath + "iptables -A tordnscrypt -p tcp -m owner --uid-owner $var1 -j RETURN; done";
-                torAppsBypassFilterUDP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnetApps | while read var1; do " + iptablesPath + "iptables -A tordnscrypt -p udp -m owner --uid-owner $var1 -j RETURN; done";
-            }
-
-            String blockHttpRuleFilterAll = "";
-            String blockHttpRuleNatTCP = "";
-            String blockHttpRuleNatUDP = "";
-            if (blockHttp) {
-                blockHttpRuleFilterAll = iptablesPath + "iptables -A tordnscrypt -d +" + rejectAddress + " -j REJECT";
-                blockHttpRuleNatTCP = iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 80 -j DNAT --to-destination " + rejectAddress;
-                blockHttpRuleNatUDP = iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 80 -j DNAT --to-destination " + rejectAddress;
-            }
-
-            String appUID = new PrefManager(getActivity()).getStrPref("appUID");
-            if (runModulesWithRoot) {
-                appUID = "0";
-            }
-            if (new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("Tor Running") &&
-                    new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
-                if (!routeAllThroughTorDevice) {
-                    FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/unlock", ipsToUnlock, "ignored");
-                    Toast.makeText(getActivity(), getText(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
-                    commandsSaveIPs = new String[]{
-                            "ip6tables -D OUTPUT -j DROP || true",
-                            "ip6tables -I OUTPUT -j DROP",
-                            iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
-                            iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                            iptablesPath + "iptables -t nat -N tordnscrypt_nat_output",
-                            iptablesPath + "iptables -t nat -I OUTPUT -j tordnscrypt_nat_output",
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d " + torVirtAdrNet + " -j DNAT --to-destination 127.0.0.1:" + torTransPort,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
-                            blockHttpRuleNatTCP,
-                            blockHttpRuleNatUDP,
-                            busyboxPath + "cat " + appDataDir + "/app_data/tor/unlock | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + torTransPort + "; done",
-                            busyboxPath + "cat " + appDataDir + "/app_data/tor/unlockApps | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j REDIRECT --to-port " + torTransPort + "; done"};
-                } else {
-                    FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/clearnet", ipsToUnlock, "ignored");
-                    Toast.makeText(getActivity(), getText(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
-                    commandsSaveIPs = new String[]{
-                            "ip6tables -D OUTPUT -j DROP || true",
-                            "ip6tables -I OUTPUT -j DROP",
-                            iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
-                            iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                            iptablesPath + "iptables -F tordnscrypt",
-                            iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
-                            busyboxPath + "sleep 1",
-                            "TOR_UID=" + appUID,
-                            iptablesPath + "iptables -t nat -N tordnscrypt_nat_output",
-                            iptablesPath + "iptables -t nat -I OUTPUT -j tordnscrypt_nat_output",
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
-
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -m owner --uid-owner $TOR_UID -j RETURN",
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d " + torVirtAdrNet + " -j DNAT --to-destination 127.0.0.1:" + torTransPort,
-                            blockHttpRuleNatTCP,
-                            blockHttpRuleNatUDP,
-                            torSitesBypassNatTCP,
-                            torSitesBypassNatUDP,
-                            torAppsBypassNatTCP,
-                            torAppsBypassNatUDP,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -j DNAT --to-destination 127.0.0.1:" + torTransPort,
-                            iptablesPath + "iptables -N tordnscrypt",
-                            iptablesPath + "iptables -A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torSOCKSPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torSOCKSPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torHTTPTunnelPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torHTTPTunnelPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + itpdSOCKSPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + itpdSOCKSPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + itpdHttpProxyPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + itpdHttpProxyPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torTransPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + dnsCryptPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + dnsCryptPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -m owner --uid-owner $TOR_UID -j RETURN",
-                            blockHttpRuleFilterAll,
-                            torSitesBypassFilterTCP,
-                            torSitesBypassFilterUDP,
-                            torAppsBypassFilterTCP,
-                            torAppsBypassFilterUDP,
-                            iptablesPath + "iptables -A tordnscrypt -j REJECT",
-                            iptablesPath + "iptables -I OUTPUT -j tordnscrypt"};
-                }
-
-            } else if (new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("Tor Running")) {
-                if (!routeAllThroughTorDevice) {
-                    FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/unlock", ipsToUnlock, "ignored");
-                    Toast.makeText(getActivity(), getText(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
-                } else {
-                    FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/clearnet", ipsToUnlock, "ignored");
-                    Toast.makeText(getActivity(), getText(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
-                    commandsSaveIPs = new String[]{
-                            "ip6tables -D OUTPUT -j DROP || true",
-                            "ip6tables -I OUTPUT -j DROP",
-                            iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
-                            iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                            iptablesPath + "iptables -F tordnscrypt",
-                            iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
-                            busyboxPath + "sleep 1",
-                            "TOR_UID=" + appUID,
-                            iptablesPath + "iptables -t nat -N tordnscrypt_nat_output",
-                            iptablesPath + "iptables -t nat -I OUTPUT -j tordnscrypt_nat_output",
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + torDNSPort,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + torDNSPort,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -m owner --uid-owner $TOR_UID -j RETURN",
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d " + torVirtAdrNet + " -j DNAT --to-destination 127.0.0.1:" + torTransPort,
-                            blockHttpRuleNatTCP,
-                            blockHttpRuleNatUDP,
-                            torSitesBypassNatTCP,
-                            torSitesBypassNatUDP,
-                            torAppsBypassNatTCP,
-                            torAppsBypassNatUDP,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -j DNAT --to-destination 127.0.0.1:" + torTransPort,
-                            iptablesPath + "iptables -N tordnscrypt",
-                            iptablesPath + "iptables -A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torSOCKSPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torSOCKSPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torHTTPTunnelPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torHTTPTunnelPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + itpdSOCKSPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + itpdSOCKSPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + itpdHttpProxyPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + itpdHttpProxyPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torTransPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torDNSPort + " -m owner --uid-owner 0 -j ACCEPT",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torDNSPort + " -m owner --uid-owner 0 -j ACCEPT",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torDNSPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torDNSPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -m owner --uid-owner $TOR_UID -j RETURN",
-                            blockHttpRuleFilterAll,
-                            torSitesBypassFilterTCP,
-                            torSitesBypassFilterUDP,
-                            torAppsBypassFilterTCP,
-                            torAppsBypassFilterUDP,
-                            iptablesPath + "iptables -A tordnscrypt -j REJECT",
-                            iptablesPath + "iptables -I OUTPUT -j tordnscrypt"};
-                }
-
+            if (!routeAllThroughTorDevice) {
+                FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/unlock", ipsToUnlock, "ignored");
+                Toast.makeText(getActivity(), getText(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
             } else {
-                if (!routeAllThroughTorDevice) {
-                    FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/unlock", ipsToUnlock, "ignored");
-                    Toast.makeText(getActivity(), getText(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
-                } else {
-                    FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/clearnet", ipsToUnlock, "ignored");
-                    Toast.makeText(getActivity(), getText(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
-                }
+                FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/clearnet", ipsToUnlock, "ignored");
+                Toast.makeText(getActivity(), getText(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
             }
+
             //////////////////////////////////////////////////////////////////////////////////////
             //////////////When open this fragment to add sites for external tether devices/////////
             /////////////////////////////////////////////////////////////////////////////////////
@@ -461,24 +263,9 @@ public class UnlockTorIpsFrag extends Fragment {
             }
         }
 
-
-        if (commandsSaveIPs == null)
-            return;
-
-        boolean privacyMode = !new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("DNSCrypt Running");
-        if (torTethering) {
-            Tethering tethering = new Tethering(getActivity());
-            String[] commandsTether = tethering.activateTethering(privacyMode);
-            if (commandsTether != null && commandsTether.length > 0)
-                commandsSaveIPs = Arr.ADD2(commandsSaveIPs, commandsTether);
-        }
-
-        RootCommands rootCommands = new RootCommands(commandsSaveIPs);
-        Intent intent = new Intent(getActivity(), RootExecService.class);
-        intent.setAction(RootExecService.RUN_COMMAND);
-        intent.putExtra("Commands", rootCommands);
-        intent.putExtra("Mark", RootExecService.NullMark);
-        RootExecService.performAction(getActivity(), intent);
+        ModulesStatus modulesStatus = ModulesStatus.getInstance();
+        modulesStatus.setIptablesRulesUpdateRequested(true);
+        ModulesRestarter.requestModulesStatusUpdateIfUseModulesWithRoot(getActivity());
     }
 
     @Override
@@ -618,7 +405,7 @@ public class UnlockTorIpsFrag extends Fragment {
                 llHostIP.setEnabled(getItem(position).active);
 
                 if (position == getItemCount() - 1) {
-                    llHostIPRoot.setPadding(0, 0, 0, floatingbtnAddTorIPs.getHeight());
+                    llHostIPRoot.setPadding(0, 0, 0, floatingBtnAddTorIPs.getHeight());
                 } else {
                     llHostIPRoot.setPadding(0, 0, 0, 0);
                 }
@@ -708,7 +495,6 @@ public class UnlockTorIpsFrag extends Fragment {
                         }
 
                     }
-
 
 
                 }

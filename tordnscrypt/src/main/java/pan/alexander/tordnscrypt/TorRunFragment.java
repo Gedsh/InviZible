@@ -51,23 +51,20 @@ import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
+import pan.alexander.tordnscrypt.modulesManager.ModulesKiller;
+import pan.alexander.tordnscrypt.modulesManager.ModulesRunner;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
-import pan.alexander.tordnscrypt.utils.Arr;
 import pan.alexander.tordnscrypt.utils.GetIPsJobService;
-import pan.alexander.tordnscrypt.utils.modulesManager.ModulesKiller;
-import pan.alexander.tordnscrypt.utils.modulesManager.ModulesRunner;
-import pan.alexander.tordnscrypt.utils.modulesManager.ModulesService;
-import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.utils.OwnFileReader;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
-import pan.alexander.tordnscrypt.utils.Tethering;
 import pan.alexander.tordnscrypt.utils.TorRefreshIPsWork;
 import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
-import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
+import pan.alexander.tordnscrypt.modulesManager.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
@@ -83,40 +80,24 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 
 public class TorRunFragment extends Fragment implements View.OnClickListener {
 
-    BroadcastReceiver br = null;
-    RootCommands rootCommands = null;
-    Button btnTorStart = null;
-    TextView tvTorStatus = null;
-    ProgressBar pbTor = null;
-    TextView tvTorLog = null;
-    Timer timer = null;
-    String appDataDir;
-    String dnsCryptPort;
-    String itpdHttpProxyPort;
-    public String torSOCKSPort;
-    public String torHTTPTunnelPort;
-    public String itpdSOCKSPort;
-    String torTransPort;
-    String torDNSPort;
-    String torVirtAdrNet;
-    String dnscryptPath;
-    String torPath;
-    String itpdPath;
-    String obfsPath;
-    String busyboxPath;
-    String iptablesPath;
-    String rejectAddress;
-    int mJobId = PreferencesFastFragment.mJobId;
-    int refreshPeriodHours = 12;
-    boolean runTorWithRoot = false;
-    Tethering tethering;
-    boolean routeAllThroughTor = true;
-    boolean blockHttp = false;
+    private BroadcastReceiver br = null;
+    private Button btnTorStart = null;
+    private TextView tvTorStatus = null;
+    private ProgressBar pbTor = null;
+    private TextView tvTorLog = null;
+    private Timer timer = null;
+    private String appDataDir;
+    private String torPath;
+    private String busyboxPath;
+    private int mJobId = PreferencesFastFragment.mJobId;
+    private int refreshPeriodHours = 12;
+    private boolean routeAllThroughTor = true;
 
     private ModulesStatus modulesStatus;
     private ModuleState fixedModuleState = STOPPED;
 
     private OwnFileReader logFile;
+    private int displayLogPeriod = -1;
 
 
     public TorRunFragment() {
@@ -146,12 +127,14 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                     Log.i(LOG_TAG, "TorRunFragment onReceive");
                     if (action.equals(RootExecService.COMMAND_RESULT)) {
 
+                        setProgressBarIndeterminate(false);
+
+                        setStartButtonEnabled(true);
 
                         RootCommands comResult = (RootCommands) intent.getSerializableExtra("CommandsResult");
 
                         if (comResult.getCommands().length == 0) {
                             setTorSomethingWrong();
-                            setProgressBarIndeterminate(false);
                             return;
                         }
 
@@ -168,7 +151,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                                 if (verArr.length > 2 && verArr[1].contains("version")) {
                                     TorVersion = verArr[2].trim();
                                     new PrefManager(getActivity()).setStrPref("TorVersion", TorVersion);
-                                    setProgressBarIndeterminate(false);
 
                                     if (!modulesStatus.isUseModulesWithRoot()) {
                                         if (!isSavedTorStatusRunning()) {
@@ -186,13 +168,15 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                                 && sb.toString().contains("checkTrRunning")) {
 
                             saveTorStatusRunning(true);
+                            modulesStatus.setTorState(RUNNING);
                             btnTorStart.setText(R.string.btnTorStop);
-                            setProgressBarIndeterminate(false);
                             startRefreshTorUnlockIPs();
+                            displayLog(5000);
 
                         } else if (!sb.toString().toLowerCase().contains(torPath)
                                 && sb.toString().contains("checkTrRunning")) {
-                            if (modulesStatus.getTorState() == STOPPING) {
+                            if (modulesStatus.getTorState() == STOPPED
+                                    || modulesStatus.getTorState() == STOPPING) {
                                 saveTorStatusRunning(false);
                             }
                             stopDisplayLog();
@@ -202,7 +186,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                             pbTor.setProgress(0);
                         } else if (sb.toString().contains("Something went wrong!")) {
                             setTorSomethingWrong();
-                            setProgressBarIndeterminate(false);
                         }
 
                     }
@@ -259,21 +242,8 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
         PathVars pathVars = new PathVars(getActivity());
         appDataDir = pathVars.appDataDir;
-        dnsCryptPort = pathVars.dnsCryptPort;
-        itpdHttpProxyPort = pathVars.itpdHttpProxyPort;
-        torSOCKSPort = pathVars.torSOCKSPort;
-        torHTTPTunnelPort = pathVars.torHTTPTunnelPort;
-        itpdSOCKSPort = pathVars.itpdSOCKSPort;
-        torTransPort = pathVars.torTransPort;
-        torDNSPort = pathVars.torDNSPort;
-        torVirtAdrNet = pathVars.torVirtAdrNet;
-        dnscryptPath = pathVars.dnscryptPath;
         torPath = pathVars.torPath;
-        itpdPath = pathVars.itpdPath;
-        obfsPath = pathVars.obfsPath;
         busyboxPath = pathVars.busyboxPath;
-        iptablesPath = pathVars.iptablesPath;
-        rejectAddress = pathVars.rejectAddress;
 
         modulesStatus = ModulesStatus.getInstance();
 
@@ -302,7 +272,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
         }
 
 
-
         IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
         IntentFilter intentFilterTopFrg = new IntentFilter(TopFragment.TOP_BROADCAST);
 
@@ -316,13 +285,8 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                 refreshPeriodHours = Integer.parseInt(refreshPeriod);
             }
 
-            runTorWithRoot = shPref.getBoolean("swUseModulesRoot", false);
             routeAllThroughTor = shPref.getBoolean("pref_fast_all_through_tor", true);
-            blockHttp = shPref.getBoolean("pref_fast_block_http", false);
         }
-
-        /////////////////////////// HOTSPOT/////////////////////////////////////////////
-        tethering = new Tethering(getActivity());
 
     }
 
@@ -350,11 +314,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
             return;
         }
 
-        if (RootExecService.lockStartStop) {
-            Toast.makeText(getActivity(), getText(R.string.please_wait), Toast.LENGTH_SHORT).show();
-            return;
-        }
-
         if (((MainActivity) getActivity()).childLockActive) {
             Toast.makeText(getActivity(), getText(R.string.action_mode_dialog_locked), Toast.LENGTH_LONG).show();
             return;
@@ -363,9 +322,11 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
         if (v.getId() == R.id.btnTorStart) {
 
+            setStartButtonEnabled(false);
+
             cleanLogFileNoRootMethod();
 
-            String[] commandsTor = new String[]{"echo 'Something went wrong!'"};
+            boolean rootIsAvailable = modulesStatus.isRootAvailable();
 
             Thread thread = new Thread(new Runnable() {
                 @Override
@@ -375,20 +336,20 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                         String appSign = verifier.getApkSignatureZipModern();
                         String appSignAlt = verifier.getApkSignature();
                         if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
-                            NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                    getActivity(), getText(R.string.verifier_error).toString(), "15");
-                            if (notificationHelper != null) {
-                                if (getFragmentManager() != null) {
+                            if (getFragmentManager() != null) {
+                                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                                        getActivity(), getText(R.string.verifier_error).toString(), "15");
+                                if (notificationHelper != null) {
                                     notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                                 }
                             }
                         }
 
                     } catch (Exception e) {
-                        NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                getActivity(), getText(R.string.verifier_error).toString(), "18");
-                        if (notificationHelper != null) {
-                            if (getFragmentManager() != null) {
+                        if (getFragmentManager() != null) {
+                            NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                                    getActivity(), getText(R.string.verifier_error).toString(), "18");
+                            if (notificationHelper != null) {
                                 notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                             }
                         }
@@ -399,39 +360,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
             });
             thread.start();
 
-            String appUID = new PrefManager(getActivity()).getStrPref("appUID");
-            if (runTorWithRoot) {
-                appUID = "0";
-            }
-
-            String torSitesBypassNatTCP = "";
-            String torSitesBypassFilterTCP = "";
-            String torSitesBypassNatUDP = "";
-            String torSitesBypassFilterUDP = "";
-            String torAppsBypassNatTCP = "";
-            String torAppsBypassNatUDP = "";
-            String torAppsBypassFilterTCP = "";
-            String torAppsBypassFilterUDP = "";
-            if (routeAllThroughTor) {
-                torSitesBypassNatTCP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnet | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j RETURN; done";
-                torSitesBypassFilterTCP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnet | while read var1; do " + iptablesPath + "iptables -A tordnscrypt -p tcp -d $var1 -j RETURN; done";
-                torSitesBypassNatUDP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnet | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d $var1 -j RETURN; done";
-                torSitesBypassFilterUDP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnet | while read var1; do " + iptablesPath + "iptables -A tordnscrypt -p udp -d $var1 -j RETURN; done";
-                torAppsBypassNatTCP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnetApps | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j RETURN; done";
-                torAppsBypassNatUDP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnetApps | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -m owner --uid-owner $var1 -j RETURN; done";
-                torAppsBypassFilterTCP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnetApps | while read var1; do " + iptablesPath + "iptables -A tordnscrypt -p tcp -m owner --uid-owner $var1 -j RETURN; done";
-                torAppsBypassFilterUDP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnetApps | while read var1; do " + iptablesPath + "iptables -A tordnscrypt -p udp -m owner --uid-owner $var1 -j RETURN; done";
-            }
-
-            String blockHttpRuleFilterAll = "";
-            String blockHttpRuleNatTCP = "";
-            String blockHttpRuleNatUDP = "";
-            if (blockHttp) {
-                blockHttpRuleFilterAll = iptablesPath + "iptables -A tordnscrypt -d +" + rejectAddress + " -j REJECT";
-                blockHttpRuleNatTCP = iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 80 -j DNAT --to-destination " + rejectAddress;
-                blockHttpRuleNatUDP = iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 80 -j DNAT --to-destination " + rejectAddress;
-            }
-
             if (!new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("Tor Running") &&
                     new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
@@ -439,103 +367,22 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                 startRefreshTorUnlockIPs();
 
                 if (!routeAllThroughTor) {
-                    NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                            getActivity(), getText(R.string.helper_dnscrypt_tor).toString(), "dnscrypt_tor");
-                    if (notificationHelper != null) {
-                        if (getFragmentManager() != null) {
+                    if (rootIsAvailable && getFragmentManager() != null) {
+                        NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                                getActivity(), getText(R.string.helper_dnscrypt_tor).toString(), "dnscrypt_tor");
+                        if (notificationHelper != null) {
                             notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                         }
                     }
-
-                    commandsTor = new String[]{
-                            //killall,
-                            "ip6tables -D OUTPUT -j DROP || true",
-                            "ip6tables -I OUTPUT -j DROP",
-                            iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
-                            iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
-                            iptablesPath + "iptables -F tordnscrypt",
-                            iptablesPath + "iptables -D OUTPUT -j tordnscrypt",
-                            busyboxPath + "sleep 1",
-                            iptablesPath + "iptables -t nat -N tordnscrypt_nat_output",
-                            iptablesPath + "iptables -t nat -I OUTPUT -j tordnscrypt_nat_output",
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d " + torVirtAdrNet + " -j DNAT --to-destination 127.0.0.1:" + torTransPort,
-                            blockHttpRuleNatTCP,
-                            blockHttpRuleNatUDP,
-                            iptablesPath + "iptables -N tordnscrypt",
-                            iptablesPath + "iptables -A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
-                            blockHttpRuleFilterAll,
-                            iptablesPath + "iptables -I OUTPUT -j tordnscrypt",
-                            busyboxPath + "cat " + appDataDir + "/app_data/tor/unlock | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + torTransPort + "; done",
-                            busyboxPath + "cat " + appDataDir + "/app_data/tor/unlockApps | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j REDIRECT --to-port " + torTransPort + "; done",
-                    };
                 } else {
-                    NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                            getActivity(), getText(R.string.helper_dnscrypt_tor_privacy).toString(), "dnscrypt_tor_privacy");
-                    if (notificationHelper != null) {
-                        if (getFragmentManager() != null) {
+
+                    if (rootIsAvailable && getFragmentManager() != null) {
+                        NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                                getActivity(), getText(R.string.helper_dnscrypt_tor_privacy).toString(), "dnscrypt_tor_privacy");
+                        if (notificationHelper != null) {
                             notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                         }
                     }
-
-                    commandsTor = new String[]{
-                            //killall,
-                            "ip6tables -D OUTPUT -j DROP || true",
-                            "ip6tables -I OUTPUT -j DROP",
-                            iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
-                            iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
-                            iptablesPath + "iptables -F tordnscrypt",
-                            iptablesPath + "iptables -D OUTPUT -j tordnscrypt",
-                            busyboxPath + "sleep 1",
-                            "TOR_UID=" + appUID,
-                            iptablesPath + "iptables -t nat -N tordnscrypt_nat_output",
-                            iptablesPath + "iptables -t nat -I OUTPUT -j tordnscrypt_nat_output",
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -m owner --uid-owner $TOR_UID -j RETURN",
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d " + torVirtAdrNet + " -j DNAT --to-destination 127.0.0.1:" + torTransPort,
-                            blockHttpRuleNatTCP,
-                            blockHttpRuleNatUDP,
-                            torSitesBypassNatTCP,
-                            torSitesBypassNatUDP,
-                            torAppsBypassNatTCP,
-                            torAppsBypassNatUDP,
-                            iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -j DNAT --to-destination 127.0.0.1:" + torTransPort,
-                            iptablesPath + "iptables -N tordnscrypt",
-                            iptablesPath + "iptables -A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torSOCKSPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torSOCKSPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torHTTPTunnelPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torHTTPTunnelPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + itpdSOCKSPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + itpdSOCKSPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + itpdHttpProxyPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + itpdHttpProxyPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torTransPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + dnsCryptPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + dnsCryptPort + " -j RETURN",
-                            iptablesPath + "iptables -A tordnscrypt -m owner --uid-owner $TOR_UID -j RETURN",
-                            blockHttpRuleFilterAll,
-                            torSitesBypassFilterTCP,
-                            torSitesBypassFilterUDP,
-                            torAppsBypassFilterTCP,
-                            torAppsBypassFilterUDP,
-                            iptablesPath + "iptables -A tordnscrypt -j REJECT",
-                            iptablesPath + "iptables -I OUTPUT -j tordnscrypt",
-                    };
                 }
 
 
@@ -544,144 +391,40 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                 runTor();
 
                 displayLog(1000);
-                String[] commandsTether = tethering.activateTethering(false);
-                if (commandsTether != null && commandsTether.length > 0)
-                    commandsTor = Arr.ADD2(commandsTor, commandsTether);
             } else if (!new PrefManager(getActivity()).getBoolPref("Tor Running") &&
                     !new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
-                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                        getActivity(), getText(R.string.helper_tor).toString(), "tor");
-                if (notificationHelper != null) {
-                    if (getFragmentManager() != null) {
+
+                if (rootIsAvailable && getFragmentManager() != null) {
+                    NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                            getActivity(), getText(R.string.helper_tor).toString(), "tor");
+                    if (notificationHelper != null) {
                         notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                     }
                 }
 
                 startRefreshTorUnlockIPs();
 
-                commandsTor = new String[]{
-                        //killall,
-                        "ip6tables -D OUTPUT -j DROP || true",
-                        "ip6tables -I OUTPUT -j DROP",
-                        iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
-                        iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
-                        iptablesPath + "iptables -F tordnscrypt",
-                        iptablesPath + "iptables -D OUTPUT -j tordnscrypt",
-                        busyboxPath + "sleep 1",
-                        "TOR_UID=" + appUID,
-                        iptablesPath + "iptables -t nat -N tordnscrypt_nat_output",
-                        iptablesPath + "iptables -t nat -I OUTPUT -j tordnscrypt_nat_output",
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + torDNSPort,
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + torDNSPort,
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -m owner --uid-owner $TOR_UID -j RETURN",
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d " + torVirtAdrNet + " -j DNAT --to-destination 127.0.0.1:" + torTransPort,
-                        blockHttpRuleNatTCP,
-                        blockHttpRuleNatUDP,
-                        torSitesBypassNatTCP,
-                        torSitesBypassNatUDP,
-                        torAppsBypassNatTCP,
-                        torAppsBypassNatUDP,
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -j DNAT --to-destination 127.0.0.1:" + torTransPort,
-                        iptablesPath + "iptables -N tordnscrypt",
-                        iptablesPath + "iptables -A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torSOCKSPort + " -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torSOCKSPort + " -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torHTTPTunnelPort + " -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torHTTPTunnelPort + " -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + itpdSOCKSPort + " -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + itpdSOCKSPort + " -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + itpdHttpProxyPort + " -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + itpdHttpProxyPort + " -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torTransPort + " -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torDNSPort + " -m owner --uid-owner 0 -j ACCEPT",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torDNSPort + " -m owner --uid-owner 0 -j ACCEPT",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torDNSPort + " -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torDNSPort + " -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -m owner --uid-owner $TOR_UID -j RETURN",
-                        blockHttpRuleFilterAll,
-                        torSitesBypassFilterTCP,
-                        torSitesBypassFilterUDP,
-                        torAppsBypassFilterTCP,
-                        torAppsBypassFilterUDP,
-                        iptablesPath + "iptables -A tordnscrypt -j REJECT",
-                        iptablesPath + "iptables -I OUTPUT -j tordnscrypt",
-                };
-
                 setTorStarting();
 
                 runTor();
 
                 displayLog(1000);
-                String[] commandsTether = tethering.activateTethering(true);
-                if (commandsTether != null && commandsTether.length > 0)
-                    commandsTor = Arr.ADD2(commandsTor, commandsTether);
             } else if (new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("Tor Running") &&
                     new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
                 stopRefreshTorUnlockIPs();
 
-                commandsTor = new String[]{
-                        //killall,
-                        iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
-                        iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
-                        iptablesPath + "iptables -F tordnscrypt",
-                        iptablesPath + "iptables -D OUTPUT -j tordnscrypt",
-                        busyboxPath + "sleep 1",
-                        iptablesPath + "iptables -t nat -N tordnscrypt_nat_output",
-                        iptablesPath + "iptables -t nat -I OUTPUT -j tordnscrypt_nat_output",
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
-                        blockHttpRuleNatTCP,
-                        blockHttpRuleNatUDP,
-                        iptablesPath + "iptables -N tordnscrypt",
-                        iptablesPath + "iptables -A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
-                        blockHttpRuleFilterAll,
-                        iptablesPath + "iptables -I OUTPUT -j tordnscrypt",
-                        busyboxPath + "sleep 3",
-                };
-
                 setTorStopping();
                 stopTor();
-                String[] commandsTether = tethering.activateTethering(false);
-                if (commandsTether != null && commandsTether.length > 0)
-                    commandsTor = Arr.ADD2(commandsTor, commandsTether);
             } else if (new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("Tor Running") &&
                     !new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
                 stopRefreshTorUnlockIPs();
 
-                commandsTor = new String[]{
-                        //killall,
-                        iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
-                        iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
-                        iptablesPath + "iptables -F tordnscrypt",
-                        iptablesPath + "iptables -D OUTPUT -j tordnscrypt",
-                        busyboxPath + "sleep 3",
-                };
-
                 setTorStopping();
                 stopTor();
-                String[] commandsTether = tethering.activateTethering(false);
-                if (commandsTether != null && commandsTether.length > 0)
-                    commandsTor = Arr.ADD2(commandsTor, commandsTether);
             }
-
-
-            rootCommands = new RootCommands(commandsTor);
-            Intent intent = new Intent(getActivity(), RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands", rootCommands);
-            intent.putExtra("Mark", RootExecService.NullMark);
-            RootExecService.performAction(getActivity(), intent);
 
             setProgressBarIndeterminate(true);
         }
@@ -697,7 +440,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                     busyboxPath + "echo 'Tor_version'",
                     torPath + " --version"
             };
-            rootCommands = new RootCommands(commandsCheck);
+            RootCommands rootCommands = new RootCommands(commandsCheck);
             Intent intent = new Intent(getActivity(), RootExecService.class);
             intent.setAction(RootExecService.RUN_COMMAND);
             intent.putExtra("Commands", rootCommands);
@@ -722,17 +465,15 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
         if (currentModuleState == STARTING) {
 
-            setTorStarting();
-
             displayLog(1000);
 
         } else if (currentModuleState == RUNNING) {
 
-            setProgressBarIndeterminate(false);
+            setStartButtonEnabled(true);
 
-            setTorRunning();
+            saveTorStatusRunning(true);
 
-            displayLog(5000);
+            btnTorStart.setText(R.string.btnTorStop);
 
         } else if (currentModuleState == STOPPED) {
 
@@ -748,7 +489,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
             saveTorStatusRunning(false);
 
-            safeStopModulesStarterService();
+            setStartButtonEnabled(true);
         }
 
         fixedModuleState = currentModuleState;
@@ -790,34 +531,16 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
             modulesStatus.setTorState(STOPPED);
 
-            new PrefManager(getActivity()).setBoolPref("DNSCrypt Running", false);
-            modulesStatus.setDnsCryptState(STOPPED);
 
-            NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                    getActivity(), getText(R.string.helper_tor_stopped).toString(), "tor_suddenly_stopped");
-            if (notificationHelper != null) {
-                if (getFragmentManager() != null) {
+            if (getFragmentManager() != null) {
+                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                        getActivity(), getText(R.string.helper_tor_stopped).toString(), "tor_suddenly_stopped");
+                if (notificationHelper != null) {
                     notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                 }
             }
 
             Log.e(LOG_TAG, getText(R.string.helper_tor_stopped).toString());
-
-            stopTor();
-            stopDNSCrypt();
-
-            String[] commandsReset = new String[]{
-                    iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
-                    iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output",
-                    iptablesPath + "iptables -F tordnscrypt",
-                    iptablesPath + "iptables -D OUTPUT -j tordnscrypt",
-            };
-            rootCommands = new RootCommands(commandsReset);
-            Intent intentReset = new Intent(getActivity(), RootExecService.class);
-            intentReset.setAction(RootExecService.RUN_COMMAND);
-            intentReset.putExtra("Commands", rootCommands);
-            intentReset.putExtra("Mark", RootExecService.NullMark);
-            RootExecService.performAction(getActivity(), intentReset);
         }
 
     }
@@ -861,13 +584,17 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
     }
 
     public void setStartButtonEnabled(boolean enabled) {
-        btnTorStart.setEnabled(enabled);
+        if (btnTorStart.isEnabled() && !enabled) {
+            btnTorStart.setEnabled(false);
+        } else if (!btnTorStart.isEnabled() && enabled) {
+            btnTorStart.setEnabled(true);
+        }
     }
 
     public void setProgressBarIndeterminate(boolean indeterminate) {
         if (!pbTor.isIndeterminate() && indeterminate) {
             pbTor.setIndeterminate(true);
-        } else if (pbTor.isIndeterminate() && !indeterminate){
+        } else if (pbTor.isIndeterminate() && !indeterminate) {
             pbTor.setIndeterminate(false);
         }
 
@@ -875,7 +602,16 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
     private void displayLog(int period) {
 
-        stopDisplayLog();
+        if (period == displayLogPeriod) {
+            return;
+        }
+
+        displayLogPeriod = period;
+
+        if (timer != null) {
+            timer.purge();
+            timer.cancel();
+        }
 
         timer = new Timer();
 
@@ -905,11 +641,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
                         if (!previousLastLines.contentEquals(lastLines)) {
 
-                            if (modulesStatus.getTorState() == STARTING && !lastLines.trim().isEmpty()) {
-                                saveTorStatusRunning(true);
-                                btnTorStart.setText(R.string.btnTorStop);
-                            }
-
                             if (!new PrefManager(getActivity()).getBoolPref("Tor Ready")) {
                                 torStartedSuccessfully(lastLines);
                             }
@@ -929,8 +660,11 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
     private void stopDisplayLog() {
         if (timer != null) {
+            timer.purge();
             timer.cancel();
             timer = null;
+
+            displayLogPeriod = -1;
         }
     }
 
@@ -960,10 +694,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
         int perc = Integer.valueOf(bootstrapPerc);
 
-        /*if (pbTor.isIndeterminate()) {
-            return;
-        }*/
-
         if (0 <= perc && perc < 100) {
 
             if (modulesStatus.getTorState() == STOPPED) {
@@ -973,16 +703,18 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
             setProgressBarIndeterminate(false);
 
             pbTor.setProgress(perc);
-            setTorStarting();
+            setTorStatus(R.string.tvTorStarting, R.color.textModuleStatusColorStarting);
 
-        } else if (modulesStatus.getTorState() == STARTING || isSavedTorStatusRunning()) {
+        } else if (modulesStatus.getTorState() == RUNNING) {
 
-            if (modulesStatus.getTorState() == RESTARTING) {
-                return;
-            }
+            setProgressBarIndeterminate(false);
+
+            setTorRunning();
+
+            displayLog(5000);
 
             pbTor.setProgress(0);
-            modulesStatus.setTorState(RUNNING);
+
             new PrefManager(Objects.requireNonNull(getActivity())).setBoolPref("Tor Ready", true);
 
             /////////////////Check Updates///////////////////////////////////////////////
@@ -996,18 +728,21 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
             Log.e(LOG_TAG, "Problem bootstrapping Tor: " + lastLines);
 
             if (lastLines.contains("Stuck at 0%") || lastLines.contains("Stuck at 5%")) {
-                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                        getActivity(), getText(R.string.helper_dnscrypt_no_internet).toString(), "helper_dnscrypt_no_internet");
-                if (notificationHelper != null) {
-                    if (getFragmentManager() != null) {
+
+                if (getFragmentManager() != null) {
+                    NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                            getActivity(), getText(R.string.helper_dnscrypt_no_internet).toString(), "helper_dnscrypt_no_internet");
+                    if (notificationHelper != null) {
                         notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                     }
                 }
+
             } else {
-                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                        getActivity(), getText(R.string.helper_tor_use_bridges).toString(), "helper_tor_use_bridges");
-                if (notificationHelper != null) {
-                    if (getFragmentManager() != null) {
+
+                if (getFragmentManager() != null) {
+                    NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                            getActivity(), getText(R.string.helper_tor_use_bridges).toString(), "helper_tor_use_bridges");
+                    if (notificationHelper != null) {
                         notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                     }
                 }
@@ -1035,31 +770,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    /* Just leave this there
-
-    private void checkINetAvailable(){
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    URL url = new URL("http://www.google.com/");
-                    HttpURLConnection huc =  (HttpURLConnection)  url.openConnection ();
-                    huc.setRequestMethod ("GET");  //OR  huc.setRequestMethod ("HEAD");
-                    huc.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows; U; " +
-                            "Windows NT 6.0; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 (.NET CLR 3.5.30729)");
-                    huc.connect () ;
-                    int code = huc.getResponseCode();
-                    huc.disconnect();
-                    if (getActivity()!=null) new PrefManager(getActivity()).setBoolPref("INet Available",code == HttpURLConnection.HTTP_OK);
-                } catch (IOException e) {
-                    Log.e(LOG_TAG,"checkINetAvailable function fault" + e.toString());
-                }
-            }
-        });
-
-        thread.startRefreshModulesStatus();
-    }*/
-
     private void startRefreshTorUnlockIPs() {
         if (getActivity() == null) {
             return;
@@ -1085,7 +795,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
     private void stopRefreshTorUnlockIPs() {
 
-        if (getActivity() == null) {
+        if (getActivity() == null || !modulesStatus.isRootAvailable()) {
             return;
         }
 
@@ -1116,42 +826,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
         }
 
         ModulesKiller.stopTor(getActivity());
-    }
-
-    private void stopDNSCrypt() {
-        if (getActivity() == null) {
-            return;
-        }
-
-        ModulesKiller.stopDNSCrypt(getActivity());
-    }
-
-    private void safeStopModulesStarterService() {
-
-        if (getActivity() == null) {
-            return;
-        }
-
-
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean rnDNSCryptWithRoot = shPref.getBoolean("swUseModulesRoot", false);
-        boolean rnTorWithRoot = shPref.getBoolean("swUseModulesRoot", false);
-        boolean rnI2PDWithRoot = shPref.getBoolean("swUseModulesRoot", false);
-        boolean dnsCryptRunning = new PrefManager(getActivity()).getBoolPref("DNSCrypt Running");
-        boolean torRunning = new PrefManager(getActivity()).getBoolPref("Tor Running");
-        boolean itpdRunning = new PrefManager(getActivity()).getBoolPref("I2PD Running");
-        boolean canSafeStopService = true;
-        if (!rnDNSCryptWithRoot && dnsCryptRunning) {
-            canSafeStopService = false;
-        } else if (!rnTorWithRoot && torRunning) {
-            canSafeStopService = false;
-        } else if (!rnI2PDWithRoot && itpdRunning) {
-            canSafeStopService = false;
-        }
-        if (canSafeStopService) {
-            Intent intent = new Intent(getActivity(), ModulesService.class);
-            getActivity().stopService(intent);
-        }
     }
 
     private void cleanLogFileNoRootMethod() {
