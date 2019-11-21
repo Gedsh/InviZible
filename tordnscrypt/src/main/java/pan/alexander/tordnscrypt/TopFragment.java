@@ -54,13 +54,13 @@ import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Registration;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.Verifier;
-import pan.alexander.tordnscrypt.utils.installer.Installer;
-import pan.alexander.tordnscrypt.utils.modulesManager.ModulesRunner;
-import pan.alexander.tordnscrypt.utils.modulesManager.ModulesService;
-import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesStatus;
-import pan.alexander.tordnscrypt.utils.modulesStatus.ModulesVersions;
-import pan.alexander.tordnscrypt.utils.update.UpdateCheck;
-import pan.alexander.tordnscrypt.utils.update.UpdateService;
+import pan.alexander.tordnscrypt.installer.Installer;
+import pan.alexander.tordnscrypt.modulesManager.ModulesRunner;
+import pan.alexander.tordnscrypt.modulesManager.ModulesService;
+import pan.alexander.tordnscrypt.modulesManager.ModulesStatus;
+import pan.alexander.tordnscrypt.modulesManager.ModulesVersions;
+import pan.alexander.tordnscrypt.update.UpdateCheck;
+import pan.alexander.tordnscrypt.update.UpdateService;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
@@ -82,11 +82,12 @@ public class TopFragment extends Fragment {
     public static String wrongSign;
     public static String appSign;
 
-    private static DialogFragment dialogInterface;
-    private static boolean rootIsAvailable = false;
-    private static String suVersion = "";
-    private static List<String> suResult = null;
-    private static List<String> bbResult = null;
+    private DialogFragment dialogInterface;
+    private boolean rootIsAvailable = false;
+    private String suVersion = "";
+    private List<String> suResult = null;
+    private List<String> bbResult = null;
+    private boolean proxies_mode = false;
 
     UpdateCheck updateCheck;
 
@@ -146,7 +147,9 @@ public class TopFragment extends Fragment {
             }
         }
 
-
+        if (getActivity() != null) {
+            proxies_mode = new PrefManager(getActivity()).getBoolPref("proxies_mode");
+        }
     }
 
     @Nullable
@@ -189,6 +192,7 @@ public class TopFragment extends Fragment {
         @Override
         @SuppressWarnings("deprecation")
         protected Void doInBackground(Void... params) {
+
             try {
                 suAvailable = Shell.SU.available();
             } catch (Exception e) {
@@ -246,7 +250,15 @@ public class TopFragment extends Fragment {
                 setSUInfo(suResult, suVersion);
                 setBBinfo(bbResult);
 
-                ModulesStatus.getInstance().setRootAvailable(rootIsAvailable);
+                if (!rootIsAvailable) {
+                    ModulesStatus.getInstance().setUseModulesWithRoot(false);
+                }
+
+                if (proxies_mode) {
+                    ModulesStatus.getInstance().setRootAvailable(false);
+                } else {
+                    ModulesStatus.getInstance().setRootAvailable(rootIsAvailable);
+                }
 
                 if (getActivity() != null) {
                     getActivity().invalidateOptionsMenu();
@@ -639,7 +651,7 @@ public class TopFragment extends Fragment {
 
     protected void registerReceiver() {
 
-        if (getActivity() == null) {
+        if (getActivity() == null || br != null) {
             return;
         }
 
