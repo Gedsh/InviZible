@@ -87,13 +87,8 @@
     <string name="etPathBackup">Folder Path:</string>
     <string name="backupFolder">Choose backup folder:</string>
 
-    <string name="menu_show_DNSCrypt" translatable="false">Show DNSCrypt uninstall panel</string>
-    <string name="menu_show_tor" translatable="false">Show Tor uninstall panel</string>
-    <string name="menu_hide_DNSCrypt_scr" translatable="false">Hide DNSCrypt panel</string>
-    <string name="menu_hide_tor_scr" translatable="false">Hide Tor panel</string>
-
-    <string name="menu_show_command_result" translatable="false">Show command result info</string>
-
+    <string name="menu_use_root" translatable="false">Root Mode</string>
+    <string name="menu_use_proxies" translatable="false">Proxies Mode</string>
 
     <string name="title_activity_settings">Settings</string>
 
@@ -536,6 +531,7 @@
         Please Check FIREWALL rules. Allow connection for InviZible Pro and for ROOT applications.</string>
     <string name="helper_tor_use_bridges">Looks like Tor CAN NOT connect to INTERNET.
         ISP may blocks Tor connections. You can try to use tor Bridges. Please find them in MENU -> Fast Settings -> Bridges</string>
+
     <string name="action_mode_child_lock">Child Lock</string>
     <string name="action_mode_dialog_message_lock">You can lock control of this application. Please enter password, or use previous.</string>
     <string name="action_mode_dialog_message_unlock">Please enter password.</string>
@@ -543,6 +539,7 @@
     <string name="action_mode_dialog_unlocked">Control Unlocked</string>
     <string name="action_mode_dialog_locked">Control Locked</string>
     <string name="action_mode_hotspot">HOTSPOT</string>
+    <string name="action_mode_root" translatable="false">Root</string>
 
     <string name="help_activity_save_logs">Save logs</string>
     <string name="help_activity_path">Path for logs:</string>
