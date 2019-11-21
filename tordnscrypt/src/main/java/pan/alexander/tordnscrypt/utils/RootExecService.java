@@ -50,7 +50,6 @@ public class RootExecService extends Service {
     public RootExecService() {
     }
 
-    public static boolean lockStartStop = false;
     private static boolean saveRootLogs = false;
     public static final int DNSCryptRunFragmentMark = 100;
     public static final int TorRunFragmentMark = 200;
@@ -99,7 +98,7 @@ public class RootExecService extends Service {
 
 
         Log.i(LOG_TAG, "RootExecService Root = " + true + " performAction");
-        lockStartStop = true;
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent);
         } else {
@@ -112,7 +111,7 @@ public class RootExecService extends Service {
         if (intent != null) {
             final String action = intent.getAction();
             if ((action == null) || (action.isEmpty())) {
-                lockStartStop = false;
+
                 stopSelf(startId);
                 return START_NOT_STICKY;
             }
@@ -191,7 +190,6 @@ public class RootExecService extends Service {
     private void sendResult(List<String> commandsResult, int mark) {
 
         if (commandsResult == null || mark == NullMark) {
-            lockStartStop = false;
             return;
         }
 
@@ -200,8 +198,6 @@ public class RootExecService extends Service {
         intent.putExtra("CommandsResult", comResult);
         intent.putExtra("Mark", mark);
         sendBroadcast(intent);
-
-        lockStartStop = false;
     }
 
     @Override
