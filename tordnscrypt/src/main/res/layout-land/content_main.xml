@@ -9,7 +9,7 @@
     tools:context=".MainActivity"
     tools:showIn="@layout/app_bar_main">
 
-    <LinearLayout
+    <android.support.v7.widget.LinearLayoutCompat
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -22,7 +22,7 @@
             android:layout_height="0dp"
             android:layout_weight="0"
             android:tag="topFragmentTAG" />
-    </LinearLayout>
+    </android.support.v7.widget.LinearLayoutCompat>
 
     <android.support.v7.widget.CardView
         android:layout_width="match_parent"
