@@ -187,6 +187,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
         String[] logcatCommands = {
                 "cd " + appDataDir,
+                busyboxPath + "rm -rf logs_dir",
                 busyboxPath + "mkdir -m 655 -p logs_dir",
                 busyboxPath + "cp -R logs logs_dir",
                 "logcat -d | grep " + pid + " > logs_dir/logcat.log",

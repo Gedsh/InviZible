@@ -50,7 +50,6 @@ import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.copyBinaryFile;
-import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.copyFolder;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.deleteFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
@@ -449,11 +448,11 @@ public class FileOperations {
 
             File[] files = usedDir.listFiles();
 
-            if (files.length == 0) {
-                if (!usedDir.delete()) {
-                    throw new IllegalStateException("Impossible to delete empty dir " + inputPath);
-                }
-            } else {
+            if (files == null) {
+                throw new IllegalStateException("Impossible to delete dir, listFiles is null " + inputPath);
+            }
+
+            if (files.length != 0) {
                 for (File file: files) {
                     if (file.isFile()) {
                         deleteFileSynchronous(context, file.getParent(), file.getName());
@@ -686,6 +685,12 @@ public class FileOperations {
 
     public void restoreAccess(Context context, String filePath) {
         if (context != null) {
+            boolean rootIsAvailable = new PrefManager(context).getBoolPref("rootIsAvailable");
+
+            if (!rootIsAvailable) {
+                return;
+            }
+
             IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
             context.registerReceiver(br, intentFilterBckgIntSer);
 
