@@ -27,6 +27,7 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.ResultReceiver;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 
 import java.lang.reflect.Field;
@@ -40,10 +41,9 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 @SuppressLint("PrivateApi")
 public class ApManager {
     private Context context;
-    //private WifiManager wifiManager;
     public static int apStateON = 100;
     public static int apStateOFF = 200;
-    private static WifiManager.LocalOnlyHotspotReservation mReservation;
+    private static Object mReservation;
 
     @SuppressLint("WifiManagerPotentialLeak")
     public ApManager(Context context) {
@@ -53,30 +53,34 @@ public class ApManager {
 
     //check whether wifi hotspot on or off
     public int isApOn() {
+        int result = 300;
 
         try {
             WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            Method method;
+            Method method = null;
             if (wifiManager != null) {
                 method = wifiManager.getClass().getDeclaredMethod("isWifiApEnabled");
                 method.setAccessible(true);
-                if ((Boolean) method.invoke(wifiManager)) {
-                    return apStateON;
-                } else {
-                    return apStateOFF;
-                }
-
             }
-        }
-        catch (Exception e) {
+
+            if (method != null) {
+                if ((Boolean) method.invoke(wifiManager)) {
+                    result = apStateON;
+                } else {
+                    result = apStateOFF;
+                }
+            }
+        } catch (Exception e) {
             Log.w(LOG_TAG, "ApManager isApOn Exception " + e.getMessage() + System.lineSeparator() + e.getCause());
         }
-        return 300;
+
+        return result;
     }
 
     // toggle wifi hotspot on or off
-    @SuppressWarnings("JavaReflectionMemberAccess")
     public boolean configApState() {
+        boolean result = false;
+
         try {
             WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             // if WiFi is on, turn it off
@@ -87,90 +91,120 @@ public class ApManager {
             }
 
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
-                try {
-                    if (wifiManager != null) {
-                        Method wifiApConfigurationMethod = wifiManager.getClass().getMethod("getWifiApConfiguration");
-                        WifiConfiguration netConfig = (WifiConfiguration)wifiApConfigurationMethod.invoke(wifiManager);
-                        Method method = wifiManager.getClass().getMethod("setWifiApEnabled", WifiConfiguration.class, boolean.class);
-                        int apState = isApOn();
-                        if (apState==apStateON) {
-                            method.invoke(wifiManager, netConfig, false);
-                        } else if (apState == apStateOFF) {
-                            method.invoke(wifiManager, netConfig, true);
-                        }
-                        return true;
-                    }
-                } catch (Exception e) {
-                    Log.e(LOG_TAG, "ApManager configApState M Exception " + e.getMessage() + System.lineSeparator() + e.getCause());
-                }
-
+                result = configureHotspotBeforeNougat(wifiManager);
             } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                try {
-                    Class<ConnectivityManager> connectivityClass = ConnectivityManager.class;
-                    ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService
-                            (CONNECTIVITY_SERVICE);
-
-                    int apState = isApOn();
-                    if (apState==apStateOFF) {
-                        Field internalConnectivityManagerField = ConnectivityManager.class.getDeclaredField("mService");
-                        internalConnectivityManagerField.setAccessible(true);
-
-                        callStartTethering(internalConnectivityManagerField.get(connectivityManager));
-
-                    } else if (apState == apStateON) {
-                        Method stopTetheringMethod = connectivityClass.getDeclaredMethod("stopTethering", int.class);
-                        stopTetheringMethod.invoke(connectivityManager, 0);
-                    }
-                    return true;
-
-                } catch (Exception e) {
-                    Log.e(LOG_TAG, "ApManager configApState N Exception " + e.getMessage() + System.lineSeparator() + e.getCause());
-                }
+                result = configureHotspotNougat();
             } else {
-                try {
-                    int apState = isApOn();
-                    if (apState==apStateOFF) {
-                        WifiManager manager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-
-                        if (manager != null) {
-                            manager.startLocalOnlyHotspot(new WifiManager.LocalOnlyHotspotCallback() {
-
-                                @Override
-                                public void onStarted(WifiManager.LocalOnlyHotspotReservation reservation) {
-                                    super.onStarted(reservation);
-                                    Log.d(LOG_TAG, "Wifi Hotspot is on now");
-                                    mReservation = reservation;
-                                }
-
-                                @Override
-                                public void onStopped() {
-                                    super.onStopped();
-                                    Log.d(LOG_TAG, "Wifi Hotspot onStopped: ");
-                                }
-
-                                @Override
-                                public void onFailed(int reason) {
-                                    super.onFailed(reason);
-                                    Log.d(LOG_TAG, "Wifi Hotspot onFailed: ");
-                                }
-                            }, new Handler());
-                        }
-                    } else if (apState == apStateON) {
-                        if (mReservation != null) {
-                            mReservation.close();
-                            mReservation = null;
-                        }
-                    }
-                    return true;
-
-                } catch (Exception e) {
-                    Log.e(LOG_TAG, "ApManager configApState O Exception " + e.getMessage() + System.lineSeparator() + e.getCause());
-                }
+                result = configureHotspotOreoAndHigher();
             }
         } catch (Exception e) {
             Log.e(LOG_TAG, "ApManager configApState Exception " + e.getMessage() + System.lineSeparator() + e.getCause());
         }
-        return false;
+
+        return result;
+    }
+
+    private boolean configureHotspotBeforeNougat(WifiManager wifiManager) {
+        boolean result = false;
+
+        try {
+            if (wifiManager != null) {
+                Method wifiApConfigurationMethod = wifiManager.getClass().getMethod("getWifiApConfiguration");
+                WifiConfiguration netConfig = (WifiConfiguration) wifiApConfigurationMethod.invoke(wifiManager);
+                Method method = wifiManager.getClass().getMethod("setWifiApEnabled", WifiConfiguration.class, boolean.class);
+                int apState = isApOn();
+                if (apState == apStateON) {
+                    method.invoke(wifiManager, netConfig, false);
+                } else if (apState == apStateOFF) {
+                    method.invoke(wifiManager, netConfig, true);
+                }
+                result = true;
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "ApManager configApState M Exception " + e.getMessage() + System.lineSeparator() + e.getCause());
+        }
+
+        return result;
+    }
+
+    @SuppressWarnings("JavaReflectionMemberAccess")
+    private boolean configureHotspotNougat() {
+        boolean result = false;
+
+        try {
+            Class<ConnectivityManager> connectivityClass = ConnectivityManager.class;
+            ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService
+                    (CONNECTIVITY_SERVICE);
+
+            int apState = isApOn();
+            if (apState == apStateOFF) {
+                Field internalConnectivityManagerField = ConnectivityManager.class.getDeclaredField("mService");
+                internalConnectivityManagerField.setAccessible(true);
+
+                callStartTethering(internalConnectivityManagerField.get(connectivityManager));
+
+            } else if (apState == apStateON) {
+                Method stopTetheringMethod = connectivityClass.getDeclaredMethod("stopTethering", int.class);
+                stopTetheringMethod.invoke(connectivityManager, 0);
+            }
+
+            result = true;
+
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "ApManager configApState N Exception " + e.getMessage() + System.lineSeparator() + e.getCause());
+        }
+
+        return result;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private boolean configureHotspotOreoAndHigher() {
+        boolean result = false;
+
+        try {
+            int apState = isApOn();
+            if (apState == apStateOFF) {
+                WifiManager manager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+
+                if (manager != null) {
+                    manager.startLocalOnlyHotspot(new WifiManager.LocalOnlyHotspotCallback() {
+
+                        @Override
+                        public void onStarted(WifiManager.LocalOnlyHotspotReservation reservation) {
+                            super.onStarted(reservation);
+                            Log.d(LOG_TAG, "Wifi Hotspot is on now");
+                            mReservation = reservation;
+                        }
+
+                        @Override
+                        public void onStopped() {
+                            super.onStopped();
+                            Log.d(LOG_TAG, "Wifi Hotspot onStopped: ");
+                        }
+
+                        @Override
+                        public void onFailed(int reason) {
+                            super.onFailed(reason);
+                            Log.d(LOG_TAG, "Wifi Hotspot onFailed: ");
+                        }
+                    }, new Handler());
+                }
+            } else if (apState == apStateON) {
+                if (mReservation instanceof WifiManager.LocalOnlyHotspotReservation) {
+                    ((WifiManager.LocalOnlyHotspotReservation)mReservation).close();
+                    mReservation = null;
+                } else {
+                    throw new Exception("ApManager mReservation = null");
+                }
+            }
+
+            result = true;
+
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "ApManager configApState O Exception " + e.getMessage() + System.lineSeparator() + e.getCause());
+        }
+
+        return result;
     }
 
     private void callStartTethering(Object internalConnectivityManager) throws ReflectiveOperationException {
