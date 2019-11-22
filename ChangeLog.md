@@ -5,9 +5,7 @@
 * Add correct processing when unable to start module
 * Add Polish language
 
-
 **InviZible Pro beta 0.3.0**
-
 * Material design
 * Update day/night theme
 * UI/UX improvements
@@ -21,21 +19,15 @@
 * Change save logs method and file format to zip
 * Total code refactoring and optimization
 
-
 **InviZible Pro beta 0.3.1**
-
 * Fix modules update result message
 * Fix modules restart after modules updates
 * Fix dialog fragments illegal state
 
-
 **InviZible Pro beta 0.3.2**
-
 * Implemented new full no root mode to use InviZible modules as proxy
 * UX improvements
 * Bug fixes
 
-
 **InviZible Pro beta 0.3.3**
-
 * Bug fixes
