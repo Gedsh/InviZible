@@ -34,3 +34,8 @@
 * Implemented new full no root mode to use InviZible modules as proxy
 * UX improvements
 * Bug fixes
+
+
+**InviZible Pro beta 0.3.3**
+
+* Bug fixes
