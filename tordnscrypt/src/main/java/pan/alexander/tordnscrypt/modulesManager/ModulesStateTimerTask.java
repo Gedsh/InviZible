@@ -68,9 +68,7 @@ public class ModulesStateTimerTask extends TimerTask {
             updateModulesState();
         }
 
-        if (modulesStatus.isRootAvailable()) {
-            updateIptablesRules();
-        }
+        updateIptablesRules();
 
         if (stopCounter <= 0) {
             safeStopModulesService();
@@ -134,17 +132,17 @@ public class ModulesStateTimerTask extends TimerTask {
                 return;
             }
 
-            if (iptablesRules != null) {
+            if (iptablesRules != null && modulesStatus.isRootAvailable()) {
                 String[] commands = iptablesRules.configureIptables(dnsCryptState, torState, itpdState);
                 iptablesRules.sendToRootExecService(commands);
+
+                if (modulesStatus.isIptablesRulesUpdateRequested()) {
+                    modulesStatus.setIptablesRulesUpdateRequested(false);
+                }
 
                 Log.i(LOG_TAG, "Iptables rules updated");
 
                 stopCounter = STOP_COUNTER_DELAY;
-            }
-
-            if (modulesStatus.isIptablesRulesUpdateRequested()) {
-                modulesStatus.setIptablesRulesUpdateRequested(false);
             }
 
         } else if (modulesStatus.isUseModulesWithRoot()) {
