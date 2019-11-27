@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.modulesManager;
+package pan.alexander.tordnscrypt.modules;
 
 /*
     This file is part of InviZible Pro.
@@ -36,12 +36,6 @@ public class ModulesRestarter {
 
     public static void restartITPD(Context context) {
         sendIntent(context, ModulesService.actionRestartITPD);
-    }
-
-    public static void requestModulesStatusUpdateIfUseModulesWithRoot(Context context) {
-        if (ModulesStatus.getInstance().isUseModulesWithRoot()) {
-            sendIntent(context, ModulesService.actionUpdateModulesStatus);
-        }
     }
 
     private static void sendIntent(Context context, String action) {

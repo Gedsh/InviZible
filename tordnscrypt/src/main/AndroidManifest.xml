@@ -52,7 +52,7 @@
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".modulesManager.ModulesService"
+            android:name=".modules.ModulesService"
             android:enabled="true"
             android:exported="false"/>
 

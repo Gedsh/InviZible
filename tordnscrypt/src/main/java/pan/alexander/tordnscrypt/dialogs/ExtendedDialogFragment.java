@@ -54,10 +54,9 @@ public abstract class ExtendedDialogFragment extends DialogFragment {
         if (dialog != null && getRetainInstance()) {
             dialog.setDismissMessage(null);
         }
+
         super.onDestroyView();
     }
-
-
 
     @NonNull
     @Override
@@ -73,7 +72,6 @@ public abstract class ExtendedDialogFragment extends DialogFragment {
 
     @Override
     public void show(FragmentManager manager, String tag) {
-        //super.show(manager, tag);
         try {
             FragmentTransaction ft = manager.beginTransaction();
             ft.add(this, tag);

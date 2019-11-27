@@ -19,32 +19,20 @@ package pan.alexander.tordnscrypt.dialogs.progressDialogs;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.support.v4.app.DialogFragment;
+import android.content.Context;
 import android.support.v7.app.AlertDialog;
 import android.widget.ProgressBar;
 
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.dialogs.ExtendedDialogFragment;
 
-public class RootCheckingProgressDialog extends ExtendedDialogFragment {
-
-    public static DialogFragment getInstance() {
-        return new RootCheckingProgressDialog();
-    }
-
-    @Override
-    public AlertDialog.Builder assignBuilder() {
-
-        if (getActivity() == null) {
-            return null;
-        }
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
+public class RootCheckingProgressDialog {
+    public static AlertDialog.Builder getBuilder(Context context) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomDialogTheme);
         builder.setTitle(R.string.root);
         builder.setMessage(R.string.root_available);
         builder.setIcon(R.drawable.ic_visibility_off_black_24dp);
 
-        ProgressBar progressBar = new ProgressBar(getActivity(),null, android.R.attr.progressBarStyleHorizontal);
+        ProgressBar progressBar = new ProgressBar(context,null, android.R.attr.progressBarStyleHorizontal);
         progressBar.setBackgroundResource(R.drawable.background_10dp_padding);
         progressBar.setIndeterminate(true);
         builder.setView(progressBar);

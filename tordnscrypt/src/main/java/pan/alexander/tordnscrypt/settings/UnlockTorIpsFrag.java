@@ -59,11 +59,11 @@ import java.util.Set;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
-import pan.alexander.tordnscrypt.modulesManager.ModulesRestarter;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Verifier;
-import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
-import pan.alexander.tordnscrypt.modulesManager.ModulesStatus;
+import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
@@ -265,7 +265,7 @@ public class UnlockTorIpsFrag extends Fragment {
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
         modulesStatus.setIptablesRulesUpdateRequested(true);
-        ModulesRestarter.requestModulesStatusUpdateIfUseModulesWithRoot(getActivity());
+        ModulesAux.requestModulesStatusUpdate(getActivity());
     }
 
     @Override

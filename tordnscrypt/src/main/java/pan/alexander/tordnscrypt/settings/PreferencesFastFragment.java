@@ -44,10 +44,10 @@ import java.util.Objects;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.language.Language;
-import pan.alexander.tordnscrypt.modulesManager.ModulesRestarter;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.utils.GetIPsJobService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.modulesManager.ModulesStatus;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -289,7 +289,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
                 if (new PrefManager(getActivity()).getBoolPref("Tor Running")) {
                     ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
-                    ModulesRestarter.requestModulesStatusUpdateIfUseModulesWithRoot(getActivity());
+                    ModulesAux.requestModulesStatusUpdate(getActivity());
                 }
 
                 if (Boolean.valueOf(newValue.toString())) {
@@ -304,7 +304,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 if (new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")
                         || new PrefManager(getActivity()).getBoolPref("Tor Running")) {
                     ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
-                    ModulesRestarter.requestModulesStatusUpdateIfUseModulesWithRoot(getActivity());
+                    ModulesAux.requestModulesStatusUpdate(getActivity());
                 }
                 return true;
             case "pref_fast_theme":

@@ -24,7 +24,7 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
-import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
+import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 

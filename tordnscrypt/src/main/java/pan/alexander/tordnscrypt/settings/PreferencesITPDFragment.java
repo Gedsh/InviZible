@@ -34,8 +34,8 @@ import java.util.Objects;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
-import pan.alexander.tordnscrypt.modulesManager.ModulesRestarter;
+import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 

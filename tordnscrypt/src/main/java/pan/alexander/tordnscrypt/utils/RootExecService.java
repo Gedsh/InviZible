@@ -50,7 +50,6 @@ public class RootExecService extends Service {
     public RootExecService() {
     }
 
-    private static boolean saveRootLogs = false;
     public static final int DNSCryptRunFragmentMark = 100;
     public static final int TorRunFragmentMark = 200;
     public static final int I2PDRunFragmentMark = 300;
@@ -65,6 +64,7 @@ public class RootExecService extends Service {
     public static final String COMMAND_RESULT = "pan.alexander.tordnscrypt.action.COMMANDS_RESULT";
     public static final String LOG_TAG = "pan.alexander.TPDCLogs";
 
+    private static boolean saveRootLogs = false;
     private static String autoStartDelay = "0";
 
     private final String ANDROID_CHANNEL_ID = "InviZible";
@@ -145,8 +145,8 @@ public class RootExecService extends Service {
 
 
     @SuppressWarnings("deprecation")
-    private List<String> runCommands(String[] runcommands) {
-        List<String> result = Shell.SU.run(runcommands);
+    private List<String> runCommands(String[] runCommands) {
+        List<String> result = Shell.SU.run(runCommands);
 
         if (saveRootLogs) {
             String appDataDir = getApplicationContext().getApplicationInfo().dataDir;
@@ -164,7 +164,7 @@ public class RootExecService extends Service {
                 PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(appDataDir + "/logs/RootExec.log", true)));
                 writer.println("********************");
                 writer.println("COMMANDS");
-                for (String command : runcommands)
+                for (String command : runCommands)
                     writer.println(command);
 
                 writer.println("--------------------");

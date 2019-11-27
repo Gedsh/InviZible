@@ -28,28 +28,11 @@ import static android.content.Context.MODE_PRIVATE;
 
 public class PrefManager {
 
-    //SharedPreferences.Editor editor;
     private static final String PREF_NAME = "TorPlusDNSCryptPref";
     private SharedPreferences sPref;
-    //private Set<String> stringSetDef;
-
-
 
     public PrefManager(Context context) {
-
         this.sPref = context.getSharedPreferences(PREF_NAME,MODE_PRIVATE);
-
-        //stringSetDef = new LinkedHashSet<>();
-    }
-
-    public String getStrPref(String stringID){
-        return sPref.getString(stringID, "");
-    }
-
-    public void setStrPref(String stringID, String stringValue){
-        SharedPreferences.Editor edit = sPref.edit();
-        edit.putString(stringID,stringValue);
-        edit.apply();
     }
 
     public boolean getBoolPref(String stringID){
@@ -59,6 +42,16 @@ public class PrefManager {
     public void setBoolPref(String stringID, boolean boolValue){
         SharedPreferences.Editor edit = sPref.edit();
         edit.putBoolean(stringID,boolValue);
+        edit.apply();
+    }
+
+    public String getStrPref(String stringID){
+        return sPref.getString(stringID, "");
+    }
+
+    public void setStrPref(String stringID, String stringValue){
+        SharedPreferences.Editor edit = sPref.edit();
+        edit.putString(stringID,stringValue);
         edit.apply();
     }
 

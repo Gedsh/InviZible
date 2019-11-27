@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.modulesManager;
+package pan.alexander.tordnscrypt.modules;
 /*
     This file is part of InviZible Pro.
 
@@ -42,6 +42,7 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
 public class ModulesService extends Service {
@@ -71,7 +72,7 @@ public class ModulesService extends Service {
     private NotificationManager notificationManager;
 
     private Timer checkModulesThreadsTimer;
-    private ModulesStateTimerTask checkModulesStateTask;
+    private ModulesStateLoop checkModulesStateTask;
     private ModulesStatus modulesStatus;
     private ModulesKiller modulesKiller;
 
@@ -157,6 +158,8 @@ public class ModulesService extends Service {
 
     private void startDNSCrypt() {
         try {
+            modulesStatus.setDnsCryptState(STARTING);
+
             ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(getApplicationContext(), mHandler, pathVars);
             Thread dnsCryptThread = new Thread(modulesStarterHelper.getDNSCryptStarterRunnable());
             dnsCryptThread.setDaemon(false);
@@ -185,6 +188,8 @@ public class ModulesService extends Service {
 
     private void startTor() {
         try {
+            modulesStatus.setTorState(STARTING);
+
             ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(getApplicationContext(), mHandler, pathVars);
             Thread torThread = new Thread(modulesStarterHelper.getTorStarterRunnable());
             torThread.setDaemon(false);
@@ -214,6 +219,8 @@ public class ModulesService extends Service {
 
     private void startITPD() {
         try {
+            modulesStatus.setItpdState(STARTING);
+
             ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(getApplicationContext(), mHandler, pathVars);
             Thread itpdThread = new Thread(modulesStarterHelper.getITPDStarterRunnable());
             itpdThread.setDaemon(false);
@@ -265,7 +272,9 @@ public class ModulesService extends Service {
 
                     makeDelay();
 
-                    startDNSCrypt();
+                    if (modulesStatus.getDnsCryptState() != RUNNING) {
+                        startDNSCrypt();
+                    }
 
                 } catch (InterruptedException e) {
                     Log.e(LOG_TAG, "ModulesService restartDNSCrypt join interrupted!");
@@ -288,7 +297,9 @@ public class ModulesService extends Service {
 
                     makeDelay();
 
-                    startTor();
+                    if (modulesStatus.getTorState() != RUNNING) {
+                        startTor();
+                    }
 
                 } catch (InterruptedException e) {
                     Log.e(LOG_TAG, "ModulesService restartTor join interrupted!");
@@ -311,7 +322,9 @@ public class ModulesService extends Service {
 
                     makeDelay();
 
-                    startITPD();
+                    if (modulesStatus.getItpdState() != RUNNING) {
+                        startITPD();
+                    }
 
                 } catch (InterruptedException e) {
                     Log.e(LOG_TAG, "ModulesService restartITPD join interrupted!");
@@ -329,7 +342,7 @@ public class ModulesService extends Service {
 
     private void startModulesThreadsTimer() {
         checkModulesThreadsTimer = new Timer();
-        checkModulesStateTask = new ModulesStateTimerTask(this);
+        checkModulesStateTask = new ModulesStateLoop(this);
         checkModulesThreadsTimer.schedule(checkModulesStateTask, 1, 1000);
     }
 

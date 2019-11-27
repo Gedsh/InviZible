@@ -35,10 +35,10 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import pan.alexander.tordnscrypt.modulesManager.ModulesRestarter;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
-import pan.alexander.tordnscrypt.modulesManager.ModulesStatus;
+import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
@@ -159,7 +159,7 @@ public class TorRefreshIPsWork {
                 }
 
                 ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
-                ModulesRestarter.requestModulesStatusUpdateIfUseModulesWithRoot(context);
+                ModulesAux.requestModulesStatusUpdate(context);
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && getIPsJobService != null) {
                     getIPsJobService.finishJob();
