@@ -33,14 +33,16 @@ import java.util.concurrent.TimeUnit;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
+import pan.alexander.tordnscrypt.modules.ModulesVersions;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.modulesManager.ModulesKiller;
-import pan.alexander.tordnscrypt.modulesManager.ModulesStatus;
+import pan.alexander.tordnscrypt.modules.ModulesKiller;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
-import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
+import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 
+import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class Installer implements TopFragment.OnActivityChangeListener {
@@ -350,8 +352,13 @@ public class Installer implements TopFragment.OnActivityChangeListener {
     }
 
     protected void refreshModulesStatus(Activity activity) {
-        ModulesStatus modulesStatus = ModulesStatus.getInstance();
-        modulesStatus.refreshViews(activity);
+        if (ModulesStatus.getInstance().isRootAvailable()
+                && ModulesStatus.getInstance().isUseModulesWithRoot()) {
+            Intent intent = new Intent(TOP_BROADCAST);
+            activity.sendBroadcast(intent);
+        } else {
+            ModulesVersions.getInstance().refreshVersions(activity);
+        }
     }
 
     protected void registerReceiver(Activity activity) {
@@ -379,7 +386,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
     }
 
     @Override
-    public void OnActivityChange(MainActivity mainActivity) {
+    public void onActivityChange(MainActivity mainActivity) {
         this.activity = mainActivity;
         this.mainActivity = mainActivity;
         installerUIChanger.setMainActivity(mainActivity);
