@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.modulesManager;
+package pan.alexander.tordnscrypt.modules;
 
 /*
     This file is part of InviZible Pro.
@@ -19,16 +19,9 @@ package pan.alexander.tordnscrypt.modulesManager;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.content.Context;
-import android.content.Intent;
-import android.util.Log;
-
-import java.util.concurrent.TimeUnit;
-
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
+import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
-import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
 public final class ModulesStatus {
@@ -40,6 +33,8 @@ public final class ModulesStatus {
     private volatile boolean rootAvailable = false;
     private volatile boolean useModulesWithRoot;
     private volatile boolean requestIptablesUpdate;
+    private volatile boolean requestContextUIDUpdate;
+    private volatile OperationMode mode;
 
     private static volatile ModulesStatus modulesStatus;
 
@@ -57,17 +52,7 @@ public final class ModulesStatus {
         return modulesStatus;
     }
 
-    public void refreshViews(Context context) {
-        if (isUseModulesWithRoot()) {
-            Intent intent = new Intent(TOP_BROADCAST);
-            context.sendBroadcast(intent);
-        } else {
-            ModulesVersions.getInstance().refreshVersions(context);
-        }
-
-    }
-
-    public void setUseModulesWithRoot(boolean useModulesWithRoot) {
+    public void setUseModulesWithRoot(final boolean useModulesWithRoot) {
         this.useModulesWithRoot = useModulesWithRoot;
     }
 
@@ -112,28 +97,22 @@ public final class ModulesStatus {
     }
 
     public void setIptablesRulesUpdateRequested(final boolean requestIptablesUpdate) {
-        if (requestIptablesUpdate) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    makeDelay();
-
-                    ModulesStatus.this.requestIptablesUpdate = true;
-                }
-
-            }).start();
-        } else {
-            this.requestIptablesUpdate = false;
-        }
-
-
+        this.requestIptablesUpdate = requestIptablesUpdate;
     }
 
-    private void makeDelay() {
-        try {
-            TimeUnit.SECONDS.sleep(1);
-        } catch (InterruptedException e) {
-            Log.e(LOG_TAG, "ModulesStatus setIptablesRulesUpdateRequested makeDelay interrupted! " + e.getMessage() + " " + e.getCause());
-        }
+    public boolean isContextUIDUpdateRequested() {
+        return requestContextUIDUpdate;
+    }
+
+    public void setContextUIDUpdateRequested(boolean requestContextUIDUpdate) {
+        this.requestContextUIDUpdate = requestContextUIDUpdate;
+    }
+
+    public OperationMode getMode() {
+        return mode;
+    }
+
+    public void setMode(OperationMode mode) {
+        this.mode = mode;
     }
 }
