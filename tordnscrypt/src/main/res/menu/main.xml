@@ -29,8 +29,15 @@
             android:title="@string/menu_use_root"
             app:showAsAction="never" />
         <item
-            android:id="@+id/menu_proxies_mode"
+            android:id="@+id/menu_vpn_mode"
+            android:enabled="false"
             android:orderInCategory="6"
+            android:title="@string/menu_use_vpn"
+            android:visible="false"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/menu_proxies_mode"
+            android:orderInCategory="7"
             android:title="@string/menu_use_proxies"
             app:showAsAction="never" />
     </group>

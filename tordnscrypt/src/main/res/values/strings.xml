@@ -89,6 +89,7 @@
 
     <string name="menu_use_root" translatable="false">Root Mode</string>
     <string name="menu_use_proxies" translatable="false">Proxies Mode</string>
+    <string name="menu_use_vpn" translatable="false">VPN Mode</string>
 
     <string name="title_activity_settings">Settings</string>
 
