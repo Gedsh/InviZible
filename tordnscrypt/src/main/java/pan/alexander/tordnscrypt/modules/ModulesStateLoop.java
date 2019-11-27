@@ -26,12 +26,14 @@ import java.util.TimerTask;
 import pan.alexander.tordnscrypt.iptables.IptablesRules;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
+import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
-public class ModulesStateTimerTask extends TimerTask {
+public class ModulesStateLoop extends TimerTask {
     //Depends on timer, currently 10 sec
     private final int STOP_COUNTER_DELAY = 10;
 
@@ -52,7 +54,7 @@ public class ModulesStateTimerTask extends TimerTask {
     //Delay in sec before service can stop
     private int stopCounter = STOP_COUNTER_DELAY;
 
-    ModulesStateTimerTask(ModulesService modulesService) {
+    ModulesStateLoop(ModulesService modulesService) {
         this.modulesService = modulesService;
 
         modulesStatus = ModulesStatus.getInstance();
@@ -73,13 +75,20 @@ public class ModulesStateTimerTask extends TimerTask {
         ModuleState torState = modulesStatus.getTorState();
         ModuleState itpdState = modulesStatus.getItpdState();
 
-        if (!modulesStatus.isUseModulesWithRoot()) {
-            updateModulesState();
+        OperationMode operationMode = modulesStatus.getMode();
+
+        boolean rootIsAvailable = modulesStatus.isRootAvailable();
+        boolean useModulesWithRoot = modulesStatus.isUseModulesWithRoot();
+        boolean contextUIDUpdateRequested = modulesStatus.isContextUIDUpdateRequested();
+
+
+        if (!useModulesWithRoot) {
+            updateModulesState(dnsCryptState, torState, itpdState);
         }
 
-        updateIptablesRules(dnsCryptState, torState, itpdState);
+        updateIptablesRules(dnsCryptState, torState, itpdState, operationMode, rootIsAvailable, useModulesWithRoot);
 
-        if (modulesStatus.isContextUIDUpdateRequested()){
+        if (rootIsAvailable && contextUIDUpdateRequested) {
             updateContextUID(dnsCryptState, torState, itpdState);
         }
 
@@ -88,39 +97,41 @@ public class ModulesStateTimerTask extends TimerTask {
         }
     }
 
-    private void updateModulesState() {
+    private void updateModulesState(ModuleState dnsCryptState, ModuleState torState, ModuleState itpdState) {
         if (dnsCryptThread != null && dnsCryptThread.isAlive()) {
-            if (modulesStatus.getDnsCryptState() == STOPPED) {
+            if (dnsCryptState == STOPPED) {
                 modulesStatus.setDnsCryptState(ModuleState.RUNNING);
             }
         } else {
-            if (modulesStatus.getDnsCryptState() == RUNNING) {
+            if (dnsCryptState == RUNNING) {
                 modulesStatus.setDnsCryptState(STOPPED);
             }
         }
 
         if (torThread != null && torThread.isAlive()) {
-            if (modulesStatus.getTorState() == STOPPED) {
+            if (torState == STOPPED) {
                 modulesStatus.setTorState(ModuleState.RUNNING);
             }
         } else {
-            if (modulesStatus.getTorState() == RUNNING) {
+            if (torState == RUNNING) {
                 modulesStatus.setTorState(STOPPED);
             }
         }
 
         if (itpdThread != null && itpdThread.isAlive()) {
-            if (modulesStatus.getItpdState() == STOPPED) {
+            if (itpdState == STOPPED) {
                 modulesStatus.setItpdState(ModuleState.RUNNING);
             }
         } else {
-            if (modulesStatus.getItpdState() == RUNNING) {
+            if (itpdState == RUNNING) {
                 modulesStatus.setItpdState(STOPPED);
             }
         }
     }
 
-    private void updateIptablesRules(ModuleState dnsCryptState, ModuleState torState, ModuleState itpdState) {
+    private void updateIptablesRules(ModuleState dnsCryptState, ModuleState torState,
+                                     ModuleState itpdState, OperationMode operationMode,
+                                     boolean rootIsAvailable, boolean useModulesWithRoot) {
 
         if (dnsCryptState != savedDNSCryptState
                 || torState != savedTorState
@@ -145,12 +156,12 @@ public class ModulesStateTimerTask extends TimerTask {
             if (modulesStatus.isIptablesRulesUpdateRequested()) {
                 modulesStatus.setIptablesRulesUpdateRequested(false);
 
-                if (!modulesStatus.isRootAvailable()) {
+                if (rootIsAvailable) {
                     Log.w(LOG_TAG, "Iptables rules isn't updated, no root!");
                 }
             }
 
-            if (iptablesRules != null && modulesStatus.isRootAvailable()) {
+            if (iptablesRules != null && rootIsAvailable && operationMode == ROOT_MODE) {
                 String[] commands = iptablesRules.configureIptables(dnsCryptState, torState, itpdState);
                 iptablesRules.sendToRootExecService(commands);
 
@@ -159,7 +170,7 @@ public class ModulesStateTimerTask extends TimerTask {
                 stopCounter = STOP_COUNTER_DELAY;
             }
 
-        } else if (modulesStatus.isUseModulesWithRoot()) {
+        } else if (useModulesWithRoot) {
 
             if (dnsCryptState != STOPPED && dnsCryptState != RUNNING) {
                 return;
@@ -193,7 +204,7 @@ public class ModulesStateTimerTask extends TimerTask {
         contextUIDUpdater.updateModulesContextAndUID();
 
         Log.i(LOG_TAG, "Modules Selinux context and UID updated for "
-                + (modulesStatus.isUseModulesWithRoot()? "Root" : "No Root"));
+                + (modulesStatus.isUseModulesWithRoot() ? "Root" : "No Root"));
     }
 
     private void safeStopModulesService() {
