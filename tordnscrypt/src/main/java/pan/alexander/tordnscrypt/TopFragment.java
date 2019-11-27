@@ -25,6 +25,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -32,6 +34,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -50,19 +53,22 @@ import pan.alexander.tordnscrypt.dialogs.NewUpdateDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.dialogs.UpdateModulesDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.RootCheckingProgressDialog;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Registration;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.installer.Installer;
-import pan.alexander.tordnscrypt.modulesManager.ModulesRunner;
-import pan.alexander.tordnscrypt.modulesManager.ModulesService;
-import pan.alexander.tordnscrypt.modulesManager.ModulesStatus;
-import pan.alexander.tordnscrypt.modulesManager.ModulesVersions;
+import pan.alexander.tordnscrypt.modules.ModulesRunner;
+import pan.alexander.tordnscrypt.modules.ModulesService;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.modules.ModulesVersions;
 import pan.alexander.tordnscrypt.update.UpdateCheck;
 import pan.alexander.tordnscrypt.update.UpdateService;
+import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 
 
 public class TopFragment extends Fragment {
@@ -82,12 +88,15 @@ public class TopFragment extends Fragment {
     public static String wrongSign;
     public static String appSign;
 
-    private DialogFragment dialogInterface;
+    private AlertDialog rootCheckingDialog;
     private boolean rootIsAvailable = false;
-    private String suVersion = "";
-    private List<String> suResult = null;
-    private List<String> bbResult = null;
-    private boolean proxies_mode = false;
+    private boolean rootIsAvailableSaved = false;
+    private static String suVersion = "";
+    private static List<String> suResult = null;
+    private static List<String> bbResult = null;
+
+    private OperationMode mode = UNDEFINED;
+    private boolean runModulesWithRoot = false;
 
     UpdateCheck updateCheck;
 
@@ -96,7 +105,7 @@ public class TopFragment extends Fragment {
     private OnActivityChangeListener onActivityChangeListener;
 
     public interface OnActivityChangeListener {
-        void OnActivityChange(MainActivity mainActivity);
+        void onActivityChange(MainActivity mainActivity);
     }
 
     public void setOnActivityChangeListener(OnActivityChangeListener onActivityChangeListener) {
@@ -126,7 +135,7 @@ public class TopFragment extends Fragment {
         rootChecker.execute();
 
         if (onActivityChangeListener != null && getActivity() instanceof MainActivity) {
-            onActivityChangeListener.OnActivityChange((MainActivity) getActivity());
+            onActivityChangeListener.onActivityChange((MainActivity) getActivity());
         }
     }
 
@@ -137,18 +146,21 @@ public class TopFragment extends Fragment {
 
         if (getActivity() != null) {
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            boolean runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+            rootIsAvailableSaved = rootIsAvailable = new PrefManager(getActivity()).getBoolPref("rootIsAvailable");
+            runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+            String operationMode = new PrefManager(getActivity()).getStrPref("OPERATION_MODE");
 
-            ModulesStatus.getInstance().setUseModulesWithRoot(runModulesWithRoot);
+            if (!operationMode.isEmpty()) {
+                mode = OperationMode.valueOf(operationMode);
+                ModulesAux.switchModes(getActivity(), rootIsAvailable, runModulesWithRoot, mode);
+            }
 
             if (!runModulesWithRoot && haveModulesSavedStateRunning() && !isModulesStarterServiceRunning()) {
                 startModulesStarterServiceIfStoppedBySystem();
                 Log.e(LOG_TAG, "ModulesService stopped by system!");
+            } else {
+                ModulesAux.requestModulesStatusUpdate(getActivity());
             }
-        }
-
-        if (getActivity() != null) {
-            proxies_mode = new PrefManager(getActivity()).getBoolPref("proxies_mode");
         }
     }
 
@@ -250,21 +262,15 @@ public class TopFragment extends Fragment {
                 setSUInfo(suResult, suVersion);
                 setBBinfo(bbResult);
 
-                if (!rootIsAvailable) {
-                    ModulesStatus.getInstance().setUseModulesWithRoot(false);
+                if (rootIsAvailable != rootIsAvailableSaved || mode == UNDEFINED) {
+                    ModulesAux.switchModes(getActivity(), rootIsAvailable, runModulesWithRoot, mode);
+
+                    if (getActivity() != null) {
+                        getActivity().invalidateOptionsMenu();
+                    }
                 }
 
-                if (proxies_mode) {
-                    ModulesStatus.getInstance().setRootAvailable(false);
-                } else {
-                    ModulesStatus.getInstance().setRootAvailable(rootIsAvailable);
-                }
-
-                if (getActivity() != null) {
-                    getActivity().invalidateOptionsMenu();
-                }
-
-                if (!isModulesInstalled(getActivity())) {
+                if (isModulesNotInstalled(getActivity())) {
                     actionModulesNotInstalled();
                 } else {
 
@@ -398,7 +404,7 @@ public class TopFragment extends Fragment {
                         "Super User Version: Unknown" +
                         fSuResult.get(0);
             }
-            Log.i(LOG_TAG, "Root manager version " + verSU);
+            Log.i(LOG_TAG, verSU);
         } else {
             rootIsAvailable = false;
             new PrefManager(getActivity()).setBoolPref("rootIsAvailable", false);
@@ -553,10 +559,10 @@ public class TopFragment extends Fragment {
         }
     }
 
-    private boolean isModulesInstalled(Context context) {
-        return new PrefManager(context).getBoolPref("DNSCrypt Installed")
-                && new PrefManager(context).getBoolPref("Tor Installed")
-                && new PrefManager(context).getBoolPref("I2PD Installed");
+    private boolean isModulesNotInstalled(Context context) {
+        return !new PrefManager(context).getBoolPref("DNSCrypt Installed")
+                || !new PrefManager(context).getBoolPref("Tor Installed")
+                || !new PrefManager(context).getBoolPref("I2PD Installed");
     }
 
     private void startModulesStarterServiceIfStoppedBySystem() {
@@ -597,24 +603,21 @@ public class TopFragment extends Fragment {
     }
 
     private void openPleaseWaitDialog() {
-        try {
-            if (getFragmentManager() != null) {
-                dialogInterface = RootCheckingProgressDialog.getInstance();
-                dialogInterface.show(getFragmentManager(), "rootCheckingProgressDialog");
-            }
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "RootChecker openPleaseWaitDialog fault " + e.getMessage() + " " + e.getCause());
+        if (getActivity() == null) {
+            return;
+        }
+
+        AlertDialog.Builder rootCheckingDialogBuilder = RootCheckingProgressDialog.getBuilder(getActivity());
+        rootCheckingDialog = rootCheckingDialogBuilder.show();
+        if (rootCheckingDialog.getWindow() != null) {
+            rootCheckingDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
     }
 
     private void closePleaseWaitDialog() {
-        try {
-            if (dialogInterface != null) {
-                dialogInterface.dismiss();
-                dialogInterface = null;
-            }
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "RootChecker openPleaseWaitDialog fault " + e.getMessage() + " " + e.getCause());
+        if (rootCheckingDialog != null) {
+            rootCheckingDialog.dismiss();
+            rootCheckingDialog = null;
         }
     }
 
