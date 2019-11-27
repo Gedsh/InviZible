@@ -87,7 +87,7 @@ public class ModulesKiller {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    modulesKiller.killWithKillAll("dnscrypt-proxy", null, true);
+                    modulesKiller.killWithPKill("dnscrypt-proxy", null, true, "SIGKILL", 5);
                 }
             }).start();
 
@@ -99,7 +99,7 @@ public class ModulesKiller {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    modulesKiller.killWithKillAll("tor", null, true);
+                    modulesKiller.killWithPKill("tor", null, true, "SIGKILL", 5);
                 }
             }).start();
 
@@ -111,7 +111,7 @@ public class ModulesKiller {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    modulesKiller.killWithKillAll("i2pd", null, true);
+                    modulesKiller.killWithPKill("i2pd", null, true, "SIGKILL", 5);
                 }
             }).start();
         }
@@ -135,28 +135,31 @@ public class ModulesKiller {
     }
 
     @SuppressWarnings("deprecation")
-    private synchronized boolean killWithKillAll(String module, Thread thread, boolean killWithRoot) {
+    private synchronized boolean killWithPKill(String module, Thread thread, boolean killWithRoot, String signal, int delaySec) {
         boolean result = false;
-        if (killWithRoot) {
-            String killString = pathVars.busyboxPath + "killall " + module;
-            //String killString = "";
-            String sleep = pathVars.busyboxPath + "sleep 3";
-            String checkString = pathVars.busyboxPath + "pgrep -l " + module;
+
+        String killString = pathVars.busyboxPath + "pkill -f " + module;
+        if (!signal.isEmpty()) {
+            killString = pathVars.busyboxPath + "pkill -f -" + signal + " " + module;
+        }
+
+        if (thread == null || killWithRoot) {
+            String sleep = pathVars.busyboxPath + "sleep " + delaySec;
+            String checkString = pathVars.busyboxPath + "pgrep -fl " + module;
             List<String> shellResult = Shell.SU.run(new String[]{killString, sleep, checkString});
-            if (shellResult == null) {
-                result = false;
-            } else {
-                result = !shellResult.toString().contains(module);
+
+            if (shellResult != null) {
+                result = !shellResult.toString().contains(module.toLowerCase().trim());
             }
 
             Log.i(LOG_TAG, "Kill " + module + " with root: result " + result);
-        } else if (thread != null) {
-            String killString = pathVars.busyboxPath + "killall " + module;
+        } else {
             Shell.SH.run(killString);
-            makeDelay(2);
+            makeDelay(delaySec);
             result = !thread.isAlive();
 
             Log.i(LOG_TAG, "Kill " + module + " without root: result " + result);
+
         }
         return result;
     }
@@ -197,22 +200,36 @@ public class ModulesKiller {
                 boolean result = false;
 
                 while (attempts < 3 && !result) {
-                    result = killWithKillAll("dnscrypt-proxy", dnsCryptThread, modulesStatus.isUseModulesWithRoot());
+                    if (attempts < 2) {
+                        result = killWithPKill(pathVars.dnscryptPath, dnsCryptThread, modulesStatus.isUseModulesWithRoot(),"", attempts + 1);
+                    } else {
+                        result = killWithPKill(pathVars.dnscryptPath, dnsCryptThread, modulesStatus.isUseModulesWithRoot(),"SIGKILL", attempts + 1);
+                    }
+
                     attempts++;
                 }
 
                 if (!result) {
-                    if (modulesStatus.isRootAvailable()) {
-                        Log.w(LOG_TAG, "ModulesKiller cannot stop DNSCrypt. Stop with root method!");
-                        killWithKillAll("dnscrypt-proxy", dnsCryptThread, true);
-                    } else {
+
+                    if (!modulesStatus.isUseModulesWithRoot()) {
                         Log.w(LOG_TAG, "ModulesKiller cannot stop DNSCrypt. Stop with interrupt thread!");
+
+                        makeDelay(5);
+
                         if (dnsCryptThread != null && dnsCryptThread.isAlive()) {
                             dnsCryptThread.interrupt();
+                            makeDelay(5);
+                        }
+
+                        if (dnsCryptThread != null) {
+                            result = !dnsCryptThread.isAlive();
                         }
                     }
 
-                    makeDelay(10);
+                    if (modulesStatus.isRootAvailable() && !result) {
+                        Log.w(LOG_TAG, "ModulesKiller cannot stop DNSCrypt. Stop with root method!");
+                        result = killWithPKill(pathVars.dnscryptPath, dnsCryptThread, true, "SIGKILL", 10);
+                    }
                 }
 
                 if (modulesStatus.isUseModulesWithRoot()) {
@@ -253,7 +270,6 @@ public class ModulesKiller {
     }
 
 
-
     Runnable getTorKillerRunnable() {
         return new Runnable() {
             @Override
@@ -262,22 +278,37 @@ public class ModulesKiller {
                 boolean result = false;
 
                 while (attempts < 3 && !result) {
-                    result = killWithKillAll("tor", torThread, modulesStatus.isUseModulesWithRoot());
+                    if (attempts < 2) {
+                        result = killWithPKill(pathVars.torPath, torThread, modulesStatus.isUseModulesWithRoot(), "", attempts + 1);
+                    } else {
+                        result = killWithPKill(pathVars.torPath, torThread, modulesStatus.isUseModulesWithRoot(), "SIGKILL", attempts + 1);
+                    }
+
                     attempts++;
                 }
 
                 if (!result) {
-                    if (modulesStatus.isRootAvailable()) {
-                        Log.w(LOG_TAG, "ModulesKiller cannot stop Tor. Stop with root method!");
-                        killWithKillAll("tor", torThread, true);
-                    } else {
+
+                    if (!modulesStatus.isUseModulesWithRoot()) {
                         Log.w(LOG_TAG, "ModulesKiller cannot stop Tor. Stop with interrupt thread!");
+
+                        makeDelay(5);
+
                         if (torThread != null && torThread.isAlive()) {
                             torThread.interrupt();
+                            makeDelay(5);
+                        }
+
+
+                        if (torThread != null) {
+                            result = !torThread.isAlive();
                         }
                     }
 
-                    makeDelay(10);
+                    if (modulesStatus.isRootAvailable() && !result) {
+                        Log.w(LOG_TAG, "ModulesKiller cannot stop Tor. Stop with root method!");
+                        result = killWithPKill(pathVars.torPath, torThread, true, "SIGKILL", 10);
+                    }
                 }
 
                 if (modulesStatus.isUseModulesWithRoot()) {
@@ -324,22 +355,35 @@ public class ModulesKiller {
                 boolean result = false;
 
                 while (attempts < 3 && !result) {
-                    result = killWithKillAll("i2pd", itpdThread, modulesStatus.isUseModulesWithRoot());
+                    if (attempts < 2) {
+                        result = killWithPKill(pathVars.itpdPath, itpdThread, modulesStatus.isUseModulesWithRoot(), "", attempts + 1);
+                    } else {
+                        result = killWithPKill(pathVars.itpdPath, itpdThread, modulesStatus.isUseModulesWithRoot(), "SIGKILL", attempts + 1);
+                    }
+
                     attempts++;
                 }
 
                 if (!result) {
-                    if (modulesStatus.isRootAvailable()) {
-                        Log.w(LOG_TAG, "ModulesKiller cannot stop I2P. Stop with root method!");
-                        killWithKillAll("i2pd", itpdThread, true);
-                    } else {
+                    if (!modulesStatus.isUseModulesWithRoot()) {
                         Log.w(LOG_TAG, "ModulesKiller cannot stop I2P. Stop with interrupt thread!");
+
+                        makeDelay(5);
+
                         if (itpdThread != null && itpdThread.isAlive()) {
                             itpdThread.interrupt();
+                            makeDelay(5);
+                        }
+
+                        if (itpdThread != null) {
+                            result = !itpdThread.isAlive();
                         }
                     }
 
-                    makeDelay(3);
+                    if (modulesStatus.isRootAvailable() && !result) {
+                        Log.w(LOG_TAG, "ModulesKiller cannot stop I2P. Stop with root method!");
+                        result = killWithPKill(pathVars.itpdPath, itpdThread, true, "SIGKILL", 10);
+                    }
                 }
 
                 if (modulesStatus.isUseModulesWithRoot()) {

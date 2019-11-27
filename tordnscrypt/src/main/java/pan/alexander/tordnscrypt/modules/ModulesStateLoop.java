@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.modulesManager;
+package pan.alexander.tordnscrypt.modules;
 
 /*
     This file is part of InviZible Pro.
@@ -39,6 +39,8 @@ public class ModulesStateTimerTask extends TimerTask {
     private final ModulesService modulesService;
     private final IptablesRules iptablesRules;
 
+    private final ContextUIDUpdater contextUIDUpdater;
+
     private Thread dnsCryptThread;
     private Thread torThread;
     private Thread itpdThread;
@@ -56,19 +58,30 @@ public class ModulesStateTimerTask extends TimerTask {
         modulesStatus = ModulesStatus.getInstance();
 
         iptablesRules = new ModulesIptablesRules(modulesService);
+
+        contextUIDUpdater = new ContextUIDUpdater(modulesService);
     }
 
     @Override
     public void run() {
+
         if (modulesStatus == null) {
             return;
         }
+
+        ModuleState dnsCryptState = modulesStatus.getDnsCryptState();
+        ModuleState torState = modulesStatus.getTorState();
+        ModuleState itpdState = modulesStatus.getItpdState();
 
         if (!modulesStatus.isUseModulesWithRoot()) {
             updateModulesState();
         }
 
-        updateIptablesRules();
+        updateIptablesRules(dnsCryptState, torState, itpdState);
+
+        if (modulesStatus.isContextUIDUpdateRequested()){
+            updateContextUID(dnsCryptState, torState, itpdState);
+        }
 
         if (stopCounter <= 0) {
             safeStopModulesService();
@@ -107,10 +120,7 @@ public class ModulesStateTimerTask extends TimerTask {
         }
     }
 
-    private void updateIptablesRules() {
-        ModuleState dnsCryptState = modulesStatus.getDnsCryptState();
-        ModuleState torState = modulesStatus.getTorState();
-        ModuleState itpdState = modulesStatus.getItpdState();
+    private void updateIptablesRules(ModuleState dnsCryptState, ModuleState torState, ModuleState itpdState) {
 
         if (dnsCryptState != savedDNSCryptState
                 || torState != savedTorState
@@ -132,13 +142,17 @@ public class ModulesStateTimerTask extends TimerTask {
                 return;
             }
 
+            if (modulesStatus.isIptablesRulesUpdateRequested()) {
+                modulesStatus.setIptablesRulesUpdateRequested(false);
+
+                if (!modulesStatus.isRootAvailable()) {
+                    Log.w(LOG_TAG, "Iptables rules isn't updated, no root!");
+                }
+            }
+
             if (iptablesRules != null && modulesStatus.isRootAvailable()) {
                 String[] commands = iptablesRules.configureIptables(dnsCryptState, torState, itpdState);
                 iptablesRules.sendToRootExecService(commands);
-
-                if (modulesStatus.isIptablesRulesUpdateRequested()) {
-                    modulesStatus.setIptablesRulesUpdateRequested(false);
-                }
 
                 Log.i(LOG_TAG, "Iptables rules updated");
 
@@ -146,11 +160,40 @@ public class ModulesStateTimerTask extends TimerTask {
             }
 
         } else if (modulesStatus.isUseModulesWithRoot()) {
+
+            if (dnsCryptState != STOPPED && dnsCryptState != RUNNING) {
+                return;
+            } else if (torState != STOPPED && torState != RUNNING) {
+                return;
+            } else if (itpdState != STOPPED && itpdState != RUNNING) {
+                return;
+            } else if (modulesStatus.isContextUIDUpdateRequested()) {
+                return;
+            }
+
             stopCounter--;
         } else if (dnsCryptState == STOPPED && torState == STOPPED && itpdState == STOPPED) {
             stopCounter--;
         }
 
+    }
+
+    private void updateContextUID(ModuleState dnsCryptState, ModuleState torState, ModuleState itpdState) {
+
+        if (dnsCryptState != STOPPED) {
+            return;
+        } else if (torState != STOPPED) {
+            return;
+        } else if (itpdState != STOPPED) {
+            return;
+        }
+
+        modulesStatus.setContextUIDUpdateRequested(false);
+
+        contextUIDUpdater.updateModulesContextAndUID();
+
+        Log.i(LOG_TAG, "Modules Selinux context and UID updated for "
+                + (modulesStatus.isUseModulesWithRoot()? "Root" : "No Root"));
     }
 
     private void safeStopModulesService() {
