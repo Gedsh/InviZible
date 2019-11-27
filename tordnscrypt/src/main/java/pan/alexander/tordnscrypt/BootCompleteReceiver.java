@@ -30,18 +30,20 @@ import android.util.Log;
 
 import java.util.Objects;
 
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
 import pan.alexander.tordnscrypt.utils.ApManager;
 import pan.alexander.tordnscrypt.utils.GetIPsJobService;
 import pan.alexander.tordnscrypt.utils.OwnFileReader;
 import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.modulesManager.ModulesKiller;
-import pan.alexander.tordnscrypt.modulesManager.ModulesRestarter;
-import pan.alexander.tordnscrypt.modulesManager.ModulesRunner;
-import pan.alexander.tordnscrypt.modulesManager.ModulesStatus;
+import pan.alexander.tordnscrypt.modules.ModulesKiller;
+import pan.alexander.tordnscrypt.modules.ModulesRestarter;
+import pan.alexander.tordnscrypt.modules.ModulesRunner;
+import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 
 public class BootCompleteReceiver extends BroadcastReceiver {
     private final int mJobId = PreferencesFastFragment.mJobId;
@@ -77,16 +79,14 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
             boolean rootIsAvailable = new PrefManager(context).getBoolPref("rootIsAvailable");
             boolean runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+            String operationMode = new PrefManager(context).getStrPref("OPERATION_MODE");
 
-            boolean proxyMode = new PrefManager(context).getBoolPref("proxies_mode");
-
-            if (proxyMode) {
-                ModulesStatus.getInstance().setRootAvailable(false);
-                ModulesStatus.getInstance().setUseModulesWithRoot(false);
-            } else {
-                ModulesStatus.getInstance().setRootAvailable(rootIsAvailable);
-                ModulesStatus.getInstance().setUseModulesWithRoot(runModulesWithRoot);
+            OperationMode mode = UNDEFINED;
+            if (!operationMode.isEmpty()) {
+                mode = OperationMode.valueOf(operationMode);
             }
+
+            ModulesAux.switchModes(context, rootIsAvailable, runModulesWithRoot, mode);
 
             boolean autoStartDNSCrypt = shPref.getBoolean("swAutostartDNS", false);
             boolean autoStartTor = shPref.getBoolean("swAutostartTor", false);
