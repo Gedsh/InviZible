@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.modulesManager;
+package pan.alexander.tordnscrypt.modules;
 
 /*
     This file is part of InviZible Pro.
@@ -31,17 +31,18 @@ import com.jrummyapps.android.shell.Shell;
 import java.util.List;
 
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
+import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.COMMAND_RESULT;
 import static pan.alexander.tordnscrypt.utils.RootExecService.DNSCryptRunFragmentMark;
 import static pan.alexander.tordnscrypt.utils.RootExecService.I2PDRunFragmentMark;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.RootExecService.TorRunFragmentMark;
-import static pan.alexander.tordnscrypt.modulesManager.ModulesService.DNSCRYPT_KEYWORD;
-import static pan.alexander.tordnscrypt.modulesManager.ModulesService.ITPD_KEYWORD;
-import static pan.alexander.tordnscrypt.modulesManager.ModulesService.TOR_KEYWORD;
+import static pan.alexander.tordnscrypt.modules.ModulesService.DNSCRYPT_KEYWORD;
+import static pan.alexander.tordnscrypt.modules.ModulesService.ITPD_KEYWORD;
+import static pan.alexander.tordnscrypt.modules.ModulesService.TOR_KEYWORD;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 
@@ -77,6 +78,8 @@ class ModulesStarterHelper {
 
                     shellResult = Shell.SU.run(dnsCmdString, waitString, checkIfModuleRunning);
 
+                    new PrefManager(context).setBoolPref("DNSCryptStartedWithRoot", true);
+
                     if (shellResult.getStdout().contains(pathVars.dnscryptPath)) {
                         sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, pathVars.dnscryptPath);
                     } else {
@@ -85,24 +88,27 @@ class ModulesStarterHelper {
 
                 } else {
                     dnsCmdString = pathVars.dnscryptPath + " --config " + pathVars.appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml";
+                    new PrefManager(context).setBoolPref("DNSCryptStartedWithRoot", false);
+
                     shellResult = Shell.SH.run(dnsCmdString);
                 }
 
                 if (!shellResult.isSuccessful()) {
+
+                    if (modulesStatus.getDnsCryptState() != STOPPING && modulesStatus.getDnsCryptState() != STOPPED) {
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(context, "DNSCrypt Module Fault: " + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr() + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    }
+
+                    modulesStatus.setDnsCryptState(STOPPED);
+
                     sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
 
                     Log.e(LOG_TAG, "Error DNSCrypt: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
-
-                    if (modulesStatus.getDnsCryptState() == STOPPING || modulesStatus.getDnsCryptState() == STOPPED) {
-                        return;
-                    }
-
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(context, "DNSCrypt Module Fault: " + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr() + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show();
-                        }
-                    });
                 }
             }
         };
@@ -127,6 +133,8 @@ class ModulesStarterHelper {
 
                     shellResult = Shell.SU.run(torCmdString, waitString, checkIfModuleRunning);
 
+                    new PrefManager(context).setBoolPref("TorStartedWithRoot", true);
+
                     if (shellResult.getStdout().contains(pathVars.torPath)) {
                         sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, pathVars.torPath);
                     } else {
@@ -136,24 +144,32 @@ class ModulesStarterHelper {
                 } else {
                     correctTorConfRunAsDaemon(context, pathVars.appDataDir, false);
                     torCmdString = pathVars.torPath + " -f " + pathVars.appDataDir + "/app_data/tor/tor.conf";
+                    new PrefManager(context).setBoolPref("TorStartedWithRoot", false);
+
                     shellResult = Shell.SH.run(torCmdString);
                 }
 
                 if (!shellResult.isSuccessful()) {
+
+                    if (modulesStatus.getTorState() != STOPPING && modulesStatus.getTorState() != STOPPED) {
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(context, "Tor Module Fault: " + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr() + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    }
+
+                    modulesStatus.setTorState(STOPPED);
+
                     sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
 
                     Log.e(LOG_TAG, "Error Tor: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
 
-                    if (modulesStatus.getTorState() == STOPPING || modulesStatus.getTorState() == STOPPED) {
-                        return;
+                    //Try to update Selinux context and UID once again
+                    if (shellResult.exitCode == 1) {
+                        modulesStatus.setContextUIDUpdateRequested(true);
                     }
-
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(context, "Tor Module Fault: " + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr() + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show();
-                        }
-                    });
                 }
             }
         };
@@ -182,6 +198,8 @@ class ModulesStarterHelper {
 
                     shellResult = Shell.SU.run(itpdCmdString, waitString, checkIfModuleRunning);
 
+                    new PrefManager(context).setBoolPref("ITPDStartedWithRoot", true);
+
                     if (shellResult.getStdout().contains(pathVars.itpdPath)) {
                         sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, pathVars.itpdPath);
                     } else {
@@ -191,25 +209,27 @@ class ModulesStarterHelper {
                 } else {
                     correctITPDConfRunAsDaemon(context, pathVars.appDataDir, false);
                     itpdCmdString = pathVars.itpdPath + " --conf " + pathVars.appDataDir + "/app_data/i2pd/i2pd.conf --datadir " + pathVars.appDataDir + "/i2pd_data";
+                    new PrefManager(context).setBoolPref("ITPDStartedWithRoot", false);
+
                     shellResult = Shell.SH.run(itpdCmdString);
                 }
 
                 if (!shellResult.isSuccessful()) {
 
+                    if (modulesStatus.getItpdState() != STOPPING && modulesStatus.getItpdState() != STOPPED) {
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(context, "Purple I2P Module Fault: " + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr() + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    }
+
+                    modulesStatus.setItpdState(STOPPED);
+
                     sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
 
                     Log.e(LOG_TAG, "Error ITPD: " + shellResult.exitCode + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
-
-                    if (modulesStatus.getItpdState() == STOPPING || modulesStatus.getItpdState()  == STOPPED) {
-                        return;
-                    }
-
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(context, "Purple I2P Module Fault: " + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr() + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show();
-                        }
-                    });
                 }
             }
         };
