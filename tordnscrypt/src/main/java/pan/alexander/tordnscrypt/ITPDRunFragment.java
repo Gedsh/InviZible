@@ -53,16 +53,17 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
-import pan.alexander.tordnscrypt.modulesManager.ModulesKiller;
-import pan.alexander.tordnscrypt.modulesManager.ModulesRunner;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
+import pan.alexander.tordnscrypt.modules.ModulesKiller;
+import pan.alexander.tordnscrypt.modules.ModulesRunner;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.OwnFileReader;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
-import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
-import pan.alexander.tordnscrypt.modulesManager.ModulesStatus;
+import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.TopFragment.ITPDVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
@@ -73,6 +74,7 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 
 /**
@@ -174,8 +176,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
 
                         } else if (!sb.toString().toLowerCase().contains(itpdPath)
                                 && sb.toString().contains("checkITPDRunning")) {
-                            if (modulesStatus.getItpdState() == STOPPED
-                                    || modulesStatus.getItpdState() == STOPPING) {
+                            if (modulesStatus.getItpdState() == STOPPED) {
                                 saveITPDStatusRunning(false);
                             }
                             stopDisplayLog();
@@ -254,7 +255,14 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
         if (isITPDInstalled()) {
             setITPDInstalled(true);
 
-            if (isSavedITPDStatusRunning()) {
+            if (modulesStatus.getItpdState() == STOPPING){
+                setITPDStopping();
+
+                if (tvITPDinfoLog != null)
+                    tvITPDinfoLog.setText(Html.fromHtml(logFile.readLastLines()));
+
+                displayLog(10000);
+            } else if (isSavedITPDStatusRunning()) {
                 setITPDRunning();
 
                 if (tvITPDinfoLog != null)
@@ -318,13 +326,19 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
 
             cleanLogFileNoRootMethod();
 
-            boolean rootIsAvailable = modulesStatus.isRootAvailable();
+            boolean rootMode = modulesStatus.getMode() == ROOT_MODE;
 
             if (!new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("I2PD Running")
                     && new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("Tor Running")
                     && !new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
-                if (rootIsAvailable && getFragmentManager() != null) {
+                if (modulesStatus.isContextUIDUpdateRequested()) {
+                    Toast.makeText(getActivity(), R.string.please_wait, Toast.LENGTH_SHORT).show();
+                    setStartButtonEnabled(true);
+                    return;
+                }
+
+                if (rootMode && getFragmentManager() != null) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             getActivity(), getText(R.string.helper_tor_itpd).toString(), "tor_itpd");
                     if (notificationHelper != null) {
@@ -343,8 +357,14 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                     !new PrefManager(getActivity()).getBoolPref("Tor Running")
                     && !new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
+                if (modulesStatus.isContextUIDUpdateRequested()) {
+                    Toast.makeText(getActivity(), R.string.please_wait, Toast.LENGTH_SHORT).show();
+                    setStartButtonEnabled(true);
+                    return;
+                }
 
-                if (rootIsAvailable && getFragmentManager() != null) {
+
+                if (rootMode && getFragmentManager() != null) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             getActivity(), getText(R.string.helper_itpd).toString(), "itpd");
                     if (notificationHelper != null) {
@@ -363,8 +383,14 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                     !new PrefManager(getActivity()).getBoolPref("Tor Running")
                     && new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
+                if (modulesStatus.isContextUIDUpdateRequested()) {
+                    Toast.makeText(getActivity(), R.string.please_wait, Toast.LENGTH_SHORT).show();
+                    setStartButtonEnabled(true);
+                    return;
+                }
 
-                if (rootIsAvailable && getFragmentManager() != null) {
+
+                if (rootMode && getFragmentManager() != null) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             getActivity(), getText(R.string.helper_dnscrypt_itpd).toString(), "dnscrypt_itpd");
                     if (notificationHelper != null) {
@@ -383,7 +409,13 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                     new PrefManager(getActivity()).getBoolPref("Tor Running")
                     && new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
-                if (rootIsAvailable && getFragmentManager() != null) {
+                if (modulesStatus.isContextUIDUpdateRequested()) {
+                    Toast.makeText(getActivity(), R.string.please_wait, Toast.LENGTH_SHORT).show();
+                    setStartButtonEnabled(true);
+                    return;
+                }
+
+                if (rootMode && getFragmentManager() != null) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             getActivity(), getText(R.string.helper_dnscrypt_tor_itpd).toString(), "dnscrypt_tor_itpd");
                     if (notificationHelper != null) {
@@ -480,7 +512,6 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
 
     private void setITPDStarting() {
         setITPDStatus(R.string.tvITPDStarting, R.color.textModuleStatusColorStarting);
-        modulesStatus.setItpdState(STARTING);
     }
 
     private void setITPDRunning() {
@@ -490,7 +521,6 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
 
     private void setITPDStopping() {
         setITPDStatus(R.string.tvITPDStopping, R.color.textModuleStatusColorStopping);
-        modulesStatus.setItpdState(STOPPING);
     }
 
     private void setITPDStopped() {
@@ -510,6 +540,8 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
         if (getActivity() != null) {
 
             modulesStatus.setItpdState(STOPPED);
+
+            ModulesAux.requestModulesStatusUpdate(getActivity());
 
             if (getFragmentManager() != null) {
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(

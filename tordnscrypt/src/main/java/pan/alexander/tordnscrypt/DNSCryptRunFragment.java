@@ -47,16 +47,17 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.modulesManager.ModulesKiller;
-import pan.alexander.tordnscrypt.modulesManager.ModulesRunner;
+import pan.alexander.tordnscrypt.modules.ModulesKiller;
+import pan.alexander.tordnscrypt.modules.ModulesRunner;
 import pan.alexander.tordnscrypt.utils.OwnFileReader;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
-import pan.alexander.tordnscrypt.modulesManager.ModulesStatus;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
@@ -69,6 +70,7 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 
 public class DNSCryptRunFragment extends Fragment implements View.OnClickListener {
@@ -165,8 +167,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
                         } else if (!sb.toString().toLowerCase().contains(dnscryptPath)
                                 && sb.toString().contains("checkDNSRunning")) {
-                            if (modulesStatus.getDnsCryptState() == STOPPED
-                                    || modulesStatus.getDnsCryptState() == STOPPING) {
+                            if (modulesStatus.getDnsCryptState() == STOPPED) {
                                 saveDNSStatusRunning(false);
                             }
                             stopDisplayLog();
@@ -270,7 +271,15 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
         if (isDNSCryptInstalled()) {
             setDNSCryptInstalled(true);
 
-            if (isSavedDNSStatusRunning()) {
+            if (modulesStatus.getDnsCryptState() == STOPPING){
+                setDnsCryptStopping();
+
+                if (logFile != null) {
+                    tvDNSCryptLog.setText(Html.fromHtml(logFile.readLastLines()));
+                }
+
+                displayLog(1000);
+            } else if (isSavedDNSStatusRunning()) {
                 setDnsCryptRunning();
 
                 if (logFile != null) {
@@ -336,14 +345,20 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
             cleanLogFileNoRootMethod();
 
-            boolean rootIsAvailable = modulesStatus.isRootAvailable();
+            boolean rootMode = modulesStatus.getMode() == ROOT_MODE;
 
 
             if (new PrefManager(getActivity()).getBoolPref("Tor Running")
                     && !new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
+                if (modulesStatus.isContextUIDUpdateRequested()) {
+                    Toast.makeText(getActivity(), R.string.please_wait, Toast.LENGTH_SHORT).show();
+                    setStartButtonEnabled(true);
+                    return;
+                }
+
                 if (!routeAllThroughTor) {
-                    if (rootIsAvailable && getFragmentManager() != null) {
+                    if (rootMode && getFragmentManager() != null) {
                         NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                                 getActivity(), getText(R.string.helper_dnscrypt_tor).toString(), "dnscrypt_tor");
                         if (notificationHelper != null) {
@@ -351,7 +366,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                         }
                     }
                 } else {
-                    if (rootIsAvailable && getFragmentManager() != null) {
+                    if (rootMode && getFragmentManager() != null) {
                         NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                                 getActivity(), getText(R.string.helper_dnscrypt_tor_privacy).toString(), "dnscrypt_tor_privacy");
                         if (notificationHelper != null) {
@@ -368,7 +383,13 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
             } else if (!new PrefManager(getActivity()).getBoolPref("Tor Running")
                     && !new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
-                if (rootIsAvailable && getFragmentManager() != null) {
+                if (modulesStatus.isContextUIDUpdateRequested()) {
+                    Toast.makeText(getActivity(), R.string.please_wait, Toast.LENGTH_SHORT).show();
+                    setStartButtonEnabled(true);
+                    return;
+                }
+
+                if (rootMode && getFragmentManager() != null) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             getActivity(), getText(R.string.helper_dnscrypt).toString(), "dnscrypt");
                     if (notificationHelper != null) {
@@ -387,7 +408,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
             } else if (new PrefManager(getActivity()).getBoolPref("Tor Running")
                     && new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
-                if (rootIsAvailable && getFragmentManager() != null) {
+                if (rootMode && getFragmentManager() != null) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             getActivity(), getText(R.string.helper_tor).toString(), "tor");
                     if (notificationHelper != null) {
@@ -475,7 +496,6 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
     private void setDnsCryptStarting() {
         setDNSCryptStatus(R.string.tvDNSStarting, R.color.textModuleStatusColorStarting);
-        modulesStatus.setDnsCryptState(STARTING);
     }
 
     private void setDnsCryptRunning() {
@@ -485,7 +505,6 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
     private void setDnsCryptStopping() {
         setDNSCryptStatus(R.string.tvDNSStopping, R.color.textModuleStatusColorStopping);
-        modulesStatus.setDnsCryptState(STOPPING);
     }
 
     private void setDnsCryptStopped() {
@@ -502,6 +521,8 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
         if (getActivity() != null) {
 
             modulesStatus.setDnsCryptState(STOPPED);
+
+            ModulesAux.requestModulesStatusUpdate(getActivity());
 
             if (getFragmentManager() != null) {
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
