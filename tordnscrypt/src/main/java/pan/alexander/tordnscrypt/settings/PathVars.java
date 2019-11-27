@@ -32,6 +32,11 @@ import pan.alexander.tordnscrypt.utils.PrefManager;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class PathVars {
+    public final String rejectAddress = "10.191.0.2";
+    public final String itpdTeleSocksProxyPort1 = "1080";
+    public final String itpdTeleSocksProxyPort2 = "4480";
+    public final String itpdTeleSocksProxyPort3 = "4481";
+
     public String appDataDir;
     public String dnsCryptPort;
     public String itpdHttpProxyPort;
@@ -42,15 +47,14 @@ public class PathVars {
     public String dnscryptPath;
     public String torPath;
     public String itpdPath;
-    public String obfsPath;
     public String busyboxPath;
     public String iptablesPath;
-    public String mediaDir;
     public String pathBackup;
     public String torSOCKSPort;
     public String torHTTPTunnelPort;
     public String itpdSOCKSPort;
-    public final String rejectAddress = "10.191.0.2";
+
+    String obfsPath;
 
     public PathVars (Context context) {
 
