@@ -19,6 +19,7 @@ package pan.alexander.tordnscrypt;
 */
 
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.Fragment;
 import android.content.Intent;
@@ -43,7 +44,7 @@ import pan.alexander.tordnscrypt.settings.ShowLogFragment;
 import pan.alexander.tordnscrypt.settings.ShowRulesRecycleFrag;
 import pan.alexander.tordnscrypt.settings.UnlockTorAppsFragment;
 import pan.alexander.tordnscrypt.settings.UnlockTorIpsFrag;
-import pan.alexander.tordnscrypt.utils.fileOperations.FileOperations;
+import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
@@ -57,6 +58,7 @@ public class SettingsActivity extends LangAppCompatActivity
     public static final String dnscrypt_proxy_toml_tag = "pan.alexander.tordnscrypt/app_data/dnscrypt-proxy/dnscrypt-proxy.toml";
     public static final String tor_conf_tag = "pan.alexander.tordnscrypt/app_data/tor/tor.conf";
     public static final String itpd_conf_tag = "pan.alexander.tordnscrypt/app_data/itpd/itpd.conf";
+    public static final String itpd_tunnels_tag = "pan.alexander.tordnscrypt/app_data/itpd/tunnels.conf";
     public static final String public_resolvers_md_tag = "pan.alexander.tordnscrypt/app_data/dnscrypt-proxy/public-resolvers.md";
     public static final String rules_tag = "pan.alexander.tordnscrypt/app_data/abstract_rules";
     public static DialogFragment dialogFragment;
@@ -148,7 +150,14 @@ public class SettingsActivity extends LangAppCompatActivity
         } else if (Objects.equals(intent.getAction(), "pref_itpd_addressbook_subscriptions")) {
             SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
             ArrayList<String> rules_file = new ArrayList<>();
-            String[] arr = sp.getString("subscriptions", "").split(",");
+
+            String subscriptionsSaved = sp.getString("subscriptions", "");
+
+            String[] arr = {""};
+            if (subscriptionsSaved != null && subscriptionsSaved.contains(",")) {
+                arr = subscriptionsSaved.split(",");
+            }
+
             String subscriptions = "subscriptions";
             for (String str : arr) {
                 rules_file.add(str.trim());
@@ -225,7 +234,9 @@ public class SettingsActivity extends LangAppCompatActivity
 
     @Override
     public void onBackPressed() {
-        Fragment frgCountry = getSupportFragmentManager().findFragmentByTag("CountrySelectFragment");
+        FragmentManager fm = getSupportFragmentManager();
+
+        Fragment frgCountry = fm.findFragmentByTag("CountrySelectFragment");
         if (frgCountry != null && frgCountry.isVisible() && key_tor != null && val_tor != null) {
             Bundle bundle = new Bundle();
             bundle.putStringArrayList("key_tor", key_tor);
@@ -237,6 +248,7 @@ public class SettingsActivity extends LangAppCompatActivity
             fTrans.commit();
             return;
         }
+
         super.onBackPressed();
     }
 }
