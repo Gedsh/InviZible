@@ -58,30 +58,34 @@ import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.help.HelpActivity;
 import pan.alexander.tordnscrypt.iptables.IptablesRules;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
-import pan.alexander.tordnscrypt.modulesManager.ModulesKiller;
-import pan.alexander.tordnscrypt.modulesManager.ModulesRestarter;
-import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.ApManager;
 import pan.alexander.tordnscrypt.utils.AppExitDetectService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Registration;
-import pan.alexander.tordnscrypt.modulesManager.ModulesStatus;
+import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class MainActivity extends LangAppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
+    public static DialogInterface modernDialog = null;
+    private static final int CODE_IS_AP_ON = 100;
+
     public boolean childLockActive = false;
     private Timer timer;
-    private static final int CODE_IS_AP_ON = 100;
-    public static DialogInterface modernDialog = null;
     private Handler handler;
-
     private TopFragment topFragment;
     private DNSCryptRunFragment dNSCryptRunFragment;
     private TorRunFragment torRunFragment;
     private ITPDRunFragment iTPDRunFragment;
+    private ModulesStatus modulesStatus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,6 +110,8 @@ public class MainActivity extends LangAppCompatActivity
 
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        modulesStatus = ModulesStatus.getInstance();
 
         startAppExitDetectService();
     }
@@ -239,50 +245,86 @@ public class MainActivity extends LangAppCompatActivity
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
+
         boolean rootIsAvailable = new PrefManager(this).getBoolPref("rootIsAvailable");
+
+        switchIconsDependingOnMode(menu, rootIsAvailable);
+
+        switchChildLockIcon(menu);
+
+        if (rootIsAvailable) {
+            switchApIcon(menu);
+        }
+
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    private void switchIconsDependingOnMode(Menu menu, boolean rootIsAvailable) {
+
         boolean busyBoxIsAvailable = new PrefManager(this).getBoolPref("bbOK");
-        boolean rootMode = new PrefManager(this).getBoolPref("root_mode");
-        boolean proxyMode = new PrefManager(this).getBoolPref("proxies_mode");
+        OperationMode mode = UNDEFINED;
+
+        String operationMode = new PrefManager(this).getStrPref("OPERATION_MODE");
+        if (!operationMode.isEmpty()) {
+            mode = OperationMode.valueOf(operationMode);
+        }
+
 
         MenuItem menuRootMode = menu.findItem(R.id.menu_root_mode);
+        MenuItem menuVPNMode = menu.findItem(R.id.menu_vpn_mode);
         MenuItem menuProxiesMode = menu.findItem(R.id.menu_proxies_mode);
 
         MenuItem hotSpot = menu.findItem(R.id.item_hotspot);
         MenuItem rootIcon = menu.findItem(R.id.item_root);
-        MenuItem childLock = menu.findItem(R.id.item_unlock);
 
         if (rootIsAvailable) {
 
-            if (proxyMode) {
-                rootIcon.setIcon(R.drawable.ic_warning_white_24dp);
-            } else if (busyBoxIsAvailable) {
-                rootIcon.setIcon(R.drawable.ic_done_all_white_24dp);
+            if (mode == ROOT_MODE) {
+                menuRootMode.setChecked(true);
+            } else if (mode == PROXY_MODE) {
+                menuProxiesMode.setChecked(true);
+            } else if (mode == VPN_MODE) {
+                menuVPNMode.setChecked(true);
             } else {
-                rootIcon.setIcon(R.drawable.ic_done_white_24dp);
+                menuRootMode.setChecked(true);
+                modulesStatus.setMode(ROOT_MODE);
+                mode = ROOT_MODE;
             }
 
-            if (proxyMode) {
-                hotSpot.setVisible(false);
-                hotSpot.setEnabled(false);
+            if (mode == ROOT_MODE && busyBoxIsAvailable) {
+                rootIcon.setIcon(R.drawable.ic_done_all_white_24dp);
+            } else if (mode == ROOT_MODE) {
+                rootIcon.setIcon(R.drawable.ic_done_white_24dp);
+            } else if (mode == PROXY_MODE) {
+                rootIcon.setIcon(R.drawable.ic_warning_white_24dp);
             } else {
+                rootIcon.setIcon(R.drawable.ic_vpn_key_white_24dp);
+            }
+
+            if (mode == ROOT_MODE) {
                 hotSpot.setVisible(true);
                 hotSpot.setEnabled(true);
+            } else {
+                hotSpot.setVisible(false);
+                hotSpot.setEnabled(false);
             }
 
             menuRootMode.setVisible(true);
             menuRootMode.setEnabled(true);
 
-            if (rootMode) {
-                menuRootMode.setChecked(true);
-            } else if (proxyMode) {
-                menuProxiesMode.setChecked(true);
-            } else {
-                menuRootMode.setChecked(true);
-            }
-
         } else {
 
-            if (proxyMode) {
+            if (mode == PROXY_MODE) {
+                menuProxiesMode.setChecked(true);
+            } else if (mode == VPN_MODE) {
+                menuVPNMode.setChecked(true);
+            } else {
+                menuProxiesMode.setChecked(true);
+                modulesStatus.setMode(PROXY_MODE);
+                mode = PROXY_MODE;
+            }
+
+            if (mode == PROXY_MODE) {
                 rootIcon.setIcon(R.drawable.ic_warning_white_24dp);
             } else {
                 rootIcon.setIcon(R.drawable.ic_vpn_key_white_24dp);
@@ -293,20 +335,10 @@ public class MainActivity extends LangAppCompatActivity
 
             menuRootMode.setVisible(false);
             menuRootMode.setEnabled(false);
-
-            menuProxiesMode.setChecked(true);
         }
+    }
 
-        try {
-            if (childLockActive) {
-                childLock.setIcon(R.drawable.ic_lock_white_24dp);
-            } else {
-                childLock.setIcon(R.drawable.ic_lock_open_white_24dp);
-            }
-        } catch (IllegalArgumentException e) {
-            Log.e(LOG_TAG, "MainActivity Child Lock Exeption " + e.getMessage());
-        }
-
+    private void switchApIcon(Menu menu) {
         ApManager apManager = new ApManager(this);
         int apState = apManager.isApOn();
 
@@ -318,8 +350,8 @@ public class MainActivity extends LangAppCompatActivity
 
                 new PrefManager(this).setBoolPref("APisON", true);
 
-                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
-                ModulesRestarter.requestModulesStatusUpdateIfUseModulesWithRoot(this);
+                modulesStatus.setIptablesRulesUpdateRequested(true);
+                ModulesAux.requestModulesStatusUpdate(this);
 
             }
 
@@ -330,8 +362,20 @@ public class MainActivity extends LangAppCompatActivity
             menu.findItem(R.id.item_hotspot).setVisible(false);
             menu.findItem(R.id.item_hotspot).setEnabled(false);
         }
+    }
 
-        return super.onPrepareOptionsMenu(menu);
+    private void switchChildLockIcon(Menu menu) {
+        MenuItem childLock = menu.findItem(R.id.item_unlock);
+
+        try {
+            if (childLockActive) {
+                childLock.setIcon(R.drawable.ic_lock_white_24dp);
+            } else {
+                childLock.setIcon(R.drawable.ic_lock_open_white_24dp);
+            }
+        } catch (IllegalArgumentException e) {
+            Log.e(LOG_TAG, "MainActivity Child Lock Exeption " + e.getMessage());
+        }
     }
 
     @Override
@@ -340,38 +384,23 @@ public class MainActivity extends LangAppCompatActivity
         int id = item.getItemId();
         switch (id) {
             case R.id.item_unlock:
-                try {
-                    if (isInterfaceLocked()) {
-                        childUnlock(item);
-                    } else {
-                        childLock(item);
-                    }
-                } catch (IllegalArgumentException e) {
-                    Log.e(LOG_TAG, "MainActivity Child Lock Exeption " + e.getMessage());
+                if (isInterfaceLocked()) {
+                    childUnlock(item);
+                } else {
+                    childLock(item);
                 }
                 break;
             case R.id.item_hotspot:
-                try {
-                    ApManager apManager = new ApManager(this);
-                    if (apManager.configApState()) {
-                        checkHotspotState();
-                    } else {
-                        Intent intent = new Intent(Intent.ACTION_MAIN, null);
-                        intent.addCategory(Intent.CATEGORY_LAUNCHER);
-                        ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.TetherSettings");
-                        intent.setComponent(cn);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        this.startActivityForResult(intent, CODE_IS_AP_ON);
-                    }
-                } catch (Exception e) {
-                    Log.e(LOG_TAG, "MainActivity onOptionsItemSelected exception " + e.getMessage() + " " + e.getCause());
-                }
+                switchHotspot();
                 break;
             case R.id.item_root:
                 showInfoAboutRoot();
                 break;
             case R.id.menu_root_mode:
                 switchToRootMode(item);
+                break;
+            case R.id.menu_vpn_mode:
+                switchToVPNMode(item);
                 break;
             case R.id.menu_proxies_mode:
                 switchToProxyMode(item);
@@ -380,53 +409,79 @@ public class MainActivity extends LangAppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+    private void switchHotspot() {
+        try {
+            ApManager apManager = new ApManager(this);
+            if (apManager.configApState()) {
+                checkHotspotState();
+            } else {
+                Intent intent = new Intent(Intent.ACTION_MAIN, null);
+                intent.addCategory(Intent.CATEGORY_LAUNCHER);
+                ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.TetherSettings");
+                intent.setComponent(cn);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                this.startActivityForResult(intent, CODE_IS_AP_ON);
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "MainActivity onOptionsItemSelected exception " + e.getMessage() + " " + e.getCause());
+        }
+    }
+
     private void switchToRootMode(MenuItem item) {
         item.setChecked(true);
 
-        new PrefManager(this).setBoolPref("root_mode", true);
-        new PrefManager(this).setBoolPref("proxies_mode", false);
+        new PrefManager(this).setStrPref("OPERATION_MODE", ROOT_MODE.toString());
 
         Log.i(LOG_TAG, "Root mode enabled");
 
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
-        boolean rootIsAvailable = new PrefManager(this).getBoolPref("rootIsAvailable");
-
-        //To start iptables adaptation
-        ModulesStatus modulesStatus = ModulesStatus.getInstance();
-        modulesStatus.setRootAvailable(rootIsAvailable);
-        modulesStatus.setUseModulesWithRoot(runModulesWithRoot);
+        //This start iptables adaptation
+        modulesStatus.setMode(ROOT_MODE);
         modulesStatus.setIptablesRulesUpdateRequested(true);
-        ModulesRestarter.requestModulesStatusUpdateIfUseModulesWithRoot(this);
+        ModulesAux.requestModulesStatusUpdate(this);
 
-        recreate();
+        invalidateOptionsMenu();
     }
 
     private void switchToProxyMode(MenuItem item) {
         item.setChecked(true);
 
-        new PrefManager(this).setBoolPref("root_mode", false);
-        new PrefManager(this).setBoolPref("proxies_mode", true);
+        new PrefManager(this).setStrPref("OPERATION_MODE", PROXY_MODE.toString());
 
         Log.i(LOG_TAG, "Proxy mode enabled");
 
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
-        if (runModulesWithRoot) {
-            ModulesKiller.stopModulesWithRootIfRunning(this, new PathVars(this));
+        OperationMode operationMode = modulesStatus.getMode();
+
+        //This stop iptables adaptation
+        modulesStatus.setMode(PROXY_MODE);
+
+        if (modulesStatus.isRootAvailable() && operationMode == ROOT_MODE) {
+            IptablesRules iptablesRules = new ModulesIptablesRules(this);
+            String[] commands = iptablesRules.clearAll();
+            iptablesRules.sendToRootExecService(commands);
+            Log.i(LOG_TAG, "Iptables rules removed");
         }
 
-        //To stop iptables adaptation
-        ModulesStatus modulesStatus = ModulesStatus.getInstance();
-        modulesStatus.setRootAvailable(false);
-        modulesStatus.setUseModulesWithRoot(false);
+        invalidateOptionsMenu();
+    }
 
-        IptablesRules iptablesRules = new ModulesIptablesRules(this);
-        String[] commands = iptablesRules.clearAll();
-        iptablesRules.sendToRootExecService(commands);
-        Log.i(LOG_TAG, "Iptables rules removed");
+    private void switchToVPNMode(MenuItem item) {
+        item.setChecked(true);
 
-        recreate();
+        new PrefManager(this).setStrPref("OPERATION_MODE", VPN_MODE.toString());
+
+        Log.i(LOG_TAG, "VPN mode enabled");
+
+        OperationMode operationMode = modulesStatus.getMode();
+
+        //This stop iptables adaptation
+        modulesStatus.setMode(VPN_MODE);
+
+        if (modulesStatus.isRootAvailable() && operationMode == ROOT_MODE) {
+            IptablesRules iptablesRules = new ModulesIptablesRules(this);
+            String[] commands = iptablesRules.clearAll();
+            iptablesRules.sendToRootExecService(commands);
+            Log.i(LOG_TAG, "Iptables rules removed");
+        }
     }
 
     private void checkHotspotState() {
