@@ -31,3 +31,7 @@
 
 **InviZible Pro beta 0.3.3**
 * Bug fixes
+
+**InviZible Pro beta 0.3.4**
+* The possibilities of the USB modem using were implemented
+* Tor and I2P socks proxies tethering were implemented
