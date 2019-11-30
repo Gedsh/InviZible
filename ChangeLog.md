@@ -36,3 +36,7 @@
 * The possibilities of the USB modem using were implemented
 * Tor and I2P socks proxies tethering were implemented
 * Bug fixes and stability improvements
+
+**InviZible Pro beta 0.3.5**
+* Improve wifi and usb hotspot;
+* Improve modules stopping method
