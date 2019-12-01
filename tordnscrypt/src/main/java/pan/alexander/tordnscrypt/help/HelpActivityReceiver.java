@@ -79,12 +79,13 @@ public class HelpActivityReceiver extends BroadcastReceiver {
         return new Runnable() {
             @Override
             public void run() {
-                deleteRootExecLog(context);
 
                 if (isRootMethodWroteLogs(comResult)) {
+                    deleteRootExecLog(context);
                     saveLogsMethodOne(context);
                 } else {
                     saveLogsMethodTwo(context);
+                    deleteRootExecLog(context);
                 }
 
                 if (isLogsExist()) {
@@ -156,9 +157,9 @@ public class HelpActivityReceiver extends BroadcastReceiver {
     }
 
     private void deleteRootExecLog(Context context) {
-        if (new PrefManager(context).getBoolPref("swRootCommandsLog")) {
+        File file = new File(appDataDir + "/logs/RootExec.log");
+        if (new PrefManager(context).getBoolPref("swRootCommandsLog") && file.isFile()) {
             FileOperations.deleteFileSynchronous(context, appDataDir + "/logs", "RootExec.log");
-            Log.e(LOG_TAG, "deleteFile function fault " + appDataDir + "logs/RootExec.log");
         }
     }
 

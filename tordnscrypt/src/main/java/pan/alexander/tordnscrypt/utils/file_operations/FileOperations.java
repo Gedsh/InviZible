@@ -95,8 +95,14 @@ public class FileOperations {
 
                     File dir = new File(outputPath);
                     if (!dir.isDirectory()) {
-                        if (!dir.mkdirs() || !dir.setReadable(true) || !dir.setWritable(true)) {
+                        if (!dir.mkdirs()) {
                             throw new IllegalStateException("Unable to create dir " + dir.toString());
+                        }
+
+                        if (!dir.canRead() || !dir.canWrite()) {
+                            if (!dir.setReadable(true) || !dir.setWritable(true)) {
+                                Log.w(LOG_TAG, "Unable to chmod dir " + dir.toString());
+                            }
                         }
                     }
 
@@ -154,7 +160,7 @@ public class FileOperations {
                     }
 
                 } catch (Exception e) {
-                    Log.e(LOG_TAG, "replaceBinaryFile function fault " + e.getMessage() + " " + e.getCause());
+                    Log.e(LOG_TAG, "moveBinaryFile function fault " + e.getMessage() + " " + e.getCause());
                     if (callback != null && !tag.contains("ignored")) {
                         if (callback instanceof OnBinaryFileOperationsCompleteListener) {
                             ((OnBinaryFileOperationsCompleteListener) callback).OnFileOperationComplete(
@@ -184,8 +190,14 @@ public class FileOperations {
 
                     File dir = new File(outputPath);
                     if (!dir.isDirectory()) {
-                        if (!dir.mkdirs() || !dir.setReadable(true) || !dir.setWritable(true)) {
+                        if (!dir.mkdirs()) {
                             throw new IllegalStateException("Unable to create dir " + dir.toString());
+                        }
+
+                        if (!dir.canRead() || !dir.canWrite()) {
+                            if (!dir.setReadable(true) || !dir.setWritable(true)) {
+                                Log.w(LOG_TAG, "Unable to chmod dir " + dir.toString());
+                            }
                         }
                     }
 
@@ -261,8 +273,14 @@ public class FileOperations {
 
             File dir = new File(outputPath);
             if (!dir.isDirectory()) {
-                if (!dir.mkdirs() || !dir.setReadable(true) || !dir.setWritable(true)) {
+                if (!dir.mkdirs()) {
                     throw new IllegalStateException("Unable to create dir " + dir.toString());
+                }
+
+                if (!dir.canRead() || !dir.canWrite()) {
+                    if (!dir.setReadable(true) || !dir.setWritable(true)) {
+                        Log.w(LOG_TAG, "Unable to chmod dir " + dir.toString());
+                    }
                 }
             }
 
@@ -327,7 +345,7 @@ public class FileOperations {
             }
 
             if (!outDir.setReadable(true) || !outDir.setWritable(true) || !outDir.setExecutable(true)) {
-                throw new IllegalStateException("Unable to chmod dir " + outDir.toString());
+                Log.w(LOG_TAG, "Unable to chmod dir " + outDir.toString());
             }
 
             for (File file: inDir.listFiles()) {
@@ -390,7 +408,7 @@ public class FileOperations {
                                 FileOperations fileOperations = new FileOperations();
                                 fileOperations.restoreAccess(context, inputPath + "/" + inputFile);
                             } else if (!usedFile.setReadable(true) || !usedFile.setWritable(true)) {
-                                throw new IllegalStateException("Unable to chmod file " + inputPath + "/" + inputFile);
+                                Log.e(LOG_TAG, "Unable to chmod file " + inputPath + "/" + inputFile);
                             }
                         }
                         if (!usedFile.delete()) {
@@ -439,7 +457,7 @@ public class FileOperations {
                         FileOperations fileOperations = new FileOperations();
                         fileOperations.restoreAccess(context, inputPath);
                     } else if (!usedDir.setReadable(true) || !usedDir.setWritable(true)) {
-                        throw new IllegalStateException("Unable to chmod dir " + inputPath);
+                        Log.e(LOG_TAG, "Unable to chmod dir " + inputPath);
                     }
                 }
             } else {
