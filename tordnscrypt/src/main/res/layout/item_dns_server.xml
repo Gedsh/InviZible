@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/llDNSServer"
@@ -10,7 +10,7 @@
     android:orientation="vertical"
     android:visibility="visible">
 
-    <android.support.v7.widget.CardView
+    <androidx.cardview.widget.CardView
         android:id="@+id/cardDNSServer"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -21,14 +21,14 @@
         app:cardUseCompatPadding="true"
         app:contentPadding="8dp">
 
-        <LinearLayout
+        <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical"
             tools:ignore="UselessParent">
 
-            <LinearLayout
+            <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
@@ -36,7 +36,7 @@
                 android:orientation="horizontal"
                 tools:ignore="NestedWeights">
 
-                <TextView
+                <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/tvDNSServerName"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -46,14 +46,14 @@
                     android:textStyle="bold"
                     tools:ignore="HardcodedText" />
 
-                <CheckBox
+                <androidx.appcompat.widget.AppCompatCheckBox
                     android:id="@+id/chbDNSServer"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:visibility="visible" />
-            </LinearLayout>
+            </androidx.appcompat.widget.LinearLayoutCompat>
 
-            <TextView
+            <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvDNSServerDescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -61,16 +61,15 @@
                 android:layout_weight="1"
                 tools:ignore="HardcodedText" />
 
-            <TextView
+            <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvDNSServerFlags"
-                style="@android:style/Widget.Holo.TextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
                 android:layout_weight="1"
                 android:textAlignment="center"
                 tools:ignore="HardcodedText" />
-        </LinearLayout>
-    </android.support.v7.widget.CardView>
+        </androidx.appcompat.widget.LinearLayoutCompat>
+    </androidx.cardview.widget.CardView>
 
-</LinearLayout>
+</androidx.appcompat.widget.LinearLayoutCompat>

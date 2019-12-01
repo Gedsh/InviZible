@@ -20,8 +20,8 @@ package pan.alexander.tordnscrypt;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 
 import pan.alexander.tordnscrypt.language.Language;
 

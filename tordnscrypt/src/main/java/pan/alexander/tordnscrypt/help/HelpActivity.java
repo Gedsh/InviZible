@@ -24,14 +24,15 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.support.v4.app.DialogFragment;
+
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.fragment.app.DialogFragment;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.Switch;
 
 import com.github.angads25.filepicker.controller.DialogSelectionListener;
 import com.github.angads25.filepicker.model.DialogConfigs;
@@ -87,7 +88,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         Button btnSaveLogs = findViewById(R.id.btnSaveLogs);
         btnSaveLogs.setOnClickListener(this);
         btnSaveLogs.requestFocus();
-        Switch swRootCommandsLog = findViewById(R.id.swRootCommandsLog);
+        SwitchCompat swRootCommandsLog = findViewById(R.id.swRootCommandsLog);
         swRootCommandsLog.setChecked(new PrefManager(this).getBoolPref("swRootCommandsLog"));
         swRootCommandsLog.setOnCheckedChangeListener(this);
 

@@ -21,20 +21,22 @@ package pan.alexander.tordnscrypt.settings;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v7.preference.PreferenceManager;
-import android.support.v7.widget.CardView;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.SearchView;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.LinearLayoutCompat;
+import androidx.appcompat.widget.SearchView;
+import androidx.cardview.widget.CardView;
+import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -43,16 +45,15 @@ import pan.alexander.tordnscrypt.R;
 
 public class CountrySelectFragment extends Fragment implements CompoundButton.OnCheckedChangeListener, SearchView.OnQueryTextListener {
 
-    public static final int entryNodes =100;
-    public static final int excludeNodes =200;
-    public static final int exitNodes =300;
-    public static final int excludeExitNodes =400;
-    int current_nodes_type = 0;
+    static final int entryNodes = 100;
+    static final int excludeNodes = 200;
+    static final int exitNodes = 300;
+    static final int excludeExitNodes = 400;
+    private int current_nodes_type = 0;
     private String countries = "";
-    RecyclerView.Adapter rvAdapter;
-    RecyclerView rvSelectCountries;
-    ArrayList<Countries> countriesListCurrent;
-    ArrayList<Countries> countriesListSaved = null;
+    private RecyclerView.Adapter rvAdapter;
+    private ArrayList<Countries> countriesListCurrent;
+    private ArrayList<Countries> countriesListSaved = null;
 
     public CountrySelectFragment() {
 
@@ -96,7 +97,7 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
             return;
         }
 
-        if (current_nodes_type == entryNodes){
+        if (current_nodes_type == entryNodes) {
             getActivity().setTitle(R.string.pref_tor_entry_nodes);
         } else if (current_nodes_type == excludeNodes) {
             getActivity().setTitle(R.string.pref_tor_exclude_nodes);
@@ -109,9 +110,9 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
         CheckBox chbTorCountriesSelectorAll = getActivity().findViewById(R.id.chbTorCountriesSelectorAll);
         chbTorCountriesSelectorAll.setOnCheckedChangeListener(this);
 
-        ((SearchView)getActivity().findViewById(R.id.searhTorCountry)).setOnQueryTextListener(this);
+        ((SearchView) getActivity().findViewById(R.id.searhTorCountry)).setOnQueryTextListener(this);
 
-        rvSelectCountries = getActivity().findViewById(R.id.rvSelectCountries);
+        RecyclerView rvSelectCountries = getActivity().findViewById(R.id.rvSelectCountries);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
         rvSelectCountries.setLayoutManager(mLayoutManager);
         rvSelectCountries.requestFocus();
@@ -123,10 +124,10 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
     public void onCheckedChanged(CompoundButton compoundButton, boolean active) {
         if (compoundButton.getId() == R.id.chbTorCountriesSelectorAll) {
             if (active) {
-                ((CountriesAdapter)rvAdapter).checkAllCountries();
+                ((CountriesAdapter) rvAdapter).checkAllCountries();
                 rvAdapter.notifyDataSetChanged();
             } else {
-                ((CountriesAdapter)rvAdapter).cleanAllCountries();
+                ((CountriesAdapter) rvAdapter).cleanAllCountries();
                 rvAdapter.notifyDataSetChanged();
             }
         }
@@ -154,7 +155,7 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
 
         countriesListCurrent.clear();
 
-        for (Countries country: countriesListSaved) {
+        for (Countries country : countriesListSaved) {
 
             if (s.trim().matches("[A-Z]{2}")
                     && country.countryCode.contains(s.trim())) {
@@ -184,19 +185,19 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
 
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
         SharedPreferences.Editor editor = sp.edit();
-        countries = ((CountriesAdapter)rvAdapter).getCheckedCountries();
+        countries = ((CountriesAdapter) rvAdapter).getCheckedCountries();
 
-        if (current_nodes_type == entryNodes){
-            editor.putString("EntryNodesCountries",countries);
+        if (current_nodes_type == entryNodes) {
+            editor.putString("EntryNodesCountries", countries);
             editor.apply();
         } else if (current_nodes_type == excludeNodes) {
-            editor.putString("ExcludeNodesCountries",countries);
+            editor.putString("ExcludeNodesCountries", countries);
             editor.apply();
         } else if (current_nodes_type == excludeExitNodes) {
-            editor.putString("ExcludeExitNodesCountries",countries);
+            editor.putString("ExcludeExitNodesCountries", countries);
             editor.apply();
         } else if (current_nodes_type == exitNodes) {
-            editor.putString("ExitNodesCountries",countries);
+            editor.putString("ExitNodesCountries", countries);
             editor.apply();
         }
     }
@@ -211,24 +212,24 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
         }
     }
 
-    public class SelectedCountries {
+    private class SelectedCountries {
         ArrayList<String> countriesList = new ArrayList<>();
 
-        SelectedCountries(String countries){
-            if (!countries.isEmpty()){
+        SelectedCountries(String countries) {
+            if (!countries.isEmpty()) {
                 String[] arr = countries.split(",");
                 for (String str : arr) {
                     this.countriesList.add(str.trim().replaceAll("[^A-Z]+", ""));
                 }
-            } else if(current_nodes_type == entryNodes){
-                for (Countries country: countriesListCurrent) {
+            } else if (current_nodes_type == entryNodes) {
+                for (Countries country : countriesListCurrent) {
                     this.countriesList.add(country.countryCode);
                 }
             }
         }
     }
 
-    public class CountriesAdapter extends RecyclerView.Adapter<CountriesAdapter.CountriesViewHolder> {
+    private class CountriesAdapter extends RecyclerView.Adapter<CountriesAdapter.CountriesViewHolder> {
 
 
         SelectedCountries selectedCountries = new SelectedCountries(countries);
@@ -252,62 +253,121 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
             return countriesListCurrent.size();
         }
 
-        boolean isCountryInList(int position) {
+        private boolean isCountryInList(int position) {
             return selectedCountries.countriesList.contains(countriesListCurrent.get(position).countryCode);
         }
 
-        void setChecked(int position) {
+        private void setChecked(int position) {
             selectedCountries.countriesList.add(countriesListCurrent.get(position).countryCode);
         }
 
-        void removeCheck(String country){
+        private void removeCheck(String country) {
             selectedCountries.countriesList.remove(country);
         }
 
-        void checkAllCountries(){
+        private void checkAllCountries() {
             selectedCountries.countriesList.clear();
-            for (Countries country: countriesListCurrent) {
+            for (Countries country : countriesListCurrent) {
                 selectedCountries.countriesList.add(country.countryCode);
             }
         }
 
-        void cleanAllCountries(){
+        private void cleanAllCountries() {
             selectedCountries.countriesList.clear();
         }
 
-        String getCheckedCountries() {
+        private String getCheckedCountries() {
 
             if (selectedCountries.countriesList.isEmpty()) return "";
 
             StringBuilder sb = new StringBuilder();
-            for (String str:selectedCountries.countriesList){
+            for (String str : selectedCountries.countriesList) {
                 sb.append("{").append(str).append("}").append(",");
             }
-            return sb.toString().substring(0,sb.lastIndexOf(","));
+            return sb.toString().substring(0, sb.lastIndexOf(","));
         }
 
-        class CountriesViewHolder extends RecyclerView.ViewHolder {
+        private class CountriesViewHolder extends RecyclerView.ViewHolder {
 
-            TextView tvCountry;
-            CheckBox chbCountry;
-            CardView cardCountry;
+            private TextView tvCountry;
+            private CheckBox chbCountry;
+            private CardView cardCountry;
+            private LinearLayoutCompat llTorCountry;
+            private CardView cardTorCountryFragment;
 
-            CountriesViewHolder(View itemView) {
+            private CountriesViewHolder(View itemView) {
                 super(itemView);
 
                 tvCountry = itemView.findViewById(R.id.tvCountry);
                 chbCountry = itemView.findViewById(R.id.chbCountry);
                 cardCountry = itemView.findViewById(R.id.cardCountry);
                 cardCountry.setClickable(true);
+
+                View.OnClickListener onClickListener = new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (!isCountryInList(getAdapterPosition())) {
+                            setChecked(getAdapterPosition());
+                            notifyItemChanged(getAdapterPosition());
+                        } else if (isCountryInList(getAdapterPosition())) {
+                            removeCheck(countriesListCurrent.get(getAdapterPosition()).countryCode);
+                            notifyItemChanged(getAdapterPosition());
+                        }
+                    }
+                };
                 cardCountry.setOnClickListener(onClickListener);
+
+                CompoundButton.OnCheckedChangeListener activeListener = new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+
+                        if (!isCountryInList(getAdapterPosition()) && isChecked) {
+                            setChecked(getAdapterPosition());
+                            notifyItemChanged(getAdapterPosition());
+                        } else if (isCountryInList(getAdapterPosition()) && !isChecked) {
+                            removeCheck(countriesListCurrent.get(getAdapterPosition()).countryCode);
+                            notifyItemChanged(getAdapterPosition());
+                        }
+                    }
+                };
                 chbCountry.setOnCheckedChangeListener(activeListener);
+
                 chbCountry.setFocusable(false);
                 cardCountry.setFocusable(true);
+                View.OnFocusChangeListener onFocusChangeListener = new View.OnFocusChangeListener() {
+                    @Override
+                    public void onFocusChange(View v, boolean hasFocus) {
+                        if (hasFocus) {
+                            ((CardView) v).setCardBackgroundColor(getResources().getColor(R.color.colorSelected));
+                        } else {
+                            if (getAdapterPosition() % 2 == 0) {
+                                ((CardView) v).setCardBackgroundColor(getResources().getColor(R.color.colorSecond));
+                            } else {
+                                ((CardView) v).setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
+                            }
+                        }
+
+                    }
+                };
+
                 cardCountry.setOnFocusChangeListener(onFocusChangeListener);
+
+                llTorCountry = itemView.findViewById(R.id.llTorCountry);
+
+                if (getActivity() != null) {
+                    cardTorCountryFragment = getActivity().findViewById(R.id.cardTorCountryFragment);
+                }
+
             }
 
-            void bind(int position){
-                if (position%2==0) {
+            private void bind(int position) {
+                if (position == 0 && cardTorCountryFragment != null) {
+                    llTorCountry.setPadding(0, cardTorCountryFragment.getHeight(), 0, 0);
+                } else {
+                    llTorCountry.setPadding(0, 0, 0, 0);
+                }
+
+                if (position % 2 == 0) {
                     cardCountry.setCardBackgroundColor(getResources().getColor(R.color.colorSecond));
                 } else {
                     cardCountry.setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
@@ -316,49 +376,6 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
                 tvCountry.setText(countriesListCurrent.get(position).countryName);
                 chbCountry.setChecked(isCountryInList(position));
             }
-
-            CompoundButton.OnCheckedChangeListener activeListener = new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-
-                    if (!isCountryInList(getAdapterPosition())&& isChecked){
-                        setChecked(getAdapterPosition());
-                        notifyItemChanged(getAdapterPosition());
-                    } else if (isCountryInList(getAdapterPosition())&& !isChecked) {
-                        removeCheck(countriesListCurrent.get(getAdapterPosition()).countryCode);
-                        notifyItemChanged(getAdapterPosition());
-                    }
-                }
-            };
-
-            View.OnClickListener onClickListener = new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (!isCountryInList(getAdapterPosition())){
-                        setChecked(getAdapterPosition());
-                        notifyItemChanged(getAdapterPosition());
-                    } else if (isCountryInList(getAdapterPosition())) {
-                        removeCheck(countriesListCurrent.get(getAdapterPosition()).countryCode);
-                        notifyItemChanged(getAdapterPosition());
-                    }
-                }
-            };
-
-            View.OnFocusChangeListener onFocusChangeListener = new View.OnFocusChangeListener() {
-                @Override
-                public void onFocusChange(View v, boolean hasFocus) {
-                    if (hasFocus) {
-                        ((CardView)v).setCardBackgroundColor(getResources().getColor(R.color.colorSelected));
-                    } else {
-                        if (getAdapterPosition()%2==0) {
-                            ((CardView)v).setCardBackgroundColor(getResources().getColor(R.color.colorSecond));
-                        } else {
-                            ((CardView)v).setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
-                        }
-                    }
-
-                }
-            };
 
 
         }

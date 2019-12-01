@@ -19,7 +19,7 @@ package pan.alexander.tordnscrypt.backup;
 */
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.view.MenuItem;
 
 import java.util.Objects;

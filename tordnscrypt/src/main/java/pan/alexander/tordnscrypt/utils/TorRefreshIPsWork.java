@@ -21,7 +21,7 @@ package pan.alexander.tordnscrypt.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.support.v7.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 import android.util.Log;
 
 import java.net.InetAddress;

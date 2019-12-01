@@ -22,7 +22,7 @@ import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -116,7 +116,7 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
                 outputText = outputText + byteArrayOutputStream.toString();
             }
 
-            AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomDialogTheme);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomAlertDialogTheme);
             LayoutInflater layoutInflater = getLayoutInflater();
             View inflatedView = layoutInflater.inflate(R.layout.licenses_scrollable_text, null, false);
             TextView licenseText = inflatedView.findViewById(R.id.tvLicense);

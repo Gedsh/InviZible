@@ -2,8 +2,8 @@ package pan.alexander.tordnscrypt.settings;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v7.preference.PreferenceManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 

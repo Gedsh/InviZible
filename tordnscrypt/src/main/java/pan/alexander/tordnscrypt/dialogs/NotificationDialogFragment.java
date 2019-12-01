@@ -21,8 +21,8 @@ package pan.alexander.tordnscrypt.dialogs;
 
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
-import android.support.v7.app.AlertDialog;
+import androidx.fragment.app.DialogFragment;
+import androidx.appcompat.app.AlertDialog;
 
 import pan.alexander.tordnscrypt.R;
 
@@ -60,7 +60,7 @@ public class NotificationDialogFragment extends ExtendedDialogFragment {
             messageStr = getArguments().getString("messageStr");
         }
 
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
 
         if (message == 0) {
             alertDialog.setMessage(messageStr);

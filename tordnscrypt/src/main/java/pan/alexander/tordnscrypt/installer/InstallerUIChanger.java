@@ -19,7 +19,7 @@ package pan.alexander.tordnscrypt.installer;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.support.v4.widget.DrawerLayout;
+import androidx.drawerlayout.widget.DrawerLayout;
 import android.util.Log;
 
 import pan.alexander.tordnscrypt.DNSCryptRunFragment;

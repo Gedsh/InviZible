@@ -27,17 +27,17 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.support.design.widget.NavigationView;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatDelegate;
-import android.support.v7.preference.PreferenceManager;
-import android.support.v7.widget.Toolbar;
+import androidx.annotation.NonNull;
+import com.google.android.material.navigation.NavigationView;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.Fragment;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.preference.PreferenceManager;
+import androidx.appcompat.widget.Toolbar;
 import android.text.InputType;
 import android.util.Base64;
 import android.util.Log;
@@ -109,6 +109,7 @@ public class MainActivity extends LangAppCompatActivity
         toggle.syncState();
 
         NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setBackgroundColor(getResources().getColor(R.color.colorBackground));
         navigationView.setNavigationItemSelectedListener(this);
 
         modulesStatus = ModulesStatus.getInstance();
@@ -140,7 +141,7 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     @Override
-    public void onAttachFragment(Fragment fragment) {
+    public void onAttachFragment(@NonNull Fragment fragment) {
         super.onAttachFragment(fragment);
 
         if (fragment instanceof DNSCryptRunFragment) {
@@ -154,6 +155,7 @@ public class MainActivity extends LangAppCompatActivity
         }
     }
 
+    @SuppressWarnings("deprecation")
     private void setDayNightTheme() {
         SharedPreferences defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         try {
@@ -166,7 +168,7 @@ public class MainActivity extends LangAppCompatActivity
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
                     break;
                 case "3":
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO);
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_TIME);
                     break;
                 case "4":
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
@@ -524,7 +526,7 @@ public class MainActivity extends LangAppCompatActivity
 
 
     private void childLock(final MenuItem item) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomAlertDialogTheme);
         builder.setTitle(R.string.action_mode_child_lock);
         builder.setMessage(R.string.action_mode_dialog_message_lock);
         builder.setIcon(R.drawable.ic_lock_outline_blue_24dp);
@@ -576,7 +578,7 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     private void childUnlock(final MenuItem item) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomAlertDialogTheme);
         builder.setTitle(R.string.action_mode_child_lock);
         builder.setMessage(R.string.action_mode_dialog_message_unlock);
         builder.setIcon(R.drawable.ic_lock_outline_blue_24dp);
@@ -692,7 +694,7 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     public DialogInterface modernProgressDialog() {
-        android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(this, R.style.CustomDialogTheme);
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this, R.style.CustomAlertDialogTheme);
         builder.setTitle(R.string.update_checking_title);
         builder.setMessage(R.string.update_checking_message);
         builder.setIcon(R.drawable.ic_visibility_off_black_24dp);

@@ -23,14 +23,15 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.CardView;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.AlertDialog;
+import androidx.cardview.widget.CardView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,7 +43,6 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.RadioButton;
 import android.widget.Spinner;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -339,7 +339,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             return;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
         LayoutInflater inflater = getActivity().getLayoutInflater();
         @SuppressLint("InflateParams") final View inputView = inflater.inflate(R.layout.edit_text_for_dialog, null, false);
         final EditText input = inputView.findViewById(R.id.etForDialog);
@@ -829,7 +829,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         private class BridgeViewHolder extends RecyclerView.ViewHolder {
 
             private TextView tvBridge;
-            private Switch swBridge;
+            private SwitchCompat swBridge;
 
             BridgeViewHolder(@NonNull View itemView) {
                 super(itemView);
@@ -914,7 +914,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     return;
                 }
 
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
                 builder.setTitle(R.string.pref_fast_use_tor_bridges_edit);
 
                 LayoutInflater inflater = getActivity().getLayoutInflater();

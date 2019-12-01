@@ -21,8 +21,8 @@ package pan.alexander.tordnscrypt.dialogs;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.preference.PreferenceManager;
+import androidx.appcompat.app.AlertDialog;
+import androidx.preference.PreferenceManager;
 import android.util.Log;
 
 import pan.alexander.tordnscrypt.R;
@@ -42,7 +42,7 @@ public class NotificationHelper extends ExtendedDialogFragment {
             return null;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
         builder.setMessage(message)
                 .setTitle(R.string.helper_dialog_title)
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {

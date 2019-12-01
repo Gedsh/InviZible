@@ -18,13 +18,13 @@ package pan.alexander.tordnscrypt.settings;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.support.v7.preference.Preference;
-import android.support.v7.preference.PreferenceManager;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceManager;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.v7.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceFragmentCompat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -44,12 +44,12 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class PreferencesTorFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
 
-    static ArrayList<String> key_tor;
-    static ArrayList<String> val_tor;
-    ArrayList<String> key_tor_orig;
-    ArrayList<String> val_tor_orig;
-    SharedPreferences sp;
-    String appDataDir;
+    private static ArrayList<String> key_tor;
+    private static ArrayList<String> val_tor;
+    private ArrayList<String> key_tor_orig;
+    private ArrayList<String> val_tor_orig;
+    private SharedPreferences sp;
+    private String appDataDir;
 
 
     @Override
@@ -60,29 +60,29 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
         addPreferencesFromResource(R.xml.preferences_tor);
 
-        findPreference("VirtualAddrNetworkIPv4").setOnPreferenceChangeListener(this);
-        findPreference("AvoidDiskWrites").setOnPreferenceChangeListener(this);
-        findPreference("ConnectionPadding").setOnPreferenceChangeListener(this);
-        findPreference("ReducedConnectionPadding").setOnPreferenceChangeListener(this);
-        findPreference("ExcludeExitNodes").setOnPreferenceChangeListener(this);
-        findPreference("ExitNodes").setOnPreferenceChangeListener(this);
-        findPreference("ExcludeNodes").setOnPreferenceChangeListener(this);
-        findPreference("EntryNodes").setOnPreferenceChangeListener(this);
-        findPreference("StrictNodes").setOnPreferenceChangeListener(this);
-        findPreference("FascistFirewall").setOnPreferenceChangeListener(this);
-        findPreference("NewCircuitPeriod").setOnPreferenceChangeListener(this);
-        findPreference("MaxCircuitDirtiness").setOnPreferenceChangeListener(this);
-        findPreference("EnforceDistinctSubnets").setOnPreferenceChangeListener(this);
-        findPreference("Enable SOCKS proxy").setOnPreferenceChangeListener(this);
-        findPreference("SOCKSPort").setOnPreferenceChangeListener(this);
-        findPreference("Enable HTTPTunnel").setOnPreferenceChangeListener(this);
-        findPreference("HTTPTunnelPort").setOnPreferenceChangeListener(this);
-        findPreference("Enable Transparent proxy").setOnPreferenceChangeListener(this);
-        findPreference("TransPort").setOnPreferenceChangeListener(this);
-        findPreference("Enable DNS").setOnPreferenceChangeListener(this);
-        findPreference("DNSPort").setOnPreferenceChangeListener(this);
-        findPreference("ClientUseIPv4").setOnPreferenceChangeListener(this);
-        findPreference("ClientUseIPv6").setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("VirtualAddrNetworkIPv4")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("AvoidDiskWrites")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("ConnectionPadding")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("ReducedConnectionPadding")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("ExcludeExitNodes")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("ExitNodes")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("ExcludeNodes")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("EntryNodes")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("StrictNodes")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("FascistFirewall")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("NewCircuitPeriod")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("MaxCircuitDirtiness")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("EnforceDistinctSubnets")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("Enable SOCKS proxy")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("SOCKSPort")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("Enable HTTPTunnel")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("HTTPTunnelPort")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("Enable Transparent proxy")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("TransPort")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("Enable DNS")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("DNSPort")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("ClientUseIPv4")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("ClientUseIPv6")).setOnPreferenceChangeListener(this);
 
 
         if (getArguments() != null) {

@@ -22,7 +22,7 @@ package pan.alexander.tordnscrypt.dialogs;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.update.UpdateService;
@@ -63,7 +63,7 @@ public class NewUpdateDialogFragment extends ExtendedDialogFragment {
             hash = getArguments().getString("hash");
         }
 
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
         alertDialog.setMessage(mMessageToDisplay)
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     @Override

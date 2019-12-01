@@ -20,8 +20,8 @@ package pan.alexander.tordnscrypt.dialogs;
 */
 
 import android.content.DialogInterface;
-import android.support.v4.app.DialogFragment;
-import android.support.v7.app.AlertDialog;
+import androidx.fragment.app.DialogFragment;
+import androidx.appcompat.app.AlertDialog;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -40,7 +40,7 @@ public class UpdateModulesDialogFragment extends ExtendedDialogFragment {
             return null;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
 
         builder.setMessage(R.string.update_core_message)
                 .setTitle(R.string.update_core_title)

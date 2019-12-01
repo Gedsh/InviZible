@@ -21,14 +21,14 @@ package pan.alexander.tordnscrypt.dialogs;
 
 import android.content.Context;
 import android.content.DialogInterface;
-import android.support.v7.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
 
 import pan.alexander.tordnscrypt.R;
 
 public class DialogAfterInstallation {
 
     public static AlertDialog.Builder getDialogBuilder(Context context) {
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context, R.style.CustomDialogTheme);
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context, R.style.CustomAlertDialogTheme);
         alertDialog.setMessage(R.string.helper_after_install);
         alertDialog.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {

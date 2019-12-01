@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/linerLayout"
@@ -8,43 +8,53 @@
     android:orientation="vertical"
     tools:context=".settings.CountrySelectFragment">
 
-    <android.support.v7.widget.CardView
+    <androidx.cardview.widget.CardView
         android:id="@+id/cardTorCountryFragment"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="5dp"
+        android:layout_gravity="end"
         android:focusable="false"
         app:cardBackgroundColor="@color/cardsColor"
         app:cardCornerRadius="4dp"
         app:cardUseCompatPadding="true"
         app:contentPadding="8dp">
 
-        <LinearLayout
+        <androidx.appcompat.widget.LinearLayoutCompat
             android:id="@+id/linearLayout4"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <SearchView
+            <androidx.appcompat.widget.SearchView
                 android:id="@+id/searhTorCountry"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
                 android:iconifiedByDefault="false"
                 android:imeOptions="actionDone" />
 
-            <CheckBox
+            <androidx.appcompat.widget.AppCompatCheckBox
                 android:id="@+id/chbTorCountriesSelectorAll"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_margin="8dp" />
-        </LinearLayout>
-    </android.support.v7.widget.CardView>
+                android:layout_marginEnd="8dp" />
+        </androidx.appcompat.widget.LinearLayoutCompat>
+    </androidx.cardview.widget.CardView>
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/rvSelectCountries"
+    <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="8dp"
-        android:scrollbars="vertical" />
-</LinearLayout>
+        android:orientation="vertical">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvSelectCountries"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="8dp"
+            android:scrollbars="vertical" />
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+
+</FrameLayout>

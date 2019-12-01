@@ -25,12 +25,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
-import android.support.v7.preference.PreferenceManager;
-import android.support.v7.widget.CardView;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,10 +32,18 @@ import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.SearchView;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.widget.LinearLayoutCompat;
+import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.cardview.widget.CardView;
+import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -70,20 +72,17 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
  * A simple {@link Fragment} subclass.
  */
 public class UnlockTorAppsFragment extends Fragment implements CompoundButton.OnCheckedChangeListener, SearchView.OnQueryTextListener {
-    boolean isChanged;
-    RecyclerView rvListTorApps;
-    RecyclerView.Adapter mAdapter;
-    ProgressBar pbTorApp;
-    boolean torTethering;
-    boolean routeAllThroughTorDevice;
-    String unlockAppsStr;
-    ArrayList<String> unlockAppsArrListSaved;
-    ArrayList<AppUnlock> appsUnlock;
-    ArrayList<AppUnlock> savedAppsUnlockWhenSearch = null;
-    Thread thread;
+    private boolean isChanged;
+    private RecyclerView.Adapter mAdapter;
+    private ProgressBar pbTorApp;
+    private String unlockAppsStr;
+    private ArrayList<AppUnlock> appsUnlock;
+    private ArrayList<AppUnlock> savedAppsUnlockWhenSearch = null;
+    private Thread thread;
 
 
-    public UnlockTorAppsFragment() {}
+    public UnlockTorAppsFragment() {
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -91,7 +90,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
 
         View view = inflater.inflate(R.layout.fragment_preferences_tor_apps, container, false);
 
-        ((Switch) view.findViewById(R.id.swTorAppSellectorAll)).setOnCheckedChangeListener(this);
+        ((SwitchCompat) view.findViewById(R.id.swTorAppSellectorAll)).setOnCheckedChangeListener(this);
         ((SearchView) view.findViewById(R.id.searhTorApp)).setOnQueryTextListener(this);
         pbTorApp = view.findViewById(R.id.pbTorApp);
 
@@ -117,8 +116,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
         appsUnlock = new ArrayList<>();
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        torTethering = shPref.getBoolean("pref_common_tor_tethering", false);
-        routeAllThroughTorDevice = shPref.getBoolean("pref_fast_all_through_tor", true);
+        boolean routeAllThroughTorDevice = shPref.getBoolean("pref_fast_all_through_tor", true);
 
         if (!routeAllThroughTorDevice) {
             Objects.requireNonNull(getActivity()).setTitle(R.string.pref_tor_unlock_app);
@@ -129,9 +127,9 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
         }
 
         Set<String> setUnlockApps = new PrefManager(Objects.requireNonNull(getActivity())).getSetStrPref(unlockAppsStr);
-        unlockAppsArrListSaved = new ArrayList<>(setUnlockApps);
+        ArrayList<String> unlockAppsArrListSaved = new ArrayList<>(setUnlockApps);
 
-        rvListTorApps = getActivity().findViewById(R.id.rvTorApps);
+        RecyclerView rvListTorApps = getActivity().findViewById(R.id.rvTorApps);
         rvListTorApps.requestFocus();
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
         rvListTorApps.setLayoutManager(mLayoutManager);
@@ -274,7 +272,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
         return true;
     }
 
-    public class AppUnlock {
+    private class AppUnlock {
         String name;
         String pack;
         String uid;
@@ -310,7 +308,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
         }
     }
 
-    public class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHolder> {
+    private class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHolder> {
         LayoutInflater lInflater = (LayoutInflater) Objects.requireNonNull(getActivity()).getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         TorAppsAdapter() {
@@ -352,31 +350,76 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
             }
         }
 
-        class TorAppsViewHolder extends RecyclerView.ViewHolder {
-            ImageView imgTorApp;
-            TextView tvTorAppName;
-            TextView tvTorAppPackage;
-            Switch swTorApp;
-            CardView cardTorApps;
+        private class TorAppsViewHolder extends RecyclerView.ViewHolder {
+            private ImageView imgTorApp;
+            private TextView tvTorAppName;
+            private TextView tvTorAppPackage;
+            private SwitchCompat swTorApp;
+            private CardView cardTorApps;
+            private LinearLayoutCompat lLayoutTorApps;
+            private CardView cardTorAppFragment;
 
-            TorAppsViewHolder(View itemView) {
+            private TorAppsViewHolder(View itemView) {
                 super(itemView);
 
                 imgTorApp = itemView.findViewById(R.id.imgTorApp);
                 tvTorAppName = itemView.findViewById(R.id.tvTorAppName);
                 tvTorAppPackage = itemView.findViewById(R.id.tvTorAppPackage);
                 swTorApp = itemView.findViewById(R.id.swTorApp);
-                swTorApp.setOnCheckedChangeListener(onCheckedChangeListener);
-                swTorApp.setFocusable(false);
                 cardTorApps = itemView.findViewById(R.id.cardTorApp);
                 cardTorApps.setFocusable(true);
+                lLayoutTorApps = itemView.findViewById(R.id.llayoutTorApps);
+
+                if (getActivity() != null) {
+                    cardTorAppFragment = getActivity().findViewById(R.id.cardTorAppFragment);
+                }
+
+                CompoundButton.OnCheckedChangeListener onCheckedChangeListener = new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton compoundButton, boolean newValue) {
+                        setActive(getAdapterPosition(), newValue);
+                        isChanged = true;
+                    }
+                };
+                swTorApp.setOnCheckedChangeListener(onCheckedChangeListener);
+                swTorApp.setFocusable(false);
+
+
+                View.OnClickListener onClickListener = new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        int appPosition = getAdapterPosition();
+                        boolean appActive = getItem(appPosition).active;
+                        setActive(appPosition, !appActive);
+                        mAdapter.notifyItemChanged(appPosition);
+                        isChanged = true;
+                    }
+                };
+
                 cardTorApps.setOnClickListener(onClickListener);
+                View.OnFocusChangeListener onFocusChangeListener = new View.OnFocusChangeListener() {
+                    @Override
+                    public void onFocusChange(View view, boolean inFocus) {
+                        if (inFocus) {
+                            ((CardView) view).setCardBackgroundColor(getResources().getColor(R.color.colorSecond));
+                        } else {
+                            ((CardView) view).setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
+                        }
+                    }
+                };
                 cardTorApps.setOnFocusChangeListener(onFocusChangeListener);
                 cardTorApps.setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
             }
 
-            void bind(int position) {
+            private void bind(int position) {
                 AppUnlock app = getItem(position);
+
+                if (position == 0 && cardTorAppFragment != null) {
+                    lLayoutTorApps.setPaddingRelative(0, cardTorAppFragment.getHeight() + 10, 0, 0);
+                } else {
+                    lLayoutTorApps.setPaddingRelative(0, 0, 0, 0);
+                }
+
                 tvTorAppName.setText(app.name);
                 imgTorApp.setImageDrawable(app.icon);
                 tvTorAppPackage.setText(app.pack);
@@ -390,40 +433,11 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
                 }
             }
 
-            CompoundButton.OnCheckedChangeListener onCheckedChangeListener = new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton compoundButton, boolean newValue) {
-                    setActive(getAdapterPosition(), newValue);
-                    isChanged = true;
-                }
-            };
-
-            View.OnClickListener onClickListener = new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    int appPosition = getAdapterPosition();
-                    boolean appActive = getItem(appPosition).active;
-                    setActive(appPosition, !appActive);
-                    mAdapter.notifyItemChanged(appPosition);
-                    isChanged = true;
-                }
-            };
-
-            View.OnFocusChangeListener onFocusChangeListener = new View.OnFocusChangeListener() {
-                @Override
-                public void onFocusChange(View view, boolean inFocus) {
-                    if (inFocus) {
-                        ((CardView) view).setCardBackgroundColor(getResources().getColor(R.color.colorSecond));
-                    } else {
-                        ((CardView) view).setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
-                    }
-                }
-            };
         }
     }
 
 
-    void getDeviceApps(final Context context, final RecyclerView.Adapter adapter, final ArrayList<String> unlockAppsArrListSaved) {
+    private void getDeviceApps(final Context context, final RecyclerView.Adapter adapter, final ArrayList<String> unlockAppsArrListSaved) {
 
         pbTorApp.setIndeterminate(true);
         pbTorApp.setVisibility(View.VISIBLE);

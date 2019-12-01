@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/llTorCountry"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal">
 
-    <android.support.v7.widget.CardView
+    <androidx.cardview.widget.CardView
         android:id="@+id/cardCountry"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -14,14 +15,14 @@
         app:cardBackgroundColor="@color/cardsColor"
         app:cardCornerRadius="5dp"
         app:cardUseCompatPadding="true"
-        app:contentPadding="8dp" >
+        app:contentPadding="8dp">
 
-        <LinearLayout
+        <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="horizontal">
 
-            <TextView
+            <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvCountry"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -30,7 +31,7 @@
                 android:textAlignment="gravity"
                 android:textSize="@dimen/fragment_counry_select_text_size" />
 
-            <CheckBox
+            <androidx.appcompat.widget.AppCompatCheckBox
                 android:id="@+id/chbCountry"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -39,7 +40,7 @@
                 app:layout_constraintBottom_toBottomOf="@+id/tvCountry"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/tvCountry" />
-        </LinearLayout>
-    </android.support.v7.widget.CardView>
+        </androidx.appcompat.widget.LinearLayoutCompat>
+    </androidx.cardview.widget.CardView>
 
-</LinearLayout>
+</androidx.appcompat.widget.LinearLayoutCompat>

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/cLayoutTorApps"
+    android:id="@+id/llayoutTorApps"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="5dp"
     android:orientation="horizontal">
 
-    <android.support.v7.widget.CardView
+    <androidx.cardview.widget.CardView
         android:id="@+id/cardTorApp"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -18,12 +18,12 @@
         app:cardUseCompatPadding="true"
         app:contentPadding="4dp">
 
-        <LinearLayout
+        <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="horizontal">
 
-            <ImageView
+            <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/imgTorApp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
@@ -33,7 +33,7 @@
                 android:cropToPadding="true"
                 android:scaleType="fitCenter" />
 
-            <LinearLayout
+            <androidx.appcompat.widget.LinearLayoutCompat
                 android:id="@+id/linearLayout3"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -42,7 +42,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical">
 
-                <TextView
+                <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/tvTorAppName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -51,7 +51,7 @@
                     android:textAlignment="center"
                     android:textStyle="bold" />
 
-                <TextView
+                <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/tvTorAppPackage"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -59,15 +59,15 @@
                     android:fontFamily="serif"
                     android:singleLine="true"
                     android:textAlignment="center" />
-            </LinearLayout>
+            </androidx.appcompat.widget.LinearLayoutCompat>
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/swTorApp"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_margin="8dp"
                 android:layout_marginEnd="8dp" />
-        </LinearLayout>
-    </android.support.v7.widget.CardView>
+        </androidx.appcompat.widget.LinearLayoutCompat>
+    </androidx.cardview.widget.CardView>
 
-</LinearLayout>
+</androidx.appcompat.widget.LinearLayoutCompat>

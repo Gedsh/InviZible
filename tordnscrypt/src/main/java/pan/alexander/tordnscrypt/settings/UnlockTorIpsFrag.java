@@ -25,13 +25,16 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.Fragment;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.preference.PreferenceManager;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.NonNull;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import androidx.appcompat.widget.LinearLayoutCompat;
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.AlertDialog;
+import androidx.preference.PreferenceManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -39,8 +42,6 @@ import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -364,10 +365,10 @@ public class UnlockTorIpsFrag extends Fragment {
 
             TextView tvTorItemHost;
             TextView tvTorItemIP;
-            Switch swTorItem;
+            SwitchCompat swTorItem;
             ImageButton imbtnTorItem;
-            LinearLayout llHostIP;
-            LinearLayout llHostIPRoot;
+            LinearLayoutCompat llHostIP;
+            LinearLayoutCompat llHostIPRoot;
 
             HostIPViewHolder(View itemView) {
                 super(itemView);
@@ -506,7 +507,7 @@ public class UnlockTorIpsFrag extends Fragment {
                     return;
                 }
 
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
                 builder.setTitle(R.string.pref_tor_unlock_edit);
 
                 LayoutInflater inflater = getActivity().getLayoutInflater();
@@ -575,13 +576,13 @@ public class UnlockTorIpsFrag extends Fragment {
         }
     }
 
-    void addHostIPDialog() {
+    private void addHostIPDialog() {
 
         if (getActivity() == null) {
             return;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
 
         if (deviceOrTether.equals("device")) {
             if (!routeAllThroughTorDevice) {
@@ -708,7 +709,7 @@ public class UnlockTorIpsFrag extends Fragment {
 
     }
 
-    void getHostOrIp(final int position, final boolean addHostIP, final boolean editHostIP) {
+    private void getHostOrIp(final int position, final boolean addHostIP, final boolean editHostIP) {
         boolean active = unlockHostIP.get(position).active;
         if (unlockHostIP.get(position).inputHost) {
             String host = unlockHostIP.get(position).host;

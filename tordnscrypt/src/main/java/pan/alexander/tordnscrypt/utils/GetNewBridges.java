@@ -21,13 +21,13 @@ package pan.alexander.tordnscrypt.utils;
 import android.annotation.SuppressLint;
 
 import android.app.Activity;
-import android.support.v4.app.FragmentManager;
+import androidx.fragment.app.FragmentManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.support.v7.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -191,7 +191,7 @@ public class GetNewBridges {
 
 
     private DialogInterface modernProgressDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
         builder.setTitle(R.string.pref_fast_use_tor_bridges_request_dialog);
         builder.setMessage(R.string.please_wait);
         builder.setIcon(R.drawable.ic_visibility_off_black_24dp);
@@ -216,14 +216,14 @@ public class GetNewBridges {
                 dialogInterface.cancel();
             }
         });
-        android.support.v7.app.AlertDialog view  = builder.show();
+        androidx.appcompat.app.AlertDialog view  = builder.show();
         Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
         return view;
     }
 
     public void selectTransport() {
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
         LayoutInflater layoutInflater = (LayoutInflater) Objects.requireNonNull(activity).getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         if (layoutInflater == null)
             return;
@@ -274,7 +274,7 @@ public class GetNewBridges {
     }
 
     private void showCodeImage(Bitmap codeImage, final String secretCode) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
         LayoutInflater layoutInflater = (LayoutInflater) Objects.requireNonNull(activity).getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         if (layoutInflater == null)
             return;
@@ -482,7 +482,7 @@ public class GetNewBridges {
     }
 
     private void showBridges(final String bridges) {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomDialogTheme);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
 
         TextView tvBridges = new TextView(activity);
         tvBridges.setBackgroundResource(R.drawable.background_10dp_padding);

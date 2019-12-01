@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/llBridge"
     android:layout_width="match_parent"
@@ -8,7 +8,7 @@
     android:focusable="false"
     android:orientation="vertical">
 
-    <android.support.v7.widget.CardView
+    <androidx.cardview.widget.CardView
         android:id="@+id/cardBridge"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -17,9 +17,9 @@
         app:cardBackgroundColor="@color/cardsColor"
         app:cardCornerRadius="5dp"
         app:cardUseCompatPadding="true"
-        app:contentPadding="8dp">
+        app:contentPadding="4dp">
 
-        <LinearLayout
+        <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
@@ -27,7 +27,7 @@
             android:gravity="start"
             android:orientation="horizontal">
 
-            <TextView
+            <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvBridge"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -37,17 +37,17 @@
                 android:gravity="center_vertical"
                 android:textAlignment="center" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/swBridge"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_margin="4dp"
                 android:checked="false" />
-        </LinearLayout>
+        </androidx.appcompat.widget.LinearLayoutCompat>
 
-    </android.support.v7.widget.CardView>
+    </androidx.cardview.widget.CardView>
 
-    <ImageButton
+    <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/ibtnBridgeDel"
         android:layout_width="wrap_content"
         android:layout_height="25dp"
@@ -59,4 +59,4 @@
         android:scaleType="fitCenter"
         app:srcCompat="@android:drawable/ic_menu_delete" />
 
-</LinearLayout>
+</androidx.appcompat.widget.LinearLayoutCompat>
