@@ -53,6 +53,7 @@ class Tethering {
     private String itpdTeleSocksProxyPort2;
     private String itpdTeleSocksProxyPort3;
     private boolean apIsOn = false;
+
     private boolean usbTetherOn = false;
 
     Tethering(Context context) {
@@ -124,9 +125,17 @@ class Tethering {
             blockHttpRulePreroutingUDPusb = iptablesPath + "iptables -t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p udp ! -d " + usbModemAddressesRange + " --dport 80 -j RETURN";
         }
 
-        final String[] tetheringCommands;
+        String[] tetheringCommands = new String[]{""};
+        boolean tetherIptablesRulesIsClean = new PrefManager(context).getBoolPref("TetherIptablesRulesIsClean");
 
         if (!torTethering && !itpdTethering && ((!apIsOn && !usbTetherOn) || !dnsCryptRunning)) {
+
+            if (tetherIptablesRulesIsClean) {
+                return tetheringCommands;
+            }
+
+            new PrefManager(context).setBoolPref("TetherIptablesRulesIsClean", true);
+
             tetheringCommands = new String[]{
                     "ip6tables -D INPUT -j DROP || true",
                     "ip6tables -I INPUT -j DROP || true",
@@ -138,6 +147,9 @@ class Tethering {
                     iptablesPath + "iptables -D FORWARD -j tordnscrypt_forward || true"
             };
         } else if (!privacyMode) {
+
+            new PrefManager(context).setBoolPref("TetherIptablesRulesIsClean", false);
+
             if (!torTethering && !itpdTethering) {
                 tetheringCommands = new String[]{
                         "ip6tables -D INPUT -j DROP || true",
@@ -449,6 +461,9 @@ class Tethering {
                 };
             }
         } else {
+
+            new PrefManager(context).setBoolPref("TetherIptablesRulesIsClean", false);
+
             if (torTethering) {
                 tetheringCommands = new String[]{
                         "ip6tables -D INPUT -j DROP || true",
@@ -505,6 +520,13 @@ class Tethering {
                         iptablesPath + "iptables -A tordnscrypt_forward -j REJECT"
                 };
             } else {
+
+                if (tetherIptablesRulesIsClean) {
+                    return tetheringCommands;
+                }
+
+                new PrefManager(context).setBoolPref("TetherIptablesRulesIsClean", true);
+
                 tetheringCommands = new String[]{
                         "ip6tables -D INPUT -j DROP || true",
                         "ip6tables -I INPUT -j DROP",
