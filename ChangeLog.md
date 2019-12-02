@@ -40,3 +40,6 @@
 **InviZible Pro beta 0.3.5**
 * Improve wifi and usb hotspot;
 * Improve modules stopping method
+
+**InviZible Pro beta 0.3.6**
+* Bug fixes and stability improvements
