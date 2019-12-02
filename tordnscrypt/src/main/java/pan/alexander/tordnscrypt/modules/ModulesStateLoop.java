@@ -25,6 +25,7 @@ import java.util.TimerTask;
 
 import pan.alexander.tordnscrypt.iptables.IptablesRules;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
+import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
@@ -62,6 +63,8 @@ public class ModulesStateLoop extends TimerTask {
         iptablesRules = new ModulesIptablesRules(modulesService);
 
         contextUIDUpdater = new ContextUIDUpdater(modulesService);
+
+        restoreModulesSavedState();
     }
 
     @Override
@@ -139,8 +142,15 @@ public class ModulesStateLoop extends TimerTask {
                 || modulesStatus.isIptablesRulesUpdateRequested()) {
 
             savedDNSCryptState = dnsCryptState;
+            new PrefManager(modulesService).setStrPref("savedDNSCryptState", dnsCryptState.toString());
+
+
             savedTorState = torState;
+            new PrefManager(modulesService).setStrPref("savedTorState", torState.toString());
+
             savedItpdState = itpdState;
+            new PrefManager(modulesService).setStrPref("savedITPDState", itpdState.toString());
+
 
             Log.i(LOG_TAG, "DNSCrypt is " + dnsCryptState +
                     " Tor is " + torState + " I2P is " + itpdState);
@@ -205,6 +215,23 @@ public class ModulesStateLoop extends TimerTask {
 
         Log.i(LOG_TAG, "Modules Selinux context and UID updated for "
                 + (modulesStatus.isUseModulesWithRoot() ? "Root" : "No Root"));
+    }
+
+    private void restoreModulesSavedState() {
+        String savedDNSCryptStateStr = new PrefManager(modulesService).getStrPref("savedDNSCryptState");
+        if (!savedDNSCryptStateStr.isEmpty()) {
+            savedDNSCryptState = ModuleState.valueOf(savedDNSCryptStateStr);
+        }
+
+        String savedTorStateStr = new PrefManager(modulesService).getStrPref("savedTorState");
+        if (!savedTorStateStr.isEmpty()) {
+            savedTorState = ModuleState.valueOf(savedTorStateStr);
+        }
+
+        String savedITPDStateStr = new PrefManager(modulesService).getStrPref("savedITPDState");
+        if (!savedITPDStateStr.isEmpty()) {
+            savedItpdState = ModuleState.valueOf(savedITPDStateStr);
+        }
     }
 
     private void safeStopModulesService() {
