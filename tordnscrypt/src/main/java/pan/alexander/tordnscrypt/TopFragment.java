@@ -73,15 +73,15 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 
 public class TopFragment extends Fragment {
 
-    public static String DNSCryptVersion = "2.0.27";
+    public static String DNSCryptVersion = "2.0.33";
     public static String TorVersion = "4.1.5";
-    public static String ITPDVersion = "2.28.0";
+    public static String ITPDVersion = "2.29.0";
 
     public static String appProcVersion = "armv7a";
     public static String appVersion = "lite";
 
-    public static String verSU = "";
-    public static String verBB = "";
+    static String verSU = "";
+    static String verBB = "";
 
     public static boolean debug = false;
     public static String TOP_BROADCAST = "pan.alexander.tordnscrypt.action.TOP_BROADCAST";
@@ -471,7 +471,7 @@ public class TopFragment extends Fragment {
         }
     }
 
-    public void checkUpdates() {
+    void checkUpdates() {
 
         if (getActivity() == null) {
             return;
@@ -652,7 +652,7 @@ public class TopFragment extends Fragment {
         return intent.getIntExtra("Mark", 0) == RootExecService.TopFragmentMark;
     }
 
-    protected void registerReceiver() {
+    private void registerReceiver() {
 
         if (getActivity() == null || br != null) {
             return;
@@ -668,7 +668,7 @@ public class TopFragment extends Fragment {
         getActivity().registerReceiver(br, intentFilter);
     }
 
-    protected void unRegisterReceiver() {
+    private void unRegisterReceiver() {
         try {
             if (br != null && getActivity() != null) {
                 getActivity().unregisterReceiver(br);
