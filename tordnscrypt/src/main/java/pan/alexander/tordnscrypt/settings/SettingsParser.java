@@ -2,10 +2,11 @@ package pan.alexander.tordnscrypt.settings;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import androidx.fragment.app.FragmentTransaction;
-import androidx.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.fragment.app.FragmentTransaction;
+import androidx.preference.PreferenceManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,13 +28,14 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
     private String appDataDir;
     private Bundle bundleForReadPublicResolversMdFunction;
 
-    public SettingsParser (SettingsActivity settingsActivity) {
+    public SettingsParser(SettingsActivity settingsActivity) {
         this.settingsActivity = settingsActivity;
     }
 
     private void readDnscryptProxyToml(List<String> lines) {
         ArrayList<String> key_toml = new ArrayList<>();
         ArrayList<String> val_toml = new ArrayList<>();
+        String header = "";
         String key = "";
         String val = "";
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(settingsActivity);
@@ -46,6 +48,9 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                         key = line.substring(0, line.indexOf("=")).trim();
                         val = line.substring(line.indexOf("=") + 1).trim();
                     } else {
+                        if (line.matches("^ *\\[.+] *$")) {
+                            header = line.trim();
+                        }
                         key = line;
                         val = "";
                     }
@@ -63,8 +68,13 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     key = "proxy_port";
                     val = val.substring(val.indexOf(":", 10) + 1, val.indexOf("\"", 10)).trim();
                 }
-                if (key.equals("cache")) key = "Enable DNS cache";
-                if (key.equals("urls")) key = "Sources";
+                if (header.equals("[sources.public-resolvers]") && key.equals("urls"))
+                    key = "Sources";
+
+                if (header.equals("[sources.relays]") && key.equals("urls")) key = "Relays";
+                if (header.equals("[sources.relays]") && key.equals("refresh_delay"))
+                    key = "refresh_delay_relays";
+
 
                 String val_saved_str = "";
                 boolean val_saved_bool = false;
@@ -78,7 +88,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                 }
 
 
-                if (!val_saved_str.isEmpty() && !val_saved_str.equals(val) && !isbool) {
+                if (!val_saved_str.isEmpty() && !val_saved_str.equals(val)) {
                     editor.putString(key, val);
                 }
                 if (isbool && val_saved_bool != Boolean.valueOf(val)) {
@@ -126,7 +136,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
         SharedPreferences.Editor editor = sp.edit();
 
         if (lines != null) {
-            for (String line:lines) {
+            for (String line : lines) {
                 if (!line.isEmpty()) {
                     if (line.contains(" ")) {
                         key = line.substring(0, line.indexOf(" ")).trim();
@@ -154,7 +164,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                 }
 
 
-                if (!val_saved_str.isEmpty() && !val_saved_str.equals(val) && !isbool) {
+                if (!val_saved_str.isEmpty() && !val_saved_str.equals(val)) {
                     editor.putString(key, val);
                 } else if (isbool && val_saved_bool != Boolean.valueOf(val)) {
                     editor.putBoolean(key, Boolean.valueOf(val));
@@ -235,7 +245,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
         String header = "common";
 
         if (lines != null) {
-            for (String line:lines) {
+            for (String line : lines) {
                 if (!line.isEmpty()) {
                     if (line.contains("=")) {
                         key = line.substring(0, line.indexOf("=")).trim();
@@ -342,11 +352,13 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
         boolean lockServer = false;
         boolean lockMD = false;
         boolean lockTOML = false;
+        boolean lockRoutes = false;
         ArrayList<String> dnsServerNames = new ArrayList<>();
         ArrayList<String> dnsServerDescr = new ArrayList<>();
         ArrayList<String> dnsServerSDNS = new ArrayList<>();
         ArrayList<String> dnscrypt_proxy_toml = new ArrayList<>();
         ArrayList<String> dnscrypt_servers = new ArrayList<>();
+        ArrayList<String> routes = new ArrayList<>();
 
         if (lines != null) {
             for (String line : lines) {
@@ -360,14 +372,14 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     lockTOML = true;
                 }
 
-                if ((line.contains("##") || lockServer) && lockMD) {
+                if ((line.contains("##") || lockServer) && lockMD && !line.trim().isEmpty()) {
                     if (line.contains("##")) {
                         lockServer = true;
                         dnsServerNames.add(line.substring(2).replaceAll("\\s+", "").trim());
                     } else if (line.contains("sdns")) {
                         dnsServerSDNS.add(line.replace("sdns://", "").trim());
                         lockServer = false;
-                        dnsServerDescr.add(sb.toString());
+                        dnsServerDescr.add(sb.toString().replaceAll("\\s", " "));
                         sb.setLength(0);
                     } else if (!line.contains("##") || lockServer) {
                         sb.append(line).append((char) 10);
@@ -380,6 +392,18 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                             String temp = line.substring(line.indexOf("[") + 1, line.indexOf("]")).trim();
                             temp = temp.replace("\"", "").trim();
                             dnscrypt_servers = new ArrayList<>(Arrays.asList(temp.trim().split(", ?")));
+                        } else if (line.contains("routes")) {
+                            lockRoutes = true;
+                        } else if (lockRoutes && line.contains("server_name")) {
+                            String[] rawStrArr = line.split(",");
+
+                            for (String route: rawStrArr) {
+                                routes.add(route
+                                        .replaceAll("via *= *", "")
+                                        .replaceAll("[^\\w\\-.=_]", ""));
+                            }
+                        } else if (lockRoutes) {
+                            lockRoutes = false;
                         }
 
                     }
@@ -416,12 +440,14 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                 bundleForReadPublicResolversMdFunction.putStringArrayList("dnscrypt_proxy_toml", dnscrypt_proxy_toml);
             if (!dnscrypt_servers.isEmpty())
                 bundleForReadPublicResolversMdFunction.putStringArrayList("dnscrypt_servers", dnscrypt_servers);
+            if (!routes.isEmpty())
+                bundleForReadPublicResolversMdFunction.putStringArrayList("routes", routes);
 
-            if (bundleForReadPublicResolversMdFunction.get("dnsServerNames")!=null
-                    && bundleForReadPublicResolversMdFunction.get("dnsServerDescr")!=null
-                    && bundleForReadPublicResolversMdFunction.get("dnsServerSDNS")!=null
-                    && bundleForReadPublicResolversMdFunction.get("dnscrypt_proxy_toml")!=null
-                    && bundleForReadPublicResolversMdFunction.get("dnscrypt_servers")!=null) {
+            if (bundleForReadPublicResolversMdFunction.get("dnsServerNames") != null
+                    && bundleForReadPublicResolversMdFunction.get("dnsServerDescr") != null
+                    && bundleForReadPublicResolversMdFunction.get("dnsServerSDNS") != null
+                    && bundleForReadPublicResolversMdFunction.get("dnscrypt_proxy_toml") != null
+                    && bundleForReadPublicResolversMdFunction.get("dnscrypt_servers") != null) {
                 PreferencesDNSCryptServersRv frag = new PreferencesDNSCryptServersRv();
                 frag.setArguments(bundleForReadPublicResolversMdFunction);
                 FragmentTransaction fTrans = settingsActivity.getSupportFragmentManager().beginTransaction();
@@ -433,7 +459,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
 
     private void readRules(String path, List<String> lines) {
         ArrayList<String> rules_file = new ArrayList<>();
-        if (lines !=null) {
+        if (lines != null) {
             rules_file.addAll(lines);
         } else {
             rules_file.add("");
@@ -441,7 +467,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
         FragmentTransaction fTrans = settingsActivity.getSupportFragmentManager().beginTransaction();
         Bundle bundle = new Bundle();
         bundle.putStringArrayList("rules_file", rules_file);
-        bundle.putString("path",path);
+        bundle.putString("path", path);
         ShowRulesRecycleFrag frag = new ShowRulesRecycleFrag();
         frag.setArguments(bundle);
         fTrans.replace(android.R.id.content, frag);
@@ -456,7 +482,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
     }
 
     public void deactivateSettingsParser() {
-        if (bundleForReadPublicResolversMdFunction!=null)
+        if (bundleForReadPublicResolversMdFunction != null)
             bundleForReadPublicResolversMdFunction.clear();
         FileOperations.deleteOnFileOperationCompleteListener();
     }
@@ -493,7 +519,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                 }
             });
 
-        } else if(!fileOperationResult && currentFileOperation == readTextFile) {
+        } else if (!fileOperationResult && currentFileOperation == readTextFile) {
             if (tag.equals(SettingsActivity.rules_tag)) {
                 readRules(path, lines);
             }
@@ -501,7 +527,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
             settingsActivity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(settingsActivity,settingsActivity.getText(R.string.toastSettings_saved),Toast.LENGTH_SHORT).show();
+                    Toast.makeText(settingsActivity, settingsActivity.getText(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
                 }
             });
         }

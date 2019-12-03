@@ -31,7 +31,6 @@
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="8dp"
                 android:layout_weight="1"
                 android:orientation="horizontal"
                 tools:ignore="NestedWeights">
@@ -42,33 +41,41 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
                     android:layout_weight="1"
+                    android:fontFamily="serif"
                     android:singleLine="true"
-                    android:textStyle="bold"
-                    tools:ignore="HardcodedText" />
+                    android:text="my-very-good-derver"
+                    android:textAlignment="center"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
 
                 <androidx.appcompat.widget.AppCompatCheckBox
                     android:id="@+id/chbDNSServer"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:visibility="visible" />
+
             </androidx.appcompat.widget.LinearLayoutCompat>
+
+            <TextView
+                android:id="@+id/tvDNSServerRelay"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:textStyle="bold|italic"
+                android:visibility="gone" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvDNSServerDescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:layout_weight="1"
-                tools:ignore="HardcodedText" />
+                android:layout_margin="8dp" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvDNSServerFlags"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
-                android:layout_weight="1"
-                android:textAlignment="center"
-                tools:ignore="HardcodedText" />
+                android:textAlignment="center" />
         </androidx.appcompat.widget.LinearLayoutCompat>
     </androidx.cardview.widget.CardView>
 

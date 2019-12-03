@@ -21,13 +21,6 @@ package pan.alexander.tordnscrypt.settings;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.preference.PreferenceManager;
-import androidx.cardview.widget.CardView;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import android.text.Html;
 import android.util.Base64;
 import android.util.Log;
@@ -38,6 +31,14 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.cardview.widget.CardView;
+import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,23 +58,22 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class PreferencesDNSCryptServersRv extends Fragment {
 
-    ArrayList<String> dnsServerNames;
-    ArrayList<String> dnsServerDescr;
-    ArrayList<String> dnsServerSDNS;
-    ArrayList<String> dnscrypt_proxy_toml;
-    ArrayList<String> dnscrypt_servers_current;
-    ArrayList<DNSServers> list_dns_servers;
-    String appDataDir;
-    String dnscryptPath;
-    String busyboxPath;
-    boolean require_dnssec;
-    boolean require_nolog;
-    boolean require_nofilter;
-    boolean use_doh_servers;
-    boolean use_dns_servers;
-    boolean use_ipv4;
-    boolean use_ipv6;
-    OnServersChangeListener callback;
+    private ArrayList<String> dnsServerNames;
+    private ArrayList<String> dnsServerDescr;
+    private ArrayList<String> dnsServerSDNS;
+    private ArrayList<String> dnscrypt_proxy_toml;
+    private ArrayList<String> dnscrypt_servers_current;
+    private ArrayList<String> routes_current;
+    private ArrayList<DNSServers> list_dns_servers;
+    private String appDataDir;
+    private boolean require_dnssec;
+    private boolean require_nolog;
+    private boolean require_nofilter;
+    private boolean use_doh_servers;
+    private boolean use_dns_servers;
+    private boolean use_ipv4;
+    private boolean use_ipv6;
+    private OnServersChangeListener callback;
 
 
     public PreferencesDNSCryptServersRv() {
@@ -92,10 +92,11 @@ public class PreferencesDNSCryptServersRv extends Fragment {
             dnsServerSDNS = getArguments().getStringArrayList("dnsServerSDNS");
             dnscrypt_proxy_toml = getArguments().getStringArrayList("dnscrypt_proxy_toml");
             dnscrypt_servers_current = getArguments().getStringArrayList("dnscrypt_servers");
+            routes_current = getArguments().getStringArrayList("routes");
 
             assert dnscrypt_servers_current != null;
         } else {
-            Log.e(LOG_TAG, "PreferencesDNSCryptServersRv getArguments() nullpointer");
+            Log.e(LOG_TAG, "PreferencesDNSCryptServersRv getArguments() nullPointer");
         }
 
         Thread thread = new Thread(new Runnable() {
@@ -116,10 +117,10 @@ public class PreferencesDNSCryptServersRv extends Fragment {
                     }
 
                 } catch (Exception e) {
-                    NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                            getActivity(), getText(R.string.verifier_error).toString(), "8990");
-                    if (notificationHelper != null) {
-                        if (getFragmentManager() != null) {
+                    if (getFragmentManager() != null) {
+                        NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                                getActivity(), getText(R.string.verifier_error).toString(), "8990");
+                        if (notificationHelper != null) {
                             notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                         }
                     }
@@ -140,8 +141,6 @@ public class PreferencesDNSCryptServersRv extends Fragment {
 
         PathVars pathVars = new PathVars(getActivity());
         appDataDir = pathVars.appDataDir;
-        dnscryptPath = pathVars.dnscryptPath;
-        busyboxPath = pathVars.busyboxPath;
 
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
@@ -150,12 +149,14 @@ public class PreferencesDNSCryptServersRv extends Fragment {
         require_nolog = sp.getBoolean("require_nolog", false);
         use_dns_servers = sp.getBoolean("dnscrypt_servers", true);
         use_doh_servers = sp.getBoolean("doh_servers", true);
-        use_ipv4 = sp.getBoolean("ipv4_servers", true);
-        use_ipv6 = sp.getBoolean("ipv6_servers", false);
+        use_ipv4 = true;
+        use_ipv6 = false;
 
         list_dns_servers = new ArrayList<>();
         for (int i = 0; i < dnsServerNames.size(); i++) {
             DNSServers dnsServer = new DNSServers(dnsServerNames.get(i), dnsServerDescr.get(i), dnsServerSDNS.get(i));
+            setRoutes(dnsServer);
+
             if (dnsServer.visibility && !dnsServerNames.get(i).contains("repeat_server"))
                 list_dns_servers.add(dnsServer);
         }
@@ -213,6 +214,9 @@ public class PreferencesDNSCryptServersRv extends Fragment {
 
         new PrefManager(getActivity()).setStrPref("DNSCrypt Servers", dnscrypt_servers.toString());
 
+        if (callback != null)
+            callback.onServersChange();
+
         for (int i = 0; i < dnscrypt_proxy_toml.size(); i++) {
             String str = dnscrypt_proxy_toml.get(i);
             if (str.contains("server_names")) {
@@ -232,26 +236,42 @@ public class PreferencesDNSCryptServersRv extends Fragment {
         if (dnsCryptRunning) {
             ModulesRestarter.restartDNSCrypt(getActivity());
         }
-
-        if (callback != null)
-            callback.onServersChange();
     }
 
-    public class DNSServers {
+    private void setRoutes(DNSServers dnsServer) {
+        if (routes_current != null && dnsServer.protoDNSCrypt) {
+            StringBuilder routes = new StringBuilder();
+            boolean routesFound = false;
+            for (int i = 0; i < routes_current.size(); i++) {
+                if (routes_current.get(i).contains(dnsServer.name)) {
+                    routesFound = true;
+                } else if (routesFound && routes_current.get(i).contains("server_name")) {
+                    break;
+                } else if (routesFound) {
+                    routes.append(routes_current.get(i)).append(", ");
+                }
+            }
 
-        private String name;
-        private String description;
+            if (routes.length() > 0) {
+                routes.delete(routes.lastIndexOf(","), routes.length());
+                dnsServer.routes = "Anonymize relays: " + routes.toString() + ".";
+            }
+        }
+    }
+
+    private class DNSServers {
         private boolean checked = false;
         private boolean dnssec = false;
         private boolean nolog = false;
         private boolean nofilter = false;
         private boolean protoDoH = false;
         private boolean protoDNSCrypt = false;
-        private boolean ipv4 = true;
-        private boolean ipv6 = false;
         private boolean visibility = true;
+        private String name;
+        private String description;
+        private String routes = "";
 
-        DNSServers(String name, String description, String sdns) {
+        private DNSServers(String name, String description, String sdns) {
             this.name = name;
             this.description = description;
 
@@ -277,9 +297,11 @@ public class PreferencesDNSCryptServersRv extends Fragment {
                     this.checked = true;
             }
 
+            boolean ipv4 = true;
+            boolean ipv6 = false;
             if (name.contains("v6") || name.contains("ip6")) {
-                this.ipv4 = false;
-                this.ipv6 = true;
+                ipv4 = false;
+                ipv6 = true;
             }
 
             if (require_dnssec)
@@ -298,15 +320,14 @@ public class PreferencesDNSCryptServersRv extends Fragment {
                 this.visibility = this.visibility && !this.protoDoH;
 
             if (!use_ipv4)
-                this.visibility = this.visibility && !this.ipv4;
+                this.visibility = this.visibility && !ipv4;
 
             if (!use_ipv6)
-                this.visibility = this.visibility && !this.ipv6;
-
+                this.visibility = this.visibility && !ipv6;
         }
     }
 
-    public class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServersViewHolder> {
+    private class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServersViewHolder> {
 
         LayoutInflater lInflater = (LayoutInflater) Objects.requireNonNull(getActivity()).getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -340,31 +361,70 @@ public class PreferencesDNSCryptServersRv extends Fragment {
         }
 
 
-        class DNSServersViewHolder extends RecyclerView.ViewHolder {
+        private class DNSServersViewHolder extends RecyclerView.ViewHolder {
 
-            CardView cardDNSServer;
-            TextView tvDNSServerName;
-            CheckBox chbDNSServer;
-            TextView tvDNSServerDescription;
-            TextView tvDNSServerFlags;
+            private TextView tvDNSServerName;
+            private CheckBox chbDNSServer;
+            private TextView tvDNSServerDescription;
+            private TextView tvDNSServerFlags;
+            private TextView tvDNSServerRelay;
 
             DNSServersViewHolder(@NonNull View itemView) {
                 super(itemView);
 
-                cardDNSServer = itemView.findViewById(R.id.cardDNSServer);
+                CardView cardDNSServer = itemView.findViewById(R.id.cardDNSServer);
                 cardDNSServer.setFocusable(true);
+
+                View.OnClickListener onClickListener = new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        int position = getAdapterPosition();
+                        DNSServers dnsServer = getItem(position);
+                        dnsServer.checked = !dnsServer.checked;
+                        setItem(position, dnsServer);
+                        notifyItemChanged(position);
+                    }
+                };
+
                 cardDNSServer.setOnClickListener(onClickListener);
                 cardDNSServer.setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
+
+                View.OnFocusChangeListener onFocusChangeListener = new View.OnFocusChangeListener() {
+                    @Override
+                    public void onFocusChange(View view, boolean b) {
+                        if (b) {
+                            ((CardView) view).setCardBackgroundColor(getResources().getColor(R.color.colorSecond));
+                        } else {
+                            ((CardView) view).setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
+                        }
+                    }
+                };
+
                 cardDNSServer.setOnFocusChangeListener(onFocusChangeListener);
+
                 tvDNSServerName = itemView.findViewById(R.id.tvDNSServerName);
                 chbDNSServer = itemView.findViewById(R.id.chbDNSServer);
                 chbDNSServer.setFocusable(false);
+
+                CheckBox.OnCheckedChangeListener onCheckedChangeListener = new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                        int position = getAdapterPosition();
+                        DNSServers dnsServer = getItem(position);
+                        if (dnsServer.checked != checked) {
+                            dnsServer.checked = checked;
+                            setItem(position, dnsServer);
+                        }
+                    }
+                };
+
                 chbDNSServer.setOnCheckedChangeListener(onCheckedChangeListener);
                 tvDNSServerDescription = itemView.findViewById(R.id.tvDNSServerDescription);
                 tvDNSServerFlags = itemView.findViewById(R.id.tvDNSServerFlags);
+                tvDNSServerRelay = itemView.findViewById(R.id.tvDNSServerRelay);
             }
 
-            void bind(int position) {
+            private void bind(int position) {
 
 
                 DNSServers dnsServer = list_dns_servers.get(position);
@@ -375,8 +435,15 @@ public class PreferencesDNSCryptServersRv extends Fragment {
                 StringBuilder sb = new StringBuilder();
                 if (dnsServer.protoDNSCrypt) {
                     sb.append("<font color='#7F4E52'>DNS Crypt Server </font>");
+
+                    if (!dnsServer.routes.isEmpty()) {
+                        tvDNSServerRelay.setVisibility(View.VISIBLE);
+                        tvDNSServerRelay.setText(dnsServer.routes);
+                    }
+
                 } else if (dnsServer.protoDoH) {
                     sb.append("<font color='#614051'>DoH Server </font>");
+                    tvDNSServerRelay.setVisibility(View.GONE);
                 }
                 if (dnsServer.nofilter) {
                     sb.append("<font color='#728FCE'>Non-Filtering </font>");
@@ -389,46 +456,14 @@ public class PreferencesDNSCryptServersRv extends Fragment {
                     sb.append("<font color='#800517'>Keep Logs </font>");
                 }
 
-                if (dnsServer.dnssec)
+                if (dnsServer.dnssec) {
                     sb.append("<font color='#4E387E'>DNSSEC</font>");
+                }
+
                 tvDNSServerFlags.setText(Html.fromHtml(sb.toString()));
 
                 chbDNSServer.setChecked(dnsServer.checked);
             }
-
-            CheckBox.OnCheckedChangeListener onCheckedChangeListener = new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                    int position = getAdapterPosition();
-                    DNSServers dnsServer = getItem(position);
-                    if (dnsServer.checked != checked) {
-                        dnsServer.checked = checked;
-                        setItem(position, dnsServer);
-                    }
-                }
-            };
-
-            View.OnClickListener onClickListener = new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    int position = getAdapterPosition();
-                    DNSServers dnsServer = getItem(position);
-                    dnsServer.checked = !dnsServer.checked;
-                    setItem(position, dnsServer);
-                    notifyItemChanged(position);
-                }
-            };
-
-            View.OnFocusChangeListener onFocusChangeListener = new View.OnFocusChangeListener() {
-                @Override
-                public void onFocusChange(View view, boolean b) {
-                    if (b) {
-                        ((CardView) view).setCardBackgroundColor(getResources().getColor(R.color.colorSecond));
-                    } else {
-                        ((CardView) view).setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
-                    }
-                }
-            };
 
         }
     }

@@ -239,14 +239,8 @@
     <string name="pref_dnscrypt_select_server_names">Select at least one server!</string>
     <string name="pref_dnscrypt_local_port_summ">Local port to listen to.</string>
     <string name="pref_dnscrypt_local_port" translatable="false">listen_port</string>
-    <string name="pref_dnscrypt_max_clients_summ">Maximum number of simultaneous client connections to accept.</string>
-    <string name="pref_dnscrypt_max_clients" translatable="false">max_clients</string>
 
     <string name="pref_dnscrypt_require_servers_categ">Require servers (from static + remote sources) to satisfy specific properties.</string>
-    <string name="pref_dnscrypt_ipv4_servers_summ">Use servers reachable over IPv4.</string>
-    <string name="pref_dnscrypt_ipv4_servers" translatable="false">ipv4_servers</string>
-    <string name="pref_dnscrypt_ipv6_servers_summ">Use servers reachable over IPv6. Do not enable if you don\'t have IPv6 connectivity.</string>
-    <string name="pref_dnscrypt_ipv6_servers" translatable="false">ipv6_servers</string>
     <string name="pref_dnscrypt_dnscrypt_servers_summ">Use servers implementing the DNSCrypt protocol.</string>
     <string name="pref_dnscrypt_dnscrypt_servers" translatable="false">dnscrypt_servers</string>
     <string name="pref_dnscrypt_doh_servers_summ">Use servers implementing the DNS-over-HTTPS protocol.</string>
@@ -272,18 +266,6 @@
     <string name="pref_dnscrypt_proxy">proxy_port</string>
 
     <string name="pref_dnscrypt_other_categ">Other Settings.</string>
-    <string name="pref_dnscrypt_timeout_summ"> How long a DNS query will wait for a response, in milliseconds.</string>
-    <string name="pref_dnscrypt_timeout" translatable="false">timeout</string>
-    <string name="pref_dnscrypt_keepalive_summ"> Keepalive for HTTP (HTTPS, HTTP/2) queries, in seconds.</string>
-    <string name="pref_dnscrypt_keepalive" translatable="false">keepalive</string>
-    <string name="pref_dnscrypt_cert_refresh_del_summ"> Keepalive for HTTP (HTTPS, HTTP/2) queries, in seconds.</string>
-    <string name="pref_dnscrypt_cert_refresh_del" translatable="false">cert_refresh_delay</string>
-    <string name="pref_dnscrypt_dnscrypt_ephemeral_keys_summ">Create a new, unique key for every single DNS query.
-        This may improve privacy but can also have a significant impact on CPU usage.
-        Only enable if you don\'t have a lot of network load.</string>
-    <string name="pref_dnscrypt_dnscrypt_ephemeral_keys" translatable="false">dnscrypt_ephemeral_keys</string>
-    <string name="pref_dnscrypt_tls_disable_session_tickets_summ"> Tls_disable_session_tickets.</string>
-    <string name="pref_dnscrypt_tls_disable_session_tickets" translatable="false">tls_disable_session_tickets</string>
     <string name="pref_dnscrypt_fallback_resolver_summ">Fallback resolver.
         This is a normal, non-encrypted DNS resolver, that will be only used for one-shot queries
         when retrieving the initial resolvers list, and only if the system DNS configuration doesn\'t work.
@@ -292,14 +274,8 @@
     <string name="pref_dnscrypt_fallback_resolver" translatable="false">fallback_resolver</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">Never let dnscrypt-proxy try to use the system DNS settings. Unconditionally use the fallback resolver..</string>
     <string name="pref_dnscrypt_ignore_system_dns" translatable="false">ignore_system_dns</string>
-    <string name="pref_dnscrypt_netprobe_timeout_summ"> Maximum time (in seconds) to wait for network connectivity before initializing the proxy.\n
-        Useful if the proxy is automatically started at boot, and network connectivity is not guaranteed to be immediately available.\n
-        Use 0 to disable..</string>
-    <string name="pref_dnscrypt_netprobe_timeout" translatable="false">netprobe_timeout</string>
 
     <string name="pref_dnscrypt_filters_categ">FILTERS</string>
-    <string name="pref_dnscrypt_dnscrypt_block_ipv6" translatable="false">block_ipv6</string>
-    <string name="pref_dnscrypt_block_ipv6_summ">Immediately respond to IPv6-related queries with an empty response. This makes things faster when there is no IPv6 connectivity, but can also cause reliability issues with some stub resolvers.</string>
 
     <string name="pref_dnscrypt_forwarding_rules_categ" translatable="false">Forwarding rules.</string>
     <string name="pref_dnscrypt_forwarding_rules" translatable="false">forwarding_rules</string>
@@ -309,20 +285,6 @@
     <string name="pref_dnscrypt_cloaking_rules" translatable="false">cloaking_rules</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking returns a predefined address for a specific name.\n
         In addition to acting as a HOSTS file, it can also return the IP address of a different name. It will also do CNAME flattening..</string>
-
-    <string name="pref_dnscrypt_DNS_cache_categ">DNS cache.</string>
-    <string name="pref_dnscrypt_cache_summ">Enable a DNS cache to reduce latency and outgoing traffic.</string>
-    <string name="pref_dnscrypt_cache">Enable DNS cache</string>
-    <string name="pref_dnscrypt_cache_size_summ">Cache size.</string>
-    <string name="pref_dnscrypt_cache_size" translatable="false">cache_size</string>
-    <string name="pref_dnscrypt_cache_min_ttl_summ">Minimum TTL for cached entries.</string>
-    <string name="pref_dnscrypt_cache_min_ttl" translatable="false">cache_min_ttl</string>
-    <string name="pref_dnscrypt_cache_max_ttl_summ">Maximum TTL for cached entries.</string>
-    <string name="pref_dnscrypt_cache_max_ttl" translatable="false">cache_max_ttl</string>
-    <string name="pref_dnscrypt_cache_neg_min_ttl_summ">Minimum TTL for negatively cached entries.</string>
-    <string name="pref_dnscrypt_cache_neg_min_ttl" translatable="false">cache_neg_min_ttl</string>
-    <string name="pref_dnscrypt_cache_neg_max_ttl_summ">Maximum TTL for negatively cached entries.</string>
-    <string name="pref_dnscrypt_cache_neg_max_ttl" translatable="false">cache_neg_max_ttl</string>
 
     <string name="pref_dnscrypt_query_log_categ">Query logging.</string>
     <string name="pref_dnscrypt_query_log_summ">Log client queries to a file.</string>
@@ -349,13 +311,18 @@
     <string name="pref_dnscrypt_whitelist">Whitelist</string>
     <string name="pref_dnscrypt_whitelist_summ">Whitelist support the same patterns as blacklists. If a name matches a whitelist entry, the corresponding session will bypass names and IP filters.</string>
 
-    <string name="pref_dnscrypt_sources_categ">Servers.</string>
+    <string name="pref_dnscrypt_sources_categ">Servers</string>
     <string name="pref_dnscrypt_sources">Sources</string>
     <string name="pref_dnscrypt_sources_summ">Remote lists of available servers.</string>
-    <string name="pref_dnscrypt_minisign_key" translatable="false">minisign_key</string>
-    <string name="pref_dnscrypt_minisign_key_summ">Key.</string>
     <string name="pref_dnscrypt_refresh_delay" translatable="false">refresh_delay</string>
     <string name="pref_dnscrypt_refresh_delay_summ">Sources list expiring after refresh_delay hours.</string>
+
+    <string name="pref_dnscrypt_relays_categ">Relays</string>
+    <string name="pref_dnscrypt_relays">Sources</string>
+    <string name="pref_dnscrypt_relays_delay" translatable="false">refresh_delay</string>
+    <string name="pref_dnscrypt_relays_delay_summ">Relays list expiring after refresh_delay hours.</string>
+
+
 
     <string name="pref_dnscrypt_not_exist">Preference does not exist in dnscrypt-proxy.toml!</string>
 
@@ -609,5 +576,6 @@
     <string name="enter_code">Enter Code</string>
     <string name="thanks_for_donate">InviZible Pro Project and its author express appreciation
         for the assistance. Would you like to download and upgrade to PRO? The update will continue in the background.</string>
+    <string name="pref_dnscrypt_relays_summ">Remote lists of available relays.</string>
 
 </resources>

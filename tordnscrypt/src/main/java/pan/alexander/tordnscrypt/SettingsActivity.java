@@ -18,6 +18,7 @@ package pan.alexander.tordnscrypt;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -110,7 +111,6 @@ public class SettingsActivity extends LangAppCompatActivity
             dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
             FileOperations.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml", public_resolvers_md_tag);
             FileOperations.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/public-resolvers.md", public_resolvers_md_tag);
-
         } else if (Objects.equals(intent.getAction(), "open_qery_log")) {
             Bundle bundle = new Bundle();
             String path = appDataDir + "/cache/query.log";
@@ -200,7 +200,7 @@ public class SettingsActivity extends LangAppCompatActivity
     }
 
     @Override
-    public void onAttachFragment(Fragment fragment) {
+    public void onAttachFragment(@NonNull Fragment fragment) {
         super.onAttachFragment(fragment);
 
         if (fragment instanceof PreferencesDNSCryptServersRv) {
