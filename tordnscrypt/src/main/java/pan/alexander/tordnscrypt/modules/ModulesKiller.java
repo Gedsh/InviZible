@@ -124,10 +124,24 @@ public class ModulesKiller {
         this.itpdThread = itpdThread;
     }
 
+    Thread getDnsCryptThread() {
+        return dnsCryptThread;
+    }
+
+    Thread getTorThread() {
+        return torThread;
+    }
+
+    Thread getItpdThread() {
+        return itpdThread;
+    }
+
     Runnable getDNSCryptKillerRunnable() {
         return new Runnable() {
             @Override
             public void run() {
+
+                String dnsCryptPid = readPidFile(pathVars.appDataDir + "/dnscrypt-proxy.pid");
 
                 if (modulesStatus.getDnsCryptState() != RESTARTING) {
                     modulesStatus.setDnsCryptState(STOPPING);
@@ -136,7 +150,7 @@ public class ModulesKiller {
                 boolean moduleStartedWithRoot = new PrefManager(service).getBoolPref("DNSCryptStartedWithRoot");
                 boolean rootIsAvailable = modulesStatus.isRootAvailable();
 
-                boolean result = doThreeAttemptsToStopModule(pathVars.dnscryptPath, dnsCryptThread, moduleStartedWithRoot);
+                boolean result = doThreeAttemptsToStopModule(pathVars.dnscryptPath, dnsCryptPid, dnsCryptThread, moduleStartedWithRoot);
 
                 if (!result) {
 
@@ -150,7 +164,7 @@ public class ModulesKiller {
 
                     if (rootIsAvailable && !result) {
                         Log.w(LOG_TAG, "ModulesKiller cannot stop DNSCrypt. Stop with root method!");
-                        result = killModule(pathVars.dnscryptPath, dnsCryptThread, true, "SIGKILL", 10);
+                        result = killModule(pathVars.dnscryptPath, dnsCryptPid, dnsCryptThread, true, "SIGKILL", 10);
                     }
                 }
 
@@ -203,6 +217,8 @@ public class ModulesKiller {
             @Override
             public void run() {
 
+                String torPid = readPidFile(pathVars.appDataDir + "/tor.pid");
+
                 if (modulesStatus.getTorState() != RESTARTING) {
                     modulesStatus.setTorState(STOPPING);
                 }
@@ -210,7 +226,7 @@ public class ModulesKiller {
                 boolean moduleStartedWithRoot = new PrefManager(service).getBoolPref("TorStartedWithRoot");
                 boolean rootIsAvailable = modulesStatus.isRootAvailable();
 
-                boolean result = doThreeAttemptsToStopModule(pathVars.torPath, torThread, moduleStartedWithRoot);
+                boolean result = doThreeAttemptsToStopModule(pathVars.torPath, torPid, torThread, moduleStartedWithRoot);
 
                 if (!result) {
 
@@ -224,7 +240,7 @@ public class ModulesKiller {
 
                     if (rootIsAvailable && !result) {
                         Log.w(LOG_TAG, "ModulesKiller cannot stop Tor. Stop with root method!");
-                        result = killModule(pathVars.torPath, torThread, true, "SIGKILL", 10);
+                        result = killModule(pathVars.torPath, torPid, torThread, true, "SIGKILL", 10);
                     }
                 }
 
@@ -275,6 +291,8 @@ public class ModulesKiller {
             @Override
             public void run() {
 
+                String itpdPid = readPidFile(pathVars.appDataDir + "/i2pd.pid");
+
                 if (modulesStatus.getItpdState() != RESTARTING) {
                     modulesStatus.setItpdState(STOPPING);
                 }
@@ -282,7 +300,7 @@ public class ModulesKiller {
                 boolean moduleStartedWithRoot = new PrefManager(service).getBoolPref("ITPDStartedWithRoot");
                 boolean rootIsAvailable = modulesStatus.isRootAvailable();
 
-                boolean result = doThreeAttemptsToStopModule(pathVars.itpdPath, itpdThread, moduleStartedWithRoot);
+                boolean result = doThreeAttemptsToStopModule(pathVars.itpdPath, itpdPid, itpdThread, moduleStartedWithRoot);
 
                 if (!result) {
                     if (!moduleStartedWithRoot) {
@@ -295,7 +313,7 @@ public class ModulesKiller {
 
                     if (rootIsAvailable && !result) {
                         Log.w(LOG_TAG, "ModulesKiller cannot stop I2P. Stop with root method!");
-                        result = killModule(pathVars.itpdPath, itpdThread, true, "SIGKILL", 10);
+                        result = killModule(pathVars.itpdPath, itpdPid, itpdThread, true, "SIGKILL", 10);
                     }
                 }
 
@@ -342,15 +360,14 @@ public class ModulesKiller {
         };
     }
 
-    @SuppressWarnings("deprecation")
-    private synchronized boolean killModule(String module, Thread thread, boolean killWithRoot, String signal, int delaySec) {
+    private synchronized boolean killModule(String module, String pid, Thread thread, boolean killWithRoot, String signal, int delaySec) {
         boolean result = false;
 
         if (module.contains("/")) {
             module = module.substring(module.lastIndexOf("/"));
         }
 
-        String[] preparedCommands = prepareKillCommands(module, signal);
+        String[] preparedCommands = prepareKillCommands(module, pid, signal);
 
         if (thread == null || killWithRoot) {
             String sleep = pathVars.busyboxPath + "sleep " + delaySec;
@@ -358,9 +375,7 @@ public class ModulesKiller {
 
             String[] commands = Arr.ADD2(preparedCommands, new String[]{sleep, checkString});
 
-            //Log.i(LOG_TAG, Arrays.toString(commands));
-
-            List<String> shellResult = Shell.SU.run(commands);
+            List<String> shellResult = killWithSU(module, commands);
 
             if (shellResult != null) {
                 result = !shellResult.toString().contains(module.toLowerCase().trim());
@@ -372,12 +387,14 @@ public class ModulesKiller {
                 Log.i(LOG_TAG, "Kill " + module + " with root: result false");
             }
         } else {
-
-            //Log.i(LOG_TAG, Arrays.toString(commands));
-
-            List<String> shellResult = Shell.SH.run(preparedCommands);
-            makeDelay(delaySec);
+            killWithPid(signal, pid, delaySec);
             result = !thread.isAlive();
+
+            List<String> shellResult = null;
+            if (!result) {
+                shellResult = killWithSH(module, preparedCommands, delaySec);
+                result = !thread.isAlive();
+            }
 
             if (shellResult != null) {
                 Log.i(LOG_TAG, "Kill " + module + " without root: result " + result + "\n" + shellResult.toString());
@@ -389,10 +406,44 @@ public class ModulesKiller {
         return result;
     }
 
-    private String[] prepareKillCommands(String module, String signal) {
-        String[] result;
+    private void killWithPid(String signal, String pid, int delay) {
+        try {
+            if (signal.isEmpty()) {
+                android.os.Process.sendSignal(Integer.valueOf(pid), 15);
+            } else {
+                android.os.Process.killProcess(Integer.valueOf(pid));
+            }
+            makeDelay(delay);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "ModulesKiller killWithPid exception " + e.getMessage() + " " + e.getCause());
+        }
+    }
 
-        String pid = readPidFile(pathVars.appDataDir + module + ".pid");
+    @SuppressWarnings("deprecation")
+    private List<String> killWithSH(String module, String[] commands, int delay) {
+        List<String> shellResult = null;
+        try {
+            shellResult = Shell.SH.run(commands);
+            makeDelay(delay);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "Kill " + module + " without root exception " + e.getMessage() + " " + e.getCause());
+        }
+        return shellResult;
+    }
+
+    @SuppressWarnings("deprecation")
+    private List<String> killWithSU(String module, String[] commands) {
+        List<String> shellResult = null;
+        try {
+            shellResult = Shell.SU.run(commands);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "Kill " + module + " with root exception " + e.getMessage() + " " + e.getCause());
+        }
+        return shellResult;
+    }
+
+    private String[] prepareKillCommands(String module, String pid, String signal) {
+        String[] result;
 
         if (pid.isEmpty()) {
             String killStringBusybox = pathVars.busyboxPath + "pkill " + module;
@@ -432,20 +483,17 @@ public class ModulesKiller {
             };
         }
 
-
-
         return result;
     }
 
-
-    private boolean doThreeAttemptsToStopModule(String modulePath, Thread thread, boolean moduleStartedWithRoot) {
+    private boolean doThreeAttemptsToStopModule(String modulePath, String pid, Thread thread, boolean moduleStartedWithRoot) {
         boolean result = false;
         int attempts = 0;
         while (attempts < 3 && !result) {
             if (attempts < 2) {
-                result = killModule(modulePath, thread, moduleStartedWithRoot, "", attempts + 1);
+                result = killModule(modulePath, pid, thread, moduleStartedWithRoot, "", attempts + 1);
             } else {
-                result = killModule(modulePath, thread, moduleStartedWithRoot, "SIGKILL", attempts + 1);
+                result = killModule(modulePath, pid, thread, moduleStartedWithRoot, "SIGKILL", attempts + 1);
             }
 
             attempts++;
@@ -456,18 +504,24 @@ public class ModulesKiller {
     private boolean stopModuleWithInterruptThread(Thread thread) {
         boolean result = false;
         int attempts = 0;
-        while (attempts < 3 && !result) {
-            if (thread != null && thread.isAlive()) {
-                thread.interrupt();
-                makeDelay(3);
-            }
 
-            if (thread != null) {
-                result = !thread.isAlive();
-            }
+        try {
+            while (attempts < 3 && !result) {
+                if (thread != null && thread.isAlive()) {
+                    thread.interrupt();
+                    makeDelay(3);
+                }
 
-            attempts++;
+                if (thread != null) {
+                    result = !thread.isAlive();
+                }
+
+                attempts++;
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "Kill with interrupt thread exception " + e.getMessage() + " " + e.getCause());
         }
+
         return result;
     }
 
@@ -478,7 +532,7 @@ public class ModulesKiller {
         if (file.isFile()) {
             List<String> lines = FileOperations.readTextFileSynchronous(service, path);
 
-            for (String line: lines) {
+            for (String line : lines) {
                 if (!line.trim().isEmpty()) {
                     pid = line.trim();
                     break;

@@ -160,6 +160,22 @@ public class ModulesService extends Service {
         try {
             modulesStatus.setDnsCryptState(STARTING);
 
+            if (!modulesStatus.isUseModulesWithRoot()) {
+                Thread previousDnsCryptThread = modulesKiller.getDnsCryptThread();
+
+                try {
+                    if (previousDnsCryptThread != null && previousDnsCryptThread.isAlive()) {
+                        Log.w(LOG_TAG, "ModulesService previous DNSCrypt thread is alive! Try interrupt!");
+                        previousDnsCryptThread.interrupt();
+                    }
+                } catch (Exception e) {
+                    Log.e(LOG_TAG, "ModulesService previous DNSCrypt thread interrupt exception "
+                            + e.getMessage() + e.getCause() +"\nStop service");
+                    System.exit(0);
+                }
+
+            }
+
             ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(getApplicationContext(), mHandler, pathVars);
             Thread dnsCryptThread = new Thread(modulesStarterHelper.getDNSCryptStarterRunnable());
             dnsCryptThread.setDaemon(false);
@@ -178,7 +194,12 @@ public class ModulesService extends Service {
                 checkModulesStateTask.setDnsCryptThread(dnsCryptThread);
             }
 
-            modulesStatus.setDnsCryptState(RUNNING);
+            if (modulesStatus.isUseModulesWithRoot() || dnsCryptThread.isAlive()) {
+                modulesStatus.setDnsCryptState(RUNNING);
+            } else {
+                modulesStatus.setDnsCryptState(STOPPED);
+            }
+
 
         } catch (Exception e) {
             Log.e(LOG_TAG, "DnsCrypt was unable to startRefreshModulesStatus: " + e.getMessage());
@@ -189,6 +210,22 @@ public class ModulesService extends Service {
     private void startTor() {
         try {
             modulesStatus.setTorState(STARTING);
+
+            if (!modulesStatus.isUseModulesWithRoot()) {
+                Thread previousTorThread = modulesKiller.getTorThread();
+
+                try {
+                    if (previousTorThread != null && previousTorThread.isAlive()) {
+                        Log.w(LOG_TAG, "ModulesService previous Tor thread is alive! Try interrupt!");
+                        previousTorThread.interrupt();
+                    }
+                } catch (Exception e) {
+                    Log.e(LOG_TAG, "ModulesService previous Tor thread interrupt exception "
+                            + e.getMessage() + e.getCause() +"\nStop service");
+                    System.exit(0);
+                }
+
+            }
 
             ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(getApplicationContext(), mHandler, pathVars);
             Thread torThread = new Thread(modulesStarterHelper.getTorStarterRunnable());
@@ -208,7 +245,12 @@ public class ModulesService extends Service {
                 checkModulesStateTask.setTorThread(torThread);
             }
 
-            modulesStatus.setTorState(RUNNING);
+            if (modulesStatus.isUseModulesWithRoot() || torThread.isAlive()) {
+                modulesStatus.setTorState(RUNNING);
+            } else {
+                modulesStatus.setTorState(STOPPED);
+            }
+
 
         } catch (Exception e) {
             Log.e(LOG_TAG, "Tor was unable to startRefreshModulesStatus: " + e.getMessage());
@@ -220,6 +262,22 @@ public class ModulesService extends Service {
     private void startITPD() {
         try {
             modulesStatus.setItpdState(STARTING);
+
+            if (!modulesStatus.isUseModulesWithRoot()) {
+                Thread previousITPDThread = modulesKiller.getItpdThread();
+
+                try {
+                    if (previousITPDThread != null && previousITPDThread.isAlive()) {
+                        Log.w(LOG_TAG, "ModulesService previous ITPD thread is alive! Try interrupt!");
+                        previousITPDThread.interrupt();
+                    }
+                } catch (Exception e) {
+                    Log.e(LOG_TAG, "ModulesService previous ITPD thread interrupt exception "
+                            + e.getMessage() + e.getCause() +"\nStop service");
+                    System.exit(0);
+                }
+
+            }
 
             ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(getApplicationContext(), mHandler, pathVars);
             Thread itpdThread = new Thread(modulesStarterHelper.getITPDStarterRunnable());
@@ -239,7 +297,12 @@ public class ModulesService extends Service {
                 checkModulesStateTask.setItpdThread(itpdThread);
             }
 
-            modulesStatus.setItpdState(RUNNING);
+            if (modulesStatus.isUseModulesWithRoot() || itpdThread.isAlive()) {
+                modulesStatus.setItpdState(RUNNING);
+            } else {
+                modulesStatus.setItpdState(STOPPED);
+            }
+
 
         } catch (Exception e) {
             Log.e(LOG_TAG, "I2PD was unable to startRefreshModulesStatus: " + e.getMessage());

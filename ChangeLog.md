@@ -43,3 +43,6 @@
 
 **InviZible Pro beta 0.3.6**
 * Bug fixes and stability improvements
+
+**InviZible Pro beta 0.3.7**
+* Attempt to rectify stop modules issue on some devices
