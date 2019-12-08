@@ -360,4 +360,5 @@
     <string name="pref_dnscrypt_relays_delay_summ">Список реле будет обновлен после refresh_delay в часах.</string>
     <string name="pref_dnscrypt_relays_categ">Реле</string>
     <string name="pref_dnscrypt_relays_summ">Список реле</string>
+    <string name="pref_dnscrypt_relays_title">Реле DNSCrypt</string>
 </resources>

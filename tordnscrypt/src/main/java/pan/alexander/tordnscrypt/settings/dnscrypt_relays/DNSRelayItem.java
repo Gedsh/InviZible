@@ -1,13 +1,34 @@
 package pan.alexander.tordnscrypt.settings.dnscrypt_relays;
 
+/*
+    This file is part of InviZible Pro.
+
+    InviZible Pro is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    InviZible Pro is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+*/
+
+import androidx.annotation.NonNull;
+
 import java.util.Objects;
 
-class DNSRelay {
+class DNSRelayItem {
     private String name;
     private String description;
     private boolean checked;
 
-    DNSRelay(String name, String description) {
+    DNSRelayItem(String name, String description) {
         this.name = name;
         this.description = description;
     }
@@ -32,14 +53,22 @@ class DNSRelay {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        DNSRelay dnsRelay = (DNSRelay) o;
-        return checked == dnsRelay.checked &&
-                name.equals(dnsRelay.name) &&
-                description.equals(dnsRelay.description);
+        DNSRelayItem that = (DNSRelayItem) o;
+        return name.equals(that.name) &&
+                description.equals(that.description);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, description, checked);
+        return Objects.hash(name, description);
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "DNSRelayItem{" +
+                "name='" + name + '\'' +
+                ", checked=" + checked +
+                '}';
     }
 }

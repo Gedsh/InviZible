@@ -24,7 +24,6 @@
         <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:orientation="vertical"
             tools:ignore="UselessParent">
 
@@ -43,7 +42,6 @@
                     android:layout_weight="1"
                     android:fontFamily="serif"
                     android:singleLine="true"
-                    android:text="my-very-good-derver"
                     android:textAlignment="center"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -56,13 +54,21 @@
 
             </androidx.appcompat.widget.LinearLayoutCompat>
 
-            <TextView
-                android:id="@+id/tvDNSServerRelay"
+            <Button
+                android:id="@+id/btnDNSServerRelay"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:textStyle="bold|italic"
-                android:visibility="gone" />
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:minHeight="30dp"
+                android:text="Button fnfgnfgn gghj"
+                android:textAllCaps="false"
+                android:textColor="#77A5CA"
+                android:typeface="normal"
+                app:backgroundTint="@color/cardsColor"
+                app:strokeColor="@color/buttonColor"
+                app:strokeWidth="1dp" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvDNSServerDescription"

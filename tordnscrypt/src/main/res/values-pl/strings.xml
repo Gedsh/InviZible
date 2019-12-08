@@ -433,6 +433,7 @@
     <string name="message_no_root_used">" Dostęp root nie został przyznany. Możesz więc korzystać z aplikacji z funkcją proxy tylko dla InviZible Pro!"</string>
     <string name="pref_dnscrypt_relays">Zrodla</string>
     <string name="pref_dnscrypt_relays_delay_summ">Lista  przekaźnik wygasa po uplywie refresh_delay godzin.</string>
-    <string name="pref_dnscrypt_relays_categ">" Przekaźnik"</string>
+    <string name="pref_dnscrypt_relays_categ">Przekaźnik</string>
     <string name="pref_dnscrypt_relays_summ">Zdalne listy dostępnych przekaźników.</string>
+    <string name="pref_dnscrypt_relays_title">Przekaźnik DNSCrypt</string>
 </resources>

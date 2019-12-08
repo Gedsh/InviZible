@@ -32,6 +32,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -52,7 +53,7 @@ import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
-public class PreferencesDNSCryptServersRv extends Fragment implements PreferencesDNSCryptRelays.OnRoutesChangeListener {
+public class PreferencesDNSCryptServers extends Fragment implements PreferencesDNSCryptRelays.OnRoutesChangeListener {
 
     private ArrayList<String> dnsServerNames;
     private ArrayList<String> dnsServerDescr;
@@ -66,12 +67,12 @@ public class PreferencesDNSCryptServersRv extends Fragment implements Preference
     private int lastAdapterPosition = 0;
 
 
-    public PreferencesDNSCryptServersRv() {
+    public PreferencesDNSCryptServers() {
         // Required empty public constructor
     }
 
     public interface OnServersChangeListener {
-        void onServersChange();
+        void onServersChange(String servers);
     }
 
     public void setOnServersChangeListener(OnServersChangeListener callback) {
@@ -111,7 +112,7 @@ public class PreferencesDNSCryptServersRv extends Fragment implements Preference
                             notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                         }
                     }
-                    Log.e(LOG_TAG, "PreferencesDNSCryptServersRv fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
+                    Log.e(LOG_TAG, "PreferencesDNSCryptServers fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                             Arrays.toString(e.getStackTrace()));
                 }
             }
@@ -159,7 +160,7 @@ public class PreferencesDNSCryptServersRv extends Fragment implements Preference
         saveDNSServersToPrefs(dnscrypt_servers);
 
         if (callback != null)
-            callback.onServersChange();
+            callback.onServersChange(dnscrypt_servers);
 
         boolean isChanges = saveDNSServersToTomlList(dnscrypt_servers);
 
@@ -176,56 +177,139 @@ public class PreferencesDNSCryptServersRv extends Fragment implements Preference
         routes_current = routesNew;
     }
 
-    private void restartDNSCryptIfRunning() {
+    @SuppressWarnings("unchecked")
+    private void takeArguments() {
+        if (getArguments() != null) {
+            dnsServerNames = getArguments().getStringArrayList("dnsServerNames");
+            dnsServerDescr = getArguments().getStringArrayList("dnsServerDescr");
+            dnsServerSDNS = getArguments().getStringArrayList("dnsServerSDNS");
+
+            if (dnscrypt_proxy_toml == null) {
+                dnscrypt_proxy_toml = getArguments().getStringArrayList("dnscrypt_proxy_toml");
+            }
+
+            if (dnscrypt_servers_current == null) {
+                dnscrypt_servers_current = getArguments().getStringArrayList("dnscrypt_servers");
+            }
+
+            if (routes_current == null) {
+                routes_current = (ArrayList<DNSServerRelays>) getArguments().getSerializable("routes");
+            }
+        } else {
+            Log.e(LOG_TAG, "PreferencesDNSCryptServers getArguments() nullPointer");
+        }
+    }
+
+    private void fillDNSServersList() {
+        Context context = getActivity();
+        list_dns_servers = new ArrayList<>();
+        for (int i = 0; i < dnsServerNames.size(); i++) {
+            DNSServerItem dnsServer = new DNSServerItem(context, dnsServerNames.get(i), dnsServerDescr.get(i), dnsServerSDNS.get(i));
+            setDnsServerChecked(dnsServer);
+            setRoutes(dnsServer);
+
+            if (dnsServer.isVisibility() && !dnsServerNames.get(i).contains("repeat_server"))
+                list_dns_servers.add(dnsServer);
+        }
+    }
+
+    private void setRoutes(DNSServerItem dnsServer) {
+        if (routes_current != null && dnsServer.isProtoDNSCrypt()) {
+
+            for (int i = 0; i < routes_current.size(); i++) {
+                if (routes_current.get(i).getDnsServerName().equals(dnsServer.getName())) {
+                    dnsServer.getRoutes().addAll(routes_current.get(i).getDnsServerRelays());
+                }
+            }
+        }
+    }
+
+    private void setDnsServerChecked(DNSServerItem dnsServer) {
+        for (int i = 0; i < dnscrypt_servers_current.size(); i++) {
+            if (!dnsServer.getName().isEmpty() && dnsServer.getName().equals(dnscrypt_servers_current.get(i).trim()))
+                dnsServer.setChecked(true);
+        }
+    }
+
+    private void createAndFillRecyclerView() {
 
         if (getActivity() == null) {
             return;
         }
 
-        boolean dnsCryptRunning = new PrefManager(getActivity()).getBoolPref("DNSCrypt Running");
+        final RecyclerView rvDNSServers = getActivity().findViewById(R.id.rvDNSServers);
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
+        rvDNSServers.setLayoutManager(mLayoutManager);
 
-        if (dnsCryptRunning) {
-            ModulesRestarter.restartDNSCrypt(getActivity());
+        RecyclerView.Adapter dNSServersAdapter = new DNSServersAdapter(getActivity(),
+                this, getFragmentManager(), list_dns_servers, routes_current, isRelaysMdExist());
+
+        try {
+            rvDNSServers.setAdapter(dNSServersAdapter);
+        } catch (IllegalStateException e) {
+            Log.e(LOG_TAG, "PreferencesDNSCryptServers setAdapter Exception " + e.getMessage());
+        }
+
+        if (lastAdapterPosition != 0) {
+            rvDNSServers.scrollToPosition(lastAdapterPosition);
         }
     }
 
-    private void saveLinesToTomlFile() {
-        FileOperations.writeToTextFile(getActivity(), appDataDir
-                        + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml", dnscrypt_proxy_toml,
-                SettingsActivity.public_resolvers_md_tag);
-    }
+    private String dnsServersListToLine() {
+        dnscrypt_servers_current.clear();
 
-    private List<String> prepareDNSRelaysToSave() {
+        String line = "";
 
-        ArrayList<String> routesLines = new ArrayList<>();
+        StringBuilder dnscrypt_servers = new StringBuilder();
+        dnscrypt_servers.append("[\"");
 
-        routesLines.add("routes = [");
+        for (int i = 0; i < list_dns_servers.size(); i++) {
+            if (list_dns_servers.get(i).isChecked()) {
+                dnscrypt_servers_current.add(list_dns_servers.get(i).getName());
 
-        for (DNSServerRelays dnsServerRelays : routes_current) {
-            String serverName = dnsServerRelays.getDnsServerName();
-
-            StringBuilder routeLine = new StringBuilder();
-
-            routeLine.append("{ server_name = ").append("'").append(serverName).append("'").append(", via=[");
-
-            for (String relay : dnsServerRelays.getDnsServerRelays()) {
-                routeLine.append("'").append(relay).append("'").append(", ");
+                dnscrypt_servers.append(list_dns_servers.get(i).getName());
+                dnscrypt_servers.append("\", \"");
             }
-
-            routeLine.delete(routeLine.lastIndexOf(","), routeLine.length());
-
-            routeLine.append("] }").append(",");
-
-            routesLines.add(routeLine.toString());
         }
 
-        String lastRouteLine = routesLines.get(routesLines.size() - 1);
-        lastRouteLine = lastRouteLine.substring(0, lastRouteLine.length() - 1);
-        routesLines.set(routesLines.size() - 1, lastRouteLine);
+        if (dnscrypt_servers.toString().equals("[\"")) {
+            Toast.makeText(getActivity(), getText(R.string.pref_dnscrypt_select_server_names), Toast.LENGTH_LONG).show();
+            return line;
+        }
 
-        routesLines.add("]");
+        dnscrypt_servers.delete(dnscrypt_servers.length() - 4, dnscrypt_servers.length()).append("\"]");
 
-        return routesLines;
+        line = dnscrypt_servers.toString();
+
+        return line;
+    }
+
+    private void saveDNSServersToPrefs(String dnscrypt_servers) {
+        if (getActivity() != null) {
+            new PrefManager(getActivity()).setStrPref("DNSCrypt Servers", dnscrypt_servers);
+        }
+    }
+
+    private boolean saveDNSServersToTomlList(String dnscrypt_servers) {
+
+        for (int i = 0; i < dnscrypt_proxy_toml.size(); i++) {
+
+            String line = dnscrypt_proxy_toml.get(i);
+
+            if (line.contains("server_names")) {
+                String lineSaved = line;
+                line = line.replaceFirst("\\[.+]", dnscrypt_servers);
+
+                if (lineSaved.equals(line)) {
+                    return false;
+                }
+
+                dnscrypt_proxy_toml.set(i, line);
+                break;
+            }
+        }
+
+        return true;
     }
 
     private boolean saveDNSRelaysToTomlList() {
@@ -261,142 +345,66 @@ public class PreferencesDNSCryptServersRv extends Fragment implements Preference
         return false;
     }
 
-    private boolean saveDNSServersToTomlList(String dnscrypt_servers) {
+    private List<String> prepareDNSRelaysToSave() {
 
-        for (int i = 0; i < dnscrypt_proxy_toml.size(); i++) {
+        ArrayList<String> routesLines = new ArrayList<>();
 
-            String line = dnscrypt_proxy_toml.get(i);
+        routesLines.add("routes = [");
 
-            if (line.contains("server_names")) {
-                String lineSaved = line;
-                line = line.replaceFirst("\\[.+]", dnscrypt_servers);
+        if (routes_current != null && routes_current.size() > 0) {
+            for (DNSServerRelays dnsServerRelays : routes_current) {
+                String serverName = dnsServerRelays.getDnsServerName();
 
-                if (lineSaved.equals(line)) {
-                    return false;
+                StringBuilder routeLine = new StringBuilder();
+
+                routeLine.append("{ server_name = ").append("'").append(serverName).append("'").append(", via=[");
+
+                for (String relay : dnsServerRelays.getDnsServerRelays()) {
+                    routeLine.append("'").append(relay).append("'").append(", ");
                 }
 
-                dnscrypt_proxy_toml.set(i, line);
-                break;
+                routeLine.delete(routeLine.lastIndexOf(","), routeLine.length());
+
+                routeLine.append("] }").append(",");
+
+                routesLines.add(routeLine.toString());
             }
+
+            String lastRouteLine = routesLines.get(routesLines.size() - 1);
+            lastRouteLine = lastRouteLine.substring(0, lastRouteLine.length() - 1);
+            routesLines.set(routesLines.size() - 1, lastRouteLine);
         }
 
-        return true;
+        routesLines.add("]");
+
+        return routesLines;
     }
 
-    private void saveDNSServersToPrefs(String dnscrypt_servers) {
-        if (getActivity() != null) {
-            new PrefManager(getActivity()).setStrPref("DNSCrypt Servers", dnscrypt_servers);
-        }
+    private void saveLinesToTomlFile() {
+        FileOperations.writeToTextFile(getActivity(), appDataDir
+                        + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml", dnscrypt_proxy_toml,
+                SettingsActivity.public_resolvers_md_tag);
     }
 
-    private String dnsServersListToLine() {
-        dnscrypt_servers_current.clear();
-
-        String line = "";
-
-        StringBuilder dnscrypt_servers = new StringBuilder();
-        dnscrypt_servers.append("[\"");
-
-        for (int i = 0; i < list_dns_servers.size(); i++) {
-            if (list_dns_servers.get(i).isChecked()) {
-                dnscrypt_servers_current.add(list_dns_servers.get(i).getName());
-
-                dnscrypt_servers.append(list_dns_servers.get(i).getName());
-                dnscrypt_servers.append("\", \"");
-            }
-        }
-
-        if (dnscrypt_servers.toString().equals("[\"")) {
-            Toast.makeText(getActivity(), getText(R.string.pref_dnscrypt_select_server_names), Toast.LENGTH_LONG).show();
-            return line;
-        }
-
-        dnscrypt_servers.delete(dnscrypt_servers.length() - 4, dnscrypt_servers.length()).append("\"]");
-
-        line = dnscrypt_servers.toString();
-
-        return line;
-    }
-
-    @SuppressWarnings("unchecked")
-    private void takeArguments() {
-        if (getArguments() != null) {
-            dnsServerNames = getArguments().getStringArrayList("dnsServerNames");
-            dnsServerDescr = getArguments().getStringArrayList("dnsServerDescr");
-            dnsServerSDNS = getArguments().getStringArrayList("dnsServerSDNS");
-
-            if (dnscrypt_proxy_toml == null) {
-                dnscrypt_proxy_toml = getArguments().getStringArrayList("dnscrypt_proxy_toml");
-            }
-
-            if (dnscrypt_servers_current == null) {
-                dnscrypt_servers_current = getArguments().getStringArrayList("dnscrypt_servers");
-            }
-
-            if (routes_current == null) {
-                routes_current = (ArrayList<DNSServerRelays>) getArguments().getSerializable("routes");
-            }
-        } else {
-            Log.e(LOG_TAG, "PreferencesDNSCryptServersRv getArguments() nullPointer");
-        }
-    }
-
-    private void createAndFillRecyclerView() {
+    private void restartDNSCryptIfRunning() {
 
         if (getActivity() == null) {
             return;
         }
 
-        final RecyclerView rvDNSServers = getActivity().findViewById(R.id.rvDNSServers);
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
-        rvDNSServers.setLayoutManager(mLayoutManager);
+        boolean dnsCryptRunning = new PrefManager(getActivity()).getBoolPref("DNSCrypt Running");
 
-        RecyclerView.Adapter dNSServersAdapter = new DNSServersAdapter(getActivity(),
-                this, getFragmentManager(), list_dns_servers, routes_current);
-
-        try {
-            rvDNSServers.setAdapter(dNSServersAdapter);
-        } catch (IllegalStateException e) {
-            Log.e(LOG_TAG, "PreferencesDNSCryptServersRv setAdapter Exception " + e.getMessage());
-        }
-
-        if (lastAdapterPosition != 0) {
-            rvDNSServers.scrollToPosition(lastAdapterPosition);
-        }
-    }
-
-    private void fillDNSServersList() {
-        Context context = getActivity();
-        list_dns_servers = new ArrayList<>();
-        for (int i = 0; i < dnsServerNames.size(); i++) {
-            DNSServerItem dnsServer = new DNSServerItem(context, dnsServerNames.get(i), dnsServerDescr.get(i), dnsServerSDNS.get(i));
-            setDnsServerChecked(dnsServer);
-            setRoutes(dnsServer);
-
-            if (dnsServer.isVisibility() && !dnsServerNames.get(i).contains("repeat_server"))
-                list_dns_servers.add(dnsServer);
-        }
-    }
-
-    private void setDnsServerChecked(DNSServerItem dnsServer) {
-        for (int i = 0; i < dnscrypt_servers_current.size(); i++) {
-            if (!dnsServer.getName().isEmpty() && dnsServer.getName().equals(dnscrypt_servers_current.get(i).trim()))
-                dnsServer.setChecked(true);
-        }
-    }
-
-    private void setRoutes(DNSServerItem dnsServer) {
-        if (routes_current != null && dnsServer.isProtoDNSCrypt()) {
-
-            for (int i = 0; i < routes_current.size(); i++) {
-                if (routes_current.get(i).getDnsServerName().equals(dnsServer.getName())) {
-                    dnsServer.getRoutes().addAll(routes_current.get(i).getDnsServerRelays());
-                }
-            }
+        if (dnsCryptRunning) {
+            ModulesRestarter.restartDNSCrypt(getActivity());
         }
     }
 
     void setLastAdapterPosition(int lastAdapterPosition) {
         this.lastAdapterPosition = lastAdapterPosition;
+    }
+
+    private boolean isRelaysMdExist() {
+        File relaysMd = new File(appDataDir +"/app_data/dnscrypt-proxy/relays.md");
+        return relaysMd.isFile();
     }
 }
