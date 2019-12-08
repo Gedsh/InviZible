@@ -321,7 +321,7 @@
     <string name="pref_dnscrypt_relays">Sources</string>
     <string name="pref_dnscrypt_relays_delay" translatable="false">refresh_delay</string>
     <string name="pref_dnscrypt_relays_delay_summ">Relays list expiring after refresh_delay hours.</string>
-
+    <string name="pref_dnscrypt_relays_title">DNSCrypt Relays</string>
 
 
     <string name="pref_dnscrypt_not_exist">Preference does not exist in dnscrypt-proxy.toml!</string>
