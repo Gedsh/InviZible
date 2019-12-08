@@ -26,6 +26,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
@@ -66,22 +68,24 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         if (getActivity() == null) {
             return super.onCreateView(inflater, container, savedInstanceState);
         }
 
         getActivity().setTitle(R.string.drawer_menu_fastSettings);
-        findPreference("prefDNSCryptServer").setSummary(new PrefManager(Objects.requireNonNull(getActivity())).getStrPref("DNSCrypt Servers"));
 
-        findPreference("swAutostartTor").setOnPreferenceChangeListener(this);
-        findPreference("pref_fast_theme").setOnPreferenceChangeListener(this);
-        findPreference("pref_fast_language").setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("prefDNSCryptServer"))
+                .setSummary(new PrefManager(Objects.requireNonNull(getActivity())).getStrPref("DNSCrypt Servers"));
+
+        Objects.requireNonNull(findPreference("swAutostartTor")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("pref_fast_theme")).setOnPreferenceChangeListener(this);
+        Objects.requireNonNull(findPreference("pref_fast_language")).setOnPreferenceChangeListener(this);
 
         if (ModulesStatus.getInstance().isRootAvailable()) {
-            findPreference("pref_fast_all_through_tor").setOnPreferenceChangeListener(this);
-            findPreference("pref_fast_block_http").setOnPreferenceChangeListener(this);
+            Objects.requireNonNull(findPreference("pref_fast_all_through_tor")).setOnPreferenceChangeListener(this);
+            Objects.requireNonNull(findPreference("pref_fast_block_http")).setOnPreferenceChangeListener(this);
 
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
             String refreshPeriod = shPref.getString("pref_fast_site_refresh_interval", "12");
@@ -90,11 +94,11 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
             }
 
             if (shPref.getBoolean("pref_fast_all_through_tor", true)) {
-                findPreference("prefTorSiteUnlock").setEnabled(false);
-                findPreference("prefTorAppUnlock").setEnabled(false);
+                Objects.requireNonNull(findPreference("prefTorSiteUnlock")).setEnabled(false);
+                Objects.requireNonNull(findPreference("prefTorAppUnlock")).setEnabled(false);
             } else {
-                findPreference("prefTorSiteUnlock").setEnabled(true);
-                findPreference("prefTorAppUnlock").setEnabled(true);
+                Objects.requireNonNull(findPreference("prefTorSiteUnlock")).setEnabled(true);
+                Objects.requireNonNull(findPreference("prefTorAppUnlock")).setEnabled(true);
             }
         } else {
             removePreferencesWithFullNoRootMode();
@@ -115,15 +119,15 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         setUpdateTimeLast();
     }
 
-    public void setDnsCryptServersSumm() {
-        if (getActivity() == null)
-            return;
-        Preference prefDNSCryptServer = findPreference("prefDNSCryptServer");
-        if (prefDNSCryptServer != null)
-            prefDNSCryptServer.setSummary(new PrefManager(Objects.requireNonNull(getActivity())).getStrPref("DNSCrypt Servers"));
+    public void setDnsCryptServersSumm(final String servers) {
+        final Preference prefDNSCryptServer = findPreference("prefDNSCryptServer");
+
+        if (prefDNSCryptServer != null) {
+            prefDNSCryptServer.setSummary(servers);
+        }
     }
 
-    public void setUpdateTimeLast() {
+    private void setUpdateTimeLast() {
 
         if (getActivity() == null) {
             return;
@@ -147,7 +151,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         } else if (lastUpdateResult.equals(getString(R.string.update_fault))
                 && new PrefManager(getActivity()).getStrPref("updateTimeLast").isEmpty()
                 && appVersion.startsWith("p")) {
-            findPreference("pref_fast_auto_update").setEnabled(false);
+            Objects.requireNonNull(findPreference("pref_fast_auto_update")).setEnabled(false);
             prefLastUpdate.setSummary(lastUpdateResult);
         } else {
             prefLastUpdate.setSummary(lastUpdateResult);
@@ -188,6 +192,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
     }
 
+    @SuppressWarnings("deprecation")
     private void changeTheme() {
         new Handler().post(new Runnable() {
 
@@ -213,7 +218,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
                             break;
                         case "3":
-                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO);
+                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_TIME);
                             break;
                         case "4":
                             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
@@ -293,11 +298,11 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 }
 
                 if (Boolean.valueOf(newValue.toString())) {
-                    findPreference("prefTorSiteUnlock").setEnabled(false);
-                    findPreference("prefTorAppUnlock").setEnabled(false);
+                    Objects.requireNonNull(findPreference("prefTorSiteUnlock")).setEnabled(false);
+                    Objects.requireNonNull(findPreference("prefTorAppUnlock")).setEnabled(false);
                 } else {
-                    findPreference("prefTorSiteUnlock").setEnabled(true);
-                    findPreference("prefTorAppUnlock").setEnabled(true);
+                    Objects.requireNonNull(findPreference("prefTorSiteUnlock")).setEnabled(true);
+                    Objects.requireNonNull(findPreference("prefTorAppUnlock")).setEnabled(true);
                 }
                 return true;
             case "pref_fast_block_http":
@@ -325,7 +330,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
     private void removePreferencesWithFullNoRootMode() {
 
-        PreferenceCategory torSettingsCategory = (PreferenceCategory) findPreference("Tor Settings");
+        PreferenceCategory torSettingsCategory = findPreference("Tor Settings");
 
         List<Preference> preferencesList = new ArrayList<>();
 
@@ -338,12 +343,16 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
         for (Preference preference: preferencesList) {
             if (preference != null) {
-                torSettingsCategory.removePreference(preference);
+                if (torSettingsCategory != null) {
+                    torSettingsCategory.removePreference(preference);
+                }
             }
         }
 
-        PreferenceCategory fastOtherCategory = (PreferenceCategory) findPreference("fast_other");
+        PreferenceCategory fastOtherCategory = findPreference("fast_other");
         Preference blockHttp = findPreference("pref_fast_block_http");
-        fastOtherCategory.removePreference(blockHttp);
+        if (fastOtherCategory != null && blockHttp != null) {
+            fastOtherCategory.removePreference(blockHttp);
+        }
     }
 }
