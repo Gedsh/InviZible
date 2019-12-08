@@ -36,7 +36,7 @@ import java.util.Objects;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.PreferencesCommonFragment;
-import pan.alexander.tordnscrypt.settings.PreferencesDNSCryptServersRv;
+import pan.alexander.tordnscrypt.settings.dnscrypt_servers.PreferencesDNSCryptServers;
 import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
 import pan.alexander.tordnscrypt.settings.PreferencesTorBridges;
 import pan.alexander.tordnscrypt.settings.PreferencesTorFragment;
@@ -51,7 +51,7 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 
 public class SettingsActivity extends LangAppCompatActivity
-        implements PreferencesDNSCryptServersRv.OnServersChangeListener {
+        implements PreferencesDNSCryptServers.OnServersChangeListener {
 
     public static ArrayList<String> key_tor;
     public static ArrayList<String> val_tor;
@@ -64,7 +64,7 @@ public class SettingsActivity extends LangAppCompatActivity
     public static final String rules_tag = "pan.alexander.tordnscrypt/app_data/abstract_rules";
     public static DialogFragment dialogFragment;
 
-    private PreferencesFastFragment preferencesFastFragment;
+    private static PreferencesFastFragment preferencesFastFragment;
 
 
     @Override
@@ -203,16 +203,23 @@ public class SettingsActivity extends LangAppCompatActivity
     public void onAttachFragment(@NonNull Fragment fragment) {
         super.onAttachFragment(fragment);
 
-        if (fragment instanceof PreferencesDNSCryptServersRv) {
-            PreferencesDNSCryptServersRv preferencesDNSCryptServersRv = (PreferencesDNSCryptServersRv) fragment;
-            preferencesDNSCryptServersRv.setOnServersChangeListener(this);
+        if (fragment instanceof PreferencesDNSCryptServers) {
+            PreferencesDNSCryptServers preferencesDNSCryptServers = (PreferencesDNSCryptServers) fragment;
+            preferencesDNSCryptServers.setOnServersChangeListener(this);
         }
     }
 
     @Override
-    public void onServersChange() {
-        if (preferencesFastFragment != null)
-            preferencesFastFragment.setDnsCryptServersSumm();
+    public void onServersChange(String servers) {
+        try {
+            if (preferencesFastFragment != null && servers != null) {
+                preferencesFastFragment.setDnsCryptServersSumm(servers);
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "SettindsActivity onServersChange exception " + e.getMessage() + " " + e.getCause());
+        }
+
+
     }
 
     @Override
