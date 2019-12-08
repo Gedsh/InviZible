@@ -4,6 +4,8 @@ def keystorePropertiesFile = file("C:\\KStore\\keystore.properties")
 def keystoreProperties = new Properties()
 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
+final BUILD_DATE = Integer.valueOf(new Date().format('yyyyMMddHH'))
+
 android {
     compileSdkVersion 28
 
@@ -43,7 +45,7 @@ android {
             resValue 'string', 'package_name', applicationId
         }
 
-        beta{
+        beta {
             applicationId "pan.alexander.tordnscrypt"
             versionName "0.3.7"
             dimension = 'version'
@@ -51,12 +53,12 @@ android {
             resValue 'string', 'package_name', applicationId
         }
 
-        armv7a{
+        armv7a {
             dimension = 'processor'
             resValue 'string', 'appProcVersion', 'armv7a'
         }
 
-        arm64{
+        arm64 {
             dimension = 'processor'
             resValue 'string', 'appProcVersion', 'arm64'
         }
@@ -66,9 +68,9 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 1
+        versionCode BUILD_DATE
 
-        resConfigs "en", "ru-rRU" , "ru-rUA", "pl"
+        resConfigs "en", "ru-rRU", "ru-rUA", "pl"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
