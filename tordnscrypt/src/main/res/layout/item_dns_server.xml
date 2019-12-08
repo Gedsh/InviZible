@@ -62,7 +62,6 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
                 android:minHeight="30dp"
-                android:text="Button fnfgnfgn gghj"
                 android:textAllCaps="false"
                 android:textColor="#77A5CA"
                 android:typeface="normal"
