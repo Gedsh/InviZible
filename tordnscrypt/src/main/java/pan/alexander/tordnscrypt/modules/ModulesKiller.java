@@ -561,9 +561,19 @@ public class ModulesKiller {
             modulesStatus.setItpdState(STOPPED);
 
             final String[] commands = new String[]{
+                    "ip6tables -D OUTPUT -j DROP || true",
+                    "ip6tables -I OUTPUT -j DROP",
+                    pathVars.iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
+                    pathVars.iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
+                    pathVars.iptablesPath + "iptables -F tordnscrypt",
+                    pathVars.iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
+                    pathVars.iptablesPath + "iptables -t nat -F tordnscrypt_prerouting",
+                    pathVars.iptablesPath + "iptables -F tordnscrypt_forward",
+                    pathVars.iptablesPath + "iptables -t nat -D PREROUTING -j tordnscrypt_prerouting || true",
+                    pathVars.iptablesPath + "iptables -D FORWARD -j tordnscrypt_forward || true",
                     pathVars.busyboxPath + "killall -s SIGTERM dnscrypt-proxy",
                     pathVars.busyboxPath + "killall -s SIGTERM tor",
-                    pathVars.busyboxPath + "killall -s SIGTERM i2pd",
+                    pathVars.busyboxPath + "killall -s SIGTERM i2pd"
             };
 
             new Thread(new Runnable() {
