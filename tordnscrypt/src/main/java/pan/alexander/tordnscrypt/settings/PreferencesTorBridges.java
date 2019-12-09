@@ -55,7 +55,6 @@ import java.util.Objects;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
-import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.utils.GetNewBridges;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -97,7 +96,6 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     private final String addBridgesTag = "pan.alexander.tordnscrypt/abstract_add_bridges";
     private final String addRequestedBridgesTag = "pan.alexander.tordnscrypt/abstract_add_requested_bridges";
     private String requestedBridgesToAdd;
-    private DialogFragment dialogFragment;
 
 
     public PreferencesTorBridges() {
@@ -125,7 +123,6 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         FileOperations.setOnFileOperationCompleteListener(this);
 
-        openPleaseWaitDialog();
         FileOperations.readTextFile(getActivity(), pathVars.appDataDir + "/app_data/tor/tor.conf", torConfTag);
     }
 
@@ -195,14 +192,10 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             noBridgesOperation();
             rbNoBridges.setChecked(true);
         } else if (useDefaultBridges) {
-            openPleaseWaitDialog();
-
             FileOperations.readTextFile(getActivity(), bridges_file_path, defaultBridgesOperationTag);
 
             rbDefaultBridges.setChecked(true);
         } else {
-            openPleaseWaitDialog();
-
             bridges_file_path = pathVars.appDataDir + "/app_data/tor/bridges_custom.lst";
             FileOperations.readTextFile(getActivity(), bridges_file_path, ownBridgesOperationTag);
 
@@ -322,8 +315,6 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btnAddBridges:
-                openPleaseWaitDialog();
-
                 FileOperations.readTextFile(getActivity(), pathVars.appDataDir + "/app_data/tor/bridges_custom.lst", addBridgesTag);
                 break;
             case R.id.btnRequestBridges:
@@ -473,7 +464,6 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
     public void readCurrentCustomBridges(String bridges) {
         requestedBridgesToAdd = bridges;
-        openPleaseWaitDialog();
 
         FileOperations.readTextFile(getActivity(), bridges_custom_file_path, addRequestedBridgesTag);
     }
@@ -516,8 +506,6 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
                         bridges_file_path = pathVars.appDataDir + "/app_data/tor/bridges_default.lst";
 
-                        openPleaseWaitDialog();
-
                         FileOperations.readTextFile(getActivity(), bridges_file_path, defaultBridgesOperationTag);
 
                         for (int i = 0; i < tor_conf.size(); i++) {
@@ -537,8 +525,6 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                         new PrefManager(getActivity()).setBoolPref("useNoBridges", false);
                         new PrefManager(getActivity()).setBoolPref("useDefaultBridges", false);
                         new PrefManager(getActivity()).setBoolPref("useOwnBridges", true);
-
-                        openPleaseWaitDialog();
 
                         bridges_file_path = pathVars.appDataDir + "/app_data/tor/bridges_custom.lst";
 
@@ -661,15 +647,12 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     if (rbDefaultBridges.isChecked()) {
                         bridges_file_path = pathVars.appDataDir + "/app_data/tor/bridges_default.lst";
 
-                        openPleaseWaitDialog();
-
                         FileOperations.readTextFile(getActivity(), bridges_file_path, defaultBridgesOperationTag);
                     }
                     break;
                 case R.id.spOwnBridges:
                     new PrefManager(getActivity()).setStrPref("ownBridgesObfs", String.valueOf(i));
                     if (rbOwnBridges.isChecked()) {
-                        openPleaseWaitDialog();
                         bridges_file_path = pathVars.appDataDir + "/app_data/tor/bridges_custom.lst";
                         FileOperations.readTextFile(getActivity(), bridges_file_path, ownBridgesOperationTag);
                     }
@@ -689,8 +672,6 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         if (getActivity() == null) {
             return;
         }
-
-        closePleaseWaitDialog();
 
         if (fileOperationResult && currentFileOperation == readTextFile) {
             switch (tag) {
@@ -979,28 +960,6 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 if (bridges_file_path != null)
                     FileOperations.writeToTextFile(getActivity(), bridges_file_path, tmpList, "ignored");
             }
-        }
-    }
-
-    private void openPleaseWaitDialog() {
-        if (dialogFragment == null && getFragmentManager() != null) {
-            try {
-                dialogFragment = PleaseWaitProgressDialog.getInstance();
-                dialogFragment.show(getFragmentManager(), "PleaseWaitProgressDialog");
-            } catch (Exception ex) {
-                Log.e(LOG_TAG, "PreferencesTorBridges open progress fault " + ex.getMessage() + " " + ex.getCause());
-            }
-        }
-    }
-
-    private void closePleaseWaitDialog() {
-        try {
-            if (dialogFragment != null) {
-                dialogFragment.dismiss();
-                dialogFragment = null;
-            }
-        } catch (Exception ex) {
-            Log.e(LOG_TAG, "PreferencesTorBridges close progress fault " + ex.getMessage() + " " + ex.getCause());
         }
     }
 }
