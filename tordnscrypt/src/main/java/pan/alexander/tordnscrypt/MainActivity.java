@@ -41,6 +41,7 @@ import android.support.v7.widget.Toolbar;
 import android.text.InputType;
 import android.util.Base64;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -59,7 +60,9 @@ import pan.alexander.tordnscrypt.help.HelpActivity;
 import pan.alexander.tordnscrypt.iptables.IptablesRules;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
+import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.ApManager;
 import pan.alexander.tordnscrypt.utils.AppExitDetectService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -756,6 +759,29 @@ public class MainActivity extends LangAppCompatActivity
         if (modernDialog != null) {
             modernDialog.dismiss();
         }
+    }
+
+    @Override
+    public boolean onKeyLongPress(int keyCode, KeyEvent event) {
+
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            Log.e(LOG_TAG, "FORCE CLOSE ALL");
+
+            Toast.makeText(this, "Force Close ...", Toast.LENGTH_LONG).show();
+
+            ModulesKiller.forceCloseApp(new PathVars(this));
+
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    System.exit(0);
+                }
+            }, 3000);
+
+
+            return true;
+        }
+        return super.onKeyLongPress(keyCode, event);
     }
 
 }
