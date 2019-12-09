@@ -262,7 +262,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                     tvITPDinfoLog.setText(Html.fromHtml(logFile.readLastLines()));
 
                 displayLog(10000);
-            } else if (isSavedITPDStatusRunning()) {
+            } else if (isSavedITPDStatusRunning() || modulesStatus.getItpdState() == RUNNING) {
                 setITPDRunning();
 
                 if (tvITPDinfoLog != null)

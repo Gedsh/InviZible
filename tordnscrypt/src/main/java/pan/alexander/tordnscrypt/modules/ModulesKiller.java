@@ -57,9 +57,9 @@ public class ModulesKiller {
 
     private final ModulesStatus modulesStatus;
 
-    private Thread dnsCryptThread;
-    private Thread torThread;
-    private Thread itpdThread;
+    private static Thread dnsCryptThread;
+    private static Thread torThread;
+    private static Thread itpdThread;
 
     ModulesKiller(Service service, PathVars pathVars) {
         this.service = service;
@@ -113,15 +113,15 @@ public class ModulesKiller {
     }
 
     void setDnsCryptThread(Thread dnsCryptThread) {
-        this.dnsCryptThread = dnsCryptThread;
+        ModulesKiller.dnsCryptThread = dnsCryptThread;
     }
 
     void setTorThread(Thread torThread) {
-        this.torThread = torThread;
+        ModulesKiller.torThread = torThread;
     }
 
     void setItpdThread(Thread itpdThread) {
-        this.itpdThread = itpdThread;
+        ModulesKiller.itpdThread = itpdThread;
     }
 
     Thread getDnsCryptThread() {
@@ -369,7 +369,9 @@ public class ModulesKiller {
 
         String[] preparedCommands = prepareKillCommands(module, pid, signal);
 
-        if (thread == null || killWithRoot) {
+        if ((thread == null || !thread.isAlive()) && modulesStatus.isRootAvailable()
+                || killWithRoot) {
+
             String sleep = pathVars.busyboxPath + "sleep " + delaySec;
             String checkString = pathVars.busyboxPath + "pgrep -l " + module;
 
@@ -388,12 +390,18 @@ public class ModulesKiller {
             }
         } else {
             killWithPid(signal, pid, delaySec);
-            result = !thread.isAlive();
+
+            if (thread != null) {
+                result = !thread.isAlive();
+            }
 
             List<String> shellResult = null;
             if (!result) {
                 shellResult = killWithSH(module, preparedCommands, delaySec);
-                result = !thread.isAlive();
+
+                if (thread != null) {
+                    result = !thread.isAlive();
+                }
             }
 
             if (shellResult != null) {
@@ -540,5 +548,30 @@ public class ModulesKiller {
             }
         }
         return pid;
+    }
+
+    @SuppressWarnings("deprecation")
+    public static void forceCloseApp(PathVars pathVars) {
+        ModulesStatus modulesStatus = ModulesStatus.getInstance();
+        if (modulesStatus.isRootAvailable()) {
+
+            modulesStatus.setUseModulesWithRoot(true);
+            modulesStatus.setDnsCryptState(STOPPED);
+            modulesStatus.setTorState(STOPPED);
+            modulesStatus.setItpdState(STOPPED);
+
+            final String[] commands = new String[]{
+                    pathVars.busyboxPath + "killall -s SIGTERM dnscrypt-proxy",
+                    pathVars.busyboxPath + "killall -s SIGTERM tor",
+                    pathVars.busyboxPath + "killall -s SIGTERM i2pd",
+            };
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Shell.SU.run(commands);
+                }
+            }).start();
+        }
     }
 }
