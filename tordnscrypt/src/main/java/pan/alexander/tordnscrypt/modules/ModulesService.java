@@ -49,6 +49,8 @@ public class ModulesService extends Service {
     public static final String actionDismissNotification = "pan.alexander.tordnscrypt.action.DISMISS_NOTIFICATION";
     public static final int DEFAULT_NOTIFICATION_ID = 101;
 
+    public static final String actionStopService = "pan.alexander.tordnscrypt.action.STOP_SERVICE";
+
     static final String actionStartDnsCrypt = "pan.alexander.tordnscrypt.action.START_DNSCRYPT";
     static final String actionStartTor = "pan.alexander.tordnscrypt.action.START_TOR";
     static final String actionStartITPD = "pan.alexander.tordnscrypt.action.START_ITPD";
@@ -149,6 +151,9 @@ public class ModulesService extends Service {
                 break;
             case actionRecoverService:
                 setAllModulesStateStopped();
+                break;
+            case actionStopService:
+                stopModulesService();
                 break;
         }
 
@@ -505,6 +510,14 @@ public class ModulesService extends Service {
         modulesStatus.setDnsCryptState(STOPPED);
         modulesStatus.setTorState(STOPPED);
         modulesStatus.setItpdState(STOPPED);
+    }
+
+    private void stopModulesService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            stopForeground(true);
+        }
+
+        stopSelf();
     }
 
     private void makeDelay() {

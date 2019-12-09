@@ -776,7 +776,8 @@ public class MainActivity extends LangAppCompatActivity
                 @Override
                 public void run() {
                     Intent intent = new Intent(MainActivity.this, ModulesService.class);
-                    stopService(intent);
+                    intent.setAction(ModulesService.actionStopService);
+                    startService(intent);
                 }
             }, 3000);
 

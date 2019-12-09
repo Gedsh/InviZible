@@ -19,6 +19,7 @@ package pan.alexander.tordnscrypt.modules;
     Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.os.Build;
 import android.util.Log;
 
 import java.util.TimerTask;
@@ -235,6 +236,10 @@ public class ModulesStateLoop extends TimerTask {
     }
 
     private void safeStopModulesService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            modulesService.stopForeground(true);
+        }
+
         modulesService.stopSelf();
     }
 
