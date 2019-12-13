@@ -9,14 +9,14 @@ android {
     productFlavors {
         lite {
             applicationId "pan.alexander.tordnscrypt.stable"
-            versionName "2.0.1"
+            versionName "3.0.0"
             dimension = 'version'
             resValue 'string', 'package_name', applicationId
         }
 
         pro {
             applicationId "pan.alexander.tordnscrypt.stable"
-            versionName "2.0.1"
+            versionName "3.0.0"
             dimension = 'version'
             resValue 'string', 'package_name', applicationId
         }
