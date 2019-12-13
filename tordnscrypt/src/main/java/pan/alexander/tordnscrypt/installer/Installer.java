@@ -131,9 +131,8 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
             TimeUnit.SECONDS.sleep(1);
 
-            if (ModulesStatus.getInstance().isRootAvailable()) {
-                mainActivity.runOnUiThread(installerUIChanger.showDialogAfterInstallation());
-            }
+            mainActivity.runOnUiThread(installerUIChanger.showDialogAfterInstallation());
+
 
         } catch (Exception e) {
             Log.e(LOG_TAG, "Installation fault " + e.getMessage() + " " + e.getCause());
@@ -205,6 +204,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
     }
 
+    @SuppressWarnings("all")
     protected boolean waitUntilAllModulesStopped() {
         countDownLatch = new CountDownLatch(1);
         Log.i(LOG_TAG, "Installer: waitUntilAllModulesStopped");
@@ -274,6 +274,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         Log.i(LOG_TAG, "Installer: correctAppDir OK");
     }
 
+    @SuppressWarnings("all")
     private void fixAppDirLinesList (String path, List<String> lines) {
         if (lines != null) {
             String line;
