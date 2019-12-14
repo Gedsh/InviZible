@@ -24,12 +24,19 @@ import android.content.DialogInterface;
 import androidx.appcompat.app.AlertDialog;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
 public class DialogAfterInstallation {
 
     public static AlertDialog.Builder getDialogBuilder(Context context) {
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context, R.style.CustomAlertDialogTheme);
-        alertDialog.setMessage(R.string.helper_after_install);
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context, R.style.CustomDialogTheme);
+
+        if (ModulesStatus.getInstance().isRootAvailable()) {
+            alertDialog.setMessage(R.string.helper_after_install);
+        } else {
+            alertDialog.setMessage(R.string.message_no_root_used);
+        }
+
         alertDialog.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                 dialog.dismiss();

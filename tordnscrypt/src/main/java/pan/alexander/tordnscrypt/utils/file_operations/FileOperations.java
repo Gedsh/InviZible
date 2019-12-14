@@ -381,7 +381,15 @@ public class FileOperations {
                     }
                 }
                 if (!usedFile.delete()) {
-                    Log.w(LOG_TAG, "Unable to delete file " + usedFile.toString());
+                    Log.w(LOG_TAG, "Unable to delete file " + usedFile.toString() + " Try restore access!");
+
+                    FileOperations fileOperations = new FileOperations();
+                    fileOperations.restoreAccess(context, inputPath + "/" + inputFile);
+
+                    if (!usedFile.delete()) {
+                        Log.e(LOG_TAG, "Unable to delete file " + usedFile.toString());
+                    }
+
                     return true;
                 }
             } else {
@@ -412,7 +420,14 @@ public class FileOperations {
                             }
                         }
                         if (!usedFile.delete()) {
-                            throw new IllegalStateException("Unable to delete file " + usedFile.toString());
+                            Log.w(LOG_TAG, "Unable to delete file " + usedFile.toString() + " Try restore access!");
+
+                            FileOperations fileOperations = new FileOperations();
+                            fileOperations.restoreAccess(context, inputPath + "/" + inputFile);
+
+                            if (!usedFile.delete()) {
+                                throw new IllegalStateException("Unable to delete file " + usedFile.toString());
+                            }
                         }
                     } else {
                         Log.w(LOG_TAG, "Unable to delete file. No file " + usedFile.toString());
@@ -481,7 +496,14 @@ public class FileOperations {
             }
 
             if (!usedDir.delete()) {
-                throw new IllegalStateException("Impossible to delete empty dir " + inputPath);
+                Log.w(LOG_TAG, "Unable to delete dir " + inputPath + " Try to restore access!");
+
+                FileOperations fileOperations = new FileOperations();
+                fileOperations.restoreAccess(context, inputPath);
+
+                if (!usedDir.delete()) {
+                    throw new IllegalStateException("Impossible to delete empty dir " + inputPath);
+                }
             }
 
             result = true;
@@ -714,8 +736,11 @@ public class FileOperations {
 
             String appUID = new PrefManager(context).getStrPref("appUID");
             PathVars pathVars = new PathVars(context);
-            String[] commands = {pathVars.busyboxPath + "chown -R " + appUID + "." + appUID + " " + filePath,
-                    "restorecon " + filePath};
+            String[] commands = {
+                    pathVars.busyboxPath + "chown -R " + appUID + "." + appUID + " " + filePath,
+                    "restorecon " + filePath,
+                    pathVars.busyboxPath + "sleep 1"
+            };
             RootCommands rootCommands = new RootCommands(commands);
             Intent intent = new Intent(context, RootExecService.class);
             intent.setAction(RootExecService.RUN_COMMAND);

@@ -46,3 +46,11 @@
 
 **InviZible Pro beta 0.3.7**
 * Attempt to rectify stop modules issue on some devices
+
+**InviZible Pro beta 0.3.8**
+* Attempt to rectify stop modules issue on some devices
+* Add force stop feature on long back button press
+
+**InviZible Pro beta 0.3.9**
+* Remove unnecessary options without root.
+* Fix modules update feature when they are used with root

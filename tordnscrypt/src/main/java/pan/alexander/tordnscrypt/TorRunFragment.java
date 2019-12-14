@@ -261,7 +261,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                 }
 
                 displayLog(1000);
-            } else if (isSavedTorStatusRunning()) {
+            } else if (isSavedTorStatusRunning() || modulesStatus.getTorState() == RUNNING) {
                 setTorRunning();
 
                 if (logFile != null) {
@@ -569,7 +569,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
         if (installed) {
             btnTorStart.setEnabled(true);
         } else {
-            tvTorStatus.setText(getText(R.string.tvDNSNotInstalled));
+            tvTorStatus.setText(getText(R.string.tvTorNotInstalled));
         }
     }
 

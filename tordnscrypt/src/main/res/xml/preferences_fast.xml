@@ -101,7 +101,9 @@
                 android:targetPackage="@string/package_name" />
         </Preference>
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_fast_categ_update">
+    <PreferenceCategory
+        android:title="@string/pref_fast_categ_update"
+        android:key="fast_update">
 
         <SwitchPreference
             android:defaultValue="true"

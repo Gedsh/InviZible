@@ -279,7 +279,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                 }
 
                 displayLog(1000);
-            } else if (isSavedDNSStatusRunning()) {
+            } else if (isSavedDNSStatusRunning() || modulesStatus.getDnsCryptState() == RUNNING) {
                 setDnsCryptRunning();
 
                 if (logFile != null) {
@@ -469,6 +469,8 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
             saveDNSStatusRunning(true);
 
             btnDNSCryptStart.setText(R.string.btnDNSCryptStop);
+
+            displayLog(5000);
 
         } else if (currentModuleState == STOPPED) {
 
@@ -661,7 +663,8 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
     private void dnsCryptStartedSuccessfully(String lines) {
 
-        if (modulesStatus.getDnsCryptState() == RUNNING
+        if ((modulesStatus.getDnsCryptState() == STARTING
+                || modulesStatus.getDnsCryptState() == RUNNING)
                 && lines.contains("lowest initial latency")) {
 
             if (!modulesStatus.isUseModulesWithRoot()) {
@@ -669,8 +672,6 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
             }
 
             setDnsCryptRunning();
-
-            displayLog(5000);
         }
     }
 
