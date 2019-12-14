@@ -51,6 +51,7 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 
 public class PreferencesFastFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
@@ -79,7 +80,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         findPreference("pref_fast_theme").setOnPreferenceChangeListener(this);
         findPreference("pref_fast_language").setOnPreferenceChangeListener(this);
 
-        if (ModulesStatus.getInstance().isRootAvailable()) {
+        if (ModulesStatus.getInstance().getMode() == ROOT_MODE) {
             findPreference("pref_fast_all_through_tor").setOnPreferenceChangeListener(this);
             findPreference("pref_fast_block_http").setOnPreferenceChangeListener(this);
 
@@ -97,7 +98,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 findPreference("prefTorAppUnlock").setEnabled(true);
             }
         } else {
-            removePreferencesWithFullNoRootMode();
+            removePreferencesWithNoRootMode();
         }
 
         return super.onCreateView(inflater, container, savedInstanceState);
@@ -323,7 +324,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         return false;
     }
 
-    private void removePreferencesWithFullNoRootMode() {
+    private void removePreferencesWithNoRootMode() {
 
         PreferenceCategory torSettingsCategory = (PreferenceCategory) findPreference("Tor Settings");
 
@@ -341,6 +342,10 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 torSettingsCategory.removePreference(preference);
             }
         }
+
+        PreferenceCategory fastUpdateCategory = (PreferenceCategory) findPreference("fast_update");
+        Preference updateThroughTor = findPreference("pref_fast through_tor_update");
+        fastUpdateCategory.removePreference(updateThroughTor);
 
         PreferenceCategory fastOtherCategory = (PreferenceCategory) findPreference("fast_other");
         Preference blockHttp = findPreference("pref_fast_block_http");
