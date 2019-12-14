@@ -29,7 +29,7 @@ android {
     productFlavors {
         lite {
             applicationId "pan.alexander.tordnscrypt.stable"
-            versionName "3.0.0"
+            versionName "3.0.1"
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
@@ -37,7 +37,7 @@ android {
 
         pro {
             applicationId "pan.alexander.tordnscrypt.stable"
-            versionName "3.0.0"
+            versionName "3.0.1"
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
@@ -45,7 +45,7 @@ android {
 
         beta{
             applicationId "pan.alexander.tordnscrypt"
-            versionName "0.3.8"
+            versionName "0.3.9"
             dimension = 'version'
             signingConfig signingConfigs.betasign
             resValue 'string', 'package_name', applicationId
@@ -66,7 +66,7 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 38
+        versionCode 39
 
         resConfigs "en", "ru-rRU" , "ru-rUA", "pl"
 
