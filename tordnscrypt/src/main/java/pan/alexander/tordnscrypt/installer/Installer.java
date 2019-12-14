@@ -33,14 +33,14 @@ import java.util.concurrent.TimeUnit;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.modules.ModulesVersions;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.modules.ModulesKiller;
-import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
-import pan.alexander.tordnscrypt.utils.PrefManager;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -83,7 +83,6 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             mainActivity.runOnUiThread(installerUIChanger.setModulesStatusTextInstalling());
             mainActivity.runOnUiThread(installerUIChanger.setModulesStartButtonsDisabled());
             mainActivity.runOnUiThread(installerUIChanger.startModulesProgressBarIndeterminate());
-
 
 
             if (ModulesStatus.getInstance().isRootAvailable()
@@ -193,13 +192,13 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         }
 
         if (installed) {
-            new PrefManager(activity).setBoolPref("DNSCrypt Installed",true);
-            new PrefManager(activity).setBoolPref("Tor Installed",true);
-            new PrefManager(activity).setBoolPref("I2PD Installed",true);
+            new PrefManager(activity).setBoolPref("DNSCrypt Installed", true);
+            new PrefManager(activity).setBoolPref("Tor Installed", true);
+            new PrefManager(activity).setBoolPref("I2PD Installed", true);
         } else {
-            new PrefManager(activity).setBoolPref("DNSCrypt Installed",false);
-            new PrefManager(activity).setBoolPref("Tor Installed",false);
-            new PrefManager(activity).setBoolPref("I2PD Installed",false);
+            new PrefManager(activity).setBoolPref("DNSCrypt Installed", false);
+            new PrefManager(activity).setBoolPref("Tor Installed", false);
+            new PrefManager(activity).setBoolPref("I2PD Installed", false);
         }
 
     }
@@ -264,9 +263,9 @@ public class Installer implements TopFragment.OnActivityChangeListener {
     }
 
     protected void correctAppDir() {
-        String dnsTomlPath = appDataDir+"/app_data/dnscrypt-proxy/dnscrypt-proxy.toml";
-        String torConfPath = appDataDir+"/app_data/tor/tor.conf";
-        String itpdConfPath = appDataDir+"/app_data/i2pd/i2pd.conf";
+        String dnsTomlPath = appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml";
+        String torConfPath = appDataDir + "/app_data/tor/tor.conf";
+        String itpdConfPath = appDataDir + "/app_data/i2pd/i2pd.conf";
         fixAppDirLinesList(dnsTomlPath, FileOperations.readTextFileSynchronous(activity, dnsTomlPath));
         fixAppDirLinesList(torConfPath, FileOperations.readTextFileSynchronous(activity, torConfPath));
         fixAppDirLinesList(itpdConfPath, FileOperations.readTextFileSynchronous(activity, itpdConfPath));
@@ -275,7 +274,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
     }
 
     @SuppressWarnings("all")
-    private void fixAppDirLinesList (String path, List<String> lines) {
+    private void fixAppDirLinesList(String path, List<String> lines) {
         if (lines != null) {
             String line;
             for (int i = 0; i < lines.size(); i++) {
@@ -294,16 +293,30 @@ public class Installer implements TopFragment.OnActivityChangeListener {
     protected void stopAllRunningModulesWithRootCommand() {
         Log.i(LOG_TAG, "Installer: stopAllRunningModulesWithRootCommand");
 
+        new PrefManager(activity).setBoolPref("DNSCrypt Running", false);
+        new PrefManager(activity).setBoolPref("Tor Running", false);
+        new PrefManager(activity).setBoolPref("I2PD Running", false);
+
         String busyboxNative = "";
         if (new PrefManager(activity).getBoolPref("bbOK") && pathVars.busyboxPath.equals("busybox ")) {
             busyboxNative = "busybox ";
         }
 
         String[] commandsInstall = {
-                busyboxNative+ "killall dnscrypt-proxy",
-                busyboxNative+ "killall tor",
-                busyboxNative+ "killall i2pd",
-                busyboxNative+ "sleep 7",
+                "ip6tables -D OUTPUT -j DROP || true",
+                "ip6tables -I OUTPUT -j DROP",
+                "iptables -t nat -F tordnscrypt_nat_output",
+                "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
+                "iptables -F tordnscrypt",
+                "iptables -D OUTPUT -j tordnscrypt || true",
+                "iptables -t nat -F tordnscrypt_prerouting",
+                "iptables -F tordnscrypt_forward",
+                "iptables -t nat -D PREROUTING -j tordnscrypt_prerouting || true",
+                "iptables -D FORWARD -j tordnscrypt_forward || true",
+                busyboxNative + "pkill -SIGTERM /dnscrypt-proxy",
+                busyboxNative + "pkill -SIGTERM /tor",
+                busyboxNative + "pkill -SIGTERM /i2pd",
+                busyboxNative + "sleep 7",
                 busyboxNative + "pgrep -l /dnscrypt-proxy",
                 busyboxNative + "pgrep -l /tor",
                 busyboxNative + "pgrep -l /i2pd",
@@ -319,28 +332,15 @@ public class Installer implements TopFragment.OnActivityChangeListener {
     }
 
     protected void stopAllRunningModulesWithNoRootCommand() {
-        boolean dnsCryptRunning = new PrefManager(activity).getBoolPref("DNSCrypt Running");
-        boolean torRunning = new PrefManager(activity).getBoolPref("Tor Running");
-        boolean itpdRunning = new PrefManager(activity).getBoolPref("I2PD Running");
+        new PrefManager(activity).setBoolPref("DNSCrypt Running", false);
+        new PrefManager(activity).setBoolPref("Tor Running", false);
+        new PrefManager(activity).setBoolPref("I2PD Running", false);
 
-        if (dnsCryptRunning) {
-            new PrefManager(activity).setBoolPref("DNSCrypt Running", false);
-            ModulesKiller.stopDNSCrypt(activity);
-        }
-
-        if (torRunning) {
-            new PrefManager(activity).setBoolPref("Tor Running", false);
-            ModulesKiller.stopTor(activity);
-        }
-
-        if (itpdRunning) {
-            new PrefManager(activity).setBoolPref("I2PD Running", false);
-            ModulesKiller.stopITPD(activity);
-        }
+        ModulesAux.stopModulesIfRunning(activity);
     }
 
     protected void createLogsDir() throws Exception {
-        File logDir = new File(appDataDir+"/logs");
+        File logDir = new File(appDataDir + "/logs");
         if (!logDir.isDirectory()) {
             if (logDir.mkdir()) {
                 ChmodCommand.dirChmod(logDir.getAbsolutePath(), false);
