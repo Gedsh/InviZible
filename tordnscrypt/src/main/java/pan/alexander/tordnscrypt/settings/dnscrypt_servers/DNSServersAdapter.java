@@ -41,7 +41,6 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.dnscrypt_relays.DNSServerRelays;
 import pan.alexander.tordnscrypt.settings.dnscrypt_relays.PreferencesDNSCryptRelays;
 
@@ -128,6 +127,7 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
             tvDNSServerFlags = itemView.findViewById(R.id.tvDNSServerFlags);
             btnDNSServerRelay = itemView.findViewById(R.id.btnDNSServerRelay);
             btnDNSServerRelay.setOnClickListener(this);
+            btnDNSServerRelay.setOnLongClickListener(this);
         }
 
         private void bind(int position) {
@@ -144,7 +144,7 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
                 if (dnsServer.isChecked() && relaysMdExist) {
                     StringBuilder routes = new StringBuilder();
 
-                    boolean orientation = context.getResources().getConfiguration().orientation== Configuration.ORIENTATION_LANDSCAPE;
+                    boolean orientation = context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
 
                     if (dnsServer.getRoutes().size() > 0) {
                         routes.append("Anonymize relays: ");
@@ -239,12 +239,14 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
             if (dnsServer.isChecked() != checked) {
                 dnsServer.setChecked(checked);
                 setItem(position, dnsServer);
+                notifyItemChanged(position);
             }
         }
 
         @Override
         public boolean onLongClick(View view) {
-            if (view.getId() == R.id.cardDNSServer) {
+            if (view.getId() == R.id.cardDNSServer
+                    || view.getId() == R.id.btnDNSServerRelay) {
                 int position = getAdapterPosition();
                 saveLastAdapterPositionToReturnIt(position);
                 openDNSRelaysPref(position);
