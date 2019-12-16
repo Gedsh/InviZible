@@ -21,7 +21,6 @@ package pan.alexander.tordnscrypt.settings;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.Color;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -159,6 +158,10 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         rvBridges = view.findViewById(R.id.rvBridges);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
         rvBridges.setLayoutManager(mLayoutManager);
+
+        if (getActivity() != null) {
+            getActivity().setTitle(R.string.pref_fast_use_tor_bridges);
+        }
 
         return view;
     }
@@ -383,8 +386,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             }
         });
         builder.setTitle(R.string.pref_fast_use_tor_bridges_add);
-        AlertDialog view = builder.show();
-        Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
+        builder.show();
     }
 
     private void addRequestedBridges(String bridges, List<String> persistList) {
@@ -937,8 +939,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                         dialog.cancel();
                     }
                 });
-                AlertDialog view = builder.show();
-                Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
+                builder.show();
             }
 
             private void deleteBridge(int position) {
