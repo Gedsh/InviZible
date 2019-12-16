@@ -23,8 +23,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
@@ -88,7 +86,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         if (getActivity() == null) {
             super.onCreateView(inflater, container, savedInstanceState);
@@ -96,12 +94,16 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         getActivity().setTitle(R.string.drawer_menu_commonSettings);
 
-        PreferenceCategory others = (PreferenceCategory) findPreference("common_other");
+        PreferenceCategory others = findPreference("common_other");
         Preference swShowNotification = findPreference("swShowNotification");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            others.removePreference(swShowNotification);
+            if (others != null && swShowNotification != null) {
+                others.removePreference(swShowNotification);
+            }
         } else {
-            swShowNotification.setOnPreferenceChangeListener(this);
+            if (swShowNotification != null) {
+                swShowNotification.setOnPreferenceChangeListener(this);
+            }
         }
 
         if (ModulesStatus.getInstance().getMode() == ROOT_MODE) {
@@ -204,9 +206,9 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 break;
             case "pref_common_tor_route_all":
                 if (Boolean.valueOf(newValue.toString())) {
-                    findPreference("prefTorSiteUnlockTether").setEnabled(false);
+                    Objects.requireNonNull(findPreference("prefTorSiteUnlockTether")).setEnabled(false);
                 } else {
-                    findPreference("prefTorSiteUnlockTether").setEnabled(true);
+                    Objects.requireNonNull(findPreference("prefTorSiteUnlockTether")).setEnabled(true);
                 }
                 if (new PrefManager(getActivity()).getBoolPref("Tor Running")) {
                     ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
@@ -398,7 +400,6 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         @Override
         public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            Objects.requireNonNull(getDialog().getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             return super.onCreateView(inflater, container, savedInstanceState);
         }
     }
@@ -410,46 +411,66 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         }
 
         Preference swTorTethering = findPreference("pref_common_tor_tethering");
-        swTorTethering.setOnPreferenceChangeListener(this);
+        if (swTorTethering != null) {
+            swTorTethering.setOnPreferenceChangeListener(this);
+        }
 
         Preference swRouteAllThroughTor = findPreference("pref_common_tor_route_all");
-        swRouteAllThroughTor.setOnPreferenceChangeListener(this);
+        if (swRouteAllThroughTor != null) {
+            swRouteAllThroughTor.setOnPreferenceChangeListener(this);
+        }
 
         Preference swITPDTethering = findPreference("pref_common_itpd_tethering");
-        swITPDTethering.setOnPreferenceChangeListener(this);
+        if (swITPDTethering != null) {
+            swITPDTethering.setOnPreferenceChangeListener(this);
+        }
 
         Preference pref_common_block_http = findPreference("pref_common_block_http");
-        pref_common_block_http.setOnPreferenceChangeListener(this);
+        if (pref_common_block_http != null) {
+            pref_common_block_http.setOnPreferenceChangeListener(this);
+        }
 
         Preference pref_common_use_modules_with_root = findPreference("swUseModulesRoot");
-        pref_common_use_modules_with_root.setOnPreferenceChangeListener(this);
+        if (pref_common_use_modules_with_root != null) {
+            pref_common_use_modules_with_root.setOnPreferenceChangeListener(this);
+        }
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
         if (shPref.getBoolean("pref_common_tor_route_all", false)) {
-            findPreference("prefTorSiteUnlockTether").setEnabled(false);
+            Objects.requireNonNull(findPreference("prefTorSiteUnlockTether")).setEnabled(false);
         } else {
-            findPreference("prefTorSiteUnlockTether").setEnabled(true);
+            Objects.requireNonNull(findPreference("prefTorSiteUnlockTether")).setEnabled(true);
         }
     }
 
     private void removePreferences() {
-        PreferenceScreen preferenceScreen = (PreferenceScreen) findPreference("pref_common");
-        PreferenceCategory hotspotSettingsCategory = (PreferenceCategory) findPreference("HOTSPOT");
-        preferenceScreen.removePreference(hotspotSettingsCategory);
+        PreferenceScreen preferenceScreen = findPreference("pref_common");
+        PreferenceCategory hotspotSettingsCategory = findPreference("HOTSPOT");
+        if (preferenceScreen != null && hotspotSettingsCategory != null) {
+            preferenceScreen.removePreference(hotspotSettingsCategory);
+        }
 
         if (ModulesStatus.getInstance().isRootAvailable()) {
             Preference pref_common_use_modules_with_root = findPreference("swUseModulesRoot");
-            pref_common_use_modules_with_root.setOnPreferenceChangeListener(this);
+            if (pref_common_use_modules_with_root != null) {
+                pref_common_use_modules_with_root.setOnPreferenceChangeListener(this);
+            }
         } else {
-            PreferenceCategory categoryUseModulesRoot = (PreferenceCategory) findPreference("categoryUseModulesRoot");
-            preferenceScreen.removePreference(categoryUseModulesRoot);
+            PreferenceCategory categoryUseModulesRoot = findPreference("categoryUseModulesRoot");
+            if (preferenceScreen != null && categoryUseModulesRoot != null) {
+                preferenceScreen.removePreference(categoryUseModulesRoot);
+            }
         }
 
-        PreferenceCategory categoryOther = (PreferenceCategory) findPreference("common_other");
+        PreferenceCategory categoryOther = findPreference("common_other");
         Preference selectIptables = findPreference("pref_common_use_iptables");
         Preference selectBusybox = findPreference("pref_common_use_busybox");
-        categoryOther.removePreference(selectIptables);
-        categoryOther.removePreference(selectBusybox);
+        if (categoryOther != null && selectIptables != null) {
+            categoryOther.removePreference(selectIptables);
+        }
+        if (categoryOther != null && selectBusybox != null) {
+            categoryOther.removePreference(selectBusybox);
+        }
     }
 
     @Override
