@@ -130,7 +130,7 @@
             android:key="pref_fast_block_http"
             android:summary="@string/pref_fast_block_http_summ"
             android:title="@string/pref_fast_block_http" />
-        <ListPreference
+        <androidx.preference.ListPreference
             android:defaultValue="4"
             android:entries="@array/pref_fast_theme_titles"
             android:entryValues="@array/pref_fast_theme_values"

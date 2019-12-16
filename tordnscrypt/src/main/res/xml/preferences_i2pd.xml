@@ -54,7 +54,7 @@
             android:key="floodfill"
             android:summary="@string/pref_itpd_com_floodfill_summ"
             android:title="@string/pref_itpd_com_floodfill" />
-        <ListPreference
+        <androidx.preference.ListPreference
             android:defaultValue="L"
             android:entries="@array/itpd_com_bandwidth_title"
             android:entryValues="@array/itpd_com_bandwidth_value"

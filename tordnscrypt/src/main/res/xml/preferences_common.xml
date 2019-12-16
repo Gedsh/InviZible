@@ -94,13 +94,13 @@
             android:key="pref_common_show_help"
             android:summary="@string/pref_common_show_help_summ"
             android:title="@string/pref_common_show_help" />
-        <ListPreference
+        <androidx.preference.ListPreference
             android:defaultValue="1"
             android:entries="@array/pref_common_categ_use_busybox_titles"
             android:entryValues="@array/pref_common_use_busybox_values"
             android:key="pref_common_use_busybox"
             android:title="@string/pref_common_use_busybox" />
-        <ListPreference
+        <androidx.preference.ListPreference
             android:defaultValue="1"
             android:entries="@array/pref_common_categ_use_iptables_titles"
             android:entryValues="@array/pref_common_use_iptables_values"
