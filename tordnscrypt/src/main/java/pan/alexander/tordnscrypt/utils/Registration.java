@@ -23,15 +23,12 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
 import android.net.Uri;
 import androidx.appcompat.app.AlertDialog;
 import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
-
-import java.util.Objects;
 
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
@@ -72,8 +69,7 @@ public class Registration {
                     })
                     .setCancelable(false);
             if (wrongRegistrationCode) {
-                AlertDialog view  = builder.show();
-                Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
+                builder.show();
             }
         } catch (Exception e) {
             e.getStackTrace();
@@ -112,7 +108,6 @@ public class Registration {
                 })
                 .setCancelable(false)
                 .setView(inputView);
-        AlertDialog view  = builder.show();
-        Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
+        builder.show();
     }
 }

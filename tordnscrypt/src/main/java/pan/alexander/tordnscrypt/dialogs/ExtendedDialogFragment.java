@@ -20,8 +20,6 @@ package pan.alexander.tordnscrypt.dialogs;
 */
 
 import android.app.Dialog;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -33,8 +31,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
-import java.util.Objects;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
@@ -84,7 +80,6 @@ public abstract class ExtendedDialogFragment extends DialogFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        Objects.requireNonNull(getDialog().getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         return super.onCreateView(inflater, container, savedInstanceState);
     }
 

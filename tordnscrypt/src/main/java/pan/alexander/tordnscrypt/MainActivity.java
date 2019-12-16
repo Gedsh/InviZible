@@ -23,7 +23,6 @@ import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -577,8 +576,7 @@ public class MainActivity extends LangAppCompatActivity
             }
         });
 
-        AlertDialog view = builder.show();
-        Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
+        builder.show();
     }
 
     private void childUnlock(final MenuItem item) {
@@ -622,8 +620,8 @@ public class MainActivity extends LangAppCompatActivity
             }
         });
 
-        AlertDialog view = builder.show();
-        Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
+        builder.show();
+
     }
 
 
@@ -725,10 +723,7 @@ public class MainActivity extends LangAppCompatActivity
         builder.setView(progressBar);
         builder.setCancelable(false);
 
-        AlertDialog view = builder.show();
-        Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
-
-        return view;
+        return builder.show();
     }
 
     private void startAppExitDetectService() {

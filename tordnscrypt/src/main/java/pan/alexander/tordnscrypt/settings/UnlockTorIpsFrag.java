@@ -22,7 +22,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
@@ -569,8 +568,7 @@ public class UnlockTorIpsFrag extends Fragment {
                     }
                 });
 
-                AlertDialog view = builder.show();
-                Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
+                builder.show();
             }
 
         }
@@ -649,8 +647,7 @@ public class UnlockTorIpsFrag extends Fragment {
             }
         });
 
-        AlertDialog view = builder.show();
-        Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
+        builder.show();
     }
 
     @SuppressLint("StaticFieldLeak")

@@ -20,7 +20,6 @@ package pan.alexander.tordnscrypt;
 
 import android.annotation.SuppressLint;
 import android.content.DialogInterface;
-import android.graphics.Color;
 import android.os.Bundle;
 import androidx.appcompat.app.AlertDialog;
 import android.util.Log;
@@ -133,8 +132,7 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
 
             builder.setView(inflatedView);
 
-            AlertDialog view  = builder.show();
-            Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
+            builder.show();
         }
         catch (IOException e)
         {

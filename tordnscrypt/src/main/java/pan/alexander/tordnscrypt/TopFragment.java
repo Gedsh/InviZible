@@ -25,8 +25,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -609,9 +607,6 @@ public class TopFragment extends Fragment {
 
         AlertDialog.Builder rootCheckingDialogBuilder = RootCheckingProgressDialog.getBuilder(getActivity());
         rootCheckingDialog = rootCheckingDialogBuilder.show();
-        if (rootCheckingDialog.getWindow() != null) {
-            rootCheckingDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
     }
 
     private void closePleaseWaitDialog() {

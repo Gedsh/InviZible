@@ -26,7 +26,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import androidx.appcompat.app.AlertDialog;
 import android.util.Base64;
 import android.util.Log;
@@ -216,9 +215,7 @@ public class GetNewBridges {
                 dialogInterface.cancel();
             }
         });
-        androidx.appcompat.app.AlertDialog view  = builder.show();
-        Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
-        return view;
+        return builder.show();
     }
 
     public void selectTransport() {
@@ -269,8 +266,7 @@ public class GetNewBridges {
             }
         });
 
-        AlertDialog dialog  = builder.show();
-        Objects.requireNonNull(dialog.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
+        builder.show();
     }
 
     private void showCodeImage(Bitmap codeImage, final String secretCode) {
@@ -304,8 +300,7 @@ public class GetNewBridges {
                 dialog.cancel();
             }
         });
-        AlertDialog dialog  = builder.show();
-        Objects.requireNonNull(dialog.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
+        builder.show();
     }
 
     private void requestNewBridges(final String imageCode, final String secretCode) {
@@ -515,7 +510,6 @@ public class GetNewBridges {
             }
         });
 
-        AlertDialog view  = builder.show();
-        Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
+        builder.show();
     }
 }

@@ -27,8 +27,6 @@
     <style name="CustomDialogTheme" parent="Theme.MaterialComponents.DayNight.Dialog">
 
         <!-- Used for the background -->
-        <item name="android:colorBackground">@color/alertWindowColor</item>
-        <item name="android:windowBackground">@color/alertWindowColor</item>
         <item name="buttonBarPositiveButtonStyle">@style/DialogButtonStyle</item>
         <item name="buttonBarNeutralButtonStyle">@style/DialogButtonStyle</item>
         <item name="buttonBarNegativeButtonStyle">@style/DialogButtonStyle</item>
@@ -37,7 +35,6 @@
 
     <!-- Alert Dialog Theme -->
     <style name="CustomAlertDialogTheme" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
-        <item name="android:background">@drawable/alert_dialog_custom</item>
         <item name="colorOnPrimary">@color/colorPrimary</item>
         <item name="buttonBarPositiveButtonStyle">@style/DialogButtonStyle</item>
         <item name="buttonBarNeutralButtonStyle">@style/DialogButtonStyle</item>
