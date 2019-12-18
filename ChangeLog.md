@@ -56,7 +56,7 @@
 * Fix modules update feature when they are used with root
 
 **InviZible Pro beta 0.4.0**
-* Implement DNSCrypt servers anonymized relays support
+* Implement DNSCrypt servers anonymized relays support (clean install required to use)
 * Attempt to fix using AfWall with InviZible on android 9, 10.
 * Prepare InviZible for Android TV
 * Migrate to androidx support library.
