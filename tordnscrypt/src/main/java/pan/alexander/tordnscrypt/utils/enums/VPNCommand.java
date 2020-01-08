@@ -1,5 +1,4 @@
-package pan.alexander.tordnscrypt.installer;
-
+package pan.alexander.tordnscrypt.utils.enums;
 /*
     This file is part of InviZible Pro.
 
@@ -19,21 +18,8 @@ package pan.alexander.tordnscrypt.installer;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.content.Context;
-
-import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
-
-public class TorExtractCommand extends AssetsExtractCommand {
-    private String appDataDir;
-
-    TorExtractCommand(Context context,  String appDataDir) {
-        super(context);
-        this.appDataDir = appDataDir;
-    }
-
-    @Override
-    public void execute() throws Exception {
-        ZipFileManager zipFileManager = new ZipFileManager();
-        zipFileManager.extractZipFromInputStream(assets.open("tor.mp3"), appDataDir);
-    }
+public enum VPNCommand {
+    START,
+    RELOAD,
+    STOP
 }

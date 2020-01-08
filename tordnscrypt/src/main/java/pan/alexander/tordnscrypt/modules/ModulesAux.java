@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.modules;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
@@ -31,6 +31,7 @@ import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class ModulesAux {
 
@@ -46,8 +47,8 @@ public class ModulesAux {
             modulesStatus.setMode(ROOT_MODE);
             new PrefManager(context).setStrPref("OPERATION_MODE", ROOT_MODE.toString());
         } else {
-            modulesStatus.setMode(PROXY_MODE);
-            new PrefManager(context).setStrPref("OPERATION_MODE", PROXY_MODE.toString());
+            modulesStatus.setMode(VPN_MODE);
+            new PrefManager(context).setStrPref("OPERATION_MODE", VPN_MODE.toString());
         }
 
     }
