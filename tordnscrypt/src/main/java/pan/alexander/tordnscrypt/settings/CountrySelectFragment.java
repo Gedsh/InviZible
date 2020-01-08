@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
@@ -303,51 +303,42 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
                 cardCountry = itemView.findViewById(R.id.cardCountry);
                 cardCountry.setClickable(true);
 
-                View.OnClickListener onClickListener = new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (!isCountryInList(getAdapterPosition())) {
-                            setChecked(getAdapterPosition());
-                            notifyItemChanged(getAdapterPosition());
-                        } else if (isCountryInList(getAdapterPosition())) {
-                            removeCheck(countriesListCurrent.get(getAdapterPosition()).countryCode);
-                            notifyItemChanged(getAdapterPosition());
-                        }
+                View.OnClickListener onClickListener = v -> {
+                    if (!isCountryInList(getAdapterPosition())) {
+                        setChecked(getAdapterPosition());
+                        notifyItemChanged(getAdapterPosition());
+                    } else if (isCountryInList(getAdapterPosition())) {
+                        removeCheck(countriesListCurrent.get(getAdapterPosition()).countryCode);
+                        notifyItemChanged(getAdapterPosition());
                     }
                 };
                 cardCountry.setOnClickListener(onClickListener);
 
-                CompoundButton.OnCheckedChangeListener activeListener = new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                CompoundButton.OnCheckedChangeListener activeListener = (buttonView, isChecked) -> {
 
-                        if (!isCountryInList(getAdapterPosition()) && isChecked) {
-                            setChecked(getAdapterPosition());
-                            notifyItemChanged(getAdapterPosition());
-                        } else if (isCountryInList(getAdapterPosition()) && !isChecked) {
-                            removeCheck(countriesListCurrent.get(getAdapterPosition()).countryCode);
-                            notifyItemChanged(getAdapterPosition());
-                        }
+                    if (!isCountryInList(getAdapterPosition()) && isChecked) {
+                        setChecked(getAdapterPosition());
+                        notifyItemChanged(getAdapterPosition());
+                    } else if (isCountryInList(getAdapterPosition()) && !isChecked) {
+                        removeCheck(countriesListCurrent.get(getAdapterPosition()).countryCode);
+                        notifyItemChanged(getAdapterPosition());
                     }
                 };
                 chbCountry.setOnCheckedChangeListener(activeListener);
 
                 chbCountry.setFocusable(false);
                 cardCountry.setFocusable(true);
-                View.OnFocusChangeListener onFocusChangeListener = new View.OnFocusChangeListener() {
-                    @Override
-                    public void onFocusChange(View v, boolean hasFocus) {
-                        if (hasFocus) {
-                            ((CardView) v).setCardBackgroundColor(getResources().getColor(R.color.colorSelected));
+                View.OnFocusChangeListener onFocusChangeListener = (v, hasFocus) -> {
+                    if (hasFocus) {
+                        ((CardView) v).setCardBackgroundColor(getResources().getColor(R.color.colorSelected));
+                    } else {
+                        if (getAdapterPosition() % 2 == 0) {
+                            ((CardView) v).setCardBackgroundColor(getResources().getColor(R.color.colorSecond));
                         } else {
-                            if (getAdapterPosition() % 2 == 0) {
-                                ((CardView) v).setCardBackgroundColor(getResources().getColor(R.color.colorSecond));
-                            } else {
-                                ((CardView) v).setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
-                            }
+                            ((CardView) v).setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
                         }
-
                     }
+
                 };
 
                 cardCountry.setOnFocusChangeListener(onFocusChangeListener);

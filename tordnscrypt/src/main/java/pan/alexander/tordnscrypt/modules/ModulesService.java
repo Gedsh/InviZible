@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.modules;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
@@ -38,12 +38,15 @@ import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.enums.OperationMode;
+import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class ModulesService extends Service {
     public static final String actionDismissNotification = "pan.alexander.tordnscrypt.action.DISMISS_NOTIFICATION";
@@ -206,22 +209,19 @@ public class ModulesService extends Service {
     }
 
     private void changeDNSCryptStatus(final Thread dnsCryptThread) {
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (modulesStatus.isUseModulesWithRoot() || dnsCryptThread.isAlive()) {
-                    modulesStatus.setDnsCryptState(RUNNING);
+        mHandler.postDelayed(() -> {
+            if (modulesStatus.isUseModulesWithRoot() || dnsCryptThread.isAlive()) {
+                modulesStatus.setDnsCryptState(RUNNING);
 
-                    if (!modulesStatus.isUseModulesWithRoot()) {
-                        modulesKiller.setDnsCryptThread(dnsCryptThread);
-                    }
-
-                    if (checkModulesStateTask != null && !modulesStatus.isUseModulesWithRoot()) {
-                        checkModulesStateTask.setDnsCryptThread(dnsCryptThread);
-                    }
-                } else {
-                    modulesStatus.setDnsCryptState(STOPPED);
+                if (!modulesStatus.isUseModulesWithRoot()) {
+                    modulesKiller.setDnsCryptThread(dnsCryptThread);
                 }
+
+                if (checkModulesStateTask != null && !modulesStatus.isUseModulesWithRoot()) {
+                    checkModulesStateTask.setDnsCryptThread(dnsCryptThread);
+                }
+            } else {
+                modulesStatus.setDnsCryptState(STOPPED);
             }
         }, 2000);
     }
@@ -272,22 +272,19 @@ public class ModulesService extends Service {
     }
 
     private void changeTorStatus(final Thread torThread) {
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (modulesStatus.isUseModulesWithRoot() || torThread.isAlive()) {
-                    modulesStatus.setTorState(RUNNING);
+        mHandler.postDelayed(() -> {
+            if (modulesStatus.isUseModulesWithRoot() || torThread.isAlive()) {
+                modulesStatus.setTorState(RUNNING);
 
-                    if (!modulesStatus.isUseModulesWithRoot()) {
-                        modulesKiller.setTorThread(torThread);
-                    }
-
-                    if (checkModulesStateTask != null && !modulesStatus.isUseModulesWithRoot()) {
-                        checkModulesStateTask.setTorThread(torThread);
-                    }
-                } else {
-                    modulesStatus.setTorState(STOPPED);
+                if (!modulesStatus.isUseModulesWithRoot()) {
+                    modulesKiller.setTorThread(torThread);
                 }
+
+                if (checkModulesStateTask != null && !modulesStatus.isUseModulesWithRoot()) {
+                    checkModulesStateTask.setTorThread(torThread);
+                }
+            } else {
+                modulesStatus.setTorState(STOPPED);
             }
         }, 2000);
     }
@@ -337,22 +334,19 @@ public class ModulesService extends Service {
     }
 
     private void changeITPDStatus(final Thread itpdThread) {
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (modulesStatus.isUseModulesWithRoot() || itpdThread.isAlive()) {
-                    modulesStatus.setItpdState(RUNNING);
+        mHandler.postDelayed(() -> {
+            if (modulesStatus.isUseModulesWithRoot() || itpdThread.isAlive()) {
+                modulesStatus.setItpdState(RUNNING);
 
-                    if (!modulesStatus.isUseModulesWithRoot()) {
-                        modulesKiller.setItpdThread(itpdThread);
-                    }
-
-                    if (checkModulesStateTask != null && !modulesStatus.isUseModulesWithRoot()) {
-                        checkModulesStateTask.setItpdThread(itpdThread);
-                    }
-                } else {
-                    modulesStatus.setItpdState(STOPPED);
+                if (!modulesStatus.isUseModulesWithRoot()) {
+                    modulesKiller.setItpdThread(itpdThread);
                 }
+
+                if (checkModulesStateTask != null && !modulesStatus.isUseModulesWithRoot()) {
+                    checkModulesStateTask.setItpdThread(itpdThread);
+                }
+            } else {
+                modulesStatus.setItpdState(STOPPED);
             }
         }, 3000);
     }
@@ -370,77 +364,68 @@ public class ModulesService extends Service {
     }
 
     private void restartDNSCrypt() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    modulesStatus.setDnsCryptState(RESTARTING);
+        new Thread(() -> {
+            try {
+                modulesStatus.setDnsCryptState(RESTARTING);
 
-                    Thread killerThread = new Thread(modulesKiller.getDNSCryptKillerRunnable());
-                    killerThread.start();
-                    killerThread.join();
+                Thread killerThread = new Thread(modulesKiller.getDNSCryptKillerRunnable());
+                killerThread.start();
+                killerThread.join();
 
-                    makeDelay();
+                makeDelay();
 
-                    if (modulesStatus.getDnsCryptState() != RUNNING) {
-                        startDNSCrypt();
-                    }
-
-                } catch (InterruptedException e) {
-                    Log.e(LOG_TAG, "ModulesService restartDNSCrypt join interrupted!");
+                if (modulesStatus.getDnsCryptState() != RUNNING) {
+                    startDNSCrypt();
                 }
 
+            } catch (InterruptedException e) {
+                Log.e(LOG_TAG, "ModulesService restartDNSCrypt join interrupted!");
             }
+
         }).start();
     }
 
     private void restartTor() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    modulesStatus.setTorState(RESTARTING);
+        new Thread(() -> {
+            try {
+                modulesStatus.setTorState(RESTARTING);
 
-                    Thread killerThread = new Thread(modulesKiller.getTorKillerRunnable());
-                    killerThread.start();
-                    killerThread.join();
+                Thread killerThread = new Thread(modulesKiller.getTorKillerRunnable());
+                killerThread.start();
+                killerThread.join();
 
-                    makeDelay();
+                makeDelay();
 
-                    if (modulesStatus.getTorState() != RUNNING) {
-                        startTor();
-                    }
-
-                } catch (InterruptedException e) {
-                    Log.e(LOG_TAG, "ModulesService restartTor join interrupted!");
+                if (modulesStatus.getTorState() != RUNNING) {
+                    startTor();
                 }
 
+            } catch (InterruptedException e) {
+                Log.e(LOG_TAG, "ModulesService restartTor join interrupted!");
             }
+
         }).start();
     }
 
     private void restartITPD() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    modulesStatus.setItpdState(RESTARTING);
+        new Thread(() -> {
+            try {
+                modulesStatus.setItpdState(RESTARTING);
 
-                    Thread killerThread = new Thread(modulesKiller.getITPDKillerRunnable());
-                    killerThread.start();
-                    killerThread.join();
+                Thread killerThread = new Thread(modulesKiller.getITPDKillerRunnable());
+                killerThread.start();
+                killerThread.join();
 
-                    makeDelay();
+                makeDelay();
 
-                    if (modulesStatus.getItpdState() != RUNNING) {
-                        startITPD();
-                    }
-
-                } catch (InterruptedException e) {
-                    Log.e(LOG_TAG, "ModulesService restartITPD join interrupted!");
+                if (modulesStatus.getItpdState() != RUNNING) {
+                    startITPD();
                 }
 
+            } catch (InterruptedException e) {
+                Log.e(LOG_TAG, "ModulesService restartITPD join interrupted!");
             }
+
         }).start();
     }
 
@@ -461,6 +446,14 @@ public class ModulesService extends Service {
             checkModulesThreadsTimer.purge();
             checkModulesThreadsTimer.cancel();
             checkModulesThreadsTimer = null;
+        }
+    }
+
+    private void stopVPNServiceIfRunning() {
+        OperationMode operationMode = modulesStatus.getMode();
+        SharedPreferences prefs = android.preference.PreferenceManager.getDefaultSharedPreferences(this);
+        if (operationMode == VPN_MODE && prefs.getBoolean("VPNServiceEnabled", false)) {
+            ServiceVPNHelper.stop("ModulesService is destroyed", this);
         }
     }
 
@@ -493,6 +486,8 @@ public class ModulesService extends Service {
         stopPowerWakelock();
 
         stopModulesThreadsTimer();
+
+        stopVPNServiceIfRunning();
 
         super.onDestroy();
     }

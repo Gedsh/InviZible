@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.job.JobInfo;
@@ -26,6 +26,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import androidx.preference.PreferenceManager;
+
+import android.net.VpnService;
 import android.util.Log;
 
 import java.util.Objects;
@@ -41,9 +43,11 @@ import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
+import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class BootCompleteReceiver extends BroadcastReceiver {
     private final int mJobId = PreferencesFastFragment.mJobId;
@@ -65,7 +69,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
         SharedPreferences shPref1 = PreferenceManager.getDefaultSharedPreferences(this.context);
         String refreshPeriod = shPref1.getString("pref_fast_site_refresh_interval", "12");
-        if (refreshPeriod != null && !refreshPeriod.isEmpty()) {
+        if (!refreshPeriod.isEmpty()) {
             refreshPeriodHours = Integer.parseInt(refreshPeriod);
         }
 
@@ -91,6 +95,18 @@ public class BootCompleteReceiver extends BroadcastReceiver {
             boolean autoStartDNSCrypt = shPref.getBoolean("swAutostartDNS", false);
             boolean autoStartTor = shPref.getBoolean("swAutostartTor", false);
             boolean autoStartITPD = shPref.getBoolean("swAutostartITPD", false);
+
+            if ((autoStartDNSCrypt || autoStartTor || autoStartITPD) && (mode == VPN_MODE)) {
+                final Intent prepareIntent = VpnService.prepare(context);
+
+                if (prepareIntent == null) {
+                    shPref.edit().putBoolean("VPNServiceEnabled", true).apply();
+
+                    ServiceVPNHelper.start("Boot complete", context);
+                } else {
+                    return;
+                }
+            }
 
             if (autoStartITPD) {
                 shortenTooLongITPDLog();

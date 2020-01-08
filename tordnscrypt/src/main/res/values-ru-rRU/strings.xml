@@ -355,10 +355,14 @@
     <string name="pref_common_wakelock_summ">Дополнительная защита в Безрутовом Режиме, чтоб андроид не закрыл приложение. Может привести к повышенному разряду батареи</string>
     <string name="install_title_no_root">Рут отсутствует</string>
     <string name="install_title_root">Рут разрешен</string>
-    <string name="message_no_root_used">Рут доступ не предоставлен. Поэтому вы можете использовать только приложения с функцией прокси вместе с InviZible Pro!</string>
+    <string name="message_no_root_used">Вы можете использовать
+        InviZible Pro в режиме локального VPN или совместно с приложениями с функцией прокси.</string>
     <string name="pref_dnscrypt_relays">Источники</string>
     <string name="pref_dnscrypt_relays_delay_summ">Список реле будет обновлен после refresh_delay в часах.</string>
     <string name="pref_dnscrypt_relays_categ">Реле</string>
     <string name="pref_dnscrypt_relays_summ">Список реле</string>
     <string name="pref_dnscrypt_relays_title">Реле DNSCrypt</string>
+    <string name="vpn_mode_active">Режим VPN активирован</string>
+    <string name="vpn_mode_off">Режим VPN выключен</string>
+    <string name="vpn_mode_error">Ошибка VPN!</string>
 </resources>

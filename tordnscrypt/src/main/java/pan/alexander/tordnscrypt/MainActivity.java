@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
@@ -24,6 +24,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.net.VpnService;
 import android.os.Bundle;
 import android.os.Handler;
 import androidx.annotation.NonNull;
@@ -67,9 +68,12 @@ import pan.alexander.tordnscrypt.utils.ApManager;
 import pan.alexander.tordnscrypt.utils.AppExitDetectService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Registration;
+import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
+import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
@@ -80,6 +84,7 @@ public class MainActivity extends LangAppCompatActivity
 
     public static DialogInterface modernDialog = null;
     private static final int CODE_IS_AP_ON = 100;
+    private static final int CODE_IS_VPN_ALLOWED = 101;
 
     public boolean childLockActive = false;
     private Timer timer;
@@ -325,8 +330,8 @@ public class MainActivity extends LangAppCompatActivity
                 menuVPNMode.setChecked(true);
             } else {
                 menuProxiesMode.setChecked(true);
-                modulesStatus.setMode(PROXY_MODE);
-                mode = PROXY_MODE;
+                modulesStatus.setMode(VPN_MODE);
+                mode = VPN_MODE;
             }
 
             if (mode == PROXY_MODE) {
@@ -384,9 +389,14 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
+
+        if (isInterfaceLocked() && id != R.id.item_unlock) {
+            Toast.makeText(this, getText(R.string.action_mode_dialog_locked), Toast.LENGTH_LONG).show();
+            return false;
+        }
+
         switch (id) {
             case R.id.item_unlock:
                 if (isInterfaceLocked()) {
@@ -439,6 +449,13 @@ public class MainActivity extends LangAppCompatActivity
 
         Log.i(LOG_TAG, "Root mode enabled");
 
+        OperationMode operationMode = modulesStatus.getMode();
+
+        if (operationMode == VPN_MODE) {
+            ServiceVPNHelper.stop("Switch to root mode", this);
+            Toast.makeText(this, getText(R.string.vpn_mode_off), Toast.LENGTH_LONG).show();
+        }
+
         //This start iptables adaptation
         modulesStatus.setMode(ROOT_MODE);
         modulesStatus.setIptablesRulesUpdateRequested(true);
@@ -464,6 +481,9 @@ public class MainActivity extends LangAppCompatActivity
             String[] commands = iptablesRules.clearAll();
             iptablesRules.sendToRootExecService(commands);
             Log.i(LOG_TAG, "Iptables rules removed");
+        } else if (operationMode == VPN_MODE) {
+            ServiceVPNHelper.stop("Switch to proxy mode", this);
+            Toast.makeText(this, getText(R.string.vpn_mode_off), Toast.LENGTH_LONG).show();
         }
 
         invalidateOptionsMenu();
@@ -487,6 +507,16 @@ public class MainActivity extends LangAppCompatActivity
             iptablesRules.sendToRootExecService(commands);
             Log.i(LOG_TAG, "Iptables rules removed");
         }
+
+        ModuleState dnsCryptState = modulesStatus.getDnsCryptState();
+        ModuleState torState = modulesStatus.getTorState();
+        ModuleState itpdState = modulesStatus.getItpdState();
+
+        if (dnsCryptState != STOPPED || torState != STOPPED || itpdState != STOPPED) {
+            prepareVPNService();
+        }
+
+        invalidateOptionsMenu();
     }
 
     private void checkHotspotState() {
@@ -508,12 +538,7 @@ public class MainActivity extends LangAppCompatActivity
                     timer.cancel();
                 }
 
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        invalidateOptionsMenu();
-                    }
-                });
+                runOnUiThread(() -> invalidateOptionsMenu());
             }
         }, 3000, 5000);
     }
@@ -524,6 +549,8 @@ public class MainActivity extends LangAppCompatActivity
 
         if (requestCode == CODE_IS_AP_ON) {
             checkHotspotState();
+        } if (requestCode == CODE_IS_VPN_ALLOWED) {
+            startVPNService(resultCode);
         }
     }
 
@@ -550,31 +577,23 @@ public class MainActivity extends LangAppCompatActivity
         }
         builder.setView(inputView);
 
-        builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                if (input.getText().toString().equals("debug")) {
-                    TopFragment.debug = !TopFragment.debug;
-                    Toast.makeText(getApplicationContext(), "Debug mode " + TopFragment.debug, Toast.LENGTH_LONG).show();
-                } else {
-                    String pass = Base64.encodeToString((input.getText().toString() + "-l-o-c-k-e-d").getBytes(), 16);
-                    new PrefManager(getApplicationContext()).setStrPref("passwd", pass);
-                    Toast.makeText(getApplicationContext(), getText(R.string.action_mode_dialog_locked), Toast.LENGTH_SHORT).show();
-                    item.setIcon(R.drawable.ic_lock_white_24dp);
-                    childLockActive = true;
+        builder.setPositiveButton(R.string.ok, (dialogInterface, i) -> {
+            if (input.getText().toString().equals("debug")) {
+                TopFragment.debug = !TopFragment.debug;
+                Toast.makeText(getApplicationContext(), "Debug mode " + TopFragment.debug, Toast.LENGTH_LONG).show();
+            } else {
+                String pass = Base64.encodeToString((input.getText().toString() + "-l-o-c-k-e-d").getBytes(), 16);
+                new PrefManager(getApplicationContext()).setStrPref("passwd", pass);
+                Toast.makeText(getApplicationContext(), getText(R.string.action_mode_dialog_locked), Toast.LENGTH_SHORT).show();
+                item.setIcon(R.drawable.ic_lock_white_24dp);
+                childLockActive = true;
 
-                    DrawerLayout mDrawerLayout = mainActivity.findViewById(R.id.drawer_layout);
-                    mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-                }
+                DrawerLayout mDrawerLayout = mainActivity.findViewById(R.id.drawer_layout);
+                mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
             }
         });
 
-        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                dialogInterface.cancel();
-            }
-        });
+        builder.setNegativeButton(R.string.cancel, (dialogInterface, i) -> dialogInterface.cancel());
 
         builder.show();
     }
@@ -593,32 +612,24 @@ public class MainActivity extends LangAppCompatActivity
 
         final MainActivity mainActivity = this;
 
-        builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                String saved_pass = new String(Base64.decode(new PrefManager(getApplicationContext()).getStrPref("passwd"), 16));
-                if (saved_pass.replace("-l-o-c-k-e-d", "").equals(input.getText().toString())) {
-                    String pass = Base64.encodeToString((input.getText().toString()).getBytes(), 16);
-                    new PrefManager(getApplicationContext()).setStrPref("passwd", pass);
-                    Toast.makeText(getApplicationContext(), getText(R.string.action_mode_dialog_unlocked), Toast.LENGTH_SHORT).show();
-                    item.setIcon(R.drawable.ic_lock_open_white_24dp);
-                    childLockActive = false;
+        builder.setPositiveButton(R.string.ok, (dialogInterface, i) -> {
+            String saved_pass = new String(Base64.decode(new PrefManager(getApplicationContext()).getStrPref("passwd"), 16));
+            if (saved_pass.replace("-l-o-c-k-e-d", "").equals(input.getText().toString())) {
+                String pass = Base64.encodeToString((input.getText().toString()).getBytes(), 16);
+                new PrefManager(getApplicationContext()).setStrPref("passwd", pass);
+                Toast.makeText(getApplicationContext(), getText(R.string.action_mode_dialog_unlocked), Toast.LENGTH_SHORT).show();
+                item.setIcon(R.drawable.ic_lock_open_white_24dp);
+                childLockActive = false;
 
-                    DrawerLayout mDrawerLayout = mainActivity.findViewById(R.id.drawer_layout);
-                    mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-                } else {
-                    childUnlock(item);
-                    Toast.makeText(getApplicationContext(), getText(R.string.action_mode_dialog_wrong_pass), Toast.LENGTH_LONG).show();
-                }
+                DrawerLayout mDrawerLayout = mainActivity.findViewById(R.id.drawer_layout);
+                mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+            } else {
+                childUnlock(item);
+                Toast.makeText(getApplicationContext(), getText(R.string.action_mode_dialog_wrong_pass), Toast.LENGTH_LONG).show();
             }
         });
 
-        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                dialogInterface.cancel();
-            }
-        });
+        builder.setNegativeButton(R.string.cancel, (dialogInterface, i) -> dialogInterface.cancel());
 
         builder.show();
 
@@ -630,7 +641,7 @@ public class MainActivity extends LangAppCompatActivity
 
         int id = item.getItemId();
 
-        if (childLockActive) {
+        if (isInterfaceLocked()) {
             Toast.makeText(this, getText(R.string.action_mode_dialog_locked), Toast.LENGTH_LONG).show();
             DrawerLayout drawer = findViewById(R.id.drawer_layout);
             drawer.closeDrawer(GravityCompat.START);
@@ -685,12 +696,9 @@ public class MainActivity extends LangAppCompatActivity
             modernDialog.dismiss();
         modernDialog = null;
 
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                DialogFragment commandResult = NotificationDialogFragment.newInstance(message);
-                commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
-            }
+        handler.postDelayed(() -> {
+            DialogFragment commandResult = NotificationDialogFragment.newInstance(message);
+            commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
         }, 500);
 
     }
@@ -700,20 +708,17 @@ public class MainActivity extends LangAppCompatActivity
         builder.setTitle(R.string.update_checking_title);
         builder.setMessage(R.string.update_checking_message);
         builder.setIcon(R.drawable.ic_visibility_off_black_24dp);
-        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                if (modernDialog != null) {
-                    modernDialog.dismiss();
-                    modernDialog = null;
+        builder.setNegativeButton(R.string.cancel, (dialogInterface, i) -> {
+            if (modernDialog != null) {
+                modernDialog.dismiss();
+                modernDialog = null;
 
-                    //////////////To STOP UPDATES CHECK/////////////////////////////////////////////////////
-                    TopFragment topFragment = (TopFragment) getSupportFragmentManager().findFragmentByTag("topFragmentTAG");
-                    if (topFragment != null) {
-                        topFragment.updateCheck.context = null;
-                    }
-
+                //////////////To STOP UPDATES CHECK/////////////////////////////////////////////////////
+                TopFragment topFragment = (TopFragment) getSupportFragmentManager().findFragmentByTag("topFragmentTAG");
+                if (topFragment != null) {
+                    topFragment.updateCheck.context = null;
                 }
+
             }
         });
 
@@ -749,6 +754,28 @@ public class MainActivity extends LangAppCompatActivity
         }
     }
 
+    public void prepareVPNService() {
+        final Intent prepareIntent = VpnService.prepare(this);
+
+        if (prepareIntent == null) {
+            startVPNService(RESULT_OK);
+        } else {
+            startActivityForResult(prepareIntent, CODE_IS_VPN_ALLOWED);
+        }
+
+    }
+
+    private void startVPNService(int resultCode) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        prefs.edit().putBoolean("VPNServiceEnabled", resultCode == RESULT_OK).apply();
+        if (resultCode == RESULT_OK) {
+            ServiceVPNHelper.start("VPN Service is Prepared", this);
+            Toast.makeText(this, getText(R.string.vpn_mode_active), Toast.LENGTH_SHORT).show();
+        } else if (resultCode == RESULT_CANCELED) {
+            Toast.makeText(this, getText(R.string.vpn_mode_off), Toast.LENGTH_LONG).show();
+        }
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -769,21 +796,13 @@ public class MainActivity extends LangAppCompatActivity
 
             ModulesKiller.forceCloseApp(new PathVars(this));
 
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    Intent intent = new Intent(MainActivity.this, ModulesService.class);
-                    intent.setAction(ModulesService.actionStopService);
-                    startService(intent);
-                }
+            new Handler().postDelayed(() -> {
+                Intent intent = new Intent(MainActivity.this, ModulesService.class);
+                intent.setAction(ModulesService.actionStopService);
+                startService(intent);
             }, 3000);
 
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    System.exit(0);
-                }
-            }, 5000);
+            new Handler().postDelayed(() -> System.exit(0), 5000);
 
 
             return true;

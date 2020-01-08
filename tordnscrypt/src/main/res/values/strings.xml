@@ -67,8 +67,7 @@
     <string name="install_title_root">Root granted</string>
     <string name="install_title_no_root">Root denied</string>
 
-    <string name="message_no_root_used">Root access was not granted.
-        So you can use applications with proxy feature only for InviZible Pro!</string>
+    <string name="message_no_root_used">You can use InviZible Pro with local VPN mode or applications with proxy feature in proxy mode.</string>
 
     <string name="write_file_error">Save file Error!</string>
 
@@ -88,7 +87,7 @@
     <string name="backupFolder">Choose backup folder:</string>
 
     <string name="menu_use_root" translatable="false">Root Mode</string>
-    <string name="menu_use_proxies" translatable="false">Proxies Mode</string>
+    <string name="menu_use_proxies" translatable="false">Proxy Mode</string>
     <string name="menu_use_vpn" translatable="false">VPN Mode</string>
 
     <string name="title_activity_settings">Settings</string>
@@ -577,5 +576,9 @@
     <string name="thanks_for_donate">InviZible Pro Project and its author express appreciation
         for the assistance. Would you like to download and upgrade to PRO? The update will continue in the background.</string>
     <string name="pref_dnscrypt_relays_summ">Remote lists of available relays.</string>
+
+    <string name="vpn_mode_active">VPN mode is active</string>
+    <string name="vpn_mode_off">VPN mode is off</string>
+    <string name="vpn_mode_error">VPN mode error!</string>
 
 </resources>

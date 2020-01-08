@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.modules;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.os.Build;
@@ -29,11 +29,13 @@ import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
+import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class ModulesStateLoop extends TimerTask {
     //Depends on timer, currently 10 sec
@@ -179,9 +181,18 @@ public class ModulesStateLoop extends TimerTask {
                 Log.i(LOG_TAG, "Iptables rules updated");
 
                 stopCounter = STOP_COUNTER_DELAY;
+            } else if (operationMode == VPN_MODE) {
+
+                if (dnsCryptState == STOPPED && torState == STOPPED) {
+                    ServiceVPNHelper.stop("All modules stopped", modulesService);
+                } else {
+                    ServiceVPNHelper.reload("Modules state changed", modulesService);
+                }
+
+                stopCounter = STOP_COUNTER_DELAY;
             }
 
-        } else if (useModulesWithRoot) {
+        } else if (useModulesWithRoot && operationMode != ROOT_MODE) {
 
             if (dnsCryptState != STOPPED && dnsCryptState != RUNNING) {
                 return;
