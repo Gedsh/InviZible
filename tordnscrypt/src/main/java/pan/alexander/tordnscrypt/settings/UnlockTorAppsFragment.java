@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
@@ -48,7 +48,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -139,29 +138,26 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
 
         getDeviceApps(getActivity(), mAdapter, unlockAppsArrListSaved);
 
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Verifier verifier = new Verifier(getActivity());
-                    String appSignAlt = verifier.getApkSignature();
-                    if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
-                        NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                getActivity(), getText(R.string.verifier_error).toString(), "11");
-                        if (notificationHelper != null && getFragmentManager() != null) {
-                            notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
-                        }
-                    }
-
-                } catch (Exception e) {
+        Thread thread = new Thread(() -> {
+            try {
+                Verifier verifier = new Verifier(getActivity());
+                String appSignAlt = verifier.getApkSignature();
+                if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                            getActivity(), getText(R.string.verifier_error).toString(), "188");
+                            getActivity(), getText(R.string.verifier_error).toString(), "11");
                     if (notificationHelper != null && getFragmentManager() != null) {
                         notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                     }
-                    Log.e(LOG_TAG, "UnlockTorAppsFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
-                            Arrays.toString(e.getStackTrace()));
                 }
+
+            } catch (Exception e) {
+                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                        getActivity(), getText(R.string.verifier_error).toString(), "188");
+                if (notificationHelper != null && getFragmentManager() != null) {
+                    notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                }
+                Log.e(LOG_TAG, "UnlockTorAppsFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
+                        Arrays.toString(e.getStackTrace()));
             }
         });
         thread.start();
@@ -374,37 +370,28 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
                     cardTorAppFragment = getActivity().findViewById(R.id.cardTorAppFragment);
                 }
 
-                CompoundButton.OnCheckedChangeListener onCheckedChangeListener = new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton compoundButton, boolean newValue) {
-                        setActive(getAdapterPosition(), newValue);
-                        isChanged = true;
-                    }
+                CompoundButton.OnCheckedChangeListener onCheckedChangeListener = (compoundButton, newValue) -> {
+                    setActive(getAdapterPosition(), newValue);
+                    isChanged = true;
                 };
                 swTorApp.setOnCheckedChangeListener(onCheckedChangeListener);
                 swTorApp.setFocusable(false);
 
 
-                View.OnClickListener onClickListener = new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        int appPosition = getAdapterPosition();
-                        boolean appActive = getItem(appPosition).active;
-                        setActive(appPosition, !appActive);
-                        mAdapter.notifyItemChanged(appPosition);
-                        isChanged = true;
-                    }
+                View.OnClickListener onClickListener = view -> {
+                    int appPosition = getAdapterPosition();
+                    boolean appActive = getItem(appPosition).active;
+                    setActive(appPosition, !appActive);
+                    mAdapter.notifyItemChanged(appPosition);
+                    isChanged = true;
                 };
 
                 cardTorApps.setOnClickListener(onClickListener);
-                View.OnFocusChangeListener onFocusChangeListener = new View.OnFocusChangeListener() {
-                    @Override
-                    public void onFocusChange(View view, boolean inFocus) {
-                        if (inFocus) {
-                            ((CardView) view).setCardBackgroundColor(getResources().getColor(R.color.colorSecond));
-                        } else {
-                            ((CardView) view).setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
-                        }
+                View.OnFocusChangeListener onFocusChangeListener = (view, inFocus) -> {
+                    if (inFocus) {
+                        ((CardView) view).setCardBackgroundColor(getResources().getColor(R.color.colorSecond));
+                    } else {
+                        ((CardView) view).setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
                     }
                 };
                 cardTorApps.setOnFocusChangeListener(onFocusChangeListener);
@@ -449,90 +436,76 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
         final Iterator<ApplicationInfo> itAppInfo = lAppInfo.iterator();
 
 
-        Runnable fillAppsList = new Runnable() {
-            @Override
-            public void run() {
+        Runnable fillAppsList = () -> {
 
-                while (itAppInfo.hasNext()) {
-                    ApplicationInfo aInfo = itAppInfo.next();
-                    boolean appUseInternet = false;
-                    boolean system = false;
-                    boolean active = false;
+            while (itAppInfo.hasNext()) {
+                ApplicationInfo aInfo = itAppInfo.next();
+                boolean appUseInternet = false;
+                boolean system = false;
+                boolean active = false;
 
+                try {
+                    PackageInfo pInfo = pMgr.getPackageInfo(aInfo.packageName, PackageManager.GET_PERMISSIONS);
+
+                    if (pInfo != null && pInfo.requestedPermissions != null) {
+                        for (String permInfo : pInfo.requestedPermissions) {
+                            if (permInfo.equals("android.permission.INTERNET")) {
+                                appUseInternet = true;
+
+                            }
+                        }
+
+                    }
+
+                } catch (Exception e) {
+                    Log.e(LOG_TAG, "UnlockTorAppsFragment getDeviceApps exception " + e.getMessage() + " " + e.getCause());
+                }
+
+                if ((aInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 1) {
+                    //System app
+                    appUseInternet = true;
+                    system = true;
+                }
+
+
+                if (appUseInternet) {
+                    String name;
                     try {
-                        PackageInfo pInfo = pMgr.getPackageInfo(aInfo.packageName, PackageManager.GET_PERMISSIONS);
-
-                        if (pInfo != null && pInfo.requestedPermissions != null) {
-                            for (String permInfo : pInfo.requestedPermissions) {
-                                if (permInfo.equals("android.permission.INTERNET")) {
-                                    appUseInternet = true;
-
-                                }
-                            }
-
-                        }
-
+                        name = pMgr.getApplicationLabel(aInfo).toString();
                     } catch (Exception e) {
-                        Log.e(LOG_TAG, "UnlockTorAppsFragment getDeviceApps exception " + e.getMessage() + " " + e.getCause());
+                        name = aInfo.packageName;
+                    }
+                    String pack = aInfo.packageName;
+                    String uid = String.valueOf(aInfo.uid);
+                    Drawable icon = pMgr.getApplicationIcon(aInfo);
+
+
+                    if (unlockAppsArrListSaved.contains(uid)) {
+                        active = true;
                     }
 
-                    if ((aInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 1) {
-                        //System app
-                        appUseInternet = true;
-                        system = true;
-                    }
+                    final AppUnlock app = new AppUnlock(name, pack, uid, icon, system, active);
 
+                    if (getActivity() == null)
+                        return;
 
-                    if (appUseInternet) {
-                        String name;
-                        try {
-                            name = pMgr.getApplicationLabel(aInfo).toString();
-                        } catch (Exception e) {
-                            name = aInfo.packageName;
-                        }
-                        String pack = aInfo.packageName;
-                        String uid = String.valueOf(aInfo.uid);
-                        Drawable icon = pMgr.getApplicationIcon(aInfo);
+                    getActivity().runOnUiThread(() -> {
+                        appsUnlock.add(app);
+                        Collections.sort(appsUnlock, (appUnlock, t1) -> appUnlock.name.toLowerCase().compareTo(t1.name.toLowerCase()));
+                        adapter.notifyDataSetChanged();
+                    });
 
-
-                        if (unlockAppsArrListSaved.contains(uid)) {
-                            active = true;
-                        }
-
-                        final AppUnlock app = new AppUnlock(name, pack, uid, icon, system, active);
-
-                        if (getActivity() == null)
-                            return;
-
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                appsUnlock.add(app);
-                                Collections.sort(appsUnlock, new Comparator<AppUnlock>() {
-                                    @Override
-                                    public int compare(AppUnlock appUnlock, AppUnlock t1) {
-                                        return appUnlock.name.toLowerCase().compareTo(t1.name.toLowerCase());
-                                    }
-                                });
-                                adapter.notifyDataSetChanged();
-                            }
-                        });
-
-                    }
                 }
-
-                if (getActivity() == null) {
-                    return;
-                }
-
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        pbTorApp.setIndeterminate(false);
-                        pbTorApp.setVisibility(View.GONE);
-                    }
-                });
             }
+
+            if (getActivity() == null) {
+                return;
+            }
+
+            getActivity().runOnUiThread(() -> {
+                pbTorApp.setIndeterminate(false);
+                pbTorApp.setVisibility(View.GONE);
+            });
         };
         thread = new Thread(fillAppsList);
         thread.start();

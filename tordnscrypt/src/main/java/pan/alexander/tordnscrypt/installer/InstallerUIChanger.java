@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.installer;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -56,213 +56,163 @@ class InstallerUIChanger {
     }
 
     Runnable lockDrawerMenu(final boolean lock) {
-       return new Runnable() {
-           @Override
-           public void run() {
-               DrawerLayout mDrawerLayout = mainActivity.findViewById(R.id.drawer_layout);
-               if (lock) {
-                   mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-                   Log.i(LOG_TAG, "Installer: DrawerMenu locked");
-               } else {
-                   mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-                   Log.i(LOG_TAG, "Installer: DrawerMenu unlocked");
-               }
+       return () -> {
+           DrawerLayout mDrawerLayout = mainActivity.findViewById(R.id.drawer_layout);
+           if (lock) {
+               mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+               Log.i(LOG_TAG, "Installer: DrawerMenu locked");
+           } else {
+               mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+               Log.i(LOG_TAG, "Installer: DrawerMenu unlocked");
            }
        };
     }
 
     Runnable setModulesStatusTextInstalling() {
-        return new Runnable() {
-            @Override
-            public void run() {
-                if (dnsCryptRunFragment != null) {
-                    dnsCryptRunFragment.setDNSCryptStatus(R.string.tvDNSInstalling, R.color.textModuleStatusColorInstalling);
-                }
-
-                if (torRunFragment != null) {
-                    torRunFragment.setTorStatus(R.string.tvTorInstalling, R.color.textModuleStatusColorInstalling);
-                }
-
-                if (itpdRunFragment != null) {
-                    itpdRunFragment.setITPDStatus(R.string.tvITPDInstalling, R.color.textModuleStatusColorInstalling);
-                }
-
-                Log.i(LOG_TAG, "Installer: setModulesStatusTextInstalling");
+        return () -> {
+            if (dnsCryptRunFragment != null) {
+                dnsCryptRunFragment.setDNSCryptStatus(R.string.tvDNSInstalling, R.color.textModuleStatusColorInstalling);
             }
+
+            if (torRunFragment != null) {
+                torRunFragment.setTorStatus(R.string.tvTorInstalling, R.color.textModuleStatusColorInstalling);
+            }
+
+            if (itpdRunFragment != null) {
+                itpdRunFragment.setITPDStatus(R.string.tvITPDInstalling, R.color.textModuleStatusColorInstalling);
+            }
+
+            Log.i(LOG_TAG, "Installer: setModulesStatusTextInstalling");
         };
     }
 
     Runnable setDnsCryptInstalledStatus() {
-        return new Runnable() {
-            @Override
-            public void run() {
-                dnsCryptRunFragment.setDNSCryptStatus(R.string.tvDNSInstalled, R.color.textModuleStatusColorInstalled);
-            }
-        };
+        return () -> dnsCryptRunFragment.setDNSCryptStatus(R.string.tvDNSInstalled, R.color.textModuleStatusColorInstalled);
     }
 
     Runnable setTorInstalledStatus() {
-        return new Runnable() {
-            @Override
-            public void run() {
-                torRunFragment.setTorStatus(R.string.tvTorInstalled, R.color.textModuleStatusColorInstalled);
-            }
-        };
+        return () -> torRunFragment.setTorStatus(R.string.tvTorInstalled, R.color.textModuleStatusColorInstalled);
     }
 
     Runnable setItpdInstalledStatus() {
-        return new Runnable() {
-            @Override
-            public void run() {
-                itpdRunFragment.setITPDStatus(R.string.tvITPDInstalled, R.color.textModuleStatusColorInstalled);
-            }
-        };
+        return () -> itpdRunFragment.setITPDStatus(R.string.tvITPDInstalled, R.color.textModuleStatusColorInstalled);
     }
 
     Runnable setModulesStartButtonsDisabled() {
-        return new Runnable() {
-            @Override
-            public void run() {
-                if (dnsCryptRunFragment != null) {
-                    dnsCryptRunFragment.setStartButtonEnabled(false);
-                }
-
-                if (torRunFragment != null) {
-                    torRunFragment.setStartButtonEnabled(false);
-                }
-
-                if (itpdRunFragment != null) {
-                    itpdRunFragment.setStartButtonEnabled(false);
-                }
-
-                Log.i(LOG_TAG, "Installer: setModulesStartButtonsDisabled");
+        return () -> {
+            if (dnsCryptRunFragment != null) {
+                dnsCryptRunFragment.setStartButtonEnabled(false);
             }
+
+            if (torRunFragment != null) {
+                torRunFragment.setStartButtonEnabled(false);
+            }
+
+            if (itpdRunFragment != null) {
+                itpdRunFragment.setStartButtonEnabled(false);
+            }
+
+            Log.i(LOG_TAG, "Installer: setModulesStartButtonsDisabled");
         };
     }
 
     Runnable startModulesProgressBarIndeterminate() {
-        return new Runnable() {
-            @Override
-            public void run() {
-                if (dnsCryptRunFragment != null) {
-                    dnsCryptRunFragment.setProgressBarIndeterminate(true);
-                }
-
-                if (torRunFragment != null) {
-                    torRunFragment.setProgressBarIndeterminate(true);
-                }
-
-                if (itpdRunFragment != null) {
-                    itpdRunFragment.setProgressBarIndeterminate(true);
-                }
-
-                Log.i(LOG_TAG, "Installer: startModulesProgressBarIndeterminate");
+        return () -> {
+            if (dnsCryptRunFragment != null) {
+                dnsCryptRunFragment.setProgressBarIndeterminate(true);
             }
+
+            if (torRunFragment != null) {
+                torRunFragment.setProgressBarIndeterminate(true);
+            }
+
+            if (itpdRunFragment != null) {
+                itpdRunFragment.setProgressBarIndeterminate(true);
+            }
+
+            Log.i(LOG_TAG, "Installer: startModulesProgressBarIndeterminate");
         };
     }
 
     Runnable stopModulesProgressBarIndeterminate() {
-        return new Runnable() {
-            @Override
-            public void run() {
-                if (dnsCryptRunFragment != null) {
-                    dnsCryptRunFragment.setProgressBarIndeterminate(false);
-                }
-
-                if (torRunFragment != null) {
-                    torRunFragment.setProgressBarIndeterminate(false);
-                }
-
-                if (itpdRunFragment != null) {
-                    itpdRunFragment.setProgressBarIndeterminate(false);
-                }
-
-                Log.i(LOG_TAG, "Installer: stopModulesProgressBarIndeterminate");
+        return () -> {
+            if (dnsCryptRunFragment != null) {
+                dnsCryptRunFragment.setProgressBarIndeterminate(false);
             }
+
+            if (torRunFragment != null) {
+                torRunFragment.setProgressBarIndeterminate(false);
+            }
+
+            if (itpdRunFragment != null) {
+                itpdRunFragment.setProgressBarIndeterminate(false);
+            }
+
+            Log.i(LOG_TAG, "Installer: stopModulesProgressBarIndeterminate");
         };
     }
 
     Runnable dnsCryptProgressBarIndeterminate(final boolean indeterminate) {
-        return new Runnable() {
-            @Override
-            public void run() {
-                if (dnsCryptRunFragment != null) {
-                    dnsCryptRunFragment.setProgressBarIndeterminate(indeterminate);
-                }
+        return () -> {
+            if (dnsCryptRunFragment != null) {
+                dnsCryptRunFragment.setProgressBarIndeterminate(indeterminate);
             }
         };
     }
 
     Runnable torProgressBarIndeterminate(final boolean indeterminate) {
-        return new Runnable() {
-            @Override
-            public void run() {
-                if (torRunFragment != null) {
-                    torRunFragment.setProgressBarIndeterminate(indeterminate);
-                }
+        return () -> {
+            if (torRunFragment != null) {
+                torRunFragment.setProgressBarIndeterminate(indeterminate);
             }
         };
     }
     Runnable itpdProgressBarIndeterminate(final boolean indeterminate) {
-        return new Runnable() {
-            @Override
-            public void run() {
-                if (itpdRunFragment != null) {
-                    itpdRunFragment.setProgressBarIndeterminate(indeterminate);
-                }
+        return () -> {
+            if (itpdRunFragment != null) {
+                itpdRunFragment.setProgressBarIndeterminate(indeterminate);
             }
         };
     }
 
 
     Runnable setModulesStartButtonsEnabled() {
-        return new Runnable() {
-            @Override
-            public void run() {
-                if (dnsCryptRunFragment != null) {
-                    dnsCryptRunFragment.setStartButtonEnabled(true);
-                }
-
-                if (torRunFragment != null) {
-                    torRunFragment.setStartButtonEnabled(true);
-                }
-
-                if (itpdRunFragment != null) {
-                    itpdRunFragment.setStartButtonEnabled(true);
-                }
-
-                Log.i(LOG_TAG, "Installer: setModulesStartButtonsEnabled");
+        return () -> {
+            if (dnsCryptRunFragment != null) {
+                dnsCryptRunFragment.setStartButtonEnabled(true);
             }
+
+            if (torRunFragment != null) {
+                torRunFragment.setStartButtonEnabled(true);
+            }
+
+            if (itpdRunFragment != null) {
+                itpdRunFragment.setStartButtonEnabled(true);
+            }
+
+            Log.i(LOG_TAG, "Installer: setModulesStartButtonsEnabled");
         };
     }
 
     Runnable showDialogAfterInstallation() {
-        return new Runnable() {
-            @Override
-            public void run() {
-                DialogAfterInstallation.getDialogBuilder(mainActivity).show();
-            }
-        };
+        return () -> DialogAfterInstallation.getDialogBuilder(mainActivity).show();
     }
 
     Runnable setModulesStatusTextError() {
-        return new Runnable() {
-            @Override
-            public void run() {
-                if (dnsCryptRunFragment != null) {
-                    dnsCryptRunFragment.setDNSCryptStatus(R.string.wrong, R.color.textModuleStatusColorAlert);
-                }
-
-                if (torRunFragment != null) {
-                    torRunFragment.setTorStatus(R.string.wrong, R.color.textModuleStatusColorAlert);
-                }
-
-                if (itpdRunFragment != null) {
-                    itpdRunFragment.setITPDStatus(R.string.wrong, R.color.textModuleStatusColorAlert);
-                }
-
-                Log.i(LOG_TAG, "Installer: setModulesStatusTextError");
+        return () -> {
+            if (dnsCryptRunFragment != null) {
+                dnsCryptRunFragment.setDNSCryptStatus(R.string.wrong, R.color.textModuleStatusColorAlert);
             }
+
+            if (torRunFragment != null) {
+                torRunFragment.setTorStatus(R.string.wrong, R.color.textModuleStatusColorAlert);
+            }
+
+            if (itpdRunFragment != null) {
+                itpdRunFragment.setITPDStatus(R.string.wrong, R.color.textModuleStatusColorAlert);
+            }
+
+            Log.i(LOG_TAG, "Installer: setModulesStatusTextError");
         };
     }
 

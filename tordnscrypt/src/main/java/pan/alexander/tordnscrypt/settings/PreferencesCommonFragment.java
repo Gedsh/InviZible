@@ -15,12 +15,11 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -42,7 +41,6 @@ import android.view.ViewGroup;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
@@ -133,34 +131,31 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         torTransPort = pathVars.torTransPort;
         torSocksPort = pathVars.torSOCKSPort;
 
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Verifier verifier = new Verifier(getActivity());
-                    String appSign = verifier.getApkSignatureZipModern();
-                    String appSignAlt = verifier.getApkSignature();
-                    if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
-                        NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                getActivity(), getText(R.string.verifier_error).toString(), "5889");
-                        if (notificationHelper != null) {
-                            if (getFragmentManager() != null) {
-                                notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
-                            }
-                        }
-                    }
-
-                } catch (Exception e) {
+        Thread thread = new Thread(() -> {
+            try {
+                Verifier verifier = new Verifier(getActivity());
+                String appSign = verifier.getApkSignatureZipModern();
+                String appSignAlt = verifier.getApkSignature();
+                if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                            getActivity(), getText(R.string.verifier_error).toString(), "5804");
+                            getActivity(), getText(R.string.verifier_error).toString(), "5889");
                     if (notificationHelper != null) {
                         if (getFragmentManager() != null) {
                             notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                         }
                     }
-                    Log.e(LOG_TAG, "PreferencesCommonFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
-                            Arrays.toString(e.getStackTrace()));
                 }
+
+            } catch (Exception e) {
+                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                        getActivity(), getText(R.string.verifier_error).toString(), "5804");
+                if (notificationHelper != null) {
+                    if (getFragmentManager() != null) {
+                        notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                    }
+                }
+                Log.e(LOG_TAG, "PreferencesCommonFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
+                        Arrays.toString(e.getStackTrace()));
             }
         });
         thread.start();
@@ -205,11 +200,15 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 }
                 break;
             case "pref_common_tor_route_all":
-                if (Boolean.valueOf(newValue.toString())) {
-                    Objects.requireNonNull(findPreference("prefTorSiteUnlockTether")).setEnabled(false);
-                } else {
-                    Objects.requireNonNull(findPreference("prefTorSiteUnlockTether")).setEnabled(true);
+                Preference prefTorSiteUnlockTether = findPreference("prefTorSiteUnlockTether");
+                if (prefTorSiteUnlockTether != null) {
+                    if (Boolean.valueOf(newValue.toString())) {
+                        prefTorSiteUnlockTether.setEnabled(false);
+                    } else {
+                        prefTorSiteUnlockTether.setEnabled(true);
+                    }
                 }
+
                 if (new PrefManager(getActivity()).getBoolPref("Tor Running")) {
                     ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
                     ModulesAux.requestModulesStatusUpdate(getActivity());
@@ -339,21 +338,18 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         }
 
         if (fileOperationResult && currentFileOperation == readTextFile) {
-            getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (lines != null) {
-                        switch (tag) {
-                            case SettingsActivity.tor_conf_tag:
-                                allowTorTethering(lines);
-                                break;
-                            case SettingsActivity.itpd_conf_tag:
-                                allowITPDTethering(lines);
-                                break;
-                            case SettingsActivity.itpd_tunnels_tag:
-                                allowITPDTunnelsTethering(lines);
-                                break;
-                        }
+            getActivity().runOnUiThread(() -> {
+                if (lines != null) {
+                    switch (tag) {
+                        case SettingsActivity.tor_conf_tag:
+                            allowTorTethering(lines);
+                            break;
+                        case SettingsActivity.itpd_conf_tag:
+                            allowITPDTethering(lines);
+                            break;
+                        case SettingsActivity.itpd_tunnels_tag:
+                            allowITPDTunnelsTethering(lines);
+                            break;
                     }
                 }
             });
@@ -373,25 +369,22 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
             builder.setMessage(R.string.pref_common_notification_helper)
                     .setTitle(R.string.helper_dialog_title)
-                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
+                    .setPositiveButton(R.string.ok, (dialog, which) -> {
 
-                            if (getActivity() == null) {
-                                return;
-                            }
+                        if (getActivity() == null) {
+                            return;
+                        }
 
-                            final String packageName = getActivity().getPackageName();
-                            final PowerManager pm = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
-                            try {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (pm != null && !pm.isIgnoringBatteryOptimizations(packageName))) {
-                                    Intent intent = new Intent();
-                                    intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
-                                    getActivity().startActivity(intent);
-                                }
-                            } catch (Exception e) {
-                                Log.e(LOG_TAG, "PreferencesCommonFragment InfoNotificationProtectService Exception " + e.getMessage());
+                        final String packageName = getActivity().getPackageName();
+                        final PowerManager pm = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
+                        try {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (pm != null && !pm.isIgnoringBatteryOptimizations(packageName))) {
+                                Intent intent = new Intent();
+                                intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+                                getActivity().startActivity(intent);
                             }
+                        } catch (Exception e) {
+                            Log.e(LOG_TAG, "PreferencesCommonFragment InfoNotificationProtectService Exception " + e.getMessage());
                         }
                     });
             // Create the AlertDialog object and return it
@@ -435,11 +428,14 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             pref_common_use_modules_with_root.setOnPreferenceChangeListener(this);
         }
 
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        if (shPref.getBoolean("pref_common_tor_route_all", false)) {
-            Objects.requireNonNull(findPreference("prefTorSiteUnlockTether")).setEnabled(false);
-        } else {
-            Objects.requireNonNull(findPreference("prefTorSiteUnlockTether")).setEnabled(true);
+        Preference prefTorSiteUnlockTether = findPreference("prefTorSiteUnlockTether");
+        if (prefTorSiteUnlockTether != null) {
+            SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            if (shPref.getBoolean("pref_common_tor_route_all", false)) {
+                prefTorSiteUnlockTether.setEnabled(false);
+            } else {
+                prefTorSiteUnlockTether.setEnabled(true);
+            }
         }
     }
 

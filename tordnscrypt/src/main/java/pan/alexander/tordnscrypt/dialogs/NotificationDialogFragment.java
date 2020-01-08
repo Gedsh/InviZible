@@ -16,10 +16,9 @@ package pan.alexander.tordnscrypt.dialogs;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.content.DialogInterface;
 import android.os.Bundle;
 import androidx.fragment.app.DialogFragment;
 import androidx.appcompat.app.AlertDialog;
@@ -68,11 +67,7 @@ public class NotificationDialogFragment extends ExtendedDialogFragment {
             alertDialog.setMessage(message);
         }
 
-        alertDialog.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                dismiss();
-            }
-        });
+        alertDialog.setPositiveButton(R.string.ok, (dialog, id) -> dismiss());
 
         return alertDialog;
     }

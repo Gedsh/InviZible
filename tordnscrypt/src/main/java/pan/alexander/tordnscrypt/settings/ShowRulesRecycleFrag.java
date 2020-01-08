@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
@@ -167,14 +167,11 @@ public class ShowRulesRecycleFrag extends Fragment {
 
         btnAddRule = getActivity().findViewById(R.id.floatingBtnAddRule);
         btnAddRule.setAlpha(0.8f);
-        btnAddRule.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                boolean subscription = file_path.contains("subscriptions");
-                rules_list.add(new Rules("", true, false, subscription));
-                mAdapter.notifyDataSetChanged();
-                mRecyclerView.scrollToPosition(rules_list.size() - 1);
-            }
+        btnAddRule.setOnClickListener(v -> {
+            boolean subscription = file_path.contains("subscriptions");
+            rules_list.add(new Rules("", true, false, subscription));
+            mAdapter.notifyDataSetChanged();
+            mRecyclerView.scrollToPosition(rules_list.size() - 1);
         });
         btnAddRule.requestFocus();
 
@@ -330,24 +327,18 @@ public class ShowRulesRecycleFrag extends Fragment {
                 }
             }
 
-            CompoundButton.OnCheckedChangeListener activeListener = new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            CompoundButton.OnCheckedChangeListener activeListener = (buttonView, isChecked) -> {
 
-                    if (getRule(getAdapterPosition()).active != isChecked) {
-                        getRule(getAdapterPosition()).active = isChecked;
-                        notifyItemChanged(getAdapterPosition());
-                    }
+                if (getRule(getAdapterPosition()).active != isChecked) {
+                    getRule(getAdapterPosition()).active = isChecked;
+                    notifyItemChanged(getAdapterPosition());
                 }
             };
 
-            View.OnClickListener onClickListener = new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (v.getId() == R.id.delBtnRules) {
-                        delRule(getAdapterPosition());
-                        notifyDataSetChanged();
-                    }
+            View.OnClickListener onClickListener = v -> {
+                if (v.getId() == R.id.delBtnRules) {
+                    delRule(getAdapterPosition());
+                    notifyDataSetChanged();
                 }
             };
 

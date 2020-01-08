@@ -16,10 +16,8 @@ package pan.alexander.tordnscrypt.dialogs;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
-
-import android.content.DialogInterface;
 
 import androidx.fragment.app.DialogFragment;
 import androidx.appcompat.app.AlertDialog;
@@ -45,22 +43,17 @@ public class InstallAppDialogFragment extends ExtendedDialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
         builder.setMessage(R.string.install_message)
                 .setTitle(getString(R.string.install))
-                .setPositiveButton(R.string.install, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (getActivity() != null && getActivity() instanceof MainActivity) {
-                            MainActivity mainActivity = (MainActivity) getActivity();
-                            TopFragment topFragment = mainActivity.getTopFragment();
-                            topFragment.startInstallation();
-                        }
-
+                .setPositiveButton(R.string.install, (dialog, which) -> {
+                    if (getActivity() != null && getActivity() instanceof MainActivity) {
+                        MainActivity mainActivity = (MainActivity) getActivity();
+                        TopFragment topFragment = mainActivity.getTopFragment();
+                        topFragment.startInstallation();
                     }
+
                 })
-                .setNegativeButton(R.string.exit, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        if (getActivity() != null) {
-                            getActivity().finish();
-                        }
+                .setNegativeButton(R.string.exit, (dialog, id) -> {
+                    if (getActivity() != null) {
+                        getActivity().finish();
                     }
                 });
 

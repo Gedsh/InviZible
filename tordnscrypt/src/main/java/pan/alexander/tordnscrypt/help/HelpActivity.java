@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.help;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Intent;
@@ -34,7 +34,6 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 
-import com.github.angads25.filepicker.controller.DialogSelectionListener;
 import com.github.angads25.filepicker.model.DialogConfigs;
 import com.github.angads25.filepicker.model.DialogProperties;
 import com.github.angads25.filepicker.view.FilePickerDialog;
@@ -162,13 +161,10 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         properties.offset = new File(Environment.getExternalStorageDirectory().toURI());
         FilePickerDialog dial = new FilePickerDialog(this, properties);
         dial.setTitle(R.string.backupFolder);
-        dial.setDialogSelectionListener(new DialogSelectionListener() {
-            @Override
-            public void onSelectedFilePaths(String[] files) {
-                pathToSaveLogs = files[0];
-                etLogsPath.setText(pathToSaveLogs);
-                br.setPathToSaveLogs(pathToSaveLogs);
-            }
+        dial.setDialogSelectionListener(files -> {
+            pathToSaveLogs = files[0];
+            etLogsPath.setText(pathToSaveLogs);
+            br.setPathToSaveLogs(pathToSaveLogs);
         });
         dial.show();
     }

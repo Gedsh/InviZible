@@ -15,12 +15,11 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -172,45 +171,41 @@ public class UnlockTorIpsFrag extends Fragment {
         getHostIP.execute();
 
 
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Verifier verifier = new Verifier(getActivity());
-                    String appSignAlt = verifier.getApkSignature();
-                    if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
-                        NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                getActivity(), getText(R.string.verifier_error).toString(), "123");
-                        if (notificationHelper != null) {
-                            if (getFragmentManager() != null) {
-                                notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
-                            }
-                        }
-                    }
-
-                } catch (Exception e) {
+        Thread thread = new Thread(() -> {
+            try {
+                Verifier verifier = new Verifier(getActivity());
+                String appSignAlt = verifier.getApkSignature();
+                if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                            getActivity(), getText(R.string.verifier_error).toString(), "168");
+                            getActivity(), getText(R.string.verifier_error).toString(), "123");
                     if (notificationHelper != null) {
                         if (getFragmentManager() != null) {
                             notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                         }
                     }
-                    Log.e(LOG_TAG, "UnlockTorIpsFrag fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
-                            Arrays.toString(e.getStackTrace()));
                 }
+
+            } catch (Exception e) {
+                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                        getActivity(), getText(R.string.verifier_error).toString(), "168");
+                if (notificationHelper != null) {
+                    if (getFragmentManager() != null) {
+                        notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                    }
+                }
+                Log.e(LOG_TAG, "UnlockTorIpsFrag fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
+                        Arrays.toString(e.getStackTrace()));
             }
         });
         thread.start();
 
+        if (getActivity() == null) {
+            return;
+        }
+
         floatingBtnAddTorIPs = getActivity().findViewById(R.id.floatingbtnAddTorIPs);
         floatingBtnAddTorIPs.setAlpha(0.8f);
-        floatingBtnAddTorIPs.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                addHostIPDialog();
-            }
-        });
+        floatingBtnAddTorIPs.setOnClickListener(v -> addHostIPDialog());
         floatingBtnAddTorIPs.requestFocus();
 
     }
@@ -411,19 +406,16 @@ public class UnlockTorIpsFrag extends Fragment {
                 }
             }
 
-            View.OnClickListener onClickListener = new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    switch (v.getId()) {
-                        case R.id.imbtnTorItem:
-                            delItem(getAdapterPosition());
-                            break;
-                        case R.id.llHostIP:
-                            editHostIPDialog(getAdapterPosition());
-                            break;
-                    }
-
+            View.OnClickListener onClickListener = v -> {
+                switch (v.getId()) {
+                    case R.id.imbtnTorItem:
+                        delItem(getAdapterPosition());
+                        break;
+                    case R.id.llHostIP:
+                        editHostIPDialog(getAdapterPosition());
+                        break;
                 }
+
             };
 
             CompoundButton.OnCheckedChangeListener onCheckedChangeListener = new CompoundButton.OnCheckedChangeListener() {
@@ -527,46 +519,33 @@ public class UnlockTorIpsFrag extends Fragment {
 
                 final String finalOldIP = oldIP;
                 final String finalOldHost = oldHost;
-                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        isChanged = true;
-                        if (input.getText().toString().matches("[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}")) {
-                            String host = getText(R.string.please_wait).toString();
-                            unlockHostIP.set(position, new HostIP(host, input.getText().toString(), false, true, true));
-                            Set<String> ipsSet;
-                            ipsSet = new PrefManager(getActivity()).getSetStrPref(unlockIPsStr);
-                            ipsSet.remove(finalOldIP);
-                            ipsSet.add(input.getText().toString());
-                            new PrefManager(getActivity()).setSetStrPref(unlockIPsStr, ipsSet);
-                        } else {
-                            String IP = getText(R.string.please_wait).toString();
-                            String host = input.getText().toString();
-                            if (!host.startsWith("http")) host = "https://" + host;
-                            unlockHostIP.set(position, new HostIP(host, IP, true, false, true));
-                            Set<String> hostsSet;
-                            hostsSet = new PrefManager(getActivity()).getSetStrPref(unlockHostsStr);
-                            hostsSet.remove(finalOldHost);
-                            hostsSet.add(host);
-                            new PrefManager(getActivity()).setSetStrPref(unlockHostsStr, hostsSet);
-                        }
-                        Thread thread = new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                getHostOrIp(position, false, true);
-                            }
-                        });
+                builder.setPositiveButton("OK", (dialog, which) -> {
+                    isChanged = true;
+                    if (input.getText().toString().matches("[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}")) {
+                        String host = getText(R.string.please_wait).toString();
+                        unlockHostIP.set(position, new HostIP(host, input.getText().toString(), false, true, true));
+                        Set<String> ipsSet;
+                        ipsSet = new PrefManager(getActivity()).getSetStrPref(unlockIPsStr);
+                        ipsSet.remove(finalOldIP);
+                        ipsSet.add(input.getText().toString());
+                        new PrefManager(getActivity()).setSetStrPref(unlockIPsStr, ipsSet);
+                    } else {
+                        String IP = getText(R.string.please_wait).toString();
+                        String host = input.getText().toString();
+                        if (!host.startsWith("http")) host = "https://" + host;
+                        unlockHostIP.set(position, new HostIP(host, IP, true, false, true));
+                        Set<String> hostsSet;
+                        hostsSet = new PrefManager(getActivity()).getSetStrPref(unlockHostsStr);
+                        hostsSet.remove(finalOldHost);
+                        hostsSet.add(host);
+                        new PrefManager(getActivity()).setSetStrPref(unlockHostsStr, hostsSet);
+                    }
+                    Thread thread = new Thread(() -> getHostOrIp(position, false, true));
 
-                        thread.start();
-                        rvAdapter.notifyItemChanged(position);
-                    }
+                    thread.start();
+                    rvAdapter.notifyItemChanged(position);
                 });
-                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                });
+                builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
 
                 builder.show();
             }
@@ -605,47 +584,34 @@ public class UnlockTorIpsFrag extends Fragment {
 
         builder.setCancelable(false);
 
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
+        builder.setPositiveButton("OK", (dialog, which) -> {
 
-                if (getActivity() == null) {
-                    return;
-                }
-
-                isChanged = true;
-                if (input.getText().toString().matches("[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}")) {
-                    unlockHostIP.add(new HostIP(getText(R.string.please_wait).toString(), input.getText().toString(), false, true, true));
-                    Set<String> ipsSet;
-                    ipsSet = new PrefManager(getActivity()).getSetStrPref(unlockIPsStr);
-                    ipsSet.add(input.getText().toString());
-                    new PrefManager(getActivity()).setSetStrPref(unlockIPsStr, ipsSet);
-                } else {
-                    String host = input.getText().toString();
-                    if (!host.startsWith("http")) host = "https://" + host;
-                    unlockHostIP.add(new HostIP(host, getText(R.string.please_wait).toString(), true, false, true));
-                    Set<String> hostsSet;
-                    hostsSet = new PrefManager(getActivity()).getSetStrPref(unlockHostsStr);
-                    hostsSet.add(host);
-                    new PrefManager(getActivity()).setSetStrPref(unlockHostsStr, hostsSet);
-                }
-                Thread thread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        getHostOrIp(unlockHostIP.size() - 1, true, false);
-                    }
-                });
-
-                thread.start();
-                rvAdapter.notifyDataSetChanged();
+            if (getActivity() == null) {
+                return;
             }
-        });
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
+
+            isChanged = true;
+            if (input.getText().toString().matches("[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}")) {
+                unlockHostIP.add(new HostIP(getText(R.string.please_wait).toString(), input.getText().toString(), false, true, true));
+                Set<String> ipsSet;
+                ipsSet = new PrefManager(getActivity()).getSetStrPref(unlockIPsStr);
+                ipsSet.add(input.getText().toString());
+                new PrefManager(getActivity()).setSetStrPref(unlockIPsStr, ipsSet);
+            } else {
+                String host = input.getText().toString();
+                if (!host.startsWith("http")) host = "https://" + host;
+                unlockHostIP.add(new HostIP(host, getText(R.string.please_wait).toString(), true, false, true));
+                Set<String> hostsSet;
+                hostsSet = new PrefManager(getActivity()).getSetStrPref(unlockHostsStr);
+                hostsSet.add(host);
+                new PrefManager(getActivity()).setSetStrPref(unlockHostsStr, hostsSet);
             }
+            Thread thread = new Thread(() -> getHostOrIp(unlockHostIP.size() - 1, true, false));
+
+            thread.start();
+            rvAdapter.notifyDataSetChanged();
         });
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
 
         builder.show();
     }
@@ -719,32 +685,26 @@ public class UnlockTorIpsFrag extends Fragment {
                 String ip = sb.substring(0, sb.length() - 2);
                 unlockHostIP.set(position, new HostIP(host, ip, true, false, active));
 
-                Objects.requireNonNull(getActivity()).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (addHostIP) {
-                            rvAdapter.notifyItemChanged(position);
-                            rvListHostip.scrollToPosition(position);
-                        } else if (editHostIP) {
-                            rvAdapter.notifyItemChanged(position);
-                        }
-
+                Objects.requireNonNull(getActivity()).runOnUiThread(() -> {
+                    if (addHostIP) {
+                        rvAdapter.notifyItemChanged(position);
+                        rvListHostip.scrollToPosition(position);
+                    } else if (editHostIP) {
+                        rvAdapter.notifyItemChanged(position);
                     }
+
                 });
             } catch (UnknownHostException | MalformedURLException e) {
                 String ip = getString(R.string.pref_fast_unlock_host_wrong);
                 unlockHostIP.set(position, new HostIP(host, ip, true, false, active));
                 Log.e(LOG_TAG, "UnlockTorIpsFrag getHostOrIp exception " + e.getMessage() + " " + e.getCause());
 
-                Objects.requireNonNull(getActivity()).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (addHostIP) {
-                            rvAdapter.notifyItemChanged(position);
-                            rvListHostip.scrollToPosition(position);
-                        } else if (editHostIP) {
-                            rvAdapter.notifyItemChanged(position);
-                        }
+                Objects.requireNonNull(getActivity()).runOnUiThread(() -> {
+                    if (addHostIP) {
+                        rvAdapter.notifyItemChanged(position);
+                        rvListHostip.scrollToPosition(position);
+                    } else if (editHostIP) {
+                        rvAdapter.notifyItemChanged(position);
                     }
                 });
             }
@@ -778,32 +738,26 @@ public class UnlockTorIpsFrag extends Fragment {
                 con.disconnect();
                 unlockHostIP.set(position, new HostIP(host, IP, false, true, active));
 
-                Objects.requireNonNull(getActivity()).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (addHostIP) {
-                            rvAdapter.notifyDataSetChanged();
-                            rvListHostip.scrollToPosition(position);
-                        } else if (editHostIP) {
-                            rvAdapter.notifyItemChanged(position);
-                        }
-
+                Objects.requireNonNull(getActivity()).runOnUiThread(() -> {
+                    if (addHostIP) {
+                        rvAdapter.notifyDataSetChanged();
+                        rvListHostip.scrollToPosition(position);
+                    } else if (editHostIP) {
+                        rvAdapter.notifyItemChanged(position);
                     }
+
                 });
             } catch (IOException e) {
                 host = "";
                 unlockHostIP.set(position, new HostIP(host, IP, false, true, active));
                 Log.e(LOG_TAG, "UnlockTorIpsFrag getHostOrIp exception " + e.getMessage() + " " + e.getCause());
 
-                Objects.requireNonNull(getActivity()).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (addHostIP) {
-                            rvAdapter.notifyDataSetChanged();
-                            rvListHostip.scrollToPosition(position);
-                        } else if (editHostIP) {
-                            rvAdapter.notifyItemChanged(position);
-                        }
+                Objects.requireNonNull(getActivity()).runOnUiThread(() -> {
+                    if (addHostIP) {
+                        rvAdapter.notifyDataSetChanged();
+                        rvListHostip.scrollToPosition(position);
+                    } else if (editHostIP) {
+                        rvAdapter.notifyItemChanged(position);
                     }
                 });
             }

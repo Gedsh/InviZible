@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_relays;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.os.Bundle;
@@ -195,12 +195,7 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
         }
 
         if (getActivity() != null) {
-            getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    adapter.notifyDataSetChanged();
-                }
-            });
+            getActivity().runOnUiThread(() -> adapter.notifyDataSetChanged());
         }
     }
 

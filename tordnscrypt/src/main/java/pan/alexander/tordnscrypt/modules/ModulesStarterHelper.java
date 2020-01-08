@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.modules;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
@@ -64,234 +64,210 @@ class ModulesStarterHelper {
     }
 
     Runnable getDNSCryptStarterRunnable() {
-        return new Runnable() {
-            @Override
-            public void run() {
-                //new experiment
-                android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+        return () -> {
+            //new experiment
+            android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
 
-                String dnsCmdString;
-                final CommandResult shellResult;
-                if (modulesStatus.isUseModulesWithRoot()) {
+            String dnsCmdString;
+            final CommandResult shellResult;
+            if (modulesStatus.isUseModulesWithRoot()) {
 
-                    dnsCmdString = pathVars.busyboxPath + "nohup " + pathVars.dnscryptPath
-                            + " -config " + pathVars.appDataDir
-                            + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml -pidfile "+ pathVars.appDataDir
-                            + "/dnscrypt-proxy.pid >/dev/null 2>&1 &";
-                    String waitString = pathVars.busyboxPath + "sleep 3";
-                    String checkIfModuleRunning = pathVars.busyboxPath + "pgrep -l /dnscrypt-proxy";
+                dnsCmdString = pathVars.busyboxPath + "nohup " + pathVars.dnscryptPath
+                        + " -config " + pathVars.appDataDir
+                        + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml -pidfile "+ pathVars.appDataDir
+                        + "/dnscrypt-proxy.pid >/dev/null 2>&1 &";
+                String waitString = pathVars.busyboxPath + "sleep 3";
+                String checkIfModuleRunning = pathVars.busyboxPath + "pgrep -l /dnscrypt-proxy";
 
-                    shellResult = Shell.SU.run(dnsCmdString, waitString, checkIfModuleRunning);
+                shellResult = Shell.SU.run(dnsCmdString, waitString, checkIfModuleRunning);
 
-                    new PrefManager(service).setBoolPref("DNSCryptStartedWithRoot", true);
+                new PrefManager(service).setBoolPref("DNSCryptStartedWithRoot", true);
 
-                    if (shellResult.getStdout().contains(pathVars.dnscryptPath)) {
-                        sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, pathVars.dnscryptPath);
-                    } else {
-                        sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
-                    }
-
+                if (shellResult.getStdout().contains(pathVars.dnscryptPath)) {
+                    sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, pathVars.dnscryptPath);
                 } else {
-                    dnsCmdString = pathVars.dnscryptPath + " -config " + pathVars.appDataDir
-                            + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml -pidfile " + pathVars.appDataDir + "/dnscrypt-proxy.pid";
-                    new PrefManager(service).setBoolPref("DNSCryptStartedWithRoot", false);
-
-                    shellResult = Shell.SH.run(dnsCmdString);
-                }
-
-                if (!shellResult.isSuccessful()) {
-
-                    if (modulesStatus.getDnsCryptState() == RESTARTING) {
-                        return;
-                    }
-
-                    if (modulesStatus.getDnsCryptState() != STOPPING && modulesStatus.getDnsCryptState() != STOPPED) {
-
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(service, "DNSCrypt Module Fault: "
-                                        + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr()
-                                        + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show();
-                            }
-                        });
-                    }
-
-                    if (modulesStatus.getDnsCryptState() == STARTING) {
-                        if (modulesStatus.isRootAvailable()) {
-                            ModulesKiller.stopDNSCrypt(service);
-                        } else {
-                            forceStopModulesWithService();
-                        }
-                    }
-
-                    modulesStatus.setDnsCryptState(STOPPED);
-
                     sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
-
-                    Log.e(LOG_TAG, "Error DNSCrypt: "
-                            + shellResult.exitCode + " ERR=" + shellResult.getStderr()
-                            + " OUT=" + shellResult.getStdout());
                 }
+
+            } else {
+                dnsCmdString = pathVars.dnscryptPath + " -config " + pathVars.appDataDir
+                        + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml -pidfile " + pathVars.appDataDir + "/dnscrypt-proxy.pid";
+                new PrefManager(service).setBoolPref("DNSCryptStartedWithRoot", false);
+
+                shellResult = Shell.SH.run(dnsCmdString);
+            }
+
+            if (!shellResult.isSuccessful()) {
+
+                if (modulesStatus.getDnsCryptState() == RESTARTING) {
+                    return;
+                }
+
+                if (modulesStatus.getDnsCryptState() != STOPPING && modulesStatus.getDnsCryptState() != STOPPED) {
+
+                    handler.post(() -> Toast.makeText(service, "DNSCrypt Module Fault: "
+                            + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr()
+                            + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
+                }
+
+                if (modulesStatus.getDnsCryptState() == STARTING) {
+                    if (modulesStatus.isRootAvailable()) {
+                        ModulesKiller.stopDNSCrypt(service);
+                    } else {
+                        forceStopModulesWithService();
+                    }
+                }
+
+                modulesStatus.setDnsCryptState(STOPPED);
+
+                sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
+
+                Log.e(LOG_TAG, "Error DNSCrypt: "
+                        + shellResult.exitCode + " ERR=" + shellResult.getStderr()
+                        + " OUT=" + shellResult.getStdout());
             }
         };
     }
 
     Runnable getTorStarterRunnable() {
-        return new Runnable() {
-            @Override
-            public void run() {
-                //new experiment
-                android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+        return () -> {
+            //new experiment
+            android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
 
-                String torCmdString;
-                final CommandResult shellResult;
-                if (modulesStatus.isUseModulesWithRoot()) {
+            String torCmdString;
+            final CommandResult shellResult;
+            if (modulesStatus.isUseModulesWithRoot()) {
 
-                    correctTorConfRunAsDaemon(service, pathVars.appDataDir, true);
+                correctTorConfRunAsDaemon(service, pathVars.appDataDir, true);
 
-                    torCmdString = pathVars.torPath + " -f "
-                            + pathVars.appDataDir + "/app_data/tor/tor.conf -pidfile " + pathVars.appDataDir + "/tor.pid";
-                    String waitString = pathVars.busyboxPath + "sleep 3";
-                    String checkIfModuleRunning = pathVars.busyboxPath + "pgrep -l /tor";
+                torCmdString = pathVars.torPath + " -f "
+                        + pathVars.appDataDir + "/app_data/tor/tor.conf -pidfile " + pathVars.appDataDir + "/tor.pid";
+                String waitString = pathVars.busyboxPath + "sleep 3";
+                String checkIfModuleRunning = pathVars.busyboxPath + "pgrep -l /tor";
 
-                    shellResult = Shell.SU.run(torCmdString, waitString, checkIfModuleRunning);
+                shellResult = Shell.SU.run(torCmdString, waitString, checkIfModuleRunning);
 
-                    new PrefManager(service).setBoolPref("TorStartedWithRoot", true);
+                new PrefManager(service).setBoolPref("TorStartedWithRoot", true);
 
-                    if (shellResult.getStdout().contains(pathVars.torPath)) {
-                        sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, pathVars.torPath);
-                    } else {
-                        sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
-                    }
-
+                if (shellResult.getStdout().contains(pathVars.torPath)) {
+                    sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, pathVars.torPath);
                 } else {
-                    correctTorConfRunAsDaemon(service, pathVars.appDataDir, false);
-                    torCmdString = pathVars.torPath + " -f "
-                            + pathVars.appDataDir + "/app_data/tor/tor.conf -pidfile " + pathVars.appDataDir + "/tor.pid";
-                    new PrefManager(service).setBoolPref("TorStartedWithRoot", false);
-
-                    shellResult = Shell.SH.run(torCmdString);
-                }
-
-                if (!shellResult.isSuccessful()) {
-
-                    if (modulesStatus.getTorState() == RESTARTING) {
-                        return;
-                    }
-
-                    if (modulesStatus.getTorState() != STOPPING && modulesStatus.getTorState() != STOPPED) {
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(service, "Tor Module Fault: " + shellResult.exitCode
-                                        + "\n\n ERR = " + shellResult.getStderr()
-                                        + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show();
-                            }
-                        });
-
-
-                    }
-
-                    if (modulesStatus.getTorState() == STARTING) {
-                        if (modulesStatus.isRootAvailable()) {
-                            ModulesKiller.stopTor(service);
-                        } else {
-                            forceStopModulesWithService();
-                        }
-
-                        //Try to update Selinux context and UID once again
-                        if (shellResult.exitCode == 1) {
-                            modulesStatus.setContextUIDUpdateRequested(true);
-                        }
-                    }
-
-                    modulesStatus.setTorState(STOPPED);
-
                     sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
-
-                    Log.e(LOG_TAG, "Error Tor: " + shellResult.exitCode
-                            + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
                 }
+
+            } else {
+                correctTorConfRunAsDaemon(service, pathVars.appDataDir, false);
+                torCmdString = pathVars.torPath + " -f "
+                        + pathVars.appDataDir + "/app_data/tor/tor.conf -pidfile " + pathVars.appDataDir + "/tor.pid";
+                new PrefManager(service).setBoolPref("TorStartedWithRoot", false);
+
+                shellResult = Shell.SH.run(torCmdString);
+            }
+
+            if (!shellResult.isSuccessful()) {
+
+                if (modulesStatus.getTorState() == RESTARTING) {
+                    return;
+                }
+
+                if (modulesStatus.getTorState() != STOPPING && modulesStatus.getTorState() != STOPPED) {
+                    handler.post(() -> Toast.makeText(service, "Tor Module Fault: " + shellResult.exitCode
+                            + "\n\n ERR = " + shellResult.getStderr()
+                            + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
+
+
+                }
+
+                if (modulesStatus.getTorState() == STARTING) {
+                    if (modulesStatus.isRootAvailable()) {
+                        ModulesKiller.stopTor(service);
+                    } else {
+                        forceStopModulesWithService();
+                    }
+
+                    //Try to update Selinux context and UID once again
+                    if (shellResult.exitCode == 1) {
+                        modulesStatus.setContextUIDUpdateRequested(true);
+                    }
+                }
+
+                modulesStatus.setTorState(STOPPED);
+
+                sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
+
+                Log.e(LOG_TAG, "Error Tor: " + shellResult.exitCode
+                        + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
             }
         };
     }
 
     Runnable getITPDStarterRunnable() {
-        return new Runnable() {
-            @Override
-            public void run() {
-                //new experiment
-                android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+        return () -> {
+            //new experiment
+            android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
 
-                String itpdCmdString;
+            String itpdCmdString;
 
-                final CommandResult shellResult;
-                if (modulesStatus.isUseModulesWithRoot()) {
-                    correctITPDConfRunAsDaemon(service, pathVars.appDataDir, true);
+            final CommandResult shellResult;
+            if (modulesStatus.isUseModulesWithRoot()) {
+                correctITPDConfRunAsDaemon(service, pathVars.appDataDir, true);
 
-                    Shell.SU.run(pathVars.busyboxPath + "mkdir -p " + pathVars.appDataDir + "/i2pd_data",
-                            "cd " + pathVars.appDataDir + "/app_data/i2pd",
-                            pathVars.busyboxPath + "cp -R certificates " + pathVars.appDataDir + "/i2pd_data");
+                Shell.SU.run(pathVars.busyboxPath + "mkdir -p " + pathVars.appDataDir + "/i2pd_data",
+                        "cd " + pathVars.appDataDir + "/app_data/i2pd",
+                        pathVars.busyboxPath + "cp -R certificates " + pathVars.appDataDir + "/i2pd_data");
 
-                    itpdCmdString = pathVars.itpdPath + " --conf " + pathVars.appDataDir
-                            + "/app_data/i2pd/i2pd.conf --datadir " + pathVars.appDataDir
-                            + "/i2pd_data --pidfile " + pathVars.appDataDir + "/i2pd.pid &";
-                    String waitString = pathVars.busyboxPath + "sleep 3";
-                    String checkIfModuleRunning = pathVars.busyboxPath + "pgrep -l /i2pd";
+                itpdCmdString = pathVars.itpdPath + " --conf " + pathVars.appDataDir
+                        + "/app_data/i2pd/i2pd.conf --datadir " + pathVars.appDataDir
+                        + "/i2pd_data --pidfile " + pathVars.appDataDir + "/i2pd.pid &";
+                String waitString = pathVars.busyboxPath + "sleep 3";
+                String checkIfModuleRunning = pathVars.busyboxPath + "pgrep -l /i2pd";
 
-                    shellResult = Shell.SU.run(itpdCmdString, waitString, checkIfModuleRunning);
+                shellResult = Shell.SU.run(itpdCmdString, waitString, checkIfModuleRunning);
 
-                    new PrefManager(service).setBoolPref("ITPDStartedWithRoot", true);
+                new PrefManager(service).setBoolPref("ITPDStartedWithRoot", true);
 
-                    if (shellResult.getStdout().contains(pathVars.itpdPath)) {
-                        sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, pathVars.itpdPath);
-                    } else {
-                        sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
-                    }
-
+                if (shellResult.getStdout().contains(pathVars.itpdPath)) {
+                    sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, pathVars.itpdPath);
                 } else {
-                    correctITPDConfRunAsDaemon(service, pathVars.appDataDir, false);
-                    itpdCmdString = pathVars.itpdPath + " --conf " + pathVars.appDataDir
-                            + "/app_data/i2pd/i2pd.conf --datadir " + pathVars.appDataDir
-                            + "/i2pd_data --pidfile " + pathVars.appDataDir + "/i2pd.pid";
-                    new PrefManager(service).setBoolPref("ITPDStartedWithRoot", false);
-
-                    shellResult = Shell.SH.run(itpdCmdString);
-                }
-
-                if (!shellResult.isSuccessful()) {
-
-                    if (modulesStatus.getItpdState() == RESTARTING) {
-                        return;
-                    }
-
-                    if (modulesStatus.getItpdState() != STOPPING && modulesStatus.getItpdState() != STOPPED) {
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(service, "Purple I2P Module Fault: "
-                                        + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr()
-                                        + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show();
-                            }
-                        });
-                    }
-
-                    if (modulesStatus.getItpdState() == STARTING) {
-                        if (modulesStatus.isRootAvailable()) {
-                            ModulesKiller.stopITPD(service);
-                        } else {
-                            forceStopModulesWithService();
-                        }
-                    }
-
-                    modulesStatus.setItpdState(STOPPED);
-
                     sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
-
-                    Log.e(LOG_TAG, "Error ITPD: " + shellResult.exitCode + " ERR="
-                            + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
                 }
+
+            } else {
+                correctITPDConfRunAsDaemon(service, pathVars.appDataDir, false);
+                itpdCmdString = pathVars.itpdPath + " --conf " + pathVars.appDataDir
+                        + "/app_data/i2pd/i2pd.conf --datadir " + pathVars.appDataDir
+                        + "/i2pd_data --pidfile " + pathVars.appDataDir + "/i2pd.pid";
+                new PrefManager(service).setBoolPref("ITPDStartedWithRoot", false);
+
+                shellResult = Shell.SH.run(itpdCmdString);
+            }
+
+            if (!shellResult.isSuccessful()) {
+
+                if (modulesStatus.getItpdState() == RESTARTING) {
+                    return;
+                }
+
+                if (modulesStatus.getItpdState() != STOPPING && modulesStatus.getItpdState() != STOPPED) {
+                    handler.post(() -> Toast.makeText(service, "Purple I2P Module Fault: "
+                            + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr()
+                            + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
+                }
+
+                if (modulesStatus.getItpdState() == STARTING) {
+                    if (modulesStatus.isRootAvailable()) {
+                        ModulesKiller.stopITPD(service);
+                    } else {
+                        forceStopModulesWithService();
+                    }
+                }
+
+                modulesStatus.setItpdState(STOPPED);
+
+                sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
+
+                Log.e(LOG_TAG, "Error ITPD: " + shellResult.exitCode + " ERR="
+                        + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
             }
         };
     }
@@ -351,18 +327,8 @@ class ModulesStarterHelper {
         modulesStatus.setTorState(STOPPED);
         modulesStatus.setItpdState(STOPPED);
 
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(service, "Force Stopping ...", Toast.LENGTH_LONG).show();
-            }
-        }, 5000);
+        handler.postDelayed(() -> Toast.makeText(service, "Force Stopping ...", Toast.LENGTH_LONG).show(), 5000);
 
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                System.exit(0);
-            }
-        }, 8000);
+        handler.postDelayed(() -> System.exit(0), 8000);
     }
 }

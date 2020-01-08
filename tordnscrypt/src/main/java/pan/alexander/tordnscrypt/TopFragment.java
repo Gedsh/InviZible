@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
@@ -296,12 +296,9 @@ public class TopFragment extends Fragment {
     private void showDonDialog() {
         if (appVersion.endsWith("e")) {
             Handler handler = new Handler();
-            Runnable performRegistration = new Runnable() {
-                @Override
-                public void run() {
-                    Registration registration = new Registration(getActivity());
-                    registration.showDonateDialog();
-                }
+            Runnable performRegistration = () -> {
+                Registration registration = new Registration(getActivity());
+                registration.showDonateDialog();
             };
             handler.postDelayed(performRegistration, 5000);
         }
@@ -507,24 +504,21 @@ public class TopFragment extends Fragment {
 
         new PrefManager(getActivity()).setStrPref("LastUpdateResult", "");
 
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                if (getActivity() == null)
-                    return;
-                new PrefManager(getActivity()).setStrPref("updateTimeLast", String.valueOf(System.currentTimeMillis()));
+        Runnable runnable = () -> {
+            if (getActivity() == null)
+                return;
+            new PrefManager(getActivity()).setStrPref("updateTimeLast", String.valueOf(System.currentTimeMillis()));
 
-                updateCheck = new UpdateCheck(getActivity());
-                try {
-                    updateCheck.requestUpdateData("https://invizible.net", appSign);
-                } catch (Exception e) {
-                    if (getActivity() != null) {
-                        new PrefManager(getActivity()).setStrPref("LastUpdateResult", getText(R.string.update_fault).toString());
-                        if (MainActivity.modernDialog != null)
-                            ((MainActivity) getActivity()).showUpdateMessage(getText(R.string.update_fault).toString());
-                    }
-                    Log.e(LOG_TAG, "TopFragment Failed to requestUpdate() " + e.getMessage() + " " + e.getCause());
+            updateCheck = new UpdateCheck(getActivity());
+            try {
+                updateCheck.requestUpdateData("https://invizible.net", appSign);
+            } catch (Exception e) {
+                if (getActivity() != null) {
+                    new PrefManager(getActivity()).setStrPref("LastUpdateResult", getText(R.string.update_fault).toString());
+                    if (MainActivity.modernDialog != null)
+                        ((MainActivity) getActivity()).showUpdateMessage(getText(R.string.update_fault).toString());
                 }
+                Log.e(LOG_TAG, "TopFragment Failed to requestUpdate() " + e.getMessage() + " " + e.getCause());
             }
         };
 
@@ -579,9 +573,11 @@ public class TopFragment extends Fragment {
         }
 
         ActivityManager manager = (ActivityManager) getActivity().getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (ModulesService.class.getName().equals(service.service.getClassName())) {
-                return true;
+        if (manager != null) {
+            for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+                if (ModulesService.class.getName().equals(service.service.getClassName())) {
+                    return true;
+                }
             }
         }
         return false;

@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.backup;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
@@ -32,7 +32,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.github.angads25.filepicker.controller.DialogSelectionListener;
 import com.github.angads25.filepicker.model.DialogConfigs;
 import com.github.angads25.filepicker.model.DialogProperties;
 import com.github.angads25.filepicker.view.FilePickerDialog;
@@ -54,11 +53,10 @@ import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveB
 
 public class BackupFragment extends Fragment implements View.OnClickListener, OnBinaryFileOperationsCompleteListener {
 
-    EditText etFilePath = null;
-    String pathBackup = null;
-    String appDataDir;
-    String busyboxPath;
-    DialogFragment progress;
+    private EditText etFilePath = null;
+    private String pathBackup = null;
+    private String appDataDir;
+    private DialogFragment progress;
 
     private BackupHelper backupHelper;
     private RestoreHelper restoreHelper;
@@ -81,7 +79,6 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
         etFilePath.setText(pathBackup);
         etFilePath.setOnClickListener(this);
         appDataDir = pathVars.appDataDir;
-        busyboxPath = pathVars.busyboxPath;
 
         return view;
     }
@@ -161,25 +158,22 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
         properties.extensions = new String[]{"arch:"};
         FilePickerDialog dial = new FilePickerDialog(getActivity(), properties);
         dial.setTitle(R.string.backupFolder);
-        dial.setDialogSelectionListener(new DialogSelectionListener() {
-            @Override
-            public void onSelectedFilePaths(String[] files) {
-                pathBackup = files[0];
-                etFilePath.setText(pathBackup);
+        dial.setDialogSelectionListener(files -> {
+            pathBackup = files[0];
+            etFilePath.setText(pathBackup);
 
-                if (backupHelper != null) {
-                    backupHelper.setPathBackup(pathBackup);
-                }
+            if (backupHelper != null) {
+                backupHelper.setPathBackup(pathBackup);
+            }
 
-                if (restoreHelper != null) {
-                    restoreHelper.setPathBackup(pathBackup);
-                }
+            if (restoreHelper != null) {
+                restoreHelper.setPathBackup(pathBackup);
             }
         });
         dial.show();
     }
 
-    void openPleaseWaitDialog() {
+    private void openPleaseWaitDialog() {
         if (getActivity() != null && getFragmentManager() != null) {
             try {
                 progress = PleaseWaitProgressDialog.getInstance();
@@ -202,12 +196,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
 
     void showToast(final String text) {
         if (getActivity() != null) {
-            getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(getActivity(), text, Toast.LENGTH_LONG).show();
-                }
-            });
+            getActivity().runOnUiThread(() -> Toast.makeText(getActivity(), text, Toast.LENGTH_LONG).show());
         }
     }
 

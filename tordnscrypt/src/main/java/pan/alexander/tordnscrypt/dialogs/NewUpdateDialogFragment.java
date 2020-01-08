@@ -16,10 +16,9 @@ package pan.alexander.tordnscrypt.dialogs;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import androidx.appcompat.app.AlertDialog;
@@ -65,25 +64,18 @@ public class NewUpdateDialogFragment extends ExtendedDialogFragment {
 
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
         alertDialog.setMessage(mMessageToDisplay)
-                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        Intent intent = new Intent(getActivity(), UpdateService.class);
-                        intent.setAction(UpdateService.DOWNLOAD_ACTION);
-                        intent.putExtra("url", "https://invizible.net/?wpdmdl="+updateStr);
-                        intent.putExtra("file", updateFile);
-                        intent.putExtra("hash",hash);
+                .setPositiveButton(R.string.ok, (dialogInterface, i) -> {
+                    Intent intent = new Intent(getActivity(), UpdateService.class);
+                    intent.setAction(UpdateService.DOWNLOAD_ACTION);
+                    intent.putExtra("url", "https://invizible.net/?wpdmdl="+updateStr);
+                    intent.putExtra("file", updateFile);
+                    intent.putExtra("hash",hash);
 
-                        if (getActivity() != null) {
-                            getActivity().startService(intent);
-                        }
+                    if (getActivity() != null) {
+                        getActivity().startService(intent);
                     }
                 })
-                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dismiss();
-                    }
-                });
+                .setNegativeButton(R.string.cancel, (dialog, id) -> dismiss());
 
         return alertDialog;
     }

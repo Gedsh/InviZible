@@ -16,10 +16,9 @@ package pan.alexander.tordnscrypt.dialogs;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.content.DialogInterface;
 import androidx.fragment.app.DialogFragment;
 import androidx.appcompat.app.AlertDialog;
 
@@ -44,57 +43,47 @@ public class UpdateModulesDialogFragment extends ExtendedDialogFragment {
 
         builder.setMessage(R.string.update_core_message)
                 .setTitle(R.string.update_core_title)
-                .setPositiveButton(R.string.update_core_yes, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
+                .setPositiveButton(R.string.update_core_yes, (dialog, which) -> {
 
-                        if (getActivity() == null) {
-                            return;
-                        }
-
-                        boolean dnsCryptRunning = new PrefManager(getActivity()).getBoolPref("DNSCrypt Running");
-                        boolean torRunning = new PrefManager(getActivity()).getBoolPref("Tor Running");
-                        boolean itpdRunning = new PrefManager(getActivity()).getBoolPref("I2PD Running");
-
-                        if (dnsCryptRunning) {
-                            new PrefManager(getActivity()).setBoolPref("DNSCrypt Running", false);
-                            ModulesKiller.stopDNSCrypt(getActivity());
-                        }
-
-                        if (torRunning) {
-                            new PrefManager(getActivity()).setBoolPref("Tor Running", false);
-                            ModulesKiller.stopTor(getActivity());
-                        }
-
-                        if (itpdRunning) {
-                            new PrefManager(getActivity()).setBoolPref("I2PD Running", false);
-                            ModulesKiller.stopITPD(getActivity());
-                        }
-
-
-                        if (getActivity() != null) {
-                            new PrefManager(getActivity()).setBoolPref("DNSCrypt Installed",false);
-                            new PrefManager(getActivity()).setBoolPref("Tor Installed",false);
-                            new PrefManager(getActivity()).setBoolPref("I2PD Installed",false);
-                            DialogFragment dialogShowSU = NotificationDialogFragment.newInstance(R.string.update_core_restart);
-                            if (getFragmentManager() != null) {
-                                dialogShowSU.show(getFragmentManager(), "NotificationDialogFragment");
-                            }
-                        }
-
+                    if (getActivity() == null) {
+                        return;
                     }
-                })
-                .setNegativeButton(R.string.update_core_no, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dismiss();
+
+                    boolean dnsCryptRunning = new PrefManager(getActivity()).getBoolPref("DNSCrypt Running");
+                    boolean torRunning = new PrefManager(getActivity()).getBoolPref("Tor Running");
+                    boolean itpdRunning = new PrefManager(getActivity()).getBoolPref("I2PD Running");
+
+                    if (dnsCryptRunning) {
+                        new PrefManager(getActivity()).setBoolPref("DNSCrypt Running", false);
+                        ModulesKiller.stopDNSCrypt(getActivity());
                     }
-                })
-                .setNeutralButton(R.string.update_core_not_show_again, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        if (getActivity() != null) {
-                            new PrefManager(getActivity()).setBoolPref("UpdateNotAllowed",true);
+
+                    if (torRunning) {
+                        new PrefManager(getActivity()).setBoolPref("Tor Running", false);
+                        ModulesKiller.stopTor(getActivity());
+                    }
+
+                    if (itpdRunning) {
+                        new PrefManager(getActivity()).setBoolPref("I2PD Running", false);
+                        ModulesKiller.stopITPD(getActivity());
+                    }
+
+
+                    if (getActivity() != null) {
+                        new PrefManager(getActivity()).setBoolPref("DNSCrypt Installed",false);
+                        new PrefManager(getActivity()).setBoolPref("Tor Installed",false);
+                        new PrefManager(getActivity()).setBoolPref("I2PD Installed",false);
+                        DialogFragment dialogShowSU = NotificationDialogFragment.newInstance(R.string.update_core_restart);
+                        if (getFragmentManager() != null) {
+                            dialogShowSU.show(getFragmentManager(), "NotificationDialogFragment");
                         }
+                    }
+
+                })
+                .setNegativeButton(R.string.update_core_no, (dialog, id) -> dismiss())
+                .setNeutralButton(R.string.update_core_not_show_again, (dialogInterface, i) -> {
+                    if (getActivity() != null) {
+                        new PrefManager(getActivity()).setBoolPref("UpdateNotAllowed",true);
                     }
                 });
 

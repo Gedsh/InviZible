@@ -15,12 +15,11 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -205,34 +204,31 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             rbOwnBridges.setChecked(true);
         }
 
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Verifier verifier = new Verifier(getActivity());
-                    String appSignAlt = verifier.getApkSignature();
-                    if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
+        Thread thread = new Thread(() -> {
+            try {
+                Verifier verifier = new Verifier(getActivity());
+                String appSignAlt = verifier.getApkSignature();
+                if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
 
-                        if (getFragmentManager() != null) {
-                            NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                    getActivity(), getText(R.string.verifier_error).toString(), "3458");
-                            if (notificationHelper != null) {
-                                notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
-                            }
-                        }
-                    }
-
-                } catch (Exception e) {
                     if (getFragmentManager() != null) {
                         NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                getActivity(), getText(R.string.verifier_error).toString(), "64539");
+                                getActivity(), getText(R.string.verifier_error).toString(), "3458");
                         if (notificationHelper != null) {
                             notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                         }
                     }
-                    Log.e(LOG_TAG, "PreferencesTorBridges fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
-                            Arrays.toString(e.getStackTrace()));
                 }
+
+            } catch (Exception e) {
+                if (getFragmentManager() != null) {
+                    NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                            getActivity(), getText(R.string.verifier_error).toString(), "64539");
+                    if (notificationHelper != null) {
+                        notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                    }
+                }
+                Log.e(LOG_TAG, "PreferencesTorBridges fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
+                        Arrays.toString(e.getStackTrace()));
             }
         });
         thread.start();
@@ -340,51 +336,43 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         input.setSingleLine(false);
         builder.setView(inputView);
 
-        builder.setPositiveButton(getText(R.string.ok), new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                List<String> bridgesListNew = new LinkedList<>();
-                String[] bridgesArrNew = input.getText().toString().split(System.lineSeparator());
+        builder.setPositiveButton(getText(R.string.ok), (dialogInterface, i) -> {
+            List<String> bridgesListNew = new LinkedList<>();
+            String[] bridgesArrNew = input.getText().toString().split(System.lineSeparator());
 
-                if (bridgesArrNew.length != 0) {
-                    for (String brgNew : bridgesArrNew) {
-                        if (!brgNew.isEmpty()) {
-                            bridgesListNew.add(brgNew.trim());
-                        }
+            if (bridgesArrNew.length != 0) {
+                for (String brgNew : bridgesArrNew) {
+                    if (!brgNew.isEmpty()) {
+                        bridgesListNew.add(brgNew.trim());
                     }
+                }
 
-                    if (persistList != null) {
-                        List<String> retainList = new LinkedList<>(persistList);
-                        retainList.retainAll(bridgesListNew);
-                        bridgesListNew.removeAll(retainList);
-                        persistList.addAll(bridgesListNew);
-                        bridgesListNew = persistList;
-                    }
+                if (persistList != null) {
+                    List<String> retainList = new LinkedList<>(persistList);
+                    retainList.retainAll(bridgesListNew);
+                    bridgesListNew.removeAll(retainList);
+                    persistList.addAll(bridgesListNew);
+                    bridgesListNew = persistList;
+                }
 
 
-                    Collections.sort(bridgesListNew);
-                    FileOperations.writeToTextFile(getActivity(), bridges_custom_file_path, bridgesListNew, "ignored");
+                Collections.sort(bridgesListNew);
+                FileOperations.writeToTextFile(getActivity(), bridges_custom_file_path, bridgesListNew, "ignored");
 
-                    if (getActivity() == null) {
-                        return;
-                    }
+                if (getActivity() == null) {
+                    return;
+                }
 
-                    boolean useOwnBridges = new PrefManager(getActivity()).getBoolPref("useOwnBridges");
-                    if (useOwnBridges) {
-                        ownBridgesOperation(bridgesListNew);
-                    } else {
-                        rbOwnBridges.performClick();
-                    }
+                boolean useOwnBridges = new PrefManager(getActivity()).getBoolPref("useOwnBridges");
+                if (useOwnBridges) {
+                    ownBridgesOperation(bridgesListNew);
+                } else {
+                    rbOwnBridges.performClick();
                 }
             }
         });
 
-        builder.setNegativeButton(getText(R.string.cancel), new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int i) {
-                dialog.cancel();
-            }
-        });
+        builder.setNegativeButton(getText(R.string.cancel), (dialog, i) -> dialog.cancel());
         builder.setTitle(R.string.pref_fast_use_tor_bridges_add);
         builder.show();
     }
@@ -711,48 +699,28 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 case addBridgesTag: {
                     final List<String> bridges_lst = lines;
                     if (bridges_lst != null) {
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                addBridges(bridges_lst);
-                            }
-                        });
+                        getActivity().runOnUiThread(() -> addBridges(bridges_lst));
                     }
                     break;
                 }
                 case defaultBridgesOperationTag: {
                     final List<String> bridges_lst = lines;
                     if (bridges_lst != null) {
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                defaultBridgesOperation(bridges_lst);
-                            }
-                        });
+                        getActivity().runOnUiThread(() -> defaultBridgesOperation(bridges_lst));
                     }
                     break;
                 }
                 case ownBridgesOperationTag: {
                     final List<String> bridges_lst = lines;
                     if (bridges_lst != null) {
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                ownBridgesOperation(bridges_lst);
-                            }
-                        });
+                        getActivity().runOnUiThread(() -> ownBridgesOperation(bridges_lst));
                     }
                     break;
                 }
                 case addRequestedBridgesTag: {
                     final List<String> bridges_lst = lines;
                     if (bridges_lst != null) {
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                addRequestedBridges(requestedBridgesToAdd, bridges_lst);
-                            }
-                        });
+                        getActivity().runOnUiThread(() -> addRequestedBridges(requestedBridgesToAdd, bridges_lst));
                     }
                     break;
                 }
@@ -819,52 +787,46 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
                 tvBridge = itemView.findViewById(R.id.tvBridge);
                 swBridge = itemView.findViewById(R.id.swBridge);
-                CompoundButton.OnCheckedChangeListener onCheckedChangeListener = new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton compoundButton, boolean newValue) {
-                        if (newValue) {
-                            String obfsType = getItem(getAdapterPosition()).obfsType;
-                            if (!obfsType.equals(currentBridgesType)) {
-                                currentBridges.clear();
-                                currentBridgesType = obfsType;
-                            }
+                CompoundButton.OnCheckedChangeListener onCheckedChangeListener = (compoundButton, newValue) -> {
+                    if (newValue) {
+                        String obfsType = getItem(getAdapterPosition()).obfsType;
+                        if (!obfsType.equals(currentBridgesType)) {
+                            currentBridges.clear();
+                            currentBridgesType = obfsType;
+                        }
 
-                            boolean unicBridge = true;
-                            for (int i = 0; i < currentBridges.size(); i++) {
-                                String brg = currentBridges.get(i);
-                                if (brg.equals(getItem(getAdapterPosition()).bridge)) {
-                                    unicBridge = false;
-                                    break;
-                                }
-                            }
-                            if (unicBridge)
-                                currentBridges.add(getItem(getAdapterPosition()).bridge);
-                        } else {
-                            for (int i = 0; i < currentBridges.size(); i++) {
-                                String brg = currentBridges.get(i);
-                                if (brg.equals(getItem(getAdapterPosition()).bridge)) {
-                                    currentBridges.remove(i);
-                                    break;
-                                }
-
+                        boolean unicBridge = true;
+                        for (int i = 0; i < currentBridges.size(); i++) {
+                            String brg = currentBridges.get(i);
+                            if (brg.equals(getItem(getAdapterPosition()).bridge)) {
+                                unicBridge = false;
+                                break;
                             }
                         }
-                        setActive(getAdapterPosition(), newValue);
+                        if (unicBridge)
+                            currentBridges.add(getItem(getAdapterPosition()).bridge);
+                    } else {
+                        for (int i = 0; i < currentBridges.size(); i++) {
+                            String brg = currentBridges.get(i);
+                            if (brg.equals(getItem(getAdapterPosition()).bridge)) {
+                                currentBridges.remove(i);
+                                break;
+                            }
+
+                        }
                     }
+                    setActive(getAdapterPosition(), newValue);
                 };
                 swBridge.setOnCheckedChangeListener(onCheckedChangeListener);
                 ImageButton ibtnBridgeDel = itemView.findViewById(R.id.ibtnBridgeDel);
-                View.OnClickListener onClickListener = new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        switch (view.getId()) {
-                            case R.id.cardBridge:
-                                editBridge(getAdapterPosition());
-                                break;
-                            case R.id.ibtnBridgeDel:
-                                deleteBridge(getAdapterPosition());
-                                break;
-                        }
+                View.OnClickListener onClickListener = view -> {
+                    switch (view.getId()) {
+                        case R.id.cardBridge:
+                            editBridge(getAdapterPosition());
+                            break;
+                        case R.id.ibtnBridgeDel:
+                            deleteBridge(getAdapterPosition());
+                            break;
                     }
                 };
                 ibtnBridgeDel.setOnClickListener(onClickListener);
@@ -916,29 +878,21 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 input.setText(brgEdit, TextView.BufferType.EDITABLE);
                 builder.setView(inputView);
 
-                builder.setPositiveButton(getText(R.string.ok), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int i) {
-                        ObfsBridge brg = new ObfsBridge(input.getText().toString(), obfsTypeEdit, false);
-                        bridgeList.set(position, brg);
-                        bridgeAdapter.notifyItemChanged(position);
+                builder.setPositiveButton(getText(R.string.ok), (dialog, i) -> {
+                    ObfsBridge brg = new ObfsBridge(input.getText().toString(), obfsTypeEdit, false);
+                    bridgeList.set(position, brg);
+                    bridgeAdapter.notifyItemChanged(position);
 
-                        List<String> tmpList = new LinkedList<>();
-                        for (ObfsBridge tmpObfs : bridgeList) {
-                            tmpList.add(tmpObfs.bridge);
-                        }
-                        tmpList.addAll(anotherBridges);
-                        Collections.sort(tmpList);
-                        if (bridges_file_path != null)
-                            FileOperations.writeToTextFile(getActivity(), bridges_file_path, tmpList, "ignored");
+                    List<String> tmpList = new LinkedList<>();
+                    for (ObfsBridge tmpObfs : bridgeList) {
+                        tmpList.add(tmpObfs.bridge);
                     }
+                    tmpList.addAll(anotherBridges);
+                    Collections.sort(tmpList);
+                    if (bridges_file_path != null)
+                        FileOperations.writeToTextFile(getActivity(), bridges_file_path, tmpList, "ignored");
                 });
-                builder.setNegativeButton(getText(R.string.cancel), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int i) {
-                        dialog.cancel();
-                    }
-                });
+                builder.setNegativeButton(getText(R.string.cancel), (dialog, i) -> dialog.cancel());
                 builder.show();
             }
 

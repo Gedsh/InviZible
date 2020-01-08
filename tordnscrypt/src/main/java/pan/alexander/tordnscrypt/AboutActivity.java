@@ -15,11 +15,10 @@ package pan.alexander.tordnscrypt;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import androidx.appcompat.app.AlertDialog;
 import android.util.Log;
@@ -123,12 +122,7 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
 
             builder.setTitle(title);
 
-            builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.dismiss();
-                }
-            });
+            builder.setPositiveButton(R.string.ok, (dialogInterface, i1) -> dialogInterface.dismiss());
 
             builder.setView(inflatedView);
 

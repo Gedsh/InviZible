@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_servers;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
@@ -87,34 +87,31 @@ public class PreferencesDNSCryptServers extends Fragment implements PreferencesD
 
         takeArguments();
 
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Verifier verifier = new Verifier(getActivity());
-                    String appSign = verifier.getApkSignatureZipModern();
-                    String appSignAlt = verifier.getApkSignature();
-                    if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
-                        NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                getActivity(), getText(R.string.verifier_error).toString(), "6787");
-                        if (notificationHelper != null) {
-                            if (getFragmentManager() != null) {
-                                notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
-                            }
-                        }
-                    }
-
-                } catch (Exception e) {
-                    if (getFragmentManager() != null) {
-                        NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                getActivity(), getText(R.string.verifier_error).toString(), "8990");
-                        if (notificationHelper != null) {
+        Thread thread = new Thread(() -> {
+            try {
+                Verifier verifier = new Verifier(getActivity());
+                String appSign = verifier.getApkSignatureZipModern();
+                String appSignAlt = verifier.getApkSignature();
+                if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
+                    NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                            getActivity(), getText(R.string.verifier_error).toString(), "6787");
+                    if (notificationHelper != null) {
+                        if (getFragmentManager() != null) {
                             notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                         }
                     }
-                    Log.e(LOG_TAG, "PreferencesDNSCryptServers fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
-                            Arrays.toString(e.getStackTrace()));
                 }
+
+            } catch (Exception e) {
+                if (getFragmentManager() != null) {
+                    NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                            getActivity(), getText(R.string.verifier_error).toString(), "8990");
+                    if (notificationHelper != null) {
+                        notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                    }
+                }
+                Log.e(LOG_TAG, "PreferencesDNSCryptServers fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
+                        Arrays.toString(e.getStackTrace()));
             }
         });
         thread.start();

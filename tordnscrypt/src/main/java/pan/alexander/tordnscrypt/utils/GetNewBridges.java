@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.utils;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
@@ -71,116 +71,98 @@ public class GetNewBridges {
 
         GetNewBridges.transport = transport;
 
-        threadRequestCodeImage = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Bitmap codeImage = null;
-                final String captcha_challenge_field_value;
-                try {
-                    URL url = new URL("https://bridges.torproject.org/bridges?transport="+transport);
-                    HttpURLConnection huc =  (HttpURLConnection)  url.openConnection ();
-                    huc.setRequestMethod ("GET");
-                    huc.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) " +
-                            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36");
-                    huc.connect () ;
+        threadRequestCodeImage = new Thread(() -> {
+            Bitmap codeImage = null;
+            final String captcha_challenge_field_value;
+            try {
+                URL url = new URL("https://bridges.torproject.org/bridges?transport="+transport);
+                HttpURLConnection huc =  (HttpURLConnection)  url.openConnection ();
+                huc.setRequestMethod ("GET");
+                huc.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) " +
+                        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36");
+                huc.connect () ;
 
-                    final int code = huc.getResponseCode();
-                    if (code == HttpURLConnection.HTTP_OK) {
-                        BufferedReader in = new BufferedReader(
-                                new InputStreamReader(
-                                        huc.getInputStream()));
-                        String inputLine;
-                        boolean imageFound = false;
-                        boolean keywordFound = false;
+                final int code = huc.getResponseCode();
+                if (code == HttpURLConnection.HTTP_OK) {
+                    BufferedReader in = new BufferedReader(
+                            new InputStreamReader(
+                                    huc.getInputStream()));
+                    String inputLine;
+                    boolean imageFound = false;
+                    boolean keywordFound = false;
 
 
-                        while ((inputLine = in.readLine()) != null) {
-                            if (inputLine.contains("data:image/jpeg;base64") && !imageFound) {
-                                String[] imgCodeBase64 = inputLine.replace("data:image/jpeg;base64,","").split("\"");
+                    while ((inputLine = in.readLine()) != null) {
+                        if (inputLine.contains("data:image/jpeg;base64") && !imageFound) {
+                            String[] imgCodeBase64 = inputLine.replace("data:image/jpeg;base64,","").split("\"");
 
-                                if (imgCodeBase64.length<4) {
-                                    activity.runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            if (dialogPleaseWait!=null){
-                                                dialogPleaseWait.cancel();
-                                            }
-                                            Toast.makeText(activity, "Tor Project web site error!",Toast.LENGTH_LONG).show();
-                                            Log.e(LOG_TAG,"Tor Project web site error");
-                                        }
-                                    });
-                                    return;
-                                }
+                            if (imgCodeBase64.length<4) {
+                                activity.runOnUiThread(() -> {
+                                    if (dialogPleaseWait!=null){
+                                        dialogPleaseWait.cancel();
+                                    }
+                                    Toast.makeText(activity, "Tor Project web site error!",Toast.LENGTH_LONG).show();
+                                    Log.e(LOG_TAG,"Tor Project web site error");
+                                });
+                                return;
+                            }
 
-                                byte[] data = Base64.decode(imgCodeBase64[3],Base64.DEFAULT);
+                            byte[] data = Base64.decode(imgCodeBase64[3],Base64.DEFAULT);
 
-                                codeImage = BitmapFactory.decodeByteArray(data, 0, data.length);
+                            codeImage = BitmapFactory.decodeByteArray(data, 0, data.length);
 
-                                imageFound = true;
+                            imageFound = true;
 
-                                if (codeImage==null)
-                                    return;
+                            if (codeImage==null)
+                                return;
 
 
-                            } else if (inputLine.contains("captcha_challenge_field")) {
-                                keywordFound = true;
-                            } else if (inputLine.contains("value") && keywordFound) {
-                                String[] secretCodeArr = inputLine.split("\"");
-                                if (secretCodeArr.length>1) {
-                                    captcha_challenge_field_value = secretCodeArr[1];
+                        } else if (inputLine.contains("captcha_challenge_field")) {
+                            keywordFound = true;
+                        } else if (inputLine.contains("value") && keywordFound) {
+                            String[] secretCodeArr = inputLine.split("\"");
+                            if (secretCodeArr.length>1) {
+                                captcha_challenge_field_value = secretCodeArr[1];
 
-                                    final Bitmap finalCodeImage = codeImage;
-                                    activity.runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            if (dialogPleaseWait!=null){
-                                                dialogPleaseWait.cancel();
-                                            }
+                                final Bitmap finalCodeImage = codeImage;
+                                activity.runOnUiThread(() -> {
+                                    if (dialogPleaseWait!=null){
+                                        dialogPleaseWait.cancel();
+                                    }
 
-                                            showCodeImage(finalCodeImage,captcha_challenge_field_value);
-                                        }
-                                    });
-                                    break;
-                                } else {
-                                    activity.runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            if (dialogPleaseWait!=null){
-                                                dialogPleaseWait.cancel();
-                                            }
-                                            Toast.makeText(activity, "Tor Project web site error!",Toast.LENGTH_LONG).show();
-                                            Log.e(LOG_TAG,"Tor Project web site error");
-                                        }
-                                    });
-                                    return;
-                                }
-
+                                    showCodeImage(finalCodeImage,captcha_challenge_field_value);
+                                });
+                                break;
+                            } else {
+                                activity.runOnUiThread(() -> {
+                                    if (dialogPleaseWait!=null){
+                                        dialogPleaseWait.cancel();
+                                    }
+                                    Toast.makeText(activity, "Tor Project web site error!",Toast.LENGTH_LONG).show();
+                                    Log.e(LOG_TAG,"Tor Project web site error");
+                                });
+                                return;
                             }
 
                         }
 
-                        in.close();
-                    } else {
-                        activity.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(activity, "Tor Project web site unavailable! "+ code,Toast.LENGTH_LONG).show();
-                                Log.e(LOG_TAG,"Tor Project web site unavailable! " + code);
-                            }
-                        });
                     }
-                    huc.disconnect();
-                } catch (final IOException e) {
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (dialogPleaseWait!=null)
-                                dialogPleaseWait.dismiss();
-                            Toast.makeText(activity, "Error: " +e.getMessage(),Toast.LENGTH_LONG).show();
-                        }
+
+                    in.close();
+                } else {
+                    activity.runOnUiThread(() -> {
+                        Toast.makeText(activity, "Tor Project web site unavailable! "+ code,Toast.LENGTH_LONG).show();
+                        Log.e(LOG_TAG,"Tor Project web site unavailable! " + code);
                     });
-                    Log.e(LOG_TAG,"requestCodeImage function fault " + e.getMessage());
                 }
+                huc.disconnect();
+            } catch (final IOException e) {
+                activity.runOnUiThread(() -> {
+                    if (dialogPleaseWait!=null)
+                        dialogPleaseWait.dismiss();
+                    Toast.makeText(activity, "Error: " +e.getMessage(),Toast.LENGTH_LONG).show();
+                });
+                Log.e(LOG_TAG,"requestCodeImage function fault " + e.getMessage());
             }
         });
 
@@ -200,20 +182,17 @@ public class GetNewBridges {
         progressBar.setBackgroundResource(R.drawable.background_10dp_padding);
         progressBar.setIndeterminate(true);
         builder.setView(progressBar);
-        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                try {
-                    if (threadRequestCodeImage.isAlive())
-                        threadRequestCodeImage.interrupt();
-                    if (threadRequestBridges.isAlive())
-                        threadRequestBridges.interrupt();
-                } catch (Exception e) {
-                    Log.e(LOG_TAG, "GetNewBridges modernProgressDialog exception " + e.getMessage() + " " + e.getCause());
-                }
-
-                dialogInterface.cancel();
+        builder.setNegativeButton(R.string.cancel, (dialogInterface, i) -> {
+            try {
+                if (threadRequestCodeImage.isAlive())
+                    threadRequestCodeImage.interrupt();
+                if (threadRequestBridges.isAlive())
+                    threadRequestBridges.interrupt();
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "GetNewBridges modernProgressDialog exception " + e.getMessage() + " " + e.getCause());
             }
+
+            dialogInterface.cancel();
         });
         return builder.show();
     }
@@ -235,36 +214,28 @@ public class GetNewBridges {
 
         builder.setTitle(R.string.pref_fast_use_tor_bridges_transport_select);
 
-        builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                switch (rbgTorTransport.getCheckedRadioButtonId()) {
-                    case R.id.rbObfsNone:
-                        dialogPleaseWait = modernProgressDialog();
-                        requestCodeImage("0");
-                        break;
-                    case R.id.rbObfs3:
-                        dialogPleaseWait = modernProgressDialog();
-                        requestCodeImage("obfs3");
-                        break;
-                    case R.id.rbObfs4:
-                        dialogPleaseWait = modernProgressDialog();
-                        requestCodeImage("obfs4");
-                        break;
-                    case R.id.rbObfsScrambleSuit:
-                        dialogPleaseWait = modernProgressDialog();
-                        requestCodeImage("scramblesuit");
-                        break;
-                }
+        builder.setPositiveButton(R.string.ok, (dialogInterface, i) -> {
+            switch (rbgTorTransport.getCheckedRadioButtonId()) {
+                case R.id.rbObfsNone:
+                    dialogPleaseWait = modernProgressDialog();
+                    requestCodeImage("0");
+                    break;
+                case R.id.rbObfs3:
+                    dialogPleaseWait = modernProgressDialog();
+                    requestCodeImage("obfs3");
+                    break;
+                case R.id.rbObfs4:
+                    dialogPleaseWait = modernProgressDialog();
+                    requestCodeImage("obfs4");
+                    break;
+                case R.id.rbObfsScrambleSuit:
+                    dialogPleaseWait = modernProgressDialog();
+                    requestCodeImage("scramblesuit");
+                    break;
             }
         });
 
-        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int i) {
-                dialog.cancel();
-            }
-        });
+        builder.setNegativeButton(R.string.cancel, (dialog, i) -> dialog.cancel());
 
         builder.show();
     }
@@ -286,191 +257,157 @@ public class GetNewBridges {
 
         builder.setView(view);
 
-        builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                requestNewBridges(etCode.getText().toString(),secretCode);
-                dialogPleaseWait = modernProgressDialog();
-            }
+        builder.setPositiveButton(R.string.ok, (dialogInterface, i) -> {
+            requestNewBridges(etCode.getText().toString(),secretCode);
+            dialogPleaseWait = modernProgressDialog();
         });
 
-        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int i) {
-                dialog.cancel();
-            }
-        });
+        builder.setNegativeButton(R.string.cancel, (dialog, i) -> dialog.cancel());
         builder.show();
     }
 
     private void requestNewBridges(final String imageCode, final String secretCode) {
-        threadRequestBridges = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Bitmap codeImage = null;
-                final String captcha_challenge_field_value;
-                try {
-                    String query = "captcha_challenge_field="+secretCode+
-                            "&captcha_response_field="+imageCode+
-                            "&submit=submit";
-                    URL url = new URL("https://bridges.torproject.org/bridges?transport="+transport);
-                    HttpURLConnection huc =  (HttpURLConnection)  url.openConnection ();
-                    //Set to POST
-                    huc.setDoOutput(true);
-                    huc.setRequestMethod("POST");
-                    huc.setRequestProperty("Content-Length", String.valueOf(query.getBytes().length));
-                    huc.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 9.0.1; " +
-                            "Mi Mi) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Mobile Safari/537.36");
-                    huc.setReadTimeout(10000);
-                    Writer writer = new OutputStreamWriter(huc.getOutputStream());
-                    writer.write(query);
-                    writer.flush();
-                    writer.close();
+        threadRequestBridges = new Thread(() -> {
+            Bitmap codeImage = null;
+            final String captcha_challenge_field_value;
+            try {
+                String query = "captcha_challenge_field="+secretCode+
+                        "&captcha_response_field="+imageCode+
+                        "&submit=submit";
+                URL url = new URL("https://bridges.torproject.org/bridges?transport="+transport);
+                HttpURLConnection huc =  (HttpURLConnection)  url.openConnection ();
+                //Set to POST
+                huc.setDoOutput(true);
+                huc.setRequestMethod("POST");
+                huc.setRequestProperty("Content-Length", String.valueOf(query.getBytes().length));
+                huc.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 9.0.1; " +
+                        "Mi Mi) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Mobile Safari/537.36");
+                huc.setReadTimeout(10000);
+                Writer writer = new OutputStreamWriter(huc.getOutputStream());
+                writer.write(query);
+                writer.flush();
+                writer.close();
 
 
-                    final int code = huc.getResponseCode();
-                    if (code == HttpURLConnection.HTTP_OK) {
-                        BufferedReader in = new BufferedReader(
-                                new InputStreamReader(
-                                        huc.getInputStream()));
-                        String inputLine;
-                        boolean keyWordBridge = false;
-                        boolean wrongImageCode = false;
-                        boolean imageFound = false;
-                        boolean keywordCaptchaFound = false;
-                        List<String> newBridges = new LinkedList<>();
+                final int code = huc.getResponseCode();
+                if (code == HttpURLConnection.HTTP_OK) {
+                    BufferedReader in = new BufferedReader(
+                            new InputStreamReader(
+                                    huc.getInputStream()));
+                    String inputLine;
+                    boolean keyWordBridge = false;
+                    boolean wrongImageCode = false;
+                    boolean imageFound = false;
+                    boolean keywordCaptchaFound = false;
+                    List<String> newBridges = new LinkedList<>();
 
-                        final StringBuilder sb = new StringBuilder();
-                        while ((inputLine = in.readLine()) != null) {
-                            if (inputLine.contains("id=\"bridgelines\"") && !wrongImageCode) {
-                                keyWordBridge = true;
-                            } else if (inputLine.contains("<br />") && keyWordBridge && !wrongImageCode) {
-                                newBridges.add(inputLine.replace("<br />","").trim());
-                            } else if (!inputLine.contains("<br />") && keyWordBridge && !wrongImageCode) {
-                                break;
-                            } else if (inputLine.contains("captcha-submission-container")) {
-                                wrongImageCode = true;
-                            } else if (wrongImageCode) {
+                    final StringBuilder sb = new StringBuilder();
+                    while ((inputLine = in.readLine()) != null) {
+                        if (inputLine.contains("id=\"bridgelines\"") && !wrongImageCode) {
+                            keyWordBridge = true;
+                        } else if (inputLine.contains("<br />") && keyWordBridge && !wrongImageCode) {
+                            newBridges.add(inputLine.replace("<br />","").trim());
+                        } else if (!inputLine.contains("<br />") && keyWordBridge && !wrongImageCode) {
+                            break;
+                        } else if (inputLine.contains("captcha-submission-container")) {
+                            wrongImageCode = true;
+                        } else if (wrongImageCode) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////If wrong image code try again/////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-                                if (inputLine.contains("data:image/jpeg;base64") && !imageFound) {
-                                    String[] imgCodeBase64 = inputLine.replace("data:image/jpeg;base64,","").split("\"");
+                            if (inputLine.contains("data:image/jpeg;base64") && !imageFound) {
+                                String[] imgCodeBase64 = inputLine.replace("data:image/jpeg;base64,","").split("\"");
 
-                                    if (imgCodeBase64.length<4) {
-                                        activity.runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                if (dialogPleaseWait!=null)
-                                                    dialogPleaseWait.dismiss();
-                                                Toast.makeText(activity, "Tor Project web site error!",Toast.LENGTH_LONG).show();
-                                                Log.e(LOG_TAG,"Tor Project web site error");
-                                            }
-                                        });
-                                        return;
-                                    }
-
-                                    byte[] data = Base64.decode(imgCodeBase64[3],Base64.DEFAULT);
-
-                                    codeImage = BitmapFactory.decodeByteArray(data, 0, data.length);
-
-                                    imageFound = true;
-
-                                    if (codeImage==null)
-                                        return;
-
-
-                                } else if (inputLine.contains("captcha_challenge_field")) {
-                                    keywordCaptchaFound = true;
-                                } else if (inputLine.contains("value") && keywordCaptchaFound) {
-                                    String[] secretCodeArr = inputLine.split("\"");
-                                    if (secretCodeArr.length>1) {
-                                        captcha_challenge_field_value = secretCodeArr[1];
-
-                                        final Bitmap finalCodeImage = codeImage;
-                                        activity.runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                if (dialogPleaseWait!=null){
-                                                    dialogPleaseWait.cancel();
-                                                }
-
-                                                showCodeImage(finalCodeImage,captcha_challenge_field_value);
-                                            }
-                                        });
-                                        break;
-                                    } else {
-                                        activity.runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                if (dialogPleaseWait!=null)
-                                                    dialogPleaseWait.dismiss();
-                                                Toast.makeText(activity, "Tor Project web site error!",Toast.LENGTH_LONG).show();
-                                                Log.e(LOG_TAG,"Tor Project web site error");
-                                            }
-                                        });
-                                        return;
-                                    }
-
+                                if (imgCodeBase64.length<4) {
+                                    activity.runOnUiThread(() -> {
+                                        if (dialogPleaseWait!=null)
+                                            dialogPleaseWait.dismiss();
+                                        Toast.makeText(activity, "Tor Project web site error!",Toast.LENGTH_LONG).show();
+                                        Log.e(LOG_TAG,"Tor Project web site error");
+                                    });
+                                    return;
                                 }
+
+                                byte[] data = Base64.decode(imgCodeBase64[3],Base64.DEFAULT);
+
+                                codeImage = BitmapFactory.decodeByteArray(data, 0, data.length);
+
+                                imageFound = true;
+
+                                if (codeImage==null)
+                                    return;
+
+
+                            } else if (inputLine.contains("captcha_challenge_field")) {
+                                keywordCaptchaFound = true;
+                            } else if (inputLine.contains("value") && keywordCaptchaFound) {
+                                String[] secretCodeArr = inputLine.split("\"");
+                                if (secretCodeArr.length>1) {
+                                    captcha_challenge_field_value = secretCodeArr[1];
+
+                                    final Bitmap finalCodeImage = codeImage;
+                                    activity.runOnUiThread(() -> {
+                                        if (dialogPleaseWait!=null){
+                                            dialogPleaseWait.cancel();
+                                        }
+
+                                        showCodeImage(finalCodeImage,captcha_challenge_field_value);
+                                    });
+                                    break;
+                                } else {
+                                    activity.runOnUiThread(() -> {
+                                        if (dialogPleaseWait!=null)
+                                            dialogPleaseWait.dismiss();
+                                        Toast.makeText(activity, "Tor Project web site error!",Toast.LENGTH_LONG).show();
+                                        Log.e(LOG_TAG,"Tor Project web site error");
+                                    });
+                                    return;
+                                }
+
                             }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                         }
-
-                        if (keyWordBridge && !wrongImageCode) {
-                            for (String bridge:newBridges) {
-                                sb.append(bridge).append((char)10);
-                            }
-                            activity.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (dialogPleaseWait!=null)
-                                        dialogPleaseWait.dismiss();
-                                    showBridges(sb.toString());
-                                    //TopFragment.NotificationDialogFragment commandResult = TopFragment.NotificationDialogFragment.newInstance(sb.toString());
-                                   // commandResult.show(activity.getFragmentManager(),TopFragment.NotificationDialogFragment.TAG_NOT_FRAG);
-                                }
-                            });
-                        } else if (!keyWordBridge && !wrongImageCode) {
-                            activity.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (dialogPleaseWait!=null)
-                                        dialogPleaseWait.dismiss();
-                                    Toast.makeText(activity, "Tor Project web site error!",Toast.LENGTH_LONG).show();
-                                    Log.e(LOG_TAG,"Tor Project web site error");
-                                }
-                            });
-                        }
-                        in.close();
-                    } else {
-                        activity.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (dialogPleaseWait!=null)
-                                    dialogPleaseWait.dismiss();
-                                Toast.makeText(activity, "Tor Project web site unavailable! "+ code,Toast.LENGTH_LONG).show();
-                                Log.e(LOG_TAG,"Tor Project web site unavailable! " + code);
-                            }
-                        });
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                     }
-                    huc.disconnect();
 
-
-                } catch (final IOException e) {
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
+                    if (keyWordBridge && !wrongImageCode) {
+                        for (String bridge:newBridges) {
+                            sb.append(bridge).append((char)10);
+                        }
+                        activity.runOnUiThread(() -> {
                             if (dialogPleaseWait!=null)
                                 dialogPleaseWait.dismiss();
-                            Toast.makeText(activity, "Error: " +e.getMessage(),Toast.LENGTH_LONG).show();
-                        }
+                            showBridges(sb.toString());
+                        });
+                    } else if (!keyWordBridge && !wrongImageCode) {
+                        activity.runOnUiThread(() -> {
+                            if (dialogPleaseWait!=null)
+                                dialogPleaseWait.dismiss();
+                            Toast.makeText(activity, "Tor Project web site error!",Toast.LENGTH_LONG).show();
+                            Log.e(LOG_TAG,"Tor Project web site error");
+                        });
+                    }
+                    in.close();
+                } else {
+                    activity.runOnUiThread(() -> {
+                        if (dialogPleaseWait!=null)
+                            dialogPleaseWait.dismiss();
+                        Toast.makeText(activity, "Tor Project web site unavailable! "+ code,Toast.LENGTH_LONG).show();
+                        Log.e(LOG_TAG,"Tor Project web site unavailable! " + code);
                     });
-                    Log.e(LOG_TAG,"requestNewBridges function fault " + e.getMessage());
                 }
+                huc.disconnect();
+
+
+            } catch (final IOException e) {
+                activity.runOnUiThread(() -> {
+                    if (dialogPleaseWait!=null)
+                        dialogPleaseWait.dismiss();
+                    Toast.makeText(activity, "Error: " +e.getMessage(),Toast.LENGTH_LONG).show();
+                });
+                Log.e(LOG_TAG,"requestNewBridges function fault " + e.getMessage());
             }
         });
         threadRequestBridges.start();
@@ -489,26 +426,18 @@ public class GetNewBridges {
         builder.setTitle(R.string.pref_fast_use_tor_bridges_show_dialog);
         builder.setView(tvBridges);
 
-        builder.setPositiveButton(R.string.pref_fast_use_tor_bridges_add_dialog, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                FragmentManager fm = ((SettingsActivity)activity).getSupportFragmentManager();
-                PreferencesTorBridges frgPreferencesTorBridges = (PreferencesTorBridges) fm.findFragmentByTag("PreferencesTorBridges");
-                if (frgPreferencesTorBridges!=null) {
-                    frgPreferencesTorBridges.readCurrentCustomBridges(bridges);
-                } else {
-                    Toast.makeText(activity, "Unable to save bridges!",Toast.LENGTH_LONG).show();
-                }
-
+        builder.setPositiveButton(R.string.pref_fast_use_tor_bridges_add_dialog, (dialogInterface, i) -> {
+            FragmentManager fm = ((SettingsActivity)activity).getSupportFragmentManager();
+            PreferencesTorBridges frgPreferencesTorBridges = (PreferencesTorBridges) fm.findFragmentByTag("PreferencesTorBridges");
+            if (frgPreferencesTorBridges!=null) {
+                frgPreferencesTorBridges.readCurrentCustomBridges(bridges);
+            } else {
+                Toast.makeText(activity, "Unable to save bridges!",Toast.LENGTH_LONG).show();
             }
+
         });
 
-        builder.setNegativeButton(R.string.pref_fast_use_tor_bridges_close_dialog, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                dialogInterface.cancel();
-            }
-        });
+        builder.setNegativeButton(R.string.pref_fast_use_tor_bridges_close_dialog, (dialogInterface, i) -> dialogInterface.cancel());
 
         builder.show();
     }

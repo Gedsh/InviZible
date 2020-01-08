@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.utils.file_operations;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Stack;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -85,89 +86,85 @@ public class FileOperations {
 
     public static void moveBinaryFile(final Context context, final String inputPath, final String inputFile, final String outputPath, final String tag) {
 
-        Runnable runnable = new Runnable() {
-            @SuppressLint("SetWorldReadable")
-            @Override
-            public void run() {
+        @SuppressLint("SetWorldReadable") Runnable runnable = () -> {
 
 
-                try {
+            try {
 
-                    File dir = new File(outputPath);
-                    if (!dir.isDirectory()) {
-                        if (!dir.mkdirs()) {
-                            throw new IllegalStateException("Unable to create dir " + dir.toString());
-                        }
-
-                        if (!dir.canRead() || !dir.canWrite()) {
-                            if (!dir.setReadable(true) || !dir.setWritable(true)) {
-                                Log.w(LOG_TAG, "Unable to chmod dir " + dir.toString());
-                            }
-                        }
+                File dir = new File(outputPath);
+                if (!dir.isDirectory()) {
+                    if (!dir.mkdirs()) {
+                        throw new IllegalStateException("Unable to create dir " + dir.toString());
                     }
 
-                    File oldFile = new File(outputPath + "/" + inputFile);
-                    if (oldFile.exists()) {
-                        if (deleteFileSynchronous(context, outputPath, inputFile)) {
-                            throw new IllegalStateException("Unable to delete file " + oldFile.toString());
+                    if (!dir.canRead() || !dir.canWrite()) {
+                        if (!dir.setReadable(true) || !dir.setWritable(true)) {
+                            Log.w(LOG_TAG, "Unable to chmod dir " + dir.toString());
                         }
                     }
+                }
 
-                    File inFile = new File(inputPath + "/" + inputFile);
-                    if (!inFile.canRead()) {
-                        if (!inFile.setReadable(true)) {
-                            Log.w(LOG_TAG, "Unable to chmod file " + inFile.toString());
-                            FileOperations fileOperations = new FileOperations();
-                            fileOperations.restoreAccess(context, inFile.getPath());
-                        } else if (!inFile.canRead()) {
-                            throw new IllegalStateException("Unable to chmod file " + inFile.toString());
-                        }
+                File oldFile = new File(outputPath + "/" + inputFile);
+                if (oldFile.exists()) {
+                    if (deleteFileSynchronous(context, outputPath, inputFile)) {
+                        throw new IllegalStateException("Unable to delete file " + oldFile.toString());
                     }
+                }
 
-                    byte[] buffer = new byte[1024];
-                    int read;
-
-                    try (FileInputStream in = new FileInputStream(inputPath + "/" + inputFile);
-                         FileOutputStream out = new FileOutputStream(outputPath + "/" + inputFile)) {
-                        while ((read = in.read(buffer)) != -1) {
-                            out.write(buffer, 0, read);
-                        }
+                File inFile = new File(inputPath + "/" + inputFile);
+                if (!inFile.canRead()) {
+                    if (!inFile.setReadable(true)) {
+                        Log.w(LOG_TAG, "Unable to chmod file " + inFile.toString());
+                        FileOperations fileOperations = new FileOperations();
+                        fileOperations.restoreAccess(context, inFile.getPath());
+                    } else if (!inFile.canRead()) {
+                        throw new IllegalStateException("Unable to chmod file " + inFile.toString());
                     }
+                }
 
-                    File newFile = new File(outputPath + "/" + inputFile);
-                    if (!newFile.exists()) {
-                        throw new IllegalStateException("New file not exist " + oldFile.toString());
+                byte[] buffer = new byte[1024];
+                int read;
+
+                try (FileInputStream in = new FileInputStream(inputPath + "/" + inputFile);
+                     FileOutputStream out = new FileOutputStream(outputPath + "/" + inputFile)) {
+                    while ((read = in.read(buffer)) != -1) {
+                        out.write(buffer, 0, read);
                     }
+                }
 
-                    if (tag.contains("executable")) {
-                        if (!newFile.setReadable(true, false) || !newFile.setWritable(true) || !newFile.setExecutable(true, false)) {
-                            throw new IllegalStateException("Chmod exec file fault " + outputPath + "/" + inputFile);
-                        }
+                File newFile = new File(outputPath + "/" + inputFile);
+                if (!newFile.exists()) {
+                    throw new IllegalStateException("New file not exist " + oldFile.toString());
+                }
+
+                if (tag.contains("executable")) {
+                    if (!newFile.setReadable(true, false) || !newFile.setWritable(true) || !newFile.setExecutable(true, false)) {
+                        throw new IllegalStateException("Chmod exec file fault " + outputPath + "/" + inputFile);
                     }
+                }
 
-                    // delete the unwanted file
-                    if (deleteFileSynchronous(context, inputPath, inputFile)) {
-                        throw new IllegalStateException("Unable to delete file " + inputFile);
+                // delete the unwanted file
+                if (deleteFileSynchronous(context, inputPath, inputFile)) {
+                    throw new IllegalStateException("Unable to delete file " + inputFile);
+                }
+
+                if (callback != null && !tag.contains("ignored")) {
+                    if (callback instanceof OnBinaryFileOperationsCompleteListener) {
+                        ((OnBinaryFileOperationsCompleteListener) callback).OnFileOperationComplete(
+                                moveBinaryFile, true, outputPath + "/" + inputFile, tag);
+                    } else {
+                        throw new ClassCastException("Wrong File operations type. Choose binary type.");
                     }
+                }
 
-                    if (callback != null && !tag.contains("ignored")) {
-                        if (callback instanceof OnBinaryFileOperationsCompleteListener) {
-                            ((OnBinaryFileOperationsCompleteListener) callback).OnFileOperationComplete(
-                                    moveBinaryFile, true, outputPath + "/" + inputFile, tag);
-                        } else {
-                            throw new ClassCastException("Wrong File operations type. Choose binary type.");
-                        }
-                    }
-
-                } catch (Exception e) {
-                    Log.e(LOG_TAG, "moveBinaryFile function fault " + e.getMessage() + " " + e.getCause());
-                    if (callback != null && !tag.contains("ignored")) {
-                        if (callback instanceof OnBinaryFileOperationsCompleteListener) {
-                            ((OnBinaryFileOperationsCompleteListener) callback).OnFileOperationComplete(
-                                    moveBinaryFile, false, outputPath + "/" + inputFile, tag);
-                        } else {
-                            throw new ClassCastException("Wrong File operations type. Choose binary type.");
-                        }
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "moveBinaryFile function fault " + e.getMessage() + " " + e.getCause());
+                if (callback != null && !tag.contains("ignored")) {
+                    if (callback instanceof OnBinaryFileOperationsCompleteListener) {
+                        ((OnBinaryFileOperationsCompleteListener) callback).OnFileOperationComplete(
+                                moveBinaryFile, false, outputPath + "/" + inputFile, tag);
+                    } else {
+                        throw new ClassCastException("Wrong File operations type. Choose binary type.");
                     }
                 }
             }
@@ -348,7 +345,7 @@ public class FileOperations {
                 Log.w(LOG_TAG, "Unable to chmod dir " + outDir.toString());
             }
 
-            for (File file: inDir.listFiles()) {
+            for (File file: Objects.requireNonNull(inDir.listFiles())) {
 
                 if (file.isFile()) {
                     copyBinaryFileSynchronous(context, inputPath, file.getName(), outDir.getCanonicalPath());
@@ -404,52 +401,49 @@ public class FileOperations {
     }
 
     public static void deleteFile(final Context context, final String inputPath, final String inputFile, final String tag) {
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    File usedFile = new File(inputPath + "/" + inputFile);
-                    if (usedFile.exists()) {
-                        if (!usedFile.canRead() || !usedFile.canWrite()) {
-                            if (!usedFile.setReadable(true) || !usedFile.setWritable(true)) {
-                                Log.w(LOG_TAG, "Unable to chmod file " + inputPath + "/" + inputFile);
-                                FileOperations fileOperations = new FileOperations();
-                                fileOperations.restoreAccess(context, inputPath + "/" + inputFile);
-                            } else if (!usedFile.setReadable(true) || !usedFile.setWritable(true)) {
-                                Log.e(LOG_TAG, "Unable to chmod file " + inputPath + "/" + inputFile);
-                            }
-                        }
-                        if (!usedFile.delete()) {
-                            Log.w(LOG_TAG, "Unable to delete file " + usedFile.toString() + " Try restore access!");
-
+        Runnable runnable = () -> {
+            try {
+                File usedFile = new File(inputPath + "/" + inputFile);
+                if (usedFile.exists()) {
+                    if (!usedFile.canRead() || !usedFile.canWrite()) {
+                        if (!usedFile.setReadable(true) || !usedFile.setWritable(true)) {
+                            Log.w(LOG_TAG, "Unable to chmod file " + inputPath + "/" + inputFile);
                             FileOperations fileOperations = new FileOperations();
                             fileOperations.restoreAccess(context, inputPath + "/" + inputFile);
-
-                            if (!usedFile.delete()) {
-                                throw new IllegalStateException("Unable to delete file " + usedFile.toString());
-                            }
+                        } else if (!usedFile.setReadable(true) || !usedFile.setWritable(true)) {
+                            Log.e(LOG_TAG, "Unable to chmod file " + inputPath + "/" + inputFile);
                         }
+                    }
+                    if (!usedFile.delete()) {
+                        Log.w(LOG_TAG, "Unable to delete file " + usedFile.toString() + " Try restore access!");
+
+                        FileOperations fileOperations = new FileOperations();
+                        fileOperations.restoreAccess(context, inputPath + "/" + inputFile);
+
+                        if (!usedFile.delete()) {
+                            throw new IllegalStateException("Unable to delete file " + usedFile.toString());
+                        }
+                    }
+                } else {
+                    Log.w(LOG_TAG, "Unable to delete file. No file " + usedFile.toString());
+                }
+
+                if (callback != null && !tag.contains("ignored")) {
+                    if (callback instanceof OnBinaryFileOperationsCompleteListener) {
+                        ((OnBinaryFileOperationsCompleteListener) callback).OnFileOperationComplete(
+                                deleteFile, true, inputPath + "/" + inputFile, tag);
                     } else {
-                        Log.w(LOG_TAG, "Unable to delete file. No file " + usedFile.toString());
+                        throw new ClassCastException("Wrong File operations type. Choose binary type.");
                     }
-
-                    if (callback != null && !tag.contains("ignored")) {
-                        if (callback instanceof OnBinaryFileOperationsCompleteListener) {
-                            ((OnBinaryFileOperationsCompleteListener) callback).OnFileOperationComplete(
-                                    deleteFile, true, inputPath + "/" + inputFile, tag);
-                        } else {
-                            throw new ClassCastException("Wrong File operations type. Choose binary type.");
-                        }
-                    }
-                } catch (Exception e) {
-                    Log.e(LOG_TAG, "deleteFile function fault " + e.getMessage() + " " + e.getCause());
-                    if (callback != null && !tag.contains("ignored")) {
-                        if (callback instanceof OnBinaryFileOperationsCompleteListener) {
-                            ((OnBinaryFileOperationsCompleteListener) callback).OnFileOperationComplete(
-                                    deleteFile, false, inputPath + "/" + inputFile, tag);
-                        } else {
-                            throw new ClassCastException("Wrong File operations type. Choose binary type.");
-                        }
+                }
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "deleteFile function fault " + e.getMessage() + " " + e.getCause());
+                if (callback != null && !tag.contains("ignored")) {
+                    if (callback instanceof OnBinaryFileOperationsCompleteListener) {
+                        ((OnBinaryFileOperationsCompleteListener) callback).OnFileOperationComplete(
+                                deleteFile, false, inputPath + "/" + inputFile, tag);
+                    } else {
+                        throw new ClassCastException("Wrong File operations type. Choose binary type.");
                     }
                 }
             }
@@ -516,63 +510,60 @@ public class FileOperations {
 
     @SuppressLint("SetWorldReadable")
     public static void readTextFile(final Context context, final String filePath, final String tag) {
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
+        Runnable runnable = () -> {
 
-                linesListMap.remove(filePath);
+            linesListMap.remove(filePath);
 
-                try {
+            try {
 
-                    File f = new File(filePath);
-                    if (f.isFile()) {
+                File f = new File(filePath);
+                if (f.isFile()) {
+                    if (f.setReadable(true, false)) {
+                        Log.i(LOG_TAG, "readTextFile take " + filePath + " success");
+                    } else {
+                        Log.w(LOG_TAG, "readTextFile take " + filePath + " warning");
+                        FileOperations fileOperations = new FileOperations();
+                        fileOperations.restoreAccess(context, filePath);
                         if (f.setReadable(true, false)) {
                             Log.i(LOG_TAG, "readTextFile take " + filePath + " success");
                         } else {
-                            Log.w(LOG_TAG, "readTextFile take " + filePath + " warning");
-                            FileOperations fileOperations = new FileOperations();
-                            fileOperations.restoreAccess(context, filePath);
-                            if (f.setReadable(true, false)) {
-                                Log.i(LOG_TAG, "readTextFile take " + filePath + " success");
-                            } else {
-                                throw new IllegalStateException("readTextFile take " + filePath + " error");
-                            }
+                            throw new IllegalStateException("readTextFile take " + filePath + " error");
                         }
+                    }
+                } else {
+                    throw new IllegalStateException("readTextFile no file " + filePath);
+                }
+
+                List<String> linesList = new LinkedList<>();
+
+                try (FileInputStream fstream = new FileInputStream(filePath);
+                     BufferedReader br = new BufferedReader(new InputStreamReader(fstream))) {
+
+                    for (String tmp; (tmp = br.readLine()) != null; ) {
+                        linesList.add(tmp.trim());
+                    }
+                }
+
+
+                linesListMap.put(filePath, linesList);
+
+                if (callback != null) {
+                    if (callback instanceof OnTextFileOperationsCompleteListener) {
+                        ((OnTextFileOperationsCompleteListener) callback).OnFileOperationComplete(
+                                readTextFile, true, filePath, tag, linesListMap.get(filePath));
                     } else {
-                        throw new IllegalStateException("readTextFile no file " + filePath);
+                        throw new ClassCastException("Wrong File operations type. Choose text type.");
                     }
+                }
 
-                    List<String> linesList = new LinkedList<>();
-
-                    try (FileInputStream fstream = new FileInputStream(filePath);
-                         BufferedReader br = new BufferedReader(new InputStreamReader(fstream))) {
-
-                        for (String tmp; (tmp = br.readLine()) != null; ) {
-                            linesList.add(tmp.trim());
-                        }
-                    }
-
-
-                    linesListMap.put(filePath, linesList);
-
-                    if (callback != null) {
-                        if (callback instanceof OnTextFileOperationsCompleteListener) {
-                            ((OnTextFileOperationsCompleteListener) callback).OnFileOperationComplete(
-                                    readTextFile, true, filePath, tag, linesListMap.get(filePath));
-                        } else {
-                            throw new ClassCastException("Wrong File operations type. Choose text type.");
-                        }
-                    }
-
-                } catch (Exception e) {
-                    Log.e(LOG_TAG, "readTextFile Exception " + e.getMessage() + " " + e.getCause());
-                    if (callback != null) {
-                        if (callback instanceof OnTextFileOperationsCompleteListener) {
-                            ((OnTextFileOperationsCompleteListener) callback).OnFileOperationComplete(
-                                    readTextFile, false, filePath, tag, null);
-                        } else {
-                            throw new ClassCastException("Wrong File operations type. Choose text type.");
-                        }
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "readTextFile Exception " + e.getMessage() + " " + e.getCause());
+                if (callback != null) {
+                    if (callback instanceof OnTextFileOperationsCompleteListener) {
+                        ((OnTextFileOperationsCompleteListener) callback).OnFileOperationComplete(
+                                readTextFile, false, filePath, tag, null);
+                    } else {
+                        throw new ClassCastException("Wrong File operations type. Choose text type.");
                     }
                 }
             }
@@ -586,56 +577,53 @@ public class FileOperations {
 
     @SuppressLint("SetWorldReadable")
     public static void writeToTextFile(final Context context, final String filePath, final List<String> lines, final String tag) {
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
+        Runnable runnable = () -> {
 
-                try {
+            try {
 
-                    File f = new File(filePath);
+                File f = new File(filePath);
 
-                    if (f.isFile()) {
+                if (f.isFile()) {
+                    if (f.setReadable(true, false) && f.setWritable(true)) {
+                        Log.i(LOG_TAG, "writeToTextFile writeTo " + filePath + " success");
+                    } else {
+                        Log.w(LOG_TAG, "writeToTextFile writeTo " + filePath + " warning");
+                        FileOperations fileOperations = new FileOperations();
+                        fileOperations.restoreAccess(context, filePath);
                         if (f.setReadable(true, false) && f.setWritable(true)) {
                             Log.i(LOG_TAG, "writeToTextFile writeTo " + filePath + " success");
                         } else {
-                            Log.w(LOG_TAG, "writeToTextFile writeTo " + filePath + " warning");
-                            FileOperations fileOperations = new FileOperations();
-                            fileOperations.restoreAccess(context, filePath);
-                            if (f.setReadable(true, false) && f.setWritable(true)) {
-                                Log.i(LOG_TAG, "writeToTextFile writeTo " + filePath + " success");
-                            } else {
-                                throw new IllegalStateException("writeToTextFile writeTo " + filePath + " error");
-                            }
+                            throw new IllegalStateException("writeToTextFile writeTo " + filePath + " error");
                         }
                     }
+                }
 
-                    try (PrintWriter writer = new PrintWriter(filePath)) {
+                try (PrintWriter writer = new PrintWriter(filePath)) {
 
-                        for (String line : lines) {
-                            writer.println(line);
-                        }
-
+                    for (String line : lines) {
+                        writer.println(line);
                     }
 
-                    linesListMap.remove(filePath);
+                }
 
-                    if (callback != null && !tag.contains("ignored")) {
-                        if (callback instanceof OnTextFileOperationsCompleteListener) {
-                            ((OnTextFileOperationsCompleteListener) callback).OnFileOperationComplete(
-                                    writeToTextFile, true, filePath, tag, null);
-                        } else {
-                            throw new ClassCastException("Wrong File operations type. Choose text type.");
-                        }
+                linesListMap.remove(filePath);
+
+                if (callback != null && !tag.contains("ignored")) {
+                    if (callback instanceof OnTextFileOperationsCompleteListener) {
+                        ((OnTextFileOperationsCompleteListener) callback).OnFileOperationComplete(
+                                writeToTextFile, true, filePath, tag, null);
+                    } else {
+                        throw new ClassCastException("Wrong File operations type. Choose text type.");
                     }
-                } catch (Exception e) {
-                    Log.e(LOG_TAG, "writeToTextFile Exception " + e.getMessage() + " " + e.getCause());
-                    if (callback != null && !tag.contains("ignored")) {
-                        if (callback instanceof OnTextFileOperationsCompleteListener) {
-                            ((OnTextFileOperationsCompleteListener) callback).OnFileOperationComplete(
-                                    writeToTextFile, false, filePath, tag, null);
-                        } else {
-                            throw new ClassCastException("Wrong File operations type. Choose text type.");
-                        }
+                }
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "writeToTextFile Exception " + e.getMessage() + " " + e.getCause());
+                if (callback != null && !tag.contains("ignored")) {
+                    if (callback instanceof OnTextFileOperationsCompleteListener) {
+                        ((OnTextFileOperationsCompleteListener) callback).OnFileOperationComplete(
+                                writeToTextFile, false, filePath, tag, null);
+                    } else {
+                        throw new ClassCastException("Wrong File operations type. Choose text type.");
                     }
                 }
             }

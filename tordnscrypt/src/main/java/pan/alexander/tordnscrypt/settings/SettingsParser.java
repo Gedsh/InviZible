@@ -1,4 +1,22 @@
 package pan.alexander.tordnscrypt.settings;
+/*
+    This file is part of InviZible Pro.
+
+    InviZible Pro is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    InviZible Pro is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+*/
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -298,9 +316,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                 try {
                     val_saved_str = sp.getString(key, "");
 
-                    if (val_saved_str != null) {
-                        val_saved_str = val_saved_str.trim();
-                    }
+                    val_saved_str = val_saved_str.trim();
 
                 } catch (ClassCastException e) {
                     isbool = true;
@@ -539,28 +555,25 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
         }
 
         if (fileOperationResult && currentFileOperation == readTextFile) {
-            settingsActivity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    switch (tag) {
-                        case SettingsActivity.dnscrypt_proxy_toml_tag:
-                            readDnscryptProxyToml(lines);
-                            break;
-                        case SettingsActivity.tor_conf_tag:
-                            readTorConf(lines);
-                            break;
-                        case SettingsActivity.itpd_conf_tag:
-                            readITPDconf(lines);
-                            break;
-                        case SettingsActivity.public_resolvers_md_tag:
-                            readPublicResolversMd(path, lines);
-                            break;
-                        case SettingsActivity.rules_tag:
-                            readRules(path, lines);
-                            break;
-                    }
-
+            settingsActivity.runOnUiThread(() -> {
+                switch (tag) {
+                    case SettingsActivity.dnscrypt_proxy_toml_tag:
+                        readDnscryptProxyToml(lines);
+                        break;
+                    case SettingsActivity.tor_conf_tag:
+                        readTorConf(lines);
+                        break;
+                    case SettingsActivity.itpd_conf_tag:
+                        readITPDconf(lines);
+                        break;
+                    case SettingsActivity.public_resolvers_md_tag:
+                        readPublicResolversMd(path, lines);
+                        break;
+                    case SettingsActivity.rules_tag:
+                        readRules(path, lines);
+                        break;
                 }
+
             });
 
         } else if (!fileOperationResult && currentFileOperation == readTextFile) {
@@ -568,12 +581,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                 readRules(path, lines);
             }
         } else if (fileOperationResult && currentFileOperation == writeToTextFile) {
-            settingsActivity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(settingsActivity, settingsActivity.getText(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
-                }
-            });
+            settingsActivity.runOnUiThread(() -> Toast.makeText(settingsActivity, settingsActivity.getText(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show());
         }
     }
 }

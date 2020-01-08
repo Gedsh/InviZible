@@ -15,11 +15,10 @@ package pan.alexander.tordnscrypt.dialogs;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import androidx.appcompat.app.AlertDialog;
 import androidx.preference.PreferenceManager;
@@ -45,20 +44,13 @@ public class NotificationHelper extends ExtendedDialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
         builder.setMessage(message)
                 .setTitle(R.string.helper_dialog_title)
-                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        notificationHelper = null;
+                .setPositiveButton(R.string.ok, (dialog, which) -> notificationHelper = null)
+                .setNegativeButton(R.string.dont_show, (dialog, id) -> {
+                    if (getActivity() != null) {
+                        new PrefManager(getActivity()).setBoolPref("helper_no_show_" + tag, true);
                     }
-                })
-                .setNegativeButton(R.string.dont_show, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        if (getActivity() != null) {
-                            new PrefManager(getActivity()).setBoolPref("helper_no_show_" + tag, true);
-                        }
-                        notificationHelper = null;
-                        dismiss();
-                    }
+                    notificationHelper = null;
+                    dismiss();
                 });
 
         return builder;

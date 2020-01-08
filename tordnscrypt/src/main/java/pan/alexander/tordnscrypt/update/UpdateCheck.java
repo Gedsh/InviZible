@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.update;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
@@ -332,96 +332,92 @@ public class UpdateCheck {
     }
 
     public void requestUpdateData(final String domainName, final String appSign) {
-        Thread requestDataThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    String rsaSign = RSASign(appSign);
+        Thread requestDataThread = new Thread(() -> {
+            try {
+                String rsaSign = RSASign(appSign);
 
-                    if (rsaSign == null){
-                        if (context != null) {
-                            if (MainActivity.modernDialog!=null)
-                                ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
-                            new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_fault).toString());
-                        }
-                        Log.e(LOG_TAG,"RSASign(appSign) returns null");
-                        return;
+                if (rsaSign == null){
+                    if (context != null) {
+                        if (MainActivity.modernDialog!=null)
+                            ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
+                        new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_fault).toString());
                     }
+                    Log.e(LOG_TAG,"RSASign(appSign) returns null");
+                    return;
+                }
 
-                    String registrationCode = new PrefManager(context).getStrPref("registrationCode");
+                String registrationCode = new PrefManager(context).getStrPref("registrationCode");
 
-                    HashMap<String,String> request = new HashMap<>();
-                    request.put("sign",rsaSign);
-                    request.put("key",convertKeyForPHP(publicKey.getEncoded()));
-                    request.put("app_proc_version",appProcVersion);
-                    request.put("app_version",appVersion);
-                    request.put("registration_code",registrationCode.replaceAll("\\W",""));
-                    request.put("submit","submit");
-
-
-                    String url = domainName + "/ru/update";
-                    String serverAnswerEncoded = HttpsRequest.post(url,HttpsRequest.hashMapToUrl(request));
-
-                    //Uses for testing purposes:
-                    //((MainActivity) context).showUpdateMessage(serverAnswerEncoded);
-
-                    if (serverAnswerEncoded.isEmpty()) {
-                        if (context !=null) {
-                            if (MainActivity.modernDialog!=null)
-                                ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_check_warning).toString());
-                            new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_check_warning_menu).toString());
-                        }
-                        Log.e(LOG_TAG,"requestUpdateData function fault - server answer is empty");
-                        return;
-                    } else if(serverAnswerEncoded.contains("fault")) {
-                        if(serverAnswerEncoded.contains("wrong code")) {
-                            if (context !=null) {
-                                ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_wrong_code).toString());
-                                new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
-                                new PrefManager(context).setStrPref("updateTimeLast", "");
-                            }
-                            wrongRegistrationCode = true;
-                            Log.e(LOG_TAG,"requestUpdateData function fault - server returns wrong code");
-                        } else if (serverAnswerEncoded.contains("over 3 activations")) {
-                            if (context !=null) {
-                                ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_over_three_activations).toString());
-                                new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
-                            }
-                            wrongRegistrationCode = true;
-                            Log.e(LOG_TAG,"requestUpdateData function fault - server returns over 3 activations");
-                        }  else if (serverAnswerEncoded.contains("over 5 times")) {
-                            if (context !=null) {
-                                ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_over_five_times).toString());
-                                new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
-                            }
-                            Log.e(LOG_TAG,"requestUpdateData function fault - server returns over 5 times");
-                        } else {
-                            if (context != null) {
-                                if (MainActivity.modernDialog != null)
-                                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_check_warning).toString());
-                                new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_check_warning_menu).toString());
-                            }
-                            Log.e(LOG_TAG, "requestUpdateData function fault - server returns fault");
-                            return;
-                        }
-                    }
+                HashMap<String,String> request = new HashMap<>();
+                request.put("sign",rsaSign);
+                request.put("key",convertKeyForPHP(publicKey.getEncoded()));
+                request.put("app_proc_version",appProcVersion);
+                request.put("app_version",appVersion);
+                request.put("registration_code",registrationCode.replaceAll("\\W",""));
+                request.put("submit","submit");
 
 
-                     String serverAnswer = RSADecrypt(serverAnswerEncoded);
+                String url = domainName + "/ru/update";
+                String serverAnswerEncoded = HttpsRequest.post(url,HttpsRequest.hashMapToUrl(request));
 
-                    if (!serverAnswer.isEmpty())
-                        compareVersions(serverAnswer);
+                //Uses for testing purposes:
+                //((MainActivity) context).showUpdateMessage(serverAnswerEncoded);
 
-                } catch (Exception e) {
+                if (serverAnswerEncoded.isEmpty()) {
                     if (context !=null) {
                         if (MainActivity.modernDialog!=null)
                             ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_check_warning).toString());
                         new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_check_warning_menu).toString());
                     }
-                    Log.e(LOG_TAG,"requestUpdateData function fault " + e.getMessage());
+                    Log.e(LOG_TAG,"requestUpdateData function fault - server answer is empty");
+                    return;
+                } else if(serverAnswerEncoded.contains("fault")) {
+                    if(serverAnswerEncoded.contains("wrong code")) {
+                        if (context !=null) {
+                            ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_wrong_code).toString());
+                            new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
+                            new PrefManager(context).setStrPref("updateTimeLast", "");
+                        }
+                        wrongRegistrationCode = true;
+                        Log.e(LOG_TAG,"requestUpdateData function fault - server returns wrong code");
+                    } else if (serverAnswerEncoded.contains("over 3 activations")) {
+                        if (context !=null) {
+                            ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_over_three_activations).toString());
+                            new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
+                        }
+                        wrongRegistrationCode = true;
+                        Log.e(LOG_TAG,"requestUpdateData function fault - server returns over 3 activations");
+                    }  else if (serverAnswerEncoded.contains("over 5 times")) {
+                        if (context !=null) {
+                            ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_over_five_times).toString());
+                            new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
+                        }
+                        Log.e(LOG_TAG,"requestUpdateData function fault - server returns over 5 times");
+                    } else {
+                        if (context != null) {
+                            if (MainActivity.modernDialog != null)
+                                ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_check_warning).toString());
+                            new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_check_warning_menu).toString());
+                        }
+                        Log.e(LOG_TAG, "requestUpdateData function fault - server returns fault");
+                        return;
+                    }
                 }
-            }
 
+
+                 String serverAnswer = RSADecrypt(serverAnswerEncoded);
+
+                if (!serverAnswer.isEmpty())
+                    compareVersions(serverAnswer);
+
+            } catch (Exception e) {
+                if (context !=null) {
+                    if (MainActivity.modernDialog!=null)
+                        ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_check_warning).toString());
+                    new PrefManager(context).setStrPref("LastUpdateResult",context.getText(R.string.update_check_warning_menu).toString());
+                }
+                Log.e(LOG_TAG,"requestUpdateData function fault " + e.getMessage());
+            }
         });
         requestDataThread.start();
     }
