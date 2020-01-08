@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.update;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Notification;
@@ -239,9 +239,11 @@ public class UpdateService extends Service {
                         new PrefManager(UpdateService.this).setStrPref("LastUpdateResult",
                                 UpdateService.this.getText(R.string.update_installed).toString());
 
-                        stopRunningModules(fileToDownload);
+                        if (fileToDownload != null) {
+                            stopRunningModules(fileToDownload);
+                        }
 
-                        if (fileToDownload.contains("InviZible")) {
+                        if (fileToDownload != null && fileToDownload.contains("InviZible")) {
                             allowSendBroadcastAfterUpdate = false;
 
                             File file = new File(path);
@@ -264,7 +266,9 @@ public class UpdateService extends Service {
                             allowSendBroadcastAfterUpdate = true;
 
                             FileOperations.moveBinaryFile(UpdateService.this, cacheDir.getPath(), fileToDownload, appDataDir + "/app_bin", "executable_ignored");
-                            runPreviousStoppedModules(fileToDownload);
+                            if (fileToDownload != null) {
+                                runPreviousStoppedModules(fileToDownload);
+                            }
 
                             if (!new PrefManager(UpdateService.this).getStrPref("UpdateResultMessage").equals(getString(R.string.update_fault))) {
                                 new PrefManager(UpdateService.this).setStrPref("UpdateResultMessage", getString(R.string.update_installed));
@@ -505,8 +509,13 @@ public class UpdateService extends Service {
 
     @SuppressWarnings("unused")
     private void removeOldApkFileFromPrevUpdate(File dir) {
+
         try {
-            for (File file: dir.listFiles()) {
+            if (dir.listFiles() == null) {
+                return;
+            }
+
+            for (File file: Objects.requireNonNull(dir.listFiles())) {
                 if (file.getName().contains("InviZible")) {
                     boolean result = file.delete();
                 }

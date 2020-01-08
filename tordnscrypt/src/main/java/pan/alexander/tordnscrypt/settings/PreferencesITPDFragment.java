@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.SharedPreferences;
@@ -41,13 +41,11 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class PreferencesITPDFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
 
-    ArrayList<String> key_itpd;
-    ArrayList<String> val_itpd;
-    ArrayList<String> key_itpd_orig;
-    ArrayList<String> val_itpd_orig;
-    String appDataDir;
-    String itpdPath;
-    String busyboxPath;
+    private ArrayList<String> key_itpd;
+    private ArrayList<String> val_itpd;
+    private ArrayList<String> key_itpd_orig;
+    private ArrayList<String> val_itpd_orig;
+    private String appDataDir;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -57,39 +55,44 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
 
         addPreferencesFromResource(R.xml.preferences_i2pd);
 
-        try {
-            findPreference("Allow incoming connections").setOnPreferenceChangeListener(this);
-            findPreference("incoming port").setOnPreferenceChangeListener(this);
-            findPreference("incoming host").setOnPreferenceChangeListener(this);
-            findPreference("ipv4").setOnPreferenceChangeListener(this);
-            findPreference("ipv6").setOnPreferenceChangeListener(this);
-            findPreference("notransit").setOnPreferenceChangeListener(this);
-            findPreference("floodfill").setOnPreferenceChangeListener(this);
-            findPreference("bandwidth").setOnPreferenceChangeListener(this);
-            findPreference("share").setOnPreferenceChangeListener(this);
-            findPreference("ssu").setOnPreferenceChangeListener(this);
-            findPreference("ntcp").setOnPreferenceChangeListener(this);
-            findPreference("Enable ntcpproxy").setOnPreferenceChangeListener(this);
-            findPreference("ntcpproxy").setOnPreferenceChangeListener(this);
-            findPreference("HTTP proxy").setOnPreferenceChangeListener(this);
-            findPreference("HTTP proxy port").setOnPreferenceChangeListener(this);
-            findPreference("Socks proxy").setOnPreferenceChangeListener(this);
-            findPreference("Socks proxy port").setOnPreferenceChangeListener(this);
-            findPreference("SAM interface").setOnPreferenceChangeListener(this);
-            findPreference("SAM interface port").setOnPreferenceChangeListener(this);
-            findPreference("elgamal").setOnPreferenceChangeListener(this);
-            findPreference("UPNP").setOnPreferenceChangeListener(this);
-            findPreference("ntcp2 enabled").setOnPreferenceChangeListener(this);
-            findPreference("verify").setOnPreferenceChangeListener(this);
-            findPreference("transittunnels").setOnPreferenceChangeListener(this);
-            findPreference("openfiles").setOnPreferenceChangeListener(this);
-            findPreference("coresize").setOnPreferenceChangeListener(this);
-            findPreference("ntcpsoft").setOnPreferenceChangeListener(this);
-            findPreference("ntcphard").setOnPreferenceChangeListener(this);
-            findPreference("defaulturl").setOnPreferenceChangeListener(this);
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "PreferencesITPDFragment setOnPreferenceChangeListener exception " + e.getMessage() + " " + e.getCause());
-            Toast.makeText(getActivity(), "PreferencesITPDFragment exception " + e.getMessage(), Toast.LENGTH_LONG).show();
+        ArrayList<Preference> preferences = new ArrayList<>();
+
+        preferences.add(findPreference("Allow incoming connections"));
+        preferences.add(findPreference("incoming port"));
+        preferences.add(findPreference("incoming host"));
+        preferences.add(findPreference("ipv4"));
+        preferences.add(findPreference("ipv6"));
+        preferences.add(findPreference("notransit"));
+        preferences.add(findPreference("floodfill"));
+        preferences.add(findPreference("bandwidth"));
+        preferences.add(findPreference("share"));
+        preferences.add(findPreference("ssu"));
+        preferences.add(findPreference("ntcp"));
+        preferences.add(findPreference("Enable ntcpproxy"));
+        preferences.add(findPreference("ntcpproxy"));
+        preferences.add(findPreference("HTTP proxy"));
+        preferences.add(findPreference("HTTP proxy port"));
+        preferences.add(findPreference("Socks proxy"));
+        preferences.add(findPreference("Socks proxy port"));
+        preferences.add(findPreference("SAM interface"));
+        preferences.add(findPreference("SAM interface port"));
+        preferences.add(findPreference("elgamal"));
+        preferences.add(findPreference("UPNP"));
+        preferences.add(findPreference("ntcp2 enabled"));
+        preferences.add(findPreference("verify"));
+        preferences.add(findPreference("transittunnels"));
+        preferences.add(findPreference("openfiles"));
+        preferences.add(findPreference("coresize"));
+        preferences.add(findPreference("ntcpsoft"));
+        preferences.add(findPreference("ntcphard"));
+        preferences.add(findPreference("defaulturl"));
+
+        for (Preference preference : preferences) {
+            if (preference != null) {
+                preference.setOnPreferenceChangeListener(this);
+            } else {
+                Log.e(LOG_TAG, "PreferencesITPDFragment preference is null exception");
+            }
         }
 
 
@@ -118,8 +121,6 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
 
         PathVars pathVars = new PathVars(getActivity());
         appDataDir = pathVars.appDataDir;
-        itpdPath = pathVars.itpdPath;
-        busyboxPath = pathVars.busyboxPath;
     }
 
     public void onStop() {

@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.os.Bundle;
@@ -53,24 +53,34 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
 
         addPreferencesFromResource(R.xml.preferences_dnscrypt);
 
-        Objects.requireNonNull(findPreference("listen_port")).setOnPreferenceChangeListener(this);
-        Objects.requireNonNull(findPreference("dnscrypt_servers")).setOnPreferenceChangeListener(this);
-        Objects.requireNonNull(findPreference("doh_servers")).setOnPreferenceChangeListener(this);
-        Objects.requireNonNull(findPreference("require_dnssec")).setOnPreferenceChangeListener(this);
-        Objects.requireNonNull(findPreference("require_nolog")).setOnPreferenceChangeListener(this);
-        Objects.requireNonNull(findPreference("require_nofilter")).setOnPreferenceChangeListener(this);
-        Objects.requireNonNull(findPreference("force_tcp")).setOnPreferenceChangeListener(this);
-        Objects.requireNonNull(findPreference("Enable proxy")).setOnPreferenceChangeListener(this);
-        Objects.requireNonNull(findPreference("proxy_port")).setOnPreferenceChangeListener(this);
-        Objects.requireNonNull(findPreference("fallback_resolver")).setOnPreferenceChangeListener(this);
-        Objects.requireNonNull(findPreference("ignore_system_dns")).setOnPreferenceChangeListener(this);
-        Objects.requireNonNull(findPreference("Enable Query logging")).setOnPreferenceChangeListener(this);
-        Objects.requireNonNull(findPreference("ignored_qtypes")).setOnPreferenceChangeListener(this);
-        Objects.requireNonNull(findPreference("Enable Suspicious logging")).setOnPreferenceChangeListener(this);
-        Objects.requireNonNull(findPreference("Sources")).setOnPreferenceChangeListener(this);
-        Objects.requireNonNull(findPreference("refresh_delay")).setOnPreferenceChangeListener(this);
-        Objects.requireNonNull(findPreference("Relays")).setOnPreferenceChangeListener(this);
-        Objects.requireNonNull(findPreference("refresh_delay_relays")).setOnPreferenceChangeListener(this);
+        ArrayList<Preference> preferences = new ArrayList<>();
+
+        preferences.add(findPreference("listen_port"));
+        preferences.add(findPreference("dnscrypt_servers"));
+        preferences.add(findPreference("doh_servers"));
+        preferences.add(findPreference("require_dnssec"));
+        preferences.add(findPreference("require_nolog"));
+        preferences.add(findPreference("require_nofilter"));
+        preferences.add(findPreference("force_tcp"));
+        preferences.add(findPreference("Enable proxy"));
+        preferences.add(findPreference("proxy_port"));
+        preferences.add(findPreference("fallback_resolver"));
+        preferences.add(findPreference("ignore_system_dns"));
+        preferences.add(findPreference("Enable Query logging"));
+        preferences.add(findPreference("ignored_qtypes"));
+        preferences.add(findPreference("Enable Suspicious logging"));
+        preferences.add(findPreference("Sources"));
+        preferences.add(findPreference("refresh_delay"));
+        preferences.add(findPreference("Relays"));
+        preferences.add(findPreference("refresh_delay_relays"));
+
+        for (Preference preference : preferences) {
+            if (preference != null) {
+                preference.setOnPreferenceChangeListener(this);
+            } else {
+                Log.e(LOG_TAG, "PreferencesDNSFragment preference is null exception");
+            }
+        }
 
         if (getArguments() != null) {
             key_toml = getArguments().getStringArrayList("key_toml");

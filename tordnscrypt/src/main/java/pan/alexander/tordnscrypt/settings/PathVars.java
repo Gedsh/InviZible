@@ -15,9 +15,10 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -56,6 +57,7 @@ public class PathVars {
 
     String obfsPath;
 
+    @SuppressLint("SdCardPath")
     public PathVars (Context context) {
 
         appDataDir = context.getApplicationInfo().dataDir;
@@ -88,9 +90,7 @@ public class PathVars {
         itpdHttpProxyPort = shPref.getString("HTTP proxy port","4444");
 
         torTransPort = shPref.getString("TransPort","9040");
-        if (torTransPort != null) {
-            torTransPort = torTransPort.replaceAll(".+:","");
-        }
+        torTransPort = torTransPort.replaceAll(".+:","");
 
         dnsCryptFallbackRes = shPref.getString("fallback_resolver","9.9.9.9");
         torDNSPort = shPref.getString("DNSPort","5400");
@@ -108,10 +108,6 @@ public class PathVars {
 
     private String getIptablesPath(SharedPreferences shPref) {
         String iptablesSelector = shPref.getString("pref_common_use_iptables","1");
-
-        if (iptablesSelector == null) {
-            return "";
-        }
 
         String path;
         switch (iptablesSelector) {
@@ -131,10 +127,6 @@ public class PathVars {
     private String getBusyBoxPath(Context context, SharedPreferences shPref) {
 
         String busyBoxSelector = shPref.getString("pref_common_use_busybox","1");
-
-        if (busyBoxSelector == null) {
-            return "";
-        }
 
         String path;
         switch (busyBoxSelector) {
