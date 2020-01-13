@@ -73,6 +73,8 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
         preferences.add(findPreference("refresh_delay"));
         preferences.add(findPreference("Relays"));
         preferences.add(findPreference("refresh_delay_relays"));
+        preferences.add(findPreference("block_unqualified"));
+        preferences.add(findPreference("block_undelegated"));
 
         for (Preference preference : preferences) {
             if (preference != null) {

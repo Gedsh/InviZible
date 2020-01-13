@@ -98,6 +98,18 @@
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_dnscrypt_filters_categ"
         android:key="pref_dnscrypt_filters_categ">
+        <CheckBoxPreference
+            android:id="@+id/block_unqualified"
+            android:defaultValue="true"
+            android:key="block_unqualified"
+            android:title="@string/pref_dnscrypt_block_unqualified"
+            android:summary="@string/pref_dnscrypt_block_unqualified_summ"/>
+        <CheckBoxPreference
+            android:id="@+id/block_undelegated"
+            android:defaultValue="true"
+            android:key="block_undelegated"
+            android:title="@string/pref_dnscrypt_block_undelegated"
+            android:summary="@string/pref_dnscrypt_block_undelegated_summ"/>
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_dnscrypt_forwarding_rules_categ"
         android:key="pref_dnscrypt_forwarding_rules">

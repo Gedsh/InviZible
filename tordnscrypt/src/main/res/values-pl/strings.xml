@@ -269,6 +269,9 @@
     <string name="title_dnscrypt_nx_log">Log podejrzanych zapytan DNSCrypt</string>
     <string name="dnscrypt_empty_log">Log pusty</string>
 
+    <string name="pref_dnscrypt_block_unqualified_summ">Natychmiast odpowiedz na zapytania A i AAAA dotyczące nazw hostów bez nazwy domeny.</string>
+    <string name="pref_dnscrypt_block_undelegated_summ">Natychmiast reaguj na zapytania dotyczące lokalnych stref zamiast przeciekać je do resolverów w górę (zawsze powodując błędy lub przekroczenia limitu czasu).</string>
+
     <string name="pref_tor_virtual_addr_network_IPv4_summ">Gdy tor musi przydzielic adres wirtualny z powodu polecenia MAPADDRESS lub wlasnosci AutomapHostsOnResolve, Tor wybiera nieprzydzielony adres z tego zakresu.</string>
     <string name="pref_tor_avoid_disc_writes_summ">Jezeli rozne od zera, sprobuj zapisywac na dysk z mniejsza czestotliwoscia.</string>
     <string name="pref_tor_connections_padding_summ">Zarzadza Paddingiem Tora jako proba obrony przed analiza traffica. Zablokuj dla zmniejszenia transmisji.</string>
@@ -438,5 +441,6 @@
     <string name="pref_dnscrypt_relays_title">Przekaźnik DNSCrypt</string>
     <string name="vpn_mode_active">Tryb VPN jest aktywny</string>
     <string name="vpn_mode_off">Tryb VPN jest wyłączony</string>
-    <string name="vpn_mode_error">" Błąd trybu VPN!"</string>
+    <string name="vpn_mode_error">Błąd trybu VPN!</string>
+    <string name="vpn_tor_tether_summ">Skonfiguruj użycie serwera proxy w ustawieniach podłączonego urządzenia. Wartości domyślne: IP:10.1.10.1 Port:8118</string>
 </resources>

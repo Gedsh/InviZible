@@ -335,6 +335,11 @@
     <string name="title_dnscrypt_ip_blacklist" translatable="false">DNSCrypt IP Blacklist</string>
     <string name="title_dnscrypt_whitelist" translatable="false">DNSCrypt Whitelist</string>
 
+    <string name="pref_dnscrypt_block_unqualified" translatable="false">block_unqualified</string>
+    <string name="pref_dnscrypt_block_unqualified_summ">Immediately respond to A and AAAA queries for host names without a domain name.</string>
+    <string name="pref_dnscrypt_block_undelegated" translatable="false">block_undelegated</string>
+    <string name="pref_dnscrypt_block_undelegated_summ">Immediately respond to queries for local zones instead of leaking them to upstream resolvers (always causing errors or timeouts).</string>
+
     <string name="pref_tor_virtual_addr_network_IPv4" translatable="false">VirtualAddrNetworkIPv4</string>
     <string name="pref_tor_virtual_addr_network_IPv4_summ">When Tor needs to assign a virtual (unused) address because of a MAPADDRESS command from the controller or the AutomapHostsOnResolve feature, Tor picks an unassigned address from this range.</string>
     <string name="pref_tor_avoid_disc_writes" translatable="false">AvoidDiskWrites</string>
@@ -580,5 +585,6 @@
     <string name="vpn_mode_active">VPN mode is active</string>
     <string name="vpn_mode_off">VPN mode is off</string>
     <string name="vpn_mode_error">VPN mode error!</string>
+    <string name="vpn_tor_tether_summ">Please configure the use of proxy server in the settings of the connected device. Default values: IP:10.1.10.1 Port:8118</string>
 
 </resources>
