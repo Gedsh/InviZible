@@ -513,10 +513,32 @@ public class MainActivity extends LangAppCompatActivity
         ModuleState itpdState = modulesStatus.getItpdState();
 
         if (dnsCryptState != STOPPED || torState != STOPPED || itpdState != STOPPED) {
-            prepareVPNService();
+            if (modulesStatus.isUseModulesWithRoot()) {
+                Toast.makeText(this, "Stop modules...", Toast.LENGTH_LONG).show();
+                disableUseModulesWithRoot();
+            } else {
+                prepareVPNService();
+            }
+        }
+
+        if (dnsCryptState == STOPPED && torState == STOPPED && itpdState == STOPPED
+                && modulesStatus.isUseModulesWithRoot()) {
+           disableUseModulesWithRoot();
         }
 
         invalidateOptionsMenu();
+    }
+
+    private void disableUseModulesWithRoot() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences.edit().putBoolean("swUseModulesRoot", false).apply();
+
+        ModulesAux.stopModulesIfRunning(this);
+        modulesStatus.setUseModulesWithRoot(false);
+        modulesStatus.setContextUIDUpdateRequested(true);
+        ModulesAux.requestModulesStatusUpdate(this);
+
+        Log.i(LOG_TAG, "Switch to VPN mode, disable use modules with root option");
     }
 
     private void checkHotspotState() {
