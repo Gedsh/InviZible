@@ -351,7 +351,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
             if (new PrefManager(getActivity()).getBoolPref("Tor Running")
                     && !new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
-                if (modulesStatus.isContextUIDUpdateRequested()) {
+                if (modulesStatus.isContextUIDUpdateRequested()|| fixedModuleState == RUNNING) {
                     Toast.makeText(getActivity(), R.string.please_wait, Toast.LENGTH_SHORT).show();
                     setStartButtonEnabled(true);
                     return;
@@ -383,7 +383,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
             } else if (!new PrefManager(getActivity()).getBoolPref("Tor Running")
                     && !new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
-                if (modulesStatus.isContextUIDUpdateRequested()) {
+                if (modulesStatus.isContextUIDUpdateRequested() || fixedModuleState == RUNNING) {
                     Toast.makeText(getActivity(), R.string.please_wait, Toast.LENGTH_SHORT).show();
                     setStartButtonEnabled(true);
                     return;

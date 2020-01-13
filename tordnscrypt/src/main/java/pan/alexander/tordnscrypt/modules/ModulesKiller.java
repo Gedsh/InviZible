@@ -152,17 +152,17 @@ public class ModulesKiller {
 
             if (!result) {
 
-                if (!moduleStartedWithRoot) {
+                if (rootIsAvailable) {
+                    Log.w(LOG_TAG, "ModulesKiller cannot stop DNSCrypt. Stop with root method!");
+                    result = killModule(pathVars.dnscryptPath, dnsCryptPid, dnsCryptThread, true, "SIGKILL", 10);
+                }
+
+                if (!moduleStartedWithRoot && !result) {
                     Log.w(LOG_TAG, "ModulesKiller cannot stop DNSCrypt. Stop with interrupt thread!");
 
                     makeDelay(5);
 
                     result = stopModuleWithInterruptThread(dnsCryptThread);
-                }
-
-                if (rootIsAvailable && !result) {
-                    Log.w(LOG_TAG, "ModulesKiller cannot stop DNSCrypt. Stop with root method!");
-                    result = killModule(pathVars.dnscryptPath, dnsCryptPid, dnsCryptThread, true, "SIGKILL", 10);
                 }
             }
 
@@ -225,7 +225,12 @@ public class ModulesKiller {
 
             if (!result) {
 
-                if (!moduleStartedWithRoot) {
+                if (rootIsAvailable) {
+                    Log.w(LOG_TAG, "ModulesKiller cannot stop Tor. Stop with root method!");
+                    result = killModule(pathVars.torPath, torPid, torThread, true, "SIGKILL", 10);
+                }
+
+                if (!moduleStartedWithRoot && !result) {
                     Log.w(LOG_TAG, "ModulesKiller cannot stop Tor. Stop with interrupt thread!");
 
                     makeDelay(5);
@@ -233,10 +238,6 @@ public class ModulesKiller {
                     result = stopModuleWithInterruptThread(torThread);
                 }
 
-                if (rootIsAvailable && !result) {
-                    Log.w(LOG_TAG, "ModulesKiller cannot stop Tor. Stop with root method!");
-                    result = killModule(pathVars.torPath, torPid, torThread, true, "SIGKILL", 10);
-                }
             }
 
             if (moduleStartedWithRoot) {
@@ -295,17 +296,18 @@ public class ModulesKiller {
             boolean result = doThreeAttemptsToStopModule(pathVars.itpdPath, itpdPid, itpdThread, moduleStartedWithRoot);
 
             if (!result) {
-                if (!moduleStartedWithRoot) {
+
+                if (rootIsAvailable ) {
+                    Log.w(LOG_TAG, "ModulesKiller cannot stop I2P. Stop with root method!");
+                    result = killModule(pathVars.itpdPath, itpdPid, itpdThread, true, "SIGKILL", 10);
+                }
+
+                if (!moduleStartedWithRoot && !result) {
                     Log.w(LOG_TAG, "ModulesKiller cannot stop I2P. Stop with interrupt thread!");
 
                     makeDelay(5);
 
                     result = stopModuleWithInterruptThread(itpdThread);
-                }
-
-                if (rootIsAvailable && !result) {
-                    Log.w(LOG_TAG, "ModulesKiller cannot stop I2P. Stop with root method!");
-                    result = killModule(pathVars.itpdPath, itpdPid, itpdThread, true, "SIGKILL", 10);
                 }
             }
 
@@ -358,7 +360,7 @@ public class ModulesKiller {
             module = module.substring(module.lastIndexOf("/"));
         }
 
-        String[] preparedCommands = prepareKillCommands(module, pid, signal);
+        String[] preparedCommands = prepareKillCommands(module, pid, signal, killWithRoot);
 
         if ((thread == null || !thread.isAlive()) && modulesStatus.isRootAvailable()
                 || killWithRoot) {
@@ -441,10 +443,10 @@ public class ModulesKiller {
         return shellResult;
     }
 
-    private String[] prepareKillCommands(String module, String pid, String signal) {
+    private String[] prepareKillCommands(String module, String pid, String signal, boolean killWithRoot) {
         String[] result;
 
-        if (pid.isEmpty()) {
+        if (pid.isEmpty() || killWithRoot) {
             String killStringBusybox = pathVars.busyboxPath + "pkill " + module;
             String killAllStringBusybox = pathVars.busyboxPath + "kill $(pgrep " + module + ")";
             String killStringToyBox = "toybox pkill " + module;

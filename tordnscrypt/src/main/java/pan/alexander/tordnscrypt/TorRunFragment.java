@@ -372,7 +372,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
             if (!new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("Tor Running") &&
                     new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
-                if (modulesStatus.isContextUIDUpdateRequested()) {
+                if (modulesStatus.isContextUIDUpdateRequested()|| fixedModuleState == RUNNING) {
                     Toast.makeText(getActivity(), R.string.please_wait, Toast.LENGTH_SHORT).show();
                     setStartButtonEnabled(true);
                     return;
@@ -409,7 +409,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
             } else if (!new PrefManager(getActivity()).getBoolPref("Tor Running") &&
                     !new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
-                if (modulesStatus.isContextUIDUpdateRequested()) {
+                if (modulesStatus.isContextUIDUpdateRequested()|| fixedModuleState == RUNNING) {
                     Toast.makeText(getActivity(), R.string.please_wait, Toast.LENGTH_SHORT).show();
                     setStartButtonEnabled(true);
                     return;
