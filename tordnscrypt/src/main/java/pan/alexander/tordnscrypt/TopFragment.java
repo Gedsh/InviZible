@@ -71,7 +71,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 
 public class TopFragment extends Fragment {
 
-    public static String DNSCryptVersion = "2.0.35";
+    public static String DNSCryptVersion = "2.0.36";
     public static String TorVersion = "4.1.5";
     public static String ITPDVersion = "2.29.0";
 
