@@ -192,7 +192,7 @@ public class ModulesStateLoop extends TimerTask {
                 stopCounter = STOP_COUNTER_DELAY;
             }
 
-        } else if (useModulesWithRoot && operationMode != ROOT_MODE) {
+        } else if (useModulesWithRoot && operationMode == ROOT_MODE) {
 
             if (dnsCryptState != STOPPED && dnsCryptState != RUNNING) {
                 return;
