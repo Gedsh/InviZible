@@ -102,6 +102,7 @@ public class ServiceVPN extends VpnService {
     private boolean registeredConnectivityChanged = false;
 
     private PathVars pathVars;
+    private static int ownUID = Process.myUid();
 
     private Object networkCallback = null;
     private ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
@@ -113,6 +114,7 @@ public class ServiceVPN extends VpnService {
 
     private ModulesStatus modulesStatus;
 
+    private boolean canFilter = true;
 
     @SuppressLint("UseSparseArrays")
     private Map<Integer, Boolean> mapUidAllowed = new HashMap<>();
@@ -208,7 +210,7 @@ public class ServiceVPN extends VpnService {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean ip6 = prefs.getBoolean("ipv6", false);
         boolean subnet = prefs.getBoolean("VPN subnet", true);
-        boolean tethering = prefs.getBoolean("VPN tethering", false);
+        boolean tethering = prefs.getBoolean("VPN tethering", true);
         boolean lan = prefs.getBoolean("VPN lan", false);
 
         // Build VPN service
@@ -520,6 +522,11 @@ public class ServiceVPN extends VpnService {
         return uid;
     }
 
+    // Called from native code
+    public boolean protectSocket(int socket) {
+        return protect(socket);
+    }
+
     private boolean isSupported(int protocol) {
         return (protocol == 1 /* ICMPv4 */ ||
                 protocol == 58 /* ICMPv6 */ ||
@@ -536,7 +543,9 @@ public class ServiceVPN extends VpnService {
 
         packet.allowed = false;
         // https://android.googlesource.com/platform/system/core/+/master/include/private/android_filesystem_config.h
-        if (packet.protocol == 17 /* UDP */ && !filterUDP) {
+        if (!canFilter) {
+            packet.allowed = true;
+        } else if (packet.protocol == 17 /* UDP */ && !filterUDP) {
             // Allow unfiltered UDP
             packet.allowed = true;
             //Log.i(LOG_TAG, "Allowing UDP " + packet);
@@ -545,19 +554,20 @@ public class ServiceVPN extends VpnService {
             // Allow system applications in disconnected state
             packet.allowed = true;
             Log.w(LOG_TAG, "Allowing disconnected system " + packet);
-        } else if (packet.uid < 2000 &&
-                modulesStatus.getTorState() != RUNNING &&
-                !mapUidKnown.containsKey(packet.uid) && isSupported(packet.protocol)) {
+        } else if (packet.uid <= 2000 &&
+                (modulesStatus.getTorState() != RUNNING) &&
+                !mapUidKnown.containsKey(packet.uid)
+                && isSupported(packet.protocol)) {
             // Allow unknown system traffic
             packet.allowed = true;
             Log.w(LOG_TAG, "Allowing unknown system " + packet);
-        } else if (packet.uid == Process.myUid()) {
+        } else if (packet.uid == ownUID) {
             // Allow self
             packet.allowed = true;
             Log.w(LOG_TAG, "Allowing self " + packet);
         } else if (modulesStatus.getTorState() == RUNNING
                 && packet.protocol != 6 && packet.dport != 53) {
-            packet.allowed = false;
+            Log.w(LOG_TAG, "Disallowing non tcp traffic when Tor is running " + packet);
         } else {
 
             if (mapUidAllowed != null && mapUidAllowed.containsKey(packet.uid)) {
@@ -573,12 +583,14 @@ public class ServiceVPN extends VpnService {
 
         Allowed allowed = null;
         if (packet.allowed) {
-            if (mapForwardPort.containsKey(packet.dport)) {
+            if (packet.daddr.equals("127.0.0.1") || packet.uid == ownUID) {
+                allowed = new Allowed();
+            } else if (mapForwardPort.containsKey(packet.dport)) {
                 Forward fwd = mapForwardPort.get(packet.dport);
                 if (fwd != null) {
                     if (fwd.ruid == packet.uid) {
                         allowed = new Allowed();
-                    } else if(!packet.daddr.equals("127.0.0.1")) {
+                    } else {
                         allowed = new Allowed(fwd.raddr, fwd.rport);
                         packet.data = "> " + fwd.raddr + "/" + fwd.rport;
                     }
@@ -588,7 +600,7 @@ public class ServiceVPN extends VpnService {
                 if (fwd != null) {
                     if (fwd.ruid == packet.uid) {
                         allowed = new Allowed();
-                    } else if (!packet.daddr.equals("127.0.0.1")) {
+                    } else {
                         allowed = new Allowed(fwd.raddr, fwd.rport);
                         packet.data = "> " + fwd.raddr + "/" + fwd.rport;
                     }
@@ -644,6 +656,8 @@ public class ServiceVPN extends VpnService {
         notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
 
         Log.i(LOG_TAG, "Create version=" + Util.getSelfVersionName(this) + "/" + Util.getSelfVersionCode(this));
+
+        canFilter = Util.canFilter(this);
 
         if (jni_context != 0) {
             Log.w(LOG_TAG, "Create with context=" + jni_context);
@@ -714,8 +728,12 @@ public class ServiceVPN extends VpnService {
                 // Make sure the right DNS servers are being used
                 List<InetAddress> dns = linkProperties.getDnsServers();
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ServiceVPN.this);
-                if (prefs.getBoolean("reload_onconnectivity", true) ||
-                        (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) && !same(last_dns, dns)) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                        ? !same(last_dns, dns)
+                        : prefs.getBoolean("reload_onconnectivity", false)) {
+                    Log.i(LOG_TAG, "VPN Changed link properties=" + linkProperties +
+                            "DNS cur=" + TextUtils.join(",", dns) +
+                            "DNS prv=" + (last_dns == null ? null : TextUtils.join(",", last_dns)));
                     last_dns = dns;
                     Log.i(LOG_TAG, "VPN Changed link properties=" + linkProperties);
                     reload("VPN Link properties changed", ServiceVPN.this);
