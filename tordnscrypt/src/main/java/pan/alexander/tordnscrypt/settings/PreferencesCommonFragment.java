@@ -39,6 +39,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -60,12 +61,14 @@ import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 
 public class PreferencesCommonFragment extends PreferenceFragmentCompat
         implements Preference.OnPreferenceChangeListener, OnTextFileOperationsCompleteListener {
     private String torTransPort;
     private String torSocksPort;
+    private String torHTTPTunnelPort;
     private String appDataDir;
     private boolean allowTorTether = false;
     private boolean allowITPDtether = false;
@@ -130,6 +133,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         appDataDir = pathVars.appDataDir;
         torTransPort = pathVars.torTransPort;
         torSocksPort = pathVars.torSOCKSPort;
+        torHTTPTunnelPort = pathVars.torHTTPTunnelPort;
 
         Thread thread = new Thread(() -> {
             try {
@@ -251,14 +255,21 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 if (allowTorTether) {
                     line = "TransPort " + "0.0.0.0:" + torTransPort;
                 } else {
-                    line = line.trim().replaceAll(" .+:", " ");
+                    line = "TransPort " + torTransPort;
                 }
                 torConf.set(i, line);
             } else if (line.contains("SOCKSPort")) {
                 if (allowTorTether) {
                     line = "SOCKSPort " + "0.0.0.0:" + torSocksPort;
                 } else {
-                    line = line.trim().replaceAll(" .+:", " ");
+                    line = "SOCKSPort " + torSocksPort;
+                }
+                torConf.set(i, line);
+            } else if (line.contains("HTTPTunnelPort")) {
+                if (allowTorTether) {
+                    line = "HTTPTunnelPort " + "0.0.0.0:" + torHTTPTunnelPort;
+                } else {
+                    line = "HTTPTunnelPort " + torHTTPTunnelPort;
                 }
                 torConf.set(i, line);
             }
@@ -441,12 +452,41 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
     private void removePreferences() {
         PreferenceScreen preferenceScreen = findPreference("pref_common");
-        PreferenceCategory hotspotSettingsCategory = findPreference("HOTSPOT");
-        if (preferenceScreen != null && hotspotSettingsCategory != null) {
-            preferenceScreen.removePreference(hotspotSettingsCategory);
+
+        if (ModulesStatus.getInstance().getMode() != VPN_MODE) {
+            PreferenceCategory hotspotSettingsCategory = findPreference("HOTSPOT");
+            if (preferenceScreen != null && hotspotSettingsCategory != null) {
+                preferenceScreen.removePreference(hotspotSettingsCategory);
+            }
+        } else {
+            PreferenceCategory hotspotSettingsCategory = findPreference("HOTSPOT");
+
+            ArrayList<Preference> preferencesHOTSPOT = new ArrayList<>();
+            preferencesHOTSPOT.add(findPreference("pref_common_tor_route_all"));
+            preferencesHOTSPOT.add(findPreference("prefTorSiteUnlockTether"));
+            preferencesHOTSPOT.add(findPreference("prefTorSiteExcludeTether"));
+            preferencesHOTSPOT.add(findPreference("pref_common_itpd_tethering"));
+            preferencesHOTSPOT.add(findPreference("pref_common_block_http"));
+
+            if (hotspotSettingsCategory != null) {
+                for (Preference preference : preferencesHOTSPOT) {
+                    if (preference != null) {
+                        hotspotSettingsCategory.removePreference(preference);
+                    }
+                }
+            }
+
+            Preference pref_common_tor_tethering = findPreference("pref_common_tor_tethering");
+
+            if (pref_common_tor_tethering != null) {
+                pref_common_tor_tethering.setSummary(getText(R.string.vpn_tor_tether_summ));
+                pref_common_tor_tethering.setOnPreferenceChangeListener(this);
+            }
         }
 
-        if (ModulesStatus.getInstance().isRootAvailable()) {
+
+        if (ModulesStatus.getInstance().isRootAvailable()
+                && ModulesStatus.getInstance().getMode() != VPN_MODE) {
             Preference pref_common_use_modules_with_root = findPreference("swUseModulesRoot");
             if (pref_common_use_modules_with_root != null) {
                 pref_common_use_modules_with_root.setOnPreferenceChangeListener(this);
