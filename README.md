@@ -129,7 +129,7 @@ InviZible Pro uses:
 * [Chainfire/libsuperuser](https://github.com/Chainfire/libsuperuser)
 * [jaredrummler/AndroidShell](https://github.com/jaredrummler/AndroidShell)
 * [Angads25/android-filepicker](https://github.com/Angads25/android-filepicker)
-* [Stericson/busybox-free](https://github.com/Stericson/busybox-free)
+* [meefik/busybox](https://github.com/meefik/busybox)
 
 This product is produced independently from the **Tor®**, **DNSCrypt**, **Purple I2P** software 
 and carries no guarantee from The Above Projects about quality, suitability or anything else.
