@@ -1,4 +1,5 @@
 #pragma clang diagnostic push
+#pragma ide diagnostic ignored "hicpp-signed-bitwise"
 #pragma ide diagnostic ignored "readability-magic-numbers"
 #pragma ide diagnostic ignored "cppcoreguidelines-avoid-magic-numbers"
 /*
@@ -24,7 +25,7 @@
 
 int max_tun_msg = 0;
 extern int loglevel;
-extern FILE *pcap_file;
+extern int own_uid;
 
 uint16_t get_mtu() {
     return 10000;
@@ -286,10 +287,23 @@ void handle_ip(const struct arguments *args,
     if (protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6 ||
         (protocol == IPPROTO_UDP && !has_udp_session(args, pkt, payload)) ||
         (protocol == IPPROTO_TCP && syn)) {
-        if (args->ctx->sdk <= 28) // Android 9 Pie
+        if (args->ctx->sdk <= 28) { // Android 9 Pie
             uid = get_uid(version, protocol, saddr, sport, daddr, dport);
-        else
+
+            if (uid < 0 && args->ctx->sdk < 21) {
+                usleep(100000);
+                uid = get_uid(version, protocol, saddr, sport, daddr, dport);
+
+                //Allow unrecognised uid!!!
+                if (uid < 0) {
+                    log_android(ANDROID_LOG_WARN, "Allow unrecognised uid!!!");
+                    uid = own_uid;
+                }
+            }
+
+        } else {
             uid = get_uid_q(args, version, protocol, source, sport, dest, dport);
+        }
     }
 
     log_android(ANDROID_LOG_DEBUG,
@@ -426,7 +440,7 @@ jint get_uid_sub(const int version, const int protocol,
         return -1;
 
     // Open proc file
-    FILE *fd = fopen(fn, "r");
+    FILE *fd = fopen(fn, "re");
     if (fd == NULL) {
         log_android(ANDROID_LOG_ERROR, "fopen %s error %d: %s", fn, errno, strerror(errno));
         return -2;

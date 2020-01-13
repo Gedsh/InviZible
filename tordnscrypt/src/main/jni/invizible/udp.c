@@ -23,7 +23,7 @@
 
 #include "invizible.h"
 
-extern FILE *pcap_file;
+extern int own_uid;
 
 int get_udp_timeout(const struct udp_session *u, int sessions, int maxsessions) {
     int timeout = (ntohs(u->dest) == 53 ? UDP_TIMEOUT_53 : UDP_TIMEOUT_ANY);
@@ -389,15 +389,18 @@ int open_udp_socket(const struct arguments *args,
         version = (strstr(redirect->raddr, ":") == NULL ? 4 : 6);
 
     // Get UDP socket
-    sock = socket(version == 4 ? PF_INET : PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+    sock = socket(version == 4 ? PF_INET : PF_INET6, SOCK_DGRAM | SOCK_CLOEXEC, IPPROTO_UDP);
     if (sock < 0) {
         log_android(ANDROID_LOG_ERROR, "UDP socket error %d: %s", errno, strerror(errno));
         return -1;
     }
 
     // Protect socket
-    if (protect_socket(args, sock) < 0)
-        return -1;
+    if (cur->uid == own_uid) {
+        if (protect_socket(args, sock) < 0)
+            return -1;
+    }
+
 
     // Check for broadcast/multicast
     if (cur->version == 4) {

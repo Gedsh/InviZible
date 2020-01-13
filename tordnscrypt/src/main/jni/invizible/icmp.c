@@ -1,4 +1,5 @@
 #pragma clang diagnostic push
+#pragma ide diagnostic ignored "hicpp-signed-bitwise"
 #pragma ide diagnostic ignored "cppcoreguidelines-avoid-magic-numbers"
 #pragma ide diagnostic ignored "readability-magic-numbers"
 /*
@@ -22,7 +23,7 @@
 
 #include "invizible.h"
 
-extern FILE *pcap_file;
+extern int own_uid;
 
 int get_icmp_timeout(const struct icmp_session *u, int sessions, int maxsessions) {
     int timeout = ICMP_TIMEOUT;
@@ -285,15 +286,17 @@ int open_icmp_socket(const struct arguments *args, const struct icmp_session *cu
     int sock;
 
     // Get UDP socket
-    sock = socket(cur->version == 4 ? PF_INET : PF_INET6, SOCK_DGRAM, IPPROTO_ICMP);
+    sock = socket(cur->version == 4 ? PF_INET : PF_INET6, SOCK_DGRAM | SOCK_CLOEXEC, IPPROTO_ICMP);
     if (sock < 0) {
         log_android(ANDROID_LOG_ERROR, "ICMP socket error %d: %s", errno, strerror(errno));
         return -1;
     }
 
     // Protect socket
-    if (protect_socket(args, sock) < 0)
-        return -1;
+    if (cur->uid == own_uid) {
+        if (protect_socket(args, sock) < 0)
+            return -1;
+    }
 
     return sock;
 }

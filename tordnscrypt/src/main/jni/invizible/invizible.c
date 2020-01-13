@@ -31,6 +31,7 @@ char socks5_addr[INET6_ADDRSTRLEN + 1];
 int socks5_port = 0;
 char socks5_username[127 + 1];
 char socks5_password[127 + 1];
+int own_uid = 0;
 int loglevel = ANDROID_LOG_WARN;
 
 extern int max_tun_msg;
@@ -118,6 +119,8 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1init(
     socks5_port = 0;
     *socks5_username = 0;
     *socks5_password = 0;
+
+    own_uid = getuid();
 
     if (pthread_mutex_init(&ctx->lock, NULL))
         log_android(ANDROID_LOG_ERROR, "pthread_mutex_init failed");
@@ -328,7 +331,7 @@ int protect_socket(const struct arguments *args, int socket) {
     }
 
     if (midProtect == NULL)
-        midProtect = jniGetMethodID(args->env, cls, "protect", "(I)Z");
+        midProtect = jniGetMethodID(args->env, cls, "protectSocket", "(I)Z");
     if (midProtect == NULL) {
         log_android(ANDROID_LOG_ERROR, "protect socket failed to get method");
         return -1;

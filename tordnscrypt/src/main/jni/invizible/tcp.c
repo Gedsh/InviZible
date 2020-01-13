@@ -28,7 +28,7 @@ extern int socks5_port;
 extern char socks5_username[127 + 1];
 extern char socks5_password[127 + 1];
 
-extern FILE *pcap_file;
+extern int own_uid;
 
 void clear_tcp_data(struct tcp_session *cur) {
     struct segment *s = cur->forward;
@@ -316,11 +316,12 @@ void check_tcp_socket(const struct arguments *args,
                     // https://tools.ietf.org/html/rfc1928
                     // https://tools.ietf.org/html/rfc1929
                     // https://en.wikipedia.org/wiki/SOCKS#SOCKS5
-                    //bypass i2p and dns addresses from socks proxy
+                    //bypass i2p, dns addresses and own uid from socks proxy
                     char *i2paddr = "10.191.0.1";
                     if (*socks5_addr && socks5_port
                     && (strcmp(dest, i2paddr) != 0)
-                    && (ntohs(s->tcp.dest) != 53)) {
+                    && (ntohs(s->tcp.dest) != 53)
+                    && own_uid != s->tcp.uid) {
                         s->tcp.socks5 = SOCKS5_HELLO;
                     } else {
                         s->tcp.socks5 = SOCKS5_CONNECTED;
@@ -1049,7 +1050,10 @@ int open_tcp_socket(const struct arguments *args,
     int sock;
     int version;
     if (redirect == NULL) {
-        if (*socks5_addr && socks5_port)
+        //bypass dns addresses and own uid from socks proxy
+        if (*socks5_addr && socks5_port
+            && (ntohs(cur->dest) != 53)
+            && own_uid != cur->uid)
             version = (strstr(socks5_addr, ":") == NULL ? 4 : 6);
         else
             version = cur->version;
@@ -1057,14 +1061,17 @@ int open_tcp_socket(const struct arguments *args,
         version = (strstr(redirect->raddr, ":") == NULL ? 4 : 6);
 
     // Get TCP socket
-    if ((sock = socket(version == 4 ? PF_INET : PF_INET6, SOCK_STREAM, 0)) < 0) {
+    if ((sock = socket(version == 4 ? PF_INET : PF_INET6, SOCK_STREAM | SOCK_CLOEXEC, 0)) < 0) {
         log_android(ANDROID_LOG_ERROR, "socket error %d: %s", errno, strerror(errno));
         return -1;
     }
 
     // Protect
-    if (protect_socket(args, sock) < 0)
-        return -1;
+    if (cur->uid == own_uid) {
+        if (protect_socket(args, sock) < 0)
+            return -1;
+    }
+
 
     int on = 1;
     if (setsockopt(sock, SOL_TCP, TCP_NODELAY, &on, sizeof(on)) < 0)
@@ -1083,7 +1090,10 @@ int open_tcp_socket(const struct arguments *args,
     struct sockaddr_in addr4;
     struct sockaddr_in6 addr6;
     if (redirect == NULL) {
-        if (*socks5_addr && socks5_port) {
+        //bypass dns addresses and own uid from socks proxy
+        if (*socks5_addr && socks5_port
+            && (ntohs(cur->dest) != 53)
+            && own_uid != cur->uid) {
             log_android(ANDROID_LOG_INFO, "TCP%d SOCKS5 to %s/%u",
                         version, socks5_addr, socks5_port);
 
