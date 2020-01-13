@@ -60,3 +60,10 @@
 * Attempt to fix using AfWall with InviZible on android 9, 10.
 * Prepare InviZible for Android TV
 * Migrate to androidx support library.
+
+**InviZible Pro beta 0.5.0**
+* Implement local VPN mode based on NetGuard source code
+* Replace internal stericson busybox with meefik.
+* Add DNSCrypt options block_unqualified and block_undelegated
+* Fix ModulesService stop in root mode.
+* Fix DNSCrypt white list option.
