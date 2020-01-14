@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.utils.zipUtil;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import java.io.File;
@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -68,7 +69,7 @@ public class ZipFileManager {
                 } else {
                     String fileName = zipEntry.getName();
                     File fileFullName = new File(outputPathDir + "/" + removeEndSlash(fileName));
-                    File fileParent = new File(removeEndSlash(fileFullName.getParent()));
+                    File fileParent = new File(removeEndSlash(Objects.requireNonNull(fileFullName.getParent())));
 
                     if (!fileParent.isDirectory()) {
                         if (!fileParent.mkdirs()) {
@@ -106,7 +107,7 @@ public class ZipFileManager {
         }
 
         File outputFile = new File(zipFile);
-        File outputFileDir = new File(removeEndSlash(outputFile.getParent()));
+        File outputFileDir = new File(removeEndSlash(Objects.requireNonNull(outputFile.getParent())));
 
         if (!outputFileDir.isDirectory()) {
             if (outputFileDir.mkdirs()) {
@@ -116,7 +117,7 @@ public class ZipFileManager {
 
         try (ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(zipFile))) {
             for (File inputFile: inputSources) {
-                addZipEntry(zipOutputStream, removeEndSlash(inputFile.getParent()), inputFile.getName());
+                addZipEntry(zipOutputStream, removeEndSlash(Objects.requireNonNull(inputFile.getParent())), inputFile.getName());
             }
         }
     }
@@ -130,11 +131,11 @@ public class ZipFileManager {
 
             File[] files = inputFile.listFiles();
 
-
-
-            for (File file: files) {
-                String nextFileName = file.getAbsolutePath().replace(inputPath + "/", "");
-                addZipEntry(zipOutputStream, inputPath, nextFileName);
+            if (files != null) {
+                for (File file: files) {
+                    String nextFileName = file.getAbsolutePath().replace(inputPath + "/", "");
+                    addZipEntry(zipOutputStream, inputPath, nextFileName);
+                }
             }
         } else if (inputFile.isFile()) {
             try (InputStream inputStream = new FileInputStream(fullPath)) {

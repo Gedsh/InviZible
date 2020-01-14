@@ -16,14 +16,14 @@ package pan.alexander.tordnscrypt.backup;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.support.v4.app.FragmentManager;
-import android.support.v7.preference.PreferenceManager;
+import androidx.fragment.app.FragmentManager;
+import androidx.preference.PreferenceManager;
 import android.util.Log;
 
 import java.io.File;
@@ -56,74 +56,71 @@ class RestoreHelper extends Installer {
     }
 
     void restoreAll() {
-        Runnable restore = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (!isBackupExist()) {
-                        throw new IllegalStateException("No file to restore " + pathBackup + "/InvizibleBackup.zip");
+        Runnable restore = () -> {
+            try {
+                if (!isBackupExist()) {
+                    throw new IllegalStateException("No file to restore " + pathBackup + "/InvizibleBackup.zip");
+                }
+
+                if (ModulesStatus.getInstance().isUseModulesWithRoot()) {
+                    registerReceiver(activity);
+
+                    stopAllRunningModulesWithRootCommand();
+
+                    if (!waitUntilAllModulesStopped()) {
+                        throw new IllegalStateException("Unexpected interruption");
                     }
 
-                    if (ModulesStatus.getInstance().isUseModulesWithRoot()) {
-                        registerReceiver(activity);
-
-                        stopAllRunningModulesWithRootCommand();
-
-                        if (!waitUntilAllModulesStopped()) {
-                            throw new IllegalStateException("Unexpected interruption");
-                        }
-
-                        if (interruptInstallation) {
-                            throw new IllegalStateException("Installation interrupted");
-                        }
-
-                        unRegisterReceiver(activity);
-
-                    } else {
-                        stopAllRunningModulesWithNoRootCommand();
+                    if (interruptInstallation) {
+                        throw new IllegalStateException("Installation interrupted");
                     }
 
-                    removeInstallationDirsIfExists();
-                    createLogsDir();
+                    unRegisterReceiver(activity);
 
-                    extractBackup();
-                    chmodExtractedDirs();
+                } else {
+                    stopAllRunningModulesWithNoRootCommand();
+                }
 
-                    correctAppDir();
+                removeInstallationDirsIfExists();
+                createLogsDir();
 
-                    SharedPreferences defaultSharedPref = PreferenceManager.getDefaultSharedPreferences(activity);
-                    String code = saveSomeOldInfo();
-                    restoreSharedPreferencesFromFile(defaultSharedPref, appDataDir + "/defaultSharedPref");
+                extractBackup();
+                chmodExtractedDirs();
 
-                    SharedPreferences sharedPreferences = activity.getSharedPreferences(PrefManager.getPrefName(), Context.MODE_PRIVATE);
-                    restoreSharedPreferencesFromFile(sharedPreferences, appDataDir + "/sharedPreferences");
+                correctAppDir();
 
-                    FileOperations.deleteFile(activity, appDataDir, "defaultSharedPref", "defaultSharedPref");
-                    FileOperations.deleteFile(activity, appDataDir, "sharedPreferences", "sharedPreferences");
+                SharedPreferences defaultSharedPref = PreferenceManager.getDefaultSharedPreferences(activity);
+                String code = saveSomeOldInfo();
+                restoreSharedPreferencesFromFile(defaultSharedPref, appDataDir + "/defaultSharedPref");
 
-                    refreshInstallationParameters();
+                SharedPreferences sharedPreferences = activity.getSharedPreferences(PrefManager.getPrefName(), Context.MODE_PRIVATE);
+                restoreSharedPreferencesFromFile(sharedPreferences, appDataDir + "/sharedPreferences");
 
-                    restoreOldInfo(code);
+                FileOperations.deleteFile(activity, appDataDir, "defaultSharedPref", "defaultSharedPref");
+                FileOperations.deleteFile(activity, appDataDir, "sharedPreferences", "sharedPreferences");
 
-                    refreshModulesStatus(activity);
+                refreshInstallationParameters();
 
-                } catch (Exception e) {
-                    Log.e(LOG_TAG, "Restore fault " + e.getMessage() + " " + e.getCause());
+                restoreOldInfo(code);
 
-                    if (activity instanceof BackupActivity) {
-                        try {
-                            BackupActivity backupActivity = (BackupActivity)activity;
-                            FragmentManager manager = backupActivity.getSupportFragmentManager();
-                            BackupFragment fragment = (BackupFragment) manager.findFragmentById(R.id.backupFragment);
-                            if (fragment != null) {
-                                fragment.closePleaseWaitDialog();
-                                fragment.showToast(activity.getString(R.string.wrong));
-                            }
-                        } catch (Exception ex) {
-                            Log.e(LOG_TAG, "RestoreHelper close progress fault " + ex.getMessage() + " " +ex.getCause());
+                refreshModulesStatus(activity);
+
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "Restore fault " + e.getMessage() + " " + e.getCause());
+
+                if (activity instanceof BackupActivity) {
+                    try {
+                        BackupActivity backupActivity = (BackupActivity)activity;
+                        FragmentManager manager = backupActivity.getSupportFragmentManager();
+                        BackupFragment fragment = (BackupFragment) manager.findFragmentById(R.id.backupFragment);
+                        if (fragment != null) {
+                            fragment.closePleaseWaitDialog();
+                            fragment.showToast(activity.getString(R.string.wrong));
                         }
-
+                    } catch (Exception ex) {
+                        Log.e(LOG_TAG, "RestoreHelper close progress fault " + ex.getMessage() + " " +ex.getCause());
                     }
+
                 }
             }
         };

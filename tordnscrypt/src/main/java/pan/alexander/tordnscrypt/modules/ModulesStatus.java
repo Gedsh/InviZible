@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.modules;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
@@ -88,7 +88,7 @@ public final class ModulesStatus {
         return rootAvailable;
     }
 
-    public void setRootAvailable(boolean rootIsAvailable) {
+    void setRootAvailable(boolean rootIsAvailable) {
         this.rootAvailable = rootIsAvailable;
     }
 

@@ -15,19 +15,22 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.Fragment;
-import android.support.v7.preference.PreferenceManager;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import androidx.appcompat.widget.LinearLayoutCompat;
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -37,8 +40,6 @@ import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.Switch;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -60,15 +61,13 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
  */
 public class ShowRulesRecycleFrag extends Fragment {
 
-    RecyclerView mRecyclerView;
-    ArrayList<String> rules_file;
-    String file_path;
-    ArrayList<Rules> rules_list;
-    ArrayList<String> others_list;
-    ArrayList<String> original_rules;
-    String appDataDir;
-    String busyboxPath;
-    FloatingActionButton btnAddRule;
+    private RecyclerView mRecyclerView;
+    private ArrayList<String> rules_file;
+    private String file_path;
+    private ArrayList<Rules> rules_list;
+    private ArrayList<String> others_list;
+    private ArrayList<String> original_rules;
+    private FloatingActionButton btnAddRule;
 
 
     public ShowRulesRecycleFrag() {}
@@ -96,10 +95,6 @@ public class ShowRulesRecycleFrag extends Fragment {
         if (getActivity() == null) {
             return view;
         }
-
-        PathVars pathVars = new PathVars(getActivity());
-        appDataDir = pathVars.appDataDir;
-        busyboxPath = pathVars.busyboxPath;
 
 
         if (rules_file == null) return view;
@@ -172,14 +167,11 @@ public class ShowRulesRecycleFrag extends Fragment {
 
         btnAddRule = getActivity().findViewById(R.id.floatingBtnAddRule);
         btnAddRule.setAlpha(0.8f);
-        btnAddRule.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                boolean subscription = file_path.contains("subscriptions");
-                rules_list.add(new Rules("", true, false, subscription));
-                mAdapter.notifyDataSetChanged();
-                mRecyclerView.scrollToPosition(rules_list.size() - 1);
-            }
+        btnAddRule.setOnClickListener(v -> {
+            boolean subscription = file_path.contains("subscriptions");
+            rules_list.add(new Rules("", true, false, subscription));
+            mAdapter.notifyDataSetChanged();
+            mRecyclerView.scrollToPosition(rules_list.size() - 1);
         });
         btnAddRule.requestFocus();
 
@@ -293,8 +285,8 @@ public class ShowRulesRecycleFrag extends Fragment {
 
             EditText etRule;
             ImageButton delBtnRules;
-            Switch swRuleActive;
-            LinearLayout llRules;
+            SwitchCompat swRuleActive;
+            LinearLayoutCompat llRules;
 
             RuleViewHolder(View itemView) {
                 super(itemView);
@@ -335,24 +327,18 @@ public class ShowRulesRecycleFrag extends Fragment {
                 }
             }
 
-            CompoundButton.OnCheckedChangeListener activeListener = new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            CompoundButton.OnCheckedChangeListener activeListener = (buttonView, isChecked) -> {
 
-                    if (getRule(getAdapterPosition()).active != isChecked) {
-                        getRule(getAdapterPosition()).active = isChecked;
-                        notifyItemChanged(getAdapterPosition());
-                    }
+                if (getRule(getAdapterPosition()).active != isChecked) {
+                    getRule(getAdapterPosition()).active = isChecked;
+                    notifyItemChanged(getAdapterPosition());
                 }
             };
 
-            View.OnClickListener onClickListener = new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (v.getId() == R.id.delBtnRules) {
-                        delRule(getAdapterPosition());
-                        notifyDataSetChanged();
-                    }
+            View.OnClickListener onClickListener = v -> {
+                if (v.getId() == R.id.delBtnRules) {
+                    delRule(getAdapterPosition());
+                    notifyDataSetChanged();
                 }
             };
 

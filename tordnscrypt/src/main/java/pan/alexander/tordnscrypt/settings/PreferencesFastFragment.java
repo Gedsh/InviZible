@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.job.JobInfo;
@@ -26,15 +26,17 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v7.app.AppCompatDelegate;
-import android.support.v7.preference.Preference;
-import android.support.v7.preference.PreferenceCategory;
-import android.support.v7.preference.PreferenceFragmentCompat;
-import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceCategory;
+import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceManager;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -45,9 +47,9 @@ import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.language.Language;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.GetIPsJobService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -67,35 +69,61 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         if (getActivity() == null) {
             return super.onCreateView(inflater, container, savedInstanceState);
         }
 
         getActivity().setTitle(R.string.drawer_menu_fastSettings);
-        findPreference("prefDNSCryptServer").setSummary(new PrefManager(Objects.requireNonNull(getActivity())).getStrPref("DNSCrypt Servers"));
 
-        findPreference("swAutostartTor").setOnPreferenceChangeListener(this);
-        findPreference("pref_fast_theme").setOnPreferenceChangeListener(this);
-        findPreference("pref_fast_language").setOnPreferenceChangeListener(this);
+        Preference prefDNSCryptServer = findPreference("prefDNSCryptServer");
+        if (prefDNSCryptServer != null) {
+            prefDNSCryptServer.setSummary(new PrefManager(Objects.requireNonNull(getActivity())).getStrPref("DNSCrypt Servers"));
+        }
+
+        Preference swAutostartTor = findPreference("swAutostartTor");
+        if (swAutostartTor != null) {
+            swAutostartTor.setOnPreferenceChangeListener(this);
+        }
+        Preference pref_fast_theme = findPreference("pref_fast_theme");
+        if (pref_fast_theme != null) {
+            pref_fast_theme.setOnPreferenceChangeListener(this);
+        }
+
+        Preference pref_fast_language = findPreference("pref_fast_language");
+        if (pref_fast_language != null) {
+            pref_fast_language.setOnPreferenceChangeListener(this);
+        }
 
         if (ModulesStatus.getInstance().getMode() == ROOT_MODE) {
-            findPreference("pref_fast_all_through_tor").setOnPreferenceChangeListener(this);
-            findPreference("pref_fast_block_http").setOnPreferenceChangeListener(this);
+            Preference pref_fast_all_through_tor = findPreference("pref_fast_all_through_tor");
+            if (pref_fast_all_through_tor != null) {
+                pref_fast_all_through_tor.setOnPreferenceChangeListener(this);
+            }
+
+            Preference pref_fast_block_http = findPreference("pref_fast_block_http");
+            if (pref_fast_block_http != null) {
+                pref_fast_block_http.setOnPreferenceChangeListener(this);
+            }
 
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
             String refreshPeriod = shPref.getString("pref_fast_site_refresh_interval", "12");
-            if (refreshPeriod != null) {
-                refreshPeriodHours = Integer.parseInt(refreshPeriod);
-            }
+            refreshPeriodHours = Integer.parseInt(refreshPeriod);
+
+            Preference prefTorSiteUnlock = findPreference("prefTorSiteUnlock");
+            Preference prefTorAppUnlock = findPreference("prefTorAppUnlock");
 
             if (shPref.getBoolean("pref_fast_all_through_tor", true)) {
-                findPreference("prefTorSiteUnlock").setEnabled(false);
-                findPreference("prefTorAppUnlock").setEnabled(false);
+                if (prefTorSiteUnlock != null && prefTorAppUnlock != null) {
+                    prefTorSiteUnlock.setEnabled(false);
+                    prefTorAppUnlock.setEnabled(false);
+                }
             } else {
-                findPreference("prefTorSiteUnlock").setEnabled(true);
-                findPreference("prefTorAppUnlock").setEnabled(true);
+                if (prefTorSiteUnlock != null && prefTorAppUnlock != null) {
+                    prefTorSiteUnlock.setEnabled(true);
+                    prefTorAppUnlock.setEnabled(true);
+                }
             }
         } else {
             removePreferencesWithNoRootMode();
@@ -116,15 +144,15 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         setUpdateTimeLast();
     }
 
-    public void setDnsCryptServersSumm() {
-        if (getActivity() == null)
-            return;
-        Preference prefDNSCryptServer = findPreference("prefDNSCryptServer");
-        if (prefDNSCryptServer != null)
-            prefDNSCryptServer.setSummary(new PrefManager(Objects.requireNonNull(getActivity())).getStrPref("DNSCrypt Servers"));
+    public void setDnsCryptServersSumm(final String servers) {
+        final Preference prefDNSCryptServer = findPreference("prefDNSCryptServer");
+
+        if (prefDNSCryptServer != null) {
+            prefDNSCryptServer.setSummary(servers);
+        }
     }
 
-    public void setUpdateTimeLast() {
+    private void setUpdateTimeLast() {
 
         if (getActivity() == null) {
             return;
@@ -148,7 +176,10 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         } else if (lastUpdateResult.equals(getString(R.string.update_fault))
                 && new PrefManager(getActivity()).getStrPref("updateTimeLast").isEmpty()
                 && appVersion.startsWith("p")) {
-            findPreference("pref_fast_auto_update").setEnabled(false);
+            Preference pref_fast_auto_update = findPreference("pref_fast_auto_update");
+            if (pref_fast_auto_update != null) {
+                pref_fast_auto_update.setEnabled(false);
+            }
             prefLastUpdate.setSummary(lastUpdateResult);
         } else {
             prefLastUpdate.setSummary(lastUpdateResult);
@@ -156,76 +187,63 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         if (getActivity() == null)
             return;
 
-        prefLastUpdate.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                if (prefLastUpdate.isEnabled()) {
-                    new Handler().post(new Runnable() {
+        prefLastUpdate.setOnPreferenceClickListener(preference -> {
+            if (prefLastUpdate.isEnabled()) {
+                new Handler().post(() -> {
 
-                        @Override
-                        public void run() {
+                    if (getActivity() == null) {
+                        return;
+                    }
 
-                            if (getActivity() == null) {
-                                return;
-                            }
+                    Intent intent = new Intent(getActivity(), MainActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK
+                            | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                    intent.setAction("check_update");
+                    getActivity().overridePendingTransition(0, 0);
+                    getActivity().finish();
 
-                            Intent intent = new Intent(getActivity(), MainActivity.class);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK
-                                    | Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                            intent.setAction("check_update");
-                            getActivity().overridePendingTransition(0, 0);
-                            getActivity().finish();
+                    startActivity(intent);
+                });
 
-                            startActivity(intent);
-                        }
-                    });
-
-                    return true;
-                } else {
-                    return false;
-                }
+                return true;
+            } else {
+                return false;
             }
         });
 
     }
 
+    @SuppressWarnings("deprecation")
     private void changeTheme() {
-        new Handler().post(new Runnable() {
+        new Handler().post(() -> {
 
-            @Override
-            public void run() {
-
-                if (getActivity() == null) {
-                    return;
-                }
-
-                SharedPreferences defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-                try {
-                    String theme = defaultSharedPreferences.getString("pref_fast_theme", "4");
-                    if (theme == null) {
-                        return;
-                    }
-
-                    switch (theme) {
-                        case "1":
-                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-                            break;
-                        case "2":
-                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-                            break;
-                        case "3":
-                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO);
-                            break;
-                        case "4":
-                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-                            break;
-                    }
-                } catch (Exception e) {
-                    Log.e(LOG_TAG, "PreferencesFastFragment changeTheme exception " + e.getMessage() + " " + e.getCause());
-                }
-
-                activityCurrentRecreate();
+            if (getActivity() == null) {
+                return;
             }
+
+            SharedPreferences defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            try {
+                String theme = defaultSharedPreferences.getString("pref_fast_theme", "4");
+
+                switch (theme) {
+                    case "1":
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                        break;
+                    case "2":
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                        break;
+                    case "3":
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_TIME);
+                        break;
+                    case "4":
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                        break;
+                }
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "PreferencesFastFragment changeTheme exception " + e.getMessage() + " " + e.getCause());
+            }
+
+            activityCurrentRecreate();
         });
 
     }
@@ -293,13 +311,18 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                     ModulesAux.requestModulesStatusUpdate(getActivity());
                 }
 
-                if (Boolean.valueOf(newValue.toString())) {
-                    findPreference("prefTorSiteUnlock").setEnabled(false);
-                    findPreference("prefTorAppUnlock").setEnabled(false);
-                } else {
-                    findPreference("prefTorSiteUnlock").setEnabled(true);
-                    findPreference("prefTorAppUnlock").setEnabled(true);
+                Preference prefTorSiteUnlock = findPreference("prefTorSiteUnlock");
+                Preference prefTorAppUnlock = findPreference("prefTorAppUnlock");
+                if (prefTorSiteUnlock != null && prefTorAppUnlock != null) {
+                    if (Boolean.valueOf(newValue.toString())) {
+                        prefTorSiteUnlock.setEnabled(false);
+                        prefTorAppUnlock.setEnabled(false);
+                    } else {
+                        prefTorSiteUnlock.setEnabled(true);
+                        prefTorAppUnlock.setEnabled(true);
+                    }
                 }
+
                 return true;
             case "pref_fast_block_http":
                 if (new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")
@@ -312,12 +335,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 changeTheme();
                 return true;
             case "pref_fast_language":
-                new Handler().post(new Runnable() {
-                    @Override
-                    public void run() {
-                        activityCurrentRecreate();
-                    }
-                });
+                new Handler().post(this::activityCurrentRecreate);
                 return true;
         }
 
@@ -326,7 +344,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
     private void removePreferencesWithNoRootMode() {
 
-        PreferenceCategory torSettingsCategory = (PreferenceCategory) findPreference("Tor Settings");
+        PreferenceCategory torSettingsCategory = findPreference("Tor Settings");
 
         List<Preference> preferencesList = new ArrayList<>();
 
@@ -337,18 +355,25 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         preferencesList.add(findPreference("prefTorAppExclude"));
         preferencesList.add(findPreference("pref_fast_site_refresh_interval"));
 
-        for (Preference preference: preferencesList) {
+        for (Preference preference : preferencesList) {
             if (preference != null) {
-                torSettingsCategory.removePreference(preference);
+                if (torSettingsCategory != null) {
+                    torSettingsCategory.removePreference(preference);
+                }
             }
         }
 
-        PreferenceCategory fastUpdateCategory = (PreferenceCategory) findPreference("fast_update");
+        PreferenceCategory fastUpdateCategory = findPreference("fast_update");
         Preference updateThroughTor = findPreference("pref_fast through_tor_update");
-        fastUpdateCategory.removePreference(updateThroughTor);
+        if (fastUpdateCategory != null && updateThroughTor != null) {
+            fastUpdateCategory.removePreference(updateThroughTor);
+        }
 
-        PreferenceCategory fastOtherCategory = (PreferenceCategory) findPreference("fast_other");
+        PreferenceCategory fastOtherCategory = findPreference("fast_other");
+
         Preference blockHttp = findPreference("pref_fast_block_http");
-        fastOtherCategory.removePreference(blockHttp);
+        if (fastOtherCategory != null && blockHttp != null) {
+            fastOtherCategory.removePreference(blockHttp);
+        }
     }
 }

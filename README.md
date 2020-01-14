@@ -38,15 +38,12 @@ Start three modules of **InviZible Pro**, and you will transform from an ordinar
 * Provides access to the hidden anonymous network Invisible Internet and "i2p" sites
 * Open-source
 
-To start using **InviZible Pro**, it is enough to have an android phone **with root access**.
+To start using **InviZible Pro**, it is enough to have an android phone.
 Just run all three modules and enjoy safe and comfortable Internet surfing. However,
 if you want to get full control over the application and your Internet connection - no problem!
 Provided access to a large number of both simple and professional settings.
 You can flexibly configure **InviZible Pro** itself, as well as its modules - **DNSCrypt**,
 **Tor** and **Purple I2P**, to satisfy the most non-standard requirements.
-
-**To start using InviZible Pro without root, a few additional steps are required.**
-Please visit the [wiki](https://github.com/Gedsh/InviZible/wiki) for further information.
 
 **InviZible Pro** is an all-in-one application. After installation, you can remove all of your VPN applications and ad blockers.
  In most cases, **InviZible Pro** works better, more stable, faster than free VPNs.
@@ -71,7 +68,8 @@ Please visit the [wiki](https://github.com/Gedsh/InviZible/wiki) for further inf
 ## Compatibility
 
 **InviZible Pro** can be used both with a rooted and non-rooted device.
-Please visit the [wiki](https://github.com/Gedsh/InviZible/wiki) to find out how to use it without root.
+
+Please visit the [wiki](https://github.com/Gedsh/InviZible/wiki) to find out how to use it.
 
 Depending on the rooting method and device specifics, an application may be incompatible with some android phones.
 
@@ -130,7 +128,7 @@ InviZible Pro uses:
 * [Chainfire/libsuperuser](https://github.com/Chainfire/libsuperuser)
 * [jaredrummler/AndroidShell](https://github.com/jaredrummler/AndroidShell)
 * [Angads25/android-filepicker](https://github.com/Angads25/android-filepicker)
-* [Stericson/busybox-free](https://github.com/Stericson/busybox-free)
+* [meefik/busybox](https://github.com/meefik/busybox)
 
 This product is produced independently from the **Tor®**, **DNSCrypt**, **Purple I2P** software 
 and carries no guarantee from The Above Projects about quality, suitability or anything else.
@@ -139,7 +137,7 @@ and carries no guarantee from The Above Projects about quality, suitability or a
 
 [GNU General Public License version 3](https://www.gnu.org/licenses/gpl-3.0.txt)
 
-Copyright (c) 2019 Garmatin Oleksandr invizible.soft@gmail.com
+Copyright (c) 2019-2020 Garmatin Oleksandr invizible.soft@gmail.com
 
 All rights reserved
 

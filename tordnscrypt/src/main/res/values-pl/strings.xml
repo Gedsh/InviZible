@@ -198,11 +198,8 @@
 
     <string name="pref_dnscrypt_select_server_names">Wybierz przynajmniej 1 serwer!</string>
     <string name="pref_dnscrypt_local_port_summ">Lokalny port nasluchu.</string>
-    <string name="pref_dnscrypt_max_clients_summ">Maksymalna akcepotowana ilosc polaczen klientow.</string>
 
     <string name="pref_dnscrypt_require_servers_categ">Wymaga serwerow (ze zrodla lokalnego i zdalnych) spelniajacych wymogi.</string>
-    <string name="pref_dnscrypt_ipv4_servers_summ">Zastosuj serwery dostepne po IPv4.</string>
-    <string name="pref_dnscrypt_ipv6_servers_summ">Zastosuj serwery dostepne przez IPv6. NIE zaznaczaj jesli nie masz polaczenia po IPv6.</string>
     <string name="pref_dnscrypt_dnscrypt_servers_summ">Zastosuj serwery uzywajace DNSCrypt.</string>
     <string name="pref_dnscrypt_doh_servers_summ">Zastosuj serwery uzywajace DNS-over-HTTPS.</string>
 
@@ -222,39 +219,19 @@
     <string name="pref_dnscrypt_proxy">port_proxy</string>
 
     <string name="pref_dnscrypt_other_categ">Inne ustawienia.</string>
-    <string name="pref_dnscrypt_timeout_summ"> Jak dlugo zapytanie DNS ma czekac na odpowiedz, w milisekundach.</string>
-    <string name="pref_dnscrypt_keepalive_summ"> Keepalive for HTTP (HTTPS, HTTP/2) zapytania, w sek.</string>
-    <string name="pref_dnscrypt_cert_refresh_del_summ"> Keepalive dla zapytania HTTP (HTTPS, HTTP/2), w sekundach.</string>
-    <string name="pref_dnscrypt_dnscrypt_ephemeral_keys_summ">Utworz nowy unikalny klucz dla kazdego zapytania DNS.
-        Moze to podniesc poziom prywatnosci, ale moze tez wplynac znaczaca na obciazenie CPU.
-        Wlaczyc tylko przy braku znaczacego obciazenia sieciowego.</string>
-    <string name="pref_dnscrypt_tls_disable_session_tickets_summ"> Zablokuj tickety sesji TLS.</string>
     <string name="pref_dnscrypt_fallback_resolver_summ">Serwer zapasowy.
         To jest normalny, nieszyfroway serwer DNS, ktory bedzie wykorzystwany tylko dla jednorazowych zapytan
         przy pobieraniu listy serwerow TYLKO jesli systemowy DNS nie bedzie dostepny.
         Nie zostanie uzyty jesli bedzie istniala kopia listy serwerow.
         Uzytkownicy w Chinach moga sprobowac uzyc 114.114.114.114:53.</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">Nie zezwalaj proxy dnscrypt uzywac systemowego DNS. Bezwarunkowo stosuj serwer zapasowy.</string>
-    <string name="pref_dnscrypt_netprobe_timeout_summ"> Czas maksymalny (w sek) oczekiwania na polaczenie z siecia przed startem proxy.\n
-        Stosowane jesli proxy startuje z uruchomieniem systemu, a siec nie jest dostepna zaraz po starcie.\n
-        Wpisz 0 zeby zablokowac.</string>
 
     <string name="pref_dnscrypt_filters_categ">FILTRY</string>
-    <string name="pref_dnscrypt_block_ipv6_summ">Natychmiast odpowiadaj pusta odpowiedzia na zapytania IPv6. To przyspiesza prace przy braku polaczenia IPv6, ale moze spowodowac roblem dostepnosci niektorych resolverow.</string>
 
     <string name="pref_dnscrypt_forwarding_rules_summ">Przekierowuj zapytania do wybranych domen przez wybrana grupe serwerow. Czasowo wylaczone </string>
 
     <string name="pref_dnscrypt_cloaking_rules_summ">Maskowanie zwraca predefiniowany adres dla specyficznych nazw.\n
         Pracuje jak plik HOSTS, a takze zwraca adres IP innej nazwy. Wykonuje tez flattening CNAME.</string>
-
-    <string name="pref_dnscrypt_DNS_cache_categ">Cache DNS.</string>
-    <string name="pref_dnscrypt_cache_summ">Uruchom cache DNS w celu przyspieszenia ruchu wychodzacego.</string>
-    <string name="pref_dnscrypt_cache">Uruchom cache DNS</string>
-    <string name="pref_dnscrypt_cache_size_summ">Rozmiar cache.</string>
-    <string name="pref_dnscrypt_cache_min_ttl_summ">Wartosc minimalna TTL dla wpisow.</string>
-    <string name="pref_dnscrypt_cache_max_ttl_summ">Wartosc maksymalna TTL dla wpisow.</string>
-    <string name="pref_dnscrypt_cache_neg_min_ttl_summ">Wartosc minimalna TTL dla wpisow bledow.</string>
-    <string name="pref_dnscrypt_cache_neg_max_ttl_summ">Wartosc maksymalna TTL dla wpisow bledow.</string>
 
     <string name="pref_dnscrypt_query_log_categ">Logowanie zapytan.</string>
     <string name="pref_dnscrypt_query_log_summ">Zapisuj log zapytan klientow do pliku.</string>
@@ -280,10 +257,9 @@
     <string name="pref_dnscrypt_whitelist">Whitelista</string>
     <string name="pref_dnscrypt_whitelist_summ">Whitelista wspiera takie same zasady jak Blacklista. Jesli nazwa jest znaleziona we Whiteliscie, sesja pominie filtrowanie nazw i IP.</string>
 
-    <string name="pref_dnscrypt_sources_categ">Serwery.</string>
+    <string name="pref_dnscrypt_sources_categ">Serwery</string>
     <string name="pref_dnscrypt_sources">Zrodla</string>
     <string name="pref_dnscrypt_sources_summ">Zdalna lista dostepnych serwerow.</string>
-    <string name="pref_dnscrypt_minisign_key_summ">Klucz minisign</string>
     <string name="pref_dnscrypt_refresh_delay_summ">Lista zrodel wygasa po uplywie refresh_delay godzin.</string>
 
     <string name="pref_dnscrypt_not_exist">Ustawienie nie istnieje w dnscrypt-proxy.toml!</string>
@@ -292,6 +268,9 @@
     <string name="title_dnscrypt_query_log">Log zapytan DNSCrypt</string>
     <string name="title_dnscrypt_nx_log">Log podejrzanych zapytan DNSCrypt</string>
     <string name="dnscrypt_empty_log">Log pusty</string>
+
+    <string name="pref_dnscrypt_block_unqualified_summ">Natychmiast odpowiedz na zapytania A i AAAA dotyczące nazw hostów bez nazwy domeny.</string>
+    <string name="pref_dnscrypt_block_undelegated_summ">Natychmiast reaguj na zapytania dotyczące lokalnych stref zamiast przeciekać je do resolverów w górę (zawsze powodując błędy lub przekroczenia limitu czasu).</string>
 
     <string name="pref_tor_virtual_addr_network_IPv4_summ">Gdy tor musi przydzielic adres wirtualny z powodu polecenia MAPADDRESS lub wlasnosci AutomapHostsOnResolve, Tor wybiera nieprzydzielony adres z tego zakresu.</string>
     <string name="pref_tor_avoid_disc_writes_summ">Jezeli rozne od zera, sprobuj zapisywac na dysk z mniejsza czestotliwoscia.</string>
@@ -454,5 +433,14 @@
     <string name="pref_common_wakelock">Zapobiegaj uśpieniu urządzenia</string>
     <string name="install_title_no_root">Odmowa roota</string>
     <string name="install_title_root">Root dostepny</string>
-    <string name="message_no_root_used">" Dostęp root nie został przyznany. Możesz więc korzystać z aplikacji z funkcją proxy tylko dla InviZible Pro!"</string>
+    <string name="message_no_root_used">"Możesz używać InviZible Pro z lokalnym trybem VPN lub aplikacjami z funkcją proxy w trybie proxy."</string>
+    <string name="pref_dnscrypt_relays">Zrodla</string>
+    <string name="pref_dnscrypt_relays_delay_summ">Lista  przekaźnik wygasa po uplywie refresh_delay godzin.</string>
+    <string name="pref_dnscrypt_relays_categ">Przekaźnik</string>
+    <string name="pref_dnscrypt_relays_summ">Zdalne listy dostępnych przekaźników.</string>
+    <string name="pref_dnscrypt_relays_title">Przekaźnik DNSCrypt</string>
+    <string name="vpn_mode_active">Tryb VPN jest aktywny</string>
+    <string name="vpn_mode_off">Tryb VPN jest wyłączony</string>
+    <string name="vpn_mode_error">Błąd trybu VPN!</string>
+    <string name="vpn_tor_tether_summ">Skonfiguruj użycie serwera proxy w ustawieniach podłączonego urządzenia. Wartości domyślne: IP:10.1.10.1 Port:8118</string>
 </resources>

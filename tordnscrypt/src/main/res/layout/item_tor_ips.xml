@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/llHostIPRoot"
@@ -9,7 +9,7 @@
     android:baselineAligned="false"
     android:orientation="vertical">
 
-    <android.support.v7.widget.CardView
+    <androidx.cardview.widget.CardView
         android:id="@+id/cardHostIP"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -20,12 +20,12 @@
         app:cardUseCompatPadding="true"
         app:contentPadding="8dp">
 
-        <LinearLayout
+        <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <LinearLayout
+            <androidx.appcompat.widget.LinearLayoutCompat
                 android:id="@+id/llHostIP"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -34,7 +34,7 @@
                 android:focusable="true"
                 android:orientation="vertical">
 
-                <TextView
+                <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/tvTorItemHost"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -56,7 +56,7 @@
                     android:layout_weight="1"
                     android:background="@color/itemDividerColor" />
 
-                <TextView
+                <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/tvTorItemIP"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -64,9 +64,9 @@
                     android:layout_weight="1"
                     android:fontFamily="serif"
                     android:gravity="fill" />
-            </LinearLayout>
+            </androidx.appcompat.widget.LinearLayoutCompat>
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/swTorItem"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
@@ -75,11 +75,11 @@
                 android:paddingStart="3dp"
                 android:paddingEnd="3dp" />
 
-        </LinearLayout>
+        </androidx.appcompat.widget.LinearLayoutCompat>
 
-    </android.support.v7.widget.CardView>
+    </androidx.cardview.widget.CardView>
 
-    <ImageButton
+    <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/imbtnTorItem"
         android:layout_width="wrap_content"
         android:layout_height="25dp"
@@ -92,4 +92,4 @@
         android:scaleType="fitCenter"
         app:srcCompat="@android:drawable/ic_menu_delete" />
 
-</LinearLayout>
+</androidx.appcompat.widget.LinearLayoutCompat>

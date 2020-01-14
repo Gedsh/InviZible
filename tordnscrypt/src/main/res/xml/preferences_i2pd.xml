@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory android:title="@string/pref_advanced">
 
@@ -54,7 +54,7 @@
             android:key="floodfill"
             android:summary="@string/pref_itpd_com_floodfill_summ"
             android:title="@string/pref_itpd_com_floodfill" />
-        <ListPreference
+        <androidx.preference.ListPreference
             android:defaultValue="L"
             android:entries="@array/itpd_com_bandwidth_title"
             android:entryValues="@array/itpd_com_bandwidth_value"
@@ -245,4 +245,4 @@
                 android:targetPackage="@string/package_name" />
         </Preference>
     </PreferenceCategory>
-</android.support.v7.preference.PreferenceScreen>
+</androidx.preference.PreferenceScreen>

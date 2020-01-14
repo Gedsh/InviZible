@@ -15,13 +15,13 @@ package pan.alexander.tordnscrypt.utils;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.support.v7.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 import android.util.Log;
 
 import java.net.InetAddress;
@@ -60,15 +60,12 @@ public class TorRefreshIPsWork {
     }
 
     private void getBridgesIP() {
-        Runnable getBridgesIPRunnable = new Runnable() {
-            @Override
-            public void run() {
-                //////////////TO GET BRIDGES WITH TOR//////////////////////////////////////
-                ArrayList<String> bridgesIPlist = handleActionGetIP("https://bridges.torproject.org");
-                //////////////TO GET UPDATES WITH TOR//////////////////////////////////////
-                bridgesIPlist.addAll(handleActionGetIP("https://invizible.net"));
-                FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/bridgesIP", bridgesIPlist, "ignored");
-            }
+        Runnable getBridgesIPRunnable = () -> {
+            //////////////TO GET BRIDGES WITH TOR//////////////////////////////////////
+            ArrayList<String> bridgesIPlist = handleActionGetIP("https://bridges.torproject.org");
+            //////////////TO GET UPDATES WITH TOR//////////////////////////////////////
+            bridgesIPlist.addAll(handleActionGetIP("https://invizible.net"));
+            FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/bridgesIP", bridgesIPlist, "ignored");
         };
         Thread thread = new Thread(getBridgesIPRunnable);
         thread.start();
@@ -115,55 +112,52 @@ public class TorRefreshIPsWork {
 
     private void performBackgroundWork() {
 
-        Runnable performWorkRunnable = new Runnable() {
-            @Override
-            public void run() {
-                Log.i(LOG_TAG, "TorRefreshIPsWork performBackgroundWork");
+        Runnable performWorkRunnable = () -> {
+            Log.i(LOG_TAG, "TorRefreshIPsWork performBackgroundWork");
 
-                if (!unlockHostsDevice.isEmpty() || !unlockIPsDevice.isEmpty()) {
+            if (!unlockHostsDevice.isEmpty() || !unlockIPsDevice.isEmpty()) {
 
-                    List<String> unlockIPsReadyDevice = universalGetIPs(unlockHostsDevice, unlockIPsDevice);
+                List<String> unlockIPsReadyDevice = universalGetIPs(unlockHostsDevice, unlockIPsDevice);
 
-                    if (unlockIPsReadyDevice == null) {
-                        unlockIPsReadyDevice = new LinkedList<>();
-                        unlockIPsReadyDevice.add("");
-                    }
+                if (unlockIPsReadyDevice == null) {
+                    unlockIPsReadyDevice = new LinkedList<>();
+                    unlockIPsReadyDevice.add("");
+                }
 
-                    List<String> unlockIPsReadyTether = universalGetIPs(unlockHostsTether, unlockIPsTether);
+                List<String> unlockIPsReadyTether = universalGetIPs(unlockHostsTether, unlockIPsTether);
 
-                    if (unlockIPsReadyTether == null) {
-                        unlockIPsReadyTether = new LinkedList<>();
-                        unlockIPsReadyTether.add("");
-                    }
+                if (unlockIPsReadyTether == null) {
+                    unlockIPsReadyTether = new LinkedList<>();
+                    unlockIPsReadyTether.add("");
+                }
 
 
-                    if (!routeAllThroughTorDevice) {
-                        FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/unlock", unlockIPsReadyDevice, "ignored");
+                if (!routeAllThroughTorDevice) {
+                    FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/unlock", unlockIPsReadyDevice, "ignored");
+                } else {
+                    FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/clearnet", unlockIPsReadyDevice, "ignored");
+                }
+
+                if (torTethering) {
+                    if (!routeAllThroughTorTether) {
+                        FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/unlock_tether", unlockIPsReadyTether, "ignored");
                     } else {
-                        FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/clearnet", unlockIPsReadyDevice, "ignored");
-                    }
-
-                    if (torTethering) {
-                        if (!routeAllThroughTorTether) {
-                            FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/unlock_tether", unlockIPsReadyTether, "ignored");
-                        } else {
-                            FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/clearnet_tether", unlockIPsReadyTether, "ignored");
-                        }
+                        FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/clearnet_tether", unlockIPsReadyTether, "ignored");
                     }
                 }
+            }
 
-                try {
-                    TimeUnit.SECONDS.sleep(5);
-                } catch (InterruptedException e) {
-                    Log.e(LOG_TAG, "TorRefreshIPsWork interrupt exception " + e.getMessage() + " " + e.getCause());
-                }
+            try {
+                TimeUnit.SECONDS.sleep(5);
+            } catch (InterruptedException e) {
+                Log.e(LOG_TAG, "TorRefreshIPsWork interrupt exception " + e.getMessage() + " " + e.getCause());
+            }
 
-                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
-                ModulesAux.requestModulesStatusUpdate(context);
+            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
+            ModulesAux.requestModulesStatusUpdate(context);
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && getIPsJobService != null) {
-                    getIPsJobService.finishJob();
-                }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && getIPsJobService != null) {
+                getIPsJobService.finishJob();
             }
         };
         Thread thread = new Thread(performWorkRunnable);

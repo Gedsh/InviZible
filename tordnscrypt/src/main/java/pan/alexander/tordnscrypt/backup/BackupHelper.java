@@ -16,13 +16,13 @@ package pan.alexander.tordnscrypt.backup;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.support.v4.app.FragmentManager;
-import android.support.v7.preference.PreferenceManager;
+import androidx.fragment.app.FragmentManager;
+import androidx.preference.PreferenceManager;
 import android.util.Log;
 
 import java.io.File;
@@ -48,47 +48,44 @@ class BackupHelper {
     }
 
     void saveAll() {
-        Runnable save = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    SharedPreferences defaultSharedPref = PreferenceManager.getDefaultSharedPreferences(context);
-                    saveSharedPreferencesToFile(defaultSharedPref, appDataDir + "/cache/defaultSharedPref");
+        Runnable save = () -> {
+            try {
+                SharedPreferences defaultSharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+                saveSharedPreferencesToFile(defaultSharedPref, appDataDir + "/cache/defaultSharedPref");
 
-                    SharedPreferences sharedPreferences = context.getSharedPreferences(PrefManager.getPrefName(), Context.MODE_PRIVATE);
-                    saveSharedPreferencesToFile(sharedPreferences, appDataDir + "/cache/sharedPreferences");
+                SharedPreferences sharedPreferences = context.getSharedPreferences(PrefManager.getPrefName(), Context.MODE_PRIVATE);
+                saveSharedPreferencesToFile(sharedPreferences, appDataDir + "/cache/sharedPreferences");
 
-                    compressAllToZip(appDataDir + "/cache/InvizibleBackup.zip",
-                            appDataDir + "/app_bin", appDataDir + "/app_data",
-                            appDataDir + "/cache/defaultSharedPref", appDataDir + "/cache/sharedPreferences");
+                compressAllToZip(appDataDir + "/cache/InvizibleBackup.zip",
+                        appDataDir + "/app_bin", appDataDir + "/app_data",
+                        appDataDir + "/cache/defaultSharedPref", appDataDir + "/cache/sharedPreferences");
 
-                    File backup = new File(appDataDir + "/cache/InvizibleBackup.zip");
-                    if (!backup.isFile() || backup.length() == 0) {
-                        throw new IllegalStateException("Backup file not exist " + backup.getAbsolutePath());
-                    }
-
-                    FileOperations.moveBinaryFile(context, appDataDir + "/cache", "InvizibleBackup.zip", pathBackup, "InvizibleBackup.zip");
-
-                    FileOperations.deleteFile(context, appDataDir, "cache/defaultSharedPref", "ignored");
-                    FileOperations.deleteFile(context, appDataDir, "cache/sharedPreferences", "ignored");
-                } catch (Exception e) {
-                    Log.e(LOG_TAG, "BackupHelper saveAllToInternalDir fault " + e.getMessage() + " " +e.getCause());
-
-                    if (context instanceof BackupActivity) {
-                        try {
-                            BackupActivity backupActivity = (BackupActivity)context;
-                            FragmentManager manager = backupActivity.getSupportFragmentManager();
-                            BackupFragment fragment = (BackupFragment) manager.findFragmentById(R.id.backupFragment);
-                            if (fragment != null) {
-                                fragment.closePleaseWaitDialog();
-                                fragment.showToast(context.getString(R.string.wrong));
-                            }
-                        } catch (Exception ex) {
-                            Log.e(LOG_TAG, "BackupHelper close progress fault " + ex.getMessage() + " " +ex.getCause());
-                        }
-                    }
-
+                File backup = new File(appDataDir + "/cache/InvizibleBackup.zip");
+                if (!backup.isFile() || backup.length() == 0) {
+                    throw new IllegalStateException("Backup file not exist " + backup.getAbsolutePath());
                 }
+
+                FileOperations.moveBinaryFile(context, appDataDir + "/cache", "InvizibleBackup.zip", pathBackup, "InvizibleBackup.zip");
+
+                FileOperations.deleteFile(context, appDataDir, "cache/defaultSharedPref", "ignored");
+                FileOperations.deleteFile(context, appDataDir, "cache/sharedPreferences", "ignored");
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "BackupHelper saveAllToInternalDir fault " + e.getMessage() + " " +e.getCause());
+
+                if (context instanceof BackupActivity) {
+                    try {
+                        BackupActivity backupActivity = (BackupActivity)context;
+                        FragmentManager manager = backupActivity.getSupportFragmentManager();
+                        BackupFragment fragment = (BackupFragment) manager.findFragmentById(R.id.backupFragment);
+                        if (fragment != null) {
+                            fragment.closePleaseWaitDialog();
+                            fragment.showToast(context.getString(R.string.wrong));
+                        }
+                    } catch (Exception ex) {
+                        Log.e(LOG_TAG, "BackupHelper close progress fault " + ex.getMessage() + " " +ex.getCause());
+                    }
+                }
+
             }
         };
 

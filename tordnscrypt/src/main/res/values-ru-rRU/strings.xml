@@ -126,10 +126,7 @@
     <string name="pref_advanced">Только для опытных пользователей!</string>
     <string name="pref_dnscrypt_select_server_names">Выберите хотя бы один сервер!</string>
     <string name="pref_dnscrypt_local_port_summ">Номер порта</string>
-    <string name="pref_dnscrypt_max_clients_summ">Максимальное количесво одновременных подключений.</string>
     <string name="pref_dnscrypt_require_servers_categ">Фильтровать сервера по параметрам.</string>
-    <string name="pref_dnscrypt_ipv4_servers_summ">Использовать сервера с IPv4.</string>
-    <string name="pref_dnscrypt_ipv6_servers_summ">Использовать сервера с IPv6. Не включайте, если у вас нет соединения IPv6.</string>
     <string name="pref_dnscrypt_dnscrypt_servers_summ">Использовать сервера, которые поддерживают протокол DNSCrypt.</string>
     <string name="pref_dnscrypt_doh_servers_summ">Использовать сервера, которые поддерживают протокол DNS-over-HTTPS.</string>
     <string name="pref_dnscrypt_require_servers_prop_categ">Фильтровать сервера по параметрам.</string>
@@ -144,35 +141,16 @@
     <string name="pref_dnscrypt_proxy_summ">Перенаправить все TCP соединения на Tor. Tor не поддерживает UDP, поэтому обязательно активируйте force_tcp.</string>
     <string name="pref_dnscrypt_proxy">Прокси порт</string>
     <string name="pref_dnscrypt_other_categ">Другие настройки</string>
-    <string name="pref_dnscrypt_timeout_summ">Как долго ждать ответ на DNS запрос, в милисекундах.</string>
-    <string name="pref_dnscrypt_keepalive_summ">Ожидание для HTTP (HTTPS, HTTP/2) запросов, в секундах.</string>
-    <string name="pref_dnscrypt_cert_refresh_del_summ">Ожидание сертификата для HTTP (HTTPS, HTTP/2) запросов, в секундах.</string>
-    <string name="pref_dnscrypt_dnscrypt_ephemeral_keys_summ">Создавать новый, уникальный ключ для каждого DNS запроса.
-        Это может улучшить приватность, но также сильно увеличивает нагрузку на процессор.
-        Активируйте только если у вас нет большой сетевой нагрузки.</string>
-    <string name="pref_dnscrypt_tls_disable_session_tickets_summ">Выключить TLS session tickets.</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">Не позволять dnscrypt-proxy использовать системные настройки DNS.
         Использовать сервер для восстановления…</string>
     <string name="pref_dnscrypt_fallback_resolver_summ">Сервер для восстановления.\n Это обычный сервер,
         который не поддерживает шифрование. Используется только для скачивания списка серверов,
         которые поддерживают шифрование, если системный DNS сервер не работает. Он никогда не используется,
         если загружен список серверов, которые поддерживают шифрование. В Китае можно использовать 114.114.114.114 </string>
-    <string name="pref_dnscrypt_netprobe_timeout_summ">Максимальное время ожидания соединения
-        (в секундах), перед инициализацией прокси. Полезно, когда происходит автозагрузка dnscrypt-proxy, а сеть недоступна.</string>
     <string name="pref_dnscrypt_filters_categ">ФИЛЬТРЫ</string>
-    <string name="pref_dnscrypt_block_ipv6_summ">Немедленно отвечать на IPv6 запросы пустым ответом.
-        Это ускорит процесс, если нет IPv6 соединения. Но может повлечь проблемы совместимомости с некоторыми серверами.</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">Перенаправить запросы к выбраным сайтам на определенные сервера. Пока деактивированно.</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking возвращает предопределенные адреса для
         выбранных сайтов. Работает как дополнительный HOSTS файл.</string>
-    <string name="pref_dnscrypt_DNS_cache_categ">DNS кеш.</string>
-    <string name="pref_dnscrypt_cache_summ">Активируйте DNS кеш, для уменьшения задержек и исходящего трафика.</string>
-    <string name="pref_dnscrypt_cache">Активировать DNS кеш</string>
-    <string name="pref_dnscrypt_cache_size_summ">Размер кеша.</string>
-    <string name="pref_dnscrypt_cache_min_ttl_summ">Минимум TTL для кешированных адресов.</string>
-    <string name="pref_dnscrypt_cache_max_ttl_summ">Максимум TTL для кешированных адресов.</string>
-    <string name="pref_dnscrypt_cache_neg_min_ttl_summ">Минимум TTL для негативно кешированных адресов.</string>
-    <string name="pref_dnscrypt_cache_neg_max_ttl_summ">Максимум TTL для негативно кешированных адресов.</string>
     <string name="pref_dnscrypt_query_log_categ">Логировать запросы.</string>
     <string name="pref_dnscrypt_query_log_summ">Записывать лог в файл.</string>
     <string name="pref_dnscrypt_query_log">Включить лог.</string>
@@ -193,16 +171,17 @@
     <string name="pref_dnscrypt_whitelist_categ">Белый список (обход черного списка)</string>
     <string name="pref_dnscrypt_whitelist">Белый список</string>
     <string name="pref_dnscrypt_whitelist_summ">Если имя сайта совпадает с записью в списке, к нему доступ будет осуществляться в обход черных списков.</string>
-    <string name="pref_dnscrypt_sources_categ">Сервера.</string>
+    <string name="pref_dnscrypt_sources_categ">Сервера</string>
     <string name="pref_dnscrypt_sources">Источники</string>
     <string name="pref_dnscrypt_sources_summ">Список серверов</string>
-    <string name="pref_dnscrypt_minisign_key_summ">Ключ</string>
     <string name="pref_dnscrypt_refresh_delay_summ">Список серверов будет обновлен после refresh_delay в часах.</string>
     <string name="pref_dnscrypt_not_exist">Настройка не существует в dnscrypt-proxy.toml!</string>
     <string name="btn_dnscrypt_delete_log">Удалить лог</string>
     <string name="title_dnscrypt_query_log">Лог запросов DNS</string>
     <string name="title_dnscrypt_nx_log">Лог подозрительных запросов DNS</string>
     <string name="dnscrypt_empty_log">Лог пустой</string>
+    <string name="pref_dnscrypt_block_unqualified_summ">Немедленно отвечать на А и АААА запросы хостов без домменого имени.</string>
+    <string name="pref_dnscrypt_block_undelegated_summ">Немедленно отвечать на запросы к локальным зонам вместо их утечки резолверам, что всегда приводит к ошибкам и лагам.</string>
     <string name="pref_tor_virtual_addr_network_IPv4_summ">Необходимо, чтоб Tor назначил
         неиспользованный виртуальный диаппазон адресов, для доступа к сайтам в зоне .onion</string>
     <string name="pref_tor_avoid_disc_writes_summ">Попытаться уменьшить частоту записи на диск.</string>
@@ -378,5 +357,15 @@
     <string name="pref_common_wakelock_summ">Дополнительная защита в Безрутовом Режиме, чтоб андроид не закрыл приложение. Может привести к повышенному разряду батареи</string>
     <string name="install_title_no_root">Рут отсутствует</string>
     <string name="install_title_root">Рут разрешен</string>
-    <string name="message_no_root_used">Рут доступ не предоставлен. Поэтому вы можете использовать только приложения с функцией прокси вместе с InviZible Pro!</string>
+    <string name="message_no_root_used">Вы можете использовать
+        InviZible Pro в режиме локального VPN или совместно с приложениями с функцией прокси.</string>
+    <string name="pref_dnscrypt_relays">Источники</string>
+    <string name="pref_dnscrypt_relays_delay_summ">Список реле будет обновлен после refresh_delay в часах.</string>
+    <string name="pref_dnscrypt_relays_categ">Реле</string>
+    <string name="pref_dnscrypt_relays_summ">Список реле</string>
+    <string name="pref_dnscrypt_relays_title">Реле DNSCrypt</string>
+    <string name="vpn_mode_active">Режим VPN активирован</string>
+    <string name="vpn_mode_off">Режим VPN выключен</string>
+    <string name="vpn_mode_error">Ошибка VPN!</string>
+    <string name="vpn_tor_tether_summ">Пожалуйста, настройте использование прокси-сервера в настройках подключенного устройства. Настройки по умолчанию: IP:10.1.10.1 Порт:8118</string>
 </resources>

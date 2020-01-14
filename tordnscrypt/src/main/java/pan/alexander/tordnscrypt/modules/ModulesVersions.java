@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.modules;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
@@ -38,7 +38,7 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.RootExecService.TorRunFragmentMark;
 
 public class ModulesVersions {
-    private static ModulesVersions holder;
+    private static volatile ModulesVersions holder;
 
     private String dnsCryptVersion;
     private String torVersion;
@@ -61,29 +61,26 @@ public class ModulesVersions {
     }
 
     public void refreshVersions(final Context context) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                openCommandShell();
+        new Thread(() -> {
+            openCommandShell();
 
-                PathVars pathVars = getPathVars(context);
+            PathVars pathVars = getPathVars(context);
 
-                checkModulesVersions(pathVars);
+            checkModulesVersions(pathVars);
 
-                if (isBinaryFileAccessible(pathVars.dnscryptPath)) {
-                    sendResult(context, dnsCryptVersion, DNSCryptRunFragmentMark);
-                }
-
-                if (isBinaryFileAccessible(pathVars.torPath)) {
-                    sendResult(context, torVersion, TorRunFragmentMark);
-                }
-
-                if (isBinaryFileAccessible(pathVars.itpdPath)) {
-                    sendResult(context, itpdVersion, I2PDRunFragmentMark);
-                }
-
-                closeCommandShell();
+            if (isBinaryFileAccessible(pathVars.dnscryptPath)) {
+                sendResult(context, dnsCryptVersion, DNSCryptRunFragmentMark);
             }
+
+            if (isBinaryFileAccessible(pathVars.torPath)) {
+                sendResult(context, torVersion, TorRunFragmentMark);
+            }
+
+            if (isBinaryFileAccessible(pathVars.itpdPath)) {
+                sendResult(context, itpdVersion, I2PDRunFragmentMark);
+            }
+
+            closeCommandShell();
         }).start();
     }
 

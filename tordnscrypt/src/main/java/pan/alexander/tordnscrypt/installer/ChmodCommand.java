@@ -1,7 +1,4 @@
 package pan.alexander.tordnscrypt.installer;
-
-import android.annotation.SuppressLint;
-
 /*
     This file is part of InviZible Pro.
 
@@ -18,15 +15,16 @@ import android.annotation.SuppressLint;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.annotation.SuppressLint;
 import java.io.File;
 
-public class ChmodCommand {
+class ChmodCommand {
 
     @SuppressLint("SetWorldReadable")
-    public static void dirChmod(String path, boolean executableDir) throws Exception {
+    static void dirChmod(String path, boolean executableDir) {
         File dir = new File(path);
 
         if (!dir.isDirectory()) {
@@ -40,6 +38,10 @@ public class ChmodCommand {
         }
 
         File[] files = dir.listFiles();
+
+        if (files == null) {
+            return;
+        }
 
         for (File file: files) {
 
@@ -62,7 +64,7 @@ public class ChmodCommand {
     }
 
     @SuppressLint("SetWorldReadable")
-    public static void executableFileChmod(String path) throws Exception {
+    private static void executableFileChmod(String path) {
         File executable = new File(path);
 
         if (!executable.isFile()) {
@@ -77,7 +79,7 @@ public class ChmodCommand {
     }
 
     @SuppressLint("SetWorldReadable")
-    public static void regularFileChmod(String path) {
+    private static void regularFileChmod(String path) {
         File file = new File(path);
 
         if (!file.isFile()) {

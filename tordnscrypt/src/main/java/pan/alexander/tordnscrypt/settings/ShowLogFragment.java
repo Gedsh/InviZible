@@ -15,16 +15,16 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.Fragment;
-import android.support.v4.widget.SwipeRefreshLayout;
+import androidx.annotation.Nullable;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import androidx.fragment.app.Fragment;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -64,7 +64,9 @@ public class ShowLogFragment extends Fragment implements View.OnClickListener, S
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
 
-        file_path = getArguments().getString("path");
+        if (getArguments() != null) {
+            file_path = getArguments().getString("path");
+        }
     }
 
     @Override
@@ -76,6 +78,10 @@ public class ShowLogFragment extends Fragment implements View.OnClickListener, S
     @Override
     public void onResume() {
         super.onResume();
+
+        if (getActivity() == null) {
+            return;
+        }
 
         tvLogFile = getActivity().findViewById(R.id.tvLogFile);
 
@@ -132,24 +138,21 @@ public class ShowLogFragment extends Fragment implements View.OnClickListener, S
 
             Activity activity = getActivity();
             if (activity != null) {
-                activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (tvLogFileText.isEmpty()) {
-                            if (tvLogFile.getTextAlignment() != View.TEXT_ALIGNMENT_CENTER) {
-                                tvLogFile.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-                            }
-                            tvLogFile.setText(R.string.dnscrypt_empty_log);
-                        } else {
-                            if (tvLogFile.getTextAlignment() != View.TEXT_ALIGNMENT_TEXT_START) {
-                                tvLogFile.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
-                            }
-                            if (!tvLogFile.getText().toString().trim().equals(tvLogFileText)) {
-                                tvLogFile.setText(tvLogFileText);
-                            }
+                activity.runOnUiThread(() -> {
+                    if (tvLogFileText.isEmpty()) {
+                        if (tvLogFile.getTextAlignment() != View.TEXT_ALIGNMENT_CENTER) {
+                            tvLogFile.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
                         }
-
+                        tvLogFile.setText(R.string.dnscrypt_empty_log);
+                    } else {
+                        if (tvLogFile.getTextAlignment() != View.TEXT_ALIGNMENT_TEXT_START) {
+                            tvLogFile.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
+                        }
+                        if (!tvLogFile.getText().toString().trim().equals(tvLogFileText)) {
+                            tvLogFile.setText(tvLogFileText);
+                        }
                     }
+
                 });
             }
         } catch (IOException e) {

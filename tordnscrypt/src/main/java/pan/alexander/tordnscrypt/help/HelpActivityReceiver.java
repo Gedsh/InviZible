@@ -16,14 +16,14 @@ package pan.alexander.tordnscrypt.help;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
-import android.support.v4.app.DialogFragment;
+import androidx.fragment.app.DialogFragment;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -65,7 +66,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
 
         RootCommands comResult = (RootCommands) intent.getSerializableExtra("CommandsResult");
 
-        if (comResult.getCommands().length == 0) {
+        if (comResult != null && comResult.getCommands().length == 0) {
             closeProgressDialog();
             showSomethingWrongToast(context);
             return;
@@ -76,26 +77,23 @@ public class HelpActivityReceiver extends BroadcastReceiver {
     }
 
     Runnable saveLogs(final Context context, final RootCommands comResult) {
-        return new Runnable() {
-            @Override
-            public void run() {
+        return () -> {
 
-                if (isRootMethodWroteLogs(comResult)) {
-                    deleteRootExecLog(context);
-                    saveLogsMethodOne(context);
-                } else {
-                    saveLogsMethodTwo(context);
-                    deleteRootExecLog(context);
-                }
+            if (isRootMethodWroteLogs(comResult)) {
+                deleteRootExecLog(context);
+                saveLogsMethodOne(context);
+            } else {
+                saveLogsMethodTwo(context);
+                deleteRootExecLog(context);
+            }
 
-                if (isLogsExist()) {
-                    FileOperations.moveBinaryFile(context, appDataDir
-                            + "/logs", "InvizibleLogs.txt", pathToSaveLogs, "InvizibleLogs.txt");
-                } else {
-                    closeProgressDialog();
-                    showSomethingWrongToast(context);
-                    Log.e(LOG_TAG, "Collect logs alternative method fault");
-                }
+            if (isLogsExist()) {
+                FileOperations.moveBinaryFile(context, appDataDir
+                        + "/logs", "InvizibleLogs.txt", pathToSaveLogs, "InvizibleLogs.txt");
+            } else {
+                closeProgressDialog();
+                showSomethingWrongToast(context);
+                Log.e(LOG_TAG, "Collect logs alternative method fault");
             }
         };
     }
@@ -182,25 +180,17 @@ public class HelpActivityReceiver extends BroadcastReceiver {
     }
 
     private void closeProgressDialog() {
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (progressDialog != null) {
-                    progressDialog.dismiss();
-                    progressDialog = null;
-                }
-
+        mHandler.post(() -> {
+            if (progressDialog != null) {
+                progressDialog.dismiss();
+                progressDialog = null;
             }
+
         });
     }
 
     private void showSomethingWrongToast(final Context context) {
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(context, R.string.wrong, Toast.LENGTH_LONG).show();
-            }
-        });
+        mHandler.post(() -> Toast.makeText(context, R.string.wrong, Toast.LENGTH_LONG).show());
     }
 
     private boolean isRootMethodWroteLogs(RootCommands comResult) {
@@ -212,7 +202,8 @@ public class HelpActivityReceiver extends BroadcastReceiver {
 
         return Arrays.toString(comResult.getCommands()).contains("Logs Saved")
                 && invizibleLogs.exists()
-                && invizibleLogs.list().length > 0;
+                && invizibleLogs.list() != null
+                && Objects.requireNonNull(invizibleLogs.list()).length > 0;
     }
 
     private boolean isLogsExist() {

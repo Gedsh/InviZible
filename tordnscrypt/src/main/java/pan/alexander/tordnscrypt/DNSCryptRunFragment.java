@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
@@ -25,8 +25,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v7.preference.PreferenceManager;
+import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -58,6 +58,7 @@ import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
@@ -128,15 +129,17 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
                         RootCommands comResult = (RootCommands) intent.getSerializableExtra("CommandsResult");
 
-                        if (comResult.getCommands().length == 0) {
+                        if (comResult != null && comResult.getCommands().length == 0) {
                             setDnsCryptSomethingWrong();
                             return;
                         }
 
                         StringBuilder sb = new StringBuilder();
-                        for (String com : comResult.getCommands()) {
-                            Log.i(LOG_TAG, com);
-                            sb.append(com).append((char) 10);
+                        if (comResult != null) {
+                            for (String com : comResult.getCommands()) {
+                                Log.i(LOG_TAG, com);
+                                sb.append(com).append((char) 10);
+                            }
                         }
 
                         if (sb.toString().contains("DNSCrypt_version")) {
@@ -186,34 +189,31 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
                             checkDNSVersionWithRoot();
                         }
-                        Thread thread = new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    Verifier verifier = new Verifier(getActivity());
-                                    String appSignAlt = verifier.getApkSignature();
-                                    if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
+                        Thread thread = new Thread(() -> {
+                            try {
+                                Verifier verifier = new Verifier(getActivity());
+                                String appSignAlt = verifier.getApkSignature();
+                                if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
 
-                                        if (getFragmentManager() != null) {
-                                            NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                                    getActivity(), getText(R.string.verifier_error).toString(), "15");
-                                            if (notificationHelper != null) {
-                                                notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
-                                            }
-                                        }
-                                    }
-
-                                } catch (Exception e) {
                                     if (getFragmentManager() != null) {
                                         NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                                getActivity(), getText(R.string.verifier_error).toString(), "18");
+                                                getActivity(), getText(R.string.verifier_error).toString(), "15");
                                         if (notificationHelper != null) {
                                             notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                                         }
                                     }
-                                    Log.e(LOG_TAG, "DNSCryptRunFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
-                                            Arrays.toString(e.getStackTrace()));
                                 }
+
+                            } catch (Exception e) {
+                                if (getFragmentManager() != null) {
+                                    NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                                            getActivity(), getText(R.string.verifier_error).toString(), "18");
+                                    if (notificationHelper != null) {
+                                        notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                                    }
+                                }
+                                Log.e(LOG_TAG, "DNSCryptRunFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
+                                        Arrays.toString(e.getStackTrace()));
                             }
                         });
                         thread.start();
@@ -351,7 +351,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
             if (new PrefManager(getActivity()).getBoolPref("Tor Running")
                     && !new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
-                if (modulesStatus.isContextUIDUpdateRequested()) {
+                if (modulesStatus.isContextUIDUpdateRequested()|| fixedModuleState == RUNNING) {
                     Toast.makeText(getActivity(), R.string.please_wait, Toast.LENGTH_SHORT).show();
                     setStartButtonEnabled(true);
                     return;
@@ -383,7 +383,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
             } else if (!new PrefManager(getActivity()).getBoolPref("Tor Running")
                     && !new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
-                if (modulesStatus.isContextUIDUpdateRequested()) {
+                if (modulesStatus.isContextUIDUpdateRequested() || fixedModuleState == RUNNING) {
                     Toast.makeText(getActivity(), R.string.please_wait, Toast.LENGTH_SHORT).show();
                     setStartButtonEnabled(true);
                     return;
@@ -463,6 +463,8 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
             displayLog(1000);
 
         } else if (currentModuleState == RUNNING) {
+
+            ServiceVPNHelper.prepareVPNServiceIfRequired(getActivity(), modulesStatus);
 
             setStartButtonEnabled(true);
 

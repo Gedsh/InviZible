@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.utils;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Notification;
@@ -28,9 +28,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.IBinder;
-import android.support.v4.app.NotificationCompat;
-import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
+
+import androidx.core.app.NotificationCompat;
+import androidx.preference.PreferenceManager;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -250,12 +251,15 @@ public class RootExecService extends Service {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ANDROID_CHANNEL_ID);
         builder.setContentIntent(contentIntent)
                 .setOngoing(true)   //Can't be swiped out
-                .setSmallIcon(R.drawable.ic_visibility_off_black_24dp)
+                .setSmallIcon(R.drawable.ic_visibility_off_white_24dp)
                 //.setLargeIcon(BitmapFactory.decodeResource(res, R.drawable.large))   // большая картинка
                 .setTicker(Ticker)
                 .setContentTitle(Title) //Заголовок
                 .setContentText(Text) // Текст уведомления
-                .setWhen(System.currentTimeMillis());
+                .setWhen(System.currentTimeMillis())
+                //new experiment
+                .setPriority(Notification.PRIORITY_MIN)
+                .setOnlyAlertOnce(true);
 
         Notification notification = builder.build();
 

@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
@@ -29,9 +29,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v7.preference.PreferenceManager;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.preference.PreferenceManager;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -66,6 +66,8 @@ import pan.alexander.tordnscrypt.utils.TorRefreshIPsWork;
 import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.utils.enums.OperationMode;
+import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
@@ -78,6 +80,7 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 
 public class TorRunFragment extends Fragment implements View.OnClickListener {
@@ -135,15 +138,17 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
                         RootCommands comResult = (RootCommands) intent.getSerializableExtra("CommandsResult");
 
-                        if (comResult.getCommands().length == 0) {
+                        if (comResult != null && comResult.getCommands().length == 0) {
                             setTorSomethingWrong();
                             return;
                         }
 
                         StringBuilder sb = new StringBuilder();
-                        for (String com : comResult.getCommands()) {
-                            Log.i(LOG_TAG, com);
-                            sb.append(com).append((char) 10);
+                        if (comResult != null) {
+                            for (String com : comResult.getCommands()) {
+                                Log.i(LOG_TAG, com);
+                                sb.append(com).append((char) 10);
+                            }
                         }
 
                         if (sb.toString().contains("Tor_version")) {
@@ -290,9 +295,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
             String refreshPeriod = shPref.getString("pref_fast_site_refresh_interval", "12");
-            if (refreshPeriod != null) {
-                refreshPeriodHours = Integer.parseInt(refreshPeriod);
-            }
+            refreshPeriodHours = Integer.parseInt(refreshPeriod);
 
             routeAllThroughTor = shPref.getBoolean("pref_fast_all_through_tor", true);
         }
@@ -337,34 +340,31 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
             boolean rootMode = modulesStatus.getMode() == ROOT_MODE;
 
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Verifier verifier = new Verifier(getActivity());
-                        String appSign = verifier.getApkSignatureZipModern();
-                        String appSignAlt = verifier.getApkSignature();
-                        if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
-                            if (getFragmentManager() != null) {
-                                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                        getActivity(), getText(R.string.verifier_error).toString(), "15");
-                                if (notificationHelper != null) {
-                                    notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
-                                }
-                            }
-                        }
-
-                    } catch (Exception e) {
+            Thread thread = new Thread(() -> {
+                try {
+                    Verifier verifier = new Verifier(getActivity());
+                    String appSign = verifier.getApkSignatureZipModern();
+                    String appSignAlt = verifier.getApkSignature();
+                    if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                         if (getFragmentManager() != null) {
                             NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                    getActivity(), getText(R.string.verifier_error).toString(), "18");
+                                    getActivity(), getText(R.string.verifier_error).toString(), "15");
                             if (notificationHelper != null) {
                                 notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                             }
                         }
-                        Log.e(LOG_TAG, "TorRunFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
-                                Arrays.toString(e.getStackTrace()));
                     }
+
+                } catch (Exception e) {
+                    if (getFragmentManager() != null) {
+                        NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                                getActivity(), getText(R.string.verifier_error).toString(), "18");
+                        if (notificationHelper != null) {
+                            notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                        }
+                    }
+                    Log.e(LOG_TAG, "TorRunFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
+                            Arrays.toString(e.getStackTrace()));
                 }
             });
             thread.start();
@@ -372,7 +372,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
             if (!new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("Tor Running") &&
                     new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
-                if (modulesStatus.isContextUIDUpdateRequested()) {
+                if (modulesStatus.isContextUIDUpdateRequested()|| fixedModuleState == RUNNING) {
                     Toast.makeText(getActivity(), R.string.please_wait, Toast.LENGTH_SHORT).show();
                     setStartButtonEnabled(true);
                     return;
@@ -409,7 +409,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
             } else if (!new PrefManager(getActivity()).getBoolPref("Tor Running") &&
                     !new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
-                if (modulesStatus.isContextUIDUpdateRequested()) {
+                if (modulesStatus.isContextUIDUpdateRequested()|| fixedModuleState == RUNNING) {
                     Toast.makeText(getActivity(), R.string.please_wait, Toast.LENGTH_SHORT).show();
                     setStartButtonEnabled(true);
                     return;
@@ -489,6 +489,8 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
             displayLog(1000);
 
         } else if (currentModuleState == RUNNING) {
+
+            ServiceVPNHelper.prepareVPNServiceIfRequired(getActivity(), modulesStatus);
 
             setStartButtonEnabled(true);
 
@@ -781,11 +783,9 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
         boolean throughTorUpdate = spref.getBoolean("pref_fast through_tor_update", false);
         if (throughTorUpdate) {
             FragmentManager fm = getActivity().getSupportFragmentManager();
-            if (fm != null) {
-                TopFragment topFragment = (TopFragment) fm.findFragmentByTag("topFragmentTAG");
-                if (topFragment != null) {
-                    topFragment.checkUpdates();
-                }
+            TopFragment topFragment = (TopFragment) fm.findFragmentByTag("topFragmentTAG");
+            if (topFragment != null) {
+                topFragment.checkUpdates();
             }
         }
     }

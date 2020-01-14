@@ -1,7 +1,7 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.DayNight.DarkActionBar">
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
@@ -10,8 +10,8 @@
         <item name="android:windowBackground">@color/colorBackground</item>
 
         <!-- AppCompat Dialog Attributes -->
-        <item name="dialogTheme">@style/AppCompatDialog</item>
-        <item name="alertDialogTheme">@style/AppCompatAlert</item>
+        <item name="dialogTheme">@style/CustomDialogTheme</item>
+        <item name="alertDialogTheme">@style/CustomAlertDialogTheme</item>
     </style>
 
     <style name="AppTheme.NoActionBar" parent="AppTheme">
@@ -19,27 +19,31 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar" />
 
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Dark" />
-
-    <style name="CustomDialogTheme" parent="Theme.AppCompat.DayNight.Dialog.Alert">
-        <item name="android:background">@drawable/alert_dialog_custom</item>
-    </style>
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.MaterialComponents.Dark" />
 
     <!-- Generic Dialog Theme -->
-    <style name="AppCompatDialog" parent="Theme.AppCompat.DayNight.Dialog">
+    <style name="CustomDialogTheme" parent="Theme.MaterialComponents.DayNight.Dialog">
 
         <!-- Used for the background -->
-        <item name="android:colorBackground">@color/alertWindowColor</item>
-        <item name="android:windowBackground">@color/alertWindowColor</item>
+        <item name="buttonBarPositiveButtonStyle">@style/DialogButtonStyle</item>
+        <item name="buttonBarNeutralButtonStyle">@style/DialogButtonStyle</item>
+        <item name="buttonBarNegativeButtonStyle">@style/DialogButtonStyle</item>
+        <item name="dialogCornerRadius">5dp</item>
     </style>
 
     <!-- Alert Dialog Theme -->
-    <style name="AppCompatAlert" parent="Theme.AppCompat.DayNight.Dialog.Alert">
-        <!-- Used for the background -->
-        <item name="android:colorBackground">@color/alertWindowColor</item>
-        <item name="android:windowBackground">@color/alertWindowColor</item>
+    <style name="CustomAlertDialogTheme" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
+        <item name="colorOnPrimary">@color/colorPrimary</item>
+        <item name="buttonBarPositiveButtonStyle">@style/DialogButtonStyle</item>
+        <item name="buttonBarNeutralButtonStyle">@style/DialogButtonStyle</item>
+        <item name="buttonBarNegativeButtonStyle">@style/DialogButtonStyle</item>
+        <item name="dialogCornerRadius">5dp</item>
+    </style>
+
+    <style name="DialogButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/colorAccent</item>
     </style>
 
 </resources>

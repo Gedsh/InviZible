@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 
@@ -27,9 +27,9 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
-import android.support.v7.preference.PreferenceManager;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -133,16 +133,18 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
 
                         RootCommands comResult = (RootCommands) intent.getSerializableExtra("CommandsResult");
 
-                        if (comResult.getCommands().length == 0) {
+                        if (comResult != null && comResult.getCommands().length == 0) {
 
                             setITPDSomethingWrong();
                             return;
                         }
 
                         StringBuilder sb = new StringBuilder();
-                        for (String com : comResult.getCommands()) {
-                            Log.i(LOG_TAG, com);
-                            sb.append(com).append((char) 10);
+                        if (comResult != null) {
+                            for (String com : comResult.getCommands()) {
+                                Log.i(LOG_TAG, com);
+                                sb.append(com).append((char) 10);
+                            }
                         }
 
                         if (sb.toString().contains("ITPD_version")) {
@@ -332,7 +334,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                     && new PrefManager(Objects.requireNonNull(getActivity())).getBoolPref("Tor Running")
                     && !new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
-                if (modulesStatus.isContextUIDUpdateRequested()) {
+                if (modulesStatus.isContextUIDUpdateRequested()|| fixedModuleState == RUNNING) {
                     Toast.makeText(getActivity(), R.string.please_wait, Toast.LENGTH_SHORT).show();
                     setStartButtonEnabled(true);
                     return;
@@ -357,7 +359,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                     !new PrefManager(getActivity()).getBoolPref("Tor Running")
                     && !new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
-                if (modulesStatus.isContextUIDUpdateRequested()) {
+                if (modulesStatus.isContextUIDUpdateRequested()|| fixedModuleState == RUNNING) {
                     Toast.makeText(getActivity(), R.string.please_wait, Toast.LENGTH_SHORT).show();
                     setStartButtonEnabled(true);
                     return;
@@ -383,7 +385,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                     !new PrefManager(getActivity()).getBoolPref("Tor Running")
                     && new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
-                if (modulesStatus.isContextUIDUpdateRequested()) {
+                if (modulesStatus.isContextUIDUpdateRequested()|| fixedModuleState == RUNNING) {
                     Toast.makeText(getActivity(), R.string.please_wait, Toast.LENGTH_SHORT).show();
                     setStartButtonEnabled(true);
                     return;
@@ -409,7 +411,7 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                     new PrefManager(getActivity()).getBoolPref("Tor Running")
                     && new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")) {
 
-                if (modulesStatus.isContextUIDUpdateRequested()) {
+                if (modulesStatus.isContextUIDUpdateRequested()|| fixedModuleState == RUNNING) {
                     Toast.makeText(getActivity(), R.string.please_wait, Toast.LENGTH_SHORT).show();
                     setStartButtonEnabled(true);
                     return;
@@ -645,23 +647,19 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
                 if (getActivity() == null)
                     return;
 
-                getActivity().runOnUiThread(new Runnable() {
+                getActivity().runOnUiThread(() -> {
 
-                    @Override
-                    public void run() {
+                    refreshITPDState();
 
-                        refreshITPDState();
+                    if (tvITPDinfoLog != null && !previousLastLines.equals(lastLines)) {
+                        tvITPDinfoLog.setText(Html.fromHtml(lastLines));
+                        previousLastLines = lastLines;
+                    }
 
-                        if (tvITPDinfoLog != null && !previousLastLines.equals(lastLines)) {
-                            tvITPDinfoLog.setText(Html.fromHtml(lastLines));
-                            previousLastLines = lastLines;
-                        }
-
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            tvITPDLog.setText(Html.fromHtml(htmlData, Html.FROM_HTML_MODE_LEGACY));
-                        } else {
-                            tvITPDLog.setText(Html.fromHtml(htmlData));
-                        }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        tvITPDLog.setText(Html.fromHtml(htmlData, Html.FROM_HTML_MODE_LEGACY));
+                    } else {
+                        tvITPDLog.setText(Html.fromHtml(htmlData));
                     }
                 });
             }
@@ -769,16 +767,13 @@ public class ITPDRunFragment extends Fragment implements View.OnClickListener {
 
         File certificateFolderDir = new File(certificateFolder);
 
-        if (certificateFolderDir.isDirectory() && certificateFolderDir.listFiles().length > 0) {
+        if (certificateFolderDir.isDirectory() && Objects.requireNonNull(certificateFolderDir.listFiles()).length > 0) {
             return;
         }
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                FileOperations.copyFolderSynchronous(getActivity(), certificateSource, certificateDestination);
-                Log.i(LOG_TAG, "Copy i2p certificates");
-            }
+        new Thread(() -> {
+            FileOperations.copyFolderSynchronous(getActivity(), certificateSource, certificateDestination);
+            Log.i(LOG_TAG, "Copy i2p certificates");
         }).start();
     }
 }

@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
@@ -25,17 +25,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.preference.PreferenceManager;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.AlertDialog;
+import androidx.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -73,15 +71,15 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 
 public class TopFragment extends Fragment {
 
-    public static String DNSCryptVersion = "2.0.35";
+    public static String DNSCryptVersion = "2.0.36";
     public static String TorVersion = "4.1.5";
     public static String ITPDVersion = "2.29.0";
 
     public static String appProcVersion = "armv7a";
     public static String appVersion = "lite";
 
-    public static String verSU = "";
-    public static String verBB = "";
+    static String verSU = "";
+    static String verBB = "";
 
     public static boolean debug = false;
     public static String TOP_BROADCAST = "pan.alexander.tordnscrypt.action.TOP_BROADCAST";
@@ -298,12 +296,9 @@ public class TopFragment extends Fragment {
     private void showDonDialog() {
         if (appVersion.endsWith("e")) {
             Handler handler = new Handler();
-            Runnable performRegistration = new Runnable() {
-                @Override
-                public void run() {
-                    Registration registration = new Registration(getActivity());
-                    registration.showDonateDialog();
-                }
+            Runnable performRegistration = () -> {
+                Registration registration = new Registration(getActivity());
+                registration.showDonateDialog();
             };
             handler.postDelayed(performRegistration, 5000);
         }
@@ -471,7 +466,7 @@ public class TopFragment extends Fragment {
         }
     }
 
-    public void checkUpdates() {
+    void checkUpdates() {
 
         if (getActivity() == null) {
             return;
@@ -509,24 +504,21 @@ public class TopFragment extends Fragment {
 
         new PrefManager(getActivity()).setStrPref("LastUpdateResult", "");
 
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                if (getActivity() == null)
-                    return;
-                new PrefManager(getActivity()).setStrPref("updateTimeLast", String.valueOf(System.currentTimeMillis()));
+        Runnable runnable = () -> {
+            if (getActivity() == null)
+                return;
+            new PrefManager(getActivity()).setStrPref("updateTimeLast", String.valueOf(System.currentTimeMillis()));
 
-                updateCheck = new UpdateCheck(getActivity());
-                try {
-                    updateCheck.requestUpdateData("https://invizible.net", appSign);
-                } catch (Exception e) {
-                    if (getActivity() != null) {
-                        new PrefManager(getActivity()).setStrPref("LastUpdateResult", getText(R.string.update_fault).toString());
-                        if (MainActivity.modernDialog != null)
-                            ((MainActivity) getActivity()).showUpdateMessage(getText(R.string.update_fault).toString());
-                    }
-                    Log.e(LOG_TAG, "TopFragment Failed to requestUpdate() " + e.getMessage() + " " + e.getCause());
+            updateCheck = new UpdateCheck(getActivity());
+            try {
+                updateCheck.requestUpdateData("https://invizible.net", appSign);
+            } catch (Exception e) {
+                if (getActivity() != null) {
+                    new PrefManager(getActivity()).setStrPref("LastUpdateResult", getText(R.string.update_fault).toString());
+                    if (MainActivity.modernDialog != null)
+                        ((MainActivity) getActivity()).showUpdateMessage(getText(R.string.update_fault).toString());
                 }
+                Log.e(LOG_TAG, "TopFragment Failed to requestUpdate() " + e.getMessage() + " " + e.getCause());
             }
         };
 
@@ -581,9 +573,11 @@ public class TopFragment extends Fragment {
         }
 
         ActivityManager manager = (ActivityManager) getActivity().getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (ModulesService.class.getName().equals(service.service.getClassName())) {
-                return true;
+        if (manager != null) {
+            for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+                if (ModulesService.class.getName().equals(service.service.getClassName())) {
+                    return true;
+                }
             }
         }
         return false;
@@ -609,9 +603,6 @@ public class TopFragment extends Fragment {
 
         AlertDialog.Builder rootCheckingDialogBuilder = RootCheckingProgressDialog.getBuilder(getActivity());
         rootCheckingDialog = rootCheckingDialogBuilder.show();
-        if (rootCheckingDialog.getWindow() != null) {
-            rootCheckingDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
     }
 
     private void closePleaseWaitDialog() {
@@ -652,7 +643,7 @@ public class TopFragment extends Fragment {
         return intent.getIntExtra("Mark", 0) == RootExecService.TopFragmentMark;
     }
 
-    protected void registerReceiver() {
+    private void registerReceiver() {
 
         if (getActivity() == null || br != null) {
             return;
@@ -668,7 +659,7 @@ public class TopFragment extends Fragment {
         getActivity().registerReceiver(br, intentFilter);
     }
 
-    protected void unRegisterReceiver() {
+    private void unRegisterReceiver() {
         try {
             if (br != null && getActivity() != null) {
                 getActivity().unregisterReceiver(br);

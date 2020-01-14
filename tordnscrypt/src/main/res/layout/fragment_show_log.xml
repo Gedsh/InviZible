@@ -10,7 +10,7 @@
     <!-- TODO: Update blank fragment layout -->
 
 
-    <android.support.v4.widget.SwipeRefreshLayout
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshDNSQueries"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -22,23 +22,23 @@
             android:layout_margin="8dp"
             android:scrollbars="vertical">
 
-            <LinearLayout
+            <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <TextView
+                <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/tvLogFile"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textIsSelectable="true"
                     android:textSize="@dimen/fragment_file_log_text_size"
                     android:typeface="serif" />
-            </LinearLayout>
+            </androidx.appcompat.widget.LinearLayoutCompat>
         </ScrollView>
-    </android.support.v4.widget.SwipeRefreshLayout>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-    <android.support.design.widget.FloatingActionButton
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/floatingBtnClearLog"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

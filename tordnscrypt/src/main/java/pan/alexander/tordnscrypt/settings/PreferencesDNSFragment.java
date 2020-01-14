@@ -15,12 +15,12 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.os.Bundle;
-import android.support.v7.preference.Preference;
-import android.support.v7.preference.PreferenceFragmentCompat;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceFragmentCompat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -39,13 +39,11 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class PreferencesDNSFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
 
-    ArrayList<String> key_toml;
-    ArrayList<String> val_toml;
-    ArrayList<String> key_toml_orig;
-    ArrayList<String> val_toml_orig;
-    String appDataDir;
-    String dnscryptPath;
-    String busyboxPath;
+    private ArrayList<String> key_toml;
+    private ArrayList<String> val_toml;
+    private ArrayList<String> key_toml_orig;
+    private ArrayList<String> val_toml_orig;
+    private String appDataDir;
     private boolean isChanged = false;
 
     @Override
@@ -55,40 +53,36 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
 
         addPreferencesFromResource(R.xml.preferences_dnscrypt);
 
+        ArrayList<Preference> preferences = new ArrayList<>();
 
-        findPreference("listen_port").setOnPreferenceChangeListener(this);
-        findPreference("max_clients").setOnPreferenceChangeListener(this);
-        findPreference("ipv4_servers").setOnPreferenceChangeListener(this);
-        findPreference("ipv6_servers").setOnPreferenceChangeListener(this);
-        findPreference("dnscrypt_servers").setOnPreferenceChangeListener(this);
-        findPreference("doh_servers").setOnPreferenceChangeListener(this);
-        findPreference("require_dnssec").setOnPreferenceChangeListener(this);
-        findPreference("require_nolog").setOnPreferenceChangeListener(this);
-        findPreference("require_nofilter").setOnPreferenceChangeListener(this);
-        findPreference("force_tcp").setOnPreferenceChangeListener(this);
-        findPreference("Enable proxy").setOnPreferenceChangeListener(this);
-        findPreference("proxy_port").setOnPreferenceChangeListener(this);
-        findPreference("timeout").setOnPreferenceChangeListener(this);
-        findPreference("keepalive").setOnPreferenceChangeListener(this);
-        findPreference("cert_refresh_delay").setOnPreferenceChangeListener(this);
-        findPreference("dnscrypt_ephemeral_keys").setOnPreferenceChangeListener(this);
-        findPreference("tls_disable_session_tickets").setOnPreferenceChangeListener(this);
-        findPreference("fallback_resolver").setOnPreferenceChangeListener(this);
-        findPreference("ignore_system_dns").setOnPreferenceChangeListener(this);
-        findPreference("netprobe_timeout").setOnPreferenceChangeListener(this);
-        findPreference("block_ipv6").setOnPreferenceChangeListener(this);
-        findPreference("Enable DNS cache").setOnPreferenceChangeListener(this);
-        findPreference("cache_size").setOnPreferenceChangeListener(this);
-        findPreference("cache_min_ttl").setOnPreferenceChangeListener(this);
-        findPreference("cache_max_ttl").setOnPreferenceChangeListener(this);
-        findPreference("cache_neg_min_ttl").setOnPreferenceChangeListener(this);
-        findPreference("cache_neg_max_ttl").setOnPreferenceChangeListener(this);
-        findPreference("Enable Query logging").setOnPreferenceChangeListener(this);
-        findPreference("ignored_qtypes").setOnPreferenceChangeListener(this);
-        findPreference("Enable Suspicious logging").setOnPreferenceChangeListener(this);
-        findPreference("Sources").setOnPreferenceChangeListener(this);
-        findPreference("refresh_delay").setOnPreferenceChangeListener(this);
-        findPreference("minisign_key").setOnPreferenceChangeListener(this);
+        preferences.add(findPreference("listen_port"));
+        preferences.add(findPreference("dnscrypt_servers"));
+        preferences.add(findPreference("doh_servers"));
+        preferences.add(findPreference("require_dnssec"));
+        preferences.add(findPreference("require_nolog"));
+        preferences.add(findPreference("require_nofilter"));
+        preferences.add(findPreference("force_tcp"));
+        preferences.add(findPreference("Enable proxy"));
+        preferences.add(findPreference("proxy_port"));
+        preferences.add(findPreference("fallback_resolver"));
+        preferences.add(findPreference("ignore_system_dns"));
+        preferences.add(findPreference("Enable Query logging"));
+        preferences.add(findPreference("ignored_qtypes"));
+        preferences.add(findPreference("Enable Suspicious logging"));
+        preferences.add(findPreference("Sources"));
+        preferences.add(findPreference("refresh_delay"));
+        preferences.add(findPreference("Relays"));
+        preferences.add(findPreference("refresh_delay_relays"));
+        preferences.add(findPreference("block_unqualified"));
+        preferences.add(findPreference("block_undelegated"));
+
+        for (Preference preference : preferences) {
+            if (preference != null) {
+                preference.setOnPreferenceChangeListener(this);
+            } else {
+                Log.e(LOG_TAG, "PreferencesDNSFragment preference is null exception");
+            }
+        }
 
         if (getArguments() != null) {
             key_toml = getArguments().getStringArrayList("key_toml");
@@ -115,10 +109,6 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
 
         PathVars pathVars = new PathVars(getActivity());
         appDataDir = pathVars.appDataDir;
-        dnscryptPath = pathVars.dnscryptPath;
-        busyboxPath = pathVars.busyboxPath;
-
-
     }
 
     @Override
@@ -174,11 +164,14 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
                 String val = "\"socks5://127.0.0.1:" + newValue.toString() + "\"";
                 val_toml.set(key_toml.indexOf("proxy"), val);
                 return true;
-            } else if (Objects.equals(preference.getKey(), "Enable DNS cache")) {
-                val_toml.set(key_toml.indexOf("cache"), newValue.toString());
-                return true;
             } else if (Objects.equals(preference.getKey(), "Sources")) {
                 val_toml.set(key_toml.indexOf("urls"), newValue.toString());
+                return true;
+            } else if (Objects.equals(preference.getKey(), "Relays")) {
+                val_toml.set(key_toml.lastIndexOf("urls"), newValue.toString());
+                return true;
+            } else if (Objects.equals(preference.getKey(), "refresh_delay_relays")) {
+                val_toml.set(key_toml.lastIndexOf("refresh_delay"), newValue.toString());
                 return true;
             } else if (Objects.equals(preference.getKey(), "Enable proxy")) {
                 if (Boolean.valueOf(newValue.toString())) {

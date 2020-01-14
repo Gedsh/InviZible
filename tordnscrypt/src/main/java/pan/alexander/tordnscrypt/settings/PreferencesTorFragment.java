@@ -15,16 +15,16 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.support.v7.preference.Preference;
-import android.support.v7.preference.PreferenceManager;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceManager;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.v7.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceFragmentCompat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -44,12 +44,12 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class PreferencesTorFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
 
-    static ArrayList<String> key_tor;
-    static ArrayList<String> val_tor;
-    ArrayList<String> key_tor_orig;
-    ArrayList<String> val_tor_orig;
-    SharedPreferences sp;
-    String appDataDir;
+    private static ArrayList<String> key_tor;
+    private static ArrayList<String> val_tor;
+    private ArrayList<String> key_tor_orig;
+    private ArrayList<String> val_tor_orig;
+    private SharedPreferences sp;
+    private String appDataDir;
 
 
     @Override
@@ -60,29 +60,39 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
         addPreferencesFromResource(R.xml.preferences_tor);
 
-        findPreference("VirtualAddrNetworkIPv4").setOnPreferenceChangeListener(this);
-        findPreference("AvoidDiskWrites").setOnPreferenceChangeListener(this);
-        findPreference("ConnectionPadding").setOnPreferenceChangeListener(this);
-        findPreference("ReducedConnectionPadding").setOnPreferenceChangeListener(this);
-        findPreference("ExcludeExitNodes").setOnPreferenceChangeListener(this);
-        findPreference("ExitNodes").setOnPreferenceChangeListener(this);
-        findPreference("ExcludeNodes").setOnPreferenceChangeListener(this);
-        findPreference("EntryNodes").setOnPreferenceChangeListener(this);
-        findPreference("StrictNodes").setOnPreferenceChangeListener(this);
-        findPreference("FascistFirewall").setOnPreferenceChangeListener(this);
-        findPreference("NewCircuitPeriod").setOnPreferenceChangeListener(this);
-        findPreference("MaxCircuitDirtiness").setOnPreferenceChangeListener(this);
-        findPreference("EnforceDistinctSubnets").setOnPreferenceChangeListener(this);
-        findPreference("Enable SOCKS proxy").setOnPreferenceChangeListener(this);
-        findPreference("SOCKSPort").setOnPreferenceChangeListener(this);
-        findPreference("Enable HTTPTunnel").setOnPreferenceChangeListener(this);
-        findPreference("HTTPTunnelPort").setOnPreferenceChangeListener(this);
-        findPreference("Enable Transparent proxy").setOnPreferenceChangeListener(this);
-        findPreference("TransPort").setOnPreferenceChangeListener(this);
-        findPreference("Enable DNS").setOnPreferenceChangeListener(this);
-        findPreference("DNSPort").setOnPreferenceChangeListener(this);
-        findPreference("ClientUseIPv4").setOnPreferenceChangeListener(this);
-        findPreference("ClientUseIPv6").setOnPreferenceChangeListener(this);
+        ArrayList<Preference> preferences = new ArrayList<>();
+
+        preferences.add(findPreference("VirtualAddrNetworkIPv4"));
+        preferences.add(findPreference("AvoidDiskWrites"));
+        preferences.add(findPreference("ConnectionPadding"));
+        preferences.add(findPreference("ReducedConnectionPadding"));
+        preferences.add(findPreference("ExcludeExitNodes"));
+        preferences.add(findPreference("ExitNodes"));
+        preferences.add(findPreference("ExcludeNodes"));
+        preferences.add(findPreference("EntryNodes"));
+        preferences.add(findPreference("StrictNodes"));
+        preferences.add(findPreference("FascistFirewall"));
+        preferences.add(findPreference("NewCircuitPeriod"));
+        preferences.add(findPreference("MaxCircuitDirtiness"));
+        preferences.add(findPreference("EnforceDistinctSubnets"));
+        preferences.add(findPreference("Enable SOCKS proxy"));
+        preferences.add(findPreference("SOCKSPort"));
+        preferences.add(findPreference("Enable HTTPTunnel"));
+        preferences.add(findPreference("HTTPTunnelPort"));
+        preferences.add(findPreference("Enable Transparent proxy"));
+        preferences.add(findPreference("TransPort"));
+        preferences.add(findPreference("Enable DNS"));
+        preferences.add(findPreference("DNSPort"));
+        preferences.add(findPreference("ClientUseIPv4"));
+        preferences.add(findPreference("ClientUseIPv6"));
+
+        for (Preference preference: preferences) {
+            if (preference != null) {
+                preference.setOnPreferenceChangeListener(this);
+            } else {
+                Log.e(LOG_TAG, "PreferencesTorFragment preference is null exception");
+            }
+        }
 
 
         if (getArguments() != null) {

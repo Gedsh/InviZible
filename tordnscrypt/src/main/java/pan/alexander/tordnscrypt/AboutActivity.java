@@ -15,14 +15,12 @@ package pan.alexander.tordnscrypt;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
-import android.content.DialogInterface;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -116,7 +114,7 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
                 outputText = outputText + byteArrayOutputStream.toString();
             }
 
-            AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomDialogTheme);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomAlertDialogTheme);
             LayoutInflater layoutInflater = getLayoutInflater();
             View inflatedView = layoutInflater.inflate(R.layout.licenses_scrollable_text, null, false);
             TextView licenseText = inflatedView.findViewById(R.id.tvLicense);
@@ -124,17 +122,11 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
 
             builder.setTitle(title);
 
-            builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.dismiss();
-                }
-            });
+            builder.setPositiveButton(R.string.ok, (dialogInterface, i1) -> dialogInterface.dismiss());
 
             builder.setView(inflatedView);
 
-            AlertDialog view  = builder.show();
-            Objects.requireNonNull(view.getWindow()).getDecorView().setBackgroundColor(Color.TRANSPARENT);
+            builder.show();
         }
         catch (IOException e)
         {

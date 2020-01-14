@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.help;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Intent;
@@ -24,16 +24,16 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.support.v4.app.DialogFragment;
+
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.fragment.app.DialogFragment;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.Switch;
 
-import com.github.angads25.filepicker.controller.DialogSelectionListener;
 import com.github.angads25.filepicker.model.DialogConfigs;
 import com.github.angads25.filepicker.model.DialogProperties;
 import com.github.angads25.filepicker.view.FilePickerDialog;
@@ -57,6 +57,7 @@ import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.vpn.Util;
 
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.deleteFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
@@ -87,7 +88,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         Button btnSaveLogs = findViewById(R.id.btnSaveLogs);
         btnSaveLogs.setOnClickListener(this);
         btnSaveLogs.requestFocus();
-        Switch swRootCommandsLog = findViewById(R.id.swRootCommandsLog);
+        SwitchCompat swRootCommandsLog = findViewById(R.id.swRootCommandsLog);
         swRootCommandsLog.setChecked(new PrefManager(this).getBoolPref("swRootCommandsLog"));
         swRootCommandsLog.setOnCheckedChangeListener(this);
 
@@ -104,16 +105,16 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
         modulesStatus = ModulesStatus.getInstance();
 
+        if (modulesStatus.isRootAvailable()) {
+            IntentFilter intentFilter = new IntentFilter(RootExecService.COMMAND_RESULT);
+            this.registerReceiver(br, intentFilter);
+        }
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
-        if (modulesStatus.isRootAvailable()) {
-            IntentFilter intentFilter = new IntentFilter(RootExecService.COMMAND_RESULT);
-            this.registerReceiver(br, intentFilter);
-        }
 
         setTitle(R.string.drawer_menu_help);
 
@@ -161,13 +162,10 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         properties.offset = new File(Environment.getExternalStorageDirectory().toURI());
         FilePickerDialog dial = new FilePickerDialog(this, properties);
         dial.setTitle(R.string.backupFolder);
-        dial.setDialogSelectionListener(new DialogSelectionListener() {
-            @Override
-            public void onSelectedFilePaths(String[] files) {
-                pathToSaveLogs = files[0];
-                etLogsPath.setText(pathToSaveLogs);
-                br.setPathToSaveLogs(pathToSaveLogs);
-            }
+        dial.setDialogSelectionListener(files -> {
+            pathToSaveLogs = files[0];
+            etLogsPath.setText(pathToSaveLogs);
+            br.setPathToSaveLogs(pathToSaveLogs);
         });
         dial.show();
     }
@@ -191,8 +189,10 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                 busyboxPath + "mkdir -m 655 -p logs_dir",
                 busyboxPath + "cp -R logs logs_dir",
                 "logcat -d | grep " + pid + " > logs_dir/logcat.log",
-                iptablesPath + "iptables -L > logs_dir/filter.log",
-                iptablesPath + "iptables -t nat -L > logs_dir/nat.log",
+                iptablesPath + "iptables -L -v > logs_dir/filter.log",
+                iptablesPath + "iptables -t nat -L -v > logs_dir/nat.log",
+                iptablesPath + "iptables -t mangle -L -v > logs_dir/mangle.log",
+                iptablesPath + "iptables -t raw -L -v > logs_dir/raw.log",
                 busyboxPath + "cp -R shared_prefs logs_dir",
                 busyboxPath + "sleep 1",
                 busyboxPath + "echo \"" + info + "\" > logs_dir/device_info.log",
@@ -226,6 +226,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                     "APP_VERSION_CODE " + BuildConfig.VERSION_CODE + (char) 10 +
                     "APP_VERSION_NAME " + BuildConfig.VERSION_NAME + (char) 10 +
                     "APP_PROC_VERSION " + TopFragment.appProcVersion + (char) 10 +
+                    "CAN_FILTER " + Util.canFilter(this) + (char) 10 +
                     "APP_VERSION " + TopFragment.appVersion + (char) 10 +
                     "DNSCRYPT_INTERNAL_VERSION " + TopFragment.DNSCryptVersion + (char) 10 +
                     "TOR_INTERNAL_VERSION " + TopFragment.TorVersion + (char) 10 +
@@ -243,6 +244,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                     "APP_VERSION_CODE " + BuildConfig.VERSION_CODE + (char) 10 +
                     "APP_VERSION_NAME " + BuildConfig.VERSION_NAME + (char) 10 +
                     "APP_PROC_VERSION " + TopFragment.appProcVersion + (char) 10 +
+                    "CAN_FILTER " + Util.canFilter(this) + (char) 10 +
                     "APP_VERSION " + TopFragment.appVersion + (char) 10 +
                     "DNSCRYPT_INTERNAL_VERSION " + TopFragment.DNSCryptVersion + (char) 10 +
                     "TOR_INTERNAL_VERSION " + TopFragment.TorVersion + (char) 10 +
@@ -258,11 +260,21 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     public void onStop() {
         super.onStop();
 
-        if (modulesStatus.isRootAvailable()) {
-            this.unregisterReceiver(br);
-        }
-
         FileOperations.deleteOnFileOperationCompleteListener();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (modulesStatus.isRootAvailable() && br != null) {
+            try {
+                this.unregisterReceiver(br);
+            } catch (Exception e) {
+                Log.w(LOG_TAG, "HelpActivity uregister receiver fault " + e.getMessage() + " " + e.getCause());
+            }
+
+        }
     }
 
     @Override

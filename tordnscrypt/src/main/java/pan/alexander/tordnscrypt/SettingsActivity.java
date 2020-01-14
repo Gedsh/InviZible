@@ -15,17 +15,18 @@ package pan.alexander.tordnscrypt;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.app.Fragment;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.fragment.app.Fragment;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.v7.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 import android.util.Log;
 import android.view.MenuItem;
 
@@ -35,7 +36,7 @@ import java.util.Objects;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.PreferencesCommonFragment;
-import pan.alexander.tordnscrypt.settings.PreferencesDNSCryptServersRv;
+import pan.alexander.tordnscrypt.settings.dnscrypt_servers.PreferencesDNSCryptServers;
 import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
 import pan.alexander.tordnscrypt.settings.PreferencesTorBridges;
 import pan.alexander.tordnscrypt.settings.PreferencesTorFragment;
@@ -50,7 +51,7 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 
 public class SettingsActivity extends LangAppCompatActivity
-        implements PreferencesDNSCryptServersRv.OnServersChangeListener {
+        implements PreferencesDNSCryptServers.OnServersChangeListener {
 
     public static ArrayList<String> key_tor;
     public static ArrayList<String> val_tor;
@@ -63,7 +64,7 @@ public class SettingsActivity extends LangAppCompatActivity
     public static final String rules_tag = "pan.alexander.tordnscrypt/app_data/abstract_rules";
     public static DialogFragment dialogFragment;
 
-    private PreferencesFastFragment preferencesFastFragment;
+    private static PreferencesFastFragment preferencesFastFragment;
 
 
     @Override
@@ -110,7 +111,6 @@ public class SettingsActivity extends LangAppCompatActivity
             dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
             FileOperations.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml", public_resolvers_md_tag);
             FileOperations.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/public-resolvers.md", public_resolvers_md_tag);
-
         } else if (Objects.equals(intent.getAction(), "open_qery_log")) {
             Bundle bundle = new Bundle();
             String path = appDataDir + "/cache/query.log";
@@ -154,7 +154,7 @@ public class SettingsActivity extends LangAppCompatActivity
             String subscriptionsSaved = sp.getString("subscriptions", "");
 
             String[] arr = {""};
-            if (subscriptionsSaved != null && subscriptionsSaved.contains(",")) {
+            if (subscriptionsSaved.contains(",")) {
                 arr = subscriptionsSaved.split(",");
             }
 
@@ -200,19 +200,26 @@ public class SettingsActivity extends LangAppCompatActivity
     }
 
     @Override
-    public void onAttachFragment(Fragment fragment) {
+    public void onAttachFragment(@NonNull Fragment fragment) {
         super.onAttachFragment(fragment);
 
-        if (fragment instanceof PreferencesDNSCryptServersRv) {
-            PreferencesDNSCryptServersRv preferencesDNSCryptServersRv = (PreferencesDNSCryptServersRv) fragment;
-            preferencesDNSCryptServersRv.setOnServersChangeListener(this);
+        if (fragment instanceof PreferencesDNSCryptServers) {
+            PreferencesDNSCryptServers preferencesDNSCryptServers = (PreferencesDNSCryptServers) fragment;
+            preferencesDNSCryptServers.setOnServersChangeListener(this);
         }
     }
 
     @Override
-    public void onServersChange() {
-        if (preferencesFastFragment != null)
-            preferencesFastFragment.setDnsCryptServersSumm();
+    public void onServersChange(String servers) {
+        try {
+            if (preferencesFastFragment != null && servers != null) {
+                preferencesFastFragment.setDnsCryptServersSumm(servers);
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "SettindsActivity onServersChange exception " + e.getMessage() + " " + e.getCause());
+        }
+
+
     }
 
     @Override

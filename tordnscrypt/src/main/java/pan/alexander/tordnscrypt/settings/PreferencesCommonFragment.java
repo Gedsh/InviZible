@@ -15,36 +15,33 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.v4.app.DialogFragment;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.preference.Preference;
-import android.support.v7.preference.PreferenceCategory;
-import android.support.v7.preference.PreferenceFragmentCompat;
-import android.support.v7.preference.PreferenceManager;
-import android.support.v7.preference.PreferenceScreen;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.DialogFragment;
+import androidx.appcompat.app.AlertDialog;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceCategory;
+import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceManager;
+import androidx.preference.PreferenceScreen;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
@@ -64,12 +61,14 @@ import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 
 public class PreferencesCommonFragment extends PreferenceFragmentCompat
         implements Preference.OnPreferenceChangeListener, OnTextFileOperationsCompleteListener {
     private String torTransPort;
     private String torSocksPort;
+    private String torHTTPTunnelPort;
     private String appDataDir;
     private boolean allowTorTether = false;
     private boolean allowITPDtether = false;
@@ -88,7 +87,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         if (getActivity() == null) {
             super.onCreateView(inflater, container, savedInstanceState);
@@ -96,12 +95,16 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         getActivity().setTitle(R.string.drawer_menu_commonSettings);
 
-        PreferenceCategory others = (PreferenceCategory) findPreference("common_other");
+        PreferenceCategory others = findPreference("common_other");
         Preference swShowNotification = findPreference("swShowNotification");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            others.removePreference(swShowNotification);
+            if (others != null && swShowNotification != null) {
+                others.removePreference(swShowNotification);
+            }
         } else {
-            swShowNotification.setOnPreferenceChangeListener(this);
+            if (swShowNotification != null) {
+                swShowNotification.setOnPreferenceChangeListener(this);
+            }
         }
 
         if (ModulesStatus.getInstance().getMode() == ROOT_MODE) {
@@ -130,35 +133,33 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         appDataDir = pathVars.appDataDir;
         torTransPort = pathVars.torTransPort;
         torSocksPort = pathVars.torSOCKSPort;
+        torHTTPTunnelPort = pathVars.torHTTPTunnelPort;
 
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Verifier verifier = new Verifier(getActivity());
-                    String appSign = verifier.getApkSignatureZipModern();
-                    String appSignAlt = verifier.getApkSignature();
-                    if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
-                        NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                getActivity(), getText(R.string.verifier_error).toString(), "5889");
-                        if (notificationHelper != null) {
-                            if (getFragmentManager() != null) {
-                                notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
-                            }
-                        }
-                    }
-
-                } catch (Exception e) {
+        Thread thread = new Thread(() -> {
+            try {
+                Verifier verifier = new Verifier(getActivity());
+                String appSign = verifier.getApkSignatureZipModern();
+                String appSignAlt = verifier.getApkSignature();
+                if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                            getActivity(), getText(R.string.verifier_error).toString(), "5804");
+                            getActivity(), getText(R.string.verifier_error).toString(), "5889");
                     if (notificationHelper != null) {
                         if (getFragmentManager() != null) {
                             notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
                         }
                     }
-                    Log.e(LOG_TAG, "PreferencesCommonFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
-                            Arrays.toString(e.getStackTrace()));
                 }
+
+            } catch (Exception e) {
+                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                        getActivity(), getText(R.string.verifier_error).toString(), "5804");
+                if (notificationHelper != null) {
+                    if (getFragmentManager() != null) {
+                        notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                    }
+                }
+                Log.e(LOG_TAG, "PreferencesCommonFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
+                        Arrays.toString(e.getStackTrace()));
             }
         });
         thread.start();
@@ -203,11 +204,15 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 }
                 break;
             case "pref_common_tor_route_all":
-                if (Boolean.valueOf(newValue.toString())) {
-                    findPreference("prefTorSiteUnlockTether").setEnabled(false);
-                } else {
-                    findPreference("prefTorSiteUnlockTether").setEnabled(true);
+                Preference prefTorSiteUnlockTether = findPreference("prefTorSiteUnlockTether");
+                if (prefTorSiteUnlockTether != null) {
+                    if (Boolean.valueOf(newValue.toString())) {
+                        prefTorSiteUnlockTether.setEnabled(false);
+                    } else {
+                        prefTorSiteUnlockTether.setEnabled(true);
+                    }
                 }
+
                 if (new PrefManager(getActivity()).getBoolPref("Tor Running")) {
                     ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
                     ModulesAux.requestModulesStatusUpdate(getActivity());
@@ -250,14 +255,21 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 if (allowTorTether) {
                     line = "TransPort " + "0.0.0.0:" + torTransPort;
                 } else {
-                    line = line.trim().replaceAll(" .+:", " ");
+                    line = "TransPort " + torTransPort;
                 }
                 torConf.set(i, line);
             } else if (line.contains("SOCKSPort")) {
                 if (allowTorTether) {
                     line = "SOCKSPort " + "0.0.0.0:" + torSocksPort;
                 } else {
-                    line = line.trim().replaceAll(" .+:", " ");
+                    line = "SOCKSPort " + torSocksPort;
+                }
+                torConf.set(i, line);
+            } else if (line.contains("HTTPTunnelPort")) {
+                if (allowTorTether) {
+                    line = "HTTPTunnelPort " + "0.0.0.0:" + torHTTPTunnelPort;
+                } else {
+                    line = "HTTPTunnelPort " + torHTTPTunnelPort;
                 }
                 torConf.set(i, line);
             }
@@ -337,21 +349,18 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         }
 
         if (fileOperationResult && currentFileOperation == readTextFile) {
-            getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (lines != null) {
-                        switch (tag) {
-                            case SettingsActivity.tor_conf_tag:
-                                allowTorTethering(lines);
-                                break;
-                            case SettingsActivity.itpd_conf_tag:
-                                allowITPDTethering(lines);
-                                break;
-                            case SettingsActivity.itpd_tunnels_tag:
-                                allowITPDTunnelsTethering(lines);
-                                break;
-                        }
+            getActivity().runOnUiThread(() -> {
+                if (lines != null) {
+                    switch (tag) {
+                        case SettingsActivity.tor_conf_tag:
+                            allowTorTethering(lines);
+                            break;
+                        case SettingsActivity.itpd_conf_tag:
+                            allowITPDTethering(lines);
+                            break;
+                        case SettingsActivity.itpd_tunnels_tag:
+                            allowITPDTunnelsTethering(lines);
+                            break;
                     }
                 }
             });
@@ -368,28 +377,25 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 return super.onCreateDialog(savedInstanceState);
             }
 
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomDialogTheme);
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
             builder.setMessage(R.string.pref_common_notification_helper)
                     .setTitle(R.string.helper_dialog_title)
-                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
+                    .setPositiveButton(R.string.ok, (dialog, which) -> {
 
-                            if (getActivity() == null) {
-                                return;
-                            }
+                        if (getActivity() == null) {
+                            return;
+                        }
 
-                            final String packageName = getActivity().getPackageName();
-                            final PowerManager pm = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
-                            try {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (pm != null && !pm.isIgnoringBatteryOptimizations(packageName))) {
-                                    Intent intent = new Intent();
-                                    intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
-                                    getActivity().startActivity(intent);
-                                }
-                            } catch (Exception e) {
-                                Log.e(LOG_TAG, "PreferencesCommonFragment InfoNotificationProtectService Exception " + e.getMessage());
+                        final String packageName = getActivity().getPackageName();
+                        final PowerManager pm = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
+                        try {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (pm != null && !pm.isIgnoringBatteryOptimizations(packageName))) {
+                                Intent intent = new Intent();
+                                intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+                                getActivity().startActivity(intent);
                             }
+                        } catch (Exception e) {
+                            Log.e(LOG_TAG, "PreferencesCommonFragment InfoNotificationProtectService Exception " + e.getMessage());
                         }
                     });
             // Create the AlertDialog object and return it
@@ -398,7 +404,6 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         @Override
         public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            Objects.requireNonNull(getDialog().getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             return super.onCreateView(inflater, container, savedInstanceState);
         }
     }
@@ -410,46 +415,98 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         }
 
         Preference swTorTethering = findPreference("pref_common_tor_tethering");
-        swTorTethering.setOnPreferenceChangeListener(this);
+        if (swTorTethering != null) {
+            swTorTethering.setOnPreferenceChangeListener(this);
+        }
 
         Preference swRouteAllThroughTor = findPreference("pref_common_tor_route_all");
-        swRouteAllThroughTor.setOnPreferenceChangeListener(this);
+        if (swRouteAllThroughTor != null) {
+            swRouteAllThroughTor.setOnPreferenceChangeListener(this);
+        }
 
         Preference swITPDTethering = findPreference("pref_common_itpd_tethering");
-        swITPDTethering.setOnPreferenceChangeListener(this);
+        if (swITPDTethering != null) {
+            swITPDTethering.setOnPreferenceChangeListener(this);
+        }
 
         Preference pref_common_block_http = findPreference("pref_common_block_http");
-        pref_common_block_http.setOnPreferenceChangeListener(this);
+        if (pref_common_block_http != null) {
+            pref_common_block_http.setOnPreferenceChangeListener(this);
+        }
 
         Preference pref_common_use_modules_with_root = findPreference("swUseModulesRoot");
-        pref_common_use_modules_with_root.setOnPreferenceChangeListener(this);
+        if (pref_common_use_modules_with_root != null) {
+            pref_common_use_modules_with_root.setOnPreferenceChangeListener(this);
+        }
 
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        if (shPref.getBoolean("pref_common_tor_route_all", false)) {
-            findPreference("prefTorSiteUnlockTether").setEnabled(false);
-        } else {
-            findPreference("prefTorSiteUnlockTether").setEnabled(true);
+        Preference prefTorSiteUnlockTether = findPreference("prefTorSiteUnlockTether");
+        if (prefTorSiteUnlockTether != null) {
+            SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            if (shPref.getBoolean("pref_common_tor_route_all", false)) {
+                prefTorSiteUnlockTether.setEnabled(false);
+            } else {
+                prefTorSiteUnlockTether.setEnabled(true);
+            }
         }
     }
 
     private void removePreferences() {
-        PreferenceScreen preferenceScreen = (PreferenceScreen) findPreference("pref_common");
-        PreferenceCategory hotspotSettingsCategory = (PreferenceCategory) findPreference("HOTSPOT");
-        preferenceScreen.removePreference(hotspotSettingsCategory);
+        PreferenceScreen preferenceScreen = findPreference("pref_common");
 
-        if (ModulesStatus.getInstance().isRootAvailable()) {
-            Preference pref_common_use_modules_with_root = findPreference("swUseModulesRoot");
-            pref_common_use_modules_with_root.setOnPreferenceChangeListener(this);
+        if (ModulesStatus.getInstance().getMode() != VPN_MODE) {
+            PreferenceCategory hotspotSettingsCategory = findPreference("HOTSPOT");
+            if (preferenceScreen != null && hotspotSettingsCategory != null) {
+                preferenceScreen.removePreference(hotspotSettingsCategory);
+            }
         } else {
-            PreferenceCategory categoryUseModulesRoot = (PreferenceCategory) findPreference("categoryUseModulesRoot");
-            preferenceScreen.removePreference(categoryUseModulesRoot);
+            PreferenceCategory hotspotSettingsCategory = findPreference("HOTSPOT");
+
+            ArrayList<Preference> preferencesHOTSPOT = new ArrayList<>();
+            preferencesHOTSPOT.add(findPreference("pref_common_tor_route_all"));
+            preferencesHOTSPOT.add(findPreference("prefTorSiteUnlockTether"));
+            preferencesHOTSPOT.add(findPreference("prefTorSiteExcludeTether"));
+            preferencesHOTSPOT.add(findPreference("pref_common_itpd_tethering"));
+            preferencesHOTSPOT.add(findPreference("pref_common_block_http"));
+
+            if (hotspotSettingsCategory != null) {
+                for (Preference preference : preferencesHOTSPOT) {
+                    if (preference != null) {
+                        hotspotSettingsCategory.removePreference(preference);
+                    }
+                }
+            }
+
+            Preference pref_common_tor_tethering = findPreference("pref_common_tor_tethering");
+
+            if (pref_common_tor_tethering != null) {
+                pref_common_tor_tethering.setSummary(getText(R.string.vpn_tor_tether_summ));
+                pref_common_tor_tethering.setOnPreferenceChangeListener(this);
+            }
         }
 
-        PreferenceCategory categoryOther = (PreferenceCategory) findPreference("common_other");
+
+        if (ModulesStatus.getInstance().isRootAvailable()
+                && ModulesStatus.getInstance().getMode() != VPN_MODE) {
+            Preference pref_common_use_modules_with_root = findPreference("swUseModulesRoot");
+            if (pref_common_use_modules_with_root != null) {
+                pref_common_use_modules_with_root.setOnPreferenceChangeListener(this);
+            }
+        } else {
+            PreferenceCategory categoryUseModulesRoot = findPreference("categoryUseModulesRoot");
+            if (preferenceScreen != null && categoryUseModulesRoot != null) {
+                preferenceScreen.removePreference(categoryUseModulesRoot);
+            }
+        }
+
+        PreferenceCategory categoryOther = findPreference("common_other");
         Preference selectIptables = findPreference("pref_common_use_iptables");
         Preference selectBusybox = findPreference("pref_common_use_busybox");
-        categoryOther.removePreference(selectIptables);
-        categoryOther.removePreference(selectBusybox);
+        if (categoryOther != null && selectIptables != null) {
+            categoryOther.removePreference(selectIptables);
+        }
+        if (categoryOther != null && selectBusybox != null) {
+            categoryOther.removePreference(selectBusybox);
+        }
     }
 
     @Override
