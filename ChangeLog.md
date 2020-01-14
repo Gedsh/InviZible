@@ -67,3 +67,8 @@
 * Add DNSCrypt options block_unqualified and block_undelegated
 * Fix ModulesService stop in root mode.
 * Fix DNSCrypt white list option.
+
+**InviZible Pro beta 0.5.1**
+* Downgrade target sdk version for compatibility with android Q.
+* Remove alpha in status bar icon.
+* Fixes.
