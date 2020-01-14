@@ -7,71 +7,71 @@
 
 ## Android application for Internet privacy and security
 
-*Protect your device from dangerous sites, get rid of annoying ads, get access to blocked resources in your country*
+*Keep privacy, protect your device from dangerous sites, block ads, get access to blocked Internet resources*
 
-**InviZible Pro** includes a well-known modules **DNSCrypt**, **Tor** , **Purple I2P**. 
-They are used to achieve maximum security, privacy and comfortable use of the Internet. 
-This application is designed for Android devices with **Root access** .
+**InviZible Pro** includes well-known modules such as **DNSCrypt, Tor, Purple I2P**.
+They are used to achieve maximum security, privacy and comfortable use of the Internet.
 
-Just press a three buttons in **InviZible Pro** , and you turn from a simple user 
-to an invisible one, which is very difficult to find, block, impose on you unnecessary products and 
-services in the form of ubiquitous advertising.
+Start three modules of **InviZible Pro**, and you will transform from an ordinary user to the invisible, which is very difficult to track, block, impose on you unnecessary products and services in the form of ubiquitous advertising.
 
 ### DNSCrypt
 * Encrypts DNS requests
 * Protects against DNS spoofing
 * Blocks ads *
-* Protects against dangerous and phishing sites *
+* Protects against dangerous and malicious sites *
 * Can block "adult" sites *
 * Hides visited sites from your provider
-* Prevents some types of resource locks
-* Open source
+* Prevents some types of resource blocks
+* Open-source
 
 **Depending on the selected dnscrypt server*
 
 ### Tor
 * Encrypts Internet traffic
-* Prevents sites locking
+* Prevents sites blocking
 * Can provide privacy and anonymity
 * Provides access to "onion" sites
-* Open source
+* Open-source
 
 ### Purple I2P
 * Encrypts Internet traffic
 * Provides access to the hidden anonymous network Invisible Internet and "i2p" sites
-* Open source
+* Open-source
 
-In order to start using **InviZible Pro** , it is enough to have an android phone **with root access**. 
-Just run all three modules and turn into Internet invisible person. However, 
-if you want to get full control over the program and your Internet connection - no problem! 
-Provides access to a large number of both simple and professional settings. 
-You can flexibly configure **InviZible Pro** itself , as well as its modules - **DNSCrypt** , 
-**Tor** and **Purple I2P** , to satisfy the most non-standard requirements.
+To start using **InviZible Pro**, it is enough to have an android phone.
+Just run all three modules and enjoy safe and comfortable Internet surfing. However,
+if you want to get full control over the application and your Internet connection - no problem!
+Provided access to a large number of both simple and professional settings.
+You can flexibly configure **InviZible Pro** itself, as well as its modules - **DNSCrypt**,
+**Tor** and **Purple I2P**, to satisfy the most non-standard requirements.
 
-**InviZible Pro** - all-in-one program. After installing its, you can easy delete all your VPN applications and ad blockers.
+**InviZible Pro** is an all-in-one application. After installation, you can remove all of your VPN applications and ad blockers.
  In most cases, **InviZible Pro** works better, more stable, faster than free VPNs.
- Does not contain ads, bloatware code and does not spy upon the users.
+ It does not contain ads, bloatware code and does not spy upon the users.
  
 ### Why InviZible Pro is better than other similar applications:
-* There are no analogues)))
-* The only one application that provides handy use of **DNSCrypt** on Android.
+* There are no analogs)))
+* The only application that provides handy use of **DNSCrypt** on Android.
 * It is often more stable than the Orbot application, which also uses the Tor network.
 * Much more handy than the official **Purple I2P** client
 * Qualitatively removes most ads, thereby saving Internet traffic.
 * You can configure parental controls to protect children from "adult" sites
 * Allows you to easily and flexibly configure which sites and applications will open through **Tor**,
- for anonymity or bypassing locks
-* Can turn your phone, or Android TV set-top box into a Wi-Fi access point - safe and without ads,
+ for anonymity or bypassing blocks
+* Can transform your phone, or Android TV set-top box into a Wi-Fi access point - safe and without ads,
  which can be used by any phone, without root access
 * Optimized interface for set-top boxes
-* Replaces several programs - various VPNs, ad blockers, other tools to achieve privacy and anonymity.
-* Successfully combines **DNSCrypt**, **Tor**, **Purple I2P** functions; to visit sites anonymously and without advertising, for example
-* Totally free
+* Replaces several apps - various VPNs, ad blockers, other tools to achieve privacy and anonymity.
+* Successfully combines **DNSCrypt**, **Tor**, **Purple I2P** features; to visit sites anonymously and without advertising, for example
+* Free and open-source
 
 ## Compatibility
 
-**InviZible Pro** can be used only on **rooted devices**. 
-Depending on rooting method and device specifics application can be incompatible with some android phones.
+**InviZible Pro** can be used both with a rooted and non-rooted device.
+Please visit the [wiki](https://github.com/Gedsh/InviZible/wiki) to find out how to use it.
+
+Depending on the rooting method and device specifics, an application may be incompatible with some android phones.
+
 
 ## Support
 
@@ -87,7 +87,7 @@ There is support for the latest version of **InviZible Pro** only.
 
 There is no support for things that are not directly related to **InviZible Pro**.
 
-There is no support for building and developing things by yourself.
+There is no support for a building and developing things by yourself.
 
 ## Contributing
 
@@ -107,16 +107,14 @@ include ':tordnscrypt'
 ```
 
 It is expected that you can solve build problems yourself, so there is no support for building. 
-If you cannot build yourself, there are prebuilt versions of **InviZible Pro** available [here](https://invizible.net/ru/downloads).
+If you cannot build yourself, there are prebuilt versions of **InviZible Pro** available [here](https://github.com/Gedsh/InviZible/releases/latest).
 
-For application signing you can use your own signature. But without the original signature, you will see a warning about this. 
-All functions will work as with original signature in any case.
-
-The source code presented in this repository is intended primarily for investigation, but not for repetition. Because of wrong coding style that improves with time.
+For application signing, you can use your signature. But without the original signature, you will see a warning about this.
+All features will continue to work as with original signature in any case.
 
 #### Translating
 
-If you would like to translate this application into other languages ​​- 
+If you would like to translate this application into other languages,
 please send an email to the developer [invizible.soft@gmail.com](mailto:invizible.soft@gmail.com)
 
 ## Attribution
@@ -138,7 +136,7 @@ and carries no guarantee from The Above Projects about quality, suitability or a
 
 [GNU General Public License version 3](https://www.gnu.org/licenses/gpl-3.0.txt)
 
-Copyright (c) 2019 Garmatin Oleksandr invizible.soft@gmail.com
+Copyright (c) 2019-2020 Garmatin Oleksandr invizible.soft@gmail.com
 
 All rights reserved
 
