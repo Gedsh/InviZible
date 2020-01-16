@@ -29,6 +29,7 @@ import androidx.annotation.NonNull;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 class BuilderVPN extends VpnService.Builder {
     private NetworkInfo networkInfo;
@@ -37,6 +38,8 @@ class BuilderVPN extends VpnService.Builder {
     private List<String> listRoute = new ArrayList<>();
     private List<InetAddress> listDns = new ArrayList<>();
     private List<String> listDisallowed = new ArrayList<>();
+    private List<String> listAllowed = new ArrayList<>();
+    private String performAllowedOrDisallowed = "";
 
     BuilderVPN(ServiceVPN serviceVPN) {
         serviceVPN.super();
@@ -90,9 +93,21 @@ class BuilderVPN extends VpnService.Builder {
     @Override
     public BuilderVPN addDisallowedApplication(@NonNull String packageName) throws PackageManager.NameNotFoundException {
         listDisallowed.add(packageName);
+        performAllowedOrDisallowed = "disallowed";
         super.addDisallowedApplication(packageName);
         return this;
     }
+
+    @NonNull
+    @Override
+    public VpnService.Builder addAllowedApplication(@NonNull String packageName) throws PackageManager.NameNotFoundException {
+        listAllowed.add(packageName);
+        performAllowedOrDisallowed = "allowed";
+        super.addAllowedApplication(packageName);
+        return this;
+    }
+
+
 
     @Override
     public boolean equals(Object obj) {
@@ -108,40 +123,73 @@ class BuilderVPN extends VpnService.Builder {
         BuilderVPN other = (BuilderVPN) obj;
 
         if (this.networkInfo == null || other.networkInfo == null ||
-                this.networkInfo.getType() != other.networkInfo.getType())
+                this.networkInfo.getType() != other.networkInfo.getType()) {
             return false;
+        }
 
-        if (this.mtu != other.mtu)
+        if (this.mtu != other.mtu) {
             return false;
+        }
 
-        if (this.listAddress.size() != other.listAddress.size())
+        if (!this.performAllowedOrDisallowed.equals(other.performAllowedOrDisallowed)) {
             return false;
+        }
 
-        if (this.listRoute.size() != other.listRoute.size())
+        if (this.listAddress.size() != other.listAddress.size()) {
             return false;
+        }
 
-        if (this.listDns.size() != other.listDns.size())
+        if (this.listRoute.size() != other.listRoute.size()) {
             return false;
+        }
 
-        if (this.listDisallowed.size() != other.listDisallowed.size())
+        if (this.listDns.size() != other.listDns.size()) {
             return false;
+        }
 
-        for (String address : this.listAddress)
-            if (!other.listAddress.contains(address))
+        if (this.listDisallowed.size() != other.listDisallowed.size()) {
+            return false;
+        }
+
+        if (this.listAllowed.size() != other.listAllowed.size()) {
+            return false;
+        }
+
+        for (String address : this.listAddress) {
+            if (!other.listAddress.contains(address)) {
                 return false;
+            }
+        }
 
-        for (String route : this.listRoute)
-            if (!other.listRoute.contains(route))
+        for (String route : this.listRoute) {
+            if (!other.listRoute.contains(route)) {
                 return false;
+            }
+        }
 
-        for (InetAddress dns : this.listDns)
-            if (!other.listDns.contains(dns))
+        for (InetAddress dns : this.listDns) {
+            if (!other.listDns.contains(dns)) {
                 return false;
+            }
+        }
 
-        for (String pkg : this.listDisallowed)
-            if (!other.listDisallowed.contains(pkg))
+        for (String pkg : this.listDisallowed) {
+            if (!other.listDisallowed.contains(pkg)) {
                 return false;
+            }
+        }
+
+        for (String pkg : this.listAllowed) {
+            if (!other.listAllowed.contains(pkg)) {
+                return false;
+            }
+        }
 
         return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(networkInfo, mtu, listAddress, listRoute, listDns, listDisallowed, listAllowed, performAllowedOrDisallowed);
     }
 }

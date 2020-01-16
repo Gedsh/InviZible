@@ -67,7 +67,8 @@
     <string name="install_title_root">Root granted</string>
     <string name="install_title_no_root">Root denied</string>
 
-    <string name="message_no_root_used">You can use InviZible Pro with local VPN mode or applications with proxy feature in proxy mode.</string>
+    <string name="message_no_root_used">You can use InviZible Pro with local VPN mode, or applications with own proxy or local VPN feature in proxy mode.</string>
+    <string name="message_no_root_used_kitkat">You can use InviZible Pro with applications with own proxy or local VPN feature in proxy mode.</string>
 
     <string name="write_file_error">Save file Error!</string>
 
@@ -101,11 +102,14 @@
     <string name="pref_fast_dns_server">DNSCrypt servers</string>
     <string name="pref_fast_select_dns_server">Select DNSCrypt servers</string>
     <string name="pref_fast_tor">Tor Settings</string>
+    <string name="pref_fast_routing">Routing Settings</string>
     <string name="pref_fast_all_through_tor">Route All traffic through Tor</string>
+    <string name="pref_fast_all_through_ipro">Route All traffic through InviZible</string>
     <string name="pref_fast_unlock_with_tor">Select WebSites</string>
     <string name="pref_fast_unlock_with_tor_summ">WebSites list to open with Tor</string>
     <string name="pref_fast_unlock_apps_with_tor">Select Applications</string>
-    <string name="pref_fast_unlock_apps_with_tor_summ">Applications list to open with Tor</string>
+    <string name="pref_fast_unlock_apps_with_tor_summ">Applications list to use with Tor</string>
+    <string name="pref_fast_unlock_apps_with_ipro_summ">Applications list to use with InviZible</string>
     <string name="pref_fast_exclude_from_tor">Exclude WebSites</string>
     <string name="pref_fast_exclude_from_tor_summ">WebSites list to open directly</string>
     <string name="pref_fast_exclude_apps_from_tor">Exclude Applications</string>
@@ -390,6 +394,9 @@
     <string name="pref_tor_unlock_app">Apps to Torify</string>
     <string name="pref_tor_clearnet_app">Apps to bypass Tor</string>
 
+    <string name="pref_routing_unlock_app">Apps to use with InviZible</string>
+    <string name="pref_routing_clearnet_app">Apps to bypass InviZible</string>
+
     <string name="country_select_select_all">Select All</string>
     <string name="country_select_unselect_all">Remove Selection</string>
 
@@ -528,7 +535,7 @@
     <string name="about_app_ver" translatable="false">Application Version:</string>
     <string name="about_build_date" translatable="false">Build Date:</string>
     <string name="about_proc_ver" translatable="false">Processor Version:</string>
-    <string name="about_own_copyright" translatable="false">Copyright (C) 2019 Garmatin Oleksandr\n All Rights Reserved\n Web Site:</string>
+    <string name="about_own_copyright" translatable="false">Copyright (C) 2019-2020 Garmatin Oleksandr\n All Rights Reserved\n Web Site:</string>
     <string name="about_own_licence" translatable="false">
         \tInviZible Pro is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

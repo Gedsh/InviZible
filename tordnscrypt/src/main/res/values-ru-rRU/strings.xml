@@ -358,7 +358,9 @@
     <string name="install_title_no_root">Рут отсутствует</string>
     <string name="install_title_root">Рут разрешен</string>
     <string name="message_no_root_used">Вы можете использовать
-        InviZible Pro в режиме локального VPN или совместно с приложениями с функцией прокси.</string>
+        InviZible Pro в режиме локального VPN или совместно с приложениями с функцией прокси или собственным локальным VPN.</string>
+    <string name="message_no_root_used_kitkat">Вы можете использовать
+        InviZible Pro совместно с приложениями с функцией прокси или собственным локальным VPN.</string>
     <string name="pref_dnscrypt_relays">Источники</string>
     <string name="pref_dnscrypt_relays_delay_summ">Список реле будет обновлен после refresh_delay в часах.</string>
     <string name="pref_dnscrypt_relays_categ">Реле</string>
@@ -368,4 +370,9 @@
     <string name="vpn_mode_off">Режим VPN выключен</string>
     <string name="vpn_mode_error">Ошибка VPN!</string>
     <string name="vpn_tor_tether_summ">Пожалуйста, настройте использование прокси-сервера в настройках подключенного устройства. Настройки по умолчанию: IP:10.1.10.1 Порт:8118</string>
+    <string name="pref_fast_unlock_apps_with_ipro_summ">Приложения, открывающиеся через InviZible</string>
+    <string name="pref_fast_routing">Настройки маршрутизации</string>
+    <string name="pref_fast_all_through_ipro">Весь интернет через InviZible</string>
+    <string name="pref_routing_clearnet_app">Приложения без InviZible</string>
+    <string name="pref_routing_unlock_app">Приложения для InviZible</string>
 </resources>

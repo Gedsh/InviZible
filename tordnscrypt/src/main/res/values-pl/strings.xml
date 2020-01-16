@@ -433,7 +433,8 @@
     <string name="pref_common_wakelock">Zapobiegaj uśpieniu urządzenia</string>
     <string name="install_title_no_root">Odmowa roota</string>
     <string name="install_title_root">Root dostepny</string>
-    <string name="message_no_root_used">"Możesz używać InviZible Pro z lokalnym trybem VPN lub aplikacjami z funkcją proxy w trybie proxy."</string>
+    <string name="message_no_root_used">Możesz używać InviZible Pro z lokalnym trybem VPN lub aplikacjami z własnym proxy lub lokalną funkcją VPN w trybie proxy.</string>
+    <string name="message_no_root_used_kitkat">Możesz używać InviZible Pro z aplikacjami z własnym proxy lub lokalną funkcją VPN w trybie proxy.</string>
     <string name="pref_dnscrypt_relays">Zrodla</string>
     <string name="pref_dnscrypt_relays_delay_summ">Lista  przekaźnik wygasa po uplywie refresh_delay godzin.</string>
     <string name="pref_dnscrypt_relays_categ">Przekaźnik</string>
@@ -443,4 +444,9 @@
     <string name="vpn_mode_off">Tryb VPN jest wyłączony</string>
     <string name="vpn_mode_error">Błąd trybu VPN!</string>
     <string name="vpn_tor_tether_summ">Skonfiguruj użycie serwera proxy w ustawieniach podłączonego urządzenia. Wartości domyślne: IP:10.1.10.1 Port:8118</string>
+    <string name="pref_fast_unlock_apps_with_ipro_summ">Lista aplikacji laczacych sie przez InviZible</string>
+    <string name="pref_fast_routing">Ustawienia routingu</string>
+    <string name="pref_fast_all_through_ipro">Przekieruj caly ruch przez InviZible</string>
+    <string name="pref_routing_clearnet_app">Aplikacje pomijajace InviZible</string>
+    <string name="pref_routing_unlock_app">Aplikacje laczace sie przez InviZible</string>
 </resources>

@@ -19,17 +19,22 @@ package pan.alexander.tordnscrypt.vpn;
 */
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Process;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+
+import pan.alexander.tordnscrypt.utils.PrefManager;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
@@ -122,6 +127,18 @@ public class Rule {
     public static List<Rule> getRules(Context context) {
         synchronized (context.getApplicationContext()) {
 
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            boolean routeAllThroughIniZible = prefs.getBoolean("pref_fast_all_through_tor", true);
+
+            String unlockAppsStr;
+            if (!routeAllThroughIniZible) {
+                unlockAppsStr = "unlockApps";
+            } else {
+                unlockAppsStr = "clearnetApps";
+            }
+
+            Set<String> setUnlockApps = new PrefManager(context).getSetStrPref(unlockAppsStr);
+
             // Build rule list
             List<Rule> listRules = new ArrayList<>();
             List<PackageInfo> listPI = getPackages(context);
@@ -201,7 +218,11 @@ public class Rule {
 
                     rule.wifi_blocked = false;
 
-                    rule.apply = true;
+                    if (routeAllThroughIniZible) {
+                        rule.apply = !setUnlockApps.contains(String.valueOf(info.applicationInfo.uid));
+                    } else {
+                        rule.apply = setUnlockApps.contains(String.valueOf(info.applicationInfo.uid));
+                    }
 
                     listRules.add(rule);
                 } catch (Throwable ex) {
