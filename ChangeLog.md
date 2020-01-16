@@ -72,3 +72,8 @@
 * Downgrade target sdk version for compatibility with android Q.
 * Remove alpha in status bar icon.
 * Fixes.
+
+**InviZible Pro beta 0.5.2**
+* Disable VPN mode for android versions below LOLLIPOP.
+* Add select apps feature to use or bypass InviZible in VPN mode.
+* Add block http feature in VPN mode.
