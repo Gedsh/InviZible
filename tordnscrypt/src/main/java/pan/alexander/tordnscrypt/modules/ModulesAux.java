@@ -46,9 +46,12 @@ public class ModulesAux {
         } else if (rootIsAvailable){
             modulesStatus.setMode(ROOT_MODE);
             new PrefManager(context).setStrPref("OPERATION_MODE", ROOT_MODE.toString());
-        } else {
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
             modulesStatus.setMode(VPN_MODE);
             new PrefManager(context).setStrPref("OPERATION_MODE", VPN_MODE.toString());
+        } else {
+            modulesStatus.setMode(PROXY_MODE);
+            new PrefManager(context).setStrPref("OPERATION_MODE", PROXY_MODE.toString());
         }
 
     }

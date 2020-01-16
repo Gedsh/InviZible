@@ -25,6 +25,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.net.VpnService;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import androidx.annotation.NonNull;
@@ -287,6 +288,11 @@ public class MainActivity extends LangAppCompatActivity
         MenuItem hotSpot = menu.findItem(R.id.item_hotspot);
         MenuItem rootIcon = menu.findItem(R.id.item_root);
 
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            menuVPNMode.setEnabled(false);
+            menuVPNMode.setVisible(false);
+        }
+
         if (rootIsAvailable) {
 
             if (mode == ROOT_MODE) {
@@ -328,10 +334,14 @@ public class MainActivity extends LangAppCompatActivity
                 menuProxiesMode.setChecked(true);
             } else if (mode == VPN_MODE) {
                 menuVPNMode.setChecked(true);
-            } else {
-                menuProxiesMode.setChecked(true);
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                menuVPNMode.setChecked(true);
                 modulesStatus.setMode(VPN_MODE);
                 mode = VPN_MODE;
+            } else {
+                menuProxiesMode.setChecked(true);
+                modulesStatus.setMode(PROXY_MODE);
+                mode = PROXY_MODE;
             }
 
             if (mode == PROXY_MODE) {
@@ -771,7 +781,13 @@ public class MainActivity extends LangAppCompatActivity
             }
             commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
         } else {
-            DialogFragment commandResult = NotificationDialogFragment.newInstance(R.string.message_no_root_used);
+            DialogFragment commandResult;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                commandResult = NotificationDialogFragment.newInstance(R.string.message_no_root_used);
+            } else {
+                commandResult = NotificationDialogFragment.newInstance(R.string.message_no_root_used_kitkat);
+            }
+
             commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
         }
     }

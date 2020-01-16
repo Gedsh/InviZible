@@ -20,6 +20,8 @@ package pan.alexander.tordnscrypt.dialogs;
 */
 
 import android.content.Context;
+import android.os.Build;
+
 import androidx.appcompat.app.AlertDialog;
 
 import pan.alexander.tordnscrypt.R;
@@ -32,8 +34,10 @@ public class DialogAfterInstallation {
 
         if (ModulesStatus.getInstance().isRootAvailable()) {
             alertDialog.setMessage(R.string.helper_after_install);
-        } else {
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             alertDialog.setMessage(R.string.message_no_root_used);
+        } else {
+            alertDialog.setMessage(R.string.message_no_root_used_kitkat);
         }
 
         alertDialog.setPositiveButton(R.string.ok, (dialog, id) -> dialog.dismiss());
