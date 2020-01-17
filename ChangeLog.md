@@ -77,3 +77,8 @@
 * Disable VPN mode for android versions below LOLLIPOP.
 * Add select apps feature to use or bypass InviZible in VPN mode.
 * Add block http feature in VPN mode.
+
+**InviZible Pro beta 0.5.3**
+* Implement DNS responses live log for VPN mode.
+* Fix use of VPN mode with hotspot.
+* Other fixes.
