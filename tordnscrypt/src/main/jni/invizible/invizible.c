@@ -449,10 +449,10 @@ jfieldID fidAName = NULL;
 jfieldID fidCName = NULL;
 jfieldID fidHInfo = NULL;
 jfieldID fidResource = NULL;
-jfieldID fidTTL = NULL;
+jfieldID fidRcode = NULL;
 
 void dns_resolved(const struct arguments *args, const char *qname, const char *aname,
-        const char *cname, const char * hinfo, const char *resource, int ttl) {
+        const char *cname, const char * hinfo, const char *resource, int rcode) {
 #ifdef PROFILE_JNI
     float mselapsed;
     struct timeval start, end;
@@ -481,7 +481,7 @@ void dns_resolved(const struct arguments *args, const char *qname, const char *a
         fidCName = jniGetFieldID(args->env, clsRR, "CName", string);
         fidHInfo = jniGetFieldID(args->env, clsRR, "HInfo", string);
         fidResource = jniGetFieldID(args->env, clsRR, "Resource", string);
-        fidTTL = jniGetFieldID(args->env, clsRR, "TTL", "I");
+        fidRcode = jniGetFieldID(args->env, clsRR, "Rcode", "I");
     }
 
     jlong jtime = time(NULL) * 1000LL;
@@ -502,7 +502,7 @@ void dns_resolved(const struct arguments *args, const char *qname, const char *a
     (*args->env)->SetObjectField(args->env, jrr, fidCName, jcname);
     (*args->env)->SetObjectField(args->env, jrr, fidHInfo, jhinfo);
     (*args->env)->SetObjectField(args->env, jrr, fidResource, jresource);
-    (*args->env)->SetIntField(args->env, jrr, fidTTL, ttl);
+    (*args->env)->SetIntField(args->env, jrr, fidRcode, rcode);
 
     (*args->env)->CallVoidMethod(args->env, args->instance, midDnsResolved, jrr);
     jniCheckException(args->env);

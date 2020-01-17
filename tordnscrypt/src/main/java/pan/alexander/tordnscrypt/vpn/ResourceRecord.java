@@ -20,18 +20,20 @@ package pan.alexander.tordnscrypt.vpn;
 
 import androidx.annotation.NonNull;
 
+import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Objects;
 
-public class ResourceRecord {
+public class ResourceRecord implements Serializable {
     public long Time;
     public String QName;
     public String AName;
     public String CName;
     public String HInfo;
     public String Resource;
-    public int TTL;
+    public int Rcode;
 
     private static DateFormat formatter = SimpleDateFormat.getDateTimeInstance();
 
@@ -40,7 +42,6 @@ public class ResourceRecord {
 
     private String trimToNotASCIISymbols(String line) {
         StringBuilder result = new StringBuilder();
-        int i = 0;
         for (char ch : line.toCharArray()) {
             if (ch < 128) {
                 result.append(ch);
@@ -50,6 +51,43 @@ public class ResourceRecord {
         }
 
         return result.toString();
+    }
+
+    private String rCodeToString(int Rcode) {
+        String result = "";
+        switch (Rcode) {
+            case 0:
+                result = "DNS Query completed successfully";
+                break;
+            case 1:
+                result = "DNS Query Format Error";
+                break;
+            case 2:
+                result = "Server failed to complete the DNS request";
+                break;
+            case 3:
+                result = "Domain name does not exist";
+                break;
+            case 4:
+                result = "Function not implemented";
+                break;
+            case 5:
+                result = "The server refused to answer for the query";
+                break;
+            case 6:
+                result = "Name that should not exist, does exist";
+                break;
+            case 7:
+                result = "RRset that should not exist, does exist";
+                break;
+            case 8:
+                result = "Server not authoritative for the zone";
+                break;
+            case 9:
+                result = "Name not in zone";
+                break;
+        }
+        return result;
     }
 
     @NonNull
@@ -62,24 +100,39 @@ public class ResourceRecord {
                     " QName " + QName +
                     " AName " + AName +
                     " CName " + CName +
-                    " TTL " + TTL +
-                    " " + formatter.format(new Date(Time + TTL * 1000L).getTime());
+                    " " + rCodeToString(Rcode);
         } else if (!Resource.isEmpty()){
             result = formatter.format(new Date(Time).getTime()) +
                     " QName " + QName +
                     " AName " + AName +
                     " Resource " + Resource +
-                    " TTL " + TTL +
-                    " " + formatter.format(new Date(Time + TTL * 1000L).getTime());
+                    " " + rCodeToString(Rcode);
         } else if (!HInfo.isEmpty()){
             result = formatter.format(new Date(Time).getTime()) +
                     " QName " + QName +
                     " AName " + AName +
                     " HINFO " + trimToNotASCIISymbols(HInfo)+
-                    " TTL " + TTL +
-                    " " + formatter.format(new Date(Time + TTL * 1000L).getTime());
+                    " " + rCodeToString(Rcode);
         }
 
         return result;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ResourceRecord that = (ResourceRecord) o;
+        return Time == that.Time &&
+                Rcode == that.Rcode &&
+                QName.equals(that.QName) &&
+                AName.equals(that.AName) &&
+                CName.equals(that.CName) &&
+                HInfo.equals(that.HInfo);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(Time, QName, AName, CName, HInfo, Rcode);
     }
 }

@@ -91,7 +91,8 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
     struct dns_header *dns = (struct dns_header *) data;
     int qcount = ntohs(dns->q_count);
     int acount = ntohs(dns->ans_count);
-    if (dns->qr == 1 && dns->opcode == 0 && qcount > 0 && acount > 0) {
+    uint16_t rcode = dns->rcode;
+    if (dns->qr == 1 && dns->opcode == 0 && qcount > 0) {
         log_android(ANDROID_LOG_DEBUG, "DNS response qcount %d acount %d", qcount, acount);
         if (qcount > 1)
             log_android(ANDROID_LOG_WARN, "DNS response qcount %d acount %d", qcount, acount);
@@ -125,13 +126,19 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
             }
         }
 
+        if (acount == 0 || rcode != 0) {
+            dns_resolved(args, qname, name, (const char *) &"", (const char *) &"",
+                         (const char *) &"", rcode);
+            return;
+        }
+
         int32_t aoff = off;
         for (int a = 0; a < acount; a++) {
             off = get_qname(data, *datalen, (uint16_t) off, name);
             if (off > 0 && off + 10 <= *datalen) {
                 uint16_t qtype = ntohs(*((uint16_t *) (data + off)));
                 uint16_t qclass = ntohs(*((uint16_t *) (data + off + 2)));
-                uint32_t ttl = ntohl(*((uint32_t *) (data + off + 4)));
+                //uint32_t ttl = ntohl(*((uint32_t *) (data + off + 4)));
                 uint16_t rdlength = ntohs(*((uint16_t *) (data + off + 8)));
                 off += 10;
 
@@ -153,25 +160,25 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
                         }
 
                         dns_resolved(args, qname, name, (const char *) &"", (const char *) &"",
-                                     rd, ttl);
+                                     rd, rcode);
                         log_android(ANDROID_LOG_DEBUG,
-                                    "DNS answer %d qname %s qtype %d ttl %d data %s",
-                                    a, name, qtype, ttl, rd);
+                                    "DNS answer %d qname %s qtype %d rcode %d data %s",
+                                    a, name, qtype, rcode, rd);
 
                     } else if (qclass == DNS_QCLASS_IN && qtype == DNS_QTYPE_CNAME) {
                         get_qname(data, *datalen, (uint16_t) off, cname);
                         dns_resolved(args, qname, name, cname, (const char *) &"",
-                                     (const char *) &"", ttl);
+                                     (const char *) &"", rcode);
                         log_android(ANDROID_LOG_DEBUG,
-                                    "DNS answer %d qname %s cname %s qclass %d qtype %d ttl %d length %d",
-                                    a, name, cname, qclass, qtype, ttl, rdlength);
+                                    "DNS answer %d qname %s cname %s qclass %d qtype %d rcode %d length %d",
+                                    a, name, cname, qclass, qtype, rcode, rdlength);
                     } else if (qclass == DNS_QCLASS_IN && qtype == DNS_QTYPE_HINFO) {
                         char *hinfo;
                         hinfo = (char *) ng_malloc(rdlength, "hinfo");
                         if (rdlength > 1) {
                             hinfo = memcpy(hinfo, data + off + 1, (size_t) (rdlength - 1));
                             dns_resolved(args, qname, name, (const char *) &"", hinfo,
-                                         (const char *) &"", ttl);
+                                         (const char *) &"", rcode);
                             log_android(ANDROID_LOG_DEBUG,
                                         "DNS answer %d qname %s hinfo %s",
                                         a, name, hinfo);
@@ -180,8 +187,8 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
 
                     } else
                         log_android(ANDROID_LOG_DEBUG,
-                                    "DNS answer %d qname %s qclass %d qtype %d ttl %d length %d",
-                                    a, name, qclass, qtype, ttl, rdlength);
+                                    "DNS answer %d qname %s qclass %d qtype %d rcode %d length %d",
+                                    a, name, qclass, qtype, rcode, rdlength);
 
                     off += rdlength;
                 } else {

@@ -20,13 +20,17 @@ package pan.alexander.tordnscrypt;
 
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
+
+import android.os.IBinder;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -41,7 +45,9 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -58,6 +64,8 @@ import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.vpn.ResourceRecord;
+import pan.alexander.tordnscrypt.vpn.service.ServiceVPN;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
@@ -72,6 +80,7 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 
 public class DNSCryptRunFragment extends Fragment implements View.OnClickListener {
@@ -92,6 +101,11 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
     private ModulesStatus modulesStatus;
     private ModuleState fixedModuleState;
     private int displayLogPeriod = -1;
+
+    private ServiceConnection serviceConnection;
+    private ServiceVPN serviceVPN;
+    private boolean bound;
+    private ArrayList<ResourceRecord> savedResourceRecords;
 
 
     public DNSCryptRunFragment() {
@@ -144,7 +158,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
                         if (sb.toString().contains("DNSCrypt_version")) {
                             String[] strArr = sb.toString().split("DNSCrypt_version");
-                            if (strArr.length > 1 && strArr[1].trim().matches("\\d+\\.\\d+\\.\\d+")) {
+                            if (getActivity() != null && strArr.length > 1 && strArr[1].trim().matches("\\d+\\.\\d+\\.\\d+")) {
                                 DNSCryptVersion = strArr[1].trim();
                                 new PrefManager(getActivity()).setStrPref("DNSCryptVersion", DNSCryptVersion);
 
@@ -181,9 +195,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                             setDnsCryptSomethingWrong();
                         }
 
-                    }
-
-                    if (action.equals(TOP_BROADCAST)) {
+                    } else if (action.equals(TOP_BROADCAST)) {
                         if (TOP_BROADCAST.contains("TOP_BROADCAST")) {
                             Log.i(LOG_TAG, "DNSCryptRunFragment onReceive TOP_BROADCAST");
 
@@ -266,6 +278,8 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
         modulesStatus = ModulesStatus.getInstance();
 
+        savedResourceRecords = new ArrayList<>();
+
         logFile = new OwnFileReader(getActivity(), appDataDir + "/logs/DnsCrypt.log");
 
         if (isDNSCryptInstalled()) {
@@ -318,6 +332,7 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
     public void onStop() {
         super.onStop();
         try {
+            unbindVPNService(getActivity());
             stopDisplayLog();
             if (br != null) Objects.requireNonNull(getActivity()).unregisterReceiver(br);
         } catch (Exception e) {
@@ -474,6 +489,10 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
 
             displayLog(5000);
 
+            if (modulesStatus.getMode() == VPN_MODE && !bound) {
+                bindToVPNService(getActivity());
+            }
+
         } else if (currentModuleState == STOPPED) {
 
             if (isSavedDNSStatusRunning()) {
@@ -628,24 +647,25 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
                     displayLog(10000);
                 }
 
-                getActivity().runOnUiThread(new Runnable() {
+                displayDnsResponses(lastLines);
 
-                    @Override
-                    public void run() {
+                getActivity().runOnUiThread(() -> {
 
-                        refreshDNSCryptState();
+                    refreshDNSCryptState();
 
-                        if (!previousLastLines.contentEquals(lastLines)) {
+                    if (!previousLastLines.contentEquals(lastLines)) {
 
-                            dnsCryptStartedSuccessfully(lastLines);
+                        dnsCryptStartedSuccessfully(lastLines);
 
-                            dnsCryptStartedWithError(lastLines);
+                        dnsCryptStartedWithError(lastLines);
 
+                        if (!previousLastLines.isEmpty()) {
                             tvDNSCryptLog.setText(Html.fromHtml(lastLines));
-                            previousLastLines = lastLines;
                         }
 
+                        previousLastLines = lastLines;
                     }
+
                 });
 
             }
@@ -740,6 +760,95 @@ public class DNSCryptRunFragment extends Fragment implements View.OnClickListene
             writer.close();
         } catch (IOException e) {
             Log.e(LOG_TAG, "Unable to create dnsCrypt log file " + e.getMessage());
+        }
+    }
+
+    private void bindToVPNService(Context context) {
+        serviceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                serviceVPN = ((ServiceVPN.VPNBinder) service).getService();
+                bound = true;
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                bound = false;
+            }
+        };
+
+        if (context != null) {
+            Intent intent = new Intent(context, ServiceVPN.class);
+            context.bindService(intent, serviceConnection, 0);
+        }
+    }
+
+    private void unbindVPNService(Context context) {
+        if (bound && serviceConnection != null && context != null) {
+            context.unbindService(serviceConnection);
+            bound = false;
+        }
+    }
+
+    private LinkedList<ResourceRecord> getResourceRecords() {
+        if (serviceVPN != null) {
+            return serviceVPN.getResourceRecords();
+        }
+        return new LinkedList<>();
+    }
+
+    private void displayDnsResponses(String savedLines) {
+        if (modulesStatus.getMode() != VPN_MODE) {
+            if (!savedResourceRecords.isEmpty() && getActivity() != null) {
+                savedResourceRecords.clear();
+                getActivity().runOnUiThread(() -> tvDNSCryptLog.setText(Html.fromHtml(logFile.readLastLines())));
+            }
+            return;
+        } else if (getActivity() != null && modulesStatus.getMode() == VPN_MODE && !bound) {
+            bindToVPNService(getActivity());
+        }
+
+        ArrayList<ResourceRecord> resourceRecords = new ArrayList<>(getResourceRecords());
+
+        if (resourceRecords.equals(savedResourceRecords) || resourceRecords.isEmpty()) {
+            return;
+        }
+
+        savedResourceRecords = resourceRecords;
+
+        ResourceRecord rr;
+        StringBuilder line = new StringBuilder();
+
+        line.append(savedLines);
+
+        line.append("<br />");
+
+        for (int i = 0; i < savedResourceRecords.size(); i++) {
+            rr = savedResourceRecords.get(i);
+
+            if (rr.Resource.equals("0.0.0.0") || rr.HInfo.contains("dnscrypt") || rr.Rcode != 0) {
+                if (!rr.AName.isEmpty()) {
+                    line.append("<font color=#f08080>").append(rr.AName);
+
+                    if (rr.HInfo.contains("block_ipv6")) {
+                        line.append(" ipv6");
+                    }
+
+                    line.append("</font>");
+                } else {
+                    line.append("<font color=#f08080>").append(rr.QName).append("</font>");
+                }
+            } else {
+                line.append("<font color=#0f7f7f>").append(rr.AName).append("</font>");
+            }
+
+            if (i < savedResourceRecords.size() - 1) {
+                line.append("<br />");
+            }
+        }
+
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(() -> tvDNSCryptLog.setText(Html.fromHtml(line.toString())));
         }
     }
 
