@@ -29,12 +29,16 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+
+import androidx.appcompat.widget.LinearLayoutCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
 import android.text.Html;
+import android.text.Spanned;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -66,7 +70,6 @@ import pan.alexander.tordnscrypt.utils.TorRefreshIPsWork;
 import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
-import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
@@ -80,7 +83,6 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
-import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 
 public class TorRunFragment extends Fragment implements View.OnClickListener {
@@ -113,7 +115,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setRetainInstance(true);
+        //setRetainInstance(true);
 
         br = new BroadcastReceiver() {
             @SuppressLint("SetTextI18n")
@@ -161,8 +163,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
                                     if (!modulesStatus.isUseModulesWithRoot()) {
                                         if (!isSavedTorStatusRunning()) {
-                                            String tvTorLogText = getText(R.string.tvTorDefaultLog) + " " + TorVersion;
-                                            tvTorLog.setText(tvTorLogText);
+                                            setLogViewText();
                                         }
 
                                         refreshTorState();
@@ -209,6 +210,13 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
             }
         };
 
+        if (getActivity() != null) {
+            IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
+            IntentFilter intentFilterTopFrg = new IntentFilter(TopFragment.TOP_BROADCAST);
+
+            getActivity().registerReceiver(br, intentFilterBckgIntSer);
+            getActivity().registerReceiver(br, intentFilterTopFrg);
+        }
 
     }
 
@@ -227,11 +235,9 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
         pbTor = view.findViewById(R.id.pbTor);
 
-        String currentTorVersion = new PrefManager(getActivity()).getStrPref("TorVersion");
-
         tvTorLog = view.findViewById(R.id.tvTorLog);
-        tvTorLog.setText(getText(R.string.tvTorDefaultLog) + " " + currentTorVersion);
         tvTorLog.setMovementMethod(ScrollingMovementMethod.getInstance());
+        setLogViewText();
 
         tvTorStatus = view.findViewById(R.id.tvTorStatus);
 
@@ -239,8 +245,8 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
+    public void onStart() {
+        super.onStart();
 
         if (getActivity() == null) {
             return;
@@ -253,6 +259,12 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
         modulesStatus = ModulesStatus.getInstance();
 
+        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String refreshPeriod = shPref.getString("pref_fast_site_refresh_interval", "12");
+        refreshPeriodHours = Integer.parseInt(refreshPeriod);
+
+        routeAllThroughTor = shPref.getBoolean("pref_fast_all_through_tor", true);
+
         logFile = new OwnFileReader(getActivity(), appDataDir + "/logs/Tor.log");
 
         if (isTorInstalled()) {
@@ -262,7 +274,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                 setTorStopping();
 
                 if (logFile != null) {
-                    tvTorLog.setText(Html.fromHtml(logFile.readLastLines()));
+                    setLogViewText(Html.fromHtml(logFile.readLastLines()));
                 }
 
                 displayLog(1000);
@@ -270,7 +282,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                 setTorRunning();
 
                 if (logFile != null) {
-                    tvTorLog.setText(Html.fromHtml(logFile.readLastLines()));
+                    setLogViewText(Html.fromHtml(logFile.readLastLines()));
                 }
 
                 if (modulesStatus.getTorState() != RESTARTING) {
@@ -285,39 +297,18 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
             setTorInstalled(false);
         }
 
-
-        IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
-        IntentFilter intentFilterTopFrg = new IntentFilter(TopFragment.TOP_BROADCAST);
-
-        if (getActivity() != null) {
-            getActivity().registerReceiver(br, intentFilterBckgIntSer);
-            getActivity().registerReceiver(br, intentFilterTopFrg);
-
-            SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            String refreshPeriod = shPref.getString("pref_fast_site_refresh_interval", "12");
-            refreshPeriodHours = Integer.parseInt(refreshPeriod);
-
-            routeAllThroughTor = shPref.getBoolean("pref_fast_all_through_tor", true);
-        }
-
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        try {
-            stopDisplayLog();
-            if (br != null) Objects.requireNonNull(getActivity()).unregisterReceiver(br);
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "TorFragment onStop exception " + e.getMessage() + " " + e.getCause());
-        }
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        try {
+            stopDisplayLog();
+            if (br != null) Objects.requireNonNull(getActivity()).unregisterReceiver(br);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "TorFragment onDestroy exception " + e.getMessage() + " " + e.getCause());
+        }
     }
-
 
     @Override
     public void onClick(View v) {
@@ -500,6 +491,8 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
         } else if (currentModuleState == STOPPED) {
 
+            stopDisplayLog();
+
             if (isSavedTorStatusRunning()) {
                 setTorStoppedBySystem();
             } else {
@@ -507,8 +500,6 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
             }
 
             setProgressBarIndeterminate(false);
-
-            stopDisplayLog();
 
             saveTorStatusRunning(false);
 
@@ -536,8 +527,7 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
 
         setTorStatus(R.string.tvTorStop, R.color.textModuleStatusColorStopped);
         btnTorStart.setText(R.string.btnTorStart);
-        String tvTorLogText = getText(R.string.tvTorDefaultLog) + " " + TorVersion;
-        tvTorLog.setText(tvTorLogText);
+        setLogViewText();
 
         if (getActivity() != null) {
             new PrefManager(Objects.requireNonNull(getActivity())).setBoolPref("Tor Ready", false);
@@ -654,26 +644,25 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
                     displayLog(10000);
                 }
 
-                getActivity().runOnUiThread(new Runnable() {
+                getActivity().runOnUiThread(() -> {
 
-                    @Override
-                    public void run() {
+                    if (getActivity() == null) {
+                        return;
+                    }
 
-                        refreshTorState();
+                    if (!previousLastLines.contentEquals(lastLines)) {
 
-                        if (!previousLastLines.contentEquals(lastLines)) {
-
-                            if (!new PrefManager(getActivity()).getBoolPref("Tor Ready")) {
-                                torStartedSuccessfully(lastLines);
-                            }
-
-                            torStartedWithError(lastLines);
-
-                            tvTorLog.setText(Html.fromHtml(lastLines));
-                            previousLastLines = lastLines;
+                        if (!new PrefManager(getActivity()).getBoolPref("Tor Ready")) {
+                            torStartedSuccessfully(lastLines);
                         }
 
+                        torStartedWithError(lastLines);
+                        setLogViewText(Html.fromHtml(lastLines));
+                        previousLastLines = lastLines;
                     }
+
+                    refreshTorState();
+
                 });
             }
         }, 1, period);
@@ -829,6 +818,20 @@ public class TorRunFragment extends Fragment implements View.OnClickListener {
         if (jobScheduler != null) {
             jobScheduler.cancel(mJobId);
         }
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void setLogViewText() {
+        tvTorLog.setText(getText(R.string.tvTorDefaultLog) + " " + TorVersion);
+        tvTorLog.setGravity(Gravity.CENTER);
+        tvTorLog.setLayoutParams(new LinearLayoutCompat.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        tvTorLog.scrollTo(0, 0);
+    }
+
+    private void setLogViewText(Spanned text) {
+        tvTorLog.setText(text);
+        tvTorLog.setGravity(Gravity.BOTTOM);
+        tvTorLog.setLayoutParams(new LinearLayoutCompat.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
     }
 
     private void runTor() {
