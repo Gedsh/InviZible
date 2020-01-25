@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.settings.itpd_fragment;
+package pan.alexander.tordnscrypt.itpd_fragment;
 
 /*
     This file is part of InviZible Pro.
@@ -26,7 +26,6 @@ import android.text.Html;
 import android.util.Log;
 import android.widget.Toast;
 
-import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
 
 import java.io.BufferedReader;
@@ -61,7 +60,6 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
-import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
@@ -444,8 +442,6 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
             return;
         }
 
-        FragmentManager fragmentManager = view.getFragmentFragmentManager();
-
         if (((MainActivity) context).childLockActive) {
             Toast.makeText(context, context.getText(R.string.action_mode_dialog_locked), Toast.LENGTH_LONG).show();
             return;
@@ -455,24 +451,14 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
         cleanLogFileNoRootMethod();
 
-        boolean rootMode = modulesStatus.getMode() == ROOT_MODE;
-
         if (!new PrefManager(Objects.requireNonNull(context)).getBoolPref("I2PD Running")
                 && new PrefManager(Objects.requireNonNull(context)).getBoolPref("Tor Running")
                 && !new PrefManager(context).getBoolPref("DNSCrypt Running")) {
 
-            if (modulesStatus.isContextUIDUpdateRequested()|| fixedModuleState == RUNNING) {
+            if (modulesStatus.isContextUIDUpdateRequested()) {
                 Toast.makeText(context, R.string.please_wait, Toast.LENGTH_SHORT).show();
                 view.setITPDStartButtonEnabled(true);
                 return;
-            }
-
-            if (rootMode && fragmentManager != null) {
-                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                        context, context.getText(R.string.helper_tor_itpd).toString(), "tor_itpd");
-                if (notificationHelper != null) {
-                    notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
-                }
             }
 
             copyCertificatesNoRootMethod(context);
@@ -486,19 +472,10 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
                 !new PrefManager(context).getBoolPref("Tor Running")
                 && !new PrefManager(context).getBoolPref("DNSCrypt Running")) {
 
-            if (modulesStatus.isContextUIDUpdateRequested()|| fixedModuleState == RUNNING) {
+            if (modulesStatus.isContextUIDUpdateRequested()) {
                 Toast.makeText(context, R.string.please_wait, Toast.LENGTH_SHORT).show();
                 view.setITPDStartButtonEnabled(true);
                 return;
-            }
-
-
-            if (rootMode && fragmentManager != null) {
-                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                        context, context.getText(R.string.helper_itpd).toString(), "itpd");
-                if (notificationHelper != null) {
-                    notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
-                }
             }
 
             copyCertificatesNoRootMethod(context);
@@ -512,19 +489,10 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
                 !new PrefManager(context).getBoolPref("Tor Running")
                 && new PrefManager(context).getBoolPref("DNSCrypt Running")) {
 
-            if (modulesStatus.isContextUIDUpdateRequested()|| fixedModuleState == RUNNING) {
+            if (modulesStatus.isContextUIDUpdateRequested()) {
                 Toast.makeText(context, R.string.please_wait, Toast.LENGTH_SHORT).show();
                 view.setITPDStartButtonEnabled(true);
                 return;
-            }
-
-
-            if (rootMode && fragmentManager != null) {
-                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                        context, context.getText(R.string.helper_dnscrypt_itpd).toString(), "dnscrypt_itpd");
-                if (notificationHelper != null) {
-                    notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
-                }
             }
 
             copyCertificatesNoRootMethod(context);
@@ -538,18 +506,10 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
                 new PrefManager(context).getBoolPref("Tor Running")
                 && new PrefManager(context).getBoolPref("DNSCrypt Running")) {
 
-            if (modulesStatus.isContextUIDUpdateRequested()|| fixedModuleState == RUNNING) {
+            if (modulesStatus.isContextUIDUpdateRequested()) {
                 Toast.makeText(context, R.string.please_wait, Toast.LENGTH_SHORT).show();
                 view.setITPDStartButtonEnabled(true);
                 return;
-            }
-
-            if (rootMode && fragmentManager != null) {
-                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                        context, context.getText(R.string.helper_dnscrypt_tor_itpd).toString(), "dnscrypt_tor_itpd");
-                if (notificationHelper != null) {
-                    notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
-                }
             }
 
             copyCertificatesNoRootMethod(context);

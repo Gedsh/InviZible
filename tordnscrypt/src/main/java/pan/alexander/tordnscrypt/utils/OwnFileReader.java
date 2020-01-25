@@ -81,8 +81,9 @@ public class OwnFileReader {
             br = new BufferedReader(new InputStreamReader(fstream));
 
             for (String tmp; (tmp = br.readLine()) != null; )
-                if (lines.add(tmp) && lines.size() > 25)
+                if (lines.add(tmp) && lines.size() > 50) {
                     lines.remove(0);
+                }
 
             for (String s : lines) {
                 s = Html.escapeHtml(s);

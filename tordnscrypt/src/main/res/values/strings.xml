@@ -51,6 +51,7 @@
     <string name="tvTorNotInstalled">Tor Not Installed</string>
 
     <string name="tvTorStarting">Tor Starting</string>
+    <string name="tvTorConnecting">Connecting</string>
     <string name="tvTorRunning">Tor Running</string>
     <string name="tvTorStopping">Tor Stopping</string>
     <string name="tvTorDefaultLog" translatable="false">Tor version</string>
@@ -73,7 +74,7 @@
     <string name="write_file_error">Save file Error!</string>
 
     <string name="drawer_menu_commonSettings">Common Settings</string>
-    <string name="drawer_menu_DNSSettings">DNS Crypt Settings</string>
+    <string name="drawer_menu_DNSSettings">DNSCrypt Settings</string>
     <string name="drawer_menu_TorSettings">Tor Settings</string>
     <string name="drawer_menu_I2PDSettings">I2P Settings</string>
     <string name="drawer_menu_fastSettings">Fast Settings</string>
@@ -171,7 +172,7 @@
 
     <string name="pref_common_categ_run_with_root">Use Root Privileges</string>
     <string name="pref_common_run_with_root">Run Modules With Root</string>
-    <string name="pref_common_run_with_root_summ">Use Root privileges for DNS Crypt, Tor, I2P </string>
+    <string name="pref_common_run_with_root_summ">Use Root privileges for DNSCrypt, Tor, I2P </string>
     <string name="pref_common_categ_other">Other</string>
     <string name="pref_common_block_http">Block HOTSPOT http</string>
     <string name="pref_common_block_http_summ">Deny connection to http port 80 for HOTSPOT</string>
@@ -211,7 +212,7 @@
     <string name="pref_common_excludes_from_tor_summ">WebSites list to open directly for HOTSPOT</string>
     <string name="pref_common_itpd_tethering">Allow I2P Tethering</string>
     <string name="pref_common_tethering_settings">Open Tethering config</string>
-    <string name="pref_common_restart_dnscrypt">Please restart DNS Crypt</string>
+    <string name="pref_common_restart_dnscrypt">Please restart DNSCrypt</string>
     <string name="pref_common_restart_tor">Please restart Tor</string>
     <string name="pref_common_restart_itpd">Please restart I2P</string>
 
@@ -483,25 +484,7 @@
     <string name="helper_after_install">Congratulations! You can use this tools to have fast access
         for all websites without restrictions now. Start DNSCrypt with or without Tor and I2P as requested (Fast Mode). Or you can use
         this tools to enhance privacy. Start Tor with or without I2P as requested(Enhanced Privacy Mode).</string>
-    <string name="helper_dnscrypt">(Fast Mode)\n Your DNS traffic is encrypting now. Try to use different
-        servers for additional features. MENU->FastSettings->Select DNSCrypt servers.</string>
-    <string name="helper_dnscrypt_tor">(Fast Mode)\n Your DNS traffic is encrypting now. You have access to ONION
-        websites from any application. You can add websites, applications to MENU->Fast Settings->Select WebSites, Applications
-        to Unblock for opening its with Tor network and without restrictions.</string>
-    <string name="helper_dnscrypt_tor_privacy">(Enhanced Privacy Mode)\n Your DNS traffic is encrypting now. You have access to ONION
-        websites from any application. You can add websites, applications to MENU->Fast Settings->Exclude WebSites, Exclude Applications
-        for Tor network bypass. All other traffic goes through Tor network. All other connections were blocked.</string>
-    <string name="helper_dnscrypt_itpd">Your DNS traffic is encrypting now. You have access to I2P websites from any application.</string>
-    <string name="helper_dnscrypt_tor_itpd">Your DNS traffic is encrypting now. You have access to ONION
-        and I2P websites from any application</string>
-    <string name="helper_tor">(Enhanced Privacy Mode)\n You have access to ONION websites from any application.
-        All your traffic goes through Tor network. You can add websites, applications to MENU->Fast Settings->Exclude WebSites, Exclude Applications
-        for Tor network bypass. All other connections were blocked.</string>
-    <string name="helper_tor_itpd">(Enhanced Privacy Mode)\n You have access to ONION websites
-        from any application. All your traffic goes through Tor network. You can add websites, applications to MENU->Fast Settings->Exclude WebSites, Exclude Applications
-        for Tor network bypass. You have access to I2P websites only through SOCKS or HTTP proxy. All other connections were blocked.</string>
-    <string name="helper_itpd">You have access to I2P websites only through SOCKS or HTTP proxy.</string>
-    <string name="helper_dnscrypt_stopped">Looks like DNS Crypt was killed by android system.
+    <string name="helper_dnscrypt_stopped">Looks like DNSCrypt was killed by android system.
         Your internet connection was restored. Check device Settings!</string>
     <string name="helper_tor_stopped">Looks like Tor was killed by android system.
         Your internet connection was restored. Check device Settings!</string>
@@ -594,4 +577,9 @@
     <string name="vpn_mode_error">VPN mode error!</string>
     <string name="vpn_tor_tether_summ">Please configure the use of proxy server in the settings of the connected device. Default values: IP:10.1.10.1 Port:8118</string>
 
+    <string name="main_fragment_button_start" translatable="false">START</string>
+    <string name="main_fragment_button_stop" translatable="false">STOP</string>
+    <string name="main_fragment_hide_ip">Hide IP with TOR</string>
+    <string name="main_fragment_protect_dns">Protect DNS with DNSCRYPT</string>
+    <string name="main_fragment_access_i2p">Access to I2P sites with Purple I2P</string>
 </resources>

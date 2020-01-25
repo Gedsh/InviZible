@@ -35,7 +35,7 @@
 
         <fragment
             android:id="@+id/DNSCryptfrg"
-            android:name="pan.alexander.tordnscrypt.DNSCryptRunFragment"
+            android:name="pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptRunFragment"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             tools:layout="@layout/fragment_dnscrypt_run" />
@@ -52,7 +52,7 @@
 
         <fragment
             android:id="@+id/Torfrg"
-            android:name="pan.alexander.tordnscrypt.TorRunFragment"
+            android:name="pan.alexander.tordnscrypt.tor_fragment.TorRunFragment"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             tools:layout="@layout/fragment_tor_run" />
@@ -69,7 +69,7 @@
 
         <fragment
             android:id="@+id/ITPDfrg"
-            android:name="pan.alexander.tordnscrypt.ITPDRunFragment"
+            android:name="pan.alexander.tordnscrypt.itpd_fragment.ITPDRunFragment"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             tools:layout="@layout/fragment_itpd_run" />

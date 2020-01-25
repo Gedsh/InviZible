@@ -548,7 +548,7 @@ public class ServiceVPN extends VpnService {
     public void dnsResolved(ResourceRecord rr) {
         if (!resourceRecords.isEmpty() && !rr.equals(resourceRecords.get(resourceRecords.size() - 1))) {
 
-            if (resourceRecords.size() > 100) {
+            if (resourceRecords.size() > 200) {
                 resourceRecords.removeFirst();
             }
 

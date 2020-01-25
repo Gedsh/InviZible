@@ -1,4 +1,23 @@
-package pan.alexander.tordnscrypt.dnscrypt;
+package pan.alexander.tordnscrypt.dnscrypt_fragment;
+
+/*
+    This file is part of InviZible Pro.
+
+    InviZible Pro is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    InviZible Pro is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+*/
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -26,25 +45,6 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
-
-/*
-    This file is part of InviZible Pro.
-
-    InviZible Pro is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    InviZible Pro is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
-
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
-*/
 
 public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
@@ -81,14 +81,14 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
             if (action.equals(RootExecService.COMMAND_RESULT)) {
 
-                view.setProgressBarIndeterminate(false);
+                view.setDNSCryptProgressBarIndeterminate(false);
 
-                view.setStartButtonEnabled(true);
+                view.setDNSCryptStartButtonEnabled(true);
 
                 RootCommands comResult = (RootCommands) intent.getSerializableExtra("CommandsResult");
 
                 if (comResult != null && comResult.getCommands().length == 0) {
-                    view.setDnsCryptSomethingWrong();
+                    presenter.setDnsCryptSomethingWrong();
                     modulesStatus.setDnsCryptState(FAULT);
                     return;
                 }
@@ -110,7 +110,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                         if (!modulesStatus.isUseModulesWithRoot()) {
 
                             if (!presenter.isSavedDNSStatusRunning(context)) {
-                                view.setLogViewText();
+                                view.setDNSCryptLogViewText();
                             }
 
                             presenter.refreshDNSCryptState(context);
@@ -121,7 +121,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                 if (sb.toString().toLowerCase().contains(dnscryptPath)
                         && sb.toString().contains("checkDNSRunning")) {
 
-                    view.setDnsCryptRunning();
+                    presenter.setDnsCryptRunning();
                     presenter.saveDNSStatusRunning(context, true);
                     modulesStatus.setDnsCryptState(RUNNING);
                     presenter.displayLog(5000);
@@ -132,11 +132,11 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                         presenter.saveDNSStatusRunning(context, false);
                     }
                     presenter.stopDisplayLog();
-                    view.setDnsCryptStopped();
+                    presenter.setDnsCryptStopped();
                     modulesStatus.setDnsCryptState(STOPPED);
                     presenter.refreshDNSCryptState(context);
                 } else if (sb.toString().contains("Something went wrong!")) {
-                    view.setDnsCryptSomethingWrong();
+                    presenter.setDnsCryptSomethingWrong();
                     modulesStatus.setDnsCryptState(FAULT);
                 }
 
@@ -147,7 +147,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                     checkDNSVersionWithRoot(context);
                 }
 
-                FragmentManager fragmentManager = view.getDNSCryptFragmentManager();
+                FragmentManager fragmentManager = view.getFragmentFragmentManager();
 
                 Thread thread = new Thread(() -> {
                     try {
@@ -198,7 +198,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
             intent.putExtra("Mark", RootExecService.DNSCryptRunFragmentMark);
             RootExecService.performAction(context, intent);
 
-            view.setProgressBarIndeterminate(true);
+            view.setDNSCryptProgressBarIndeterminate(true);
         }
     }
 }

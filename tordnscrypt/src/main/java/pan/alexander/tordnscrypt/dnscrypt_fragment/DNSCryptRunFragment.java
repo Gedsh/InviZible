@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.dnscrypt;
+package pan.alexander.tordnscrypt.dnscrypt_fragment;
 /*
     This file is part of InviZible Pro.
 
@@ -24,13 +24,12 @@ import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
 import android.os.Bundle;
 
-import androidx.appcompat.widget.LinearLayoutCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import android.text.Spanned;
 import android.text.method.ScrollingMovementMethod;
-import android.view.Gravity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,20 +37,25 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.util.Objects;
+
+import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 
 import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 
 public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentView, View.OnClickListener {
 
 
-    private Button btnDNSCryptStart = null;
-    private TextView tvDNSStatus = null;
-    private ProgressBar pbDNSCrypt = null;
-    private TextView tvDNSCryptLog = null;
+    private Button btnDNSCryptStart;
+    private TextView tvDNSStatus;
+    private ProgressBar pbDNSCrypt;
+    private TextView tvDNSCryptLog;
+    private BroadcastReceiver receiver;
 
     private DNSCryptFragmentPresenter presenter;
 
@@ -60,25 +64,6 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
     }
 
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        presenter = new DNSCryptFragmentPresenter(this);
-
-        BroadcastReceiver receiver = new DNSCryptFragmentReceiver(this, presenter);
-
-        if (getActivity() != null) {
-            IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
-            IntentFilter intentFilterTopFrg = new IntentFilter(TOP_BROADCAST);
-
-            getActivity().registerReceiver(receiver, intentFilterBckgIntSer);
-            getActivity().registerReceiver(receiver, intentFilterTopFrg);
-        }
-
-
-    }
-
     @SuppressLint("SetTextI18n")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -86,20 +71,23 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
 
         View view = inflater.inflate(R.layout.fragment_dnscrypt_run, container, false);
 
-        if (getActivity() == null) {
+        btnDNSCryptStart = view.findViewById(R.id.btnDNSCryptStart);
+
+        //Not required for a portrait orientation, so return
+        if (btnDNSCryptStart == null) {
             return view;
         }
 
-        btnDNSCryptStart = view.findViewById(R.id.btnDNSCryptStart);
         btnDNSCryptStart.setOnClickListener(this);
 
         pbDNSCrypt = view.findViewById(R.id.pbDNSCrypt);
 
         tvDNSCryptLog = view.findViewById(R.id.tvDNSCryptLog);
         tvDNSCryptLog.setMovementMethod(ScrollingMovementMethod.getInstance());
-        setLogViewText();
 
         tvDNSStatus = view.findViewById(R.id.tvDNSStatus);
+
+        setDNSCryptLogViewText();
 
         return view;
     }
@@ -108,56 +96,49 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
     public void onStart() {
         super.onStart();
 
-        presenter.onStart(getActivity());
+        //MainFragment do this job for portrait orientation, so return
+        if (btnDNSCryptStart == null) {
+            return;
+        }
+
+        presenter = new DNSCryptFragmentPresenter(this);
+
+        receiver = new DNSCryptFragmentReceiver(this, presenter);
+
+        if (getActivity() != null) {
+            IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
+            IntentFilter intentFilterTopFrg = new IntentFilter(TOP_BROADCAST);
+
+            getActivity().registerReceiver(receiver, intentFilterBckgIntSer);
+            getActivity().registerReceiver(receiver, intentFilterTopFrg);
+
+            presenter.onStart(getActivity());
+        }
+
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
 
-        presenter.onDestroy(getActivity());
-    }
+        try {
+            if (receiver != null) {
+                Objects.requireNonNull(getActivity()).unregisterReceiver(receiver);
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "DNSCryptRunFragment onDestroy exception " + e.getMessage() + " " + e.getCause());
+        }
 
-    @Override
-    public void onClick(View v) {
-        presenter.startButtonOnClick(getActivity(), v);
-    }
-
-    @Override
-    public void setDnsCryptStarting() {
-        setDNSCryptStatus(R.string.tvDNSStarting, R.color.textModuleStatusColorStarting);
-    }
-
-    @Override
-    public void setDnsCryptRunning() {
-        setDNSCryptStatus(R.string.tvDNSRunning, R.color.textModuleStatusColorRunning);
-        btnDNSCryptStart.setText(R.string.btnDNSCryptStop);
-    }
-
-    @Override
-    public void setDnsCryptStopping() {
-        setDNSCryptStatus(R.string.tvDNSStopping, R.color.textModuleStatusColorStopping);
-    }
-
-    @Override
-    public void setDnsCryptStopped() {
-        setDNSCryptStatus(R.string.tvDNSStop, R.color.textModuleStatusColorStopped);
-        btnDNSCryptStart.setText(R.string.btnDNSCryptStart);
-        setLogViewText();
-    }
-
-    @Override
-    public void setDNSCryptInstalled(boolean installed) {
-        if (installed) {
-            btnDNSCryptStart.setEnabled(true);
-        } else {
-            tvDNSStatus.setText(getText(R.string.tvDNSNotInstalled));
+        if (presenter != null) {
+            presenter.onDestroy(getActivity());
         }
     }
 
     @Override
-    public void setDnsCryptSomethingWrong() {
-        setDNSCryptStatus(R.string.wrong, R.color.textModuleStatusColorAlert);
+    public void onClick(View v) {
+        if (v.getId() == R.id.btnDNSCryptStart) {
+            presenter.startButtonOnClick(getActivity());
+        }
     }
 
     @Override
@@ -167,7 +148,7 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
     }
 
     @Override
-    public void setStartButtonEnabled(boolean enabled) {
+    public void setDNSCryptStartButtonEnabled(boolean enabled) {
         if (btnDNSCryptStart.isEnabled() && !enabled) {
             btnDNSCryptStart.setEnabled(false);
         } else if (!btnDNSCryptStart.isEnabled() && enabled) {
@@ -181,7 +162,7 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
     }
 
     @Override
-    public void setProgressBarIndeterminate(boolean indeterminate) {
+    public void setDNSCryptProgressBarIndeterminate(boolean indeterminate) {
         if (!pbDNSCrypt.isIndeterminate() && indeterminate) {
             pbDNSCrypt.setIndeterminate(true);
         } else if (pbDNSCrypt.isIndeterminate() && !indeterminate){
@@ -191,18 +172,13 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
 
     @Override
     @SuppressLint("SetTextI18n")
-    public void setLogViewText() {
+    public void setDNSCryptLogViewText() {
         tvDNSCryptLog.setText(getText(R.string.tvDNSDefaultLog) + " " + DNSCryptVersion);
-        tvDNSCryptLog.setGravity(Gravity.CENTER);
-        tvDNSCryptLog.setLayoutParams(new LinearLayoutCompat.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        tvDNSCryptLog.scrollTo(0, 0);
     }
 
     @Override
-    public void setLogViewText(Spanned text) {
+    public void setDNSCryptLogViewText(Spanned text) {
         tvDNSCryptLog.setText(text);
-        tvDNSCryptLog.setGravity(Gravity.BOTTOM);
-        tvDNSCryptLog.setLayoutParams(new LinearLayoutCompat.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
     }
 
     @Override
@@ -211,8 +187,16 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
     }
 
     @Override
-    public FragmentManager getDNSCryptFragmentManager() {
+    public FragmentManager getFragmentFragmentManager() {
         return getFragmentManager();
+    }
+
+    public DNSCryptFragmentPresenterCallbacks getPresenter() {
+        if (presenter == null && getActivity() instanceof MainActivity && ((MainActivity)getActivity()).getMainFragment() != null) {
+            presenter = ((MainActivity)getActivity()).getMainFragment().getDnsCryptFragmentPresenter();
+        }
+
+        return presenter;
     }
 
 }

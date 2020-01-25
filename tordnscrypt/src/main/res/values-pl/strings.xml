@@ -51,7 +51,7 @@
     <string name="write_file_error">Blad zapisu pliku!</string>
 
     <string name="drawer_menu_commonSettings">Ustawienia wspolne</string>
-    <string name="drawer_menu_DNSSettings">Ustawienia DNS Crypt</string>
+    <string name="drawer_menu_DNSSettings">Ustawienia DNSCrypt</string>
     <string name="drawer_menu_TorSettings">Ustawienia Tor</string>
     <string name="drawer_menu_I2PDSettings">Ustawienia I2P</string>
     <string name="drawer_menu_fastSettings">Szybkie ustawienia</string>
@@ -130,7 +130,7 @@
 
     <string name="pref_common_categ_run_with_root">Uzyj uprawnien Roota</string>
     <string name="pref_common_run_with_root">Uruchom moduly z uprawnieiami Roota</string>
-    <string name="pref_common_run_with_root_summ">Zastosuj uprawnienia Roota do DNS Crypt, Tor, I2P </string>
+    <string name="pref_common_run_with_root_summ">Zastosuj uprawnienia Roota do DNSCrypt, Tor, I2P </string>
     <string name="pref_common_categ_other">Inne</string>
     <string name="pref_common_block_http">Zablokuj Punkt Dostepu po http</string>
     <string name="pref_common_block_http_summ">Odmow polaczenia na port http 80 dla Punktu Dostepu</string>
@@ -168,7 +168,7 @@
     <string name="pref_common_excludes_from_tor_summ">Stony otwierane bezposrednio przez Punkt Dostepu</string>
     <string name="pref_common_itpd_tethering">Zezwol na udostepnianie I2P</string>
     <string name="pref_common_tethering_settings">Otworz ustawienia Punktu Dostepu</string>
-    <string name="pref_common_restart_dnscrypt">Prosze zrestartowac DNS Crypt</string>
+    <string name="pref_common_restart_dnscrypt">Prosze zrestartowac DNSCrypt</string>
     <string name="pref_common_restart_tor">Prosze zrestartowac Tor</string>
     <string name="pref_common_restart_itpd">Prosze zrestartowac I2P</string>
 
@@ -353,25 +353,7 @@
     <string name="helper_after_install">Gratulacje! Mozesz zastosowac te narzedzia aby miec szybki dostep
         bez ograniczen do wszystkich stron. Uruchom DNSCrypt z lub bez Tora oraz I2P (ustawienia w Fast Mode). Mozesz tez uzyc
         te narzedzia do zwiekszenia prywatnosci. Uruchom Tor z lub bez I2P (Tryb Enhanced Privacy Mode).</string>
-    <string name="helper_dnscrypt">(Fast Mode)\n Twoj ruch DNS jest teraz szyfrowany. Sprobuj uzyc innych serwerow
-        majacych dodatkowe wlasnosci. MENU->Ustawienia Szybkie->Wybierz serwery DNSCrypt.</string>
-    <string name="helper_dnscrypt_tor">(Fast Mode)\n Ruch DNS jest szyfrowany. Masz dostep do stron ONION
-        z kazdej aplikacji. Mozesz dodac strony i aplikacje MENU->Ustawienia szybkie->Wybierz strony web, aplikacje
-        by odblokowac ich otwieranie przez siec Tor bez ograniczen.</string>
-    <string name="helper_dnscrypt_tor_privacy">(Enhanced Privacy Mode)\n Ruch DNS jest szyfrowany. Masz dostep do stron ONION
-        z kazdej aplikacji. Maozesz dodac strony i aplikacje w MENU->Ustawienia szybkie->Wyklucz strony web, Wyklucz aplikacje
-        aby pomijaly TORa. Calosc pozostalego ruchu odbywa sie przez Tor. Wszystkie ine polaczenia sa blokowane.</string>
-    <string name="helper_dnscrypt_itpd">Ruch DNS jest szyfrowany. Masz dostep do stron I2P z kazdej aplikacji.</string>
-    <string name="helper_dnscrypt_tor_itpd">Ruch DNS jest szyfrowany. Masz dostep do stron ONION i I2P
-        z kazdej aplikacji</string>
-    <string name="helper_tor">(Enhanced Privacy Mode)\n Masz dostep do stron ONION z kazdej aplikacji.
-        Caly ruch sieciowy odbywa sie przez Tor. Mozesz dodac strony, aplikacje do MENU->Szybkie Ustawienia->Wyklucz strony, Wyklucz Aplikacje
-        by pomijaly Tor. Wszystkie inne polaczenia beda blokowane.</string>
-    <string name="helper_tor_itpd">(Enhanced Privacy Mode)\n Masz dostep do stron ONION
-        z kazdej aplikacji. Caly ruch sieciowy odywa sie przez Tor. Mozesz dodac strony i aplikacje do MENU->Szybkie Ustawienia->Wyklucz strony, Wyklucz Aplikacje
-        by pomijaly Tor. Masz dostep do sieci I2P tylko przez proxy SOCKS lub HTTP . Caly inny ruch jest blokowany.</string>
-    <string name="helper_itpd">Masz dostep do scieci I2P tylko przez proxy SOCKS lub HTTP.</string>
-    <string name="helper_dnscrypt_stopped">Wyglada na to ze system android wylaczyl DNS Crypt.
+    <string name="helper_dnscrypt_stopped">Wyglada na to ze system android wylaczyl DNSCrypt.
         Twoje polaczenie z siecia zostalo przywrocone. Szprawdz ustawienia urzadzenia!</string>
     <string name="helper_tor_stopped">Wyglada na to ze system android wylaczyl Tor.
         Twoje polaczenie z siecia zostalo przywrocone. Szprawdz ustawienia urzadzenia!</string>
@@ -449,4 +431,8 @@
     <string name="pref_fast_all_through_ipro">Przekieruj caly ruch przez InviZible</string>
     <string name="pref_routing_clearnet_app">Aplikacje pomijajace InviZible</string>
     <string name="pref_routing_unlock_app">Aplikacje laczace sie przez InviZible</string>
+    <string name="main_fragment_hide_ip">Ukryj adres IP za pomocą TOR</string>
+    <string name="main_fragment_protect_dns">Chroń DNS za pomocą DNSCRYPT</string>
+    <string name="main_fragment_access_i2p">" Dostęp do stron I2P za pomocą Purple I2P"</string>
+    <string name="tvTorConnecting">Złączony</string>
 </resources>

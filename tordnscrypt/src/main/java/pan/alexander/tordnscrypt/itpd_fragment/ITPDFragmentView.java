@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.settings.itpd_fragment;
+package pan.alexander.tordnscrypt.itpd_fragment;
 
 /*
     This file is part of InviZible Pro.

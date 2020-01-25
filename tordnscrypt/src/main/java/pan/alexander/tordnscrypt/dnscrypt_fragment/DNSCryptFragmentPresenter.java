@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.dnscrypt;
+package pan.alexander.tordnscrypt.dnscrypt_fragment;
 
 /*
     This file is part of InviZible Pro.
@@ -19,27 +19,22 @@ package pan.alexander.tordnscrypt.dnscrypt;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.text.Html;
 import android.util.Log;
-import android.view.View;
 import android.widget.Toast;
 
 import androidx.fragment.app.FragmentManager;
-import androidx.preference.PreferenceManager;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -65,32 +60,28 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
-import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
-class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
-    private DNSCryptFragmentView view;
-    private BroadcastReceiver br = null;
-    private Timer timer = null;
-    private String appDataDir;
-    private boolean routeAllThroughTor = true;
+public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
+    private boolean bound;
 
-    private OwnFileReader logFile;
-
-    private ModulesStatus modulesStatus;
-    private ModuleState fixedModuleState;
     private int displayLogPeriod = -1;
 
+    private String appDataDir;
+    private DNSCryptFragmentView view;
+    private Timer timer = null;
+    private OwnFileReader logFile;
+    private ModulesStatus modulesStatus;
+    private ModuleState fixedModuleState;
     private ServiceConnection serviceConnection;
     private ServiceVPN serviceVPN;
-    private boolean bound;
     private ArrayList<ResourceRecord> savedResourceRecords;
 
-    DNSCryptFragmentPresenter(DNSCryptFragmentView view) {
+    public DNSCryptFragmentPresenter(DNSCryptFragmentView view) {
         this.view = view;
     }
 
-    void onStart(Context context) {
+    public void onStart(Context context) {
         if (context == null || view == null) {
             return;
         }
@@ -100,30 +91,26 @@ class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
 
         modulesStatus = ModulesStatus.getInstance();
 
-
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        routeAllThroughTor = shPref.getBoolean("pref_fast_all_through_tor", true);
-
         savedResourceRecords = new ArrayList<>();
 
         logFile = new OwnFileReader(context, appDataDir + "/logs/DnsCrypt.log");
 
         if (isDNSCryptInstalled(context)) {
-            view.setDNSCryptInstalled(true);
+            setDNSCryptInstalled(true);
 
             if (modulesStatus.getDnsCryptState() == STOPPING){
-                view.setDnsCryptStopping();
+                setDnsCryptStopping();
 
                 if (logFile != null) {
-                    view.setLogViewText(Html.fromHtml(logFile.readLastLines()));
+                    view.setDNSCryptLogViewText(Html.fromHtml(logFile.readLastLines()));
                 }
 
                 displayLog(1000);
             } else if (isSavedDNSStatusRunning(context) || modulesStatus.getDnsCryptState() == RUNNING) {
-                view.setDnsCryptRunning();
+                setDnsCryptRunning();
 
                 if (logFile != null) {
-                    view.setLogViewText(Html.fromHtml(logFile.readLastLines()));
+                    view.setDNSCryptLogViewText(Html.fromHtml(logFile.readLastLines()));
                 }
 
                 if (modulesStatus.getDnsCryptState() != RESTARTING) {
@@ -133,29 +120,27 @@ class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
                 displayLog(1000);
 
             } else {
-                view.setDnsCryptStopped();
+                setDnsCryptStopped();
                 modulesStatus.setDnsCryptState(STOPPED);
             }
 
         } else {
-            view.setDNSCryptInstalled(false);
+            setDNSCryptInstalled(false);
         }
     }
 
-    void onDestroy(Context context) {
+    public void onDestroy(Context context) {
+        stopDisplayLog();
+        unbindVPNService(context);
         view = null;
-
-        try {
-            unbindVPNService(context);
-            stopDisplayLog();
-            if (br != null) Objects.requireNonNull(context).unregisterReceiver(br);
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "DNSCryptRunFragment onDestroy exception " + e.getMessage() + " " + e.getCause());
-        }
     }
 
     @Override
     public boolean isDNSCryptInstalled(Context context) {
+        if (context == null) {
+            return false;
+        }
+
         return new PrefManager(context).getBoolPref("DNSCrypt Installed");
     }
 
@@ -191,7 +176,7 @@ class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
 
             @Override
             public void run() {
-                if (view.getFragmentActivity() == null) {
+                if (view == null || view.getFragmentActivity() == null) {
                     return;
                 }
 
@@ -206,7 +191,7 @@ class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
 
                 view.getFragmentActivity().runOnUiThread(() -> {
 
-                    if (view.getFragmentActivity() == null) {
+                    if (view == null || view.getFragmentActivity() == null) {
                         return;
                     }
 
@@ -217,7 +202,7 @@ class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
                         dnsCryptStartedWithError(view.getFragmentActivity(), lastLines);
 
                         if (!previousLastLines.isEmpty()) {
-                            view.setLogViewText(Html.fromHtml(lastLines));
+                            view.setDNSCryptLogViewText(Html.fromHtml(lastLines));
                         }
 
                         previousLastLines = lastLines;
@@ -243,6 +228,100 @@ class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
         }
     }
 
+    private void setDnsCryptStarting() {
+        if (view == null) {
+            return;
+        }
+
+        view.setDNSCryptStatus(R.string.tvDNSStarting, R.color.textModuleStatusColorStarting);
+    }
+
+    @Override
+    public void setDnsCryptRunning() {
+        if (view == null) {
+            return;
+        }
+
+        view.setDNSCryptStatus(R.string.tvDNSRunning, R.color.textModuleStatusColorRunning);
+        view.setStartButtonText(R.string.btnDNSCryptStop);
+    }
+
+    private void setDnsCryptStopping() {
+        if (view == null) {
+            return;
+        }
+
+        view.setDNSCryptStatus(R.string.tvDNSStopping, R.color.textModuleStatusColorStopping);
+    }
+
+    @Override
+    public void setDnsCryptStopped() {
+        if (view == null) {
+            return;
+        }
+
+        view.setDNSCryptStatus(R.string.tvDNSStop, R.color.textModuleStatusColorStopped);
+        view.setStartButtonText(R.string.btnDNSCryptStart);
+        view.setDNSCryptLogViewText();
+    }
+
+    @Override
+    public void setDnsCryptInstalling() {
+        if (view == null) {
+            return;
+        }
+
+        view.setDNSCryptStatus(R.string.tvDNSInstalling, R.color.textModuleStatusColorInstalling);
+    }
+
+    @Override
+    public void setDnsCryptInstalled() {
+        if (view == null) {
+            return;
+        }
+
+        view.setDNSCryptStatus(R.string.tvDNSInstalled, R.color.textModuleStatusColorInstalled);
+    }
+
+    @Override
+    public void setDNSCryptStartButtonEnabled(boolean enabled) {
+        if (view == null) {
+            return;
+        }
+
+        view.setDNSCryptStartButtonEnabled(enabled);
+    }
+
+    @Override
+    public void setDNSCryptProgressBarIndeterminate(boolean indeterminate) {
+        if (view == null) {
+            return;
+        }
+
+        view.setDNSCryptProgressBarIndeterminate(indeterminate);
+    }
+
+    private void setDNSCryptInstalled(boolean installed) {
+        if (view == null) {
+            return;
+        }
+
+        if (installed) {
+            view.setDNSCryptStartButtonEnabled(true);
+        } else {
+            view.setDNSCryptStatus(R.string.tvDNSNotInstalled, R.color.textModuleStatusColorAlert);
+        }
+    }
+
+    @Override
+    public void setDnsCryptSomethingWrong() {
+        if (view == null) {
+            return;
+        }
+
+        view.setDNSCryptStatus(R.string.wrong, R.color.textModuleStatusColorAlert);
+    }
+
     private void dnsCryptStartedSuccessfully(String lines) {
 
         if (view == null) {
@@ -254,10 +333,10 @@ class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
                 && lines.contains("lowest initial latency")) {
 
             if (!modulesStatus.isUseModulesWithRoot()) {
-                view.setProgressBarIndeterminate(false);
+                view.setDNSCryptProgressBarIndeterminate(false);
             }
 
-            view.setDnsCryptRunning();
+            setDnsCryptRunning();
         }
     }
 
@@ -267,7 +346,7 @@ class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
             return;
         }
 
-        FragmentManager fragmentManager = view.getDNSCryptFragmentManager();
+        FragmentManager fragmentManager = view.getFragmentFragmentManager();
 
         if ((lastLines.contains("connect: connection refused")
                 || lastLines.contains("ERROR"))
@@ -304,16 +383,16 @@ class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
         }
 
         if (modulesStatus.getMode() != VPN_MODE) {
-            if (!savedResourceRecords.isEmpty() && view.getFragmentActivity() != null) {
+            if (!savedResourceRecords.isEmpty() && view != null && view.getFragmentActivity() != null) {
                 savedResourceRecords.clear();
                 view.getFragmentActivity().runOnUiThread(() -> {
                     if (view.getFragmentActivity() != null) {
-                        view.setLogViewText(Html.fromHtml(logFile.readLastLines()));
+                        view.setDNSCryptLogViewText(Html.fromHtml(logFile.readLastLines()));
                     }
                 });
             }
             return;
-        } else if (view.getFragmentActivity() != null && modulesStatus.getMode() == VPN_MODE && !bound) {
+        } else if (view != null && view.getFragmentActivity() != null && modulesStatus.getMode() == VPN_MODE && !bound) {
             bindToVPNService(view.getFragmentActivity());
         }
 
@@ -356,10 +435,10 @@ class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
             }
         }
 
-        if (view.getFragmentActivity() != null) {
+        if (view != null && view.getFragmentActivity() != null) {
             view.getFragmentActivity().runOnUiThread(() -> {
-                if (view.getFragmentActivity() != null) {
-                    view.setLogViewText(Html.fromHtml(lines.toString()));
+                if (view != null && view.getFragmentActivity() != null) {
+                    view.setDNSCryptLogViewText(Html.fromHtml(lines.toString()));
                 }
             });
         }
@@ -389,11 +468,11 @@ class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
 
             displayLog(1000);
 
-        } else if (currentModuleState == RUNNING) {
+        } else if (currentModuleState == RUNNING && view.getFragmentActivity() != null) {
 
             ServiceVPNHelper.prepareVPNServiceIfRequired(view.getFragmentActivity(), modulesStatus);
 
-            view.setStartButtonEnabled(true);
+            view.setDNSCryptStartButtonEnabled(true);
 
             saveDNSStatusRunning(context, true);
 
@@ -402,24 +481,24 @@ class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
             displayLog(5000);
 
             if (modulesStatus.getMode() == VPN_MODE && !bound) {
-                bindToVPNService(view.getFragmentActivity());
+                bindToVPNService(context);
             }
 
         } else if (currentModuleState == STOPPED) {
 
             stopDisplayLog();
 
-            if (isSavedDNSStatusRunning(view.getFragmentActivity())) {
+            if (isSavedDNSStatusRunning(context)) {
                 setDNSCryptStoppedBySystem(context);
             } else {
-                view.setDnsCryptStopped();
+                setDnsCryptStopped();
             }
 
-            view.setProgressBarIndeterminate(false);
+            view.setDNSCryptProgressBarIndeterminate(false);
 
             saveDNSStatusRunning(context, false);
 
-            view.setStartButtonEnabled(true);
+            view.setDNSCryptStartButtonEnabled(true);
         }
 
         fixedModuleState = currentModuleState;
@@ -430,9 +509,9 @@ class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
             return;
         }
 
-        view.setDnsCryptStopped();
+        setDnsCryptStopped();
 
-        FragmentManager fragmentManager = view.getDNSCryptFragmentManager();
+        FragmentManager fragmentManager = view.getFragmentFragmentManager();
 
         if (context!= null) {
 
@@ -496,12 +575,10 @@ class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
         }
     }
 
-    void startButtonOnClick(Context context, View v) {
+    public void startButtonOnClick(Context context) {
         if (context == null || view == null) {
             return;
         }
-
-        FragmentManager fragmentManager = view.getDNSCryptFragmentManager();
 
         if (((MainActivity) context).childLockActive) {
             Toast.makeText(context, context.getText(R.string.action_mode_dialog_locked), Toast.LENGTH_LONG).show();
@@ -509,89 +586,51 @@ class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
         }
 
 
-        if (v.getId() == R.id.btnDNSCryptStart) {
+        view.setDNSCryptStartButtonEnabled(false);
 
-            view.setStartButtonEnabled(false);
-
-            cleanLogFileNoRootMethod(context);
-
-            boolean rootMode = modulesStatus.getMode() == ROOT_MODE;
+        cleanLogFileNoRootMethod(context);
 
 
-            if (new PrefManager(context).getBoolPref("Tor Running")
-                    && !new PrefManager(context).getBoolPref("DNSCrypt Running")) {
+        if (new PrefManager(context).getBoolPref("Tor Running")
+                && !new PrefManager(context).getBoolPref("DNSCrypt Running")) {
 
-                if (modulesStatus.isContextUIDUpdateRequested()|| fixedModuleState == RUNNING) {
-                    Toast.makeText(context, R.string.please_wait, Toast.LENGTH_SHORT).show();
-                    view.setStartButtonEnabled(true);
-                    return;
-                }
-
-                if (!routeAllThroughTor) {
-                    if (rootMode && fragmentManager != null) {
-                        NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                context, context.getText(R.string.helper_dnscrypt_tor).toString(), "dnscrypt_tor");
-                        if (notificationHelper != null) {
-                            notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
-                        }
-                    }
-                } else {
-                    if (rootMode && fragmentManager != null) {
-                        NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                context, context.getText(R.string.helper_dnscrypt_tor_privacy).toString(), "dnscrypt_tor_privacy");
-                        if (notificationHelper != null) {
-                            notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
-                        }
-                    }
-                }
-
-                view.setDnsCryptStarting();
-
-                runDNSCrypt(context);
-
-                displayLog(1000);
-            } else if (!new PrefManager(context).getBoolPref("Tor Running")
-                    && !new PrefManager(context).getBoolPref("DNSCrypt Running")) {
-
-                if (modulesStatus.isContextUIDUpdateRequested() || fixedModuleState == RUNNING) {
-                    Toast.makeText(context, R.string.please_wait, Toast.LENGTH_SHORT).show();
-                    view.setStartButtonEnabled(true);
-                    return;
-                }
-
-                if (rootMode && fragmentManager != null) {
-                    NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                            context, context.getText(R.string.helper_dnscrypt).toString(), "dnscrypt");
-                    if (notificationHelper != null) {
-                        notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
-                    }
-                }
-                view.setDnsCryptStarting();
-
-                runDNSCrypt(context);
-
-                displayLog(1000);
-            } else if (!new PrefManager(context).getBoolPref("Tor Running")
-                    && new PrefManager(context).getBoolPref("DNSCrypt Running")) {
-                view.setDnsCryptStopping();
-                stopDNSCrypt(context);
-            } else if (new PrefManager(context).getBoolPref("Tor Running")
-                    && new PrefManager(context).getBoolPref("DNSCrypt Running")) {
-
-                if (rootMode && fragmentManager != null) {
-                    NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                            context, context.getText(R.string.helper_tor).toString(), "tor");
-                    if (notificationHelper != null) {
-                        notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
-                    }
-                }
-
-                view.setDnsCryptStopping();
-                stopDNSCrypt(context);
+            if (modulesStatus.isContextUIDUpdateRequested()) {
+                Toast.makeText(context, R.string.please_wait, Toast.LENGTH_SHORT).show();
+                view.setDNSCryptStartButtonEnabled(true);
+                return;
             }
 
-            view.setProgressBarIndeterminate(true);
+            setDnsCryptStarting();
+
+            runDNSCrypt(context);
+
+            displayLog(1000);
+        } else if (!new PrefManager(context).getBoolPref("Tor Running")
+                && !new PrefManager(context).getBoolPref("DNSCrypt Running")) {
+
+            if (modulesStatus.isContextUIDUpdateRequested()) {
+                Toast.makeText(context, R.string.please_wait, Toast.LENGTH_SHORT).show();
+                view.setDNSCryptStartButtonEnabled(true);
+                return;
+            }
+
+            setDnsCryptStarting();
+
+            runDNSCrypt(context);
+
+            displayLog(1000);
+        } else if (!new PrefManager(context).getBoolPref("Tor Running")
+                && new PrefManager(context).getBoolPref("DNSCrypt Running")) {
+            setDnsCryptStopping();
+            stopDNSCrypt(context);
+        } else if (new PrefManager(context).getBoolPref("Tor Running")
+                && new PrefManager(context).getBoolPref("DNSCrypt Running")) {
+
+            setDnsCryptStopping();
+            stopDNSCrypt(context);
         }
+
+        view.setDNSCryptProgressBarIndeterminate(true);
     }
 
     private void cleanLogFileNoRootMethod(Context context) {

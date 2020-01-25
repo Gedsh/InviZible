@@ -1,13 +1,186 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainFragment">
+    tools:context=".main_fragment.MainFragment">
 
-    <TextView
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardView3"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="Hello" />
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="@color/cardsColor"
+        app:cardCornerRadius="5dp"
+        app:cardUseCompatPadding="true"
+        app:contentPadding="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-</FrameLayout>
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="vertical">
+
+            <androidx.appcompat.widget.AppCompatCheckBox
+                android:id="@+id/chbHideIpMainFragment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:minHeight="20dp"
+                android:singleLine="true"
+                android:text="@string/main_fragment_hide_ip" />
+
+            <androidx.appcompat.widget.AppCompatCheckBox
+                android:id="@+id/chbProtectDnsMainFragment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:minHeight="20dp"
+                android:singleLine="true"
+                android:text="@string/main_fragment_protect_dns" />
+
+            <androidx.appcompat.widget.AppCompatCheckBox
+                android:id="@+id/chbAccessITPMainFragment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="20dp"
+                android:singleLine="true"
+                android:text="@string/main_fragment_access_i2p" />
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardView5"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:cardBackgroundColor="@color/cardsColor"
+        app:cardCornerRadius="5dp"
+        app:cardUseCompatPadding="true"
+        app:contentPadding="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/cardView4"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/cardView3">
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnBackroundMainFragment"
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            android:layout_gravity="center"
+            android:background="@drawable/button_main_selector"
+            android:clickable="false"
+            android:focusable="false" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnStartMainFragment"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_gravity="center"
+            android:background="@drawable/button_main_selector"
+            android:fontFamily="sans-serif-medium"
+            android:singleLine="true"
+            android:text="@string/main_fragment_button_start"
+            android:textColor="@color/colorAccent"
+            android:textSize="@dimen/start_btns_text_size"
+            android:typeface="monospace" />
+
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardView4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        app:cardBackgroundColor="@color/cardsColor"
+        app:cardCornerRadius="5dp"
+        app:cardUseCompatPadding="true"
+        app:contentPadding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="bottom"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/tvTorMainFragment"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="4dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="@string/tvTorStop" />
+
+                <ProgressBar
+                    android:id="@+id/pbTorMainFragment"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </androidx.appcompat.widget.LinearLayoutCompat>
+
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/tvDNSMainFragment"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="4dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="@string/tvDNSStop" />
+
+                <ProgressBar
+                    android:id="@+id/pbDNSMainFragment"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </androidx.appcompat.widget.LinearLayoutCompat>
+
+
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/tvITPDMainFragment"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="4dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="@string/tvITPDStop" />
+
+                <ProgressBar
+                    android:id="@+id/pbITPDMainFragment"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </androidx.appcompat.widget.LinearLayoutCompat>
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+    </androidx.cardview.widget.CardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

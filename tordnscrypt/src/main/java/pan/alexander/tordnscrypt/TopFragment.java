@@ -466,7 +466,7 @@ public class TopFragment extends Fragment {
         }
     }
 
-    void checkUpdates() {
+    public void checkUpdates() {
 
         if (getActivity() == null) {
             return;

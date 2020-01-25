@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".MainActivity">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -20,7 +21,34 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <include layout="@layout/content_main" />
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="@color/cardsColor"
+        app:cardCornerRadius="5dp"
+        app:cardUseCompatPadding="true">
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="fill"
+            android:background="@color/cardsColor"
+            app:tabIndicatorColor="?attr/colorAccent"
+            app:tabSelectedTextColor="?attr/colorAccent" />
+
+    </androidx.cardview.widget.CardView>
+
+    <include
+        layout="@layout/content_main"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
+    <androidx.viewpager.widget.ViewPager
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</androidx.appcompat.widget.LinearLayoutCompat>

@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.dnscrypt;
+package pan.alexander.tordnscrypt.dnscrypt_fragment;
 
 /*
     This file is part of InviZible Pro.
@@ -25,18 +25,12 @@ import android.text.Spanned;
 import androidx.fragment.app.FragmentManager;
 
 public interface DNSCryptFragmentView {
-    void setDnsCryptStarting();
-    void setDnsCryptRunning();
-    void setDnsCryptStopping();
-    void setDnsCryptStopped();
-    void setDNSCryptInstalled(boolean installed);
-    void setDnsCryptSomethingWrong();
     void setDNSCryptStatus(int resourceText, int resourceColor);
-    void setStartButtonEnabled(boolean enabled);
-    void setProgressBarIndeterminate(boolean indeterminate);
-    void setLogViewText();
-    void setLogViewText(Spanned text);
+    void setDNSCryptStartButtonEnabled(boolean enabled);
+    void setDNSCryptProgressBarIndeterminate(boolean indeterminate);
+    void setDNSCryptLogViewText();
+    void setDNSCryptLogViewText(Spanned text);
     void setStartButtonText(int textId);
     Activity getFragmentActivity();
-    FragmentManager getDNSCryptFragmentManager();
+    FragmentManager getFragmentFragmentManager();
 }
