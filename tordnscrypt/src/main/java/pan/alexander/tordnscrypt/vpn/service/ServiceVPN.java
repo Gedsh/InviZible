@@ -819,7 +819,7 @@ public class ServiceVPN extends VpnService {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ServiceVPN.this);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
                         ? !same(last_dns, dns)
-                        : prefs.getBoolean("reload_onconnectivity", false)) {
+                        : prefs.getBoolean("reload_onconnectivity", true)) {
                     Log.i(LOG_TAG, "VPN Changed link properties=" + linkProperties +
                             "DNS cur=" + TextUtils.join(",", dns) +
                             "DNS prv=" + (last_dns == null ? null : TextUtils.join(",", last_dns)));
