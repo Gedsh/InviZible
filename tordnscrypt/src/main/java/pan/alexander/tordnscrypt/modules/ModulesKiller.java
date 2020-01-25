@@ -30,6 +30,7 @@ import android.util.Log;
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import eu.chainfire.libsuperuser.Shell;
 import pan.alexander.tordnscrypt.settings.PathVars;
@@ -57,6 +58,8 @@ public class ModulesKiller {
 
     private final ModulesStatus modulesStatus;
 
+    private ReentrantLock reentrantLock;
+
     private static Thread dnsCryptThread;
     private static Thread torThread;
     private static Thread itpdThread;
@@ -65,6 +68,7 @@ public class ModulesKiller {
         this.service = service;
         this.pathVars = pathVars;
         modulesStatus = ModulesStatus.getInstance();
+        reentrantLock = new ReentrantLock();
     }
 
     public static void stopDNSCrypt(Context context) {
@@ -139,11 +143,13 @@ public class ModulesKiller {
     Runnable getDNSCryptKillerRunnable() {
         return () -> {
 
-            String dnsCryptPid = readPidFile(pathVars.appDataDir + "/dnscrypt-proxy.pid");
-
             if (modulesStatus.getDnsCryptState() != RESTARTING) {
                 modulesStatus.setDnsCryptState(STOPPING);
             }
+
+            reentrantLock.lock();
+
+            String dnsCryptPid = readPidFile(pathVars.appDataDir + "/dnscrypt-proxy.pid");
 
             boolean moduleStartedWithRoot = new PrefManager(service).getBoolPref("DNSCryptStartedWithRoot");
             boolean rootIsAvailable = modulesStatus.isRootAvailable();
@@ -205,6 +211,8 @@ public class ModulesKiller {
                 }
             }
 
+            reentrantLock.unlock();
+
         };
     }
 
@@ -212,11 +220,13 @@ public class ModulesKiller {
     Runnable getTorKillerRunnable() {
         return () -> {
 
-            String torPid = readPidFile(pathVars.appDataDir + "/tor.pid");
-
             if (modulesStatus.getTorState() != RESTARTING) {
                 modulesStatus.setTorState(STOPPING);
             }
+
+            reentrantLock.lock();
+
+            String torPid = readPidFile(pathVars.appDataDir + "/tor.pid");
 
             boolean moduleStartedWithRoot = new PrefManager(service).getBoolPref("TorStartedWithRoot");
             boolean rootIsAvailable = modulesStatus.isRootAvailable();
@@ -278,17 +288,21 @@ public class ModulesKiller {
                     }
                 }
             }
+
+            reentrantLock.unlock();
         };
     }
 
     Runnable getITPDKillerRunnable() {
         return () -> {
 
-            String itpdPid = readPidFile(pathVars.appDataDir + "/i2pd.pid");
-
             if (modulesStatus.getItpdState() != RESTARTING) {
                 modulesStatus.setItpdState(STOPPING);
             }
+
+            reentrantLock.lock();
+
+            String itpdPid = readPidFile(pathVars.appDataDir + "/i2pd.pid");
 
             boolean moduleStartedWithRoot = new PrefManager(service).getBoolPref("ITPDStartedWithRoot");
             boolean rootIsAvailable = modulesStatus.isRootAvailable();
@@ -350,10 +364,12 @@ public class ModulesKiller {
                     sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
                 }
             }
+
+            reentrantLock.unlock();
         };
     }
 
-    private synchronized boolean killModule(String module, String pid, Thread thread, boolean killWithRoot, String signal, int delaySec) {
+    private boolean killModule(String module, String pid, Thread thread, boolean killWithRoot, String signal, int delaySec) {
         boolean result = false;
 
         if (module.contains("/")) {
@@ -471,7 +487,7 @@ public class ModulesKiller {
             String killString = "kill " + pid;
             if (!signal.isEmpty()) {
                 killStringBusyBox = pathVars.busyboxPath + "kill -s " + signal + " " + pid;
-                killAllStringToolBox = "toollbox kill -s " + signal + " " + pid;
+                killAllStringToolBox = "toolbox kill -s " + signal + " " + pid;
                 killStringToyBox = "toybox kill -s " + signal + " " + pid;
                 killString = "kill -s " + signal + " " + pid;
             }

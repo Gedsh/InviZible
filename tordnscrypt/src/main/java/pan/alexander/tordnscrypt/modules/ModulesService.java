@@ -28,9 +28,10 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
-import androidx.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.preference.PreferenceManager;
 
 import java.util.Objects;
 import java.util.Timer;
@@ -38,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
@@ -186,9 +188,27 @@ public class ModulesService extends Service {
 
             }
 
+            if (isDnsCryptSavedStateRunning()) {
+
+                Thread killerThread = new Thread(modulesKiller.getDNSCryptKillerRunnable());
+                killerThread.start();
+
+                while (killerThread.isAlive()) {
+                    killerThread.join();
+                }
+
+                makeDelay();
+
+                if (modulesStatus.getDnsCryptState() == RUNNING) {
+                    return;
+                }
+
+            }
+
             if (modulesStatus.getDnsCryptState() == STOPPED) {
                 modulesStatus.setDnsCryptState(STARTING);
             }
+
 
             ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(this, mHandler, pathVars);
             Thread dnsCryptThread = new Thread(modulesStarterHelper.getDNSCryptStarterRunnable());
@@ -244,6 +264,23 @@ public class ModulesService extends Service {
                     Log.e(LOG_TAG, "ModulesService previous Tor thread interrupt exception "
                             + e.getMessage() + e.getCause() + "\nStop service");
                     System.exit(0);
+                }
+
+            }
+
+            if (isTorSavedStateRunning()) {
+
+                Thread killerThread = new Thread(modulesKiller.getTorKillerRunnable());
+                killerThread.start();
+
+                while (killerThread.isAlive()) {
+                    killerThread.join();
+                }
+
+                makeDelay();
+
+                if (modulesStatus.getTorState() == RUNNING) {
+                    return;
                 }
 
             }
@@ -311,6 +348,23 @@ public class ModulesService extends Service {
 
             }
 
+            if (isITPDSavedStateRunning()) {
+
+                Thread killerThread = new Thread(modulesKiller.getITPDKillerRunnable());
+                killerThread.start();
+
+                while (killerThread.isAlive()) {
+                    killerThread.join();
+                }
+
+                makeDelay();
+
+                if (modulesStatus.getItpdState() == RUNNING) {
+                    return;
+                }
+
+            }
+
             if (modulesStatus.getItpdState() == STOPPED) {
                 modulesStatus.setItpdState(STARTING);
             }
@@ -370,7 +424,10 @@ public class ModulesService extends Service {
 
                 Thread killerThread = new Thread(modulesKiller.getDNSCryptKillerRunnable());
                 killerThread.start();
-                killerThread.join();
+
+                while (killerThread.isAlive()) {
+                    killerThread.join();
+                }
 
                 makeDelay();
 
@@ -390,18 +447,15 @@ public class ModulesService extends Service {
             try {
                 modulesStatus.setTorState(RESTARTING);
 
-                Thread killerThread = new Thread(modulesKiller.getTorKillerRunnable());
-                killerThread.start();
-                killerThread.join();
+                ModulesRestarter modulesRestarter = new ModulesRestarter();
+                modulesRestarter.getTorRestarterRunnable(this).run();
 
                 makeDelay();
 
-                if (modulesStatus.getTorState() != RUNNING) {
-                    startTor();
-                }
+                modulesStatus.setTorState(RUNNING);
 
-            } catch (InterruptedException e) {
-                Log.e(LOG_TAG, "ModulesService restartTor join interrupted!");
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "ModulesService restartTor exception " + e.getMessage() + " " + e.getCause());
             }
 
         }).start();
@@ -412,18 +466,15 @@ public class ModulesService extends Service {
             try {
                 modulesStatus.setItpdState(RESTARTING);
 
-                Thread killerThread = new Thread(modulesKiller.getITPDKillerRunnable());
-                killerThread.start();
-                killerThread.join();
+                ModulesRestarter modulesRestarter = new ModulesRestarter();
+                modulesRestarter.getITPDRestarterRunnable(this).run();
 
                 makeDelay();
 
-                if (modulesStatus.getItpdState() != RUNNING) {
-                    startITPD();
-                }
+                modulesStatus.setItpdState(RUNNING);
 
-            } catch (InterruptedException e) {
-                Log.e(LOG_TAG, "ModulesService restartITPD join interrupted!");
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "ModulesService restartITPD exception " + e.getMessage() + " " + e.getCause());
             }
 
         }).start();
@@ -513,6 +564,18 @@ public class ModulesService extends Service {
         }
 
         stopSelf();
+    }
+
+    private boolean isDnsCryptSavedStateRunning() {
+        return new PrefManager(this).getBoolPref("DNSCrypt Running");
+    }
+
+    private boolean isTorSavedStateRunning() {
+        return new PrefManager(this).getBoolPref("Tor Running");
+    }
+
+    private boolean isITPDSavedStateRunning() {
+        return new PrefManager(this).getBoolPref("I2PD Running");
     }
 
     private void makeDelay() {

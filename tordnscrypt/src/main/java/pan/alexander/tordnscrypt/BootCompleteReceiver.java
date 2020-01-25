@@ -31,6 +31,7 @@ import android.net.VpnService;
 import android.util.Log;
 
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.settings.PathVars;
@@ -191,11 +192,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         saveModulesStateRunning(autoStartDNSCrypt, autoStartTor, autoStartITPD);
 
         if (autoStartDNSCrypt) {
-            if (isDnsCryptSavedStateRunning()) {
-                restartDNSCrypt();
-            } else {
-                runDNSCrypt();
-            }
+            runDNSCrypt();
         } else {
             if (isDnsCryptSavedStateRunning()) {
                 stopDNSCrypt();
@@ -203,11 +200,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         }
 
         if (autoStartTor) {
-            if (isTorSavedStateRunning()) {
-                restartTor();
-            } else {
-                runTor();
-            }
+            runTor();
         } else {
             if (isTorSavedStateRunning()) {
                 stopTor();
@@ -215,13 +208,11 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         }
 
         if (autoStartITPD) {
-            if (isITPDSavedStateRunning()) {
-                restartITPD();
-            } else {
-                runITPD();
-            }
+            runITPD();
         } else {
-            stopITPD();
+            if (isITPDSavedStateRunning()) {
+                stopITPD();
+            }
         }
 
     }
@@ -260,14 +251,6 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         ModulesRestarter.restartDNSCrypt(context);
     }
 
-    private void restartTor() {
-        ModulesRestarter.restartTor(context);
-    }
-
-    private void restartITPD() {
-        ModulesRestarter.restartITPD(context);
-    }
-
     private boolean isDnsCryptSavedStateRunning() {
         return new PrefManager(context).getBoolPref("DNSCrypt Running");
     }
@@ -303,6 +286,14 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
         if (jobScheduler != null) {
             jobScheduler.cancel(mJobId);
+        }
+    }
+
+    private void makeDelay() {
+        try {
+            TimeUnit.SECONDS.sleep(5);
+        } catch (InterruptedException e) {
+            Log.e(LOG_TAG, "BootCompleteReceiver makeDelay interrupted! " + e.getMessage() + " " + e.getCause());
         }
     }
 }
