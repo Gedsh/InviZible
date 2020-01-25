@@ -75,15 +75,6 @@ public class ModulesRestarter {
 
     }
 
-    Runnable getITPDRestarterRunnable(Context context) {
-        boolean useModulesWithRoot = ModulesStatus.getInstance().isUseModulesWithRoot();
-        PathVars pathVars = new PathVars(context);
-        String itpdPid = readPidFile(context, pathVars.appDataDir + "/i2pd.pid");
-
-        return () -> restartModule(pathVars, pathVars.itpdPath, itpdPid, useModulesWithRoot);
-
-    }
-
     private String readPidFile(Context context, String path) {
         String pid = "";
 
