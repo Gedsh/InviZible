@@ -48,6 +48,7 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class ModulesService extends Service {
@@ -82,6 +83,8 @@ public class ModulesService extends Service {
     private ModulesStateLoop checkModulesStateTask;
     private ModulesStatus modulesStatus;
     private ModulesKiller modulesKiller;
+
+    ModulesBroadcastReceiver modulesBroadcastReceiver;
 
     public ModulesService() {
     }
@@ -161,6 +164,8 @@ public class ModulesService extends Service {
                 stopModulesService();
                 break;
         }
+
+        setBroadcastReceiver();
 
         return START_REDELIVER_INTENT;
 
@@ -418,6 +423,12 @@ public class ModulesService extends Service {
     }
 
     private void restartDNSCrypt() {
+
+        if (modulesStatus.getDnsCryptState() != RUNNING) {
+            return;
+        }
+
+
         new Thread(() -> {
             try {
                 modulesStatus.setDnsCryptState(RESTARTING);
@@ -443,14 +454,19 @@ public class ModulesService extends Service {
     }
 
     private void restartTor() {
+
+        if (modulesStatus.getTorState() != RUNNING) {
+            return;
+        }
+
         new Thread(() -> {
             try {
                 modulesStatus.setTorState(RESTARTING);
 
+                makeDelay();
+
                 ModulesRestarter modulesRestarter = new ModulesRestarter();
                 modulesRestarter.getTorRestarterRunnable(this).run();
-
-                makeDelay();
 
                 modulesStatus.setTorState(RUNNING);
 
@@ -462,19 +478,30 @@ public class ModulesService extends Service {
     }
 
     private void restartITPD() {
+
+        if (modulesStatus.getItpdState() != RUNNING) {
+            return;
+        }
+
         new Thread(() -> {
             try {
                 modulesStatus.setItpdState(RESTARTING);
 
-                ModulesRestarter modulesRestarter = new ModulesRestarter();
-                modulesRestarter.getITPDRestarterRunnable(this).run();
+                Thread killerThread = new Thread(modulesKiller.getITPDKillerRunnable());
+                killerThread.start();
+
+                while (killerThread.isAlive()) {
+                    killerThread.join();
+                }
 
                 makeDelay();
 
-                modulesStatus.setItpdState(RUNNING);
+                if (modulesStatus.getItpdState() != RUNNING) {
+                    startITPD();
+                }
 
-            } catch (Exception e) {
-                Log.e(LOG_TAG, "ModulesService restartITPD exception " + e.getMessage() + " " + e.getCause());
+            } catch (InterruptedException e) {
+                Log.e(LOG_TAG, "ModulesService restartITPD join interrupted!");
             }
 
         }).start();
@@ -540,6 +567,8 @@ public class ModulesService extends Service {
 
         stopVPNServiceIfRunning();
 
+        unregisterModulesBroadcastReceiver();
+
         super.onDestroy();
     }
 
@@ -564,6 +593,30 @@ public class ModulesService extends Service {
         }
 
         stopSelf();
+    }
+
+    private void setBroadcastReceiver() {
+        if (modulesStatus.getMode() == ROOT_MODE
+                && !modulesStatus.isUseModulesWithRoot()
+                && modulesBroadcastReceiver == null) {
+            modulesBroadcastReceiver = new ModulesBroadcastReceiver(this);
+            modulesBroadcastReceiver.registerReceivers();
+        } else if (modulesStatus.getMode() != ROOT_MODE
+                && modulesBroadcastReceiver != null) {
+            unregisterModulesBroadcastReceiver();
+            modulesBroadcastReceiver = null;
+        }
+
+    }
+
+    private void unregisterModulesBroadcastReceiver() {
+        if (modulesBroadcastReceiver != null) {
+            try {
+                modulesBroadcastReceiver.unregisterReceivers();
+            } catch (Exception e) {
+                Log.i(LOG_TAG, "ModulesService unregister receiver exception " + e.getMessage());
+            }
+        }
     }
 
     private boolean isDnsCryptSavedStateRunning() {

@@ -86,6 +86,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
 
                 commands = new String[]{
+                        iptablesPath + "iptables -I OUTPUT -j DROP",
                         "ip6tables -D OUTPUT -j DROP || true",
                         "ip6tables -I OUTPUT -j DROP",
                         iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
@@ -116,10 +117,12 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         busyboxPath + "cat " + appDataDir + "/app_data/tor/bridgesIP | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + torTransPort + "; done",
                         busyboxPath + "cat " + appDataDir + "/app_data/tor/unlock | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + torTransPort + "; done",
                         busyboxPath + "cat " + appDataDir + "/app_data/tor/unlockApps | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j REDIRECT --to-port " + torTransPort + "; done",
+                        iptablesPath + "iptables -D OUTPUT -j DROP || true"
                 };
             } else {
 
                 commands = new String[]{
+                        iptablesPath + "iptables -I OUTPUT -j DROP",
                         "ip6tables -D OUTPUT -j DROP || true",
                         "ip6tables -I OUTPUT -j DROP",
                         iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
@@ -171,6 +174,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         torAppsBypassFilterUDP,
                         iptablesPath + "iptables -A tordnscrypt -j REJECT",
                         iptablesPath + "iptables -I OUTPUT -j tordnscrypt",
+                        iptablesPath + "iptables -D OUTPUT -j DROP || true"
                 };
             }
 
@@ -180,6 +184,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         } else if (dnsCryptState == RUNNING && torState == STOPPED) {
 
             commands = new String[]{
+                    iptablesPath + "iptables -I OUTPUT -j DROP",
                     "ip6tables -D OUTPUT -j DROP || true",
                     "ip6tables -I OUTPUT -j DROP",
                     iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
@@ -206,6 +211,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     blockHttpRuleFilterAll,
                     iptablesPath + "iptables -A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
                     iptablesPath + "iptables -I OUTPUT -j tordnscrypt",
+                    iptablesPath + "iptables -D OUTPUT -j DROP || true"
             };
 
             String[] commandsTether = tethering.activateTethering(false);
@@ -228,6 +234,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         } else if (dnsCryptState == STOPPED && torState == RUNNING) {
 
             commands = new String[]{
+                    iptablesPath + "iptables -I OUTPUT -j DROP",
                     iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
                     iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
                     iptablesPath + "iptables -F tordnscrypt",
@@ -272,6 +279,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     torAppsBypassFilterUDP,
                     iptablesPath + "iptables -A tordnscrypt -j REJECT",
                     iptablesPath + "iptables -I OUTPUT -j tordnscrypt",
+                    iptablesPath + "iptables -D OUTPUT -j DROP || true"
             };
 
             String[] commandsTether = tethering.activateTethering(true);

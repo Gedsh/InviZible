@@ -152,6 +152,7 @@ class Tethering {
 
             if (!torTethering && !itpdTethering) {
                 tetheringCommands = new String[]{
+                        iptablesPath + "iptables -I FORWARD -j DROP",
                         "ip6tables -D INPUT -j DROP || true",
                         "ip6tables -I INPUT -j DROP || true",
                         "ip6tables -D FORWARD -j DROP",
@@ -191,10 +192,12 @@ class Tethering {
                         iptablesPath + "iptables -A tordnscrypt_forward -p tcp --dport 53 -j RETURN",
                         iptablesPath + "iptables -A tordnscrypt_forward -p udp --dport 53 -j RETURN",
                         blockHttpRuleForwardTCP,
-                        blockHttpRuleForwardUDP
+                        blockHttpRuleForwardUDP,
+                        iptablesPath + "iptables -D FORWARD -j DROP || true"
                 };
             } else if (torTethering && routeAllThroughTorTether && itpdTethering) {
                 tetheringCommands = new String[]{
+                        iptablesPath + "iptables -I FORWARD -j DROP",
                         "ip6tables -D INPUT -j DROP || true",
                         "ip6tables -I INPUT -j DROP",
                         "ip6tables -D FORWARD -j DROP || true",
@@ -258,10 +261,12 @@ class Tethering {
                         torSitesBypassForwardTCP,
                         torSitesBypassForwardUDP,
                         iptablesPath + "iptables -A tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt_forward -j REJECT"
+                        iptablesPath + "iptables -A tordnscrypt_forward -j REJECT",
+                        iptablesPath + "iptables -D FORWARD -j DROP || true"
                 };
             } else if (torTethering && itpdTethering) {
                 tetheringCommands = new String[]{
+                        iptablesPath + "iptables -I FORWARD -j DROP",
                         "ip6tables -D INPUT -j DROP || true",
                         "ip6tables -I INPUT -j DROP",
                         "ip6tables -D FORWARD -j DROP || true",
@@ -310,10 +315,12 @@ class Tethering {
                         iptablesPath + "iptables -A tordnscrypt_forward -p tcp --dport 53 -j RETURN",
                         iptablesPath + "iptables -A tordnscrypt_forward -p udp --dport 53 -j RETURN",
                         blockHttpRuleForwardTCP,
-                        blockHttpRuleForwardUDP
+                        blockHttpRuleForwardUDP,
+                        iptablesPath + "iptables -D FORWARD -j DROP || true"
                 };
             } else if (itpdTethering) {
                 tetheringCommands = new String[]{
+                        iptablesPath + "iptables -I FORWARD -j DROP",
                         "ip6tables -D INPUT -j DROP || true",
                         "ip6tables -I INPUT -j DROP",
                         "ip6tables -D FORWARD -j DROP || true",
@@ -354,10 +361,12 @@ class Tethering {
                         iptablesPath + "iptables -A tordnscrypt_forward -p tcp --dport 53 -j RETURN",
                         iptablesPath + "iptables -A tordnscrypt_forward -p udp --dport 53 -j RETURN",
                         blockHttpRuleForwardTCP,
-                        blockHttpRuleForwardUDP
+                        blockHttpRuleForwardUDP,
+                        iptablesPath + "iptables -D FORWARD -j DROP || true"
                 };
             } else if (routeAllThroughTorTether) {
                 tetheringCommands = new String[]{
+                        iptablesPath + "iptables -I FORWARD -j DROP",
                         "ip6tables -D INPUT -j DROP || true",
                         "ip6tables -I INPUT -j DROP",
                         "ip6tables -D FORWARD -j DROP || true",
@@ -409,10 +418,12 @@ class Tethering {
                         torSitesBypassForwardTCP,
                         torSitesBypassForwardUDP,
                         iptablesPath + "iptables -A tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt_forward -j REJECT"
+                        iptablesPath + "iptables -A tordnscrypt_forward -j REJECT",
+                        iptablesPath + "iptables -D FORWARD -j DROP || true"
                 };
             } else {
                 tetheringCommands = new String[]{
+                        iptablesPath + "iptables -I FORWARD -j DROP",
                         "ip6tables -D INPUT -j DROP || true",
                         "ip6tables -I INPUT -j DROP || true",
                         "ip6tables -D FORWARD -j DROP",
@@ -457,7 +468,8 @@ class Tethering {
                         iptablesPath + "iptables -A tordnscrypt_forward -p tcp --dport 53 -j RETURN",
                         iptablesPath + "iptables -A tordnscrypt_forward -p udp --dport 53 -j RETURN",
                         blockHttpRuleForwardTCP,
-                        blockHttpRuleForwardUDP
+                        blockHttpRuleForwardUDP,
+                        iptablesPath + "iptables -D FORWARD -j DROP || true"
                 };
             }
         } else {
@@ -466,6 +478,7 @@ class Tethering {
 
             if (torTethering) {
                 tetheringCommands = new String[]{
+                        iptablesPath + "iptables -I FORWARD -j DROP",
                         "ip6tables -D INPUT -j DROP || true",
                         "ip6tables -I INPUT -j DROP",
                         "ip6tables -D FORWARD -j DROP || true",
@@ -517,7 +530,8 @@ class Tethering {
                         torSitesBypassForwardTCP,
                         torSitesBypassForwardUDP,
                         iptablesPath + "iptables -A tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt_forward -j REJECT"
+                        iptablesPath + "iptables -A tordnscrypt_forward -j REJECT",
+                        iptablesPath + "iptables -D FORWARD -j DROP || true"
                 };
             } else {
 
