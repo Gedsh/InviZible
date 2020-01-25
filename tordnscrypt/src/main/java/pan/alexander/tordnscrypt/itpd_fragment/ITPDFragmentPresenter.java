@@ -249,7 +249,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
     @Override
     public void refreshITPDState(Context context) {
 
-        if (modulesStatus == null || view == null) {
+        if (context == null || modulesStatus == null || view == null) {
             return;
         }
 

@@ -226,7 +226,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
     @Override
     public void refreshTorState(Context context) {
 
-        if (modulesStatus == null) {
+        if (context == null || modulesStatus == null || view == null) {
             return;
         }
 
@@ -240,7 +240,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
             displayLog(1000);
 
-        } else if (currentModuleState == RUNNING && view != null && view.getFragmentActivity() != null) {
+        } else if (currentModuleState == RUNNING && view.getFragmentActivity() != null) {
 
             ServiceVPNHelper.prepareVPNServiceIfRequired(view.getFragmentActivity(), modulesStatus);
 

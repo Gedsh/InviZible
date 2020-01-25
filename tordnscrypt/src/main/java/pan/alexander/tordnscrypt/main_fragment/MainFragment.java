@@ -131,16 +131,16 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
         chbProtectDnsMainFragment.setOnCheckedChangeListener(this);
         chbAccessITPMainFragment.setOnCheckedChangeListener(this);
 
-        initDNSCryptFragmentPresenter();
-        initTorFragmentPresenter();
-        initITPDFragmentPresenter();
-
         return view;
     }
 
     @Override
     public void onStart() {
         super.onStart();
+
+        initDNSCryptFragmentPresenter();
+        initTorFragmentPresenter();
+        initITPDFragmentPresenter();
 
         dnsCryptFragmentPresenter.onStart(getActivity());
         torFragmentPresenter.onStart(getActivity());
@@ -150,15 +150,6 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     @Override
     public void onStop() {
         super.onStop();
-
-        dnsCryptFragmentPresenter.onStop(getActivity());
-        torFragmentPresenter.onStop();
-        itpdFragmentPresenter.onStop();
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
 
         try {
             if (dnsCryptFragmentReceiver != null) {
@@ -175,6 +166,10 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
         } catch (Exception e) {
             Log.e(LOG_TAG, "MainFragment onStop exception " + e.getMessage() + " " + e.getCause());
         }
+
+        dnsCryptFragmentPresenter.onStop(getActivity());
+        torFragmentPresenter.onStop();
+        itpdFragmentPresenter.onStop();
     }
 
     @Override

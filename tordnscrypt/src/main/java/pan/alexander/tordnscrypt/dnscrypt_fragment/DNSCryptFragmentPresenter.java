@@ -454,7 +454,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     @Override
     public void refreshDNSCryptState(Context context) {
 
-        if (modulesStatus == null || view == null) {
+        if (context == null || modulesStatus == null || view == null) {
             return;
         }
 
