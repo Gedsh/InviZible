@@ -31,7 +31,6 @@ import android.net.VpnService;
 import android.util.Log;
 
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.settings.PathVars;
@@ -41,7 +40,6 @@ import pan.alexander.tordnscrypt.utils.GetIPsJobService;
 import pan.alexander.tordnscrypt.utils.OwnFileReader;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
-import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
@@ -247,10 +245,6 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         ModulesKiller.stopITPD(context);
     }
 
-    private void restartDNSCrypt() {
-        ModulesRestarter.restartDNSCrypt(context);
-    }
-
     private boolean isDnsCryptSavedStateRunning() {
         return new PrefManager(context).getBoolPref("DNSCrypt Running");
     }
@@ -286,14 +280,6 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
         if (jobScheduler != null) {
             jobScheduler.cancel(mJobId);
-        }
-    }
-
-    private void makeDelay() {
-        try {
-            TimeUnit.SECONDS.sleep(5);
-        } catch (InterruptedException e) {
-            Log.e(LOG_TAG, "BootCompleteReceiver makeDelay interrupted! " + e.getMessage() + " " + e.getCause());
         }
     }
 }
