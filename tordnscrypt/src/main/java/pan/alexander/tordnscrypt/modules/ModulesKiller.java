@@ -58,7 +58,7 @@ public class ModulesKiller {
 
     private final ModulesStatus modulesStatus;
 
-    private ReentrantLock reentrantLock;
+    private final ReentrantLock reentrantLock;
 
     private static Thread dnsCryptThread;
     private static Thread torThread;
