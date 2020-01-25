@@ -129,7 +129,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         }
     }
 
-    public void onDestroy(Context context) {
+    public void onStop(Context context) {
         stopDisplayLog();
         unbindVPNService(context);
         view = null;

@@ -120,20 +120,21 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onStop() {
+        super.onStop();
 
         try {
             if (receiver != null) {
                 Objects.requireNonNull(getActivity()).unregisterReceiver(receiver);
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "ITPDRunFragment onDestroy exception " + e.getMessage() + " " + e.getCause());
+            Log.e(LOG_TAG, "ITPDRunFragment onStop exception " + e.getMessage() + " " + e.getCause());
         }
 
         if (presenter != null) {
-            presenter.onDestroy();
+            presenter.onStop();
         }
+
     }
 
     @Override

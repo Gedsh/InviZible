@@ -116,19 +116,19 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onStop() {
+        super.onStop();
 
         try {
             if (receiver != null) {
                 Objects.requireNonNull(getActivity()).unregisterReceiver(receiver);
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "TorFragment onDestroy exception " + e.getMessage() + " " + e.getCause());
+            Log.e(LOG_TAG, "TorFragment onStop exception " + e.getMessage() + " " + e.getCause());
         }
 
         if (presenter != null) {
-            presenter.onDestroy();
+            presenter.onStop();
         }
     }
 

@@ -121,7 +121,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
         }
     }
 
-    public void onDestroy() {
+    public void onStop() {
         stopDisplayLog();
         view = null;
     }

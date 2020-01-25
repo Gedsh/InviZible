@@ -118,19 +118,19 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onStop() {
+        super.onStop();
 
         try {
             if (receiver != null) {
                 Objects.requireNonNull(getActivity()).unregisterReceiver(receiver);
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "DNSCryptRunFragment onDestroy exception " + e.getMessage() + " " + e.getCause());
+            Log.e(LOG_TAG, "DNSCryptRunFragment onStop exception " + e.getMessage() + " " + e.getCause());
         }
 
         if (presenter != null) {
-            presenter.onDestroy(getActivity());
+            presenter.onStop(getActivity());
         }
     }
 

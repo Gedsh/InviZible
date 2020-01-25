@@ -134,7 +134,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
         }
     }
 
-    public void onDestroy() {
+    public void onStop() {
         stopDisplayLog();
         view = null;
     }

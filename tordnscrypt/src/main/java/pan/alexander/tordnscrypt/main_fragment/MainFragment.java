@@ -148,8 +148,17 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onStop() {
+        super.onStop();
+
+        dnsCryptFragmentPresenter.onStop(getActivity());
+        torFragmentPresenter.onStop();
+        itpdFragmentPresenter.onStop();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
 
         try {
             if (dnsCryptFragmentReceiver != null) {
@@ -164,14 +173,9 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
                 Objects.requireNonNull(getActivity()).unregisterReceiver(itpdFragmentReceiver);
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "MainFragment onDestroy exception " + e.getMessage() + " " + e.getCause());
+            Log.e(LOG_TAG, "MainFragment onStop exception " + e.getMessage() + " " + e.getCause());
         }
-
-        dnsCryptFragmentPresenter.onDestroy(getActivity());
-        torFragmentPresenter.onDestroy();
-        itpdFragmentPresenter.onDestroy();
     }
-
 
     @Override
     public void onClick(View v) {
