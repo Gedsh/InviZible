@@ -44,6 +44,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -59,7 +60,8 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class FileOperations {
     private final CountDownLatch latch = new CountDownLatch(1);
-    private static Map<String, List<String>> linesListMap = new HashMap<>();
+    private static final Map<String, List<String>> linesListMap = new HashMap<>();
+    private static final ReentrantLock reentrantLock = new ReentrantLock();
     private static OnFileOperationsCompleteListener callback;
     private static Stack<OnFileOperationsCompleteListener> stackCallbacks;
     private static ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -88,8 +90,9 @@ public class FileOperations {
 
         @SuppressLint("SetWorldReadable") Runnable runnable = () -> {
 
-
             try {
+
+                reentrantLock.lock();
 
                 File dir = new File(outputPath);
                 if (!dir.isDirectory()) {
@@ -167,6 +170,8 @@ public class FileOperations {
                         throw new ClassCastException("Wrong File operations type. Choose binary type.");
                     }
                 }
+            } finally {
+                reentrantLock.unlock();
             }
         };
 
@@ -184,6 +189,8 @@ public class FileOperations {
 
 
                 try {
+
+                    reentrantLock.lock();
 
                     File dir = new File(outputPath);
                     if (!dir.isDirectory()) {
@@ -252,6 +259,8 @@ public class FileOperations {
                         }
                     }
                     Log.e(LOG_TAG, "copyBinaryFile function fault " + e.getMessage() + " " + e.getCause());
+                } finally {
+                    reentrantLock.unlock();
                 }
 
             }
@@ -267,6 +276,8 @@ public class FileOperations {
                                                   final String inputFile, final String outputPath) {
 
         try {
+
+            reentrantLock.lock();
 
             File dir = new File(outputPath);
             if (!dir.isDirectory()) {
@@ -316,12 +327,16 @@ public class FileOperations {
 
         } catch (Exception e) {
             Log.e(LOG_TAG, "copyBinaryFileSynchronous function fault " + e.getMessage() + " " + e.getCause());
+        } finally {
+            reentrantLock.unlock();
         }
 
     }
 
     public static void copyFolderSynchronous(final Context context, final String inputPath, final String outputPath) {
         try {
+
+            reentrantLock.lock();
 
             File inDir = new File(inputPath);
             if (!inDir.canRead()) {
@@ -360,11 +375,15 @@ public class FileOperations {
 
         } catch (Exception e) {
             Log.e(LOG_TAG, "copyFolderSynchronous function fault " + e.getMessage() + " " + e.getCause());
+        } finally {
+            reentrantLock.unlock();
         }
     }
 
     public static boolean deleteFileSynchronous(final Context context, final String inputPath, final String inputFile) {
         try {
+            reentrantLock.lock();
+
             File usedFile = new File(inputPath + "/" + inputFile);
             if (usedFile.exists()) {
                 if (!usedFile.canRead() || !usedFile.canWrite()) {
@@ -373,6 +392,7 @@ public class FileOperations {
                         FileOperations fileOperations = new FileOperations();
                         fileOperations.restoreAccess(context, inputPath + "/" + inputFile);
                     } else if (!usedFile.setReadable(true) || !usedFile.setWritable(true)) {
+                        reentrantLock.unlock();
                         Log.e(LOG_TAG, "Unable to chmod file " + inputPath + "/" + inputFile);
                         return true;
                     }
@@ -387,22 +407,28 @@ public class FileOperations {
                         Log.e(LOG_TAG, "Unable to delete file " + usedFile.toString());
                     }
 
+                    reentrantLock.unlock();
                     return true;
                 }
             } else {
+                reentrantLock.unlock();
                 Log.w(LOG_TAG, "Unable to delete file internal function. No file " + usedFile.toString());
                 return false;
             }
         } catch (Exception e) {
+            reentrantLock.unlock();
             Log.e(LOG_TAG, "deleteFileSynchronous function fault " + e.getMessage());
             return true;
         }
+        reentrantLock.unlock();
         return false;
     }
 
     public static void deleteFile(final Context context, final String inputPath, final String inputFile, final String tag) {
         Runnable runnable = () -> {
             try {
+                reentrantLock.lock();
+
                 File usedFile = new File(inputPath + "/" + inputFile);
                 if (usedFile.exists()) {
                     if (!usedFile.canRead() || !usedFile.canWrite()) {
@@ -446,6 +472,8 @@ public class FileOperations {
                         throw new ClassCastException("Wrong File operations type. Choose binary type.");
                     }
                 }
+            } finally {
+                reentrantLock.unlock();
             }
         };
 
@@ -456,8 +484,11 @@ public class FileOperations {
     }
 
     public static boolean deleteDirSynchronous(final Context context, final String inputPath) {
+        reentrantLock.lock();
+
         boolean result = false;
         try{
+
             File usedDir = new File(inputPath);
             if (usedDir.isDirectory()) {
                 if (!usedDir.canRead() || !usedDir.canWrite()) {
@@ -505,6 +536,8 @@ public class FileOperations {
             Log.e(LOG_TAG, "delete Dir function fault " + e.getMessage() + " " + e.getCause());
         }
 
+        reentrantLock.unlock();
+
         return result;
     }
 
@@ -512,9 +545,11 @@ public class FileOperations {
     public static void readTextFile(final Context context, final String filePath, final String tag) {
         Runnable runnable = () -> {
 
-            linesListMap.remove(filePath);
-
             try {
+
+                reentrantLock.lock();
+
+                linesListMap.remove(filePath);
 
                 File f = new File(filePath);
                 if (f.isFile()) {
@@ -566,6 +601,8 @@ public class FileOperations {
                         throw new ClassCastException("Wrong File operations type. Choose text type.");
                     }
                 }
+            } finally {
+                reentrantLock.unlock();
             }
         };
 
@@ -580,6 +617,8 @@ public class FileOperations {
         Runnable runnable = () -> {
 
             try {
+
+                reentrantLock.lock();
 
                 File f = new File(filePath);
 
@@ -626,6 +665,8 @@ public class FileOperations {
                         throw new ClassCastException("Wrong File operations type. Choose text type.");
                     }
                 }
+            } finally {
+                reentrantLock.unlock();
             }
         };
 
@@ -637,8 +678,13 @@ public class FileOperations {
 
     @SuppressLint("SetWorldReadable")
     public static List<String> readTextFileSynchronous(final Context context, final String filePath) {
+
+        reentrantLock.lock();
+
         List<String> lines = null;
+
         try {
+
             File f = new File(filePath);
             if (f.isFile()) {
                 if (f.setReadable(true, false)) {
@@ -671,11 +717,16 @@ public class FileOperations {
             Log.e(LOG_TAG, "readTextFileSynchronous Exception " + e.getMessage() + " " + e.getCause());
         }
 
+        reentrantLock.unlock();
+
         return lines;
     }
 
     @SuppressLint("SetWorldReadable")
     public static boolean writeTextFileSynchronous(final Context context, final String filePath, final List<String> lines) {
+        
+        reentrantLock.lock();
+
         boolean result = true;
         try {
 
@@ -707,6 +758,8 @@ public class FileOperations {
             Log.e(LOG_TAG, "writeTextFileSynchronous Exception " + e.getMessage() + " " + e.getCause());
             result = false;
         }
+
+        reentrantLock.unlock();
 
         return result;
     }
