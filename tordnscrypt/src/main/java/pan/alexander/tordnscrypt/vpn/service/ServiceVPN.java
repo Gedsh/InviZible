@@ -553,7 +553,7 @@ public class ServiceVPN extends VpnService {
             }
 
             resourceRecords.add(rr);
-        } else if (resourceRecords.isEmpty()){
+        } else if (resourceRecords.isEmpty()) {
             resourceRecords.add(rr);
         }
         //Log.i(LOG_TAG, "VPN DNS resolved " + rr.toString());
@@ -999,5 +999,11 @@ public class ServiceVPN extends VpnService {
 
     public LinkedList<ResourceRecord> getResourceRecords() {
         return resourceRecords;
+    }
+
+    public void clearResourceRecords() {
+        if (resourceRecords != null && !resourceRecords.isEmpty()) {
+            resourceRecords.clear();
+        }
     }
 }
