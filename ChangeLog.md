@@ -87,3 +87,6 @@
 * Implement a new interface for portrait orientation.
 * Implement the iptables rules update when the device state changes in root mode.
 * Bug fixes and stability improvements.
+
+**InviZible Pro beta 0.5.6**
+* Bug fixes and stability improvements.
