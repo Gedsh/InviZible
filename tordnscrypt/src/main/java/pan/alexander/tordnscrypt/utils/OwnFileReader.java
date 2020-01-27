@@ -136,7 +136,7 @@ public class OwnFileReader {
         if (!file.exists())
             return;
 
-        if (file.length() / 1024 > 10) {
+        if (file.length() / 1024 > 100) {
             try {
                 PrintWriter writer = new PrintWriter(file, "UTF-8");
                 if (lines != null && lines.size() != 0) {
@@ -158,7 +158,7 @@ public class OwnFileReader {
         if (!file.exists())
             return;
 
-        if (file.length() / 1024 > 100) {
+        if (file.length() / 1024 > 500) {
             try {
                 PrintWriter writer = new PrintWriter(file, "UTF-8");
                 writer.println("");
