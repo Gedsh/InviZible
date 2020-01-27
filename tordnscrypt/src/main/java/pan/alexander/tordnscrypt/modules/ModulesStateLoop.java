@@ -144,17 +144,6 @@ public class ModulesStateLoop extends TimerTask {
                 || itpdState != savedItpdState
                 || modulesStatus.isIptablesRulesUpdateRequested()) {
 
-            savedDNSCryptState = dnsCryptState;
-            new PrefManager(modulesService).setStrPref("savedDNSCryptState", dnsCryptState.toString());
-
-
-            savedTorState = torState;
-            new PrefManager(modulesService).setStrPref("savedTorState", torState.toString());
-
-            savedItpdState = itpdState;
-            new PrefManager(modulesService).setStrPref("savedITPDState", itpdState.toString());
-
-
             Log.i(LOG_TAG, "DNSCrypt is " + dnsCryptState +
                     " Tor is " + torState + " I2P is " + itpdState);
 
@@ -165,6 +154,15 @@ public class ModulesStateLoop extends TimerTask {
             } else if (itpdState != STOPPED && itpdState != RUNNING) {
                 return;
             }
+
+            savedDNSCryptState = dnsCryptState;
+            new PrefManager(modulesService).setStrPref("savedDNSCryptState", dnsCryptState.toString());
+
+            savedTorState = torState;
+            new PrefManager(modulesService).setStrPref("savedTorState", torState.toString());
+
+            savedItpdState = itpdState;
+            new PrefManager(modulesService).setStrPref("savedITPDState", itpdState.toString());
 
             if (modulesStatus.isIptablesRulesUpdateRequested()) {
                 modulesStatus.setIptablesRulesUpdateRequested(false);
