@@ -398,6 +398,11 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
             }
         }
 
+        Preference prefTorAppExclude = findPreference("prefTorAppExclude");
+        if (prefTorAppExclude != null) {
+            prefTorAppExclude.setSummary(R.string.pref_fast_exclude_apps_from_ipro_summ);
+        }
+
         PreferenceCategory torSettingsCategory = findPreference("Tor Settings");
         if (torSettingsCategory != null) {
             torSettingsCategory.setTitle(R.string.pref_fast_routing);
