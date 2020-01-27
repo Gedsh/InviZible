@@ -435,4 +435,5 @@
     <string name="main_fragment_protect_dns">Chroń DNS za pomocą DNSCRYPT</string>
     <string name="main_fragment_access_i2p">" Dostęp do stron I2P za pomocą Purple I2P"</string>
     <string name="tvTorConnecting">Złączony</string>
+    <string name="pref_fast_exclude_apps_from_ipro_summ">Lista aplikacji laczacych sie bezposrednio</string>
 </resources>

@@ -360,4 +360,5 @@
     <string name="main_fragment_protect_dns">Защитить DNS с помощью DNSCRYPT</string>
     <string name="main_fragment_access_i2p">Доступ к I2P сайтам с помощью Purple I2P</string>
     <string name="tvTorConnecting">Подключение</string>
+    <string name="pref_fast_exclude_apps_from_ipro_summ">Приложения, открывающиеся в обход InviZible</string>
 </resources>
