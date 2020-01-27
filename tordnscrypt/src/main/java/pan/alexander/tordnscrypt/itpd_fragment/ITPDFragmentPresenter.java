@@ -69,7 +69,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
     private ITPDFragmentView view;
     private Timer timer;
     private String appDataDir;
-    private OwnFileReader logFile;
+    private volatile OwnFileReader logFile;
     private ModulesStatus modulesStatus;
     private ModuleState fixedModuleState;
 
@@ -215,7 +215,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
     @Override
     public void setITPDSomethingWrong() {
-        if (view == null) {
+        if (view == null || modulesStatus == null) {
             return;
         }
 
@@ -299,7 +299,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
         setITPDStopped();
 
-        if (context != null && view != null) {
+        if (context != null && view != null && modulesStatus != null) {
 
             modulesStatus.setItpdState(STOPPED);
 
@@ -342,7 +342,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
             @Override
             public void run() {
 
-                if (view == null || view.getFragmentActivity() == null) {
+                if (view == null || view.getFragmentActivity() == null || logFile == null) {
                     return;
                 }
 
@@ -357,7 +357,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
                 view.getFragmentActivity().runOnUiThread(() -> {
 
-                    if (view == null || view.getFragmentActivity() == null) {
+                    if (view == null || view.getFragmentActivity() == null || lastLines == null || lastLines.isEmpty()) {
                         return;
                     }
 
@@ -375,7 +375,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
                     refreshITPDState(view.getFragmentActivity());
                 });
             }
-        }, 0, period);
+        }, 1000, period);
 
     }
 
@@ -438,7 +438,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
     }
 
     public void startButtonOnClick(Context context) {
-        if (context == null || view == null) {
+        if (context == null || view == null || modulesStatus == null) {
             return;
         }
 

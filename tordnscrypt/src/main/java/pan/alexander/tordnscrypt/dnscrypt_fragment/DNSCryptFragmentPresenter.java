@@ -70,7 +70,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     private String appDataDir;
     private DNSCryptFragmentView view;
     private Timer timer = null;
-    private OwnFileReader logFile;
+    private volatile OwnFileReader logFile;
     private ModulesStatus modulesStatus;
     private ModuleState fixedModuleState;
     private ServiceConnection serviceConnection;
@@ -98,7 +98,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         if (isDNSCryptInstalled(context)) {
             setDNSCryptInstalled(true);
 
-            if (modulesStatus.getDnsCryptState() == STOPPING){
+            if (modulesStatus.getDnsCryptState() == STOPPING) {
                 setDnsCryptStopping();
 
                 if (logFile != null) {
@@ -176,7 +176,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
             @Override
             public void run() {
-                if (view == null || view.getFragmentActivity() == null) {
+                if (view == null || view.getFragmentActivity() == null || logFile == null) {
                     return;
                 }
 
@@ -187,11 +187,11 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                     displayLog(10000);
                 }
 
-                displayDnsResponses(lastLines);
+                final boolean displayed = displayDnsResponses(lastLines);
 
                 view.getFragmentActivity().runOnUiThread(() -> {
 
-                    if (view == null || view.getFragmentActivity() == null) {
+                    if (view == null || view.getFragmentActivity() == null || lastLines == null || lastLines.isEmpty()) {
                         return;
                     }
 
@@ -201,7 +201,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
                         dnsCryptStartedWithError(view.getFragmentActivity(), lastLines);
 
-                        if (!previousLastLines.isEmpty()) {
+                        if (!displayed) {
                             view.setDNSCryptLogViewText(Html.fromHtml(lastLines));
                         }
 
@@ -213,7 +213,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                 });
 
             }
-        }, 1, period);
+        }, 1000, period);
 
     }
 
@@ -324,7 +324,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
     private void dnsCryptStartedSuccessfully(String lines) {
 
-        if (view == null) {
+        if (view == null || modulesStatus == null) {
             return;
         }
 
@@ -377,29 +377,40 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         }
     }
 
-    private void displayDnsResponses(String savedLines) {
-        if (view == null) {
-            return;
+    private boolean displayDnsResponses(String savedLines) {
+
+        if (view == null || modulesStatus == null) {
+            return false;
         }
 
         if (modulesStatus.getMode() != VPN_MODE) {
             if (!savedResourceRecords.isEmpty() && view != null && view.getFragmentActivity() != null) {
                 savedResourceRecords.clear();
                 view.getFragmentActivity().runOnUiThread(() -> {
-                    if (view.getFragmentActivity() != null) {
+                    if (view != null && view.getFragmentActivity() != null  && logFile != null) {
                         view.setDNSCryptLogViewText(Html.fromHtml(logFile.readLastLines()));
                     }
                 });
+                return true;
+            } else {
+                return false;
             }
-            return;
+
         } else if (view != null && view.getFragmentActivity() != null && modulesStatus.getMode() == VPN_MODE && !bound) {
             bindToVPNService(view.getFragmentActivity());
+            return false;
+        }
+
+        if (modulesStatus.getDnsCryptState() == RESTARTING) {
+            clearResourceRecords();
+            savedResourceRecords.clear();
+            return false;
         }
 
         ArrayList<ResourceRecord> resourceRecords = new ArrayList<>(getResourceRecords());
 
         if (resourceRecords.equals(savedResourceRecords) || resourceRecords.isEmpty()) {
-            return;
+            return false;
         }
 
         savedResourceRecords = resourceRecords;
@@ -439,9 +450,13 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             view.getFragmentActivity().runOnUiThread(() -> {
                 if (view != null && view.getFragmentActivity() != null) {
                     view.setDNSCryptLogViewText(Html.fromHtml(lines.toString()));
+                } else {
+                    savedResourceRecords.clear();
                 }
             });
         }
+
+        return true;
     }
 
     private LinkedList<ResourceRecord> getResourceRecords() {
@@ -449,6 +464,12 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             return serviceVPN.getResourceRecords();
         }
         return new LinkedList<>();
+    }
+
+    private void clearResourceRecords() {
+        if (serviceVPN != null) {
+            serviceVPN.clearResourceRecords();
+        }
     }
 
     @Override
@@ -513,7 +534,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
         FragmentManager fragmentManager = view.getFragmentFragmentManager();
 
-        if (context!= null) {
+        if (context != null && modulesStatus != null) {
 
             modulesStatus.setDnsCryptState(STOPPED);
 
@@ -576,7 +597,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     }
 
     public void startButtonOnClick(Context context) {
-        if (context == null || view == null) {
+        if (context == null || view == null || modulesStatus == null) {
             return;
         }
 

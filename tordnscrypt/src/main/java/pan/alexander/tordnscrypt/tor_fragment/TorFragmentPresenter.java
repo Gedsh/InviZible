@@ -80,7 +80,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
     private ModulesStatus modulesStatus;
     private ModuleState fixedModuleState = STOPPED;
 
-    private OwnFileReader logFile;
+    private volatile OwnFileReader logFile;
     private int displayLogPeriod = -1;
 
     public TorFragmentPresenter(TorFragmentView view) {
@@ -200,7 +200,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     @Override
     public void setTorSomethingWrong() {
-        if (view == null) {
+        if (view == null || modulesStatus == null) {
             return;
         }
 
@@ -274,7 +274,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
         setTorStopped(context);
 
-        if (context != null) {
+        if (context != null && modulesStatus != null) {
 
             modulesStatus.setTorState(STOPPED);
 
@@ -316,7 +316,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
             @Override
             public void run() {
 
-                if (view == null || view.getFragmentActivity() == null) {
+                if (view == null || view.getFragmentActivity() == null || logFile == null) {
                     return;
                 }
 
@@ -329,7 +329,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
                 view.getFragmentActivity().runOnUiThread(() -> {
 
-                    if (view == null || view.getFragmentActivity() == null) {
+                    if (view == null || view.getFragmentActivity() == null || lastLines == null || lastLines.isEmpty()) {
                         return;
                     }
 
@@ -348,7 +348,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
                 });
             }
-        }, 1, period);
+        }, 1000, period);
 
     }
 
@@ -365,7 +365,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     private void torStartedSuccessfully(Context context, String lastLines) {
 
-        if (context == null || view == null) {
+        if (context == null || view == null || modulesStatus == null) {
             return;
         }
 
@@ -515,7 +515,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     private void stopRefreshTorUnlockIPs(Context context) {
 
-        if (context == null || !modulesStatus.isRootAvailable()) {
+        if (context == null || modulesStatus == null || !modulesStatus.isRootAvailable()) {
             return;
         }
 
@@ -533,7 +533,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     public void startButtonOnClick(Context context) {
 
-        if (context == null || view == null) {
+        if (context == null || view == null || modulesStatus == null) {
             return;
         }
 

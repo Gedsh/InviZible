@@ -138,6 +138,10 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     public void onStart() {
         super.onStart();
 
+        if (getActivity() == null) {
+            return;
+        }
+
         initDNSCryptFragmentPresenter();
         initTorFragmentPresenter();
         initITPDFragmentPresenter();
@@ -150,6 +154,10 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     @Override
     public void onStop() {
         super.onStop();
+
+        if (getActivity() == null) {
+            return;
+        }
 
         try {
             if (dnsCryptFragmentReceiver != null) {
