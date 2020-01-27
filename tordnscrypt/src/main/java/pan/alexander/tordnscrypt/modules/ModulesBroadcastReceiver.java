@@ -39,7 +39,6 @@ import androidx.annotation.NonNull;
 import java.net.InetAddress;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -50,7 +49,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
     private boolean receiverRegistered = false;
     private Object networkCallback;
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
-    private final ReentrantLock reentrantLock = new ReentrantLock();
+    private volatile boolean lock = false;
 
     public ModulesBroadcastReceiver(Context context) {
         this.context = context;
@@ -80,6 +79,10 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
     }
 
     void unregisterReceivers() {
+        if (context == null) {
+            return;
+        }
+
         if (receiverRegistered) {
             context.unregisterReceiver(this);
             receiverRegistered = false;
@@ -219,12 +222,12 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
 
         if (modulesStatus.getMode() == ROOT_MODE
                 && !modulesStatus.isUseModulesWithRoot()
-                && !reentrantLock.isLocked()) {
+                && !lock) {
 
-            new Thread(()->{
-                if (!reentrantLock.isLocked()) {
+            new Thread(() -> {
+                if (!lock) {
 
-                    reentrantLock.lock();
+                    lock = true;
 
                     try {
                         TimeUnit.SECONDS.sleep(10);
@@ -232,13 +235,12 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
                         Log.w(LOG_TAG, "ModulesBroadcastReceiver sleep interruptedException " + e.getMessage());
                     }
 
-                    if (modulesStatus.getMode() == ROOT_MODE
-                            && !modulesStatus.isUseModulesWithRoot()
-                            && !reentrantLock.isLocked()) {
+                    if (context != null && modulesStatus.getMode() == ROOT_MODE
+                            && !modulesStatus.isUseModulesWithRoot()) {
                         modulesStatus.setIptablesRulesUpdateRequested(true);
                     }
 
-                    reentrantLock.unlock();
+                    lock = false;
                 }
 
             }).start();
