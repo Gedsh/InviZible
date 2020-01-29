@@ -99,7 +99,7 @@ public class ModulesRestarter {
 
         String[] preparedCommands = prepareRestartCommand (pathVars, module, pid, killWithRoot);
 
-        if (ModulesStatus.getInstance().isRootAvailable() || killWithRoot) {
+        if (ModulesStatus.getInstance().isRootAvailable() && killWithRoot) {
             killWithSU(module, preparedCommands);
         } else if (!pid.isEmpty()){
             killWithPid(pid);
@@ -140,14 +140,16 @@ public class ModulesRestarter {
         if (pid.isEmpty() || killWithRoot) {
             String killStringBusybox = pathVars.busyboxPath + "pkill -SIGHUP" + " " + module;
             //String killAllStringBusybox = pathVars.busyboxPath + "kill -s SIGHUP" + " $(pgrep " + module + ")";
-            //String killStringToyBox = "toybox pkill -SIGHUP" + " " + module;
+            String killStringToyBox = "toybox pkill -SIGHUP" + " " + module;
             //String killString = "pkill -" + "SIGHUP" + " " + module;
 
+            String killString = killStringBusybox;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !killWithRoot) {
+                killString = killStringToyBox;
+            }
+
             result = new String[]{
-                    killStringBusybox
-                    //killAllStringBusybox,
-                    //killStringToyBox,
-                    //killString
+                    killString
             };
         } else {
             //String killStringBusyBox = pathVars.busyboxPath + "kill -s SIGHUP" + " " + pid;
