@@ -883,7 +883,7 @@ public class ServiceVPN extends VpnService {
 
             if (showNotification) {
                 ServiceVPNNotification notification = new ServiceVPNNotification(this, notificationManager);
-                notification.sendNotification(getText(R.string.notification_text).toString(), getString(R.string.app_name), getText(R.string.notification_text).toString());
+                notification.sendNotification(getString(R.string.app_name), getText(R.string.notification_text).toString());
             }
         }
 

@@ -130,8 +130,7 @@ public class RootExecService extends Service {
                     assert notificationManager != null;
                     notificationManager.createNotificationChannel(notificationChannel);
 
-                    sendNotification(getText(R.string.notification_temp_text).toString(),
-                            getString(R.string.app_name), getText(R.string.notification_temp_text).toString());
+                    sendNotification(getString(R.string.app_name), getText(R.string.notification_temp_text).toString());
 
                 }
 
@@ -239,7 +238,7 @@ public class RootExecService extends Service {
         }
     }
 
-    public void sendNotification(String Ticker, String Title, String Text) {
+    public void sendNotification(String Title, String Text) {
 
         //These three lines makes Notification to open main activity after clicking on it
         Intent notificationIntent = new Intent(this, MainActivity.class);
@@ -253,13 +252,14 @@ public class RootExecService extends Service {
                 .setOngoing(true)   //Can't be swiped out
                 .setSmallIcon(R.drawable.ic_visibility_off_white_24dp)
                 //.setLargeIcon(BitmapFactory.decodeResource(res, R.drawable.large))   // большая картинка
-                .setTicker(Ticker)
+                //.setTicker(Ticker)
                 .setContentTitle(Title) //Заголовок
                 .setContentText(Text) // Текст уведомления
-                .setWhen(System.currentTimeMillis())
+                //.setWhen(System.currentTimeMillis())
                 //new experiment
                 .setPriority(Notification.PRIORITY_MIN)
-                .setOnlyAlertOnce(true);
+                .setOnlyAlertOnce(true)
+                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
 
         Notification notification = builder.build();
 

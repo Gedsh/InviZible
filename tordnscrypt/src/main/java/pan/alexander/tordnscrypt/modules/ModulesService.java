@@ -119,7 +119,7 @@ public class ModulesService extends Service {
 
         if (showNotification) {
             ServiceNotification notification = new ServiceNotification(this, notificationManager);
-            notification.sendNotification(getText(R.string.notification_text).toString(), getString(R.string.app_name), getText(R.string.notification_text).toString());
+            notification.sendNotification(getString(R.string.app_name), getText(R.string.notification_text).toString());
         }
 
 
