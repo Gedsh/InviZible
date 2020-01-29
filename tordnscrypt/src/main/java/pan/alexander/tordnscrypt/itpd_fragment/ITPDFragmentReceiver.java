@@ -111,7 +111,7 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
                     }
                 }
 
-                if (sb.toString().toLowerCase().contains(itpdPath)
+                if (sb.toString().toLowerCase().contains(itpdPath.toLowerCase())
                         && sb.toString().contains("checkITPDRunning")) {
 
                     presenter.setITPDRunning();
@@ -119,7 +119,7 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
                     modulesStatus.setItpdState(RUNNING);
                     presenter.displayLog(10000);
 
-                } else if (!sb.toString().toLowerCase().contains(itpdPath)
+                } else if (!sb.toString().toLowerCase().contains(itpdPath.toLowerCase())
                         && sb.toString().contains("checkITPDRunning")) {
                     if (modulesStatus.getItpdState() == STOPPED) {
                         presenter.saveITPDStatusRunning(context, false);

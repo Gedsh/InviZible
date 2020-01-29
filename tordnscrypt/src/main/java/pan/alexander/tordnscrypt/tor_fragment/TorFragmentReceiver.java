@@ -109,7 +109,7 @@ public class TorFragmentReceiver extends BroadcastReceiver {
                     }
                 }
 
-                if (sb.toString().toLowerCase().contains(torPath)
+                if (sb.toString().toLowerCase().contains(torPath.toLowerCase())
                         && sb.toString().contains("checkTrRunning")) {
 
                     presenter.saveTorStatusRunning(context, true);
@@ -118,7 +118,7 @@ public class TorFragmentReceiver extends BroadcastReceiver {
                     presenter.startRefreshTorUnlockIPs(context);
                     presenter.displayLog(5000);
 
-                } else if (!sb.toString().toLowerCase().contains(torPath)
+                } else if (!sb.toString().toLowerCase().contains(torPath.toLowerCase())
                         && sb.toString().contains("checkTrRunning")) {
                     if (modulesStatus.getTorState() == STOPPED) {
                         presenter.saveTorStatusRunning(context, false);

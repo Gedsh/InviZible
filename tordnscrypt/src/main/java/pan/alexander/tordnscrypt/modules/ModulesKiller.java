@@ -389,7 +389,7 @@ public class ModulesKiller {
             List<String> shellResult = killWithSU(module, commands);
 
             if (shellResult != null) {
-                result = !shellResult.toString().contains(module.toLowerCase().trim());
+                result = !shellResult.toString().toLowerCase().contains(module.toLowerCase().trim());
             }
 
             if (shellResult != null) {
