@@ -50,6 +50,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
     private Object networkCallback;
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
     private volatile boolean lock = false;
+    private int currentNetworkHash = 0;
 
     public ModulesBroadcastReceiver(Context context) {
         this.context = context;
@@ -153,8 +154,12 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
 
             @Override
             public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities networkCapabilities) {
-                Log.i(LOG_TAG, "ModulesBroadcastReceiver Changed capabilities=" + network);
-                updateIptablesRules();
+                if (ModulesBroadcastReceiver.this.currentNetworkHash != network.hashCode()) {
+                    ModulesBroadcastReceiver.this.currentNetworkHash = network.hashCode();
+                    updateIptablesRules();
+
+                    Log.i(LOG_TAG, "ModulesBroadcastReceiver Changed capabilities=" + network);
+                }
             }
 
             @Override
