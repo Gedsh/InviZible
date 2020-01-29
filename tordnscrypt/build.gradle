@@ -23,7 +23,7 @@ android {
 
         beta{
             applicationId "pan.alexander.tordnscrypt"
-            versionName "0.5.7"
+            versionName "0.5.8"
             dimension = 'version'
             resValue 'string', 'package_name', applicationId
         }
@@ -53,7 +53,7 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 29
-        versionCode 57
+        versionCode 58
 
         resConfigs "en", "ru-rRU" , "ru-rUA", "pl"
 
