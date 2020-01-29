@@ -72,3 +72,29 @@
 * Downgrade target sdk version for compatibility with android Q.
 * Remove alpha in status bar icon.
 * Fixes.
+
+**InviZible Pro beta 0.5.2**
+* Disable VPN mode for android versions below LOLLIPOP.
+* Add select apps feature to use or bypass InviZible in VPN mode.
+* Add block http feature in VPN mode.
+
+**InviZible Pro beta 0.5.3**
+* Implement DNS responses live log for VPN mode.
+* Fix use of VPN mode with hotspot.
+* Other fixes.
+
+**InviZible Pro beta 0.5.5**
+* Implement a new interface for portrait orientation.
+* Implement the iptables rules update when the device state changes in root mode.
+* Bug fixes and stability improvements.
+
+**InviZible Pro beta 0.5.6**
+* Bug fixes and stability improvements.
+
+**InviZible Pro beta 0.5.7**
+* Changed the location of modules binaries to the application libs folder to meet android 10 requirements.
+* InviZible cannot do OTA modules update anymore, modules will update together with InviZible.
+* Assigned different version codes for armv7 and arm64.
+* Fixed too frequent iptables rules update
+* Updated modules: obfs4proxy, tor v4.2.5
+* Clean install recommended. InviZible will ask the modules update with overwriting your modules settings.
