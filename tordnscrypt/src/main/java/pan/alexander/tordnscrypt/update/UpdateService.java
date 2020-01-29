@@ -51,16 +51,12 @@ import javax.net.ssl.HttpsURLConnection;
 
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
-import pan.alexander.tordnscrypt.modules.ModulesRunner;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
-import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.RootExecService.TopFragmentMark;
-import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 
 public class UpdateService extends Service {
     private static final String STOP_DOWNLOAD_ACTION = "pan.alexander.tordnscrypt.STOP_DOWNLOAD_ACTION";
@@ -70,12 +66,10 @@ public class UpdateService extends Service {
     private static final int DEFAULT_NOTIFICATION_ID = 103;
     private static final int READTIMEOUT = 60;
     private static final int CONNECTTIMEOUT = 60;
-    private String appDataDir;
     public static final String DOWNLOAD_ACTION = "pan.alexander.tordnscrypt.DOWNLOAD_ACTION";
     private final AtomicInteger currentNotificationId = new AtomicInteger(DEFAULT_NOTIFICATION_ID) ;
     private volatile SparseArray<DownloadThread> sparseArray;
     private boolean allowSendBroadcastAfterUpdate = true;
-    private ModulesStatus currentModuleStatus;
 
     public UpdateService() {
     }
@@ -89,11 +83,8 @@ public class UpdateService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        PathVars pathVars = new PathVars(this);
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         sparseArray = new SparseArray<>();
-        appDataDir = pathVars.appDataDir;
-        currentModuleStatus = ModulesStatus.getInstance();
     }
 
     @Override
@@ -262,17 +253,6 @@ public class UpdateService extends Service {
                                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                 UpdateService.this.startActivity(intent);
                             }
-                        } else {
-                            allowSendBroadcastAfterUpdate = true;
-
-                            FileOperations.moveBinaryFile(UpdateService.this, cacheDir.getPath(), fileToDownload, appDataDir + "/app_bin", "executable_ignored");
-                            if (fileToDownload != null) {
-                                runPreviousStoppedModules(fileToDownload);
-                            }
-
-                            if (!new PrefManager(UpdateService.this).getStrPref("UpdateResultMessage").equals(getString(R.string.update_fault))) {
-                                new PrefManager(UpdateService.this).setStrPref("UpdateResultMessage", getString(R.string.update_installed));
-                            }
                         }
 
                     } else {
@@ -418,28 +398,7 @@ public class UpdateService extends Service {
     }
 
     private void stopRunningModules(String fileName) {
-        if (fileName.contains("dnscrypt-proxy")) {
-            currentModuleStatus.setDnsCryptState(RESTARTING);
-            boolean dnsCryptRunning = new PrefManager(this).getBoolPref("DNSCrypt Running");
-            if (dnsCryptRunning) {
-                ModulesKiller.stopDNSCrypt(this);
-            }
-        } else if (fileName.contains("tor")) {
-            currentModuleStatus.setTorState(RESTARTING);
-            boolean torRunning = new PrefManager(this).getBoolPref("Tor Running");
-            if (torRunning) {
-                while (sparseArray.size() > 1) {
-                    makeDelay(5);
-                }
-                ModulesKiller.stopTor(this);
-            }
-        } else if (fileName.contains("i2pd")) {
-            currentModuleStatus.setItpdState(RESTARTING);
-            boolean itpdRunning = new PrefManager(this).getBoolPref("I2PD Running");
-            if (itpdRunning) {
-                ModulesKiller.stopITPD(this);
-            }
-        } else if (fileName.contains("InviZible")) {
+      if (fileName.contains("InviZible")) {
 
             boolean dnsCryptRunning = new PrefManager(this).getBoolPref("DNSCrypt Running");
             boolean torRunning = new PrefManager(this).getBoolPref("Tor Running");
@@ -462,49 +421,6 @@ public class UpdateService extends Service {
         }
 
         makeDelay(3);
-    }
-
-    private void runPreviousStoppedModules(String fileName) {
-        if (fileName.contains("dnscrypt-proxy")) {
-            boolean dnsCryptRunning = new PrefManager(this).getBoolPref("DNSCrypt Running");
-            if (dnsCryptRunning) {
-
-                makeDelay(3);
-
-                runDNSCrypt();
-            }
-
-        } else if (fileName.contains("tor")) {
-            boolean torRunning = new PrefManager(this).getBoolPref("Tor Running");
-            if (torRunning) {
-
-                makeDelay(3);
-
-                runTor();
-            }
-
-        } else if (fileName.contains("i2pd")) {
-            boolean itpdRunning = new PrefManager(this).getBoolPref("I2PD Running");
-            if (itpdRunning) {
-
-                makeDelay(3);
-
-                runITPD();
-            }
-        }
-
-    }
-
-    private void runDNSCrypt() {
-        ModulesRunner.runDNSCrypt(this);
-    }
-
-    private void runTor() {
-        ModulesRunner.runTor(this);
-    }
-
-    private void runITPD() {
-       ModulesRunner.runITPD(this);
     }
 
     @SuppressWarnings("unused")
