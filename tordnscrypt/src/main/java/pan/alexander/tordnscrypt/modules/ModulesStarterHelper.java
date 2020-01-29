@@ -77,7 +77,7 @@ class ModulesStarterHelper {
                         + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml -pidfile "+ pathVars.appDataDir
                         + "/dnscrypt-proxy.pid >/dev/null 2>&1 &";
                 String waitString = pathVars.busyboxPath + "sleep 3";
-                String checkIfModuleRunning = pathVars.busyboxPath + "pgrep -l /dnscrypt-proxy";
+                String checkIfModuleRunning = pathVars.busyboxPath + "pgrep -l /libdnscrypt-proxy.so";
 
                 shellResult = Shell.SU.run(dnsCmdString, waitString, checkIfModuleRunning);
 
@@ -143,7 +143,7 @@ class ModulesStarterHelper {
                 torCmdString = pathVars.torPath + " -f "
                         + pathVars.appDataDir + "/app_data/tor/tor.conf -pidfile " + pathVars.appDataDir + "/tor.pid";
                 String waitString = pathVars.busyboxPath + "sleep 3";
-                String checkIfModuleRunning = pathVars.busyboxPath + "pgrep -l /tor";
+                String checkIfModuleRunning = pathVars.busyboxPath + "pgrep -l /libtor.so";
 
                 shellResult = Shell.SU.run(torCmdString, waitString, checkIfModuleRunning);
 
@@ -220,7 +220,7 @@ class ModulesStarterHelper {
                         + "/app_data/i2pd/i2pd.conf --datadir " + pathVars.appDataDir
                         + "/i2pd_data --pidfile " + pathVars.appDataDir + "/i2pd.pid &";
                 String waitString = pathVars.busyboxPath + "sleep 3";
-                String checkIfModuleRunning = pathVars.busyboxPath + "pgrep -l /i2pd";
+                String checkIfModuleRunning = pathVars.busyboxPath + "pgrep -l /libi2pd.so";
 
                 shellResult = Shell.SU.run(itpdCmdString, waitString, checkIfModuleRunning);
 

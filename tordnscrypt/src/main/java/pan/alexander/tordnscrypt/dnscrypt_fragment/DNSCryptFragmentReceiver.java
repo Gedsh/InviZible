@@ -186,7 +186,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
         if (presenter.isDNSCryptInstalled(context)) {
 
             String[] commandsCheck = {
-                    busyboxPath + "pgrep -l /dnscrypt-proxy",
+                    busyboxPath + "pgrep -l /libdnscrypt-proxy.so",
                     busyboxPath + "echo 'checkDNSRunning'",
                     busyboxPath + "echo 'DNSCrypt_version'",
                     dnscryptPath + " --version"

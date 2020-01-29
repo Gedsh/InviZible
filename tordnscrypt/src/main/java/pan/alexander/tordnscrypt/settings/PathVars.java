@@ -23,8 +23,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.os.Environment;
-import androidx.preference.PreferenceManager;
 import android.util.Log;
+
+import androidx.preference.PreferenceManager;
 
 import java.util.Objects;
 
@@ -54,19 +55,22 @@ public class PathVars {
     public String torSOCKSPort;
     public String torHTTPTunnelPort;
     public String itpdSOCKSPort;
+    private String nativeLibPath;
 
     String obfsPath;
 
     @SuppressLint("SdCardPath")
-    public PathVars (Context context) {
+    public PathVars(Context context) {
 
         appDataDir = context.getApplicationInfo().dataDir;
+
+        nativeLibPath = context.getApplicationInfo().nativeLibraryDir;
 
         if (appDataDir == null) {
             appDataDir = "/data/data/" + context.getPackageName();
         }
 
-        if(!isModulesInstalled(context)){
+        if (!isModulesInstalled(context)) {
             saveAppUID(context);
         }
 
@@ -82,42 +86,42 @@ public class PathVars {
     }
 
     private void setAuxPaths(SharedPreferences shPref) {
-        dnsCryptPort = shPref.getString("listen_port","5354");
-        torSOCKSPort = shPref.getString("SOCKSPort","9050");
-        torHTTPTunnelPort = shPref.getString("HTTPTunnelPort","8118");
-        itpdSOCKSPort = shPref.getString("Socks proxy port","4447");
+        dnsCryptPort = shPref.getString("listen_port", "5354");
+        torSOCKSPort = shPref.getString("SOCKSPort", "9050");
+        torHTTPTunnelPort = shPref.getString("HTTPTunnelPort", "8118");
+        itpdSOCKSPort = shPref.getString("Socks proxy port", "4447");
 
-        itpdHttpProxyPort = shPref.getString("HTTP proxy port","4444");
+        itpdHttpProxyPort = shPref.getString("HTTP proxy port", "4444");
 
-        torTransPort = shPref.getString("TransPort","9040");
-        torTransPort = torTransPort.replaceAll(".+:","");
+        torTransPort = shPref.getString("TransPort", "9040");
+        torTransPort = torTransPort.replaceAll(".+:", "");
 
-        dnsCryptFallbackRes = shPref.getString("fallback_resolver","9.9.9.9");
-        torDNSPort = shPref.getString("DNSPort","5400");
-        torVirtAdrNet = shPref.getString("VirtualAddrNetworkIPv4","10.0.0.0/10");
-        dnscryptPath = appDataDir+"/app_bin/dnscrypt-proxy";
-        torPath = appDataDir+"/app_bin/tor";
-        itpdPath = appDataDir+"/app_bin/i2pd";
-        obfsPath = appDataDir+"/app_bin/obfs4proxy";
+        dnsCryptFallbackRes = shPref.getString("fallback_resolver", "9.9.9.9");
+        torDNSPort = shPref.getString("DNSPort", "5400");
+        torVirtAdrNet = shPref.getString("VirtualAddrNetworkIPv4", "10.0.0.0/10");
+        dnscryptPath = nativeLibPath + "/libdnscrypt-proxy.so";
+        torPath = nativeLibPath + "/libtor.so";
+        itpdPath = nativeLibPath + "/libi2pd.so";
+        obfsPath = nativeLibPath + "/libobfs4proxy.so";
     }
 
     private String getDefaultBackupPath() {
         String storageDir = Environment.getExternalStorageDirectory().getPath();
-        return storageDir +"/TorDNSCrypt";
+        return storageDir + "/TorDNSCrypt";
     }
 
     private String getIptablesPath(SharedPreferences shPref) {
-        String iptablesSelector = shPref.getString("pref_common_use_iptables","1");
+        String iptablesSelector = shPref.getString("pref_common_use_iptables", "1");
 
         String path;
         switch (iptablesSelector) {
             case "2":
-                path = "";
+                path = "iptables ";
                 break;
             case "1":
 
             default:
-                path = appDataDir+"/app_bin/";
+                path = appDataDir + "/app_bin/iptables ";
                 break;
         }
 
@@ -126,7 +130,7 @@ public class PathVars {
 
     private String getBusyBoxPath(Context context, SharedPreferences shPref) {
 
-        String busyBoxSelector = shPref.getString("pref_common_use_busybox","1");
+        String busyBoxSelector = shPref.getString("pref_common_use_busybox", "1");
 
         String path;
         switch (busyBoxSelector) {
@@ -134,7 +138,7 @@ public class PathVars {
                 path = "busybox ";
                 break;
             case "3":
-                path = appDataDir+"/app_bin/busybox ";
+                path = appDataDir + "/app_bin/busybox ";
                 break;
             case "4":
                 path = "";
@@ -145,7 +149,7 @@ public class PathVars {
                 if (new PrefManager(context).getBoolPref("bbOK")) {
                     path = "busybox ";
                 } else {
-                    path = appDataDir+"/app_bin/busybox ";
+                    path = appDataDir + "/app_bin/busybox ";
                 }
                 break;
         }
@@ -161,13 +165,13 @@ public class PathVars {
     public void saveAppUID(Context context) {
         String appUID = "";
         try {
-            ApplicationInfo applicationInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(),0);
+            ApplicationInfo applicationInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), 0);
             appUID = String.valueOf(applicationInfo.uid);
         } catch (Exception e) {
             Log.e(LOG_TAG, "saveAppUID function fault " + e.getMessage() + " " + e.getCause());
         }
 
-        new PrefManager(Objects.requireNonNull(context)).setStrPref("appUID",appUID);
+        new PrefManager(Objects.requireNonNull(context)).setStrPref("appUID", appUID);
 
         Log.i(LOG_TAG, "PathVars AppDataDir " + appDataDir + " AppUID " + appUID);
     }

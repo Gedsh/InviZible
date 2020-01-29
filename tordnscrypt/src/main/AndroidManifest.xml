@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="pan.alexander.tordnscrypt"
+    android:installLocation="internalOnly"
     android:targetSandboxVersion="1"
     tools:targetApi="o">
 
@@ -38,6 +39,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:banner="@drawable/banner_tv"
+        android:extractNativeLibs="true"
         tools:ignore="AllowBackup">
 
         <service

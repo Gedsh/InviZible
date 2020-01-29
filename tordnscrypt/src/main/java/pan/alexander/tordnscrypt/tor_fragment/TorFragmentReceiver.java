@@ -150,7 +150,7 @@ public class TorFragmentReceiver extends BroadcastReceiver {
         if (context != null && presenter.isTorInstalled(context)) {
 
             String[] commandsCheck = {
-                    busyboxPath + "pgrep -l /tor",
+                    busyboxPath + "pgrep -l /libtor.so",
                     busyboxPath + "echo 'checkTrRunning'",
                     busyboxPath + "echo 'Tor_version'",
                     torPath + " --version"

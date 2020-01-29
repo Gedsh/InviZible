@@ -463,15 +463,15 @@ public class ModulesKiller {
         String[] result;
 
         if (pid.isEmpty() || killWithRoot) {
-            String killStringBusybox = pathVars.busyboxPath + "pkill " + module;
-            String killAllStringBusybox = pathVars.busyboxPath + "kill $(pgrep " + module + ")";
             String killStringToyBox = "toybox pkill " + module;
             String killString = "pkill " + module;
+            String killStringBusybox = pathVars.busyboxPath + "pkill " + module;
+            String killAllStringBusybox = pathVars.busyboxPath + "kill $(pgrep " + module + ")";
             if (!signal.isEmpty()) {
-                killStringBusybox = pathVars.busyboxPath + "pkill -" + signal + " " + module;
-                killAllStringBusybox = pathVars.busyboxPath + "kill -s " + signal + " $(pgrep " + module + ")";
                 killStringToyBox = "toybox pkill -" + signal + " " + module;
                 killString = "pkill -" + signal + " " + module;
+                killStringBusybox = pathVars.busyboxPath + "pkill -" + signal + " " + module;
+                killAllStringBusybox = pathVars.busyboxPath + "kill -s " + signal + " $(pgrep " + module + ")";
             }
 
             result = new String[]{
@@ -481,15 +481,15 @@ public class ModulesKiller {
                     killString
             };
         } else {
-            String killStringBusyBox = pathVars.busyboxPath + "kill " + pid;
             String killAllStringToolBox = "toolbox kill " + pid;
             String killStringToyBox = "toybox kill " + pid;
             String killString = "kill " + pid;
+            String killStringBusyBox = pathVars.busyboxPath + "kill " + pid;
             if (!signal.isEmpty()) {
-                killStringBusyBox = pathVars.busyboxPath + "kill -s " + signal + " " + pid;
                 killAllStringToolBox = "toolbox kill -s " + signal + " " + pid;
                 killStringToyBox = "toybox kill -s " + signal + " " + pid;
                 killString = "kill -s " + signal + " " + pid;
+                killStringBusyBox = pathVars.busyboxPath + "kill -s " + signal + " " + pid;
             }
 
             result = new String[]{
@@ -572,17 +572,17 @@ public class ModulesKiller {
             final String[] commands = new String[]{
                     "ip6tables -D OUTPUT -j DROP || true",
                     "ip6tables -I OUTPUT -j DROP",
-                    pathVars.iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
-                    pathVars.iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                    pathVars.iptablesPath + "iptables -F tordnscrypt",
-                    pathVars.iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
-                    pathVars.iptablesPath + "iptables -t nat -F tordnscrypt_prerouting",
-                    pathVars.iptablesPath + "iptables -F tordnscrypt_forward",
-                    pathVars.iptablesPath + "iptables -t nat -D PREROUTING -j tordnscrypt_prerouting || true",
-                    pathVars.iptablesPath + "iptables -D FORWARD -j tordnscrypt_forward || true",
-                    pathVars.busyboxPath + "killall -s SIGTERM dnscrypt-proxy",
-                    pathVars.busyboxPath + "killall -s SIGTERM tor",
-                    pathVars.busyboxPath + "killall -s SIGTERM i2pd"
+                    pathVars.iptablesPath + "-t nat -F tordnscrypt_nat_output",
+                    pathVars.iptablesPath + "-t nat -D OUTPUT -j tordnscrypt_nat_output || true",
+                    pathVars.iptablesPath + "-F tordnscrypt",
+                    pathVars.iptablesPath + "-D OUTPUT -j tordnscrypt || true",
+                    pathVars.iptablesPath + "-t nat -F tordnscrypt_prerouting",
+                    pathVars.iptablesPath + "-F tordnscrypt_forward",
+                    pathVars.iptablesPath + "-t nat -D PREROUTING -j tordnscrypt_prerouting || true",
+                    pathVars.iptablesPath + "-D FORWARD -j tordnscrypt_forward || true",
+                    pathVars.busyboxPath + "killall -s SIGTERM libdnscrypt-proxy.so",
+                    pathVars.busyboxPath + "killall -s SIGTERM libtor.so",
+                    pathVars.busyboxPath + "killall -s SIGTERM libi2pd.so"
             };
 
             new Thread(() -> Shell.SU.run(commands)).start();

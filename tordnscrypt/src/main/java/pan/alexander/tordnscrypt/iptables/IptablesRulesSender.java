@@ -39,8 +39,8 @@ abstract class IptablesRulesSender implements IptablesRules {
     String dnsCryptFallbackRes;
     String torDNSPort;
     String torVirtAdrNet;
-    String busyboxPath;
-    String iptablesPath;
+    String busybox;
+    String iptables;
     String rejectAddress;
 
     boolean runModulesWithRoot;
@@ -62,8 +62,8 @@ abstract class IptablesRulesSender implements IptablesRules {
         dnsCryptFallbackRes = pathVars.dnsCryptFallbackRes;
         torDNSPort = pathVars.torDNSPort;
         torVirtAdrNet = pathVars.torVirtAdrNet;
-        busyboxPath = pathVars.busyboxPath;
-        iptablesPath = pathVars.iptablesPath;
+        busybox = pathVars.busyboxPath;
+        iptables = pathVars.iptablesPath;
         rejectAddress = pathVars.rejectAddress;
 
         tethering = new Tethering(context);
