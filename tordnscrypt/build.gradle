@@ -23,7 +23,7 @@ android {
 
         beta{
             applicationId "pan.alexander.tordnscrypt"
-            versionName "0.5.6"
+            versionName "0.5.7"
             dimension = 'version'
             resValue 'string', 'package_name', applicationId
         }
@@ -31,6 +31,7 @@ android {
         armv7a{
             dimension = 'processor'
             resValue 'string', 'appProcVersion', 'armv7a'
+            versionCode = 2
 
             ndk {
                 abiFilters 'armeabi-v7a'
@@ -40,6 +41,7 @@ android {
         arm64{
             dimension = 'processor'
             resValue 'string', 'appProcVersion', 'arm64'
+            versionCode = 3
 
             ndk {
                 abiFilters 'arm64-v8a'
@@ -50,8 +52,8 @@ android {
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 28
-        versionCode 56
+        targetSdkVersion 29
+        versionCode 57
 
         resConfigs "en", "ru-rRU" , "ru-rUA", "pl"
 
@@ -93,6 +95,28 @@ android {
         }
     }
 
+    sourceSets {
+        main {
+            jniLibs.srcDirs 'libs/'
+        }
+    }
+
+    packagingOptions{
+        doNotStrip '*/*/libdnscrypt-proxy.so'
+        doNotStrip '*/*/libi2pd.so'
+        doNotStrip '*/*/libobfs4proxy.so'
+        doNotStrip '*/*/libtor.so'
+    }
+
+    applicationVariants.all { variant ->
+
+        def abiVersion = variant.mergedFlavor.versionCode
+
+        variant.outputs.each { output ->
+            output.versionCodeOverride = abiVersion * 1000 + defaultConfig.versionCode
+        }
+    }
+
 }
 
 repositories {
@@ -104,7 +128,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.preference:preference:1.1.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'com.google.android.material:material:1.2.0-alpha03'
+    implementation 'com.google.android.material:material:1.2.0-alpha04'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
     testImplementation 'junit:junit:4.12'
