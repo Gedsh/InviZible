@@ -98,3 +98,6 @@
 * Fixed too frequent iptables rules update
 * Updated modules: obfs4proxy, tor v4.2.5
 * Clean install recommended. InviZible will ask the modules update with overwriting your modules settings.
+
+**InviZible Pro beta 0.5.8**
+* Fixed a bug in which the modules did not start with the "Run modules with root" option activated.
