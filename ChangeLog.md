@@ -90,3 +90,11 @@
 
 **InviZible Pro beta 0.5.6**
 * Bug fixes and stability improvements.
+
+**InviZible Pro beta 0.5.7**
+* Changed the location of modules binaries to the application libs folder to meet android 10 requirements.
+* InviZible cannot do OTA modules update anymore, modules will update together with InviZible.
+* Assigned different version codes for armv7 and arm64.
+* Fixed too frequent iptables rules update
+* Updated modules: obfs4proxy, tor v4.2.5
+* Clean install recommended. InviZible will ask the modules update with overwriting your modules settings.
