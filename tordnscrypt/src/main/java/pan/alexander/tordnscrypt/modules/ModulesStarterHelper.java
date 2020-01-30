@@ -45,6 +45,7 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.I2PDRunFragmentMar
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.RootExecService.TorRunFragmentMark;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
@@ -111,7 +112,12 @@ class ModulesStarterHelper {
                             + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
                 }
 
-                if (modulesStatus.getDnsCryptState() == STARTING) {
+                Log.e(LOG_TAG, "Error DNSCrypt: "
+                        + shellResult.exitCode + " ERR=" + shellResult.getStderr()
+                        + " OUT=" + shellResult.getStdout());
+
+                if (modulesStatus.getDnsCryptState() == STARTING
+                        || (modulesStatus.getDnsCryptState() == RUNNING && modulesStatus.isUseModulesWithRoot())) {
                     if (modulesStatus.isRootAvailable()) {
                         forceStopModulesWithRootMethod();
                     } else {
@@ -122,10 +128,6 @@ class ModulesStarterHelper {
                 modulesStatus.setDnsCryptState(STOPPED);
 
                 sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
-
-                Log.e(LOG_TAG, "Error DNSCrypt: "
-                        + shellResult.exitCode + " ERR=" + shellResult.getStderr()
-                        + " OUT=" + shellResult.getStdout());
             }
         };
     }
@@ -179,7 +181,11 @@ class ModulesStarterHelper {
 
                 }
 
-                if (modulesStatus.getTorState() == STARTING) {
+                Log.e(LOG_TAG, "Error Tor: " + shellResult.exitCode
+                        + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
+
+                if (modulesStatus.getTorState() == STARTING
+                        || (modulesStatus.getTorState() == RUNNING && modulesStatus.isUseModulesWithRoot())) {
                     if (modulesStatus.isRootAvailable()) {
                         forceStopModulesWithRootMethod();
                     } else {
@@ -195,9 +201,6 @@ class ModulesStarterHelper {
                 modulesStatus.setTorState(STOPPED);
 
                 sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
-
-                Log.e(LOG_TAG, "Error Tor: " + shellResult.exitCode
-                        + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
             }
         };
     }
@@ -255,7 +258,11 @@ class ModulesStarterHelper {
                             + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
                 }
 
-                if (modulesStatus.getItpdState() == STARTING) {
+                Log.e(LOG_TAG, "Error ITPD: " + shellResult.exitCode + " ERR="
+                        + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
+
+                if (modulesStatus.getItpdState() == STARTING
+                        || (modulesStatus.getItpdState() == RUNNING && modulesStatus.isUseModulesWithRoot())) {
                     if (modulesStatus.isRootAvailable()) {
                         forceStopModulesWithRootMethod();
                     } else {
@@ -266,9 +273,6 @@ class ModulesStarterHelper {
                 modulesStatus.setItpdState(STOPPED);
 
                 sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
-
-                Log.e(LOG_TAG, "Error ITPD: " + shellResult.exitCode + " ERR="
-                        + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
             }
         };
     }
@@ -323,6 +327,8 @@ class ModulesStarterHelper {
             return;
         }
 
+        saveModulesAreStopped();
+
         Log.e(LOG_TAG, "FORCE CLOSE ALL NO ROOT METHOD");
 
         modulesStatus.setUseModulesWithRoot(true);
@@ -337,12 +343,23 @@ class ModulesStarterHelper {
 
     private void forceStopModulesWithRootMethod() {
 
+        saveModulesAreStopped();
+
         Log.e(LOG_TAG, "FORCE CLOSE ALL ROOT METHOD");
+
+        boolean useModulesWithRoot = modulesStatus.isUseModulesWithRoot();
 
         ModulesKiller.forceCloseApp(new PathVars(service));
 
-        handler.postDelayed(() -> Toast.makeText(service, R.string.top_fragment_address_already_in_use, Toast.LENGTH_LONG).show(), 5000);
+        if (!useModulesWithRoot) {
+            handler.postDelayed(() -> Toast.makeText(service, R.string.top_fragment_address_already_in_use, Toast.LENGTH_LONG).show(), 5000);
+            handler.postDelayed(() -> System.exit(0), 10000);
+        }
+    }
 
-        handler.postDelayed(() -> System.exit(0), 10000);
+    private void saveModulesAreStopped() {
+        new PrefManager(service).setBoolPref("DNSCrypt Running", false);
+        new PrefManager(service).setBoolPref("Tor Running", false);
+        new PrefManager(service).setBoolPref("I2PD Running", false);
     }
 }
