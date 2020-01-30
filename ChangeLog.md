@@ -101,3 +101,8 @@
 
 **InviZible Pro beta 0.5.8**
 * Fixed a bug in which the modules did not start with the "Run modules with root" option activated.
+* Device restart required after installation
+
+**InviZible Pro beta 0.5.9**
+* Update DNSCrypt to v2.0.38
+* Force the app to stop when one of the modules starts with an error
