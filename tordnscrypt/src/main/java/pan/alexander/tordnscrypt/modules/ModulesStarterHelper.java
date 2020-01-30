@@ -30,6 +30,7 @@ import com.jrummyapps.android.shell.Shell;
 
 import java.util.List;
 
+import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
@@ -112,7 +113,7 @@ class ModulesStarterHelper {
 
                 if (modulesStatus.getDnsCryptState() == STARTING) {
                     if (modulesStatus.isRootAvailable()) {
-                        ModulesKiller.stopDNSCrypt(service);
+                        forceStopModulesWithRootMethod();
                     } else {
                         forceStopModulesWithService();
                     }
@@ -180,7 +181,7 @@ class ModulesStarterHelper {
 
                 if (modulesStatus.getTorState() == STARTING) {
                     if (modulesStatus.isRootAvailable()) {
-                        ModulesKiller.stopTor(service);
+                        forceStopModulesWithRootMethod();
                     } else {
                         forceStopModulesWithService();
                     }
@@ -256,7 +257,7 @@ class ModulesStarterHelper {
 
                 if (modulesStatus.getItpdState() == STARTING) {
                     if (modulesStatus.isRootAvailable()) {
-                        ModulesKiller.stopITPD(service);
+                        forceStopModulesWithRootMethod();
                     } else {
                         forceStopModulesWithService();
                     }
@@ -322,13 +323,26 @@ class ModulesStarterHelper {
             return;
         }
 
+        Log.e(LOG_TAG, "FORCE CLOSE ALL NO ROOT METHOD");
+
         modulesStatus.setUseModulesWithRoot(true);
         modulesStatus.setDnsCryptState(STOPPED);
         modulesStatus.setTorState(STOPPED);
         modulesStatus.setItpdState(STOPPED);
 
-        handler.postDelayed(() -> Toast.makeText(service, "Force Stopping ...", Toast.LENGTH_LONG).show(), 5000);
+        handler.postDelayed(() -> Toast.makeText(service, R.string.top_fragment_address_already_in_use, Toast.LENGTH_LONG).show(), 5000);
 
-        handler.postDelayed(() -> System.exit(0), 8000);
+        handler.postDelayed(() -> System.exit(0), 10000);
+    }
+
+    private void forceStopModulesWithRootMethod() {
+
+        Log.e(LOG_TAG, "FORCE CLOSE ALL ROOT METHOD");
+
+        ModulesKiller.forceCloseApp(new PathVars(service));
+
+        handler.postDelayed(() -> Toast.makeText(service, R.string.top_fragment_address_already_in_use, Toast.LENGTH_LONG).show(), 5000);
+
+        handler.postDelayed(() -> System.exit(0), 10000);
     }
 }

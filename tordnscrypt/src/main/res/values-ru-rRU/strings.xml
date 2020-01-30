@@ -361,4 +361,6 @@
     <string name="main_fragment_access_i2p">Доступ к I2P сайтам с помощью Purple I2P</string>
     <string name="tvTorConnecting">Подключение</string>
     <string name="pref_fast_exclude_apps_from_ipro_summ">Приложения, открывающиеся в обход InviZible</string>
+    <string name="top_fragment_address_already_in_use">Некоторые модули не были правильно остановлены в последний раз.
+        Попробуйте запустить снова. Экстренное завершение…</string>
 </resources>

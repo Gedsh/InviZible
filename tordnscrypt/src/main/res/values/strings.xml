@@ -583,4 +583,7 @@
     <string name="main_fragment_hide_ip">Hide IP with TOR</string>
     <string name="main_fragment_protect_dns">Protect DNS with DNSCRYPT</string>
     <string name="main_fragment_access_i2p">Access to I2P sites with Purple I2P</string>
+
+    <string name="top_fragment_address_already_in_use">Some modules were not properly stopped the last time.
+        Try to start again. Force Close …</string>
 </resources>
