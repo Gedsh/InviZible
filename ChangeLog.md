@@ -106,3 +106,8 @@
 **InviZible Pro beta 0.5.9**
 * Update DNSCrypt to v2.0.38
 * Force the app to stop when one of the modules starts with an error
+
+**InviZible Pro beta 0.6.0**
+* Implemented the option to add a custom DNSCrypt server.
+* Update DNSCrypt to v2.0.39.
+* Performance improvements
