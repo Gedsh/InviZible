@@ -586,4 +586,7 @@
 
     <string name="top_fragment_address_already_in_use">Some modules were not properly stopped the last time.
         Try to start again. Force Close …</string>
+
+    <string name="add_custom_server_title">Add custom server</string>
+    <string name="add_custom_server_error">Invalid custom server configuration. Please check the SDNS field.</string>
 </resources>

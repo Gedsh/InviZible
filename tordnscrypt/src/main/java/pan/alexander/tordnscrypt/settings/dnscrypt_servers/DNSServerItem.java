@@ -29,7 +29,7 @@ import androidx.preference.PreferenceManager;
 import java.util.ArrayList;
 import java.util.Objects;
 
-class DNSServerItem {
+public class DNSServerItem {
     private boolean checked = false;
     private boolean dnssec = false;
     private boolean nolog = false;
@@ -39,11 +39,14 @@ class DNSServerItem {
     private boolean visibility = true;
     private String name;
     private String description;
+    private String sdns;
+    private boolean ownServer = false;
     private ArrayList<String> routes = new ArrayList<>();
 
-    DNSServerItem(Context context, String name, String description, String sdns) {
+    public DNSServerItem(Context context, String name, String description, String sdns) throws Exception {
         this.name = name;
         this.description = description;
+        this.sdns = sdns;
 
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
 
@@ -58,6 +61,8 @@ class DNSServerItem {
             protoDNSCrypt = true;
         } else if (bin[0] == 0x02) {
             protoDoH = true;
+        } else {
+            throw new Exception("Wrong sever type");
         }
 
         if (((bin[1]) & 1) == 1) {
@@ -135,6 +140,18 @@ class DNSServerItem {
 
     String getDescription() {
         return description;
+    }
+
+    public void setOwnServer(boolean ownServer) {
+        this.ownServer = ownServer;
+    }
+
+    boolean getOwnServer() {
+        return ownServer;
+    }
+
+    String getSDNS() {
+        return sdns;
     }
 
     ArrayList<String> getRoutes() {

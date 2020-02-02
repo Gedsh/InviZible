@@ -438,4 +438,6 @@
     <string name="pref_fast_exclude_apps_from_ipro_summ">Lista aplikacji laczacych sie bezposrednio</string>
     <string name="top_fragment_address_already_in_use">Niektóre moduły nie zostały poprawnie zatrzymane ostatnim razem.
         Spróbuj zacząć od nowa. Wymuś zamknięcie…</string>
+    <string name="add_custom_server_title">Dodaj serwer</string>
+    <string name="add_custom_server_error">Niepoprawna niestandardowa konfiguracja serwera. Sprawdź pole SDNS.</string>
 </resources>

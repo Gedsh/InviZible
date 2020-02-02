@@ -77,15 +77,10 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
 
         setRetainInstance(true);
 
-        FileOperations.setOnFileOperationCompleteListener(this);
-
         takeArguments(getArguments());
 
         openPleaseWaitDialog();
 
-        PathVars pathVars = new PathVars(getActivity());
-
-        FileOperations.readTextFile(getActivity(), pathVars.appDataDir + "/app_data/dnscrypt-proxy/relays.md", "relays.md");
     }
 
     @Override
@@ -95,6 +90,12 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
         if (getActivity() == null) {
             return;
         }
+
+        FileOperations.setOnFileOperationCompleteListener(this);
+
+        PathVars pathVars = PathVars.getInstance(getActivity());
+
+        FileOperations.readTextFile(getActivity(), pathVars.getAppDataDir() + "/app_data/dnscrypt-proxy/relays.md", "relays.md");
 
         getActivity().setTitle(R.string.pref_dnscrypt_relays_title);
 
@@ -122,6 +123,13 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+
+        FileOperations.deleteOnFileOperationCompleteListener();
+    }
+
+    @Override
     public void onStop() {
         super.onStop();
 
@@ -138,13 +146,6 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
         ArrayList<DNSServerRelays> routesNew = updateRelaysListForAllServers(dnsServerRelaysNew);
 
         callbackToPreferencesDNSCryptServers(routesNew);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-
-        FileOperations.deleteOnFileOperationCompleteListener();
     }
 
     @SuppressWarnings("unchecked")
