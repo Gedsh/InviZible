@@ -183,87 +183,84 @@ public class FileOperations {
 
     public static void copyBinaryFile(final Context context, final String inputPath, final String inputFile, final String outputPath, final String tag) {
 
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
+        Runnable runnable = () -> {
 
 
-                try {
+            try {
 
-                    reentrantLock.lock();
+                reentrantLock.lock();
 
-                    File dir = new File(outputPath);
-                    if (!dir.isDirectory()) {
-                        if (!dir.mkdirs()) {
-                            throw new IllegalStateException("Unable to create dir " + dir.toString());
-                        }
-
-                        if (!dir.canRead() || !dir.canWrite()) {
-                            if (!dir.setReadable(true) || !dir.setWritable(true)) {
-                                Log.w(LOG_TAG, "Unable to chmod dir " + dir.toString());
-                            }
-                        }
+                File dir = new File(outputPath);
+                if (!dir.isDirectory()) {
+                    if (!dir.mkdirs()) {
+                        throw new IllegalStateException("Unable to create dir " + dir.toString());
                     }
 
-                    File oldFile = new File(outputPath + "/" + inputFile);
-                    if (oldFile.exists()) {
-                        if (deleteFileSynchronous(context, outputPath, inputFile)) {
-                            throw new IllegalStateException("Unable to delete file " + oldFile.toString());
+                    if (!dir.canRead() || !dir.canWrite()) {
+                        if (!dir.setReadable(true) || !dir.setWritable(true)) {
+                            Log.w(LOG_TAG, "Unable to chmod dir " + dir.toString());
                         }
                     }
-
-                    File inFile = new File(inputPath + "/" + inputFile);
-                    if (!inFile.canRead()) {
-                        if (!inFile.setReadable(true)) {
-                            Log.w(LOG_TAG, "Unable to chmod file " + inFile.toString());
-                            FileOperations fileOperations = new FileOperations();
-                            fileOperations.restoreAccess(context, inFile.getPath());
-                        } else if (!inFile.canRead()) {
-                            throw new IllegalStateException("Unable to chmod file " + inFile.toString());
-                        }
-                    }
-
-                    byte[] buffer = new byte[1024];
-                    int read;
-
-                    try (InputStream in = new FileInputStream(inputPath + "/" + inputFile);
-                         OutputStream out = new FileOutputStream(outputPath + "/" + inputFile)) {
-                        while ((read = in.read(buffer)) != -1) {
-                            out.write(buffer, 0, read);
-                        }
-                    }
-
-                    File newFile = new File(outputPath + "/" + inputFile);
-                    if (!newFile.exists()) {
-                        throw new IllegalStateException("New file not exist " + oldFile.toString());
-                    }
-
-                    if (callback != null && !tag.contains("ignored")) {
-                        if (callback instanceof OnBinaryFileOperationsCompleteListener) {
-                            ((OnBinaryFileOperationsCompleteListener) callback).OnFileOperationComplete(
-                                    copyBinaryFile, true, outputPath + "/" + inputFile, tag);
-                        } else {
-                            throw new ClassCastException("Wrong File operations type. Choose binary type.");
-                        }
-
-                    }
-
-
-                } catch (Exception e) {
-                    if (callback != null && !tag.contains("ignored")) {
-                        if (callback instanceof OnBinaryFileOperationsCompleteListener) {
-                            ((OnBinaryFileOperationsCompleteListener) callback).OnFileOperationComplete(
-                                    copyBinaryFile, false, outputPath + "/" + inputFile, tag);
-                        } else {
-                            throw new ClassCastException("Wrong File operations type. Choose binary type.");
-                        }
-                    }
-                    Log.e(LOG_TAG, "copyBinaryFile function fault " + e.getMessage() + " " + e.getCause());
-                } finally {
-                    reentrantLock.unlock();
                 }
 
+                File oldFile = new File(outputPath + "/" + inputFile);
+                if (oldFile.exists()) {
+                    if (deleteFileSynchronous(context, outputPath, inputFile)) {
+                        throw new IllegalStateException("Unable to delete file " + oldFile.toString());
+                    }
+                }
+
+                File inFile = new File(inputPath + "/" + inputFile);
+                if (!inFile.canRead()) {
+                    if (!inFile.setReadable(true)) {
+                        Log.w(LOG_TAG, "Unable to chmod file " + inFile.toString());
+                        FileOperations fileOperations = new FileOperations();
+                        fileOperations.restoreAccess(context, inFile.getPath());
+                    } else if (!inFile.canRead()) {
+                        throw new IllegalStateException("Unable to chmod file " + inFile.toString());
+                    }
+                }
+
+                byte[] buffer = new byte[1024];
+                int read;
+
+                try (InputStream in = new FileInputStream(inputPath + "/" + inputFile);
+                     OutputStream out = new FileOutputStream(outputPath + "/" + inputFile)) {
+                    while ((read = in.read(buffer)) != -1) {
+                        out.write(buffer, 0, read);
+                    }
+                }
+
+                File newFile = new File(outputPath + "/" + inputFile);
+                if (!newFile.exists()) {
+                    throw new IllegalStateException("New file not exist " + oldFile.toString());
+                }
+
+                if (callback != null && !tag.contains("ignored")) {
+                    if (callback instanceof OnBinaryFileOperationsCompleteListener) {
+                        ((OnBinaryFileOperationsCompleteListener) callback).OnFileOperationComplete(
+                                copyBinaryFile, true, outputPath + "/" + inputFile, tag);
+                    } else {
+                        throw new ClassCastException("Wrong File operations type. Choose binary type.");
+                    }
+
+                }
+
+
+            } catch (Exception e) {
+                if (callback != null && !tag.contains("ignored")) {
+                    if (callback instanceof OnBinaryFileOperationsCompleteListener) {
+                        ((OnBinaryFileOperationsCompleteListener) callback).OnFileOperationComplete(
+                                copyBinaryFile, false, outputPath + "/" + inputFile, tag);
+                    } else {
+                        throw new ClassCastException("Wrong File operations type. Choose binary type.");
+                    }
+                }
+                Log.e(LOG_TAG, "copyBinaryFile function fault " + e.getMessage() + " " + e.getCause());
+            } finally {
+                reentrantLock.unlock();
             }
+
         };
 
         if (executorService == null || executorService.isShutdown()) {
@@ -776,11 +773,11 @@ public class FileOperations {
             context.registerReceiver(br, intentFilterBckgIntSer);
 
             String appUID = new PrefManager(context).getStrPref("appUID");
-            PathVars pathVars = new PathVars(context);
+            PathVars pathVars = PathVars.getInstance(context);
             String[] commands = {
-                    pathVars.busyboxPath + "chown -R " + appUID + "." + appUID + " " + filePath,
+                    pathVars.getBusyboxPath()+ "chown -R " + appUID + "." + appUID + " " + filePath,
                     "restorecon " + filePath,
-                    pathVars.busyboxPath + "sleep 1"
+                    pathVars.getBusyboxPath() + "sleep 1"
             };
             RootCommands rootCommands = new RootCommands(commands);
             Intent intent = new Intent(context, RootExecService.class);
