@@ -95,7 +95,7 @@ public class ModulesService extends Service {
 
         notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
 
-        pathVars = new PathVars(this);
+        pathVars = PathVars.getInstance(this);
 
         modulesKiller = new ModulesKiller(this, pathVars);
 

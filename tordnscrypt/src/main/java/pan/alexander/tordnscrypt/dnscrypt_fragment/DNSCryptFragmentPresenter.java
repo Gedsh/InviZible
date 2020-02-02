@@ -86,8 +86,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             return;
         }
 
-        PathVars pathVars = new PathVars(context);
-        appDataDir = pathVars.appDataDir;
+        PathVars pathVars = PathVars.getInstance(context);
+        appDataDir = pathVars.getAppDataDir();
 
         modulesStatus = ModulesStatus.getInstance();
 
@@ -188,6 +188,10 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                 }
 
                 final boolean displayed = displayDnsResponses(lastLines);
+
+                if (view == null || view.getFragmentActivity() == null || logFile == null) {
+                    return;
+                }
 
                 view.getFragmentActivity().runOnUiThread(() -> {
 

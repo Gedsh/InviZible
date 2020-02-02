@@ -197,8 +197,8 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
             return;
         }
 
-        PathVars pathVars = new PathVars(getActivity());
-        String appDataDir = pathVars.appDataDir;
+        PathVars pathVars = PathVars.getInstance(getActivity());
+        String appDataDir = pathVars.getAppDataDir();
 
         if (!isChanged)
             return;
@@ -523,6 +523,8 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
                 pbTorApp.setIndeterminate(false);
                 pbTorApp.setVisibility(View.GONE);
             });
+
+            System.gc();
         };
         thread = new Thread(fillAppsList);
         thread.start();

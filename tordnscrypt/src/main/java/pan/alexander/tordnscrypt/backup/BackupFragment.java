@@ -74,11 +74,11 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
         btnSaveBackup.setOnClickListener(this);
         btnSaveBackup.requestFocus();
         etFilePath = view.findViewById(R.id.etPathBackup);
-        PathVars pathVars = new PathVars(view.getContext());
-        pathBackup = pathVars.pathBackup;
+        PathVars pathVars = PathVars.getInstance(view.getContext());
+        pathBackup = pathVars.getDefaultBackupPath();
         etFilePath.setText(pathBackup);
         etFilePath.setOnClickListener(this);
-        appDataDir = pathVars.appDataDir;
+        appDataDir = pathVars.getAppDataDir();
 
         return view;
     }

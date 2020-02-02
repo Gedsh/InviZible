@@ -107,8 +107,8 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
 
         getActivity().setTitle(R.string.drawer_menu_DNSSettings);
 
-        PathVars pathVars = new PathVars(getActivity());
-        appDataDir = pathVars.appDataDir;
+        PathVars pathVars = PathVars.getInstance(getActivity());
+        appDataDir = pathVars.getAppDataDir();
     }
 
     @Override

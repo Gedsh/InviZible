@@ -83,8 +83,8 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
             return;
         }
 
-        PathVars pathVars = new PathVars(context);
-        appDataDir = pathVars.appDataDir;
+        PathVars pathVars = PathVars.getInstance(context);
+        appDataDir = pathVars.getAppDataDir();
 
         modulesStatus = ModulesStatus.getInstance();
 
@@ -353,6 +353,10 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
                 if (++loop > 30) {
                     loop = 0;
                     displayLog(10000);
+                }
+
+                if (view == null || view.getFragmentActivity() == null) {
+                    return;
                 }
 
                 view.getFragmentActivity().runOnUiThread(() -> {

@@ -59,9 +59,9 @@ public class TorFragmentReceiver extends BroadcastReceiver {
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
-        PathVars pathVars = new PathVars(context);
-        torPath = pathVars.torPath;
-        busyboxPath = pathVars.busyboxPath;
+        PathVars pathVars = PathVars.getInstance(context);
+        torPath = pathVars.getTorPath();
+        busyboxPath = pathVars.getBusyboxPath();
 
         if (intent != null) {
             final String action = intent.getAction();

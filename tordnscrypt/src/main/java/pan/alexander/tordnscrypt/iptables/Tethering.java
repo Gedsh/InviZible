@@ -59,20 +59,20 @@ class Tethering {
 
     Tethering(Context context) {
         this.context = context;
-        PathVars pathVars = new PathVars(context);
-        iptables = pathVars.iptablesPath;
-        itpdHttpProxyPort = pathVars.itpdHttpProxyPort;
-        dnsCryptPort = pathVars.dnsCryptPort;
-        appDataDir = pathVars.appDataDir;
-        torTransPort = pathVars.torTransPort;
-        busybox = pathVars.busyboxPath;
-        torVirtAdrNet = pathVars.torVirtAdrNet;
-        torDNSPort = pathVars.torDNSPort;
-        torSocksPort = pathVars.torSOCKSPort;
-        itpdSocksPort = pathVars.itpdSOCKSPort;
-        itpdTeleSocksProxyPort1 = pathVars.itpdTeleSocksProxyPort1;
-        itpdTeleSocksProxyPort2 = pathVars.itpdTeleSocksProxyPort2;
-        itpdTeleSocksProxyPort3 = pathVars.itpdTeleSocksProxyPort3;
+        PathVars pathVars = PathVars.getInstance(context);
+        iptables = pathVars.getIptablesPath();
+        itpdHttpProxyPort = pathVars.getITPDHttpProxyPort();
+        dnsCryptPort = pathVars.getDNSCryptPort();
+        appDataDir = pathVars.getAppDataDir();
+        torTransPort = pathVars.getTorTransPort();
+        busybox = pathVars.getBusyboxPath();
+        torVirtAdrNet = pathVars.getTorVirtAdrNet();
+        torDNSPort = pathVars.getTorDNSPort();
+        torSocksPort = pathVars.getTorSOCKSPort();
+        itpdSocksPort = pathVars.getITPDSOCKSPort();
+        itpdTeleSocksProxyPort1 = pathVars.getITPDTeleSocksProxyPort1();
+        itpdTeleSocksProxyPort2 = pathVars.getITPDTeleSocksProxyPort2();
+        itpdTeleSocksProxyPort3 = pathVars.getITPDTeleSocksProxyPort3();
     }
 
     String[] activateTethering(boolean privacyMode) {

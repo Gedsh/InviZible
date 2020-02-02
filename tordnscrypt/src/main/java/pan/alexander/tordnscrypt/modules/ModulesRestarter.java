@@ -68,10 +68,10 @@ public class ModulesRestarter {
 
     Runnable getTorRestarterRunnable(Context context) {
         boolean useModulesWithRoot = ModulesStatus.getInstance().isUseModulesWithRoot();
-        PathVars pathVars = new PathVars(context);
-        String torPid = readPidFile(context, pathVars.appDataDir + "/tor.pid");
+        PathVars pathVars = PathVars.getInstance(context);
+        String torPid = readPidFile(context, pathVars.getAppDataDir() + "/tor.pid");
 
-        return () -> restartModule(pathVars, pathVars.torPath, torPid, useModulesWithRoot);
+        return () -> restartModule(pathVars, pathVars.getTorPath(), torPid, useModulesWithRoot);
 
     }
 
@@ -138,7 +138,7 @@ public class ModulesRestarter {
         String[] result;
 
         if (pid.isEmpty() || killWithRoot) {
-            String killStringBusybox = pathVars.busyboxPath + "pkill -SIGHUP" + " " + module;
+            String killStringBusybox = pathVars.getBusyboxPath() + "pkill -SIGHUP" + " " + module;
             //String killAllStringBusybox = pathVars.busyboxPath + "kill -s SIGHUP" + " $(pgrep " + module + ")";
             String killStringToyBox = "toybox pkill -SIGHUP" + " " + module;
             //String killString = "pkill -" + "SIGHUP" + " " + module;

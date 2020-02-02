@@ -80,8 +80,8 @@ public class TorRefreshIPsWork {
         routeAllThroughTorDevice = shPref.getBoolean("pref_fast_all_through_tor", true);
         routeAllThroughTorTether = shPref.getBoolean("pref_common_tor_route_all", false);
 
-        PathVars pathVars = new PathVars(context);
-        appDataDir = pathVars.appDataDir;
+        PathVars pathVars = PathVars.getInstance(context);
+        appDataDir = pathVars.getAppDataDir();
 
         getBridgesIP();
 

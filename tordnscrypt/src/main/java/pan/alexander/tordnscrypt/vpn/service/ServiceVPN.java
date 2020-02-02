@@ -280,7 +280,7 @@ public class ServiceVPN extends VpnService {
             try {
                 InetAddress start = InetAddress.getByName("0.0.0.0");
                 for (IPUtil.CIDR exclude : listExclude) {
-                    Log.i(LOG_TAG, "Exclude " + exclude.getStart().getHostAddress() + "..." + exclude.getEnd().getHostAddress());
+                    //Log.i(LOG_TAG, "Exclude " + exclude.getStart().getHostAddress() + "..." + exclude.getEnd().getHostAddress());
                     for (IPUtil.CIDR include : IPUtil.toCIDR(start, IPUtil.minus1(exclude.getStart())))
                         try {
                             builder.addRoute(include.address, include.prefix);
@@ -302,7 +302,6 @@ public class ServiceVPN extends VpnService {
         } else
             builder.addRoute("0.0.0.0", 0);
 
-        Log.i(LOG_TAG, "VPN IPv6=" + ip6);
         if (ip6)
             builder.addRoute("2000::", 3); // unicast
 
@@ -390,7 +389,7 @@ public class ServiceVPN extends VpnService {
         int torSOCKSPort = 9050;
 
         try {
-            torSOCKSPort = Integer.parseInt(pathVars.torSOCKSPort);
+            torSOCKSPort = Integer.parseInt(pathVars.getTorSOCKSPort());
         } catch (Exception e) {
             Log.e(LOG_TAG, "VPN SOCKS Parse Exception " + e.getMessage() + " " + e.getCause());
         }
@@ -480,9 +479,9 @@ public class ServiceVPN extends VpnService {
         int torDNSPort = 5400;
         int itpdHttpPort = 4444;
         try {
-            dnsCryptPort = Integer.parseInt(pathVars.dnsCryptPort);
-            torDNSPort = Integer.parseInt(pathVars.torDNSPort);
-            itpdHttpPort = Integer.parseInt(pathVars.itpdHttpProxyPort);
+            dnsCryptPort = Integer.parseInt(pathVars.getDNSCryptPort());
+            torDNSPort = Integer.parseInt(pathVars.getTorDNSPort());
+            itpdHttpPort = Integer.parseInt(pathVars.getITPDHttpProxyPort());
         } catch (Exception e) {
             Log.e(LOG_TAG, "VPN Redirect Ports Parse Exception " + e.getMessage() + " " + e.getCause());
         }
@@ -875,7 +874,7 @@ public class ServiceVPN extends VpnService {
         blockHttp = prefs.getBoolean("pref_fast_block_http", false);
         routeAllThroughInviZible = prefs.getBoolean("pref_fast_all_through_tor", true);
 
-        pathVars = new PathVars(this);
+        pathVars = PathVars.getInstance(this);
         modulesStatus = ModulesStatus.getInstance();
 
         if (intent != null) {

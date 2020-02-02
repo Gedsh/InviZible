@@ -59,8 +59,8 @@ public class Installer implements TopFragment.OnActivityChangeListener {
     public Installer(Activity activity) {
         this.activity = activity;
 
-        pathVars = new PathVars(activity);
-        appDataDir = pathVars.appDataDir;
+        pathVars = PathVars.getInstance(activity);
+        appDataDir = pathVars.getAppDataDir();
 
         if (activity instanceof MainActivity) {
             mainActivity = (MainActivity) activity;
@@ -297,7 +297,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         new PrefManager(activity).setBoolPref("I2PD Running", false);
 
         String busyboxNative = "";
-        if (new PrefManager(activity).getBoolPref("bbOK") && pathVars.busyboxPath.equals("busybox ")) {
+        if (new PrefManager(activity).getBoolPref("bbOK") && pathVars.getBusyboxPath().equals("busybox ")) {
             busyboxNative = "busybox ";
         }
 

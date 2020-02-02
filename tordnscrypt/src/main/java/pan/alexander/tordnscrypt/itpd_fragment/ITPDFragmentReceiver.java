@@ -58,9 +58,9 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
-        PathVars pathVars = new PathVars(context);
-        itpdPath = pathVars.itpdPath;
-        busyboxPath = pathVars.busyboxPath;
+        PathVars pathVars = PathVars.getInstance(context);
+        itpdPath = pathVars.getITPDPath();
+        busyboxPath = pathVars.getBusyboxPath();
 
         if (intent != null) {
             final String action = intent.getAction();

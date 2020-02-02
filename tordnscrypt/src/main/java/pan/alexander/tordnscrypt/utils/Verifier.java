@@ -53,7 +53,7 @@ public class Verifier {
     public Context context;
     private final String LOG_TAG = RootExecService.LOG_TAG;
 
-    public Verifier(Context context){
+    public Verifier(Context context) {
         this.context = context;
     }
 
@@ -89,26 +89,26 @@ public class Verifier {
         return null;
     }
 
-    public String getApkSignatureZipModern() throws Exception{
+    public String getApkSignatureZipModern() throws Exception {
         File apkFile = new File(context.getApplicationInfo().sourceDir);
         ZipFile zipFile = new ZipFile(apkFile);
         ZipEntry ze = zipFile.getEntry("META-INF/CERT.RSA");
-        if (ze==null)
+        if (ze == null)
             return null;
         InputStream inputStream = zipFile.getInputStream(ze);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         byte[] buffer = new byte[8192];
         int len;
         while ((len = inputStream.read(buffer)) != -1) {
-            baos.write(buffer,0,len);
+            baos.write(buffer, 0, len);
         }
         baos.close();
+        inputStream.close();
         zipFile.close();
         byte[] byteSign = baos.toByteArray();
         byteSign = CertificateFactory.getInstance("X509").generateCertificate(new ByteArrayInputStream(byteSign)).getEncoded();
         return Base64.encodeToString(MessageDigest.getInstance("md5").digest(byteSign), Base64.DEFAULT);
     }
-
 
 
     //The arguement is your public key's value that is deal with md5 and base64
@@ -126,32 +126,32 @@ public class Verifier {
     }
 
     public String decryptStr(String text, String key, String vector) throws Exception {
-        key = key.substring(key.length()-16);
+        key = key.substring(key.length() - 16);
         // Create key and cipher
         Key aesKey = new SecretKeySpec(key.getBytes(), "AES");
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         // decrypt the text
-        byte[] ivBytes = vector.substring(vector.length()-16).getBytes();
-        cipher.init(Cipher.DECRYPT_MODE, aesKey,new IvParameterSpec(ivBytes));
-        byte[] decrypted = Base64.decode(text.getBytes(StandardCharsets.UTF_8),Base64.DEFAULT);
+        byte[] ivBytes = vector.substring(vector.length() - 16).getBytes();
+        cipher.init(Cipher.DECRYPT_MODE, aesKey, new IvParameterSpec(ivBytes));
+        byte[] decrypted = Base64.decode(text.getBytes(StandardCharsets.UTF_8), Base64.DEFAULT);
         return new String(cipher.doFinal(decrypted));
     }
 
     public void encryptStr(String text, String key, String vector) {
         try {
             if (TopFragment.debug) {
-                key = key.substring(key.length()-16);
+                key = key.substring(key.length() - 16);
                 // Create key and cipher
                 Key aesKey = new SecretKeySpec(key.getBytes(), "AES");
 
                 Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-                byte[] ivBytes = vector.substring(vector.length()-16).getBytes();
+                byte[] ivBytes = vector.substring(vector.length() - 16).getBytes();
                 // encrypt the text
                 cipher.init(Cipher.ENCRYPT_MODE, aesKey, new IvParameterSpec(ivBytes));
                 byte[] encrypted = cipher.doFinal(text.getBytes(StandardCharsets.UTF_8));
 
-                PathVars pathVars = new PathVars(context);
-                File f = new File(pathVars.appDataDir+"/logs");
+                PathVars pathVars = PathVars.getInstance(context);
+                File f = new File(pathVars.getAppDataDir() + "/logs");
 
                 if (f.mkdirs() && f.setReadable(true) && f.setWritable(true)) {
                     Log.i(LOG_TAG, "encryptStr log dir created");
@@ -159,9 +159,9 @@ public class Verifier {
                     Log.e(LOG_TAG, "encryptStr Unable to create and chmod log dir");
                 }
 
-                PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(pathVars.appDataDir+"/logs/EncryptedStr.txt", true)));
+                PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(pathVars.getAppDataDir() + "/logs/EncryptedStr.txt", true)));
                 writer.println(text);
-                writer.println(Base64.encodeToString(encrypted,Base64.DEFAULT));
+                writer.println(Base64.encodeToString(encrypted, Base64.DEFAULT));
                 writer.println("********************");
                 writer.close();
             }

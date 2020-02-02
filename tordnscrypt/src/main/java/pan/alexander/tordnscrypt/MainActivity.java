@@ -880,7 +880,7 @@ public class MainActivity extends LangAppCompatActivity
 
             Toast.makeText(this, "Force Close ...", Toast.LENGTH_LONG).show();
 
-            ModulesKiller.forceCloseApp(new PathVars(this));
+            ModulesKiller.forceCloseApp(PathVars.getInstance(this));
 
             new Handler().postDelayed(() -> {
                 Intent intent = new Intent(MainActivity.this, ModulesService.class);

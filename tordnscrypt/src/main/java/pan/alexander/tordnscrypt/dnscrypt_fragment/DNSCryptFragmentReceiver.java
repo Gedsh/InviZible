@@ -67,9 +67,9 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
-        PathVars pathVars = new PathVars(context);
-        dnscryptPath = pathVars.dnscryptPath;
-        busyboxPath = pathVars.busyboxPath;
+        PathVars pathVars = PathVars.getInstance(context);
+        dnscryptPath = pathVars.getDNSCryptPath();
+        busyboxPath = pathVars.getBusyboxPath();
 
 
         if (intent != null) {

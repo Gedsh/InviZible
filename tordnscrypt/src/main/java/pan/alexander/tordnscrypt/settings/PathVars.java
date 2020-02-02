@@ -34,84 +34,62 @@ import pan.alexander.tordnscrypt.utils.PrefManager;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class PathVars {
-    public final String rejectAddress = "10.191.0.2";
-    public final String itpdTeleSocksProxyPort1 = "1080";
-    public final String itpdTeleSocksProxyPort2 = "4480";
-    public final String itpdTeleSocksProxyPort3 = "4481";
+    private static volatile PathVars pathVars;
 
-    public String appDataDir;
-    public String dnsCryptPort;
-    public String itpdHttpProxyPort;
-    public String torTransPort;
-    public String dnsCryptFallbackRes;
-    public String torDNSPort;
-    public String torVirtAdrNet;
-    public String dnscryptPath;
-    public String torPath;
-    public String itpdPath;
-    public String busyboxPath;
-    public String iptablesPath;
-    public String pathBackup;
-    public String torSOCKSPort;
-    public String torHTTPTunnelPort;
-    public String itpdSOCKSPort;
-    private String nativeLibPath;
+    private final SharedPreferences preferences;
 
-    String obfsPath;
+    private String appDataDir;
+    private String dnscryptPath;
+    private String torPath;
+    private String itpdPath;
+    private String obfsPath;
+    private boolean bbOK;
+
 
     @SuppressLint("SdCardPath")
-    public PathVars(Context context) {
+    private PathVars(Context context) {
+
+        preferences = PreferenceManager.getDefaultSharedPreferences(context);
 
         appDataDir = context.getApplicationInfo().dataDir;
-
-        nativeLibPath = context.getApplicationInfo().nativeLibraryDir;
 
         if (appDataDir == null) {
             appDataDir = "/data/data/" + context.getPackageName();
         }
 
+        String nativeLibPath = context.getApplicationInfo().nativeLibraryDir;
+
         if (!isModulesInstalled(context)) {
             saveAppUID(context);
         }
 
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
+        bbOK = new PrefManager(context).getBoolPref("bbOK");
 
-        setAuxPaths(shPref);
-
-        busyboxPath = getBusyBoxPath(context, shPref);
-
-        iptablesPath = getIptablesPath(shPref);
-
-        pathBackup = getDefaultBackupPath();
-    }
-
-    private void setAuxPaths(SharedPreferences shPref) {
-        dnsCryptPort = shPref.getString("listen_port", "5354");
-        torSOCKSPort = shPref.getString("SOCKSPort", "9050");
-        torHTTPTunnelPort = shPref.getString("HTTPTunnelPort", "8118");
-        itpdSOCKSPort = shPref.getString("Socks proxy port", "4447");
-
-        itpdHttpProxyPort = shPref.getString("HTTP proxy port", "4444");
-
-        torTransPort = shPref.getString("TransPort", "9040");
-        torTransPort = torTransPort.replaceAll(".+:", "");
-
-        dnsCryptFallbackRes = shPref.getString("fallback_resolver", "9.9.9.9");
-        torDNSPort = shPref.getString("DNSPort", "5400");
-        torVirtAdrNet = shPref.getString("VirtualAddrNetworkIPv4", "10.0.0.0/10");
         dnscryptPath = nativeLibPath + "/libdnscrypt-proxy.so";
         torPath = nativeLibPath + "/libtor.so";
         itpdPath = nativeLibPath + "/libi2pd.so";
         obfsPath = nativeLibPath + "/libobfs4proxy.so";
     }
 
-    private String getDefaultBackupPath() {
-        String storageDir = Environment.getExternalStorageDirectory().getPath();
-        return storageDir + "/TorDNSCrypt";
+    public static PathVars getInstance(Context context) {
+
+
+        if (pathVars == null) {
+            synchronized (PathVars.class) {
+                if (pathVars == null) {
+                    pathVars = new PathVars(context);
+                }
+            }
+        }
+        return pathVars;
     }
 
-    private String getIptablesPath(SharedPreferences shPref) {
-        String iptablesSelector = shPref.getString("pref_common_use_iptables", "1");
+    public String getDefaultBackupPath() {
+        return Environment.getExternalStorageDirectory().getPath() + "/TorDNSCrypt";
+    }
+
+    public String getIptablesPath() {
+        String iptablesSelector = preferences.getString("pref_common_use_iptables", "1");
 
         String path;
         switch (iptablesSelector) {
@@ -128,9 +106,9 @@ public class PathVars {
         return path;
     }
 
-    private String getBusyBoxPath(Context context, SharedPreferences shPref) {
+    public String getBusyboxPath() {
 
-        String busyBoxSelector = shPref.getString("pref_common_use_busybox", "1");
+        String busyBoxSelector = preferences.getString("pref_common_use_busybox", "1");
 
         String path;
         switch (busyBoxSelector) {
@@ -146,7 +124,7 @@ public class PathVars {
             case "1":
 
             default:
-                if (new PrefManager(context).getBoolPref("bbOK")) {
+                if (bbOK) {
                     path = "busybox ";
                 } else {
                     path = appDataDir + "/app_bin/busybox ";
@@ -174,5 +152,78 @@ public class PathVars {
         new PrefManager(Objects.requireNonNull(context)).setStrPref("appUID", appUID);
 
         Log.i(LOG_TAG, "PathVars AppDataDir " + appDataDir + " AppUID " + appUID);
+    }
+
+    public String getRejectAddress() {
+        return "10.191.0.2";
+    }
+
+    public String getITPDTeleSocksProxyPort1() {
+        return "1080";
+    }
+
+    public String getITPDTeleSocksProxyPort2() {
+        return "4480";
+    }
+
+    public String getITPDTeleSocksProxyPort3() {
+        return "4481";
+    }
+
+    public String getAppDataDir() {
+        return appDataDir;
+    }
+
+    public String getDNSCryptPath() {
+        return dnscryptPath;
+    }
+
+    public String getTorPath() {
+        return torPath;
+    }
+
+    public String getITPDPath() {
+        return itpdPath;
+    }
+
+    String getObfsPath() {
+        return obfsPath;
+    }
+
+    public String getTorVirtAdrNet() {
+        return preferences.getString("VirtualAddrNetworkIPv4", "10.0.0.0/10");
+    }
+
+    public String getDNSCryptPort() {
+        return preferences.getString("listen_port", "5354");
+    }
+
+    public String getITPDHttpProxyPort() {
+        return preferences.getString("HTTP proxy port", "4444");
+    }
+
+    public String getTorTransPort() {
+        String torTransPort = preferences.getString("TransPort", "9040");
+        return torTransPort.replaceAll(".+:", "");
+    }
+
+    public String getDNSCryptFallbackRes() {
+        return preferences.getString("fallback_resolver", "9.9.9.9");
+    }
+
+    public String getTorDNSPort() {
+        return preferences.getString("DNSPort", "5400");
+    }
+
+    public String getTorSOCKSPort() {
+        return preferences.getString("SOCKSPort", "9050");
+    }
+
+    public String getTorHTTPTunnelPort() {
+        return preferences.getString("HTTPTunnelPort", "8118");
+    }
+
+    public String getITPDSOCKSPort() {
+        return preferences.getString("Socks proxy port", "4447");
     }
 }

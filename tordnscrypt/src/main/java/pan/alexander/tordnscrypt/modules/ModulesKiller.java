@@ -54,7 +54,11 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 
 public class ModulesKiller {
     private final Service service;
-    private final PathVars pathVars;
+    private String appDataDir;
+    private String busyboxPath;
+    private String dnscryptPath;
+    private String torPath;
+    private String itpdPath;
 
     private final ModulesStatus modulesStatus;
 
@@ -66,7 +70,11 @@ public class ModulesKiller {
 
     ModulesKiller(Service service, PathVars pathVars) {
         this.service = service;
-        this.pathVars = pathVars;
+        appDataDir = pathVars.getAppDataDir();
+        busyboxPath = pathVars.getBusyboxPath();
+        dnscryptPath = pathVars.getDNSCryptPath();
+        torPath = pathVars.getTorPath();
+        itpdPath = pathVars.getITPDPath();
         modulesStatus = ModulesStatus.getInstance();
         reentrantLock = new ReentrantLock();
     }
@@ -149,18 +157,18 @@ public class ModulesKiller {
 
             reentrantLock.lock();
 
-            String dnsCryptPid = readPidFile(pathVars.appDataDir + "/dnscrypt-proxy.pid");
+            String dnsCryptPid = readPidFile(appDataDir + "/dnscrypt-proxy.pid");
 
             boolean moduleStartedWithRoot = new PrefManager(service).getBoolPref("DNSCryptStartedWithRoot");
             boolean rootIsAvailable = modulesStatus.isRootAvailable();
 
-            boolean result = doThreeAttemptsToStopModule(pathVars.dnscryptPath, dnsCryptPid, dnsCryptThread, moduleStartedWithRoot);
+            boolean result = doThreeAttemptsToStopModule(dnscryptPath, dnsCryptPid, dnsCryptThread, moduleStartedWithRoot);
 
             if (!result) {
 
                 if (rootIsAvailable) {
                     Log.w(LOG_TAG, "ModulesKiller cannot stop DNSCrypt. Stop with root method!");
-                    result = killModule(pathVars.dnscryptPath, dnsCryptPid, dnsCryptThread, true, "SIGKILL", 10);
+                    result = killModule(dnscryptPath, dnsCryptPid, dnsCryptThread, true, "SIGKILL", 10);
                 }
 
                 if (!moduleStartedWithRoot && !result) {
@@ -176,7 +184,7 @@ public class ModulesKiller {
                 if (!result) {
                     if (modulesStatus.getDnsCryptState() != RESTARTING) {
                         new PrefManager(service).setBoolPref("DNSCrypt Running", true);
-                        sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, pathVars.dnscryptPath);
+                        sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, dnscryptPath);
                     }
 
                     modulesStatus.setDnsCryptState(RUNNING);
@@ -195,7 +203,7 @@ public class ModulesKiller {
 
                     if (modulesStatus.getDnsCryptState() != RESTARTING) {
                         new PrefManager(service).setBoolPref("DNSCrypt Running", true);
-                        sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, pathVars.dnscryptPath);
+                        sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, dnscryptPath);
                     }
 
                     modulesStatus.setDnsCryptState(RUNNING);
@@ -226,18 +234,18 @@ public class ModulesKiller {
 
             reentrantLock.lock();
 
-            String torPid = readPidFile(pathVars.appDataDir + "/tor.pid");
+            String torPid = readPidFile(appDataDir + "/tor.pid");
 
             boolean moduleStartedWithRoot = new PrefManager(service).getBoolPref("TorStartedWithRoot");
             boolean rootIsAvailable = modulesStatus.isRootAvailable();
 
-            boolean result = doThreeAttemptsToStopModule(pathVars.torPath, torPid, torThread, moduleStartedWithRoot);
+            boolean result = doThreeAttemptsToStopModule(torPath, torPid, torThread, moduleStartedWithRoot);
 
             if (!result) {
 
                 if (rootIsAvailable) {
                     Log.w(LOG_TAG, "ModulesKiller cannot stop Tor. Stop with root method!");
-                    result = killModule(pathVars.torPath, torPid, torThread, true, "SIGKILL", 10);
+                    result = killModule(torPath, torPid, torThread, true, "SIGKILL", 10);
                 }
 
                 if (!moduleStartedWithRoot && !result) {
@@ -253,7 +261,7 @@ public class ModulesKiller {
             if (moduleStartedWithRoot) {
                 if (!result) {
                     if (modulesStatus.getTorState() != RESTARTING) {
-                        sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, pathVars.torPath);
+                        sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, torPath);
                         new PrefManager(service).setBoolPref("Tor Running", true);
                     }
 
@@ -273,7 +281,7 @@ public class ModulesKiller {
 
                     if (modulesStatus.getTorState() != RESTARTING) {
                         new PrefManager(service).setBoolPref("Tor Running", true);
-                        sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, pathVars.torPath);
+                        sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, torPath);
                     }
 
                     modulesStatus.setTorState(RUNNING);
@@ -302,18 +310,18 @@ public class ModulesKiller {
 
             reentrantLock.lock();
 
-            String itpdPid = readPidFile(pathVars.appDataDir + "/i2pd.pid");
+            String itpdPid = readPidFile(appDataDir + "/i2pd.pid");
 
             boolean moduleStartedWithRoot = new PrefManager(service).getBoolPref("ITPDStartedWithRoot");
             boolean rootIsAvailable = modulesStatus.isRootAvailable();
 
-            boolean result = doThreeAttemptsToStopModule(pathVars.itpdPath, itpdPid, itpdThread, moduleStartedWithRoot);
+            boolean result = doThreeAttemptsToStopModule(itpdPath, itpdPid, itpdThread, moduleStartedWithRoot);
 
             if (!result) {
 
                 if (rootIsAvailable ) {
                     Log.w(LOG_TAG, "ModulesKiller cannot stop I2P. Stop with root method!");
-                    result = killModule(pathVars.itpdPath, itpdPid, itpdThread, true, "SIGKILL", 10);
+                    result = killModule(itpdPath, itpdPid, itpdThread, true, "SIGKILL", 10);
                 }
 
                 if (!moduleStartedWithRoot && !result) {
@@ -329,7 +337,7 @@ public class ModulesKiller {
                 if (!result) {
                     if (modulesStatus.getItpdState() != RESTARTING) {
                         new PrefManager(service).setBoolPref("I2PD Running", true);
-                        sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, pathVars.itpdPath);
+                        sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, itpdPath);
                     }
 
                     modulesStatus.setItpdState(RUNNING);
@@ -350,7 +358,7 @@ public class ModulesKiller {
 
                 if (modulesStatus.getItpdState() != RESTARTING) {
                     new PrefManager(service).setBoolPref("I2PD Running", true);
-                    sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, pathVars.itpdPath);
+                    sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, itpdPath);
                 }
 
                 modulesStatus.setItpdState(RUNNING);
@@ -381,8 +389,8 @@ public class ModulesKiller {
         if ((thread == null || !thread.isAlive()) && modulesStatus.isRootAvailable()
                 || killWithRoot) {
 
-            String sleep = pathVars.busyboxPath + "sleep " + delaySec;
-            String checkString = pathVars.busyboxPath + "pgrep -l " + module;
+            String sleep = busyboxPath + "sleep " + delaySec;
+            String checkString = busyboxPath + "pgrep -l " + module;
 
             String[] commands = Arr.ADD2(preparedCommands, new String[]{sleep, checkString});
 
@@ -465,13 +473,13 @@ public class ModulesKiller {
         if (pid.isEmpty() || killWithRoot) {
             String killStringToyBox = "toybox pkill " + module;
             String killString = "pkill " + module;
-            String killStringBusybox = pathVars.busyboxPath + "pkill " + module;
-            String killAllStringBusybox = pathVars.busyboxPath + "kill $(pgrep " + module + ")";
+            String killStringBusybox = busyboxPath + "pkill " + module;
+            String killAllStringBusybox = busyboxPath + "kill $(pgrep " + module + ")";
             if (!signal.isEmpty()) {
                 killStringToyBox = "toybox pkill -" + signal + " " + module;
                 killString = "pkill -" + signal + " " + module;
-                killStringBusybox = pathVars.busyboxPath + "pkill -" + signal + " " + module;
-                killAllStringBusybox = pathVars.busyboxPath + "kill -s " + signal + " $(pgrep " + module + ")";
+                killStringBusybox = busyboxPath + "pkill -" + signal + " " + module;
+                killAllStringBusybox = busyboxPath + "kill -s " + signal + " $(pgrep " + module + ")";
             }
 
             result = new String[]{
@@ -484,12 +492,12 @@ public class ModulesKiller {
             String killAllStringToolBox = "toolbox kill " + pid;
             String killStringToyBox = "toybox kill " + pid;
             String killString = "kill " + pid;
-            String killStringBusyBox = pathVars.busyboxPath + "kill " + pid;
+            String killStringBusyBox = busyboxPath + "kill " + pid;
             if (!signal.isEmpty()) {
                 killAllStringToolBox = "toolbox kill -s " + signal + " " + pid;
                 killStringToyBox = "toybox kill -s " + signal + " " + pid;
                 killString = "kill -s " + signal + " " + pid;
-                killStringBusyBox = pathVars.busyboxPath + "kill -s " + signal + " " + pid;
+                killStringBusyBox = busyboxPath + "kill -s " + signal + " " + pid;
             }
 
             result = new String[]{
@@ -564,6 +572,9 @@ public class ModulesKiller {
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
         if (modulesStatus.isRootAvailable()) {
 
+            String iptablesPath = pathVars.getIptablesPath();
+            String busyboxPath = pathVars.getBusyboxPath();
+
             modulesStatus.setUseModulesWithRoot(true);
             modulesStatus.setDnsCryptState(STOPPED);
             modulesStatus.setTorState(STOPPED);
@@ -572,17 +583,17 @@ public class ModulesKiller {
             final String[] commands = new String[]{
                     "ip6tables -D OUTPUT -j DROP || true",
                     "ip6tables -I OUTPUT -j DROP",
-                    pathVars.iptablesPath + "-t nat -F tordnscrypt_nat_output",
-                    pathVars.iptablesPath + "-t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                    pathVars.iptablesPath + "-F tordnscrypt",
-                    pathVars.iptablesPath + "-D OUTPUT -j tordnscrypt || true",
-                    pathVars.iptablesPath + "-t nat -F tordnscrypt_prerouting",
-                    pathVars.iptablesPath + "-F tordnscrypt_forward",
-                    pathVars.iptablesPath + "-t nat -D PREROUTING -j tordnscrypt_prerouting || true",
-                    pathVars.iptablesPath + "-D FORWARD -j tordnscrypt_forward || true",
-                    pathVars.busyboxPath + "killall -s SIGTERM libdnscrypt-proxy.so",
-                    pathVars.busyboxPath + "killall -s SIGTERM libtor.so",
-                    pathVars.busyboxPath + "killall -s SIGTERM libi2pd.so"
+                    iptablesPath + "-t nat -F tordnscrypt_nat_output",
+                    iptablesPath + "-t nat -D OUTPUT -j tordnscrypt_nat_output || true",
+                    iptablesPath + "-F tordnscrypt",
+                    iptablesPath + "-D OUTPUT -j tordnscrypt || true",
+                    iptablesPath + "-t nat -F tordnscrypt_prerouting",
+                    iptablesPath + "-F tordnscrypt_forward",
+                    iptablesPath + "-t nat -D PREROUTING -j tordnscrypt_prerouting || true",
+                    iptablesPath + "-D FORWARD -j tordnscrypt_forward || true",
+                    busyboxPath + "killall -s SIGTERM libdnscrypt-proxy.so",
+                    busyboxPath + "killall -s SIGTERM libtor.so",
+                    busyboxPath + "killall -s SIGTERM libi2pd.so"
             };
 
             new Thread(() -> Shell.SU.run(commands)).start();

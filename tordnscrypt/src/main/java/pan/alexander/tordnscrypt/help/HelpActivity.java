@@ -94,11 +94,11 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
         Handler mHandler = new Handler();
 
-        PathVars pathVars = new PathVars(this);
-        appDataDir = pathVars.appDataDir;
-        busyboxPath = pathVars.busyboxPath;
-        pathToSaveLogs = pathVars.pathBackup;
-        iptables = pathVars.iptablesPath;
+        PathVars pathVars = PathVars.getInstance(this);
+        appDataDir = pathVars.getAppDataDir();
+        busyboxPath = pathVars.getBusyboxPath();
+        pathToSaveLogs = pathVars.getDefaultBackupPath();
+        iptables = pathVars.getIptablesPath();
         appUID = new PrefManager(this).getStrPref("appUID");
 
         br = new HelpActivityReceiver(mHandler, appDataDir, pathToSaveLogs);

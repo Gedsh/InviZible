@@ -61,8 +61,8 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         final String BOOT_COMPLETE = "android.intent.action.BOOT_COMPLETED";
         this.context = context.getApplicationContext();
 
-        final PathVars pathVars = new PathVars(context.getApplicationContext());
-        appDataDir = pathVars.appDataDir;
+        final PathVars pathVars = PathVars.getInstance(context.getApplicationContext());
+        appDataDir = pathVars.getAppDataDir();
 
         final boolean tethering_autostart;
 

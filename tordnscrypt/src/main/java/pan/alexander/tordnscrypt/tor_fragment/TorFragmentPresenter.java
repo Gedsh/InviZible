@@ -92,8 +92,8 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
             return;
         }
 
-        PathVars pathVars = new PathVars(context);
-        appDataDir = pathVars.appDataDir;
+        PathVars pathVars = PathVars.getInstance(context);
+        appDataDir = pathVars.getAppDataDir();
 
         modulesStatus = ModulesStatus.getInstance();
 
@@ -316,7 +316,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
             @Override
             public void run() {
 
-                if (view == null || view.getFragmentActivity() == null || logFile == null) {
+                if (logFile == null) {
                     return;
                 }
 
@@ -325,6 +325,10 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
                 if (++loop > 120) {
                     loop = 0;
                     displayLog(10000);
+                }
+
+                if (view == null || view.getFragmentActivity() == null) {
+                    return;
                 }
 
                 view.getFragmentActivity().runOnUiThread(() -> {

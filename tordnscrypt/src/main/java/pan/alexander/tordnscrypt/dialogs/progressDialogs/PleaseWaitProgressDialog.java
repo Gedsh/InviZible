@@ -19,7 +19,6 @@ package pan.alexander.tordnscrypt.dialogs.progressDialogs;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.content.DialogInterface;
 import androidx.fragment.app.DialogFragment;
 import androidx.appcompat.app.AlertDialog;
 import android.widget.ProgressBar;
