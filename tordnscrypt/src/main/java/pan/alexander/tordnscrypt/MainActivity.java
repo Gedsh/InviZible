@@ -25,10 +25,13 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.net.VpnService;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import androidx.annotation.NonNull;
 import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.tabs.TabLayout;
+
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.core.view.GravityCompat;
@@ -38,6 +41,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.preference.PreferenceManager;
 import androidx.appcompat.widget.Toolbar;
+import androidx.viewpager.widget.ViewPager;
+
 import android.text.InputType;
 import android.util.Base64;
 import android.util.Log;
@@ -56,14 +61,18 @@ import java.util.TimerTask;
 
 import pan.alexander.tordnscrypt.backup.BackupActivity;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
+import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptRunFragment;
 import pan.alexander.tordnscrypt.help.HelpActivity;
 import pan.alexander.tordnscrypt.iptables.IptablesRules;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
+import pan.alexander.tordnscrypt.main_fragment.MainFragment;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.itpd_fragment.ITPDRunFragment;
+import pan.alexander.tordnscrypt.tor_fragment.TorRunFragment;
 import pan.alexander.tordnscrypt.utils.ApManager;
 import pan.alexander.tordnscrypt.utils.AppExitDetectService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -93,7 +102,10 @@ public class MainActivity extends LangAppCompatActivity
     private DNSCryptRunFragment dNSCryptRunFragment;
     private TorRunFragment torRunFragment;
     private ITPDRunFragment iTPDRunFragment;
+    private MainFragment mainFragment;
     private ModulesStatus modulesStatus;
+    private ViewPager viewPager;
+    private static int viewPagerPosition = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,6 +131,32 @@ public class MainActivity extends LangAppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setBackgroundColor(getResources().getColor(R.color.colorBackground));
         navigationView.setNavigationItemSelectedListener(this);
+
+        viewPager = findViewById(R.id.viewPager);
+        if (viewPager != null) {
+            viewPager.setOffscreenPageLimit(4);
+
+            ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager(), ViewPagerAdapter.BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
+
+            MainFragment mainFragment = new MainFragment();
+
+            DNSCryptRunFragment dnsCryptRunFragment = new DNSCryptRunFragment();
+
+            TorRunFragment torRunFragment = new TorRunFragment();
+            ITPDRunFragment itpdRunFragment = new ITPDRunFragment();
+
+            adapter.addFragment(adapter.new ViewPagerFragment("Main", mainFragment));
+            adapter.addFragment(adapter.new ViewPagerFragment("DNS", dnsCryptRunFragment));
+            adapter.addFragment(adapter.new ViewPagerFragment("Tor", torRunFragment));
+            adapter.addFragment(adapter.new ViewPagerFragment("I2P", itpdRunFragment));
+
+            viewPager.setAdapter(adapter);
+
+            TabLayout tabLayout = findViewById(R.id.tabs);
+            tabLayout.setupWithViewPager(viewPager);
+
+            viewPager.setCurrentItem(viewPagerPosition);
+        }
 
         modulesStatus = ModulesStatus.getInstance();
 
@@ -160,6 +198,8 @@ public class MainActivity extends LangAppCompatActivity
             iTPDRunFragment = (ITPDRunFragment) fragment;
         } else if (fragment instanceof TopFragment) {
             topFragment = (TopFragment) fragment;
+        } else if (fragment instanceof MainFragment) {
+            mainFragment = (MainFragment) fragment;
         }
     }
 
@@ -236,6 +276,10 @@ public class MainActivity extends LangAppCompatActivity
         return iTPDRunFragment;
     }
 
+    public MainFragment getMainFragment() {
+        return mainFragment;
+    }
+
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -287,6 +331,11 @@ public class MainActivity extends LangAppCompatActivity
         MenuItem hotSpot = menu.findItem(R.id.item_hotspot);
         MenuItem rootIcon = menu.findItem(R.id.item_root);
 
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            menuVPNMode.setEnabled(false);
+            menuVPNMode.setVisible(false);
+        }
+
         if (rootIsAvailable) {
 
             if (mode == ROOT_MODE) {
@@ -328,10 +377,14 @@ public class MainActivity extends LangAppCompatActivity
                 menuProxiesMode.setChecked(true);
             } else if (mode == VPN_MODE) {
                 menuVPNMode.setChecked(true);
-            } else {
-                menuProxiesMode.setChecked(true);
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                menuVPNMode.setChecked(true);
                 modulesStatus.setMode(VPN_MODE);
                 mode = VPN_MODE;
+            } else {
+                menuProxiesMode.setChecked(true);
+                modulesStatus.setMode(PROXY_MODE);
+                mode = PROXY_MODE;
             }
 
             if (mode == PROXY_MODE) {
@@ -771,7 +824,13 @@ public class MainActivity extends LangAppCompatActivity
             }
             commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
         } else {
-            DialogFragment commandResult = NotificationDialogFragment.newInstance(R.string.message_no_root_used);
+            DialogFragment commandResult;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                commandResult = NotificationDialogFragment.newInstance(R.string.message_no_root_used);
+            } else {
+                commandResult = NotificationDialogFragment.newInstance(R.string.message_no_root_used_kitkat);
+            }
+
             commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
         }
     }
@@ -803,8 +862,13 @@ public class MainActivity extends LangAppCompatActivity
         super.onDestroy();
         if (timer != null)
             timer.cancel();
+
         if (modernDialog != null) {
             modernDialog.dismiss();
+        }
+
+        if (viewPager != null) {
+            viewPagerPosition = viewPager.getCurrentItem();
         }
     }
 
@@ -816,7 +880,7 @@ public class MainActivity extends LangAppCompatActivity
 
             Toast.makeText(this, "Force Close ...", Toast.LENGTH_LONG).show();
 
-            ModulesKiller.forceCloseApp(new PathVars(this));
+            ModulesKiller.forceCloseApp(PathVars.getInstance(this));
 
             new Handler().postDelayed(() -> {
                 Intent intent = new Intent(MainActivity.this, ModulesService.class);

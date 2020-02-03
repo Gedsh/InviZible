@@ -111,8 +111,8 @@ public class UnlockTorIpsFrag extends Fragment {
             return;
         }
 
-        PathVars pathVars = new PathVars(getActivity());
-        appDataDir = pathVars.appDataDir;
+        PathVars pathVars = PathVars.getInstance(getActivity());
+        appDataDir = pathVars.getAppDataDir();
 
 
         ////////////////////////////////////////////////////////////////////////////////////

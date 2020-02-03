@@ -21,6 +21,7 @@ package pan.alexander.tordnscrypt.iptables;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+
 import androidx.preference.PreferenceManager;
 
 import pan.alexander.tordnscrypt.utils.Arr;
@@ -60,23 +61,23 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         String torAppsBypassFilterTCP = "";
         String torAppsBypassFilterUDP = "";
         if (routeAllThroughTor) {
-            torSitesBypassNatTCP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnet | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j RETURN; done";
-            torSitesBypassFilterTCP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnet | while read var1; do " + iptablesPath + "iptables -A tordnscrypt -p tcp -d $var1 -j RETURN; done";
-            torSitesBypassNatUDP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnet | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d $var1 -j RETURN; done";
-            torSitesBypassFilterUDP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnet | while read var1; do " + iptablesPath + "iptables -A tordnscrypt -p udp -d $var1 -j RETURN; done";
-            torAppsBypassNatTCP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnetApps | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j RETURN; done";
-            torAppsBypassNatUDP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnetApps | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -m owner --uid-owner $var1 -j RETURN; done";
-            torAppsBypassFilterTCP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnetApps | while read var1; do " + iptablesPath + "iptables -A tordnscrypt -p tcp -m owner --uid-owner $var1 -j RETURN; done";
-            torAppsBypassFilterUDP = busyboxPath + "cat " + appDataDir + "/app_data/tor/clearnetApps | while read var1; do " + iptablesPath + "iptables -A tordnscrypt -p udp -m owner --uid-owner $var1 -j RETURN; done";
+            torSitesBypassNatTCP = busybox + "cat " + appDataDir + "/app_data/tor/clearnet | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j RETURN; done";
+            torSitesBypassFilterTCP = busybox + "cat " + appDataDir + "/app_data/tor/clearnet | while read var1; do " + iptables + "-A tordnscrypt -p tcp -d $var1 -j RETURN; done";
+            torSitesBypassNatUDP = busybox + "cat " + appDataDir + "/app_data/tor/clearnet | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p udp -d $var1 -j RETURN; done";
+            torSitesBypassFilterUDP = busybox + "cat " + appDataDir + "/app_data/tor/clearnet | while read var1; do " + iptables + "-A tordnscrypt -p udp -d $var1 -j RETURN; done";
+            torAppsBypassNatTCP = busybox + "cat " + appDataDir + "/app_data/tor/clearnetApps | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j RETURN; done";
+            torAppsBypassNatUDP = busybox + "cat " + appDataDir + "/app_data/tor/clearnetApps | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p udp -m owner --uid-owner $var1 -j RETURN; done";
+            torAppsBypassFilterTCP = busybox + "cat " + appDataDir + "/app_data/tor/clearnetApps | while read var1; do " + iptables + "-A tordnscrypt -p tcp -m owner --uid-owner $var1 -j RETURN; done";
+            torAppsBypassFilterUDP = busybox + "cat " + appDataDir + "/app_data/tor/clearnetApps | while read var1; do " + iptables + "-A tordnscrypt -p udp -m owner --uid-owner $var1 -j RETURN; done";
         }
 
         String blockHttpRuleFilterAll = "";
         String blockHttpRuleNatTCP = "";
         String blockHttpRuleNatUDP = "";
         if (blockHttp) {
-            blockHttpRuleFilterAll = iptablesPath + "iptables -A tordnscrypt -d +" + rejectAddress + " -j REJECT";
-            blockHttpRuleNatTCP = iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 80 -j DNAT --to-destination " + rejectAddress;
-            blockHttpRuleNatUDP = iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 80 -j DNAT --to-destination " + rejectAddress;
+            blockHttpRuleFilterAll = iptables + "-A tordnscrypt -d +" + rejectAddress + " -j REJECT";
+            blockHttpRuleNatTCP = iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 80 -j DNAT --to-destination " + rejectAddress;
+            blockHttpRuleNatUDP = iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 80 -j DNAT --to-destination " + rejectAddress;
         }
 
 
@@ -86,91 +87,95 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
 
                 commands = new String[]{
+                        iptables + "-I OUTPUT -j DROP",
                         "ip6tables -D OUTPUT -j DROP || true",
                         "ip6tables -I OUTPUT -j DROP",
-                        iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
-                        iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                        iptablesPath + "iptables -F tordnscrypt",
-                        iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
-                        busyboxPath + "sleep 1",
+                        iptables + "-t nat -F tordnscrypt_nat_output",
+                        iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output || true",
+                        iptables + "-F tordnscrypt",
+                        iptables + "-D OUTPUT -j tordnscrypt || true",
+                        busybox + "sleep 1",
                         "TOR_UID=" + appUID,
-                        iptablesPath + "iptables -t nat -N tordnscrypt_nat_output",
-                        iptablesPath + "iptables -t nat -I OUTPUT -j tordnscrypt_nat_output",
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d " + dnsCryptFallbackRes + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d " + torVirtAdrNet + " -j DNAT --to-destination 127.0.0.1:" + torTransPort,
+                        iptables + "-t nat -N tordnscrypt_nat_output",
+                        iptables + "-t nat -I OUTPUT -j tordnscrypt_nat_output",
+                        iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
+                        iptables + "-t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
+                        iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
+                        iptables + "-t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
+                        iptables + "-t nat -A tordnscrypt_nat_output -p udp -d " + dnsCryptFallbackRes + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
+                        iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
+                        iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
+                        iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d " + torVirtAdrNet + " -j DNAT --to-destination 127.0.0.1:" + torTransPort,
                         blockHttpRuleNatTCP,
                         blockHttpRuleNatUDP,
-                        iptablesPath + "iptables -N tordnscrypt",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
-                        iptablesPath + "iptables -A tordnscrypt -p udp -d " + dnsCryptFallbackRes + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
+                        iptables + "-N tordnscrypt",
+                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
+                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
+                        iptables + "-A tordnscrypt -p udp -d " + dnsCryptFallbackRes + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                         blockHttpRuleFilterAll,
-                        iptablesPath + "iptables -A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
-                        iptablesPath + "iptables -I OUTPUT -j tordnscrypt",
-                        busyboxPath + "cat " + appDataDir + "/app_data/tor/bridgesIP | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + torTransPort + "; done",
-                        busyboxPath + "cat " + appDataDir + "/app_data/tor/unlock | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + torTransPort + "; done",
-                        busyboxPath + "cat " + appDataDir + "/app_data/tor/unlockApps | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j REDIRECT --to-port " + torTransPort + "; done",
+                        iptables + "-A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
+                        iptables + "-I OUTPUT -j tordnscrypt",
+                        busybox + "cat " + appDataDir + "/app_data/tor/bridgesIP | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + torTransPort + "; done",
+                        busybox + "cat " + appDataDir + "/app_data/tor/unlock | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + torTransPort + "; done",
+                        busybox + "cat " + appDataDir + "/app_data/tor/unlockApps | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j REDIRECT --to-port " + torTransPort + "; done",
+                        iptables + "-D OUTPUT -j DROP || true"
                 };
             } else {
 
                 commands = new String[]{
+                        iptables + "-I OUTPUT -j DROP",
                         "ip6tables -D OUTPUT -j DROP || true",
                         "ip6tables -I OUTPUT -j DROP",
-                        iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
-                        iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                        iptablesPath + "iptables -F tordnscrypt",
-                        iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
-                        busyboxPath + "sleep 1",
+                        iptables + "-t nat -F tordnscrypt_nat_output",
+                        iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output || true",
+                        iptables + "-F tordnscrypt",
+                        iptables + "-D OUTPUT -j tordnscrypt || true",
+                        busybox + "sleep 1",
                         "TOR_UID=" + appUID,
-                        iptablesPath + "iptables -t nat -N tordnscrypt_nat_output",
-                        iptablesPath + "iptables -t nat -I OUTPUT -j tordnscrypt_nat_output",
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d " + dnsCryptFallbackRes + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
-                        busyboxPath + "cat " + appDataDir + "/app_data/tor/bridgesIP | while read var1; do " + iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + torTransPort + "; done",
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -m owner --uid-owner $TOR_UID -j RETURN",
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d " + torVirtAdrNet + " -j DNAT --to-destination 127.0.0.1:" + torTransPort,
+                        iptables + "-t nat -N tordnscrypt_nat_output",
+                        iptables + "-t nat -I OUTPUT -j tordnscrypt_nat_output",
+                        iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
+                        iptables + "-t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
+                        iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
+                        iptables + "-t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
+                        iptables + "-t nat -A tordnscrypt_nat_output -p udp -d " + dnsCryptFallbackRes + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
+                        iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
+                        iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
+                        busybox + "cat " + appDataDir + "/app_data/tor/bridgesIP | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + torTransPort + "; done",
+                        iptables + "-t nat -A tordnscrypt_nat_output -m owner --uid-owner $TOR_UID -j RETURN",
+                        iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d " + torVirtAdrNet + " -j DNAT --to-destination 127.0.0.1:" + torTransPort,
                         blockHttpRuleNatTCP,
                         blockHttpRuleNatUDP,
                         torSitesBypassNatTCP,
                         torSitesBypassNatUDP,
                         torAppsBypassNatTCP,
                         torAppsBypassNatUDP,
-                        iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -j DNAT --to-destination 127.0.0.1:" + torTransPort,
-                        iptablesPath + "iptables -N tordnscrypt",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torSOCKSPort + " -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torSOCKSPort + " -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torHTTPTunnelPort + " -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torHTTPTunnelPort + " -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + itpdSOCKSPort + " -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + itpdSOCKSPort + " -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + itpdHttpProxyPort + " -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + itpdHttpProxyPort + " -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torTransPort + " -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + dnsCryptPort + " -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + dnsCryptPort + " -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -m owner --uid-owner $TOR_UID -j RETURN",
-                        iptablesPath + "iptables -A tordnscrypt -p udp -d " + dnsCryptFallbackRes + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
+                        iptables + "-t nat -A tordnscrypt_nat_output -p tcp -j DNAT --to-destination 127.0.0.1:" + torTransPort,
+                        iptables + "-N tordnscrypt",
+                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torSOCKSPort + " -j RETURN",
+                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torSOCKSPort + " -j RETURN",
+                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torHTTPTunnelPort + " -j RETURN",
+                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torHTTPTunnelPort + " -j RETURN",
+                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + itpdSOCKSPort + " -j RETURN",
+                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + itpdSOCKSPort + " -j RETURN",
+                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + itpdHttpProxyPort + " -j RETURN",
+                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + itpdHttpProxyPort + " -j RETURN",
+                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torTransPort + " -j RETURN",
+                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
+                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
+                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + dnsCryptPort + " -j RETURN",
+                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + dnsCryptPort + " -j RETURN",
+                        iptables + "-A tordnscrypt -m owner --uid-owner $TOR_UID -j RETURN",
+                        iptables + "-A tordnscrypt -p udp -d " + dnsCryptFallbackRes + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                         blockHttpRuleFilterAll,
-                        iptablesPath + "iptables -A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
+                        iptables + "-A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
                         torSitesBypassFilterTCP,
                         torSitesBypassFilterUDP,
                         torAppsBypassFilterTCP,
                         torAppsBypassFilterUDP,
-                        iptablesPath + "iptables -A tordnscrypt -j REJECT",
-                        iptablesPath + "iptables -I OUTPUT -j tordnscrypt",
+                        iptables + "-A tordnscrypt -j REJECT",
+                        iptables + "-I OUTPUT -j tordnscrypt",
+                        iptables + "-D OUTPUT -j DROP || true"
                 };
             }
 
@@ -180,32 +185,34 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         } else if (dnsCryptState == RUNNING && torState == STOPPED) {
 
             commands = new String[]{
+                    iptables + "-I OUTPUT -j DROP",
                     "ip6tables -D OUTPUT -j DROP || true",
                     "ip6tables -I OUTPUT -j DROP",
-                    iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
-                    iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                    iptablesPath + "iptables -F tordnscrypt",
-                    iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
-                    busyboxPath + "sleep 1",
+                    iptables + "-t nat -F tordnscrypt_nat_output",
+                    iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output || true",
+                    iptables + "-F tordnscrypt",
+                    iptables + "-D OUTPUT -j tordnscrypt || true",
+                    busybox + "sleep 1",
                     "TOR_UID=" + appUID,
-                    iptablesPath + "iptables -t nat -N tordnscrypt_nat_output",
-                    iptablesPath + "iptables -t nat -I OUTPUT -j tordnscrypt_nat_output",
-                    iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
-                    iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
-                    iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
-                    iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
-                    iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d " + dnsCryptFallbackRes + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
-                    iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
-                    iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
+                    iptables + "-t nat -N tordnscrypt_nat_output",
+                    iptables + "-t nat -I OUTPUT -j tordnscrypt_nat_output",
+                    iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
+                    iptables + "-t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
+                    iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
+                    iptables + "-t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + itpdHttpProxyPort,
+                    iptables + "-t nat -A tordnscrypt_nat_output -p udp -d " + dnsCryptFallbackRes + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
+                    iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
+                    iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + dnsCryptPort,
                     blockHttpRuleNatTCP,
                     blockHttpRuleNatUDP,
-                    iptablesPath + "iptables -N tordnscrypt",
-                    iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
-                    iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
-                    iptablesPath + "iptables -A tordnscrypt -p udp -d " + dnsCryptFallbackRes + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
+                    iptables + "-N tordnscrypt",
+                    iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
+                    iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + dnsCryptPort + " -m owner --uid-owner 0 -j ACCEPT",
+                    iptables + "-A tordnscrypt -p udp -d " + dnsCryptFallbackRes + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                     blockHttpRuleFilterAll,
-                    iptablesPath + "iptables -A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
-                    iptablesPath + "iptables -I OUTPUT -j tordnscrypt",
+                    iptables + "-A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
+                    iptables + "-I OUTPUT -j tordnscrypt",
+                    iptables + "-D OUTPUT -j DROP || true"
             };
 
             String[] commandsTether = tethering.activateTethering(false);
@@ -215,11 +222,11 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
             commands = new String[]{
                     "ip6tables -D OUTPUT -j DROP || true",
-                    iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
-                    iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                    iptablesPath + "iptables -F tordnscrypt",
-                    iptablesPath + "iptables -A tordnscrypt -j RETURN",
-                    iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
+                    iptables + "-t nat -F tordnscrypt_nat_output",
+                    iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output || true",
+                    iptables + "-F tordnscrypt",
+                    iptables + "-A tordnscrypt -j RETURN",
+                    iptables + "-D OUTPUT -j tordnscrypt || true",
             };
 
             String[] commandsTether = tethering.activateTethering(false);
@@ -228,50 +235,52 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         } else if (dnsCryptState == STOPPED && torState == RUNNING) {
 
             commands = new String[]{
-                    iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
-                    iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                    iptablesPath + "iptables -F tordnscrypt",
-                    iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
+                    iptables + "-I OUTPUT -j DROP",
+                    iptables + "-t nat -F tordnscrypt_nat_output",
+                    iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output || true",
+                    iptables + "-F tordnscrypt",
+                    iptables + "-D OUTPUT -j tordnscrypt || true",
                     "TOR_UID=" + appUID,
-                    iptablesPath + "iptables -t nat -N tordnscrypt_nat_output",
-                    iptablesPath + "iptables -t nat -I OUTPUT -j tordnscrypt_nat_output",
-                    iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
-                    iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
-                    iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + torDNSPort,
-                    iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + torDNSPort,
-                    busyboxPath + "cat "+appDataDir+"/app_data/tor/bridgesIP | while read var1; do "+iptablesPath+"iptables -t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port "+torTransPort+"; done",
-                    iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -m owner --uid-owner $TOR_UID -j RETURN",
-                    iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -d " + torVirtAdrNet + " -j DNAT --to-destination 127.0.0.1:" + torTransPort,
+                    iptables + "-t nat -N tordnscrypt_nat_output",
+                    iptables + "-t nat -I OUTPUT -j tordnscrypt_nat_output",
+                    iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
+                    iptables + "-t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
+                    iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + torDNSPort,
+                    iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + torDNSPort,
+                    busybox + "cat " + appDataDir + "/app_data/tor/bridgesIP | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + torTransPort + "; done",
+                    iptables + "-t nat -A tordnscrypt_nat_output -m owner --uid-owner $TOR_UID -j RETURN",
+                    iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d " + torVirtAdrNet + " -j DNAT --to-destination 127.0.0.1:" + torTransPort,
                     blockHttpRuleNatTCP,
                     blockHttpRuleNatUDP,
                     torSitesBypassNatTCP,
                     torSitesBypassNatUDP,
                     torAppsBypassNatTCP,
                     torAppsBypassNatUDP,
-                    iptablesPath + "iptables -t nat -A tordnscrypt_nat_output -p tcp -j DNAT --to-destination 127.0.0.1:" + torTransPort,
-                    iptablesPath + "iptables -N tordnscrypt",
-                    iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torSOCKSPort + " -j RETURN",
-                    iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torSOCKSPort + " -j RETURN",
-                    iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torHTTPTunnelPort + " -j RETURN",
-                    iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torHTTPTunnelPort + " -j RETURN",
-                    iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + itpdSOCKSPort + " -j RETURN",
-                    iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + itpdSOCKSPort + " -j RETURN",
-                    iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + itpdHttpProxyPort + " -j RETURN",
-                    iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + itpdHttpProxyPort + " -j RETURN",
-                    iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torTransPort + " -j RETURN",
-                    iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torDNSPort + " -m owner --uid-owner 0 -j ACCEPT",
-                    iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torDNSPort + " -m owner --uid-owner 0 -j ACCEPT",
-                    iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torDNSPort + " -j RETURN",
-                    iptablesPath + "iptables -A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torDNSPort + " -j RETURN",
-                    iptablesPath + "iptables -A tordnscrypt -m owner --uid-owner $TOR_UID -j RETURN",
+                    iptables + "-t nat -A tordnscrypt_nat_output -p tcp -j DNAT --to-destination 127.0.0.1:" + torTransPort,
+                    iptables + "-N tordnscrypt",
+                    iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torSOCKSPort + " -j RETURN",
+                    iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torSOCKSPort + " -j RETURN",
+                    iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torHTTPTunnelPort + " -j RETURN",
+                    iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torHTTPTunnelPort + " -j RETURN",
+                    iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + itpdSOCKSPort + " -j RETURN",
+                    iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + itpdSOCKSPort + " -j RETURN",
+                    iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + itpdHttpProxyPort + " -j RETURN",
+                    iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + itpdHttpProxyPort + " -j RETURN",
+                    iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torTransPort + " -j RETURN",
+                    iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torDNSPort + " -m owner --uid-owner 0 -j ACCEPT",
+                    iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torDNSPort + " -m owner --uid-owner 0 -j ACCEPT",
+                    iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + torDNSPort + " -j RETURN",
+                    iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + torDNSPort + " -j RETURN",
+                    iptables + "-A tordnscrypt -m owner --uid-owner $TOR_UID -j RETURN",
                     blockHttpRuleFilterAll,
-                    iptablesPath + "iptables -A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
+                    iptables + "-A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
                     torSitesBypassFilterTCP,
                     torSitesBypassFilterUDP,
                     torAppsBypassFilterTCP,
                     torAppsBypassFilterUDP,
-                    iptablesPath + "iptables -A tordnscrypt -j REJECT",
-                    iptablesPath + "iptables -I OUTPUT -j tordnscrypt",
+                    iptables + "-A tordnscrypt -j REJECT",
+                    iptables + "-I OUTPUT -j tordnscrypt",
+                    iptables + "-D OUTPUT -j DROP || true"
             };
 
             String[] commandsTether = tethering.activateTethering(true);
@@ -288,18 +297,18 @@ public class ModulesIptablesRules extends IptablesRulesSender {
     public String[] clearAll() {
         return new String[]{
                 "ip6tables -D OUTPUT -j DROP || true",
-                iptablesPath + "iptables -t nat -F tordnscrypt_nat_output",
-                iptablesPath + "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                iptablesPath + "iptables -F tordnscrypt",
-                iptablesPath + "iptables -A tordnscrypt -j RETURN",
-                iptablesPath + "iptables -D OUTPUT -j tordnscrypt || true",
+                iptables + "-t nat -F tordnscrypt_nat_output",
+                iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output || true",
+                iptables + "-F tordnscrypt",
+                iptables + "-A tordnscrypt -j RETURN",
+                iptables + "-D OUTPUT -j tordnscrypt || true",
 
                 "ip6tables -D INPUT -j DROP || true",
                 "ip6tables -D FORWARD -j DROP || true",
-                iptablesPath + "iptables -t nat -F tordnscrypt_prerouting",
-                iptablesPath + "iptables -F tordnscrypt_forward",
-                iptablesPath + "iptables -t nat -D PREROUTING -j tordnscrypt_prerouting || true",
-                iptablesPath + "iptables -D FORWARD -j tordnscrypt_forward || true"
+                iptables + "-t nat -F tordnscrypt_prerouting",
+                iptables + "-F tordnscrypt_forward",
+                iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting || true",
+                iptables + "-D FORWARD -j tordnscrypt_forward || true"
         };
     }
 }

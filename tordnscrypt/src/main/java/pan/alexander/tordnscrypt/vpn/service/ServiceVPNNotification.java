@@ -43,7 +43,7 @@ class ServiceVPNNotification {
         this.notificationManager = notificationManager;
     }
 
-    void sendNotification(String Ticker, String Title, String Text) {
+    void sendNotification(String Title, String Text) {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel notificationChannel = new NotificationChannel
@@ -68,13 +68,14 @@ class ServiceVPNNotification {
                 .setOngoing(true)   //Can't be swiped out
                 .setSmallIcon(R.drawable.ic_visibility_off_white_24dp)
                 //.setLargeIcon(BitmapFactory.decodeResource(res, R.drawable.large))   // большая картинка
-                .setTicker(Ticker)
+                //.setTicker(Ticker)
                 .setContentTitle(Title) //Заголовок
                 .setContentText(Text) // Текст уведомления
-                .setWhen(System.currentTimeMillis())
+                //.setWhen(System.currentTimeMillis())
                 //new experiment
                 .setPriority(Notification.PRIORITY_MIN)
-                .setOnlyAlertOnce(true);
+                .setOnlyAlertOnce(true)
+                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
 
         Notification notification = builder.build();
 

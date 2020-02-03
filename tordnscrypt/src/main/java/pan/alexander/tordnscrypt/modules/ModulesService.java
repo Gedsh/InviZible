@@ -28,9 +28,10 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
-import androidx.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.preference.PreferenceManager;
 
 import java.util.Objects;
 import java.util.Timer;
@@ -38,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
@@ -46,6 +48,7 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class ModulesService extends Service {
@@ -72,13 +75,15 @@ public class ModulesService extends Service {
 
     private static PowerManager.WakeLock wakeLock = null;
 
-    private PathVars pathVars;
-    private Handler mHandler;
-    private NotificationManager notificationManager;
+    ModulesBroadcastReceiver modulesBroadcastReceiver;
 
+    private final Handler mHandler = new Handler();
+    private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
+
+    private PathVars pathVars;
+    private NotificationManager notificationManager;
     private Timer checkModulesThreadsTimer;
     private ModulesStateLoop checkModulesStateTask;
-    private ModulesStatus modulesStatus;
     private ModulesKiller modulesKiller;
 
     public ModulesService() {
@@ -90,12 +95,9 @@ public class ModulesService extends Service {
 
         notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
 
-        pathVars = new PathVars(this);
-        mHandler = new Handler();
+        pathVars = PathVars.getInstance(this);
 
         modulesKiller = new ModulesKiller(this, pathVars);
-
-        modulesStatus = ModulesStatus.getInstance();
 
         startModulesThreadsTimer();
 
@@ -117,7 +119,7 @@ public class ModulesService extends Service {
 
         if (showNotification) {
             ServiceNotification notification = new ServiceNotification(this, notificationManager);
-            notification.sendNotification(getText(R.string.notification_text).toString(), getString(R.string.app_name), getText(R.string.notification_text).toString());
+            notification.sendNotification(getString(R.string.app_name), getText(R.string.notification_text).toString());
         }
 
 
@@ -160,195 +162,321 @@ public class ModulesService extends Service {
                 break;
         }
 
+        setBroadcastReceiver();
+
         return START_REDELIVER_INTENT;
 
     }
 
     private void startDNSCrypt() {
-        try {
 
-            if (!modulesStatus.isUseModulesWithRoot()) {
-                Thread previousDnsCryptThread = modulesKiller.getDnsCryptThread();
+        if (modulesStatus.getDnsCryptState() == STOPPED) {
+            modulesStatus.setDnsCryptState(STARTING);
+        }
 
-                try {
-                    if (previousDnsCryptThread != null && previousDnsCryptThread.isAlive()) {
-                        Log.w(LOG_TAG, "ModulesService previous DNSCrypt thread is alive! Try stop!");
-                        previousDnsCryptThread.interrupt();
-                        ModulesKiller.stopDNSCrypt(this);
-                        Toast.makeText(this, getText(R.string.please_wait), Toast.LENGTH_LONG).show();
-                        return;
-                    }
-                } catch (Exception e) {
-                    Log.e(LOG_TAG, "ModulesService previous DNSCrypt thread interrupt exception "
-                            + e.getMessage() + e.getCause() + "\nStop service");
-                    System.exit(0);
+        if (!modulesStatus.isUseModulesWithRoot()) {
+            Thread previousDnsCryptThread = modulesKiller.getDnsCryptThread();
+
+            try {
+                if (previousDnsCryptThread != null && previousDnsCryptThread.isAlive()) {
+                    Log.w(LOG_TAG, "ModulesService previous DNSCrypt thread is alive! Try stop!");
+                    previousDnsCryptThread.interrupt();
+                    ModulesKiller.stopDNSCrypt(this);
+                    Toast.makeText(this, getText(R.string.please_wait), Toast.LENGTH_LONG).show();
+                    return;
+                }
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "ModulesService previous DNSCrypt thread interrupt exception "
+                        + e.getMessage() + e.getCause() + "\nStop service");
+                System.exit(0);
+            }
+
+        }
+
+        new Thread(() -> {
+
+            try {
+
+                if (!stopPreviouslyRunningDNSCryptModule()) {
+                    return;
                 }
 
+
+                ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(ModulesService.this, mHandler, pathVars);
+                Thread dnsCryptThread = new Thread(modulesStarterHelper.getDNSCryptStarterRunnable());
+                dnsCryptThread.setDaemon(false);
+                try {
+                    dnsCryptThread.setPriority(Thread.NORM_PRIORITY);
+                } catch (SecurityException e) {
+                    Log.e(LOG_TAG, "ModulesService startDNSCrypt exception " + e.getMessage() + " " + e.getCause());
+                }
+                dnsCryptThread.start();
+
+                changeDNSCryptStatus(dnsCryptThread);
+
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "DnsCrypt was unable to start " + e.getMessage());
+                mHandler.post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
             }
 
-            if (modulesStatus.getDnsCryptState() == STOPPED) {
-                modulesStatus.setDnsCryptState(STARTING);
+        }).start();
+    }
+
+    private boolean stopPreviouslyRunningDNSCryptModule() {
+        boolean result = false;
+
+        try {
+            if (isDnsCryptSavedStateRunning() && modulesStatus.getDnsCryptState() != RESTARTING) {
+
+                Thread killerThread = new Thread(modulesKiller.getDNSCryptKillerRunnable());
+                killerThread.start();
+
+                while (killerThread.isAlive()) {
+                    killerThread.join();
+                }
+
+                makeDelay(5);
+
+                if (modulesStatus.getDnsCryptState() != RUNNING) {
+                    result = true;
+                }
+
+            } else {
+                result = true;
             }
-
-            ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(this, mHandler, pathVars);
-            Thread dnsCryptThread = new Thread(modulesStarterHelper.getDNSCryptStarterRunnable());
-            dnsCryptThread.setDaemon(false);
-            try {
-                dnsCryptThread.setPriority(Thread.NORM_PRIORITY);
-            } catch (SecurityException e) {
-                Log.e(LOG_TAG, "ModulesService startDNSCrypt exception " + e.getMessage() + " " + e.getCause());
-            }
-            dnsCryptThread.start();
-
-            changeDNSCryptStatus(dnsCryptThread);
-
         } catch (Exception e) {
-            Log.e(LOG_TAG, "DnsCrypt was unable to startRefreshModulesStatus: " + e.getMessage());
-            Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+            Log.e(LOG_TAG, "DnsCrypt was unable to stop previously running module " + e.getMessage());
         }
+
+        return result;
     }
 
     private void changeDNSCryptStatus(final Thread dnsCryptThread) {
-        mHandler.postDelayed(() -> {
-            if (modulesStatus.isUseModulesWithRoot() || dnsCryptThread.isAlive()) {
-                modulesStatus.setDnsCryptState(RUNNING);
 
-                if (!modulesStatus.isUseModulesWithRoot()) {
-                    modulesKiller.setDnsCryptThread(dnsCryptThread);
-                }
+        makeDelay(2);
 
-                if (checkModulesStateTask != null && !modulesStatus.isUseModulesWithRoot()) {
-                    checkModulesStateTask.setDnsCryptThread(dnsCryptThread);
-                }
-            } else {
-                modulesStatus.setDnsCryptState(STOPPED);
+        if (modulesStatus == null) {
+            return;
+        }
+
+        if (modulesStatus.isUseModulesWithRoot() || dnsCryptThread.isAlive()) {
+            modulesStatus.setDnsCryptState(RUNNING);
+
+            if (modulesKiller != null && !modulesStatus.isUseModulesWithRoot()) {
+                modulesKiller.setDnsCryptThread(dnsCryptThread);
             }
-        }, 2000);
+
+            if (checkModulesStateTask != null && !modulesStatus.isUseModulesWithRoot()) {
+                checkModulesStateTask.setDnsCryptThread(dnsCryptThread);
+            }
+        } else {
+            modulesStatus.setDnsCryptState(STOPPED);
+        }
     }
 
     private void startTor() {
-        try {
 
-            if (!modulesStatus.isUseModulesWithRoot()) {
-                Thread previousTorThread = modulesKiller.getTorThread();
-
-                try {
-                    if (previousTorThread != null && previousTorThread.isAlive()) {
-                        Log.w(LOG_TAG, "ModulesService previous Tor thread is alive! Try stop!");
-                        previousTorThread.interrupt();
-                        ModulesKiller.stopTor(this);
-                        Toast.makeText(this, getText(R.string.please_wait), Toast.LENGTH_LONG).show();
-                        return;
-                    }
-                } catch (Exception e) {
-                    Log.e(LOG_TAG, "ModulesService previous Tor thread interrupt exception "
-                            + e.getMessage() + e.getCause() + "\nStop service");
-                    System.exit(0);
-                }
-
-            }
-
-            if (modulesStatus.getTorState() == STOPPED) {
-                modulesStatus.setTorState(STARTING);
-            }
-
-            ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(this, mHandler, pathVars);
-            Thread torThread = new Thread(modulesStarterHelper.getTorStarterRunnable());
-            torThread.setDaemon(false);
-            try {
-                torThread.setPriority(Thread.NORM_PRIORITY);
-            } catch (SecurityException e) {
-                Log.e(LOG_TAG, "ModulesService startTor exception " + e.getMessage() + " " + e.getCause());
-            }
-            torThread.start();
-
-            changeTorStatus(torThread);
-
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "Tor was unable to startRefreshModulesStatus: " + e.getMessage());
-            Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+        if (modulesStatus.getTorState() == STOPPED) {
+            modulesStatus.setTorState(STARTING);
         }
 
+        if (!modulesStatus.isUseModulesWithRoot()) {
+            Thread previousTorThread = modulesKiller.getTorThread();
+
+            try {
+                if (previousTorThread != null && previousTorThread.isAlive()) {
+                    Log.w(LOG_TAG, "ModulesService previous Tor thread is alive! Try stop!");
+                    previousTorThread.interrupt();
+                    ModulesKiller.stopTor(this);
+                    Toast.makeText(this, getText(R.string.please_wait), Toast.LENGTH_LONG).show();
+                    return;
+                }
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "ModulesService previous Tor thread interrupt exception "
+                        + e.getMessage() + e.getCause() + "\nStop service");
+                System.exit(0);
+            }
+
+        }
+
+        new Thread(() -> {
+            try {
+                if (!stopPreviouslyRunningTorModule()) {
+                    return;
+                }
+
+                ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(ModulesService.this, mHandler, pathVars);
+                Thread torThread = new Thread(modulesStarterHelper.getTorStarterRunnable());
+                torThread.setDaemon(false);
+                try {
+                    torThread.setPriority(Thread.NORM_PRIORITY);
+                } catch (SecurityException e) {
+                    Log.e(LOG_TAG, "ModulesService startTor exception " + e.getMessage() + " " + e.getCause());
+                }
+                torThread.start();
+
+                changeTorStatus(torThread);
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "Tor was unable to startRefreshModulesStatus: " + e.getMessage());
+                mHandler.post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
+            }
+
+        }).start();
+
+    }
+
+    private boolean stopPreviouslyRunningTorModule() {
+        boolean result = false;
+
+        try {
+            if (isTorSavedStateRunning() && modulesStatus.getTorState() != RESTARTING) {
+
+                Thread killerThread = new Thread(modulesKiller.getTorKillerRunnable());
+                killerThread.start();
+
+                while (killerThread.isAlive()) {
+                    killerThread.join();
+                }
+
+                makeDelay(5);
+
+                if (modulesStatus.getTorState() != RUNNING) {
+                    result = true;
+                }
+
+            } else {
+                result = true;
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "Tor was unable to stop previously running module " + e.getMessage());
+        }
+
+        return result;
     }
 
     private void changeTorStatus(final Thread torThread) {
-        mHandler.postDelayed(() -> {
-            if (modulesStatus.isUseModulesWithRoot() || torThread.isAlive()) {
-                modulesStatus.setTorState(RUNNING);
 
-                if (!modulesStatus.isUseModulesWithRoot()) {
-                    modulesKiller.setTorThread(torThread);
-                }
+        makeDelay(2);
 
-                if (checkModulesStateTask != null && !modulesStatus.isUseModulesWithRoot()) {
-                    checkModulesStateTask.setTorThread(torThread);
-                }
-            } else {
-                modulesStatus.setTorState(STOPPED);
-            }
-        }, 2000);
-    }
+        if (modulesStatus == null) {
+            return;
+        }
 
-    private void startITPD() {
-        try {
+        if (modulesStatus.isUseModulesWithRoot() || torThread.isAlive()) {
+            modulesStatus.setTorState(RUNNING);
 
-            if (!modulesStatus.isUseModulesWithRoot()) {
-                Thread previousITPDThread = modulesKiller.getItpdThread();
-
-                try {
-                    if (previousITPDThread != null && previousITPDThread.isAlive()) {
-                        Log.w(LOG_TAG, "ModulesService previous ITPD thread is alive! Try stop!");
-                        previousITPDThread.interrupt();
-                        ModulesKiller.stopITPD(this);
-                        Toast.makeText(this, getText(R.string.please_wait), Toast.LENGTH_LONG).show();
-                        return;
-                    }
-                } catch (Exception e) {
-                    Log.e(LOG_TAG, "ModulesService previous ITPD thread interrupt exception "
-                            + e.getMessage() + e.getCause() + "\nStop service");
-                    System.exit(0);
-                }
-
+            if (modulesKiller != null && !modulesStatus.isUseModulesWithRoot()) {
+                modulesKiller.setTorThread(torThread);
             }
 
-            if (modulesStatus.getItpdState() == STOPPED) {
-                modulesStatus.setItpdState(STARTING);
+            if (checkModulesStateTask != null && !modulesStatus.isUseModulesWithRoot()) {
+                checkModulesStateTask.setTorThread(torThread);
             }
-
-            ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(this, mHandler, pathVars);
-            Thread itpdThread = new Thread(modulesStarterHelper.getITPDStarterRunnable());
-            itpdThread.setDaemon(false);
-            try {
-                itpdThread.setPriority(Thread.NORM_PRIORITY);
-            } catch (SecurityException e) {
-                Log.e(LOG_TAG, "ModulesService startITPD exception " + e.getMessage() + " " + e.getCause());
-            }
-            itpdThread.start();
-
-            changeITPDStatus(itpdThread);
-
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "I2PD was unable to startRefreshModulesStatus: " + e.getMessage());
-            Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+        } else {
+            modulesStatus.setTorState(STOPPED);
         }
     }
 
-    private void changeITPDStatus(final Thread itpdThread) {
-        mHandler.postDelayed(() -> {
-            if (modulesStatus.isUseModulesWithRoot() || itpdThread.isAlive()) {
-                modulesStatus.setItpdState(RUNNING);
+    private void startITPD() {
 
-                if (!modulesStatus.isUseModulesWithRoot()) {
-                    modulesKiller.setItpdThread(itpdThread);
-                }
+        if (modulesStatus.getItpdState() == STOPPED) {
+            modulesStatus.setItpdState(STARTING);
+        }
 
-                if (checkModulesStateTask != null && !modulesStatus.isUseModulesWithRoot()) {
-                    checkModulesStateTask.setItpdThread(itpdThread);
+        if (!modulesStatus.isUseModulesWithRoot()) {
+            Thread previousITPDThread = modulesKiller.getItpdThread();
+
+            try {
+                if (previousITPDThread != null && previousITPDThread.isAlive()) {
+                    Log.w(LOG_TAG, "ModulesService previous ITPD thread is alive! Try stop!");
+                    previousITPDThread.interrupt();
+                    ModulesKiller.stopITPD(this);
+                    Toast.makeText(this, getText(R.string.please_wait), Toast.LENGTH_LONG).show();
+                    return;
                 }
-            } else {
-                modulesStatus.setItpdState(STOPPED);
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "ModulesService previous ITPD thread interrupt exception "
+                        + e.getMessage() + e.getCause() + "\nStop service");
+                System.exit(0);
             }
-        }, 3000);
+
+        }
+
+        new Thread(() -> {
+            try {
+                if (!stopPreviouslyRunningITPDModule()) {
+                    return;
+                }
+
+                ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(ModulesService.this, mHandler, pathVars);
+                Thread itpdThread = new Thread(modulesStarterHelper.getITPDStarterRunnable());
+                itpdThread.setDaemon(false);
+                try {
+                    itpdThread.setPriority(Thread.NORM_PRIORITY);
+                } catch (SecurityException e) {
+                    Log.e(LOG_TAG, "ModulesService startITPD exception " + e.getMessage() + " " + e.getCause());
+                }
+                itpdThread.start();
+
+                changeITPDStatus(itpdThread);
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "I2PD was unable to startRefreshModulesStatus: " + e.getMessage());
+                mHandler.post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
+            }
+
+        }).start();
+    }
+
+    private boolean stopPreviouslyRunningITPDModule() {
+        boolean result = false;
+
+        try {
+            if (isITPDSavedStateRunning() && modulesStatus.getItpdState() != RESTARTING) {
+
+                Thread killerThread = new Thread(modulesKiller.getITPDKillerRunnable());
+                killerThread.start();
+
+                while (killerThread.isAlive()) {
+                    killerThread.join();
+                }
+
+                makeDelay(5);
+
+                if (modulesStatus.getItpdState() != RUNNING) {
+                    result = true;
+                }
+
+            } else {
+                result = true;
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "I2PD was unable to stop previously running module " + e.getMessage());
+        }
+
+        return result;
+    }
+
+    private void changeITPDStatus(final Thread itpdThread) {
+
+        makeDelay(3);
+
+        if (modulesStatus == null) {
+            return;
+        }
+
+        if (modulesStatus.isUseModulesWithRoot() || itpdThread.isAlive()) {
+            modulesStatus.setItpdState(RUNNING);
+
+            if (modulesKiller != null && !modulesStatus.isUseModulesWithRoot()) {
+                modulesKiller.setItpdThread(itpdThread);
+            }
+
+            if (checkModulesStateTask != null && !modulesStatus.isUseModulesWithRoot()) {
+                checkModulesStateTask.setItpdThread(itpdThread);
+            }
+        } else {
+            modulesStatus.setItpdState(STOPPED);
+        }
     }
 
     private void stopDNSCrypt() {
@@ -364,15 +492,24 @@ public class ModulesService extends Service {
     }
 
     private void restartDNSCrypt() {
+
+        if (modulesStatus.getDnsCryptState() != RUNNING) {
+            return;
+        }
+
+
         new Thread(() -> {
             try {
                 modulesStatus.setDnsCryptState(RESTARTING);
 
                 Thread killerThread = new Thread(modulesKiller.getDNSCryptKillerRunnable());
                 killerThread.start();
-                killerThread.join();
 
-                makeDelay();
+                while (killerThread.isAlive()) {
+                    killerThread.join();
+                }
+
+                makeDelay(5);
 
                 if (modulesStatus.getDnsCryptState() != RUNNING) {
                     startDNSCrypt();
@@ -386,37 +523,47 @@ public class ModulesService extends Service {
     }
 
     private void restartTor() {
+
+        if (modulesStatus.getTorState() != RUNNING) {
+            return;
+        }
+
         new Thread(() -> {
             try {
                 modulesStatus.setTorState(RESTARTING);
 
-                Thread killerThread = new Thread(modulesKiller.getTorKillerRunnable());
-                killerThread.start();
-                killerThread.join();
+                makeDelay(5);
 
-                makeDelay();
+                ModulesRestarter modulesRestarter = new ModulesRestarter();
+                modulesRestarter.getTorRestarterRunnable(this).run();
 
-                if (modulesStatus.getTorState() != RUNNING) {
-                    startTor();
-                }
+                modulesStatus.setTorState(RUNNING);
 
-            } catch (InterruptedException e) {
-                Log.e(LOG_TAG, "ModulesService restartTor join interrupted!");
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "ModulesService restartTor exception " + e.getMessage() + " " + e.getCause());
             }
 
         }).start();
     }
 
     private void restartITPD() {
+
+        if (modulesStatus.getItpdState() != RUNNING) {
+            return;
+        }
+
         new Thread(() -> {
             try {
                 modulesStatus.setItpdState(RESTARTING);
 
                 Thread killerThread = new Thread(modulesKiller.getITPDKillerRunnable());
                 killerThread.start();
-                killerThread.join();
 
-                makeDelay();
+                while (killerThread.isAlive()) {
+                    killerThread.join();
+                }
+
+                makeDelay(5);
 
                 if (modulesStatus.getItpdState() != RUNNING) {
                     startITPD();
@@ -489,6 +636,8 @@ public class ModulesService extends Service {
 
         stopVPNServiceIfRunning();
 
+        unregisterModulesBroadcastReceiver();
+
         super.onDestroy();
     }
 
@@ -515,9 +664,45 @@ public class ModulesService extends Service {
         stopSelf();
     }
 
-    private void makeDelay() {
+    private void setBroadcastReceiver() {
+        if (modulesStatus.getMode() == ROOT_MODE
+                && !modulesStatus.isUseModulesWithRoot()
+                && modulesBroadcastReceiver == null) {
+            modulesBroadcastReceiver = new ModulesBroadcastReceiver(this);
+            modulesBroadcastReceiver.registerReceivers();
+        } else if (modulesStatus.getMode() != ROOT_MODE
+                && modulesBroadcastReceiver != null) {
+            unregisterModulesBroadcastReceiver();
+            modulesBroadcastReceiver = null;
+        }
+
+    }
+
+    private void unregisterModulesBroadcastReceiver() {
+        if (modulesBroadcastReceiver != null) {
+            try {
+                modulesBroadcastReceiver.unregisterReceivers();
+            } catch (Exception e) {
+                Log.i(LOG_TAG, "ModulesService unregister receiver exception " + e.getMessage());
+            }
+        }
+    }
+
+    private boolean isDnsCryptSavedStateRunning() {
+        return new PrefManager(this).getBoolPref("DNSCrypt Running");
+    }
+
+    private boolean isTorSavedStateRunning() {
+        return new PrefManager(this).getBoolPref("Tor Running");
+    }
+
+    private boolean isITPDSavedStateRunning() {
+        return new PrefManager(this).getBoolPref("I2PD Running");
+    }
+
+    private void makeDelay(int sec) {
         try {
-            TimeUnit.SECONDS.sleep(10);
+            TimeUnit.SECONDS.sleep(sec);
         } catch (InterruptedException e) {
             Log.e(LOG_TAG, "ModulesService makeDelay interrupted! " + e.getMessage() + " " + e.getCause());
         }

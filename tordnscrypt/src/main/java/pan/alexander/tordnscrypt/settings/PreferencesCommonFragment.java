@@ -129,11 +129,11 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             return;
         }
 
-        PathVars pathVars = new PathVars(getActivity());
-        appDataDir = pathVars.appDataDir;
-        torTransPort = pathVars.torTransPort;
-        torSocksPort = pathVars.torSOCKSPort;
-        torHTTPTunnelPort = pathVars.torHTTPTunnelPort;
+        PathVars pathVars = PathVars.getInstance(getActivity());
+        appDataDir = pathVars.getAppDataDir();
+        torTransPort = pathVars.getTorTransPort();
+        torSocksPort = pathVars.getTorSOCKSPort();
+        torHTTPTunnelPort = pathVars.getTorHTTPTunnelPort();
 
         Thread thread = new Thread(() -> {
             try {

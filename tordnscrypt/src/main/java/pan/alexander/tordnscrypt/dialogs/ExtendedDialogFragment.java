@@ -21,16 +21,17 @@ package pan.alexander.tordnscrypt.dialogs;
 
 import android.app.Dialog;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
-import androidx.appcompat.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
@@ -73,7 +74,7 @@ public abstract class ExtendedDialogFragment extends DialogFragment {
             ft.add(this, tag);
             ft.commitAllowingStateLoss();
         } catch (IllegalStateException e) {
-            Log.w(LOG_TAG, "ExtendedDialogFragment Exception "+e.getMessage() + " " + e.getCause());
+            Log.w(LOG_TAG, "ExtendedDialogFragment Exception " + e.getMessage() + " " + e.getCause());
         }
     }
 

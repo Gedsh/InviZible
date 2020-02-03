@@ -40,7 +40,6 @@ import pan.alexander.tordnscrypt.utils.GetIPsJobService;
 import pan.alexander.tordnscrypt.utils.OwnFileReader;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
-import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
@@ -62,8 +61,8 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         final String BOOT_COMPLETE = "android.intent.action.BOOT_COMPLETED";
         this.context = context.getApplicationContext();
 
-        final PathVars pathVars = new PathVars(context.getApplicationContext());
-        appDataDir = pathVars.appDataDir;
+        final PathVars pathVars = PathVars.getInstance(context.getApplicationContext());
+        appDataDir = pathVars.getAppDataDir();
 
         final boolean tethering_autostart;
 
@@ -191,11 +190,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         saveModulesStateRunning(autoStartDNSCrypt, autoStartTor, autoStartITPD);
 
         if (autoStartDNSCrypt) {
-            if (isDnsCryptSavedStateRunning()) {
-                restartDNSCrypt();
-            } else {
-                runDNSCrypt();
-            }
+            runDNSCrypt();
         } else {
             if (isDnsCryptSavedStateRunning()) {
                 stopDNSCrypt();
@@ -203,11 +198,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         }
 
         if (autoStartTor) {
-            if (isTorSavedStateRunning()) {
-                restartTor();
-            } else {
-                runTor();
-            }
+            runTor();
         } else {
             if (isTorSavedStateRunning()) {
                 stopTor();
@@ -215,13 +206,11 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         }
 
         if (autoStartITPD) {
-            if (isITPDSavedStateRunning()) {
-                restartITPD();
-            } else {
-                runITPD();
-            }
+            runITPD();
         } else {
-            stopITPD();
+            if (isITPDSavedStateRunning()) {
+                stopITPD();
+            }
         }
 
     }
@@ -254,18 +243,6 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
     private void stopITPD() {
         ModulesKiller.stopITPD(context);
-    }
-
-    private void restartDNSCrypt() {
-        ModulesRestarter.restartDNSCrypt(context);
-    }
-
-    private void restartTor() {
-        ModulesRestarter.restartTor(context);
-    }
-
-    private void restartITPD() {
-        ModulesRestarter.restartITPD(context);
     }
 
     private boolean isDnsCryptSavedStateRunning() {

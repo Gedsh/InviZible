@@ -74,8 +74,8 @@ public class SettingsActivity extends LangAppCompatActivity
 
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
 
-        PathVars pathVars = new PathVars(this);
-        String appDataDir = pathVars.appDataDir;
+        PathVars pathVars = PathVars.getInstance(this);
+        String appDataDir = pathVars.getAppDataDir();
 
         if (savedInstanceState != null) return;
 

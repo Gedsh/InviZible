@@ -77,10 +77,18 @@ Depending on the rooting method and device specifics, an application may be inco
 ## Support
 
 For questions, feature requests and bug reports, you can use GitHub.
+
+### International:
  
 Telegram channel: [InviZiblePro](https://t.me/InviZiblePro)
 
 Telegram group: [InviZiblePro_Group](https://t.me/InviZiblePro_Group)
+
+### For Russian-speaking users:
+
+Telegram channel: [InviZiblePro](https://t.me/InviZibleProRus)
+
+Telegram group: [InviZiblePro_Group](https://t.me/InviZibleProRus_Group)
 
 Site [invizible.net](https://invizible.net/ru) for Russian-speaking users at the moment.
 

@@ -68,15 +68,15 @@ public class ModulesVersions {
 
             checkModulesVersions(pathVars);
 
-            if (isBinaryFileAccessible(pathVars.dnscryptPath)) {
+            if (isBinaryFileAccessible(pathVars.getDNSCryptPath())) {
                 sendResult(context, dnsCryptVersion, DNSCryptRunFragmentMark);
             }
 
-            if (isBinaryFileAccessible(pathVars.torPath)) {
+            if (isBinaryFileAccessible(pathVars.getTorPath())) {
                 sendResult(context, torVersion, TorRunFragmentMark);
             }
 
-            if (isBinaryFileAccessible(pathVars.itpdPath)) {
+            if (isBinaryFileAccessible(pathVars.getITPDPath())) {
                 sendResult(context, itpdVersion, I2PDRunFragmentMark);
             }
 
@@ -85,7 +85,7 @@ public class ModulesVersions {
     }
 
     private PathVars getPathVars(Context context) {
-        return new PathVars(context);
+        return PathVars.getInstance(context);
     }
 
     private boolean isBinaryFileAccessible(String path) {
@@ -109,17 +109,17 @@ public class ModulesVersions {
     private void checkModulesVersions(PathVars pathVars) {
         dnsCryptVersion = console.run(
                 "echo 'DNSCrypt_version'",
-                pathVars.dnscryptPath + " --version")
+                pathVars.getDNSCryptPath() + " --version")
                 .getStdout();
 
         torVersion = console.run(
                 "echo 'Tor_version'",
-                pathVars.torPath + " --version")
+                pathVars.getTorPath() + " --version")
                 .getStdout();
 
         itpdVersion = console.run(
                 "echo 'ITPD_version'",
-                pathVars.itpdPath + " --version")
+                pathVars.getITPDPath() + " --version")
                 .getStdout();
     }
 

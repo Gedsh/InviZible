@@ -20,12 +20,15 @@ package pan.alexander.tordnscrypt.dialogs;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.preference.PreferenceManager;
-import android.util.Log;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.utils.PrefManager;
+
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class NotificationHelper extends ExtendedDialogFragment {
 
@@ -56,12 +59,13 @@ public class NotificationHelper extends ExtendedDialogFragment {
         return builder;
     }
 
+    @SuppressWarnings("CatchMayIgnoreException")
     public static NotificationHelper setHelperMessage(Context context, String message, String preferenceTag) {
 
         try {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-            if ((!new PrefManager(context).getBoolPref("helper_no_show_"+preferenceTag)
-                    || sharedPreferences.getBoolean("pref_common_show_help",false)
+            if ((!new PrefManager(context).getBoolPref("helper_no_show_" + preferenceTag)
+                    || sharedPreferences.getBoolean("pref_common_show_help", false)
                     || preferenceTag.matches("\\d+"))
                     && notificationHelper == null) {
                 notificationHelper = new NotificationHelper();
@@ -70,7 +74,9 @@ public class NotificationHelper extends ExtendedDialogFragment {
                 return notificationHelper;
             }
         } catch (Exception e) {
-            Log.e("TPDClogs",e.getMessage());
+            if (e.getMessage() != null) {
+                Log.e(LOG_TAG, e.getMessage());
+            }
         }
 
         return null;

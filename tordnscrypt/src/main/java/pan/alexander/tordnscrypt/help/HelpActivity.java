@@ -71,7 +71,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     private String appDataDir;
     private String busyboxPath;
     private String pathToSaveLogs;
-    private String iptablesPath;
+    private String iptables;
     private String appUID;
     private static DialogFragment dialogFragment;
     private ModulesStatus modulesStatus;
@@ -94,11 +94,11 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
         Handler mHandler = new Handler();
 
-        PathVars pathVars = new PathVars(this);
-        appDataDir = pathVars.appDataDir;
-        busyboxPath = pathVars.busyboxPath;
-        pathToSaveLogs = pathVars.pathBackup;
-        iptablesPath = pathVars.iptablesPath;
+        PathVars pathVars = PathVars.getInstance(this);
+        appDataDir = pathVars.getAppDataDir();
+        busyboxPath = pathVars.getBusyboxPath();
+        pathToSaveLogs = pathVars.getDefaultBackupPath();
+        iptables = pathVars.getIptablesPath();
         appUID = new PrefManager(this).getStrPref("appUID");
 
         br = new HelpActivityReceiver(mHandler, appDataDir, pathToSaveLogs);
@@ -189,10 +189,10 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                 busyboxPath + "mkdir -m 655 -p logs_dir",
                 busyboxPath + "cp -R logs logs_dir",
                 "logcat -d | grep " + pid + " > logs_dir/logcat.log",
-                iptablesPath + "iptables -L -v > logs_dir/filter.log",
-                iptablesPath + "iptables -t nat -L -v > logs_dir/nat.log",
-                iptablesPath + "iptables -t mangle -L -v > logs_dir/mangle.log",
-                iptablesPath + "iptables -t raw -L -v > logs_dir/raw.log",
+                iptables + "-L -v > logs_dir/filter.log",
+                iptables + "-t nat -L -v > logs_dir/nat.log",
+                iptables + "-t mangle -L -v > logs_dir/mangle.log",
+                iptables + "-t raw -L -v > logs_dir/raw.log",
                 busyboxPath + "cp -R shared_prefs logs_dir",
                 busyboxPath + "sleep 1",
                 busyboxPath + "echo \"" + info + "\" > logs_dir/device_info.log",
@@ -257,8 +257,8 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
 
     @Override
-    public void onStop() {
-        super.onStop();
+    public void onPause() {
+        super.onPause();
 
         FileOperations.deleteOnFileOperationCompleteListener();
     }

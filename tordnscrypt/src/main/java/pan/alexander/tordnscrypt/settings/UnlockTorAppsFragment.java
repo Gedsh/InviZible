@@ -57,6 +57,7 @@ import java.util.Set;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.TorRefreshIPsWork;
 import pan.alexander.tordnscrypt.utils.Verifier;
@@ -66,6 +67,8 @@ import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -118,10 +121,19 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
         boolean routeAllThroughTorDevice = shPref.getBoolean("pref_fast_all_through_tor", true);
 
         if (!routeAllThroughTorDevice) {
-            Objects.requireNonNull(getActivity()).setTitle(R.string.pref_tor_unlock_app);
+            if (ModulesStatus.getInstance().getMode() == ROOT_MODE) {
+                Objects.requireNonNull(getActivity()).setTitle(R.string.pref_tor_unlock_app);
+            } else {
+                Objects.requireNonNull(getActivity()).setTitle(R.string.pref_routing_unlock_app);
+            }
+
             unlockAppsStr = "unlockApps";
         } else {
-            Objects.requireNonNull(getActivity()).setTitle(R.string.pref_tor_clearnet_app);
+            if (ModulesStatus.getInstance().getMode() == ROOT_MODE) {
+                Objects.requireNonNull(getActivity()).setTitle(R.string.pref_tor_clearnet_app);
+            } else {
+                Objects.requireNonNull(getActivity()).setTitle(R.string.pref_routing_clearnet_app);
+            }
             unlockAppsStr = "clearnetApps";
         }
 
@@ -185,8 +197,8 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
             return;
         }
 
-        PathVars pathVars = new PathVars(getActivity());
-        String appDataDir = pathVars.appDataDir;
+        PathVars pathVars = PathVars.getInstance(getActivity());
+        String appDataDir = pathVars.getAppDataDir();
 
         if (!isChanged)
             return;
@@ -207,9 +219,14 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
         FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/" + unlockAppsStr, listAppUIDtoSave, "ignored");
         Toast.makeText(getActivity(), getString(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
 
-        /////////////Refresh iptables rules/////////////////////////
-        TorRefreshIPsWork torRefreshIPsWork = new TorRefreshIPsWork(getActivity(), null);
-        torRefreshIPsWork.refreshIPs();
+        ModulesStatus modulesStatus = ModulesStatus.getInstance();
+        if (modulesStatus.getMode() == ROOT_MODE) {
+            /////////////Refresh iptables rules/////////////////////////
+            TorRefreshIPsWork torRefreshIPsWork = new TorRefreshIPsWork(getActivity(), null);
+            torRefreshIPsWork.refreshIPs();
+        } else if (modulesStatus.getMode() == VPN_MODE) {
+            modulesStatus.setIptablesRulesUpdateRequested(true);
+        }
     }
 
     @Override
@@ -506,6 +523,8 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
                 pbTorApp.setIndeterminate(false);
                 pbTorApp.setVisibility(View.GONE);
             });
+
+            System.gc();
         };
         thread = new Thread(fillAppsList);
         thread.start();

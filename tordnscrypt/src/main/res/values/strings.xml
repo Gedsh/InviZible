@@ -51,6 +51,7 @@
     <string name="tvTorNotInstalled">Tor Not Installed</string>
 
     <string name="tvTorStarting">Tor Starting</string>
+    <string name="tvTorConnecting">Connecting</string>
     <string name="tvTorRunning">Tor Running</string>
     <string name="tvTorStopping">Tor Stopping</string>
     <string name="tvTorDefaultLog" translatable="false">Tor version</string>
@@ -67,12 +68,13 @@
     <string name="install_title_root">Root granted</string>
     <string name="install_title_no_root">Root denied</string>
 
-    <string name="message_no_root_used">You can use InviZible Pro with local VPN mode or applications with proxy feature in proxy mode.</string>
+    <string name="message_no_root_used">You can use InviZible Pro with local VPN mode, or applications with own proxy or local VPN feature in proxy mode.</string>
+    <string name="message_no_root_used_kitkat">You can use InviZible Pro with applications with own proxy or local VPN feature in proxy mode.</string>
 
     <string name="write_file_error">Save file Error!</string>
 
     <string name="drawer_menu_commonSettings">Common Settings</string>
-    <string name="drawer_menu_DNSSettings">DNS Crypt Settings</string>
+    <string name="drawer_menu_DNSSettings">DNSCrypt Settings</string>
     <string name="drawer_menu_TorSettings">Tor Settings</string>
     <string name="drawer_menu_I2PDSettings">I2P Settings</string>
     <string name="drawer_menu_fastSettings">Fast Settings</string>
@@ -101,15 +103,19 @@
     <string name="pref_fast_dns_server">DNSCrypt servers</string>
     <string name="pref_fast_select_dns_server">Select DNSCrypt servers</string>
     <string name="pref_fast_tor">Tor Settings</string>
+    <string name="pref_fast_routing">Routing Settings</string>
     <string name="pref_fast_all_through_tor">Route All traffic through Tor</string>
+    <string name="pref_fast_all_through_ipro">Route All traffic through InviZible</string>
     <string name="pref_fast_unlock_with_tor">Select WebSites</string>
     <string name="pref_fast_unlock_with_tor_summ">WebSites list to open with Tor</string>
     <string name="pref_fast_unlock_apps_with_tor">Select Applications</string>
-    <string name="pref_fast_unlock_apps_with_tor_summ">Applications list to open with Tor</string>
+    <string name="pref_fast_unlock_apps_with_tor_summ">Applications list to use with Tor</string>
+    <string name="pref_fast_unlock_apps_with_ipro_summ">Applications list to use with InviZible</string>
     <string name="pref_fast_exclude_from_tor">Exclude WebSites</string>
     <string name="pref_fast_exclude_from_tor_summ">WebSites list to open directly</string>
     <string name="pref_fast_exclude_apps_from_tor">Exclude Applications</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">Applications list to open directly</string>
+    <string name="pref_fast_exclude_apps_from_ipro_summ">Applications list to open directly</string>
     <string name="pref_fast_site_refresh_interval">Refresh Interval</string>
     <string name="pref_fast_site_refresh_interval_summ">Period in hours to refresh WebSites IPs. For Android 5.1 and higher. Put 0 to stop refresh.</string>
     <string name="pref_fast_use_tor_bridges">Bridges</string>
@@ -167,7 +173,7 @@
 
     <string name="pref_common_categ_run_with_root">Use Root Privileges</string>
     <string name="pref_common_run_with_root">Run Modules With Root</string>
-    <string name="pref_common_run_with_root_summ">Use Root privileges for DNS Crypt, Tor, I2P </string>
+    <string name="pref_common_run_with_root_summ">Use Root privileges for DNSCrypt, Tor, I2P </string>
     <string name="pref_common_categ_other">Other</string>
     <string name="pref_common_block_http">Block HOTSPOT http</string>
     <string name="pref_common_block_http_summ">Deny connection to http port 80 for HOTSPOT</string>
@@ -207,7 +213,7 @@
     <string name="pref_common_excludes_from_tor_summ">WebSites list to open directly for HOTSPOT</string>
     <string name="pref_common_itpd_tethering">Allow I2P Tethering</string>
     <string name="pref_common_tethering_settings">Open Tethering config</string>
-    <string name="pref_common_restart_dnscrypt">Please restart DNS Crypt</string>
+    <string name="pref_common_restart_dnscrypt">Please restart DNSCrypt</string>
     <string name="pref_common_restart_tor">Please restart Tor</string>
     <string name="pref_common_restart_itpd">Please restart I2P</string>
 
@@ -390,6 +396,9 @@
     <string name="pref_tor_unlock_app">Apps to Torify</string>
     <string name="pref_tor_clearnet_app">Apps to bypass Tor</string>
 
+    <string name="pref_routing_unlock_app">Apps to use with InviZible</string>
+    <string name="pref_routing_clearnet_app">Apps to bypass InviZible</string>
+
     <string name="country_select_select_all">Select All</string>
     <string name="country_select_unselect_all">Remove Selection</string>
 
@@ -476,25 +485,7 @@
     <string name="helper_after_install">Congratulations! You can use this tools to have fast access
         for all websites without restrictions now. Start DNSCrypt with or without Tor and I2P as requested (Fast Mode). Or you can use
         this tools to enhance privacy. Start Tor with or without I2P as requested(Enhanced Privacy Mode).</string>
-    <string name="helper_dnscrypt">(Fast Mode)\n Your DNS traffic is encrypting now. Try to use different
-        servers for additional features. MENU->FastSettings->Select DNSCrypt servers.</string>
-    <string name="helper_dnscrypt_tor">(Fast Mode)\n Your DNS traffic is encrypting now. You have access to ONION
-        websites from any application. You can add websites, applications to MENU->Fast Settings->Select WebSites, Applications
-        to Unblock for opening its with Tor network and without restrictions.</string>
-    <string name="helper_dnscrypt_tor_privacy">(Enhanced Privacy Mode)\n Your DNS traffic is encrypting now. You have access to ONION
-        websites from any application. You can add websites, applications to MENU->Fast Settings->Exclude WebSites, Exclude Applications
-        for Tor network bypass. All other traffic goes through Tor network. All other connections were blocked.</string>
-    <string name="helper_dnscrypt_itpd">Your DNS traffic is encrypting now. You have access to I2P websites from any application.</string>
-    <string name="helper_dnscrypt_tor_itpd">Your DNS traffic is encrypting now. You have access to ONION
-        and I2P websites from any application</string>
-    <string name="helper_tor">(Enhanced Privacy Mode)\n You have access to ONION websites from any application.
-        All your traffic goes through Tor network. You can add websites, applications to MENU->Fast Settings->Exclude WebSites, Exclude Applications
-        for Tor network bypass. All other connections were blocked.</string>
-    <string name="helper_tor_itpd">(Enhanced Privacy Mode)\n You have access to ONION websites
-        from any application. All your traffic goes through Tor network. You can add websites, applications to MENU->Fast Settings->Exclude WebSites, Exclude Applications
-        for Tor network bypass. You have access to I2P websites only through SOCKS or HTTP proxy. All other connections were blocked.</string>
-    <string name="helper_itpd">You have access to I2P websites only through SOCKS or HTTP proxy.</string>
-    <string name="helper_dnscrypt_stopped">Looks like DNS Crypt was killed by android system.
+    <string name="helper_dnscrypt_stopped">Looks like DNSCrypt was killed by android system.
         Your internet connection was restored. Check device Settings!</string>
     <string name="helper_tor_stopped">Looks like Tor was killed by android system.
         Your internet connection was restored. Check device Settings!</string>
@@ -528,7 +519,7 @@
     <string name="about_app_ver" translatable="false">Application Version:</string>
     <string name="about_build_date" translatable="false">Build Date:</string>
     <string name="about_proc_ver" translatable="false">Processor Version:</string>
-    <string name="about_own_copyright" translatable="false">Copyright (C) 2019 Garmatin Oleksandr\n All Rights Reserved\n Web Site:</string>
+    <string name="about_own_copyright" translatable="false">Copyright (C) 2019-2020 Garmatin Oleksandr\n All Rights Reserved\n Web Site:</string>
     <string name="about_own_licence" translatable="false">
         \tInviZible Pro is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -587,4 +578,15 @@
     <string name="vpn_mode_error">VPN mode error!</string>
     <string name="vpn_tor_tether_summ">Please configure the use of proxy server in the settings of the connected device. Default values: IP:10.1.10.1 Port:8118</string>
 
+    <string name="main_fragment_button_start" translatable="false">START</string>
+    <string name="main_fragment_button_stop" translatable="false">STOP</string>
+    <string name="main_fragment_hide_ip">Hide IP with TOR</string>
+    <string name="main_fragment_protect_dns">Protect DNS with DNSCRYPT</string>
+    <string name="main_fragment_access_i2p">Access to I2P sites with Purple I2P</string>
+
+    <string name="top_fragment_address_already_in_use">Some modules were not properly stopped the last time.
+        Try to start again. Force Close …</string>
+
+    <string name="add_custom_server_title">Add custom server</string>
+    <string name="add_custom_server_error">Invalid custom server configuration. Please check the SDNS field.</string>
 </resources>

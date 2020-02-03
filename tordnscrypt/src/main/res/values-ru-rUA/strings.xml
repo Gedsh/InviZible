@@ -38,7 +38,7 @@
     <string name="install_message">Вы хотите завершить установку?</string>
     <string name="write_file_error">Ошибка при сохранении файла!</string>
     <string name="drawer_menu_commonSettings">Общие настройки</string>
-    <string name="drawer_menu_DNSSettings">Настройки DNS Crypt</string>
+    <string name="drawer_menu_DNSSettings">Настройки DNSCrypt</string>
     <string name="drawer_menu_TorSettings">Настройки Tor</string>
     <string name="drawer_menu_I2PDSettings">Настройки I2P</string>
     <string name="drawer_menu_fastSettings">Быстрые настройки</string>
@@ -90,7 +90,7 @@
     <string name="pref_fast_theme">Выбрать тему</string>
     <string name="pref_common_categ_run_with_root">Использовать Root привилегии</string>
     <string name="pref_common_run_with_root">Запуск модулей с Root</string>
-    <string name="pref_common_run_with_root_summ">Использовать Root привилегии для DNS Crypt, Tor, I2P</string>
+    <string name="pref_common_run_with_root_summ">Использовать Root привилегии для DNSCrypt, Tor, I2P</string>
     <string name="pref_common_categ_other">Другие</string>
     <string name="pref_common_notification_summ">Защитите приложение в Безрутовом Режиме, чтоб андроид не завершил его</string>
     <string name="pref_common_show_notification">Показывать уведомление</string>
@@ -134,7 +134,7 @@
     <string name="pref_dnscrypt_require_nofilter_summ">Сервера не должны использовать черный список (для родительского контроля, блокировки рекламы…).</string>
     <string name="pref_dnscrypt_force_tcp_categ">Всегда использовать TCP протокол, для соединения с серверами.</string>
     <string name="pref_dnscrypt_force_tcp_summ">Это может быть полезным, когда вы перенаправляете весь трафик через Tor.
-        Иначе не активируйте, так как это не улучшит безопасность. DNS Crypt и так шифрует все запросы, даже через UDP. А задержки могут увеличиться.</string>
+        Иначе не активируйте, так как это не улучшит безопасность. DNSCrypt и так шифрует все запросы, даже через UDP. А задержки могут увеличиться.</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">HTTP / SOCKS прокси.</string>
     <string name="pref_dnscrypt_use_proxy">Включить прокси</string>
     <string name="pref_dnscrypt_proxy_summ">Перенаправить все TCP соединения на Tor. Tor не поддерживает UDP, поэтому обязательно активируйте force_tcp.</string>
@@ -264,26 +264,7 @@
         чтоб обеспечить легкий доступ к любым сайтам и без всяких ограничений. Запустите DNSCrypt
         с или без Tor или I2P, как необходимо (Быстрый режим). Или можете использовать эти инструменты
         для улучшения приватности. Запустите Tor с или без I2P, как необходимо (Режим улучшеной приватности)</string>
-    <string name="helper_dnscrypt">(Быстрый режим)\n Ваши DNS запросы теперь зашифрованы.
-        Попробуйте использовать разные сервера для дополнительных функций MENU->Быстрые Настройки->Выбрать сервера DNSCrypt</string>
-    <string name="helper_dnscrypt_tor">(Быстрый режим)\n Ваши DNS запросы теперь зашифрованы. У вас
-        есть доступ к ONION сайтам с любого приложения. Вы можете добавить сайты, приложения MENU->Быстрые
-        Настройки->Выбрать сайты, приложения, которые будут открываться через сеть Tor и без ограничений.</string>
-    <string name="helper_dnscrypt_tor_privacy">(Режим улучшеной приватности)\n Ваши DNS запросы теперь зашифрованы. У вас
-        есть доступ к ONION сайтам с любого приложения. Вы можете добавить сайты, приложения MENU->Быстрые
-        Настройки->Исключить сайты, приложения, которые будут открываться в обход Tor. Остальной траффик идет через Tor.
-        Все остальные соединения блокируются.</string>
-    <string name="helper_dnscrypt_itpd">Ваши DNS запросы теперь зашифрованы. У вас есть доступ к I2P сайтам с любого приложения.</string>
-    <string name="helper_dnscrypt_tor_itpd">Ваши DNS запросы теперь зашифрованы. У вас есть доступ к ONION и I2P сайтам с любого приложения.</string>
-    <string name="helper_tor">(Режим улучшеной приватности)\n У вас есть доступ к ONION сайтам с любого приложения. Весь трафик идет через Tor.
-        Вы можете добавить сайты, приложения MENU->Быстрые Настройки->Исключить сайты, приложения,
-        которые будут открываться в обход Tor.  Все остальные соединения блокируются.</string>
-    <string name="helper_tor_itpd">(Режим улучшеной приватности)\n У вас есть доступ к ONION сайтам
-        с любого приложения. Весь трафик идет через Tor. Вы можете добавить сайты, приложения
-        MENU->Быстрые Настройки->Исключить Сайты, Приложения, которые будут открываться в обход Tor.
-        У вас есть доступ к I2P сайтам через SOCKS или HTTP прокси. Все остальные соединения блокируются.</string>
-    <string name="helper_itpd">У вас есть доступ к I2P сайтам через SOCKS или HTTP прокси.</string>
-    <string name="helper_dnscrypt_stopped">Похоже андроид закрыл модуль DNS Crypt. Ваше интернет
+    <string name="helper_dnscrypt_stopped">Похоже андроид закрыл модуль DNSCrypt. Ваше интернет
         соединение восстановлено. Проверьте настройки устройства!</string>
     <string name="helper_tor_stopped">Похоже андроид закрыл модуль Tor. Ваше интернет
         соединение восстановлено. Проверьте настройки устройства!</string>
@@ -313,7 +294,7 @@
     <string name="pref_fast_block_http_summ">Закрыть http порт 80</string>
     <string name="pref_common_block_http">Заблокировать http</string>
     <string name="pref_common_block_http_summ">Закрыть http порт 80 для точки доступа</string>
-    <string name="pref_common_restart_dnscrypt">Пожалуйста, перезапустите DNS Crypt</string>
+    <string name="pref_common_restart_dnscrypt">Пожалуйста, перезапустите DNSCrypt</string>
     <string name="update_dnscrypt_has_apdate">Доступно обновление DNSCrypt. Загрузить и установить его? Обновление будет продолжено в фоновом режиме.</string>
     <string name="update_ipro_has_apdate">Доступно обновление InviZible Pro. Загрузить и установить его? Обновление будет продолжено в фоновом режиме.</string>
     <string name="update_itpd_has_apdate">Доступно обновление Purple I2P. Загрузить и установить его? Обновление будет продолжено в фоновом режиме.</string>
@@ -357,7 +338,9 @@
     <string name="install_title_no_root">Рут отсутствует</string>
     <string name="install_title_root">Рут разрешен</string>
     <string name="message_no_root_used">Вы можете использовать
-        InviZible Pro в режиме локального VPN или совместно с приложениями с функцией прокси.</string>
+        InviZible Pro в режиме локального VPN или совместно с приложениями с функцией прокси или собственным локальным VPN.</string>
+    <string name="message_no_root_used_kitkat">Вы можете использовать
+        InviZible Pro совместно с приложениями с функцией прокси или собственным локальным VPN.</string>
     <string name="pref_dnscrypt_filters_categ">ФИЛЬТРЫ</string>
     <string name="pref_dnscrypt_relays">Источники</string>
     <string name="pref_dnscrypt_relays_delay_summ">Список реле будет обновлен после refresh_delay в часах.</string>
@@ -368,4 +351,18 @@
     <string name="vpn_mode_active">Режим VPN активирован</string>
     <string name="vpn_mode_error">Ошибка VPN!</string>
     <string name="vpn_tor_tether_summ">Пожалуйста, настройте использование прокси-сервера в настройках подключенного устройства. Настройки по умолчанию: IP:10.1.10.1 Порт:8118</string>
+    <string name="pref_fast_unlock_apps_with_ipro_summ">Приложения, открывающиеся через InviZible</string>
+    <string name="pref_fast_routing">Настройки маршрутизации</string>
+    <string name="pref_fast_all_through_ipro">Весь интернет через InviZible</string>
+    <string name="pref_routing_clearnet_app">Приложения без InviZible</string>
+    <string name="pref_routing_unlock_app">Приложения для InviZible</string>
+    <string name="main_fragment_hide_ip">Скрыть IP с помощью TOR</string>
+    <string name="main_fragment_protect_dns">Защитить DNS с помощью DNSCRYPT</string>
+    <string name="main_fragment_access_i2p">Доступ к I2P сайтам с помощью Purple I2P</string>
+    <string name="tvTorConnecting">Подключение</string>
+    <string name="pref_fast_exclude_apps_from_ipro_summ">Приложения, открывающиеся в обход InviZible</string>
+    <string name="top_fragment_address_already_in_use">Некоторые модули не были правильно остановлены в последний раз.
+        Попробуйте запустить снова. Экстренное завершение…</string>
+    <string name="add_custom_server_title">Добавить сервер</string>
+    <string name="add_custom_server_error">Неправильная конфигурация сервера. Пожалуйста, проверьте поле SDNS.</string>
 </resources>

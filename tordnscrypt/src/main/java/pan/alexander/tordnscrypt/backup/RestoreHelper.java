@@ -147,7 +147,7 @@ class RestoreHelper extends Installer {
     }
 
     private void refreshInstallationParameters() {
-        PathVars pathVars = new PathVars(activity);
+        PathVars pathVars = PathVars.getInstance(activity);
         pathVars.saveAppUID(activity);
     }
 

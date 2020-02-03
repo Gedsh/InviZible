@@ -34,8 +34,10 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.net.VpnService;
+import android.os.Binder;
 import android.os.Build;
 import android.os.HandlerThread;
+import android.os.IBinder;
 import android.os.Looper;
 import android.os.ParcelFileDescriptor;
 import android.os.PowerManager;
@@ -53,6 +55,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -62,6 +65,7 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.VPNCommand;
 import pan.alexander.tordnscrypt.vpn.Allowed;
@@ -99,6 +103,7 @@ public class ServiceVPN extends VpnService {
     ParcelFileDescriptor vpn = null;
 
     private boolean registeredIdleState = false;
+    private boolean registeredPackageChanged = false;
     private boolean registeredConnectivityChanged = false;
 
     private PathVars pathVars;
@@ -116,6 +121,10 @@ public class ServiceVPN extends VpnService {
 
     private boolean canFilter = true;
 
+    private boolean filterUDP = true;
+    private boolean blockHttp = false;
+    private boolean routeAllThroughInviZible = true;
+
     @SuppressLint("UseSparseArrays")
     private Map<Integer, Boolean> mapUidAllowed = new HashMap<>();
     @SuppressLint("UseSparseArrays")
@@ -123,6 +132,9 @@ public class ServiceVPN extends VpnService {
     @SuppressLint("UseSparseArrays")
     private Map<Integer, Forward> mapForwardPort = new HashMap<>();
     private Map<String, Forward> mapForwardAddress = new HashMap<>();
+
+    private VPNBinder binder = new VPNBinder();
+    private LinkedList<ResourceRecord> resourceRecords = new LinkedList<>();
 
     private native long jni_init(int sdk);
 
@@ -147,8 +159,8 @@ public class ServiceVPN extends VpnService {
         // Get custom DNS servers
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean ip6 = prefs.getBoolean("ipv6", false);
-        String vpnDns1 = prefs.getString("dns", null);
-        String vpnDns2 = prefs.getString("dns2", null);
+        String vpnDns1 = prefs.getString("dns", "127.0.0.1");
+        String vpnDns2 = prefs.getString("dns2", "127.0.0.1");
         Log.i(LOG_TAG, "VPN DNS system=" + TextUtils.join(",", sysDns) + " config=" + vpnDns1 + "," + vpnDns2);
 
         if (vpnDns1 != null)
@@ -207,11 +219,13 @@ public class ServiceVPN extends VpnService {
     }
 
     BuilderVPN getBuilder(List<Rule> listAllowed, List<Rule> listRule) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
         boolean ip6 = prefs.getBoolean("ipv6", false);
         boolean subnet = prefs.getBoolean("VPN subnet", true);
         boolean tethering = prefs.getBoolean("VPN tethering", true);
         boolean lan = prefs.getBoolean("VPN lan", false);
+        boolean apIsOn = new PrefManager(this).getBoolPref("APisON");
+        boolean torIsRunning = modulesStatus.getTorState() == RUNNING;
 
         // Build VPN service
         BuilderVPN builder = new BuilderVPN(this);
@@ -241,7 +255,7 @@ public class ServiceVPN extends VpnService {
             List<IPUtil.CIDR> listExclude = new ArrayList<>();
             listExclude.add(new IPUtil.CIDR("127.0.0.0", 8)); // localhost
 
-            if (tethering && !lan) {
+            if (tethering && !lan && !torIsRunning && apIsOn) {
                 // USB tethering 192.168.42.x
                 // Wi-Fi tethering 192.168.43.x
                 listExclude.add(new IPUtil.CIDR("192.168.42.0", 23));
@@ -266,7 +280,7 @@ public class ServiceVPN extends VpnService {
             try {
                 InetAddress start = InetAddress.getByName("0.0.0.0");
                 for (IPUtil.CIDR exclude : listExclude) {
-                    Log.i(LOG_TAG, "Exclude " + exclude.getStart().getHostAddress() + "..." + exclude.getEnd().getHostAddress());
+                    //Log.i(LOG_TAG, "Exclude " + exclude.getStart().getHostAddress() + "..." + exclude.getEnd().getHostAddress());
                     for (IPUtil.CIDR include : IPUtil.toCIDR(start, IPUtil.minus1(exclude.getStart())))
                         try {
                             builder.addRoute(include.address, include.prefix);
@@ -288,7 +302,6 @@ public class ServiceVPN extends VpnService {
         } else
             builder.addRoute("0.0.0.0", 0);
 
-        Log.i(LOG_TAG, "VPN IPv6=" + ip6);
         if (ip6)
             builder.addRoute("2000::", 3); // unicast
 
@@ -299,22 +312,60 @@ public class ServiceVPN extends VpnService {
 
         // Add list of allowed applications
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            try {
-                builder.addDisallowedApplication(getPackageName());
-            } catch (PackageManager.NameNotFoundException ex) {
-                Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
-            }
 
-            for (Rule rule : listRule) {
-                if (!rule.apply) {
+            if (routeAllThroughInviZible) {
+                try {
+                    builder.addDisallowedApplication(getPackageName());
+                } catch (PackageManager.NameNotFoundException ex) {
+                    Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+                }
+
+                for (Rule rule : listRule) {
+                    if (!rule.apply) {
+                        try {
+                            Log.i(LOG_TAG, "VPN Not routing " + rule.packageName);
+                            builder.addDisallowedApplication(rule.packageName);
+                        } catch (PackageManager.NameNotFoundException ex) {
+                            Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+                        }
+                    }
+                }
+            } else {
+
+                boolean applied = false;
+
+                for (Rule rule : listRule) {
+                    if (rule.apply) {
+                        try {
+                            if (rule.uid != ownUID) {
+                                Log.i(LOG_TAG, "VPN routing " + rule.packageName);
+                                applied = true;
+                                builder.addAllowedApplication(rule.packageName);
+                            }
+                        } catch (PackageManager.NameNotFoundException ex) {
+                            Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+                        }
+                    }
+                }
+
+                if (!applied) {
                     try {
-                        Log.i(LOG_TAG, "VPN Not routing " + rule.packageName);
-                        builder.addDisallowedApplication(rule.packageName);
+                        builder.addDisallowedApplication(getPackageName());
                     } catch (PackageManager.NameNotFoundException ex) {
                         Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
                     }
+
+                    for (Rule rule : listRule) {
+                        try {
+                            Log.i(LOG_TAG, "VPN Not routing " + rule.packageName);
+                            builder.addDisallowedApplication(rule.packageName);
+                        } catch (PackageManager.NameNotFoundException ex) {
+                            Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+                        }
+                    }
                 }
             }
+
         }
 
         // Build configure intent
@@ -338,7 +389,7 @@ public class ServiceVPN extends VpnService {
         int torSOCKSPort = 9050;
 
         try {
-            torSOCKSPort = Integer.parseInt(pathVars.torSOCKSPort);
+            torSOCKSPort = Integer.parseInt(pathVars.getTorSOCKSPort());
         } catch (Exception e) {
             Log.e(LOG_TAG, "VPN SOCKS Parse Exception " + e.getMessage() + " " + e.getCause());
         }
@@ -428,9 +479,9 @@ public class ServiceVPN extends VpnService {
         int torDNSPort = 5400;
         int itpdHttpPort = 4444;
         try {
-            dnsCryptPort = Integer.parseInt(pathVars.dnsCryptPort);
-            torDNSPort = Integer.parseInt(pathVars.torDNSPort);
-            itpdHttpPort = Integer.parseInt(pathVars.itpdHttpProxyPort);
+            dnsCryptPort = Integer.parseInt(pathVars.getDNSCryptPort());
+            torDNSPort = Integer.parseInt(pathVars.getTorDNSPort());
+            itpdHttpPort = Integer.parseInt(pathVars.getITPDHttpProxyPort());
         } catch (Exception e) {
             Log.e(LOG_TAG, "VPN Redirect Ports Parse Exception " + e.getMessage() + " " + e.getCause());
         }
@@ -494,6 +545,16 @@ public class ServiceVPN extends VpnService {
 
     // Called from native code
     public void dnsResolved(ResourceRecord rr) {
+        if (!resourceRecords.isEmpty() && !rr.equals(resourceRecords.get(resourceRecords.size() - 1))) {
+
+            if (resourceRecords.size() > 200) {
+                resourceRecords.removeFirst();
+            }
+
+            resourceRecords.add(rr);
+        } else if (resourceRecords.isEmpty()) {
+            resourceRecords.add(rr);
+        }
         //Log.i(LOG_TAG, "VPN DNS resolved " + rr.toString());
     }
 
@@ -536,8 +597,8 @@ public class ServiceVPN extends VpnService {
 
     // Called from native code
     public Allowed isAddressAllowed(Packet packet) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean filterUDP = prefs.getBoolean("VPN filter_udp", true);
+
+        boolean torIsRunning = modulesStatus.getTorState() == RUNNING;
 
         lock.readLock().lock();
 
@@ -545,6 +606,12 @@ public class ServiceVPN extends VpnService {
         // https://android.googlesource.com/platform/system/core/+/master/include/private/android_filesystem_config.h
         if (!canFilter) {
             packet.allowed = true;
+        } else if (packet.uid == ownUID) {
+            // Allow self
+            packet.allowed = true;
+            Log.w(LOG_TAG, "Allowing self " + packet);
+        } else if (blockHttp && packet.dport == 80 && !packet.daddr.matches("^10\\..+")) {
+            Log.w(LOG_TAG, "Block http " + packet);
         } else if (packet.protocol == 17 /* UDP */ && !filterUDP) {
             // Allow unfiltered UDP
             packet.allowed = true;
@@ -555,17 +622,13 @@ public class ServiceVPN extends VpnService {
             packet.allowed = true;
             Log.w(LOG_TAG, "Allowing disconnected system " + packet);
         } else if (packet.uid <= 2000 &&
-                (modulesStatus.getTorState() != RUNNING) &&
+                !routeAllThroughInviZible &&
                 !mapUidKnown.containsKey(packet.uid)
                 && isSupported(packet.protocol)) {
             // Allow unknown system traffic
             packet.allowed = true;
             Log.w(LOG_TAG, "Allowing unknown system " + packet);
-        } else if (packet.uid == ownUID) {
-            // Allow self
-            packet.allowed = true;
-            Log.w(LOG_TAG, "Allowing self " + packet);
-        } else if (modulesStatus.getTorState() == RUNNING
+        } else if (routeAllThroughInviZible && torIsRunning
                 && packet.protocol != 6 && packet.dport != 53) {
             Log.w(LOG_TAG, "Disallowing non tcp traffic when Tor is running " + packet);
         } else {
@@ -651,6 +714,23 @@ public class ServiceVPN extends VpnService {
         }
     };
 
+    private BroadcastReceiver packageChangedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.i(LOG_TAG, "VPN Received " + intent);
+
+            try {
+                if (Intent.ACTION_PACKAGE_ADDED.equals(intent.getAction())) {
+                    reload("Package added", context);
+                } else if (Intent.ACTION_PACKAGE_REMOVED.equals(intent.getAction())) {
+                    reload("Package deleted", context);
+                }
+            } catch (Throwable ex) {
+                Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+            }
+        }
+    };
+
     @Override
     public void onCreate() {
         notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
@@ -688,6 +768,14 @@ public class ServiceVPN extends VpnService {
             registerReceiver(idleStateReceiver, ifIdle);
             registeredIdleState = true;
         }
+
+        // Listen for added/removed applications
+        IntentFilter ifPackage = new IntentFilter();
+        ifPackage.addAction(Intent.ACTION_PACKAGE_ADDED);
+        ifPackage.addAction(Intent.ACTION_PACKAGE_REMOVED);
+        ifPackage.addDataScheme("package");
+        registerReceiver(packageChangedReceiver, ifPackage);
+        registeredPackageChanged = true;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             try {
@@ -730,7 +818,7 @@ public class ServiceVPN extends VpnService {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ServiceVPN.this);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
                         ? !same(last_dns, dns)
-                        : prefs.getBoolean("reload_onconnectivity", false)) {
+                        : prefs.getBoolean("reload_onconnectivity", true)) {
                     Log.i(LOG_TAG, "VPN Changed link properties=" + linkProperties +
                             "DNS cur=" + TextUtils.join(",", dns) +
                             "DNS prv=" + (last_dns == null ? null : TextUtils.join(",", last_dns)));
@@ -781,8 +869,12 @@ public class ServiceVPN extends VpnService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        filterUDP = prefs.getBoolean("VPN filter_udp", true);
+        blockHttp = prefs.getBoolean("pref_fast_block_http", false);
+        routeAllThroughInviZible = prefs.getBoolean("pref_fast_all_through_tor", true);
 
-        pathVars = new PathVars(this);
+        pathVars = PathVars.getInstance(this);
         modulesStatus = ModulesStatus.getInstance();
 
         if (intent != null) {
@@ -790,7 +882,7 @@ public class ServiceVPN extends VpnService {
 
             if (showNotification) {
                 ServiceVPNNotification notification = new ServiceVPNNotification(this, notificationManager);
-                notification.sendNotification(getText(R.string.notification_text).toString(), getString(R.string.app_name), getText(R.string.notification_text).toString());
+                notification.sendNotification(getString(R.string.app_name), getText(R.string.notification_text).toString());
             }
         }
 
@@ -849,6 +941,11 @@ public class ServiceVPN extends VpnService {
                 registeredIdleState = false;
             }
 
+            if (registeredPackageChanged) {
+                unregisterReceiver(packageChangedReceiver);
+                registeredPackageChanged = false;
+            }
+
             if (networkCallback != null) {
                 unlistenNetworkChanges();
                 networkCallback = null;
@@ -884,6 +981,28 @@ public class ServiceVPN extends VpnService {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm != null) {
             cm.unregisterNetworkCallback((ConnectivityManager.NetworkCallback) networkCallback);
+        }
+    }
+
+    @Override
+    public IBinder onBind(Intent arg0) {
+        Log.i(LOG_TAG, "ServiceVPN onBind");
+        return binder;
+    }
+
+    public class VPNBinder extends Binder {
+        public ServiceVPN getService() {
+            return ServiceVPN.this;
+        }
+    }
+
+    public LinkedList<ResourceRecord> getResourceRecords() {
+        return resourceRecords;
+    }
+
+    public void clearResourceRecords() {
+        if (resourceRecords != null && !resourceRecords.isEmpty()) {
+            resourceRecords.clear();
         }
     }
 }

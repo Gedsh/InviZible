@@ -22,11 +22,11 @@ package pan.alexander.tordnscrypt.installer;
 import androidx.drawerlayout.widget.DrawerLayout;
 import android.util.Log;
 
-import pan.alexander.tordnscrypt.DNSCryptRunFragment;
-import pan.alexander.tordnscrypt.ITPDRunFragment;
+import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptRunFragment;
+import pan.alexander.tordnscrypt.itpd_fragment.ITPDRunFragment;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.TorRunFragment;
+import pan.alexander.tordnscrypt.tor_fragment.TorRunFragment;
 import pan.alexander.tordnscrypt.dialogs.DialogAfterInstallation;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -70,16 +70,17 @@ class InstallerUIChanger {
 
     Runnable setModulesStatusTextInstalling() {
         return () -> {
-            if (dnsCryptRunFragment != null) {
-                dnsCryptRunFragment.setDNSCryptStatus(R.string.tvDNSInstalling, R.color.textModuleStatusColorInstalling);
+            if (dnsCryptRunFragment != null && dnsCryptRunFragment.getPresenter() != null) {
+                dnsCryptRunFragment.getPresenter().setDnsCryptInstalling();
+
             }
 
-            if (torRunFragment != null) {
-                torRunFragment.setTorStatus(R.string.tvTorInstalling, R.color.textModuleStatusColorInstalling);
+            if (torRunFragment != null && torRunFragment.getPresenter() != null) {
+                torRunFragment.getPresenter().setTorInstalling();
             }
 
-            if (itpdRunFragment != null) {
-                itpdRunFragment.setITPDStatus(R.string.tvITPDInstalling, R.color.textModuleStatusColorInstalling);
+            if (itpdRunFragment != null && itpdRunFragment.getPresenter() != null) {
+                itpdRunFragment.getPresenter().setITPDInstalling();
             }
 
             Log.i(LOG_TAG, "Installer: setModulesStatusTextInstalling");
@@ -87,29 +88,41 @@ class InstallerUIChanger {
     }
 
     Runnable setDnsCryptInstalledStatus() {
-        return () -> dnsCryptRunFragment.setDNSCryptStatus(R.string.tvDNSInstalled, R.color.textModuleStatusColorInstalled);
+        return () -> {
+            if (dnsCryptRunFragment != null && dnsCryptRunFragment.getPresenter() != null) {
+                dnsCryptRunFragment.getPresenter().setDnsCryptInstalled();
+            }
+        };
     }
 
     Runnable setTorInstalledStatus() {
-        return () -> torRunFragment.setTorStatus(R.string.tvTorInstalled, R.color.textModuleStatusColorInstalled);
+        return () -> {
+            if (torRunFragment != null && torRunFragment.getPresenter() != null) {
+                torRunFragment.getPresenter().setTorInstalled();
+            }
+        };
     }
 
     Runnable setItpdInstalledStatus() {
-        return () -> itpdRunFragment.setITPDStatus(R.string.tvITPDInstalled, R.color.textModuleStatusColorInstalled);
+        return () -> {
+            if (itpdRunFragment != null && itpdRunFragment.getPresenter() != null) {
+                itpdRunFragment.getPresenter().setITPDInstalled();
+            }
+        };
     }
 
     Runnable setModulesStartButtonsDisabled() {
         return () -> {
-            if (dnsCryptRunFragment != null) {
-                dnsCryptRunFragment.setStartButtonEnabled(false);
+            if (dnsCryptRunFragment != null && dnsCryptRunFragment.getPresenter() != null) {
+                dnsCryptRunFragment.getPresenter().setDNSCryptStartButtonEnabled(false);
             }
 
-            if (torRunFragment != null) {
-                torRunFragment.setStartButtonEnabled(false);
+            if (torRunFragment != null && torRunFragment.getPresenter() != null) {
+                torRunFragment.getPresenter().setTorStartButtonEnabled(false);
             }
 
-            if (itpdRunFragment != null) {
-                itpdRunFragment.setStartButtonEnabled(false);
+            if (itpdRunFragment != null && itpdRunFragment.getPresenter() != null) {
+                itpdRunFragment.getPresenter().setITPDStartButtonEnabled(false);
             }
 
             Log.i(LOG_TAG, "Installer: setModulesStartButtonsDisabled");
@@ -118,16 +131,16 @@ class InstallerUIChanger {
 
     Runnable startModulesProgressBarIndeterminate() {
         return () -> {
-            if (dnsCryptRunFragment != null) {
-                dnsCryptRunFragment.setProgressBarIndeterminate(true);
+            if (dnsCryptRunFragment != null && dnsCryptRunFragment.getPresenter() != null) {
+                dnsCryptRunFragment.getPresenter().setDNSCryptProgressBarIndeterminate(true);
             }
 
-            if (torRunFragment != null) {
-                torRunFragment.setProgressBarIndeterminate(true);
+            if (torRunFragment != null && torRunFragment.getPresenter() != null) {
+                torRunFragment.getPresenter().setTorProgressBarIndeterminate(true);
             }
 
-            if (itpdRunFragment != null) {
-                itpdRunFragment.setProgressBarIndeterminate(true);
+            if (itpdRunFragment != null && itpdRunFragment.getPresenter() != null) {
+                itpdRunFragment.getPresenter().setITPDProgressBarIndeterminate(true);
             }
 
             Log.i(LOG_TAG, "Installer: startModulesProgressBarIndeterminate");
@@ -136,16 +149,16 @@ class InstallerUIChanger {
 
     Runnable stopModulesProgressBarIndeterminate() {
         return () -> {
-            if (dnsCryptRunFragment != null) {
-                dnsCryptRunFragment.setProgressBarIndeterminate(false);
+            if (dnsCryptRunFragment != null && dnsCryptRunFragment.getPresenter() != null) {
+                dnsCryptRunFragment.getPresenter().setDNSCryptProgressBarIndeterminate(false);
             }
 
-            if (torRunFragment != null) {
-                torRunFragment.setProgressBarIndeterminate(false);
+            if (torRunFragment != null && torRunFragment.getPresenter() != null) {
+                torRunFragment.getPresenter().setTorProgressBarIndeterminate(false);
             }
 
-            if (itpdRunFragment != null) {
-                itpdRunFragment.setProgressBarIndeterminate(false);
+            if (itpdRunFragment != null && itpdRunFragment.getPresenter() != null) {
+                itpdRunFragment.getPresenter().setITPDProgressBarIndeterminate(false);
             }
 
             Log.i(LOG_TAG, "Installer: stopModulesProgressBarIndeterminate");
@@ -154,23 +167,23 @@ class InstallerUIChanger {
 
     Runnable dnsCryptProgressBarIndeterminate(final boolean indeterminate) {
         return () -> {
-            if (dnsCryptRunFragment != null) {
-                dnsCryptRunFragment.setProgressBarIndeterminate(indeterminate);
+            if (dnsCryptRunFragment != null && dnsCryptRunFragment.getPresenter() != null) {
+                dnsCryptRunFragment.getPresenter().setDNSCryptProgressBarIndeterminate(indeterminate);
             }
         };
     }
 
     Runnable torProgressBarIndeterminate(final boolean indeterminate) {
         return () -> {
-            if (torRunFragment != null) {
-                torRunFragment.setProgressBarIndeterminate(indeterminate);
+            if (torRunFragment != null && torRunFragment.getPresenter() != null) {
+                torRunFragment.getPresenter().setTorProgressBarIndeterminate(indeterminate);
             }
         };
     }
     Runnable itpdProgressBarIndeterminate(final boolean indeterminate) {
         return () -> {
-            if (itpdRunFragment != null) {
-                itpdRunFragment.setProgressBarIndeterminate(indeterminate);
+            if (itpdRunFragment != null && itpdRunFragment.getPresenter() != null) {
+                itpdRunFragment.getPresenter().setITPDProgressBarIndeterminate(indeterminate);
             }
         };
     }
@@ -178,16 +191,16 @@ class InstallerUIChanger {
 
     Runnable setModulesStartButtonsEnabled() {
         return () -> {
-            if (dnsCryptRunFragment != null) {
-                dnsCryptRunFragment.setStartButtonEnabled(true);
+            if (dnsCryptRunFragment != null && dnsCryptRunFragment.getPresenter() != null) {
+                dnsCryptRunFragment.getPresenter().setDNSCryptStartButtonEnabled(true);
             }
 
-            if (torRunFragment != null) {
-                torRunFragment.setStartButtonEnabled(true);
+            if (torRunFragment != null && torRunFragment.getPresenter() != null) {
+                torRunFragment.getPresenter().setTorStartButtonEnabled(true);
             }
 
-            if (itpdRunFragment != null) {
-                itpdRunFragment.setStartButtonEnabled(true);
+            if (itpdRunFragment != null && itpdRunFragment.getPresenter() != null) {
+                itpdRunFragment.getPresenter().setITPDStartButtonEnabled(true);
             }
 
             Log.i(LOG_TAG, "Installer: setModulesStartButtonsEnabled");
@@ -200,16 +213,16 @@ class InstallerUIChanger {
 
     Runnable setModulesStatusTextError() {
         return () -> {
-            if (dnsCryptRunFragment != null) {
-                dnsCryptRunFragment.setDNSCryptStatus(R.string.wrong, R.color.textModuleStatusColorAlert);
+            if (dnsCryptRunFragment != null && dnsCryptRunFragment.getPresenter() != null) {
+                dnsCryptRunFragment.getPresenter().setDnsCryptSomethingWrong();
             }
 
-            if (torRunFragment != null) {
-                torRunFragment.setTorStatus(R.string.wrong, R.color.textModuleStatusColorAlert);
+            if (torRunFragment != null && torRunFragment.getPresenter() != null) {
+                torRunFragment.getPresenter().setTorSomethingWrong();
             }
 
-            if (itpdRunFragment != null) {
-                itpdRunFragment.setITPDStatus(R.string.wrong, R.color.textModuleStatusColorAlert);
+            if (itpdRunFragment != null && itpdRunFragment.getPresenter() != null) {
+                itpdRunFragment.getPresenter().setITPDSomethingWrong();
             }
 
             Log.i(LOG_TAG, "Installer: setModulesStatusTextError");

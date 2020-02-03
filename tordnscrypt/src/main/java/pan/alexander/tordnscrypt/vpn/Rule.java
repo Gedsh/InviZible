@@ -19,32 +19,28 @@ package pan.alexander.tordnscrypt.vpn;
 */
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Process;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+
+import pan.alexander.tordnscrypt.utils.PrefManager;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class Rule {
     public int uid;
     public String packageName;
-    public int icon;
-    public String name;
-    public String version;
-    public boolean system;
-    public boolean internet;
-    public boolean enabled;
-    public boolean pkg = true;
-
-    private boolean wifi_blocked = false;
 
     public boolean apply = true;
 
@@ -70,57 +66,25 @@ public class Rule {
         return Util.isEnabled(info, context);
     }
 
-    private Rule(PackageInfo info, Context context) {
+    private Rule(PackageInfo info) {
         this.uid = info.applicationInfo.uid;
         this.packageName = info.packageName;
-        this.icon = info.applicationInfo.icon;
-        this.version = info.versionName;
-        if (info.applicationInfo.uid == 0) {
-            this.name = "root";
-            this.system = true;
-            this.internet = true;
-            this.enabled = true;
-            this.pkg = false;
-        } else if (info.applicationInfo.uid == 1013) {
-            this.name = "mediaserver";
-            this.system = true;
-            this.internet = true;
-            this.enabled = true;
-            this.pkg = false;
-        } else if (info.applicationInfo.uid == 1020) {
-            this.name = "MulticastDNSResponder";
-            this.system = true;
-            this.internet = true;
-            this.enabled = true;
-            this.pkg = false;
-        } else if (info.applicationInfo.uid == 1021) {
-            this.name = "GPS daemon";
-            this.system = true;
-            this.internet = true;
-            this.enabled = true;
-            this.pkg = false;
-        } else if (info.applicationInfo.uid == 1051) {
-            this.name = "DNS daemon";
-            this.system = true;
-            this.internet = true;
-            this.enabled = true;
-            this.pkg = false;
-        } else if (info.applicationInfo.uid == 9999) {
-            this.name = "nobody";
-            this.system = true;
-            this.internet = true;
-            this.enabled = true;
-            this.pkg = false;
-        } else {
-            this.name = getLabel(info, context);
-            this.system = isSystem(info.packageName, context);
-            this.internet = hasInternet(info.packageName, context);
-            this.enabled = isEnabled(info, context);
-        }
     }
 
     public static List<Rule> getRules(Context context) {
         synchronized (context.getApplicationContext()) {
+
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            boolean routeAllThroughIniZible = prefs.getBoolean("pref_fast_all_through_tor", true);
+
+            String unlockAppsStr;
+            if (!routeAllThroughIniZible) {
+                unlockAppsStr = "unlockApps";
+            } else {
+                unlockAppsStr = "clearnetApps";
+            }
+
+            Set<String> setUnlockApps = new PrefManager(context).getSetStrPref(unlockAppsStr);
 
             // Build rule list
             List<Rule> listRules = new ArrayList<>();
@@ -194,14 +158,13 @@ public class Rule {
                     if (info.applicationInfo.uid == Process.myUid())
                         continue;
 
-                    Rule rule = new Rule(info, context);
+                    Rule rule = new Rule(info);
 
-                    if (info.applicationInfo.uid == Process.myUid())
-                        rule.system = true;
-
-                    rule.wifi_blocked = false;
-
-                    rule.apply = true;
+                    if (routeAllThroughIniZible) {
+                        rule.apply = !setUnlockApps.contains(String.valueOf(info.applicationInfo.uid));
+                    } else {
+                        rule.apply = setUnlockApps.contains(String.valueOf(info.applicationInfo.uid));
+                    }
 
                     listRules.add(rule);
                 } catch (Throwable ex) {
@@ -210,12 +173,5 @@ public class Rule {
 
             return listRules;
         }
-    }
-
-    @NonNull
-    @Override
-    public String toString() {
-        // This is used in the port forwarding dialog application selector
-        return this.name;
     }
 }

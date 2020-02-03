@@ -13,7 +13,7 @@
     <color name="buttonColor">#3C3C3C</color>
     <color name="buttonColorFocusedHighlight">#1A00E5FF</color>
     <color name="buttonColorFocusedHighlightStroke">#00E5FF</color>
-    <color name="buttonColorPressedHighlight">#C8C8C8</color>
+    <color name="buttonColorPressedHighlight">#646464</color>
     <color name="buttonTextColor">#FFFFFF</color>
     <color name="textModuleStatusColorAlert">#FF1744</color>
     <color name="textModuleStatusColorStopped">#FFFFFF</color>
@@ -23,4 +23,7 @@
     <color name="textModuleStatusColorInstalling">#2979FF</color>
     <color name="textModuleStatusColorInstalled">#1DE9B6</color>
     <color name="buttonItemColorFocusedHighlight">#3C3C3C</color>
+    <color name="mainStartButtonColorStart">#3C3C3C</color>
+    <color name="mainStartButtonColorEnd">#646464</color>
+    <color name="mainStartButtonColorActive">#00B0FF</color>
 </resources>

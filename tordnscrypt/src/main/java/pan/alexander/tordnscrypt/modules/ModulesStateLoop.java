@@ -39,7 +39,10 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class ModulesStateLoop extends TimerTask {
     //Depends on timer, currently 10 sec
-    private final int STOP_COUNTER_DELAY = 10;
+    private static final int STOP_COUNTER_DELAY = 10;
+
+    //Delay in sec before service can stop
+    private static int stopCounter = STOP_COUNTER_DELAY;
 
     private final ModulesStatus modulesStatus;
     private final ModulesService modulesService;
@@ -55,10 +58,10 @@ public class ModulesStateLoop extends TimerTask {
     private ModuleState savedTorState;
     private ModuleState savedItpdState;
 
-    //Delay in sec before service can stop
-    private int stopCounter = STOP_COUNTER_DELAY;
-
     ModulesStateLoop(ModulesService modulesService) {
+        //Delay in sec before service can stop
+        stopCounter = STOP_COUNTER_DELAY;
+
         this.modulesService = modulesService;
 
         modulesStatus = ModulesStatus.getInstance();
@@ -99,6 +102,7 @@ public class ModulesStateLoop extends TimerTask {
         }
 
         if (stopCounter <= 0) {
+            Log.i(LOG_TAG, "ModulesStateLoop stopCounter is zero. Stop service.");
             safeStopModulesService();
         }
     }
@@ -107,6 +111,7 @@ public class ModulesStateLoop extends TimerTask {
         if (dnsCryptThread != null && dnsCryptThread.isAlive()) {
             if (dnsCryptState == STOPPED) {
                 modulesStatus.setDnsCryptState(ModuleState.RUNNING);
+                stopCounter = STOP_COUNTER_DELAY;
             }
         } else {
             if (dnsCryptState == RUNNING) {
@@ -117,6 +122,7 @@ public class ModulesStateLoop extends TimerTask {
         if (torThread != null && torThread.isAlive()) {
             if (torState == STOPPED) {
                 modulesStatus.setTorState(ModuleState.RUNNING);
+                stopCounter = STOP_COUNTER_DELAY;
             }
         } else {
             if (torState == RUNNING) {
@@ -127,6 +133,7 @@ public class ModulesStateLoop extends TimerTask {
         if (itpdThread != null && itpdThread.isAlive()) {
             if (itpdState == STOPPED) {
                 modulesStatus.setItpdState(ModuleState.RUNNING);
+                stopCounter = STOP_COUNTER_DELAY;
             }
         } else {
             if (itpdState == RUNNING) {
@@ -144,17 +151,6 @@ public class ModulesStateLoop extends TimerTask {
                 || itpdState != savedItpdState
                 || modulesStatus.isIptablesRulesUpdateRequested()) {
 
-            savedDNSCryptState = dnsCryptState;
-            new PrefManager(modulesService).setStrPref("savedDNSCryptState", dnsCryptState.toString());
-
-
-            savedTorState = torState;
-            new PrefManager(modulesService).setStrPref("savedTorState", torState.toString());
-
-            savedItpdState = itpdState;
-            new PrefManager(modulesService).setStrPref("savedITPDState", itpdState.toString());
-
-
             Log.i(LOG_TAG, "DNSCrypt is " + dnsCryptState +
                     " Tor is " + torState + " I2P is " + itpdState);
 
@@ -165,6 +161,15 @@ public class ModulesStateLoop extends TimerTask {
             } else if (itpdState != STOPPED && itpdState != RUNNING) {
                 return;
             }
+
+            savedDNSCryptState = dnsCryptState;
+            new PrefManager(modulesService).setStrPref("savedDNSCryptState", dnsCryptState.toString());
+
+            savedTorState = torState;
+            new PrefManager(modulesService).setStrPref("savedTorState", torState.toString());
+
+            savedItpdState = itpdState;
+            new PrefManager(modulesService).setStrPref("savedITPDState", itpdState.toString());
 
             if (modulesStatus.isIptablesRulesUpdateRequested()) {
                 modulesStatus.setIptablesRulesUpdateRequested(false);

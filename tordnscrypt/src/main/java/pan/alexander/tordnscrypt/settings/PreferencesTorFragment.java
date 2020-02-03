@@ -120,8 +120,8 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
         getActivity().setTitle(R.string.drawer_menu_TorSettings);
 
-        PathVars pathVars = new PathVars(getActivity());
-        appDataDir = pathVars.appDataDir;
+        PathVars pathVars = PathVars.getInstance(getActivity());
+        appDataDir = pathVars.getAppDataDir();
 
         sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
     }

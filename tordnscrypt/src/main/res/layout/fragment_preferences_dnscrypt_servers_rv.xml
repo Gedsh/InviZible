@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".settings.dnscrypt_servers.PreferencesDNSCryptServers">
 
     <androidx.recyclerview.widget.RecyclerView
@@ -10,4 +12,15 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scrollbars="vertical" />
+
+    <ImageButton
+        android:id="@+id/ibAddOwnServer"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="10dp"
+        android:background="@drawable/button_main_selector"
+        android:scaleType="center"
+        android:src="@drawable/ic_add_circle_black_24dp" />
+
 </FrameLayout>

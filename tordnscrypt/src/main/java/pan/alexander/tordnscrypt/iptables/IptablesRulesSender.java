@@ -39,8 +39,8 @@ abstract class IptablesRulesSender implements IptablesRules {
     String dnsCryptFallbackRes;
     String torDNSPort;
     String torVirtAdrNet;
-    String busyboxPath;
-    String iptablesPath;
+    String busybox;
+    String iptables;
     String rejectAddress;
 
     boolean runModulesWithRoot;
@@ -51,20 +51,20 @@ abstract class IptablesRulesSender implements IptablesRules {
     IptablesRulesSender(Context context) {
         this.context = context;
 
-        PathVars pathVars = new PathVars(context);
-        appDataDir = pathVars.appDataDir;
-        dnsCryptPort = pathVars.dnsCryptPort;
-        itpdHttpProxyPort = pathVars.itpdHttpProxyPort;
-        torSOCKSPort = pathVars.torSOCKSPort;
-        torHTTPTunnelPort = pathVars.torHTTPTunnelPort;
-        itpdSOCKSPort = pathVars.itpdSOCKSPort;
-        torTransPort = pathVars.torTransPort;
-        dnsCryptFallbackRes = pathVars.dnsCryptFallbackRes;
-        torDNSPort = pathVars.torDNSPort;
-        torVirtAdrNet = pathVars.torVirtAdrNet;
-        busyboxPath = pathVars.busyboxPath;
-        iptablesPath = pathVars.iptablesPath;
-        rejectAddress = pathVars.rejectAddress;
+        PathVars pathVars = PathVars.getInstance(context);
+        appDataDir = pathVars.getAppDataDir();
+        dnsCryptPort = pathVars.getDNSCryptPort();
+        itpdHttpProxyPort = pathVars.getITPDHttpProxyPort();
+        torSOCKSPort = pathVars.getTorSOCKSPort();
+        torHTTPTunnelPort = pathVars.getTorHTTPTunnelPort();
+        itpdSOCKSPort = pathVars.getITPDSOCKSPort();
+        torTransPort = pathVars.getTorTransPort();
+        dnsCryptFallbackRes = pathVars.getDNSCryptFallbackRes();
+        torDNSPort = pathVars.getTorDNSPort();
+        torVirtAdrNet = pathVars.getTorVirtAdrNet();
+        busybox = pathVars.getBusyboxPath();
+        iptables = pathVars.getIptablesPath();
+        rejectAddress = pathVars.getRejectAddress();
 
         tethering = new Tethering(context);
     }

@@ -20,6 +20,7 @@ package pan.alexander.tordnscrypt;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.StrictMode;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -30,8 +31,26 @@ import pan.alexander.tordnscrypt.language.Language;
 
 public abstract class LangAppCompatActivity extends AppCompatActivity {
 
+    private final boolean DEVELOPER_MODE = false;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        if (DEVELOPER_MODE) {
+            StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+                    .detectDiskReads()
+                    .detectDiskWrites()
+                    .detectNetwork()
+                    .detectAll() //for all detectable problems
+                    .penaltyLog()
+                    .penaltyFlashScreen ()
+                    .build());
+            StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+                    .detectLeakedSqlLiteObjects()
+                    .detectLeakedClosableObjects()
+                    .penaltyLog()
+                    .penaltyDeath()
+                    .build());
+        }
         super.onCreate(savedInstanceState);
 
         Language.setFromPreference(this, "pref_fast_language");

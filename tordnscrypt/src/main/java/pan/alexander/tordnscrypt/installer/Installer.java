@@ -59,8 +59,8 @@ public class Installer implements TopFragment.OnActivityChangeListener {
     public Installer(Activity activity) {
         this.activity = activity;
 
-        pathVars = new PathVars(activity);
-        appDataDir = pathVars.appDataDir;
+        pathVars = PathVars.getInstance(activity);
+        appDataDir = pathVars.getAppDataDir();
 
         if (activity instanceof MainActivity) {
             mainActivity = (MainActivity) activity;
@@ -203,7 +203,6 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
     }
 
-    @SuppressWarnings("all")
     protected boolean waitUntilAllModulesStopped() {
         countDownLatch = new CountDownLatch(1);
         Log.i(LOG_TAG, "Installer: waitUntilAllModulesStopped");
@@ -255,7 +254,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         Log.i(LOG_TAG, "Installer: removeInstallationDirsIfExists OK");
     }
 
-    protected void chmodExtractedDirs() throws Exception {
+    protected void chmodExtractedDirs() {
         ChmodCommand.dirChmod(appDataDir + "/app_bin", true);
         ChmodCommand.dirChmod(appDataDir + "/app_data", false);
 
@@ -298,7 +297,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         new PrefManager(activity).setBoolPref("I2PD Running", false);
 
         String busyboxNative = "";
-        if (new PrefManager(activity).getBoolPref("bbOK") && pathVars.busyboxPath.equals("busybox ")) {
+        if (new PrefManager(activity).getBoolPref("bbOK") && pathVars.getBusyboxPath().equals("busybox ")) {
             busyboxNative = "busybox ";
         }
 
@@ -313,13 +312,13 @@ public class Installer implements TopFragment.OnActivityChangeListener {
                 "iptables -F tordnscrypt_forward",
                 "iptables -t nat -D PREROUTING -j tordnscrypt_prerouting || true",
                 "iptables -D FORWARD -j tordnscrypt_forward || true",
-                busyboxNative + "pkill -SIGTERM /dnscrypt-proxy",
-                busyboxNative + "pkill -SIGTERM /tor",
-                busyboxNative + "pkill -SIGTERM /i2pd",
+                busyboxNative + "pkill -SIGTERM /libdnscrypt-proxy.so",
+                busyboxNative + "pkill -SIGTERM /libtor.so",
+                busyboxNative + "pkill -SIGTERM /libi2pd.so",
                 busyboxNative + "sleep 7",
-                busyboxNative + "pgrep -l /dnscrypt-proxy",
-                busyboxNative + "pgrep -l /tor",
-                busyboxNative + "pgrep -l /i2pd",
+                busyboxNative + "pgrep -l /libdnscrypt-proxy.so",
+                busyboxNative + "pgrep -l /libtor.so",
+                busyboxNative + "pgrep -l /libi2pd.so",
                 busyboxNative + "echo 'checkModulesRunning'"
         };
 
@@ -339,7 +338,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         ModulesAux.stopModulesIfRunning(activity);
     }
 
-    protected void createLogsDir() throws Exception {
+    protected void createLogsDir() {
         File logDir = new File(appDataDir + "/logs");
         if (!logDir.isDirectory()) {
             if (logDir.mkdir()) {

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    android:orientation="vertical">
+
+    <androidx.appcompat.widget.AppCompatEditText
+        android:id="@+id/etOwnServerName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="NAME"
+        android:imeOptions="actionDone"
+        android:inputType="text"
+        android:textAlignment="center"
+        android:typeface="serif" />
+
+    <androidx.appcompat.widget.AppCompatEditText
+        android:id="@+id/etOwnServerDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="DESCRIPTION"
+        android:imeOptions="actionDone"
+        android:inputType="textLongMessage|textMultiLine|text"
+        android:textAlignment="center"
+        android:typeface="serif" />
+
+    <androidx.appcompat.widget.AppCompatEditText
+        android:id="@+id/etOwnServerSDNS"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="SDNS \nhttps://dnscrypt.info/stamps/"
+        android:imeOptions="actionDone"
+        android:inputType="textLongMessage|textMultiLine|text"
+        android:textAlignment="center"
+        android:typeface="serif" />
+</androidx.appcompat.widget.LinearLayoutCompat>

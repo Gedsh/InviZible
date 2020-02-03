@@ -53,7 +53,9 @@ import pan.alexander.tordnscrypt.utils.PrefManager;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 
 public class PreferencesFastFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
@@ -97,36 +99,11 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         }
 
         if (ModulesStatus.getInstance().getMode() == ROOT_MODE) {
-            Preference pref_fast_all_through_tor = findPreference("pref_fast_all_through_tor");
-            if (pref_fast_all_through_tor != null) {
-                pref_fast_all_through_tor.setOnPreferenceChangeListener(this);
-            }
-
-            Preference pref_fast_block_http = findPreference("pref_fast_block_http");
-            if (pref_fast_block_http != null) {
-                pref_fast_block_http.setOnPreferenceChangeListener(this);
-            }
-
-            SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            String refreshPeriod = shPref.getString("pref_fast_site_refresh_interval", "12");
-            refreshPeriodHours = Integer.parseInt(refreshPeriod);
-
-            Preference prefTorSiteUnlock = findPreference("prefTorSiteUnlock");
-            Preference prefTorAppUnlock = findPreference("prefTorAppUnlock");
-
-            if (shPref.getBoolean("pref_fast_all_through_tor", true)) {
-                if (prefTorSiteUnlock != null && prefTorAppUnlock != null) {
-                    prefTorSiteUnlock.setEnabled(false);
-                    prefTorAppUnlock.setEnabled(false);
-                }
-            } else {
-                if (prefTorSiteUnlock != null && prefTorAppUnlock != null) {
-                    prefTorSiteUnlock.setEnabled(true);
-                    prefTorAppUnlock.setEnabled(true);
-                }
-            }
+           changePreferencesWithRootMode(getActivity());
+        } else if (ModulesStatus.getInstance().getMode() == VPN_MODE) {
+            changePreferencesWithVPNMode(getActivity());
         } else {
-            removePreferencesWithNoRootMode();
+            changePreferencesWithProxyMode();
         }
 
         return super.onCreateView(inflater, container, savedInstanceState);
@@ -306,22 +283,41 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 return true;
             case "pref_fast_all_through_tor":
 
-                if (new PrefManager(getActivity()).getBoolPref("Tor Running")) {
-                    ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
+                ModulesStatus modulesStatus = ModulesStatus.getInstance();
+
+                if (modulesStatus.getMode() == ROOT_MODE
+                        && modulesStatus.getTorState() == RUNNING ) {
+                    modulesStatus.setIptablesRulesUpdateRequested(true);
                     ModulesAux.requestModulesStatusUpdate(getActivity());
+                } else if (modulesStatus.getMode() == VPN_MODE
+                        && (modulesStatus.getDnsCryptState() == RUNNING
+                        || modulesStatus.getTorState() == RUNNING )) {
+                    modulesStatus.setIptablesRulesUpdateRequested(true);
                 }
 
-                Preference prefTorSiteUnlock = findPreference("prefTorSiteUnlock");
                 Preference prefTorAppUnlock = findPreference("prefTorAppUnlock");
-                if (prefTorSiteUnlock != null && prefTorAppUnlock != null) {
-                    if (Boolean.valueOf(newValue.toString())) {
-                        prefTorSiteUnlock.setEnabled(false);
-                        prefTorAppUnlock.setEnabled(false);
-                    } else {
-                        prefTorSiteUnlock.setEnabled(true);
-                        prefTorAppUnlock.setEnabled(true);
+
+                if (modulesStatus.getMode() == ROOT_MODE) {
+                    Preference prefTorSiteUnlock = findPreference("prefTorSiteUnlock");
+                    if (prefTorSiteUnlock != null && prefTorAppUnlock != null) {
+                        if (Boolean.valueOf(newValue.toString())) {
+                            prefTorSiteUnlock.setEnabled(false);
+                            prefTorAppUnlock.setEnabled(false);
+                        } else {
+                            prefTorSiteUnlock.setEnabled(true);
+                            prefTorAppUnlock.setEnabled(true);
+                        }
+                    }
+                } else if (modulesStatus.getMode() == VPN_MODE) {
+                    if (prefTorAppUnlock != null) {
+                        if (Boolean.valueOf(newValue.toString())) {
+                            prefTorAppUnlock.setEnabled(false);
+                        } else {
+                            prefTorAppUnlock.setEnabled(true);
+                        }
                     }
                 }
+
 
                 return true;
             case "pref_fast_block_http":
@@ -342,7 +338,98 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         return false;
     }
 
-    private void removePreferencesWithNoRootMode() {
+    private void changePreferencesWithRootMode(Context context) {
+        Preference pref_fast_all_through_tor = findPreference("pref_fast_all_through_tor");
+        if (pref_fast_all_through_tor != null) {
+            pref_fast_all_through_tor.setOnPreferenceChangeListener(this);
+        }
+
+        Preference pref_fast_block_http = findPreference("pref_fast_block_http");
+        if (pref_fast_block_http != null) {
+            pref_fast_block_http.setOnPreferenceChangeListener(this);
+        }
+
+        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
+        String refreshPeriod = shPref.getString("pref_fast_site_refresh_interval", "12");
+        refreshPeriodHours = Integer.parseInt(refreshPeriod);
+
+        Preference prefTorSiteUnlock = findPreference("prefTorSiteUnlock");
+        Preference prefTorAppUnlock = findPreference("prefTorAppUnlock");
+
+        if (shPref.getBoolean("pref_fast_all_through_tor", true)) {
+            if (prefTorSiteUnlock != null && prefTorAppUnlock != null) {
+                prefTorSiteUnlock.setEnabled(false);
+                prefTorAppUnlock.setEnabled(false);
+            }
+        } else {
+            if (prefTorSiteUnlock != null && prefTorAppUnlock != null) {
+                prefTorSiteUnlock.setEnabled(true);
+                prefTorAppUnlock.setEnabled(true);
+            }
+        }
+    }
+
+    private void changePreferencesWithVPNMode(Context context) {
+        Preference pref_fast_all_through_tor = findPreference("pref_fast_all_through_tor");
+        if (pref_fast_all_through_tor != null) {
+            pref_fast_all_through_tor.setTitle(R.string.pref_fast_all_through_ipro);
+            pref_fast_all_through_tor.setOnPreferenceChangeListener(this);
+        }
+
+        Preference pref_fast_block_http = findPreference("pref_fast_block_http");
+        if (pref_fast_block_http != null) {
+            pref_fast_block_http.setOnPreferenceChangeListener(this);
+        }
+
+        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
+        Preference prefTorAppUnlock = findPreference("prefTorAppUnlock");
+
+        if (prefTorAppUnlock != null) {
+            prefTorAppUnlock.setSummary(R.string.pref_fast_unlock_apps_with_ipro_summ);
+        }
+
+        if (shPref.getBoolean("pref_fast_all_through_tor", true)) {
+            if (prefTorAppUnlock != null) {
+                prefTorAppUnlock.setEnabled(false);
+            }
+        } else {
+            if (prefTorAppUnlock != null) {
+                prefTorAppUnlock.setEnabled(true);
+            }
+        }
+
+        Preference prefTorAppExclude = findPreference("prefTorAppExclude");
+        if (prefTorAppExclude != null) {
+            prefTorAppExclude.setSummary(R.string.pref_fast_exclude_apps_from_ipro_summ);
+        }
+
+        PreferenceCategory torSettingsCategory = findPreference("Tor Settings");
+        if (torSettingsCategory != null) {
+            torSettingsCategory.setTitle(R.string.pref_fast_routing);
+        }
+
+        List<Preference> preferencesList = new ArrayList<>();
+
+        preferencesList.add(findPreference("prefTorSiteUnlock"));
+        preferencesList.add(findPreference("prefTorSiteExclude"));
+        preferencesList.add(findPreference("pref_fast_site_refresh_interval"));
+
+        for (Preference preference : preferencesList) {
+            if (preference != null) {
+                if (torSettingsCategory != null) {
+                    torSettingsCategory.removePreference(preference);
+                }
+            }
+        }
+
+        PreferenceCategory fastUpdateCategory = findPreference("fast_update");
+        Preference updateThroughTor = findPreference("pref_fast through_tor_update");
+        if (fastUpdateCategory != null && updateThroughTor != null) {
+            fastUpdateCategory.removePreference(updateThroughTor);
+        }
+    }
+
+    private void changePreferencesWithProxyMode() {
 
         PreferenceCategory torSettingsCategory = findPreference("Tor Settings");
 

@@ -30,12 +30,15 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class OwnFileReader {
+
+    private static final ReentrantLock reentrantLock = new ReentrantLock();
 
     private Context context;
     private String filePath;
@@ -49,6 +52,8 @@ public class OwnFileReader {
     }
 
     public String readLastLines() {
+
+        reentrantLock.lock();
 
         File file = new File(filePath);
 
@@ -81,8 +86,9 @@ public class OwnFileReader {
             br = new BufferedReader(new InputStreamReader(fstream));
 
             for (String tmp; (tmp = br.readLine()) != null; )
-                if (lines.add(tmp) && lines.size() > 25)
+                if (lines.add(tmp) && lines.size() > 50) {
                     lines.remove(0);
+                }
 
             for (String s : lines) {
                 s = Html.escapeHtml(s);
@@ -127,6 +133,9 @@ public class OwnFileReader {
         if (lastBrIndex > 0) {
             result = result.substring(0, lastBrIndex);
         }
+
+        reentrantLock.unlock();
+
         return result;
     }
 
@@ -135,7 +144,7 @@ public class OwnFileReader {
         if (!file.exists())
             return;
 
-        if (file.length() / 1024 > 10) {
+        if (file.length() / 1024 > 100) {
             try {
                 PrintWriter writer = new PrintWriter(file, "UTF-8");
                 if (lines != null && lines.size() != 0) {
@@ -157,7 +166,7 @@ public class OwnFileReader {
         if (!file.exists())
             return;
 
-        if (file.length() / 1024 > 100) {
+        if (file.length() / 1024 > 500) {
             try {
                 PrintWriter writer = new PrintWriter(file, "UTF-8");
                 writer.println("");

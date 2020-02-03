@@ -29,11 +29,14 @@ import pan.alexander.tordnscrypt.utils.RootExecService;
 
 class ContextUIDUpdater {
     private Context context;
-    private PathVars pathVars;
+    private String appDataDir;
+    private String busyboxPath;
 
     ContextUIDUpdater(Context context) {
         this.context = context;
-        this.pathVars = new PathVars(context);
+        PathVars pathVars = PathVars.getInstance(context);
+        appDataDir = pathVars.getAppDataDir();
+        busyboxPath = pathVars.getBusyboxPath();
     }
 
     void updateModulesContextAndUID() {
@@ -42,32 +45,32 @@ class ContextUIDUpdater {
         String[] commands;
         if (ModulesStatus.getInstance().isUseModulesWithRoot()) {
             commands = new String[]{
-                    pathVars.busyboxPath + "chown -R 0.0 " + pathVars.appDataDir + "/app_data/dnscrypt-proxy",
-                    pathVars.busyboxPath + "chown -R 0.0 " + pathVars.appDataDir + "/dnscrypt-proxy.pid",
-                    pathVars.busyboxPath + "chown -R 0.0 " + pathVars.appDataDir + "/tor_data",
-                    pathVars.busyboxPath + "chown -R 0.0 " + pathVars.appDataDir + "/tor.pid",
-                    pathVars.busyboxPath + "chown -R 0.0 " + pathVars.appDataDir + "/i2pd_data",
-                    pathVars.busyboxPath + "chown -R 0.0 " + pathVars.appDataDir + "/i2pd.pid"
+                    busyboxPath + "chown -R 0.0 " + appDataDir + "/app_data/dnscrypt-proxy",
+                    busyboxPath + "chown -R 0.0 " + appDataDir + "/dnscrypt-proxy.pid",
+                    busyboxPath + "chown -R 0.0 " + appDataDir + "/tor_data",
+                    busyboxPath + "chown -R 0.0 " + appDataDir + "/tor.pid",
+                    busyboxPath + "chown -R 0.0 " + appDataDir + "/i2pd_data",
+                    busyboxPath + "chown -R 0.0 " + appDataDir + "/i2pd.pid"
             };
         } else {
             commands = new String[]{
-                    pathVars.busyboxPath + "chown -R " + appUID + "." + appUID + " " + pathVars.appDataDir + "/app_data/dnscrypt-proxy",
-                    pathVars.busyboxPath + "chown -R " + appUID + "." + appUID + " " + pathVars.appDataDir + "/dnscrypt-proxy.pid",
-                    "restorecon -R " + pathVars.appDataDir + "/app_data/dnscrypt-proxy",
-                    "restorecon -R " + pathVars.appDataDir + "/dnscrypt-proxy.pid",
+                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/app_data/dnscrypt-proxy",
+                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/dnscrypt-proxy.pid",
+                    "restorecon -R " + appDataDir + "/app_data/dnscrypt-proxy",
+                    "restorecon -R " + appDataDir + "/dnscrypt-proxy.pid",
 
-                    pathVars.busyboxPath + "chown -R " + appUID + "." + appUID + " " + pathVars.appDataDir + "/tor_data",
-                    pathVars.busyboxPath + "chown -R " + appUID + "." + appUID + " " + pathVars.appDataDir + "/tor.pid",
-                    "restorecon -R " + pathVars.appDataDir + "/tor_data",
-                    "restorecon -R " + pathVars.appDataDir + "/tor.pid",
+                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/tor_data",
+                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/tor.pid",
+                    "restorecon -R " + appDataDir + "/tor_data",
+                    "restorecon -R " + appDataDir + "/tor.pid",
 
-                    pathVars.busyboxPath + "chown -R " + appUID + "." + appUID + " " + pathVars.appDataDir + "/i2pd_data",
-                    pathVars.busyboxPath + "chown -R " + appUID + "." + appUID + " " + pathVars.appDataDir + "/i2pd.pid",
-                    "restorecon -R " + pathVars.appDataDir + "/i2pd_data",
-                    "restorecon -R " + pathVars.appDataDir + "/i2pd.pid",
+                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/i2pd_data",
+                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/i2pd.pid",
+                    "restorecon -R " + appDataDir + "/i2pd_data",
+                    "restorecon -R " + appDataDir + "/i2pd.pid",
 
-                    pathVars.busyboxPath + "chown -R " + appUID + "." + appUID + " " + pathVars.appDataDir + "/logs",
-                    "restorecon -R " + pathVars.appDataDir + "/logs"
+                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/logs",
+                    "restorecon -R " + appDataDir + "/logs"
             };
         }
 

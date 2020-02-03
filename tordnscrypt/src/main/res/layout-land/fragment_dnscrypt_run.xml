@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".dnscrypt_fragment.DNSCryptRunFragment">
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnDNSCryptStart"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/run_btns_side_margin"
+            android:layout_marginTop="@dimen/run_btns_top_margin"
+            android:layout_marginEnd="@dimen/run_btns_side_margin"
+            android:layout_weight="1"
+            android:background="@drawable/button_start_selector"
+            android:clickable="true"
+            android:enabled="false"
+            android:focusable="true"
+            android:fontFamily="sans-serif-medium"
+            android:minHeight="@dimen/run_btns_min_width"
+            android:nextFocusLeft="@id/btnITPDStart"
+            android:nextFocusRight="@id/btnTorStart"
+            android:nextFocusDown="@id/btnTorStart"
+            android:nextFocusForward="@id/btnTorStart"
+            android:singleLine="true"
+            android:text="@string/btnDNSCryptStart"
+            android:textColor="@color/buttonTextColor"
+            android:textSize="@dimen/start_btns_text_size"
+            android:typeface="monospace" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvDNSStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/status_text_margin"
+            android:layout_weight="1"
+            android:fontFamily="serif"
+            android:singleLine="true"
+            android:text="@string/tvDNSStop"
+            android:textAlignment="center"
+            android:textColor="@color/textModuleStatusColorStopped"
+            android:textSize="@dimen/status_text_size"
+            android:typeface="monospace" />
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <ProgressBar
+            android:id="@+id/pbDNSCrypt"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvDNSCryptLog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="bottom"
+            android:scrollbars="vertical"
+            android:text="@string/tvDNSDefaultLog"
+            android:textSize="@dimen/fragment_log_text_size"
+            android:typeface="monospace" />
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+</androidx.appcompat.widget.LinearLayoutCompat>

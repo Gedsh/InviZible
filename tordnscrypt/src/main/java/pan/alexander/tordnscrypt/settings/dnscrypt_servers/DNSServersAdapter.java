@@ -29,6 +29,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -106,6 +107,7 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
         private TextView tvDNSServerDescription;
         private TextView tvDNSServerFlags;
         private Button btnDNSServerRelay;
+        private ImageButton delBtnDNSServer;
 
         DNSServersViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -128,6 +130,9 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
             btnDNSServerRelay = itemView.findViewById(R.id.btnDNSServerRelay);
             btnDNSServerRelay.setOnClickListener(this);
             btnDNSServerRelay.setOnLongClickListener(this);
+
+            delBtnDNSServer = itemView.findViewById(R.id.delBtnDNSServer);
+            delBtnDNSServer.setOnClickListener(this);
         }
 
         private void bind(int position) {
@@ -139,7 +144,7 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
 
             StringBuilder sb = new StringBuilder();
             if (dnsServer.isProtoDNSCrypt()) {
-                sb.append("<font color='#7F4E52'>DNS Crypt Server </font>");
+                sb.append("<font color='#7F4E52'>DNSCrypt Server </font>");
 
                 if (dnsServer.isChecked() && relaysMdExist) {
                     StringBuilder routes = new StringBuilder();
@@ -201,6 +206,13 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
             tvDNSServerFlags.setText(Html.fromHtml(sb.toString()));
 
             chbDNSServer.setChecked(dnsServer.isChecked());
+
+            if (dnsServer.getOwnServer()) {
+                delBtnDNSServer.setVisibility(View.VISIBLE);
+            } else {
+                delBtnDNSServer.setVisibility(View.GONE);
+            }
+
         }
 
         @Override
@@ -211,12 +223,17 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
                     DNSServerItem dnsServer = getItem(position);
                     dnsServer.setChecked(!dnsServer.isChecked());
                     setItem(position, dnsServer);
-                    notifyItemChanged(position);
+                    DNSServersAdapter.this.notifyItemChanged(position);
                     break;
                 case R.id.btnDNSServerRelay:
                     position = getAdapterPosition();
                     saveLastAdapterPositionToReturnIt(position);
                     openDNSRelaysPref(position);
+                    break;
+                case R.id.delBtnDNSServer:
+                    position = getAdapterPosition();
+                    list_dns_servers.remove(position);
+                    DNSServersAdapter.this.notifyItemRemoved(position);
                     break;
             }
         }
@@ -239,7 +256,7 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
             if (dnsServer.isChecked() != checked) {
                 dnsServer.setChecked(checked);
                 setItem(position, dnsServer);
-                notifyItemChanged(position);
+                DNSServersAdapter.this.notifyItemChanged(position);
             }
         }
 

@@ -98,3 +98,19 @@
 * Fixed too frequent iptables rules update
 * Updated modules: obfs4proxy, tor v4.2.5
 * Clean install recommended. InviZible will ask the modules update with overwriting your modules settings.
+
+**InviZible Pro beta 0.5.8**
+* Fixed a bug in which the modules did not start with the "Run modules with root" option activated.
+* Device restart required after installation
+
+**InviZible Pro beta 0.5.9**
+* Update DNSCrypt to v2.0.38
+* Force the app to stop when one of the modules starts with an error
+
+**InviZible Pro beta 0.6.0**
+* Implemented the option to add a custom DNSCrypt server.
+* Update DNSCrypt to v2.0.39.
+* Performance improvements
+
+**InviZible Pro beta 0.6.1**
+* Fixed saving logs and backing up to internal storage for android 10.

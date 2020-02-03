@@ -535,8 +535,8 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
     }
 
     public void activateSettingsParser() {
-        PathVars pathVars = new PathVars(settingsActivity);
-        appDataDir = pathVars.appDataDir;
+        PathVars pathVars = PathVars.getInstance(settingsActivity);
+        appDataDir = pathVars.getAppDataDir();
 
         FileOperations.setOnFileOperationCompleteListener(this);
     }
