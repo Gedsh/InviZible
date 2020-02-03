@@ -111,3 +111,6 @@
 * Implemented the option to add a custom DNSCrypt server.
 * Update DNSCrypt to v2.0.39.
 * Performance improvements
+
+**InviZible Pro beta 0.6.1**
+* Fixed saving logs and backing up to internal storage for android 10
