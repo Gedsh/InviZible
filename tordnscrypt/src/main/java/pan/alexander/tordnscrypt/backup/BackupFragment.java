@@ -211,10 +211,19 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
     public void OnFileOperationComplete(FileOperationsVariants currentFileOperation, boolean fileOperationResult, String path, String tag) {
         if (currentFileOperation == moveBinaryFile && tag.equals("InvizibleBackup.zip")) {
             closePleaseWaitDialog();
-            showToast("Backup OK");
+            if (fileOperationResult) {
+                showToast("Backup OK");
+            } else {
+                showToast(getString(R.string.wrong));
+            }
+
         } else if (currentFileOperation == deleteFile && tag.equals("sharedPreferences")) {
             closePleaseWaitDialog();
-            showToast("Restore OK");
+            if (fileOperationResult) {
+                showToast("Restore OK");
+            } else {
+                showToast(getString(R.string.wrong));
+            }
         }
     }
 }
