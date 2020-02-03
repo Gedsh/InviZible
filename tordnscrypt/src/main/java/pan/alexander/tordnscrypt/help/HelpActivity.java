@@ -257,8 +257,8 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
 
     @Override
-    public void onStop() {
-        super.onStop();
+    public void onPause() {
+        super.onPause();
 
         FileOperations.deleteOnFileOperationCompleteListener();
     }
