@@ -20,7 +20,10 @@ package pan.alexander.tordnscrypt.settings;
 
 import android.os.Bundle;
 import androidx.preference.Preference;
+import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceScreen;
+
 import android.util.Log;
 import android.widget.Toast;
 
@@ -35,6 +38,7 @@ import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
+import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class PreferencesDNSFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
@@ -52,6 +56,10 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
         setRetainInstance(true);
 
         addPreferencesFromResource(R.xml.preferences_dnscrypt);
+
+        if (appVersion.endsWith("p")) {
+            removePreferencesWithGPVersion();
+        }
 
         ArrayList<Preference> preferences = new ArrayList<>();
 
@@ -79,7 +87,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
         for (Preference preference : preferences) {
             if (preference != null) {
                 preference.setOnPreferenceChangeListener(this);
-            } else {
+            } else if (!appVersion.startsWith("g")){
                 Log.e(LOG_TAG, "PreferencesDNSFragment preference is null exception");
             }
         }
@@ -208,5 +216,30 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
         }
 
         return false;
+    }
+
+    private void removePreferencesWithGPVersion() {
+        PreferenceScreen dnscryptSettings = findPreference("dnscrypt_settings");
+
+        ArrayList<PreferenceCategory> categories = new ArrayList<>();
+        categories.add(findPreference("pref_dnscrypt_filters_categ"));
+        categories.add(findPreference("pref_dnscrypt_forwarding_rules"));
+        categories.add(findPreference("pref_dnscrypt_cloaking_rules"));
+        categories.add(findPreference("pref_dnscrypt_blacklist"));
+        categories.add(findPreference("pref_dnscrypt_ipblacklist"));
+        categories.add(findPreference("pref_dnscrypt_whitelist"));
+
+        for (PreferenceCategory category : categories) {
+            if (dnscryptSettings != null && category != null) {
+                dnscryptSettings.removePreference(category);
+            }
+        }
+
+        PreferenceCategory requireServersCategory = findPreference("dnscrypt_require_servers_prop_summ");
+        Preference requireNofilter = findPreference("require_nofilter");
+
+        if (requireServersCategory != null && requireNofilter != null) {
+            requireServersCategory.removePreference(requireNofilter);
+        }
     }
 }

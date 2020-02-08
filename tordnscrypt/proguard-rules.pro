@@ -23,3 +23,4 @@
 -keep public class pan.alexander.tordnscrypt.vpn.** {
   public *;
 }
+-keep class com.android.vending.billing.**

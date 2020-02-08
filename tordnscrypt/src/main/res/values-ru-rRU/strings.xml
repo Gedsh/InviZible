@@ -180,7 +180,7 @@
     <string name="title_dnscrypt_query_log">Лог запросов DNS</string>
     <string name="title_dnscrypt_nx_log">Лог подозрительных запросов DNS</string>
     <string name="dnscrypt_empty_log">Лог пустой</string>
-    <string name="pref_dnscrypt_block_unqualified_summ">Немедленно отвечать на А и АААА запросы хостов без домменого имени.</string>
+    <string name="pref_dnscrypt_block_unqualified_summ">Немедленно отвечать на А и АААА запросы хостов без доменного имени.</string>
     <string name="pref_dnscrypt_block_undelegated_summ">Немедленно отвечать на запросы к локальным зонам вместо их утечки резолверам, что всегда приводит к ошибкам и лагам.</string>
     <string name="pref_tor_virtual_addr_network_IPv4_summ">Необходимо, чтоб Tor назначил
         неиспользованный виртуальный диаппазон адресов, для доступа к сайтам в зоне .onion</string>
@@ -327,8 +327,7 @@
     <string name="donate">Поддержка проекта</string>
     <string name="donate_button">Посетить</string>
     <string name="enter_code_button">Ввести код</string>
-    <string name="donate_project">Проект InviZible Pro нуждается в Вашей помощи. Пожалуйста, посетите
-        страницу поддержки или введите уже полученный регистрационный код.</string>
+    <string name="donate_project">Проект InviZible Pro нуждается в Вашей помощи. Пожалуйста, посетите         страницу поддержки или введите уже полученный регистрационный код.</string>
     <string name="thanks_for_donate">Проект InviZible Pro и его автор благодарен за помощь. Загрузить и обновить до PRO? Обновление будет продолжено в фоновом режиме.</string>
     <string name="enter_code">Введите код</string>
     <string name="update_over_five_times">Вы проверяли обновление InviZible Pro больше 5 раз в день. Пожалуйста, попробуйте позже.</string>
@@ -336,8 +335,6 @@
     <string name="update_wrong_code">Похоже Ваш PRO код неверный. Пожалуйста, свяжитесь с разработчиком.</string>
     <string name="pref_common_wakelock">Запретить сон устройства</string>
     <string name="pref_common_wakelock_summ">Дополнительная защита в Безрутовом Режиме, чтоб андроид не закрыл приложение. Может привести к повышенному разряду батареи</string>
-    <string name="install_title_no_root">Рут отсутствует</string>
-    <string name="install_title_root">Рут разрешен</string>
     <string name="message_no_root_used">Вы можете использовать
         InviZible Pro в режиме локального VPN или совместно с приложениями с функцией прокси или собственным локальным VPN.</string>
     <string name="message_no_root_used_kitkat">Вы можете использовать
@@ -365,4 +362,24 @@
         Попробуйте запустить снова. Экстренное завершение…</string>
     <string name="add_custom_server_title">Добавить сервер</string>
     <string name="add_custom_server_error">Неправильная конфигурация сервера. Пожалуйста, проверьте поле SDNS.</string>
+    <string name="pref_tor_clean_module_folder">Очистить папку модуля</string>
+    <string name="done">Готово</string>
+    <string name="pending_purchase">Пожалуйста, обратите внимание. У Вас есть незавершенная покупка:</string>
+    <string name="buy_premium_gp">Проект InviZible Pro нуждается в Вашей помощи. Нажмите ОК, чтобы приобрести премиум возможности.</string>
+    <string name="wrong_purchase_signature_gp">К сожалению мы не можем подтвердить вашу покупку. Вы получите возврат средств через 3 дня.</string>
+    <string name="premium">Премиум версия</string>
+    <string name="only_premium_feature">К сожалению, эта опция доступна только в премиум версии.</string>
+    <string name="agree">Я согласен</string>
+    <string name="disagree">Не согласен</string>
+    <string name="agreement_text">
+        \tСпасибо за выбор InviZible Pro. Надеюсь, приложение будет полезно для Вашей конфиденциальности и комфортного использования интернета.
+        \n\tInviZible Pro содержит Tor, DNSCrypt и Purple I2P в качестве модулей.
+        \n\tInviZible Pro может использовать рут, если у Вас есть рут права, или использовать локальный VPN для доставки интернет траффика в сети Tor, DNSCrypt и I2P.
+        \n\tЭто приложение созданно независимо от проектов Tor®, DNSCrypt и Purple I2P. Эти проекты не предоставляют данному приложению какие-либо гарантии в отношении качества, пригодности или чего-то еще.
+        \n\tInviZible Pro распространяется в надежде на то, что будет полезно, но БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ; в том числе подразумеваемых гарантией ТОВАРНОЙ ПРИГОДНОСТИ и ГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННОЙ ЦЕЛИ.
+        \n\tCopyright © 2019-2020
+        \n\tGarmatin Oleksandr
+        \n\tinvizible.soft@gmail.com
+        \n\tinvizible.net/en/privacy
+    </string>
 </resources>

@@ -59,6 +59,7 @@ import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import pan.alexander.tordnscrypt.assistance.AccelerateDevelop;
 import pan.alexander.tordnscrypt.backup.BackupActivity;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptRunFragment;
@@ -81,6 +82,8 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
+import static pan.alexander.tordnscrypt.TopFragment.appVersion;
+import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
@@ -96,6 +99,7 @@ public class MainActivity extends LangAppCompatActivity
     private static final int CODE_IS_VPN_ALLOWED = 101;
 
     public boolean childLockActive = false;
+    public AccelerateDevelop accelerateDevelop;
     private Timer timer;
     private Handler handler;
     private TopFragment topFragment;
@@ -131,6 +135,8 @@ public class MainActivity extends LangAppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setBackgroundColor(getResources().getColor(R.color.colorBackground));
         navigationView.setNavigationItemSelectedListener(this);
+
+        changeDrawerWithVersionAndDestination(navigationView);
 
         viewPager = findViewById(R.id.viewPager);
         if (viewPager != null) {
@@ -174,6 +180,11 @@ public class MainActivity extends LangAppCompatActivity
         checkUpdates();
 
         showUpdateResultMessage();
+
+        if (appVersion.equals("gp")) {
+            accelerateDevelop = new AccelerateDevelop(this);
+            accelerateDevelop.initBilling();
+        }
     }
 
     @Override
@@ -208,6 +219,11 @@ public class MainActivity extends LangAppCompatActivity
         SharedPreferences defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         try {
             String theme = defaultSharedPreferences.getString("pref_fast_theme", "4");
+
+            if (appVersion.startsWith("g") && !accelerated) {
+                theme = defaultSharedPreferences.getString("pref_fast_theme", "1");
+            }
+
             switch (Objects.requireNonNull(theme)) {
                 case "1":
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
@@ -228,6 +244,11 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     private void checkUpdates() {
+
+        if (appVersion.equals("gp") || appVersion.equals("fd")) {
+            return;
+        }
+
         Intent intent = getIntent();
         if (Objects.equals(intent.getAction(), "check_update")) {
             if (topFragment != null) {
@@ -241,6 +262,11 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     public void showUpdateResultMessage() {
+
+        if (appVersion.equals("gp") || appVersion.equals("fd")) {
+            return;
+        }
+
         String updateResultMessage = new PrefManager(this).getStrPref("UpdateResultMessage");
         if (!updateResultMessage.isEmpty()) {
             showUpdateMessage(updateResultMessage);
@@ -753,8 +779,14 @@ public class MainActivity extends LangAppCompatActivity
             Intent intent = new Intent(this, HelpActivity.class);
             startActivity(intent);
         } else if (id == R.id.nav_Donate) {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://invizible.net/donate"));
-            startActivity(intent);
+            if (appVersion.startsWith("g")) {
+                if (accelerateDevelop != null) {
+                    accelerateDevelop.launchBilling(AccelerateDevelop.mSkuId);
+                }
+            } else {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://invizible.net/ru/donate/"));
+                startActivity(intent);
+            }
         } else if (id == R.id.nav_Code) {
             Registration registration = new Registration(this);
             registration.showEnterCodeDialog();
@@ -854,6 +886,34 @@ public class MainActivity extends LangAppCompatActivity
             Toast.makeText(this, getText(R.string.vpn_mode_active), Toast.LENGTH_SHORT).show();
         } else if (resultCode == RESULT_CANCELED) {
             Toast.makeText(this, getText(R.string.vpn_mode_off), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void changeDrawerWithVersionAndDestination(NavigationView navigationView) {
+        if (navigationView == null) {
+            return;
+        }
+
+        MenuItem item = navigationView.getMenu().findItem(R.id.nav_Donate);
+        if ((appVersion.startsWith("g") && accelerated) || appVersion.startsWith("p") || appVersion.startsWith("f")) {
+            if (item != null) {
+                item.setVisible(false);
+            }
+        } else {
+            if (item != null) {
+                item.setVisible(true);
+            }
+        }
+
+        item = navigationView.getMenu().findItem(R.id.nav_Code);
+        if (appVersion.startsWith("l")) {
+            if (item != null) {
+                item.setVisible(true);
+            }
+        } else {
+            if (item != null) {
+                item.setVisible(false);
+            }
         }
     }
 

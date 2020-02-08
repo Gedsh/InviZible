@@ -29,6 +29,8 @@ import androidx.preference.PreferenceManager;
 import java.util.ArrayList;
 import java.util.Objects;
 
+import pan.alexander.tordnscrypt.R;
+
 public class DNSServerItem {
     private boolean checked = false;
     private boolean dnssec = false;
@@ -55,6 +57,10 @@ public class DNSServerItem {
         boolean require_nolog = sp.getBoolean("require_nolog", false);
         boolean use_dns_servers = sp.getBoolean("dnscrypt_servers", true);
         boolean use_doh_servers = sp.getBoolean("doh_servers", true);
+
+        if (context.getText(R.string.package_name).toString().contains(".gp")) {
+            require_nofilter = true;
+        }
 
         byte[] bin = Base64.decode(sdns.substring(0, 7).getBytes(), 16);
         if (bin[0] == 0x01) {

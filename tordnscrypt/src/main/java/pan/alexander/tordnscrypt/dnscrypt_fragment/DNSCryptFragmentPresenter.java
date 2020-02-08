@@ -54,6 +54,7 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPN;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
+import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -428,6 +429,10 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
         for (int i = 0; i < savedResourceRecords.size(); i++) {
             rr = savedResourceRecords.get(i);
+
+            if (appVersion.startsWith("g") && rr.HInfo.contains("block_ipv6")) {
+                continue;
+            }
 
             if (rr.Resource.equals("0.0.0.0") || rr.Resource.equals("127.0.0.1") || rr.HInfo.contains("dnscrypt") || rr.Rcode != 0) {
                 if (!rr.AName.isEmpty()) {

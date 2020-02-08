@@ -405,7 +405,7 @@
     <string name="verifier_error">Chyba to nie jest oficjalna wersja InviZible. Uwazaj!</string>
     <string name="only_for_pro">Tylko wersja PRO</string>
     <string name="donate">Dotacja</string>
-    <string name="donate_project">Projekt InviZible Pro wymaga Twojego wsparcia. Prosze odwiedz strone dotacji lub wprowadz otrzymany kod rejestracyjny.</string>
+    <string name="donate_project">Projekt InviZible Pro potrzebuje Twojego wsparcia. Prosze odwiedz strone dotacji lub wprowadz otrzymany kod rejestracyjny.</string>
     <string name="donate_button">Odwiedz</string>
     <string name="enter_code_button">Wprowadz kod</string>
     <string name="enter_code">wprowadz kod</string>
@@ -413,8 +413,6 @@
         za wsparcie. Czy chcialbys pobrac i wykonac upgrade do wersji PRO? Aktualizacja będzie kontynuowana w tle.</string>
     <string name="pref_common_wakelock_summ">Dodatkowa ochrona bez trybu rootowania, aby zapobiec śmierci aplikacji przez Androida. Może wyczerpać baterię</string>
     <string name="pref_common_wakelock">Zapobiegaj uśpieniu urządzenia</string>
-    <string name="install_title_no_root">Odmowa roota</string>
-    <string name="install_title_root">Root dostepny</string>
     <string name="message_no_root_used">Możesz używać InviZible Pro z lokalnym trybem VPN lub aplikacjami z własnym proxy lub lokalną funkcją VPN w trybie proxy.</string>
     <string name="message_no_root_used_kitkat">Możesz używać InviZible Pro z aplikacjami z własnym proxy lub lokalną funkcją VPN w trybie proxy.</string>
     <string name="pref_dnscrypt_relays">Zrodla</string>
@@ -440,4 +438,24 @@
         Spróbuj zacząć od nowa. Wymuś zamknięcie…</string>
     <string name="add_custom_server_title">Dodaj serwer</string>
     <string name="add_custom_server_error">Niepoprawna niestandardowa konfiguracja serwera. Sprawdź pole SDNS.</string>
+    <string name="pref_tor_clean_module_folder">Wyczyść folder modułu</string>
+    <string name="done">Gotowy</string>
+    <string name="pending_purchase">Pamiętaj, że masz oczekujący zakup:</string>
+    <string name="buy_premium_gp">Projekt InviZible Pro potrzebuje Twojego wsparcia. Naciśnij OK, aby kupić funkcje premium.</string>
+    <string name="wrong_purchase_signature_gp">Przepraszamy, ale nie można potwierdzić zakupu. Otrzymasz zwrot pieniędzy po 3 dniach.</string>
+    <string name="premium">Wersja premium</string>
+    <string name="only_premium_feature">Niestety ta funkcja jest dostępna tylko w wersji premium.</string>
+    <string name="agree">Zgadzam</string>
+    <string name="disagree">Nie zgadzam</string>
+    <string name="agreement_text">
+        \tThanks for choosing InviZible Pro. I hope that it will be useful for your privacy and comfortable use of the Internet.
+        \n\tInviZible Pro includes Tor, DNSCrypt and Purple I2P as modules.
+        \n\tInviZible Pro can use root, if your device has root privileges, or uses a local VPN to deliver Internet traffic to Tor, DNSCrypt and I2P networks.
+        \n\tThis product is produced independently from the Tor®, DNSCrypt, Purple I2P software and carries no guarantee from The Above Projects about quality, suitability or anything else.
+        \n\tInviZible Pro is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+        \n\tCopyright © 2019-2020
+        \n\tGarmatin Oleksandr
+        \n\tinvizible.soft@gmail.com
+        \n\tinvizible.net/en/privacy
+    </string>
 </resources>

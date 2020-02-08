@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory android:title="@string/pref_advanced">
+    <PreferenceCategory android:title="@string/pref_advanced"
+        android:key="tor_settings">
 
         <SwitchPreference
             android:id="@+id/pref_tor_exclude_exit_nodes"
@@ -56,7 +57,6 @@
         <CheckBoxPreference
             android:id="@+id/pref_tor_strict_nodes"
             android:defaultValue="false"
-            android:dependency="ExcludeNodes"
             android:key="StrictNodes"
             android:summary="@string/pref_tor_strict_nodes_summ"
             android:title="@string/pref_tor_strict_nodes" />
@@ -96,7 +96,6 @@
         <EditTextPreference
             android:id="@+id/pref_tor_SOCKS_port"
             android:defaultValue="9050"
-            android:dependency="Enable SOCKS proxy"
             android:key="SOCKSPort"
             android:selectAllOnFocus="false"
             android:singleLine="true"
@@ -110,7 +109,6 @@
         <EditTextPreference
             android:id="@+id/pref_tor_HTTPTunnel_port"
             android:defaultValue="8118"
-            android:dependency="Enable HTTPTunnel"
             android:key="HTTPTunnelPort"
             android:selectAllOnFocus="false"
             android:singleLine="true"
@@ -124,7 +122,6 @@
         <EditTextPreference
             android:id="@+id/pref_tor_trans_port"
             android:defaultValue="9040"
-            android:dependency="Enable Transparent proxy"
             android:key="TransPort"
             android:selectAllOnFocus="false"
             android:singleLine="true"
@@ -138,7 +135,6 @@
         <EditTextPreference
             android:id="@+id/pref_tor_DNS_port"
             android:defaultValue="5400"
-            android:dependency="Enable DNS"
             android:key="DNSPort"
             android:selectAllOnFocus="false"
             android:singleLine="true"
@@ -157,5 +153,12 @@
             android:key="ClientUseIPv6"
             android:summary="@string/pref_tor_client_use_IPv6_summ"
             android:title="@string/pref_tor_client_use_IPv6" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:title="@string/pref_common_categ_other">
+        <Preference
+            android:key="cleanTorFolder"
+            android:title="@string/pref_tor_clean_module_folder">
+        </Preference>
     </PreferenceCategory>
 </androidx.preference.PreferenceScreen>

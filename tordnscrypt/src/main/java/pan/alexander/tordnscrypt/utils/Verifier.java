@@ -47,6 +47,8 @@ import javax.crypto.spec.SecretKeySpec;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
 
+import static pan.alexander.tordnscrypt.TopFragment.appVersion;
+
 
 public class Verifier {
 
@@ -134,6 +136,9 @@ public class Verifier {
         byte[] ivBytes = vector.substring(vector.length() - 16).getBytes();
         cipher.init(Cipher.DECRYPT_MODE, aesKey, new IvParameterSpec(ivBytes));
         byte[] decrypted = Base64.decode(text.getBytes(StandardCharsets.UTF_8), Base64.DEFAULT);
+        if (appVersion.endsWith("d")) {
+            return new String(decrypted);
+        }
         return new String(cipher.doFinal(decrypted));
     }
 

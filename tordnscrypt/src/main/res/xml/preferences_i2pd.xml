@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="itpd_settings_screen">
 
     <PreferenceCategory android:title="@string/pref_advanced">
 
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_itpd_common">
+    <PreferenceCategory android:title="@string/pref_itpd_common"
+        android:key="itpd_settings_common">
 
         <SwitchPreference
             android:id="@+id/pref_itpd_com_incom_connect"
@@ -96,7 +98,8 @@
             android:summary="@string/pref_itpd_com_ntcpproxy_summ"
             android:title="@string/pref_itpd_com_ntcpproxy" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_itpd_HTTP_proxy">
+    <PreferenceCategory android:title="@string/pref_itpd_HTTP_proxy"
+        android:key="itpd_category_http_proxy">
 
         <SwitchPreference
             android:id="@+id/pref_itpd_HTTP_proxy_enabled"
@@ -106,14 +109,14 @@
         <EditTextPreference
             android:id="@+id/pref_itpd_HTTP_proxy_port"
             android:defaultValue="4444"
-            android:dependency="HTTP proxy"
             android:key="HTTP proxy port"
             android:selectAllOnFocus="false"
             android:singleLine="true"
             android:summary="@string/pref_itpd_HTTP_proxy_port_summ"
             android:title="@string/pref_itpd_HTTP_proxy_port" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_itpd_Socks_proxy">
+    <PreferenceCategory android:title="@string/pref_itpd_Socks_proxy"
+        android:key="itpd_category_socks_proxy">
 
         <SwitchPreference
             android:id="@+id/pref_itpd_Socks_proxy_enabled"
@@ -123,14 +126,14 @@
         <EditTextPreference
             android:id="@+id/pref_itpd_Socks_proxy_port"
             android:defaultValue="4447"
-            android:dependency="Socks proxy"
             android:key="Socks proxy port"
             android:selectAllOnFocus="false"
             android:singleLine="true"
             android:summary="@string/pref_itpd_Socks_proxy_port_summ"
             android:title="@string/pref_itpd_Socks_proxy_port" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_itpd_SAM_interface">
+    <PreferenceCategory android:title="@string/pref_itpd_SAM_interface"
+        android:key="category_itpd_sam_interface">
 
         <SwitchPreference
             android:id="@+id/pref_itpd_SAM_interface_enabled"
@@ -147,7 +150,8 @@
             android:summary="@string/pref_itpd_SAM_interface_port_summ"
             android:title="@string/pref_itpd_SAM_interface_port" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_itpd_Cryptography">
+    <PreferenceCategory android:title="@string/pref_itpd_Cryptography"
+        android:key="category_itpd_cryptography">
 
         <CheckBoxPreference
             android:id="@+id/pref_itp_delgamal_enabled"
@@ -156,7 +160,8 @@
             android:summary="@string/pref_itpd_elgamal_summ"
             android:title="@string/pref_itpd_elgamal_enabled" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_itpd_UPNP">
+    <PreferenceCategory android:title="@string/pref_itpd_UPNP"
+        android:key="category_itpd_upnp">
 
         <CheckBoxPreference
             android:id="@+id/pref_itpd_UPNP_enabled"
@@ -173,7 +178,8 @@
             android:key="ntcp2 enabled"
             android:title="@string/pref_itpd_ntcp2_enabled" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_itpd_reseeding">
+    <PreferenceCategory android:title="@string/pref_itpd_reseeding"
+        android:key="category_itpd_reseeding">
 
         <CheckBoxPreference
             android:id="@+id/pref_itpd_reseeding_enabled"
@@ -182,7 +188,8 @@
             android:summary="@string/pref_itpd_reseeding_summ"
             android:title="@string/pref_itpd_reseeding_enabled" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_itpd_limits">
+    <PreferenceCategory android:title="@string/pref_itpd_limits"
+        android:key="category_itpd_limits">
 
         <EditTextPreference
             android:id="@+id/pref_itpd_limits_transittunnels"
@@ -243,6 +250,13 @@
                 android:action="pref_itpd_addressbook_subscriptions"
                 android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
                 android:targetPackage="@string/package_name" />
+        </Preference>
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:title="@string/pref_common_categ_other">
+        <Preference
+            android:key="cleanITPDFolder"
+            android:title="@string/pref_tor_clean_module_folder">
         </Preference>
     </PreferenceCategory>
 </androidx.preference.PreferenceScreen>
