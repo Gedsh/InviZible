@@ -52,6 +52,7 @@ android {
         }
 
         google_play {
+            minSdkVersion 22
             applicationId "pan.alexander.tordnscrypt.gp"
             versionName "1.0.0"
             dimension = 'version'
