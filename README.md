@@ -7,24 +7,23 @@
 
 ## Android application for Internet privacy and security
 
-*Keep privacy, protect your device from dangerous sites, block ads, get access to blocked Internet resources*
+*Keeps privacy, protects your device from dangerous sites, prevents tracking, gets access to blocked on-line resources*
 
-**InviZible Pro** includes well-known modules such as **DNSCrypt, Tor, Purple I2P**.
+**InviZible Pro** includes well-known modules such as **DNSCrypt**, **Tor** and **Purple I2P**.
 They are used to achieve maximum security, privacy and comfortable use of the Internet.
-
-Start three modules of **InviZible Pro**, and you will transform from an ordinary user to the invisible, which is very difficult to track, block, impose on you unnecessary products and services in the form of ubiquitous advertising.
 
 ### DNSCrypt
 * Encrypts DNS requests
 * Protects against DNS spoofing
-* Blocks ads *
-* Protects against dangerous and malicious sites *
-* Can block "adult" sites *
+* Can blocks ads *
+* Can protects against dangerous and malicious sites *
+* Can blocks "adult" sites *
 * Hides visited sites from your provider
 * Prevents some types of resource blocks
 * Open-source
 
 **Depending on the selected dnscrypt server*
+**(Not available in Google Play version!)**
 
 ### Tor
 * Encrypts Internet traffic
@@ -54,15 +53,13 @@ You can flexibly configure **InviZible Pro** itself, as well as its modules - **
 * The only application that provides handy use of **DNSCrypt** on Android.
 * It is often more stable than the Orbot application, which also uses the Tor network.
 * Much more handy than the official **Purple I2P** client
-* Qualitatively removes most ads, thereby saving Internet traffic.
-* You can configure parental controls to protect children from "adult" sites
 * Allows you to easily and flexibly configure which sites and applications will open through **Tor**,
  for anonymity or bypassing blocks
-* Can transform your phone, or Android TV set-top box into a Wi-Fi access point - safe and without ads,
+* Can transform your phone, or Android TV set-top box into a secure Wi-Fi access point,
  which can be used by any phone, without root access
 * Optimized interface for set-top boxes
-* Replaces several apps - various VPNs, ad blockers, other tools to achieve privacy and anonymity.
-* Successfully combines **DNSCrypt**, **Tor**, **Purple I2P** features; to visit sites anonymously and without advertising, for example
+* Replaces various VPNs and other tools to achieve privacy and anonymity
+* Successfully combines **DNSCrypt**, **Tor** and **Purple I2P** features
 * Free and open-source
 
 ## Compatibility
