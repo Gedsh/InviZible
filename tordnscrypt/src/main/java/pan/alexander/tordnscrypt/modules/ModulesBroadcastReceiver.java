@@ -24,6 +24,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.LinkProperties;
 import android.net.Network;
@@ -35,6 +36,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.preference.PreferenceManager;
 
 import java.net.InetAddress;
 import java.util.List;
@@ -224,6 +226,13 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
     }
 
     private void updateIptablesRules() {
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean refreshRules = sharedPreferences.getBoolean("swRefreshRules", true);
+
+        if (!refreshRules) {
+            return;
+        }
 
         if (modulesStatus.getMode() == ROOT_MODE
                 && !modulesStatus.isUseModulesWithRoot()

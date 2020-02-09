@@ -458,4 +458,6 @@
         \n\tinvizible.soft@gmail.com
         \n\tinvizible.net/en/privacy
     </string>
+    <string name="pref_common_refresh_rules_summ">Zaktualizuj reguły przy każdej zmianie łączności</string>
+    <string name="pref_common_refresh_rules">Odśwież reguły</string>
 </resources>

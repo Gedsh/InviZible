@@ -382,4 +382,6 @@
         \n\tinvizible.soft@gmail.com
         \n\tinvizible.net/en/privacy
     </string>
+    <string name="pref_common_refresh_rules_summ">Обновлять правила при изменении подключения</string>
+    <string name="pref_common_refresh_rules">Обновлять правила</string>
 </resources>

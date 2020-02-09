@@ -157,7 +157,7 @@ public class ServiceVPN extends VpnService {
         List<String> sysDns = Util.getDefaultDNS(context);
 
         // Get custom DNS servers
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
         boolean ip6 = prefs.getBoolean("ipv6", false);
         String vpnDns1 = prefs.getString("dns", "127.0.0.1");
         String vpnDns2 = prefs.getString("dns2", "127.0.0.1");
@@ -377,7 +377,7 @@ public class ServiceVPN extends VpnService {
     }
 
     void startNative(final ParcelFileDescriptor vpn, List<Rule> listAllowed, List<Rule> listRule) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
 
         // Prepare rules
         prepareUidAllowed(listAllowed, listRule);
@@ -528,7 +528,7 @@ public class ServiceVPN extends VpnService {
     public void nativeExit(String reason) {
         Log.w(LOG_TAG, "VPN Native exit reason=" + reason);
         if (reason != null) {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
             prefs.edit().putBoolean("VPNServiceEnabled", false).apply();
         }
     }
@@ -815,10 +815,10 @@ public class ServiceVPN extends VpnService {
             public void onLinkPropertiesChanged(@NonNull Network network, LinkProperties linkProperties) {
                 // Make sure the right DNS servers are being used
                 List<InetAddress> dns = linkProperties.getDnsServers();
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ServiceVPN.this);
+                SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ServiceVPN.this);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
                         ? !same(last_dns, dns)
-                        : prefs.getBoolean("reload_onconnectivity", true)) {
+                        : prefs.getBoolean("swRefreshRules", true)) {
                     Log.i(LOG_TAG, "VPN Changed link properties=" + linkProperties +
                             "DNS cur=" + TextUtils.join(",", dns) +
                             "DNS prv=" + (last_dns == null ? null : TextUtils.join(",", last_dns)));
@@ -869,7 +869,7 @@ public class ServiceVPN extends VpnService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
         filterUDP = prefs.getBoolean("VPN filter_udp", true);
         blockHttp = prefs.getBoolean("pref_fast_block_http", false);
         routeAllThroughInviZible = prefs.getBoolean("pref_fast_all_through_tor", true);
@@ -918,7 +918,7 @@ public class ServiceVPN extends VpnService {
         Log.i(LOG_TAG, "VPN Revoke");
 
         // Disable firewall (will result in stop command)
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
         prefs.edit().putBoolean("VPNServiceEnabled", false).apply();
 
         ModulesAux.stopModulesIfRunning(this);

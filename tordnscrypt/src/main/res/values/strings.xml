@@ -180,6 +180,8 @@
     <string name="pref_common_block_http">Block HOTSPOT http</string>
     <string name="pref_common_block_http_summ">Deny connection to http port 80 for HOTSPOT</string>
     <string name="pref_common_notification_summ">Protect application with No Root Mode to prevent app being killed by android</string>
+    <string name="pref_common_refresh_rules">Refresh rules</string>
+    <string name="pref_common_refresh_rules_summ">Update rules on every connectivity change</string>
     <string name="pref_common_show_notification">Show notification</string>
     <string name="pref_common_wakelock">Prevent device sleep</string>
     <string name="pref_common_wakelock_summ">Additional Protection with No Root Mode to prevent app being killed by android. May drain battery</string>
