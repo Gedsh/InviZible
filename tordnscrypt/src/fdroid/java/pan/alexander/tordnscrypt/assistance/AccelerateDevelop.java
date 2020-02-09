@@ -19,15 +19,14 @@ package pan.alexander.tordnscrypt.assistance;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import pan.alexander.tordnscrypt.MainActivity;
+
 public class AccelerateDevelop {
     public final static String mSkuId = "";
 
     public static boolean accelerated = true;
 
-    private MainActivity activity;
-
     public AccelerateDevelop(MainActivity activity) {
-        this.activity = activity;
     }
 
     public void initBilling() {

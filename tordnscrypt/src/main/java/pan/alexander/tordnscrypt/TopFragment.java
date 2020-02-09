@@ -163,7 +163,7 @@ public class TopFragment extends Fragment {
                 ModulesAux.requestModulesStatusUpdate(getActivity());
             }
 
-            if (!isModulesNotInstalled(getActivity())) {
+            if (!isModulesNotInstalled(getActivity()) && appVersion.endsWith("p")) {
                 checkAgreement();
             }
         }
@@ -305,10 +305,6 @@ public class TopFragment extends Fragment {
             return;
         }
 
-        if (!new PrefManager(getActivity()).getBoolPref("Agreement")) {
-            return;
-        }
-
         if (appVersion.endsWith("e")) {
             Handler handler = new Handler();
             Runnable performRegistration = () -> {
@@ -319,6 +315,11 @@ public class TopFragment extends Fragment {
             };
             handler.postDelayed(performRegistration, 5000);
         } else if (appVersion.endsWith("p") && getFragmentManager() != null && !accelerated) {
+
+            if (!new PrefManager(getActivity()).getBoolPref("Agreement")) {
+                return;
+            }
+
             Handler handler = new Handler();
             handler.postDelayed(() -> {
                 DialogFragment accelerateDevelop = AskAccelerateDevelop.getInstance();
@@ -522,8 +523,7 @@ public class TopFragment extends Fragment {
 
     public void checkNewVer() {
 
-        if (getActivity() == null || appVersion.startsWith("l")
-                || appVersion.endsWith("p") || appVersion.startsWith("f")) {
+        if (getActivity() == null || appVersion.endsWith("p") || appVersion.startsWith("f")) {
             return;
         }
 
