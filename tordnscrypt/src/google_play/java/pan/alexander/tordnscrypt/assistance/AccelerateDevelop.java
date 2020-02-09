@@ -39,15 +39,12 @@ import com.android.billingclient.api.SkuDetails;
 import com.android.billingclient.api.SkuDetailsParams;
 import com.android.billingclient.api.SkuDetailsResponseListener;
 
-import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.KeyFactory;
-import java.security.MessageDigest;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -139,7 +136,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
         String signedData = new PrefManager(activity).getStrPref("gpData");
         String signature = new PrefManager(activity).getStrPref("gpSign");
 
-        if (!signedData.isEmpty() && !signature.isEmpty() && verifyValidSignatureModern(signedData, signature)) {
+        if (!signedData.isEmpty() && !signature.isEmpty() && verifyValidSignature(signedData, signature)) {
             payComplete();
         }
     }
@@ -192,7 +189,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
             String signedData = new PrefManager(activity).getStrPref("gpData");
             String signature = new PrefManager(activity).getStrPref("gpSign");
 
-            if (!signedData.isEmpty() && !signature.isEmpty() && verifyValidSignatureModern(signedData, signature)) {
+            if (!signedData.isEmpty() && !signature.isEmpty() && verifyValidSignature(signedData, signature)) {
                 Log.w(LOG_TAG, "Purchases list is empty but saved signature is correct. Allowing...");
                 payComplete();
             } else {
@@ -210,7 +207,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
 
             if(TextUtils.equals(mSkuId, purchaseId) && purchaseState == Purchase.PurchaseState.PURCHASED) {
 
-                if (!verifyValidSignatureModern(purchase.getOriginalJson(), purchase.getSignature())) {
+                if (!verifyValidSignature(purchase.getOriginalJson(), purchase.getSignature())) {
                     if (!acknowledged && activity != null) {
                         activity.runOnUiThread(() -> {
                             DialogFragment dialogFragment = NotificationDialogFragment.newInstance(R.string.wrong_purchase_signature_gp);
@@ -299,33 +296,11 @@ public class AccelerateDevelop implements BillingClientStateListener {
         return result;
     }
 
-    private boolean verifyValidSignatureModern(String signedData, String signature) {
-        new PrefManager(activity).setStrPref("gpData", signedData);
-        new PrefManager(activity).setStrPref("gpSign", signature);
-
-        boolean result = false;
-        try {
-            PublicKey pkey = getAPKKey();
-
-            MessageDigest md = MessageDigest.getInstance("SHA-1");
-            byte[] digest = md.digest(signedData.getBytes(StandardCharsets.UTF_8));
-
-            if(Arrays.equals(digest, RSADecrypt(signature, pkey))) {
-                result = true;
-            } else {
-                Log.e(LOG_TAG, "AccelerateDevelop signature is wrong " + signature);
-            }
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "AccelerateDevelop verifyValidSignature Exception " + e.getMessage() + " " + e.getCause());
-        }
-        return result;
-    }
-
     private byte[] RSADecrypt(final String encryptedText, final Key key) {
         byte[] result = new byte[]{0};
         try {
             byte[] encryptedBytes = Base64.decode(encryptedText, Base64.DEFAULT);
-            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            Cipher cipher = Cipher.getInstance("RSA/ECB/NoPadding");
             cipher.init(Cipher.DECRYPT_MODE, key);
             result = cipher.doFinal(encryptedBytes);
         } catch (Exception e) {
