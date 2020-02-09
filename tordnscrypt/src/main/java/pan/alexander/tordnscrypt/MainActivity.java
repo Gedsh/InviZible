@@ -902,6 +902,10 @@ public class MainActivity extends LangAppCompatActivity
         } else {
             if (item != null) {
                 item.setVisible(true);
+
+                if (appVersion.startsWith("g")) {
+                    item.setTitle(R.string.premium);
+                }
             }
         }
 
