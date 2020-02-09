@@ -1,0 +1,29 @@
+Keeps privacy, prevents tracking, gets access to blocked and hidden on-line resources.
+
+InviZible Pro uses DNSCrypt, Tor and Purple I2P to achieve maximum security, privacy and comfortable use of the Internet.
+
+DNS is used by most applications to translate domain names into IP addresses to find a remote server with the site that you want to visit.
+But this communication is not encrypted and can be used by attackers.
+DNSCrypt encrypts and authenticates DNS traffic, thus preventing DNS tracking and spoofing.
+
+Tor encrypts Internet traffic and hides your actual location.
+It uses thousands of computers around the world to mask your IP address and prevents activity tracking to preserve your privacy and anonymity.
+Tor also provides access to onion services. These are sites that are in a completely hidden network without censorship.
+
+The Invisible Internet Project (I2P) is a hidden anonymous network.
+It includes thousands of computers distributed around the world.
+Purple I2P encrypts the traffic of your device and sends it through these computers to ensure privacy and anonymity.
+Start I2P to access i2p sites and other Invisible Internet hidden services.
+
+InviZible Pro can use root, if your device has root privileges, or uses a local VPN to deliver Internet traffic to Tor, DNSCrypt and I2P networks.
+
+Features:
+* No root required
+* Hides location and IP
+* Unblocks the restricted web content
+* Prevents tracking
+* Allows access to hidden networks
+* Tethering supported
+* Material design theme
+
+- InviZible blocks ipv6 due to some security issues with this protocol and the InviZible app.
