@@ -22,6 +22,8 @@ package pan.alexander.tordnscrypt.installer;
 import androidx.drawerlayout.widget.DrawerLayout;
 import android.util.Log;
 
+import pan.alexander.tordnscrypt.TopFragment;
+import pan.alexander.tordnscrypt.dialogs.AgreementDialog;
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptRunFragment;
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDRunFragment;
 import pan.alexander.tordnscrypt.MainActivity;
@@ -29,6 +31,7 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.tor_fragment.TorRunFragment;
 import pan.alexander.tordnscrypt.dialogs.DialogAfterInstallation;
 
+import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 class InstallerUIChanger {
@@ -208,7 +211,12 @@ class InstallerUIChanger {
     }
 
     Runnable showDialogAfterInstallation() {
-        return () -> DialogAfterInstallation.getDialogBuilder(mainActivity).show();
+        if (appVersion.endsWith("p")) {
+            return () -> AgreementDialog.getDialogBuilder(mainActivity).show();
+        } else {
+            return () -> DialogAfterInstallation.getDialogBuilder(mainActivity).show();
+        }
+
     }
 
     Runnable setModulesStatusTextError() {

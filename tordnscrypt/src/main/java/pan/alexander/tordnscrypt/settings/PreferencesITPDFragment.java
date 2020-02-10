@@ -21,8 +21,11 @@ package pan.alexander.tordnscrypt.settings;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import androidx.preference.Preference;
+import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
+import androidx.preference.PreferenceScreen;
+
 import android.util.Log;
 import android.widget.Toast;
 
@@ -33,13 +36,16 @@ import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 
+import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
-public class PreferencesITPDFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
+public class PreferencesITPDFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener {
 
     private ArrayList<String> key_itpd;
     private ArrayList<String> val_itpd;
@@ -54,6 +60,10 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
         setRetainInstance(true);
 
         addPreferencesFromResource(R.xml.preferences_i2pd);
+
+        if (appVersion.endsWith("p")) {
+            changePreferencesForGPVersion();
+        }
 
         ArrayList<Preference> preferences = new ArrayList<>();
 
@@ -90,9 +100,14 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
         for (Preference preference : preferences) {
             if (preference != null) {
                 preference.setOnPreferenceChangeListener(this);
-            } else {
+            } else if (!appVersion.startsWith("g")){
                 Log.e(LOG_TAG, "PreferencesITPDFragment preference is null exception");
             }
+        }
+
+        Preference cleanITPDFolder = findPreference("cleanITPDFolder");
+        if (cleanITPDFolder != null) {
+            cleanITPDFolder.setOnPreferenceClickListener(this);
         }
 
 
@@ -218,5 +233,103 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
 
 
         return false;
+    }
+
+    @Override
+    public boolean onPreferenceClick(Preference preference) {
+        if (getActivity() == null) {
+            return false;
+        }
+
+        if (ModulesStatus.getInstance().getItpdState() != STOPPED) {
+            Toast.makeText(getActivity(), R.string.btnITPDStop, Toast.LENGTH_SHORT).show();
+            return true;
+        }
+
+        if ("cleanITPDFolder".equals(preference.getKey())) {
+            new Thread(() -> {
+                boolean successfully = false;
+                if (getActivity() != null) {
+                    successfully = FileOperations.deleteDirSynchronous(getActivity(), appDataDir + "/i2pd_data");
+                }
+
+                if (getActivity() != null) {
+                    if (successfully) {
+                        getActivity().runOnUiThread(() -> Toast.makeText(getActivity(), R.string.done, Toast.LENGTH_SHORT).show());
+                    } else {
+                        getActivity().runOnUiThread(() -> Toast.makeText(getActivity(), R.string.wrong, Toast.LENGTH_SHORT).show());
+                    }
+
+                }
+            }).start();
+
+
+            return true;
+        }
+        return false;
+    }
+
+    private void changePreferencesForGPVersion() {
+        PreferenceCategory categoryCommon = findPreference("itpd_settings_common");
+
+        if (categoryCommon != null) {
+            ArrayList<Preference> preferences = new ArrayList<>();
+            preferences.add(findPreference("Allow incoming connections"));
+            preferences.add(findPreference("incoming host"));
+            preferences.add(findPreference("incoming port"));
+            preferences.add(findPreference("ipv4"));
+            preferences.add(findPreference("ipv6"));
+
+            for (Preference preference : preferences) {
+                if (preference != null) {
+                    categoryCommon.removePreference(preference);
+                }
+            }
+        }
+
+        PreferenceScreen preferenceScreen = findPreference("itpd_settings_screen");
+
+        if (preferenceScreen != null) {
+            ArrayList<PreferenceCategory> categories = new ArrayList<>();
+            categories.add(findPreference("category_itpd_sam_interface"));
+            categories.add(findPreference("category_itpd_cryptography"));
+            categories.add(findPreference("category_itpd_upnp"));
+            categories.add(findPreference("category_itpd_reseeding"));
+
+            for (PreferenceCategory category : categories) {
+                if (category != null) {
+                    preferenceScreen.removePreference(category);
+                }
+            }
+        }
+
+        PreferenceCategory categoryLimits = findPreference("category_itpd_limits");
+
+        if (categoryLimits != null) {
+            ArrayList<Preference> preferences = new ArrayList<>();
+            preferences.add(findPreference("openfiles"));
+            preferences.add(findPreference("coresize"));
+            preferences.add(findPreference("ntcpsoft"));
+            preferences.add(findPreference("ntcphard"));
+
+            for (Preference preference : preferences) {
+                if (preference != null) {
+                    categoryLimits.removePreference(preference);
+                }
+            }
+        }
+
+        PreferenceCategory categorySocksProxy = findPreference("itpd_category_socks_proxy");
+        Preference enableSocks = findPreference("Socks proxy");
+        if (categorySocksProxy != null && enableSocks != null) {
+            categorySocksProxy.removePreference(enableSocks);
+        }
+
+        PreferenceCategory categoryHTTPProxy = findPreference("itpd_category_http_proxy");
+        Preference enableHTTP = findPreference("HTTP proxy");
+        if (categoryHTTPProxy != null && enableHTTP != null) {
+            categoryHTTPProxy.removePreference(enableHTTP);
+        }
+
     }
 }

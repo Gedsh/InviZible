@@ -33,10 +33,12 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.fragment.app.DialogFragment;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
+import androidx.preference.PreferenceScreen;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -45,6 +47,7 @@ import java.util.Objects;
 
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.language.Language;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
@@ -52,6 +55,7 @@ import pan.alexander.tordnscrypt.utils.GetIPsJobService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
+import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -106,12 +110,23 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
             changePreferencesWithProxyMode();
         }
 
+        if (appVersion.startsWith("g")) {
+            changePreferencesForGPVersion();
+        } else if (appVersion.endsWith("d")) {
+            changePreferencesForFDVersion();
+        }
+
         return super.onCreateView(inflater, container, savedInstanceState);
     }
 
     @Override
     public void onCreatePreferences(Bundle bundle, String s) {
-
+        if (appVersion.startsWith("g") && !accelerated && getActivity() != null) {
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            if (preferences != null) {
+                preferences.edit().putString("pref_fast_theme", "1").apply();
+            }
+        }
     }
 
     @Override
@@ -328,6 +343,15 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 }
                 return true;
             case "pref_fast_theme":
+                if (appVersion.startsWith("g") && !accelerated) {
+                    if (getFragmentManager() != null) {
+                        DialogFragment notificationDialogFragment = NotificationDialogFragment.newInstance(R.string.only_premium_feature);
+                        if (notificationDialogFragment != null) {
+                            notificationDialogFragment.show(getFragmentManager(), "NotificationDialogFragment");
+                        }
+                    }
+                    return false;
+                }
                 changeTheme();
                 return true;
             case "pref_fast_language":
@@ -461,6 +485,29 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         Preference blockHttp = findPreference("pref_fast_block_http");
         if (fastOtherCategory != null && blockHttp != null) {
             fastOtherCategory.removePreference(blockHttp);
+        }
+    }
+
+    private void changePreferencesForGPVersion() {
+        PreferenceScreen preferencesFast = findPreference("fast_preferences");
+        PreferenceCategory fastUpdateCategory = findPreference("fast_update");
+        if (preferencesFast != null && fastUpdateCategory != null) {
+            preferencesFast.removePreference(fastUpdateCategory);
+        }
+
+        PreferenceCategory fastOtherCategory = findPreference("fast_other");
+
+        Preference blockHttp = findPreference("pref_fast_block_http");
+        if (fastOtherCategory != null && blockHttp != null) {
+            fastOtherCategory.removePreference(blockHttp);
+        }
+    }
+
+    private void changePreferencesForFDVersion() {
+        PreferenceScreen preferencesFast = findPreference("fast_preferences");
+        PreferenceCategory fastUpdateCategory = findPreference("fast_update");
+        if (preferencesFast != null && fastUpdateCategory != null) {
+            preferencesFast.removePreference(fastUpdateCategory);
         }
     }
 }

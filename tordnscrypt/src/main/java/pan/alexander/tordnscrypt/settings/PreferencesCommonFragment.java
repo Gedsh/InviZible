@@ -57,6 +57,7 @@ import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import pan.alexander.tordnscrypt.utils.file_operations.OnTextFileOperationsCompleteListener;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
+import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
@@ -111,6 +112,14 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             registerPreferences();
         } else {
             removePreferences();
+        }
+
+        if (appVersion.startsWith("g")) {
+            PreferenceCategory hotspotSettingsCategory = findPreference("HOTSPOT");
+            Preference blockHTTP = findPreference("pref_common_block_http");
+            if (hotspotSettingsCategory != null && blockHTTP != null) {
+                hotspotSettingsCategory.removePreference(blockHTTP);
+            }
         }
 
         return super.onCreateView(inflater, container, savedInstanceState);

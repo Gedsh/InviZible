@@ -46,6 +46,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import eu.chainfire.libsuperuser.Shell;
+import pan.alexander.tordnscrypt.dialogs.AgreementDialog;
+import pan.alexander.tordnscrypt.dialogs.AskAccelerateDevelop;
 import pan.alexander.tordnscrypt.dialogs.InstallAppDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NewUpdateDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
@@ -65,6 +67,7 @@ import pan.alexander.tordnscrypt.update.UpdateCheck;
 import pan.alexander.tordnscrypt.update.UpdateService;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
+import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 
@@ -158,6 +161,10 @@ public class TopFragment extends Fragment {
                 Log.e(LOG_TAG, "ModulesService stopped by system!");
             } else {
                 ModulesAux.requestModulesStatusUpdate(getActivity());
+            }
+
+            if (!isModulesNotInstalled(getActivity()) && appVersion.endsWith("p")) {
+                checkAgreement();
             }
         }
     }
@@ -294,13 +301,33 @@ public class TopFragment extends Fragment {
     }
 
     private void showDonDialog() {
+        if (getActivity()== null) {
+            return;
+        }
+
         if (appVersion.endsWith("e")) {
             Handler handler = new Handler();
             Runnable performRegistration = () -> {
-                Registration registration = new Registration(getActivity());
-                registration.showDonateDialog();
+                if (getActivity() != null) {
+                    Registration registration = new Registration(getActivity());
+                    registration.showDonateDialog();
+                }
             };
             handler.postDelayed(performRegistration, 5000);
+        } else if (appVersion.endsWith("p") && getFragmentManager() != null && !accelerated) {
+
+            if (!new PrefManager(getActivity()).getBoolPref("Agreement")) {
+                return;
+            }
+
+            Handler handler = new Handler();
+            handler.postDelayed(() -> {
+                DialogFragment accelerateDevelop = AskAccelerateDevelop.getInstance();
+                if (getActivity() != null && getFragmentManager() != null && !accelerated) {
+                    accelerateDevelop.show(getFragmentManager(), "accelerateDevelop");
+                }
+            },5000);
+
         }
     }
 
@@ -474,7 +501,7 @@ public class TopFragment extends Fragment {
 
         SharedPreferences spref = PreferenceManager.getDefaultSharedPreferences(getActivity());
         boolean autoUpdate = spref.getBoolean("pref_fast_auto_update", true)
-                && !appVersion.startsWith("l");
+                && !appVersion.startsWith("l") && !appVersion.endsWith("p") && !appVersion.startsWith("f");
         if (autoUpdate) {
             boolean throughTorUpdate = spref.getBoolean("pref_fast through_tor_update", false);
             boolean torRunning = new PrefManager(getActivity()).getBoolPref("Tor Running");
@@ -496,7 +523,7 @@ public class TopFragment extends Fragment {
 
     public void checkNewVer() {
 
-        if (getActivity() == null) {
+        if (getActivity() == null || appVersion.endsWith("p") || appVersion.startsWith("f")) {
             return;
         }
 
@@ -667,5 +694,15 @@ public class TopFragment extends Fragment {
         } catch (Exception ignored) {
         }
 
+    }
+
+    private void checkAgreement() {
+        if (getActivity() == null) {
+            return;
+        }
+
+        if (!new PrefManager(getActivity()).getBoolPref("Agreement")) {
+            AgreementDialog.getDialogBuilder(getActivity()).show();
+        }
     }
 }

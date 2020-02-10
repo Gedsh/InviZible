@@ -19,6 +19,7 @@ package pan.alexander.tordnscrypt.settings;
 */
 
 import androidx.preference.Preference;
+import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceManager;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
@@ -35,14 +36,17 @@ import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 
+import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
 
-public class PreferencesTorFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
+public class PreferencesTorFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener {
 
     private static ArrayList<String> key_tor;
     private static ArrayList<String> val_tor;
@@ -59,6 +63,10 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         setRetainInstance(true);
 
         addPreferencesFromResource(R.xml.preferences_tor);
+
+        if (appVersion.endsWith("p")) {
+            changePreferencesForGPVersion();
+        }
 
         ArrayList<Preference> preferences = new ArrayList<>();
 
@@ -89,9 +97,14 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         for (Preference preference: preferences) {
             if (preference != null) {
                 preference.setOnPreferenceChangeListener(this);
-            } else {
+            } else if (!appVersion.startsWith("g")){
                 Log.e(LOG_TAG, "PreferencesTorFragment preference is null exception");
             }
+        }
+
+        Preference cleanTorFolder = findPreference("cleanTorFolder");
+        if (cleanTorFolder != null) {
+            cleanTorFolder.setOnPreferenceClickListener(this);
         }
 
 
@@ -304,5 +317,65 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
 
         return false;
+    }
+
+    @Override
+    public boolean onPreferenceClick(Preference preference) {
+        if (getActivity() == null) {
+            return false;
+        }
+
+        if ("cleanTorFolder".equals(preference.getKey())) {
+
+            if (ModulesStatus.getInstance().getTorState() != STOPPED) {
+                Toast.makeText(getActivity(), R.string.btnTorStop, Toast.LENGTH_SHORT).show();
+                return true;
+            }
+
+            new Thread(() -> {
+                boolean successfully = false;
+                if (getActivity() != null) {
+                   successfully = FileOperations.deleteDirSynchronous(getActivity(), appDataDir + "/tor_data");
+                }
+
+                if (getActivity() != null) {
+                    if (successfully) {
+                        getActivity().runOnUiThread(() -> Toast.makeText(getActivity(), R.string.done, Toast.LENGTH_SHORT).show());
+                    } else {
+                        getActivity().runOnUiThread(() -> Toast.makeText(getActivity(), R.string.wrong, Toast.LENGTH_SHORT).show());
+                    }
+
+                }
+            }).start();
+
+
+            return true;
+        }
+        return false;
+    }
+
+    private void changePreferencesForGPVersion() {
+        PreferenceCategory torSettingsCategory = findPreference("tor_settings");
+
+        if (torSettingsCategory != null) {
+            ArrayList<Preference> preferences = new ArrayList<>();
+            preferences.add(findPreference("ClientUseIPv4"));
+            preferences.add(findPreference("ClientUseIPv6"));
+            preferences.add(findPreference("AvoidDiskWrites"));
+            preferences.add(findPreference("ConnectionPadding"));
+            preferences.add(findPreference("ReducedConnectionPadding"));
+            preferences.add(findPreference("MaxCircuitDirtiness"));
+            preferences.add(findPreference("EnforceDistinctSubnets"));
+            preferences.add(findPreference("Enable SOCKS proxy"));
+            preferences.add(findPreference("Enable HTTPTunnel"));
+            preferences.add(findPreference("Enable Transparent proxy"));
+            preferences.add(findPreference("Enable DNS"));
+
+            for (Preference preference : preferences) {
+                if (preference != null) {
+                    torSettingsCategory.removePreference(preference);
+                }
+            }
+        }
     }
 }

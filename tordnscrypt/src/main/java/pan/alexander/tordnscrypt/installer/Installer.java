@@ -19,13 +19,16 @@ package pan.alexander.tordnscrypt.installer;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.IntentFilter;
-import androidx.fragment.app.FragmentManager;
 import android.util.Log;
 
+import androidx.fragment.app.FragmentManager;
+
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -272,7 +275,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         Log.i(LOG_TAG, "Installer: correctAppDir OK");
     }
 
-    @SuppressWarnings("all")
+    @SuppressLint("SdCardPath")
     private void fixAppDirLinesList(String path, List<String> lines) {
         if (lines != null) {
             String line;
@@ -283,10 +286,51 @@ public class Installer implements TopFragment.OnActivityChangeListener {
                     lines.set(i, line);
                 }
             }
+
+            if (activity != null
+                    && activity.getText(R.string.package_name).toString().contains(".gp")
+                    && path.contains("dnscrypt-proxy.toml")) {
+                lines = prepareDNSCryptForGP(lines);
+            }
+
             FileOperations.writeTextFileSynchronous(activity, path, lines);
         } else {
             throw new IllegalStateException("correctAppDir readTextFile return null " + path);
         }
+    }
+
+    @SuppressLint("SdCardPath")
+    private List<String> prepareDNSCryptForGP(List<String> lines) {
+        ArrayList<String> prepared = new ArrayList<>();
+
+        for (String line : lines) {
+            if (line.contains("block_unqualified")) {
+                line = "block_unqualified = false";
+            } else if (line.contains("block_undelegated")) {
+                line = "block_undelegated = false";
+            } else if (line.contains("blacklist_file")) {
+                line = "";
+            } else if (line.contains("whitelist_file")) {
+                line = "";
+            } else if (line.matches("(^| )\\{ ?server_name([ =]).+")) {
+                line = "";
+            } else if (line.matches("(^| )server_names([ =]).+")) {
+                line = "server_names = [\"dnswarden-dc1\", " +
+                        "\"dnswarden-dc2\", " +
+                        "\"dnswarden-doh1\", " +
+                        "\"dnswarden-doh2\", " +
+                        "\"cs-ch\", " +
+                        "\"cs-ca\", " +
+                        "\"doh-ibksturm\", " +
+                        "\"scaleway-fr\"]";
+            }
+
+            if (!line.isEmpty()) {
+                prepared.add(line);
+            }
+        }
+
+        return prepared;
     }
 
     protected void stopAllRunningModulesWithRootCommand() {

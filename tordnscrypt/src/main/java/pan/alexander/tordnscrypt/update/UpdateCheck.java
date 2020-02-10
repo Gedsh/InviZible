@@ -270,6 +270,10 @@ public class UpdateCheck {
     }
 
     public void requestUpdateData(final String domainName, final String appSign) {
+        if (appVersion.endsWith("p") || appVersion.startsWith("f")) {
+            return;
+        }
+
         Thread requestDataThread = new Thread(() -> {
             try {
                 String rsaSign = RSASign(appSign);

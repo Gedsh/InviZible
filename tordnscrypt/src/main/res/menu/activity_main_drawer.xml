@@ -3,7 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
 
-    <group android:checkableBehavior="none">
+    <group android:checkableBehavior="none"
+        android:id="@+id/nav_main_group">
         <item
             android:id="@+id/nav_fast_Pref"
             android:icon="@drawable/ic_settings_fast"
@@ -24,32 +25,35 @@
             android:id="@+id/nav_I2PD_Pref"
             android:icon="@drawable/ic_settings_itpd"
             android:title="@string/drawer_menu_I2PDSettings" />
+    </group>
+
+    <group android:checkableBehavior="none"
+        android:id="@+id/nav_donate_group">
+        <item
+            android:id="@+id/nav_Donate"
+            android:icon="@drawable/ic_attach_money_black_24dp"
+            android:title="@string/drawer_menu_donate" />
+        <item
+            android:id="@+id/nav_Code"
+            android:icon="@drawable/ic_enter_black_24dp"
+            android:title="@string/enter_code_button"
+            android:visible="false"/>
+    </group>
+
+    <group android:checkableBehavior="none"
+        android:id="@+id/nav_secondary_group">
         <item
             android:id="@+id/nav_backup"
             android:icon="@drawable/ic_save_black_24dp"
             android:title="@string/drawer_menu_backup" />
+        <item
+            android:id="@+id/nav_help"
+            android:icon="@drawable/ic_help_black_24dp"
+            android:title="@string/drawer_menu_help" />
+        <item
+            android:id="@+id/nav_about"
+            android:icon="@drawable/ic_info_black_24dp"
+            android:title="@string/drawer_menu_about" />
     </group>
-
-    <item android:title="">
-        <menu>
-            <item
-                android:id="@+id/nav_Donate"
-                android:icon="@drawable/ic_attach_money_black_24dp"
-                android:title="@string/drawer_menu_donate" />
-            <item
-                android:id="@+id/nav_Code"
-                android:icon="@drawable/ic_enter_black_24dp"
-                android:title="@string/enter_code_button"
-                android:visible="false"/>
-            <item
-                android:id="@+id/nav_about"
-                android:icon="@drawable/ic_info_black_24dp"
-                android:title="@string/drawer_menu_about" />
-            <item
-                android:id="@+id/nav_help"
-                android:icon="@drawable/ic_help_black_24dp"
-                android:title="@string/drawer_menu_help" />
-        </menu>
-    </item>
 
 </menu>

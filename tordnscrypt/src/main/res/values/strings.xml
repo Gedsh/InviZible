@@ -63,10 +63,12 @@
     <string name="no_root" translatable="false">NO ROOT!</string>
     <string name="install">Install</string>
     <string name="exit">Exit</string>
+    <string name="done">Done</string>
     <string name="wrong">Something went wrong!</string>
     <string name="install_message">Do you want to complete installation?</string>
-    <string name="install_title_root">Root granted</string>
-    <string name="install_title_no_root">Root denied</string>
+    <string name="premium">Premium version</string>
+    <string name="agree">I agree</string>
+    <string name="disagree">I disagree</string>
 
     <string name="message_no_root_used">You can use InviZible Pro with local VPN mode, or applications with own proxy or local VPN feature in proxy mode.</string>
     <string name="message_no_root_used_kitkat">You can use InviZible Pro with applications with own proxy or local VPN feature in proxy mode.</string>
@@ -178,6 +180,8 @@
     <string name="pref_common_block_http">Block HOTSPOT http</string>
     <string name="pref_common_block_http_summ">Deny connection to http port 80 for HOTSPOT</string>
     <string name="pref_common_notification_summ">Protect application with No Root Mode to prevent app being killed by android</string>
+    <string name="pref_common_refresh_rules">Refresh rules</string>
+    <string name="pref_common_refresh_rules_summ">Update rules on every connectivity change</string>
     <string name="pref_common_show_notification">Show notification</string>
     <string name="pref_common_wakelock">Prevent device sleep</string>
     <string name="pref_common_wakelock_summ">Additional Protection with No Root Mode to prevent app being killed by android. May drain battery</string>
@@ -395,6 +399,7 @@
     <string name="pref_tor_unlock_disabled">Disabled</string>
     <string name="pref_tor_unlock_app">Apps to Torify</string>
     <string name="pref_tor_clearnet_app">Apps to bypass Tor</string>
+    <string name="pref_tor_clean_module_folder">Clean module folder</string>
 
     <string name="pref_routing_unlock_app">Apps to use with InviZible</string>
     <string name="pref_routing_clearnet_app">Apps to bypass InviZible</string>
@@ -565,7 +570,7 @@
     <string name="verifier_error">Looks like this unofficial version of InviZible. Please be care of it!</string>
     <string name="only_for_pro">Only for PRO version</string>
     <string name="donate">Donate</string>
-    <string name="donate_project">InviZible Pro Project requires your assistance. Please visit donate page or enter received registration code.</string>
+    <string name="donate_project">InviZible Pro Project needs your assistance. Please visit donate page or enter received registration code.</string>
     <string name="donate_button">Visit</string>
     <string name="enter_code_button">Enter Code</string>
     <string name="enter_code">Enter Code</string>
@@ -589,4 +594,21 @@
 
     <string name="add_custom_server_title">Add custom server</string>
     <string name="add_custom_server_error">Invalid custom server configuration. Please check the SDNS field.</string>
+
+    <string name="pending_purchase">Please note that you have a pending purchase:</string>
+    <string name="buy_premium_gp">InviZible Pro Project needs your assistance. Press OK to purchase premium features.</string>
+    <string name="wrong_purchase_signature_gp">Sorry, but it is impossible to confirm your purchase. You will receive a refund after 3 days.</string>
+    <string name="only_premium_feature">Unfortunately, this feature is available for the premium version only.</string>
+    <string name="agreement_text">
+        \tThanks for choosing InviZible Pro. I hope that it will be useful for your privacy and comfortable use of the Internet.
+        \n\tInviZible Pro includes Tor, DNSCrypt and Purple I2P as modules.
+        \n\tInviZible Pro can use root, if your device has root privileges, or uses a local VPN to deliver Internet traffic to Tor, DNSCrypt and I2P networks.
+        \n\tThis product is produced independently from the Tor®, DNSCrypt, Purple I2P software and carries no guarantee from The Above Projects about quality, suitability or anything else.
+        \n\tInviZible Pro is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+        \n\tCopyright © 2019-2020
+        \n\tGarmatin Oleksandr
+        \n\tinvizible.soft@gmail.com
+        \n\tinvizible.net/en/privacy
+    </string>
+
 </resources>

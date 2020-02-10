@@ -7,23 +7,10 @@ android {
     flavorDimensions "version", "processor"
 
     productFlavors {
-        lite {
-            applicationId "pan.alexander.tordnscrypt.stable"
-            versionName "3.0.1"
-            dimension = 'version'
-            resValue 'string', 'package_name', applicationId
-        }
 
-        pro {
-            applicationId "pan.alexander.tordnscrypt.stable"
-            versionName "3.0.1"
-            dimension = 'version'
-            resValue 'string', 'package_name', applicationId
-        }
-
-        beta{
+        fdroid{
             applicationId "pan.alexander.tordnscrypt"
-            versionName "0.6.1"
+            versionName "0.6.2"
             dimension = 'version'
             resValue 'string', 'package_name', applicationId
         }
@@ -53,7 +40,7 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 29
-        versionCode 61
+        versionCode 62
 
         resConfigs "en", "ru-rRU" , "ru-rUA", "pl"
 
@@ -131,7 +118,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.2.0-alpha04'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
-    testImplementation 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.13'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     //noinspection GradleDynamicVersion
