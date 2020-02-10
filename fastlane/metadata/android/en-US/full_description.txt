@@ -26,4 +26,4 @@ Features:
 * Tethering supported
 * Material design theme
 
-- InviZible blocks ipv6 due to some security issues with this protocol and the InviZible app.
+- InviZible Pro blocks ipv6 due to some security issues with this protocol and the InviZible app.
