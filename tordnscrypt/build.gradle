@@ -10,7 +10,7 @@ android {
 
         fdroid{
             applicationId "pan.alexander.tordnscrypt"
-            versionName "0.6.2"
+            versionName "0.6.2-beta"
             dimension = 'version'
             resValue 'string', 'package_name', applicationId
         }
