@@ -228,7 +228,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
     private void updateIptablesRules() {
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean refreshRules = sharedPreferences.getBoolean("swRefreshRules", true);
+        boolean refreshRules = sharedPreferences.getBoolean("swRefreshRules", false);
 
         if (!refreshRules) {
             return;
