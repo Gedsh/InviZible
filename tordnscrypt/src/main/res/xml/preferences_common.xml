@@ -49,6 +49,12 @@
             android:defaultValue="false"
             android:key="pref_common_itpd_tethering"
             android:title="@string/pref_common_itpd_tethering" />
+        <SwitchPreference
+            android:id="@+id/pref_common_fix_ttl"
+            android:defaultValue="false"
+            android:key="pref_common_fix_ttl"
+            android:title="@string/pref_common_fix_ttl"
+            android:summary="@string/pref_common_fix_ttl_summ"/>
         <Preference
             android:key="pref_common_tethering_settings"
             android:title="@string/pref_common_tethering_settings">
@@ -84,7 +90,7 @@
             android:title="@string/pref_common_show_notification" />
         <SwitchPreference
             android:id="@+id/swRefreshRules"
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="swRefreshRules"
             android:summary="@string/pref_common_refresh_rules_summ"
             android:title="@string/pref_common_refresh_rules" />

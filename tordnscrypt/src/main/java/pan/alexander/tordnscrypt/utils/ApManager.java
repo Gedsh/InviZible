@@ -64,7 +64,8 @@ public class ApManager {
             }
 
             if (method != null) {
-                if ((Boolean) method.invoke(wifiManager)) {
+                Object on = method.invoke(wifiManager);
+                if (on != null && (Boolean)on) {
                     result = apStateON;
                 } else {
                     result = apStateOFF;

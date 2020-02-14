@@ -149,6 +149,9 @@ public class TopFragment extends Fragment {
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
             rootIsAvailableSaved = rootIsAvailable = new PrefManager(getActivity()).getBoolPref("rootIsAvailable");
             runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+
+            ModulesStatus.getInstance().setFixTTL(shPref.getBoolean("pref_common_fix_ttl", false));
+
             String operationMode = new PrefManager(getActivity()).getStrPref("OPERATION_MODE");
 
             if (!operationMode.isEmpty()) {

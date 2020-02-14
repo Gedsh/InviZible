@@ -166,6 +166,10 @@
     <string name="pref_common_unblock_with_tor_summ">Strony otwierane w trybie Punktu Dostepu przez Tor</string>
     <string name="pref_common_excludes_from_tor">Wyklucz strony</string>
     <string name="pref_common_excludes_from_tor_summ">Stony otwierane bezposrednio przez Punkt Dostepu</string>
+    <string name="pref_common_fix_ttl">Naprawić TTL</string>
+    <string name="pref_common_fix_ttl_summ">TTL zostanie ustawione na 64 przy użyciu lokalnej sieci VPN. Obsługa jądra nie jest wymagana.
+        Można go używać tylko w \"root mode\" z wyłączoną opcją \"Run Modules With Root\".
+        Aby naprawić TTL, uruchom DNSCrypt lub / i Tor.</string>
     <string name="pref_common_itpd_tethering">Zezwol na udostepnianie I2P</string>
     <string name="pref_common_tethering_settings">Otworz ustawienia Punktu Dostepu</string>
     <string name="pref_common_restart_dnscrypt">Prosze zrestartowac DNSCrypt</string>

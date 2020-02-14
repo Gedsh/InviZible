@@ -32,6 +32,7 @@ import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.utils.enums.VPNCommand;
 
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPN.EXTRA_COMMAND;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPN.EXTRA_REASON;
@@ -53,8 +54,12 @@ public class ServiceVPNHelper {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean vpnServiceEnabled = prefs.getBoolean("VPNServiceEnabled", false);
 
-        if (operationMode == VPN_MODE && vpnServiceEnabled &&
-                (dnsCryptState == RUNNING || torState == RUNNING)) {
+        boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
+                && !modulesStatus.isUseModulesWithRoot();
+
+        if (((operationMode == VPN_MODE) || fixTTL)
+                && vpnServiceEnabled
+                && (dnsCryptState == RUNNING || torState == RUNNING)) {
             Intent intent = new Intent(context, ServiceVPN.class);
             intent.putExtra(EXTRA_COMMAND, VPNCommand.RELOAD);
             intent.putExtra(EXTRA_REASON, reason);
@@ -63,16 +68,25 @@ public class ServiceVPNHelper {
     }
 
     public static void stop(String reason, Context context) {
-        Intent intent = new Intent(context, ServiceVPN.class);
-        intent.putExtra(EXTRA_COMMAND, VPNCommand.STOP);
-        intent.putExtra(EXTRA_REASON, reason);
-        sendIntent(context, intent);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean vpnServiceEnabled = prefs.getBoolean("VPNServiceEnabled", false);
+
+        if (vpnServiceEnabled) {
+            Intent intent = new Intent(context, ServiceVPN.class);
+            intent.putExtra(EXTRA_COMMAND, VPNCommand.STOP);
+            intent.putExtra(EXTRA_REASON, reason);
+            sendIntent(context, intent);
+        }
     }
 
     public static void prepareVPNServiceIfRequired(Activity activity, ModulesStatus modulesStatus) {
         OperationMode operationMode = modulesStatus.getMode();
+
+        boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
+                && !modulesStatus.isUseModulesWithRoot();
+
         SharedPreferences prefs = android.preference.PreferenceManager.getDefaultSharedPreferences(activity);
-        if (operationMode == VPN_MODE
+        if (((operationMode == VPN_MODE) || fixTTL)
                 && activity instanceof MainActivity
                 && !prefs.getBoolean("VPNServiceEnabled", false)) {
             ((MainActivity) activity).prepareVPNService();

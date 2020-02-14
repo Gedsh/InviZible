@@ -113,6 +113,10 @@
     <string name="pref_common_excludes_from_tor">Исключить сайты</string>
     <string name="pref_common_excludes_from_tor_summ">Список сайтов, которые открываются в обход Tor, для точки доступа</string>
     <string name="pref_common_itpd_tethering">Разрешить раздачу I2P</string>
+    <string name="pref_common_fix_ttl">Зафиксировать TTL</string>
+    <string name="pref_common_fix_ttl_summ">TTL будет зафиксирован на 64 с помощью локального VPN. Поддержка ядра не требуется.
+        Можно использовать только в \"root mode\" и с выключенной опцией \"Запуск модулей с Root\".
+        Чтобы зафиксировать TTL запустите DNSCrypt и/или Tor.</string>
     <string name="pref_common_tethering_settings">Открыть настройки точки доступа</string>
     <string name="pref_common_restart_tor">Пожалуйста, перезапустите Tor</string>
     <string name="pref_common_restart_itpd">Пожалуйста, перезапустите I2P</string>

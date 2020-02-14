@@ -341,7 +341,14 @@ public class MainActivity extends LangAppCompatActivity
 
     private void switchIconsDependingOnMode(Menu menu, boolean rootIsAvailable) {
 
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean fixTTL = sharedPreferences.getBoolean("pref_common_fix_ttl", false);
+        boolean useModulesWithRoot = sharedPreferences.getBoolean("swUseModulesRoot", false);
+
         boolean busyBoxIsAvailable = new PrefManager(this).getBoolPref("bbOK");
+
+        fixTTL = fixTTL && !useModulesWithRoot;
+
         OperationMode mode = UNDEFINED;
 
         String operationMode = new PrefManager(this).getStrPref("OPERATION_MODE");
@@ -376,7 +383,9 @@ public class MainActivity extends LangAppCompatActivity
                 mode = ROOT_MODE;
             }
 
-            if (mode == ROOT_MODE && busyBoxIsAvailable) {
+            if (mode == ROOT_MODE && fixTTL) {
+                rootIcon.setIcon(R.drawable.ic_ttl_main);
+            } else if (mode == ROOT_MODE && busyBoxIsAvailable) {
                 rootIcon.setIcon(R.drawable.ic_done_all_white_24dp);
             } else if (mode == ROOT_MODE) {
                 rootIcon.setIcon(R.drawable.ic_done_white_24dp);
@@ -446,7 +455,12 @@ public class MainActivity extends LangAppCompatActivity
 
         } else if (apState == ApManager.apStateOFF) {
             menu.findItem(R.id.item_hotspot).setIcon(R.drawable.ic_portable_wifi_off_white_24dp);
-            new PrefManager(this).setBoolPref("APisON", false);
+            if (new PrefManager(this).getBoolPref("APisON")) {
+                new PrefManager(this).setBoolPref("APisON", false);
+
+                modulesStatus.setIptablesRulesUpdateRequested(true);
+                ModulesAux.requestModulesStatusUpdate(this);
+            }
         } else {
             menu.findItem(R.id.item_hotspot).setVisible(false);
             menu.findItem(R.id.item_hotspot).setEnabled(false);
@@ -528,11 +542,15 @@ public class MainActivity extends LangAppCompatActivity
 
         Log.i(LOG_TAG, "Root mode enabled");
 
+        boolean fixTTL = modulesStatus.isFixTTL() && !modulesStatus.isUseModulesWithRoot();
+
         OperationMode operationMode = modulesStatus.getMode();
 
-        if (operationMode == VPN_MODE) {
+        if ((operationMode == VPN_MODE) && !fixTTL) {
             ServiceVPNHelper.stop("Switch to root mode", this);
             Toast.makeText(this, getText(R.string.vpn_mode_off), Toast.LENGTH_LONG).show();
+        } else if ((operationMode == PROXY_MODE) && fixTTL) {
+            prepareVPNService();
         }
 
         //This start iptables adaptation

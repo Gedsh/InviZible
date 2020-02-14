@@ -76,6 +76,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         if (Objects.requireNonNull(intent.getAction()).equalsIgnoreCase(BOOT_COMPLETE)) {
 
             new PrefManager(context).setBoolPref("APisON", false);
+            new PrefManager(context).setBoolPref("ModemIsON", false);
 
             final SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
             tethering_autostart = shPref.getBoolean("pref_common_tethering_autostart", false);

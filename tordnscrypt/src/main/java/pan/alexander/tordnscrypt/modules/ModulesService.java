@@ -599,7 +599,7 @@ public class ModulesService extends Service {
     private void stopVPNServiceIfRunning() {
         OperationMode operationMode = modulesStatus.getMode();
         SharedPreferences prefs = android.preference.PreferenceManager.getDefaultSharedPreferences(this);
-        if (operationMode == VPN_MODE && prefs.getBoolean("VPNServiceEnabled", false)) {
+        if (((operationMode == VPN_MODE) || modulesStatus.isFixTTL()) && prefs.getBoolean("VPNServiceEnabled", false)) {
             ServiceVPNHelper.stop("ModulesService is destroyed", this);
         }
     }
