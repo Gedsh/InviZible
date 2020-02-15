@@ -120,3 +120,7 @@
 * Implemented clear module folder option for Tor and I2P.
 * Changed Tor configuration to stay active longer in the background.
 * Changes related to the preparation of Google Play and F-Droid versions.
+
+**InviZible Pro beta 0.6.3**
+* Implemented Fix TTL option based on the local VPN (root is still required).
+* Fixes.
