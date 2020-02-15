@@ -79,6 +79,7 @@ import pan.alexander.tordnscrypt.vpn.Util;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper.reload;
 
 @SuppressWarnings("unused")
@@ -225,6 +226,8 @@ public class ServiceVPN extends VpnService {
         boolean tethering = prefs.getBoolean("VPN tethering", true);
         boolean lan = prefs.getBoolean("VPN lan", false);
         boolean apIsOn = new PrefManager(this).getBoolPref("APisON");
+        boolean modemIsOn = new PrefManager(this).getBoolPref("ModemIsON");
+
         boolean torIsRunning = modulesStatus.getTorState() == RUNNING;
 
         // Build VPN service
@@ -249,13 +252,16 @@ public class ServiceVPN extends VpnService {
             }
         }
 
+        boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
+                && !modulesStatus.isUseModulesWithRoot();
+
         // Subnet routing
-        if (subnet) {
+        if (subnet && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             // Exclude IP ranges
             List<IPUtil.CIDR> listExclude = new ArrayList<>();
             listExclude.add(new IPUtil.CIDR("127.0.0.0", 8)); // localhost
 
-            if (tethering && !lan && !torIsRunning && apIsOn) {
+            if (tethering && !lan && !torIsRunning && (apIsOn || modemIsOn) && !fixTTL) {
                 // USB tethering 192.168.42.x
                 // Wi-Fi tethering 192.168.43.x
                 listExclude.add(new IPUtil.CIDR("192.168.42.0", 23));
@@ -299,8 +305,13 @@ public class ServiceVPN extends VpnService {
             } catch (UnknownHostException ex) {
                 Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
             }
-        } else
+        } else if (fixTTL) {
+            // USB tethering 192.168.42.x
+            // Wi-Fi tethering 192.168.43.x
+            builder.addRoute("192.168.42.0", 23);
+        } else {
             builder.addRoute("0.0.0.0", 0);
+        }
 
         if (ip6)
             builder.addRoute("2000::", 3); // unicast
@@ -313,7 +324,7 @@ public class ServiceVPN extends VpnService {
         // Add list of allowed applications
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 
-            if (routeAllThroughInviZible) {
+            if (routeAllThroughInviZible && !fixTTL) {
                 try {
                     builder.addDisallowedApplication(getPackageName());
                 } catch (PackageManager.NameNotFoundException ex) {
@@ -335,7 +346,7 @@ public class ServiceVPN extends VpnService {
                 boolean applied = false;
 
                 for (Rule rule : listRule) {
-                    if (rule.apply) {
+                    if (rule.apply && !fixTTL) {
                         try {
                             if (rule.uid != ownUID) {
                                 Log.i(LOG_TAG, "VPN routing " + rule.packageName);
@@ -394,7 +405,10 @@ public class ServiceVPN extends VpnService {
             Log.e(LOG_TAG, "VPN SOCKS Parse Exception " + e.getMessage() + " " + e.getCause());
         }
 
-        if (modulesStatus.getTorState() == RUNNING) {
+        boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
+                && !modulesStatus.isUseModulesWithRoot();
+
+        if (modulesStatus.getTorState() == RUNNING && !fixTTL) {
             jni_socks5("127.0.0.1", torSOCKSPort, "", "");
         } else {
             jni_socks5("", 0, "", "");
@@ -600,11 +614,14 @@ public class ServiceVPN extends VpnService {
 
         boolean torIsRunning = modulesStatus.getTorState() == RUNNING;
 
+        boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
+                && !modulesStatus.isUseModulesWithRoot() && packet.saddr.matches("^192\\.168\\.(42|43)\\.\\d+");
+
         lock.readLock().lock();
 
         packet.allowed = false;
         // https://android.googlesource.com/platform/system/core/+/master/include/private/android_filesystem_config.h
-        if (!canFilter) {
+        if (!canFilter  || fixTTL) {
             packet.allowed = true;
         } else if (packet.uid == ownUID) {
             // Allow self

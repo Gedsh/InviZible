@@ -130,14 +130,19 @@ public class TopFragment extends Fragment {
         appVersion = getString(R.string.appVersion);
         appProcVersion = getString(R.string.appProcVersion);
 
-        registerReceiver();
-
         RootChecker rootChecker = new RootChecker();
         rootChecker.execute();
 
         if (onActivityChangeListener != null && getActivity() instanceof MainActivity) {
             onActivityChangeListener.onActivityChange((MainActivity) getActivity());
         }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        registerReceiver();
     }
 
     @Override
@@ -149,6 +154,9 @@ public class TopFragment extends Fragment {
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
             rootIsAvailableSaved = rootIsAvailable = new PrefManager(getActivity()).getBoolPref("rootIsAvailable");
             runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+
+            ModulesStatus.getInstance().setFixTTL(shPref.getBoolean("pref_common_fix_ttl", false));
+
             String operationMode = new PrefManager(getActivity()).getStrPref("OPERATION_MODE");
 
             if (!operationMode.isEmpty()) {
@@ -179,6 +187,8 @@ public class TopFragment extends Fragment {
     public void onStop() {
         super.onStop();
 
+        unRegisterReceiver();
+
         closePleaseWaitDialog();
 
         if (updateCheck != null && updateCheck.context != null)
@@ -188,8 +198,6 @@ public class TopFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-        unRegisterReceiver();
 
         stopInstallationTimer();
 

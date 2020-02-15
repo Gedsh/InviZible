@@ -24,10 +24,14 @@ import android.content.SharedPreferences;
 
 import androidx.preference.PreferenceManager;
 
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.Arr;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 
+import static pan.alexander.tordnscrypt.iptables.Tethering.usbModemAddressesRange;
+import static pan.alexander.tordnscrypt.iptables.Tethering.vpnInterfaceName;
+import static pan.alexander.tordnscrypt.iptables.Tethering.wifiAPAddressesRange;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
@@ -44,6 +48,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
         routeAllThroughTor = shPref.getBoolean("pref_fast_all_through_tor", true);
         blockHttp = shPref.getBoolean("pref_fast_block_http", false);
+        apIsOn = new PrefManager(context).getBoolPref("APisON");
+        modemIsOn = new PrefManager(context).getBoolPref("ModemIsON");
 
         String[] commands = null;
 
@@ -78,6 +84,12 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             blockHttpRuleFilterAll = iptables + "-A tordnscrypt -d +" + rejectAddress + " -j REJECT";
             blockHttpRuleNatTCP = iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 80 -j DNAT --to-destination " + rejectAddress;
             blockHttpRuleNatUDP = iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 80 -j DNAT --to-destination " + rejectAddress;
+        }
+
+        String unblockHOTSPOT = iptables + "-D FORWARD -j DROP || true";
+        String blockHOTSPOT = iptables + "-I FORWARD -j DROP";
+        if (apIsOn || modemIsOn) {
+            blockHOTSPOT = "";
         }
 
 
@@ -118,6 +130,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         busybox + "cat " + appDataDir + "/app_data/tor/bridgesIP | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + torTransPort + "; done",
                         busybox + "cat " + appDataDir + "/app_data/tor/unlock | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + torTransPort + "; done",
                         busybox + "cat " + appDataDir + "/app_data/tor/unlockApps | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j REDIRECT --to-port " + torTransPort + "; done",
+                        unblockHOTSPOT,
+                        blockHOTSPOT,
                         iptables + "-D OUTPUT -j DROP || true"
                 };
             } else {
@@ -175,6 +189,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         torAppsBypassFilterUDP,
                         iptables + "-A tordnscrypt -j REJECT",
                         iptables + "-I OUTPUT -j tordnscrypt",
+                        unblockHOTSPOT,
+                        blockHOTSPOT,
                         iptables + "-D OUTPUT -j DROP || true"
                 };
             }
@@ -212,6 +228,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     blockHttpRuleFilterAll,
                     iptables + "-A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
                     iptables + "-I OUTPUT -j tordnscrypt",
+                    unblockHOTSPOT,
+                    blockHOTSPOT,
                     iptables + "-D OUTPUT -j DROP || true"
             };
 
@@ -227,6 +245,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     iptables + "-F tordnscrypt",
                     iptables + "-A tordnscrypt -j RETURN",
                     iptables + "-D OUTPUT -j tordnscrypt || true",
+                    unblockHOTSPOT
             };
 
             String[] commandsTether = tethering.activateTethering(false);
@@ -280,6 +299,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     torAppsBypassFilterUDP,
                     iptables + "-A tordnscrypt -j REJECT",
                     iptables + "-I OUTPUT -j tordnscrypt",
+                    unblockHOTSPOT,
+                    blockHOTSPOT,
                     iptables + "-D OUTPUT -j DROP || true"
             };
 
@@ -295,6 +316,11 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
     @Override
     public String[] clearAll() {
+        ModulesStatus modulesStatus = ModulesStatus.getInstance();
+        if (modulesStatus.isFixTTL()) {
+            modulesStatus.setIptablesRulesUpdateRequested(true);
+        }
+
         return new String[]{
                 "ip6tables -D OUTPUT -j DROP || true",
                 iptables + "-t nat -F tordnscrypt_nat_output",
@@ -308,7 +334,11 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                 iptables + "-t nat -F tordnscrypt_prerouting",
                 iptables + "-F tordnscrypt_forward",
                 iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting || true",
-                iptables + "-D FORWARD -j tordnscrypt_forward || true"
+                iptables + "-D FORWARD -j tordnscrypt_forward || true",
+                iptables + "-D FORWARD -j DROP || true",
+
+                "ip rule delete from " + wifiAPAddressesRange + " lookup 63",
+                "ip rule delete from " + usbModemAddressesRange + " lookup 62",
         };
     }
 }

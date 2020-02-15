@@ -47,6 +47,8 @@ abstract class IptablesRulesSender implements IptablesRules {
     Tethering tethering;
     boolean routeAllThroughTor;
     boolean blockHttp;
+    boolean apIsOn;
+    boolean modemIsOn;
 
     IptablesRulesSender(Context context) {
         this.context = context;

@@ -34,6 +34,7 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
@@ -195,6 +196,16 @@ public class ModulesStateLoop extends TimerTask {
                 }
 
                 stopCounter = STOP_COUNTER_DELAY;
+            }
+
+            if (modulesStatus.isFixTTL() && !modulesStatus.isUseModulesWithRoot() && (operationMode == ROOT_MODE)) {
+                if ((dnsCryptState == STOPPED && torState == STOPPED) || useModulesWithRoot) {
+                    ServiceVPNHelper.stop("All modules stopped", modulesService);
+                } else {
+                    ServiceVPNHelper.reload("TTL is fixed", modulesService);
+                }
+            } else if (operationMode == ROOT_MODE || operationMode == PROXY_MODE){
+                ServiceVPNHelper.stop("TTL stop fixing", modulesService);
             }
 
         } else if (useModulesWithRoot && operationMode == ROOT_MODE) {

@@ -237,11 +237,26 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             case "swUseModulesRoot":
                 ModulesStatus modulesStatus = ModulesStatus.getInstance();
                 ModulesAux.stopModulesIfRunning(getActivity());
-                modulesStatus.setUseModulesWithRoot(Boolean.valueOf(newValue.toString()));
+                boolean newOptionValue = Boolean.valueOf(newValue.toString());
+                modulesStatus.setUseModulesWithRoot(newOptionValue);
                 modulesStatus.setContextUIDUpdateRequested(true);
                 ModulesAux.requestModulesStatusUpdate(getActivity());
+
+                Preference fixTTLPreference = findPreference("pref_common_fix_ttl");
+                if (fixTTLPreference != null) {
+                    fixTTLPreference.setEnabled(!newOptionValue);
+                }
+
                 Log.i(LOG_TAG, "PreferencesCommonFragment switch to "
                         + (Boolean.valueOf(newValue.toString())? "Root" : "No Root"));
+                break;
+            case "pref_common_fix_ttl":
+                modulesStatus = ModulesStatus.getInstance();
+                boolean fixed = Boolean.valueOf(newValue.toString());
+                modulesStatus.setFixTTL(fixed);
+                modulesStatus.setIptablesRulesUpdateRequested(true);
+
+                new PrefManager(getActivity()).setBoolPref("refresh_main_activity", true);
                 break;
         }
         return true;
@@ -438,6 +453,14 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             swITPDTethering.setOnPreferenceChangeListener(this);
         }
 
+        Preference swFixTTL = findPreference("pref_common_fix_ttl");
+        if (swFixTTL != null) {
+            swFixTTL.setOnPreferenceChangeListener(this);
+
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            swFixTTL.setEnabled(!sharedPreferences.getBoolean("swUseModulesRoot", false));
+        }
+
         Preference pref_common_block_http = findPreference("pref_common_block_http");
         if (pref_common_block_http != null) {
             pref_common_block_http.setOnPreferenceChangeListener(this);
@@ -476,6 +499,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             preferencesHOTSPOT.add(findPreference("prefTorSiteExcludeTether"));
             preferencesHOTSPOT.add(findPreference("pref_common_itpd_tethering"));
             preferencesHOTSPOT.add(findPreference("pref_common_block_http"));
+            preferencesHOTSPOT.add(findPreference("pref_common_fix_ttl"));
 
             if (hotspotSettingsCategory != null) {
                 for (Preference preference : preferencesHOTSPOT) {

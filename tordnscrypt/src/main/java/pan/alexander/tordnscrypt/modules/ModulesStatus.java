@@ -34,6 +34,7 @@ public final class ModulesStatus {
     private volatile boolean useModulesWithRoot;
     private volatile boolean requestIptablesUpdate;
     private volatile boolean requestContextUIDUpdate;
+    private volatile boolean fixTTL;
     private volatile OperationMode mode;
 
     private static volatile ModulesStatus modulesStatus;
@@ -106,6 +107,14 @@ public final class ModulesStatus {
 
     public void setContextUIDUpdateRequested(boolean requestContextUIDUpdate) {
         this.requestContextUIDUpdate = requestContextUIDUpdate;
+    }
+
+    public boolean isFixTTL() {
+        return fixTTL && rootAvailable;
+    }
+
+    public void setFixTTL(boolean fixTTL) {
+        this.fixTTL = fixTTL;
     }
 
     public OperationMode getMode() {

@@ -216,6 +216,10 @@
     <string name="pref_common_excludes_from_tor">Exclude WebSites</string>
     <string name="pref_common_excludes_from_tor_summ">WebSites list to open directly for HOTSPOT</string>
     <string name="pref_common_itpd_tethering">Allow I2P Tethering</string>
+    <string name="pref_common_fix_ttl">Fix TTL</string>
+    <string name="pref_common_fix_ttl_summ">TTL will be fixed to 64 using a local VPN. Kernel support is not required.
+        It can only be used in \"root mode\" with the \"Run Modules With Root\" option disabled.
+        To fix TTL please start DNSCrypt or/and Tor.</string>
     <string name="pref_common_tethering_settings">Open Tethering config</string>
     <string name="pref_common_restart_dnscrypt">Please restart DNSCrypt</string>
     <string name="pref_common_restart_tor">Please restart Tor</string>
