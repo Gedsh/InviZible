@@ -256,7 +256,7 @@ public class ServiceVPN extends VpnService {
                 && !modulesStatus.isUseModulesWithRoot();
 
         // Subnet routing
-        if (subnet) {
+        if (subnet && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             // Exclude IP ranges
             List<IPUtil.CIDR> listExclude = new ArrayList<>();
             listExclude.add(new IPUtil.CIDR("127.0.0.0", 8)); // localhost
@@ -305,8 +305,13 @@ public class ServiceVPN extends VpnService {
             } catch (UnknownHostException ex) {
                 Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
             }
-        } else
+        } else if (fixTTL) {
+            // USB tethering 192.168.42.x
+            // Wi-Fi tethering 192.168.43.x
+            builder.addRoute("192.168.42.0", 23);
+        } else {
             builder.addRoute("0.0.0.0", 0);
+        }
 
         if (ip6)
             builder.addRoute("2000::", 3); // unicast
