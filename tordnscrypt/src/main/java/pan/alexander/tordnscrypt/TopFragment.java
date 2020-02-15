@@ -130,14 +130,19 @@ public class TopFragment extends Fragment {
         appVersion = getString(R.string.appVersion);
         appProcVersion = getString(R.string.appProcVersion);
 
-        registerReceiver();
-
         RootChecker rootChecker = new RootChecker();
         rootChecker.execute();
 
         if (onActivityChangeListener != null && getActivity() instanceof MainActivity) {
             onActivityChangeListener.onActivityChange((MainActivity) getActivity());
         }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        registerReceiver();
     }
 
     @Override
@@ -182,6 +187,8 @@ public class TopFragment extends Fragment {
     public void onStop() {
         super.onStop();
 
+        unRegisterReceiver();
+
         closePleaseWaitDialog();
 
         if (updateCheck != null && updateCheck.context != null)
@@ -191,8 +198,6 @@ public class TopFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-        unRegisterReceiver();
 
         stopInstallationTimer();
 
