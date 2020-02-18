@@ -58,6 +58,8 @@ public class BootCompleteReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(final Context context, Intent intent) {
 
+        Log.i(LOG_TAG, "Receive Boot Completed");
+
         final String BOOT_COMPLETE = "android.intent.action.BOOT_COMPLETED";
         this.context = context.getApplicationContext();
 
