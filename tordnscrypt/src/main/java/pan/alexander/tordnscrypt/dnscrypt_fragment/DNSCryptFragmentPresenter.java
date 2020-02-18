@@ -618,7 +618,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
         view.setDNSCryptStartButtonEnabled(false);
 
-        cleanLogFileNoRootMethod(context);
+        //cleanLogFileNoRootMethod(context);
 
 
         if (new PrefManager(context).getBoolPref("Tor Running")

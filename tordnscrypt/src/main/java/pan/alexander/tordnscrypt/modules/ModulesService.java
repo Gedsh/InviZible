@@ -33,6 +33,11 @@ import android.widget.Toast;
 
 import androidx.preference.PreferenceManager;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.DatagramSocket;
+import java.net.ServerSocket;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
@@ -43,6 +48,8 @@ import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
+import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
+import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -177,33 +184,33 @@ public class ModulesService extends Service {
         if (!modulesStatus.isUseModulesWithRoot()) {
             Thread previousDnsCryptThread = modulesKiller.getDnsCryptThread();
 
-            try {
-                if (previousDnsCryptThread != null && previousDnsCryptThread.isAlive()) {
-                    Log.w(LOG_TAG, "ModulesService previous DNSCrypt thread is alive! Try stop!");
-                    previousDnsCryptThread.interrupt();
-                    ModulesKiller.stopDNSCrypt(this);
-                    Toast.makeText(this, getText(R.string.please_wait), Toast.LENGTH_LONG).show();
-                    return;
-                }
-            } catch (Exception e) {
-                Log.e(LOG_TAG, "ModulesService previous DNSCrypt thread interrupt exception "
-                        + e.getMessage() + e.getCause() + "\nStop service");
-                System.exit(0);
+            if (previousDnsCryptThread != null && previousDnsCryptThread.isAlive()) {
+                changeDNSCryptStatus(previousDnsCryptThread);
+                return;
             }
-
         }
 
         new Thread(() -> {
 
             try {
+                Thread previousDnsCryptThread = checkPreviouslyRunningDNSCryptModule();
 
-                if (!stopPreviouslyRunningDNSCryptModule()) {
+                if (previousDnsCryptThread != null && previousDnsCryptThread.isAlive()) {
+                    changeDNSCryptStatus(previousDnsCryptThread);
                     return;
                 }
 
+                if (stopDNSCryptIfPortIsBusy()) {
+                    changeDNSCryptStatus(modulesKiller.getDnsCryptThread());
+                    return;
+                }
+
+                cleanLogFileNoRootMethod(pathVars.getAppDataDir() + "/logs/DnsCrypt.log",
+                        ModulesService.this.getResources().getString(R.string.tvDNSDefaultLog) + " " + DNSCryptVersion);
 
                 ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(ModulesService.this, mHandler, pathVars);
                 Thread dnsCryptThread = new Thread(modulesStarterHelper.getDNSCryptStarterRunnable());
+                dnsCryptThread.setName("DNSCryptThread");
                 dnsCryptThread.setDaemon(false);
                 try {
                     dnsCryptThread.setPriority(Thread.NORM_PRIORITY);
@@ -222,30 +229,20 @@ public class ModulesService extends Service {
         }).start();
     }
 
-    private boolean stopPreviouslyRunningDNSCryptModule() {
-        boolean result = false;
+    private Thread checkPreviouslyRunningDNSCryptModule() {
+
+        if (modulesStatus.isUseModulesWithRoot()) {
+            return null;
+        }
+
+        Thread result = null;
 
         try {
-            if (isDnsCryptSavedStateRunning() && modulesStatus.getDnsCryptState() != RESTARTING) {
-
-                Thread killerThread = new Thread(modulesKiller.getDNSCryptKillerRunnable());
-                killerThread.start();
-
-                while (killerThread.isAlive()) {
-                    killerThread.join();
-                }
-
-                makeDelay(5);
-
-                if (modulesStatus.getDnsCryptState() != RUNNING) {
-                    result = true;
-                }
-
-            } else {
-                result = true;
+            if (modulesStatus.getDnsCryptState() != RESTARTING) {
+                result = findThreadByName("DNSCryptThread");
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "DnsCrypt was unable to stop previously running module " + e.getMessage());
+            Log.e(LOG_TAG, "checkPreviouslyRunningDNSCryptModule exception " + e.getMessage());
         }
 
         return result;
@@ -274,6 +271,31 @@ public class ModulesService extends Service {
         }
     }
 
+    private boolean stopDNSCryptIfPortIsBusy() {
+        if (!isAvailable(pathVars.getDNSCryptPort())) {
+            try {
+                modulesStatus.setDnsCryptState(RESTARTING);
+
+                Thread killerThread = new Thread(modulesKiller.getDNSCryptKillerRunnable());
+                killerThread.start();
+
+                while (killerThread.isAlive()) {
+                    killerThread.join();
+                }
+
+                makeDelay(5);
+
+                if (modulesStatus.getDnsCryptState() == RUNNING) {
+                    return true;
+                }
+
+            } catch (InterruptedException e) {
+                Log.e(LOG_TAG, "ModulesService restartDNSCrypt join interrupted!");
+            }
+        }
+        return false;
+    }
+
     private void startTor() {
 
         if (modulesStatus.getTorState() == STOPPED) {
@@ -283,30 +305,32 @@ public class ModulesService extends Service {
         if (!modulesStatus.isUseModulesWithRoot()) {
             Thread previousTorThread = modulesKiller.getTorThread();
 
-            try {
-                if (previousTorThread != null && previousTorThread.isAlive()) {
-                    Log.w(LOG_TAG, "ModulesService previous Tor thread is alive! Try stop!");
-                    previousTorThread.interrupt();
-                    ModulesKiller.stopTor(this);
-                    Toast.makeText(this, getText(R.string.please_wait), Toast.LENGTH_LONG).show();
-                    return;
-                }
-            } catch (Exception e) {
-                Log.e(LOG_TAG, "ModulesService previous Tor thread interrupt exception "
-                        + e.getMessage() + e.getCause() + "\nStop service");
-                System.exit(0);
+            if (previousTorThread != null && previousTorThread.isAlive()) {
+                changeTorStatus(previousTorThread);
+                return;
             }
-
         }
 
         new Thread(() -> {
             try {
-                if (!stopPreviouslyRunningTorModule()) {
+                Thread previousTorThread = checkPreviouslyRunningTorModule();
+
+                if (previousTorThread != null && previousTorThread.isAlive()) {
+                    changeTorStatus(previousTorThread);
                     return;
                 }
 
+                if (stopTorIfPortsIsBusy()) {
+                    changeTorStatus(modulesKiller.getTorThread());
+                    return;
+                }
+
+                cleanLogFileNoRootMethod(pathVars.getAppDataDir() + "/logs/Tor.log",
+                        ModulesService.this.getResources().getString(R.string.tvTorDefaultLog) + " " + TorVersion);
+
                 ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(ModulesService.this, mHandler, pathVars);
                 Thread torThread = new Thread(modulesStarterHelper.getTorStarterRunnable());
+                torThread.setName("TorThread");
                 torThread.setDaemon(false);
                 try {
                     torThread.setPriority(Thread.NORM_PRIORITY);
@@ -325,30 +349,20 @@ public class ModulesService extends Service {
 
     }
 
-    private boolean stopPreviouslyRunningTorModule() {
-        boolean result = false;
+    private Thread checkPreviouslyRunningTorModule() {
+
+        if (modulesStatus.isUseModulesWithRoot()) {
+            return null;
+        }
+
+        Thread result = null;
 
         try {
-            if (isTorSavedStateRunning() && modulesStatus.getTorState() != RESTARTING) {
-
-                Thread killerThread = new Thread(modulesKiller.getTorKillerRunnable());
-                killerThread.start();
-
-                while (killerThread.isAlive()) {
-                    killerThread.join();
-                }
-
-                makeDelay(5);
-
-                if (modulesStatus.getTorState() != RUNNING) {
-                    result = true;
-                }
-
-            } else {
-                result = true;
+            if (modulesStatus.getTorState() != RESTARTING) {
+                result = findThreadByName("TorThread");
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "Tor was unable to stop previously running module " + e.getMessage());
+            Log.e(LOG_TAG, "checkPreviouslyRunningTorModule exception " + e.getMessage());
         }
 
         return result;
@@ -377,6 +391,36 @@ public class ModulesService extends Service {
         }
     }
 
+    private boolean stopTorIfPortsIsBusy() {
+        boolean stopRequired = !isAvailable(pathVars.getTorDNSPort())
+                || !isAvailable(pathVars.getTorSOCKSPort())
+                || !isAvailable(pathVars.getTorTransPort() )
+                || !isAvailable(pathVars.getTorHTTPTunnelPort());
+
+        if (stopRequired) {
+            try {
+                modulesStatus.setTorState(RESTARTING);
+
+                Thread killerThread = new Thread(modulesKiller.getTorKillerRunnable());
+                killerThread.start();
+
+                while (killerThread.isAlive()) {
+                    killerThread.join();
+                }
+
+                makeDelay(5);
+
+                if (modulesStatus.getTorState() == RUNNING) {
+                    return true;
+                }
+
+            } catch (InterruptedException e) {
+                Log.e(LOG_TAG, "ModulesService restartTor join interrupted!");
+            }
+        }
+        return false;
+    }
+
     private void startITPD() {
 
         if (modulesStatus.getItpdState() == STOPPED) {
@@ -386,30 +430,31 @@ public class ModulesService extends Service {
         if (!modulesStatus.isUseModulesWithRoot()) {
             Thread previousITPDThread = modulesKiller.getItpdThread();
 
-            try {
-                if (previousITPDThread != null && previousITPDThread.isAlive()) {
-                    Log.w(LOG_TAG, "ModulesService previous ITPD thread is alive! Try stop!");
-                    previousITPDThread.interrupt();
-                    ModulesKiller.stopITPD(this);
-                    Toast.makeText(this, getText(R.string.please_wait), Toast.LENGTH_LONG).show();
-                    return;
-                }
-            } catch (Exception e) {
-                Log.e(LOG_TAG, "ModulesService previous ITPD thread interrupt exception "
-                        + e.getMessage() + e.getCause() + "\nStop service");
-                System.exit(0);
+            if (previousITPDThread != null && previousITPDThread.isAlive()) {
+                changeITPDStatus(previousITPDThread);
+                return;
             }
-
         }
 
         new Thread(() -> {
             try {
-                if (!stopPreviouslyRunningITPDModule()) {
+                Thread previousITPDThread = checkPreviouslyRunningITPDModule();
+
+                if (previousITPDThread != null && previousITPDThread.isAlive()) {
+                    changeITPDStatus(previousITPDThread);
                     return;
                 }
 
+                if (stopITPDIfPortsIsBusy()) {
+                    changeITPDStatus(modulesKiller.getItpdThread());
+                    return;
+                }
+
+                cleanLogFileNoRootMethod(pathVars.getAppDataDir() + "/logs/i2pd.log", "");
+
                 ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(ModulesService.this, mHandler, pathVars);
                 Thread itpdThread = new Thread(modulesStarterHelper.getITPDStarterRunnable());
+                itpdThread.setName("ITPDThread");
                 itpdThread.setDaemon(false);
                 try {
                     itpdThread.setPriority(Thread.NORM_PRIORITY);
@@ -427,30 +472,20 @@ public class ModulesService extends Service {
         }).start();
     }
 
-    private boolean stopPreviouslyRunningITPDModule() {
-        boolean result = false;
+    private Thread checkPreviouslyRunningITPDModule() {
+
+        if (modulesStatus.isUseModulesWithRoot()) {
+            return null;
+        }
+
+        Thread result = null;
 
         try {
-            if (isITPDSavedStateRunning() && modulesStatus.getItpdState() != RESTARTING) {
-
-                Thread killerThread = new Thread(modulesKiller.getITPDKillerRunnable());
-                killerThread.start();
-
-                while (killerThread.isAlive()) {
-                    killerThread.join();
-                }
-
-                makeDelay(5);
-
-                if (modulesStatus.getItpdState() != RUNNING) {
-                    result = true;
-                }
-
-            } else {
-                result = true;
+            if (modulesStatus.getItpdState() != RESTARTING) {
+                result = findThreadByName("ITPDThread");
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "I2PD was unable to stop previously running module " + e.getMessage());
+            Log.e(LOG_TAG, "checkPreviouslyRunningITPDModule exception " + e.getMessage());
         }
 
         return result;
@@ -477,6 +512,37 @@ public class ModulesService extends Service {
         } else {
             modulesStatus.setItpdState(STOPPED);
         }
+    }
+
+    private boolean stopITPDIfPortsIsBusy() {
+        boolean stopRequired = !isAvailable(pathVars.getITPDSOCKSPort())
+                || !isAvailable(pathVars.getITPDHttpProxyPort())
+                || !isAvailable(pathVars.getITPDTeleSocksProxyPort1())
+                || !isAvailable(pathVars.getITPDTeleSocksProxyPort2())
+                || !isAvailable(pathVars.getITPDTeleSocksProxyPort3());
+
+        if (stopRequired) {
+            try {
+                modulesStatus.setItpdState(RESTARTING);
+
+                Thread killerThread = new Thread(modulesKiller.getITPDKillerRunnable());
+                killerThread.start();
+
+                while (killerThread.isAlive()) {
+                    killerThread.join();
+                }
+
+                makeDelay(5);
+
+                if (modulesStatus.getItpdState() == RUNNING) {
+                    return true;
+                }
+
+            } catch (InterruptedException e) {
+                Log.e(LOG_TAG, "ModulesService restartITPD join interrupted!");
+            }
+        }
+        return false;
     }
 
     private void stopDNSCrypt() {
@@ -708,4 +774,88 @@ public class ModulesService extends Service {
         }
     }
 
+    public Thread findThreadByName(String threadName) {
+        Thread currentThread = Thread.currentThread();
+        ThreadGroup threadGroup = getRootThreadGroup(currentThread);
+        int allActiveThreads = threadGroup.activeCount();
+        Thread[] allThreads = new Thread[allActiveThreads];
+        threadGroup.enumerate(allThreads);
+
+        for (Thread thread : allThreads) {
+            String name = thread.getName();
+            //Log.i(LOG_TAG, "Current threads " + name);
+            if (name.equals(threadName)) {
+                Log.i(LOG_TAG, "Found old module thread " + name);
+                return thread;
+            }
+        }
+
+        return null;
+    }
+
+    private ThreadGroup getRootThreadGroup(Thread thread) {
+        ThreadGroup rootGroup = thread.getThreadGroup();
+        while (rootGroup != null) {
+            ThreadGroup parentGroup = rootGroup.getParent();
+            if (parentGroup == null) {
+                break;
+            }
+            rootGroup = parentGroup;
+        }
+        return rootGroup;
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+
+        if (!modulesStatus.isUseModulesWithRoot()) {
+            ModulesAux.stopModulesIfRunning(this);
+        }
+
+        super.finalize();
+    }
+
+    private boolean isAvailable(String portStr) {
+
+        int port = Integer.parseInt(portStr);
+
+        ServerSocket ss = null;
+        DatagramSocket ds = null;
+        try {
+            ss = new ServerSocket(port);
+            ss.setReuseAddress(true);
+            ds = new DatagramSocket(port);
+            ds.setReuseAddress(true);
+            return true;
+        } catch (IOException ignored) {
+        } finally {
+            if (ds != null) {
+                ds.close();
+            }
+
+            if (ss != null) {
+                try {
+                    ss.close();
+                } catch (IOException ignored) {
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private void cleanLogFileNoRootMethod(String logFilePath, String text) {
+        try {
+            File f = new File(pathVars.getAppDataDir() + "/logs");
+
+            if (f.mkdirs() && f.setReadable(true) && f.setWritable(true))
+                Log.i(LOG_TAG, "log dir created");
+
+            PrintWriter writer = new PrintWriter(logFilePath, "UTF-8");
+            writer.println(text);
+            writer.close();
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Unable to create dnsCrypt log file " + e.getMessage());
+        }
+    }
 }

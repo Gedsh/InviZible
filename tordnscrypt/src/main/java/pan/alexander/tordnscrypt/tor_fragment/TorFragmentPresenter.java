@@ -549,7 +549,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
         view.setTorStartButtonEnabled(false);
 
-        cleanLogFileNoRootMethod(context);
+        //cleanLogFileNoRootMethod(context);
 
         Thread thread = new Thread(() -> {
 

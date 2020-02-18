@@ -124,3 +124,6 @@
 **InviZible Pro beta 0.6.3**
 * Implemented Fix TTL option based on the local VPN (root is still required).
 * Fixes.
+
+**InviZible Pro beta 0.6.4**
+* Bug fixes and stability improvements.
