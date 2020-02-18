@@ -453,7 +453,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
         view.setITPDStartButtonEnabled(false);
 
-        cleanLogFileNoRootMethod();
+        //cleanLogFileNoRootMethod();
 
         if (!new PrefManager(Objects.requireNonNull(context)).getBoolPref("I2PD Running")
                 && new PrefManager(Objects.requireNonNull(context)).getBoolPref("Tor Running")
