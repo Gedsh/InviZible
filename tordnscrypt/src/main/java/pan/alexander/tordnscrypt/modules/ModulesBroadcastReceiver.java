@@ -62,6 +62,8 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
     private int currentNetworkHash = 0;
     private static final String apStateFilterAction = "android.net.wifi.WIFI_AP_STATE_CHANGED";
     private static final String tetherStateFilterAction = "android.net.conn.TETHER_STATE_CHANGED";
+    private static final String shutdownFilterAction = "android.intent.action.ACTION_SHUTDOWN";
+    private static final String powerOFFFilterAction = "android.intent.action.QUICKBOOT_POWEROFF";
 
     public ModulesBroadcastReceiver(Context context) {
         this.context = context;
@@ -69,23 +71,27 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (intent.getAction() == null) {
+        String action = intent.getAction();
+
+        if (action == null) {
             return;
         }
 
-        if (intent.getAction().equals(PowerManager.ACTION_DEVICE_IDLE_MODE_CHANGED)
+        if (action.equalsIgnoreCase(PowerManager.ACTION_DEVICE_IDLE_MODE_CHANGED)
                 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 
             Log.i(LOG_TAG, "ModulesBroadcastReceiver Received " + intent);
 
             idleStateChanged(context);
 
-        } else if (intent.getAction().equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
+        } else if (action.equalsIgnoreCase(ConnectivityManager.CONNECTIVITY_ACTION)) {
             connectivityStateChanged(intent);
-        } else if (intent.getAction().equals(apStateFilterAction)) {
+        } else if (action.equalsIgnoreCase(apStateFilterAction)) {
             apStateChanged();
-        } else if (intent.getAction().equals(tetherStateFilterAction)) {
+        } else if (action.equalsIgnoreCase(tetherStateFilterAction)) {
             tetherStateChanged();
+        } else if (action.equalsIgnoreCase(powerOFFFilterAction) || action.equalsIgnoreCase(shutdownFilterAction)) {
+            powerOFFDetected();
         }
     }
 
@@ -94,6 +100,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
         registerConnectivityChanges();
         registerAPisOn();
         registerUSBModemIsOn();
+        registerPowerOFF();
     }
 
     void unregisterReceivers() {
@@ -145,6 +152,14 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
         IntentFilter apStateChanged = new IntentFilter();
         apStateChanged.addAction(tetherStateFilterAction);
         context.registerReceiver(this, apStateChanged);
+        receiverRegistered = true;
+    }
+
+    private void registerPowerOFF() {
+        IntentFilter powerOFF = new IntentFilter();
+        powerOFF.addAction(shutdownFilterAction);
+        powerOFF.addAction(powerOFFFilterAction);
+        context.registerReceiver(this, powerOFF);
         receiverRegistered = true;
     }
 
@@ -279,6 +294,14 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
         modulesStatus.setIptablesRulesUpdateRequested(true);
 
         Log.i(LOG_TAG, "ModulesBroadcastReceiver USB modem state is " + (Tethering.usbTetherOn ? "ON" : "OFF"));
+    }
+
+    private void powerOFFDetected() {
+        new PrefManager(context).setBoolPref("DNSCrypt Running", false);
+        new PrefManager(context).setBoolPref("Tor Running", false);
+        new PrefManager(context).setBoolPref("I2PD Running", false);
+
+        ModulesAux.stopModulesIfRunning(context);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
