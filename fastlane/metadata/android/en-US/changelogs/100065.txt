@@ -1,0 +1,2 @@
+**InviZible Pro beta 0.6.5**
+* Fixed modules stop in the background.

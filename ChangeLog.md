@@ -127,3 +127,6 @@
 
 **InviZible Pro beta 0.6.4**
 * Bug fixes and stability improvements.
+
+**InviZible Pro beta 0.6.5**
+* Fixed modules stop in the background.
