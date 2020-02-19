@@ -52,10 +52,6 @@ public class AppExitDetectService extends Service {
 
         FileOperations.removeAllOnFileOperationsListeners();
 
-        if (!ModulesStatus.getInstance().isUseModulesWithRoot()) {
-            ModulesAux.stopModulesIfRunning(this);
-        }
-
         Log.i(LOG_TAG, "App Exit");
     }
 }

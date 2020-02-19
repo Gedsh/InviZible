@@ -805,16 +805,6 @@ public class ModulesService extends Service {
         return rootGroup;
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-
-        if (!modulesStatus.isUseModulesWithRoot()) {
-            ModulesAux.stopModulesIfRunning(this);
-        }
-
-        super.finalize();
-    }
-
     private boolean isAvailable(String portStr) {
 
         int port = Integer.parseInt(portStr);
