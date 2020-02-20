@@ -98,6 +98,8 @@ public class AccelerateDevelop implements BillingClientStateListener {
 
                 Log.i(LOG_TAG, "Launch billing");
 
+                new PrefManager(activity).setBoolPref("helper_no_show_pending_purchase", false);
+
                 BillingFlowParams billingFlowParams = BillingFlowParams.newBuilder()
                         .setSkuDetails(mSkuDetailsMap.get(skuId))
                         .build();
@@ -252,7 +254,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
                                     });
                                 }
                             } else {
-                                Log.i(LOG_TAG, "Purchase not acknowledged " + purchase.getSku() + billingResult.getDebugMessage());
+                                Log.i(LOG_TAG, "Purchase is not acknowledged " + purchase.getSku() + " " + billingResult.getDebugMessage());
                             }
                         }
                     });
