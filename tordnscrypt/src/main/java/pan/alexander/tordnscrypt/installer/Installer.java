@@ -304,11 +304,13 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         ArrayList<String> prepared = new ArrayList<>();
 
         for (String line : lines) {
-            if (line.contains("block_unqualified")) {
+            /*if (line.contains("block_unqualified")) {
                 line = "block_unqualified = false";
             } else if (line.contains("block_undelegated")) {
                 line = "block_undelegated = false";
-            } else if (line.contains("blacklist_file")) {
+            } else */
+
+            if (line.contains("blacklist_file")) {
                 line = "";
             } else if (line.contains("whitelist_file")) {
                 line = "";
