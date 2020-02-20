@@ -368,9 +368,9 @@ public class TopFragment extends Fragment {
             int currentTorVersion = Integer.parseInt(currentTorVersionStr.replaceAll("\\D+", ""));
             int currentITPDVersion = Integer.parseInt(currentITPDVersionStr.replaceAll("\\D+", ""));
 
-            if ((currentDNSCryptVersion < Integer.parseInt(DNSCryptVersion.replaceAll("\\D+", ""))
+            if (((currentDNSCryptVersion < Integer.parseInt(DNSCryptVersion.replaceAll("\\D+", ""))
                     || currentTorVersion < Integer.parseInt(TorVersion.replaceAll("\\D+", ""))
-                    || currentITPDVersion < Integer.parseInt(ITPDVersion.replaceAll("\\D+", ""))
+                    || currentITPDVersion < Integer.parseInt(ITPDVersion.replaceAll("\\D+", "")))
                     && !new PrefManager(getActivity()).getBoolPref("UpdateNotAllowed"))) {
                 if (getFragmentManager() != null) {
                     DialogFragment updateCore = UpdateModulesDialogFragment.getInstance();

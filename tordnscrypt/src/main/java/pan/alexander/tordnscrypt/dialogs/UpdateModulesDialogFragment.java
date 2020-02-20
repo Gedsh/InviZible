@@ -23,8 +23,8 @@ import androidx.fragment.app.DialogFragment;
 import androidx.appcompat.app.AlertDialog;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.modules.ModulesKiller;
 
 public class UpdateModulesDialogFragment extends ExtendedDialogFragment {
 
@@ -49,25 +49,7 @@ public class UpdateModulesDialogFragment extends ExtendedDialogFragment {
                         return;
                     }
 
-                    boolean dnsCryptRunning = new PrefManager(getActivity()).getBoolPref("DNSCrypt Running");
-                    boolean torRunning = new PrefManager(getActivity()).getBoolPref("Tor Running");
-                    boolean itpdRunning = new PrefManager(getActivity()).getBoolPref("I2PD Running");
-
-                    if (dnsCryptRunning) {
-                        new PrefManager(getActivity()).setBoolPref("DNSCrypt Running", false);
-                        ModulesKiller.stopDNSCrypt(getActivity());
-                    }
-
-                    if (torRunning) {
-                        new PrefManager(getActivity()).setBoolPref("Tor Running", false);
-                        ModulesKiller.stopTor(getActivity());
-                    }
-
-                    if (itpdRunning) {
-                        new PrefManager(getActivity()).setBoolPref("I2PD Running", false);
-                        ModulesKiller.stopITPD(getActivity());
-                    }
-
+                    ModulesAux.stopModulesIfRunning(getActivity());
 
                     if (getActivity() != null) {
                         new PrefManager(getActivity()).setBoolPref("DNSCrypt Installed",false);

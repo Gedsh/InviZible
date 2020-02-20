@@ -149,6 +149,10 @@ class RestoreHelper extends Installer {
     private void refreshInstallationParameters() {
         PathVars pathVars = PathVars.getInstance(activity);
         pathVars.saveAppUID(activity);
+
+        new PrefManager(activity).setBoolPref("DNSCrypt Running", false);
+        new PrefManager(activity).setBoolPref("Tor Running", false);
+        new PrefManager(activity).setBoolPref("I2PD Running", false);
     }
 
     private void extractBackup() throws Exception {
