@@ -3,7 +3,9 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/gedsh/invizible?style=plastic)
 ![GitHub Releases](https://img.shields.io/github/downloads/gedsh/invizible/latest/total?color=blue&style=plastic)
 
-## [Download the latest release](https://github.com/Gedsh/InviZible/releases/latest)
+## [Google Play version](https://play.google.com/store/apps/details?id=pan.alexander.tordnscrypt.gp)
+
+## [Download the latest beta version](https://github.com/Gedsh/InviZible/releases/latest)
 
 ## Android application for Internet privacy and security
 
