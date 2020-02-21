@@ -78,7 +78,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
     public void installModules() {
 
         try {
-            if (mainActivity == null) {
+            if (mainActivity == null || mainActivity.isFinishing()) {
                 throw new IllegalStateException("Installer: MainActivity is null, interrupt installation");
             }
 
@@ -107,21 +107,52 @@ public class Installer implements TopFragment.OnActivityChangeListener {
                 throw new IllegalStateException("Installation interrupted");
             }
 
+            if (mainActivity == null || mainActivity.isFinishing()) {
+                throw new IllegalStateException("Installer: MainActivity is null, interrupt installation");
+            }
+
             unRegisterReceiver(activity);
 
             removeInstallationDirsIfExists();
             createLogsDir();
 
+            if (mainActivity == null || mainActivity.isFinishing()) {
+                throw new IllegalStateException("Installer: MainActivity is null, interrupt installation");
+            }
+
             mainActivity.runOnUiThread(installerUIChanger.stopModulesProgressBarIndeterminate());
 
             extractDNSCrypt();
+
+            if (mainActivity == null || mainActivity.isFinishing()) {
+                throw new IllegalStateException("Installer: MainActivity is null, interrupt installation");
+            }
+
             extractTor();
+
+            if (mainActivity == null || mainActivity.isFinishing()) {
+                throw new IllegalStateException("Installer: MainActivity is null, interrupt installation");
+            }
+
             extractITPD();
+
+            if (mainActivity == null || mainActivity.isFinishing()) {
+                throw new IllegalStateException("Installer: MainActivity is null, interrupt installation");
+            }
+
             chmodExtractedDirs();
+
+            if (mainActivity == null || mainActivity.isFinishing()) {
+                throw new IllegalStateException("Installer: MainActivity is null, interrupt installation");
+            }
 
             mainActivity.runOnUiThread(installerUIChanger.startModulesProgressBarIndeterminate());
 
             correctAppDir();
+
+            if (mainActivity == null || mainActivity.isFinishing()) {
+                throw new IllegalStateException("Installer: MainActivity is null, interrupt installation");
+            }
 
             mainActivity.runOnUiThread(installerUIChanger.stopModulesProgressBarIndeterminate());
             mainActivity.runOnUiThread(installerUIChanger.setModulesStartButtonsEnabled());
@@ -130,9 +161,17 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
             savePreferencesModulesInstalled(true);
 
+            if (mainActivity == null || mainActivity.isFinishing()) {
+                throw new IllegalStateException("Installer: MainActivity is null, interrupt installation");
+            }
+
             refreshModulesStatus(activity);
 
             TimeUnit.SECONDS.sleep(1);
+
+            if (mainActivity == null || mainActivity.isFinishing()) {
+                throw new IllegalStateException("Installer: MainActivity is null, interrupt installation");
+            }
 
             mainActivity.runOnUiThread(installerUIChanger.showDialogAfterInstallation());
 
@@ -142,11 +181,13 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
             savePreferencesModulesInstalled(false);
 
-            if (mainActivity != null) {
-                mainActivity.runOnUiThread(installerUIChanger.setModulesStatusTextError());
-                mainActivity.runOnUiThread(installerUIChanger.setModulesStartButtonsDisabled());
-                mainActivity.runOnUiThread(installerUIChanger.stopModulesProgressBarIndeterminate());
-                mainActivity.runOnUiThread(installerUIChanger.lockDrawerMenu(false));
+            if (mainActivity != null && !mainActivity.isFinishing()) {
+                try {
+                    mainActivity.runOnUiThread(installerUIChanger.setModulesStatusTextError());
+                    mainActivity.runOnUiThread(installerUIChanger.setModulesStartButtonsDisabled());
+                    mainActivity.runOnUiThread(installerUIChanger.stopModulesProgressBarIndeterminate());
+                    mainActivity.runOnUiThread(installerUIChanger.lockDrawerMenu(false));
+                } catch (Exception ignored){}
             }
         }
 
