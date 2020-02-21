@@ -30,9 +30,6 @@ import android.widget.Toast;
 
 import androidx.fragment.app.FragmentManager;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Timer;
@@ -53,7 +50,6 @@ import pan.alexander.tordnscrypt.vpn.ResourceRecord;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPN;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
-import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
@@ -68,7 +64,6 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
     private int displayLogPeriod = -1;
 
-    private String appDataDir;
     private DNSCryptFragmentView view;
     private Timer timer = null;
     private volatile OwnFileReader logFile;
@@ -88,7 +83,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         }
 
         PathVars pathVars = PathVars.getInstance(context);
-        appDataDir = pathVars.getAppDataDir();
+        String appDataDir = pathVars.getAppDataDir();
 
         modulesStatus = ModulesStatus.getInstance();
 
@@ -102,17 +97,9 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             if (modulesStatus.getDnsCryptState() == STOPPING) {
                 setDnsCryptStopping();
 
-                if (logFile != null) {
-                    view.setDNSCryptLogViewText(Html.fromHtml(logFile.readLastLines()));
-                }
-
                 displayLog(1000);
             } else if (isSavedDNSStatusRunning(context) || modulesStatus.getDnsCryptState() == RUNNING) {
                 setDnsCryptRunning();
-
-                if (logFile != null) {
-                    view.setDNSCryptLogViewText(Html.fromHtml(logFile.readLastLines()));
-                }
 
                 if (modulesStatus.getDnsCryptState() != RESTARTING) {
                     modulesStatus.setDnsCryptState(RUNNING);
@@ -661,21 +648,6 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         }
 
         view.setDNSCryptProgressBarIndeterminate(true);
-    }
-
-    private void cleanLogFileNoRootMethod(Context context) {
-        try {
-            File f = new File(appDataDir + "/logs");
-
-            if (f.mkdirs() && f.setReadable(true) && f.setWritable(true))
-                Log.i(LOG_TAG, "log dir created");
-
-            PrintWriter writer = new PrintWriter(appDataDir + "/logs/DnsCrypt.log", "UTF-8");
-            writer.println(context.getResources().getString(R.string.tvDNSDefaultLog) + " " + DNSCryptVersion);
-            writer.close();
-        } catch (IOException e) {
-            Log.e(LOG_TAG, "Unable to create dnsCrypt log file " + e.getMessage());
-        }
     }
 
 }

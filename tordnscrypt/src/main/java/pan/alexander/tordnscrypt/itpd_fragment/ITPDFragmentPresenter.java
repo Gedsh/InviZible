@@ -30,9 +30,7 @@ import androidx.preference.PreferenceManager;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Objects;
@@ -99,13 +97,9 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
             if (modulesStatus.getItpdState() == STOPPING){
                 setITPDStopping();
 
-                view.setITPDInfoLogText(Html.fromHtml(logFile.readLastLines()));
-
                 displayLog(10000);
             } else if (isSavedITPDStatusRunning(context) || modulesStatus.getItpdState() == RUNNING) {
                 setITPDRunning();
-
-                view.setITPDInfoLogText(Html.fromHtml(logFile.readLastLines()));
 
                 if (modulesStatus.getItpdState() != RESTARTING) {
                     modulesStatus.setItpdState(RUNNING);
@@ -553,21 +547,6 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
         }
 
         ModulesKiller.stopITPD(context);
-    }
-
-    private void cleanLogFileNoRootMethod() {
-        try {
-            File f = new File(appDataDir + "/logs");
-
-            if (f.mkdirs() && f.setReadable(true) && f.setWritable(true))
-                Log.i(LOG_TAG, "log dir created");
-
-            PrintWriter writer = new PrintWriter(appDataDir + "/logs/i2pd.log", "UTF-8");
-            writer.println("");
-            writer.close();
-        } catch (IOException e) {
-            Log.e(LOG_TAG, "Unable to create i2pd log file " + e.getMessage());
-        }
     }
 
     private void copyCertificatesNoRootMethod(Context context) {
