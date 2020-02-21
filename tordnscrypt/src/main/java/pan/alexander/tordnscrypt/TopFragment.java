@@ -48,7 +48,6 @@ import java.util.TimerTask;
 import eu.chainfire.libsuperuser.Shell;
 import pan.alexander.tordnscrypt.dialogs.AgreementDialog;
 import pan.alexander.tordnscrypt.dialogs.AskAccelerateDevelop;
-import pan.alexander.tordnscrypt.dialogs.InstallAppDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NewUpdateDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.dialogs.UpdateModulesDialogFragment;
@@ -396,11 +395,6 @@ public class TopFragment extends Fragment {
         PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences_tor, true);
         PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences_i2pd, true);
 
-        if (getFragmentManager() != null) {
-            DialogFragment installAll = InstallAppDialogFragment.getInstance();
-            installAll.show(getFragmentManager(), "InstallAppDialogFragment");
-        }
-
         //For core update purposes
         new PrefManager(getActivity()).setStrPref("DNSCryptVersion", DNSCryptVersion);
         new PrefManager(getActivity()).setStrPref("TorVersion", TorVersion);
@@ -411,6 +405,8 @@ public class TopFragment extends Fragment {
         editor.putBoolean("pref_common_tor_tethering", false);
         editor.putBoolean("pref_common_itpd_tethering", false);
         editor.apply();
+
+        startInstallation();
     }
 
     private void setSUInfo(List<String> fSuResult, String fSuVersion) {
@@ -463,7 +459,7 @@ public class TopFragment extends Fragment {
         }
     }
 
-    public void startInstallation() {
+    private void startInstallation() {
 
         stopInstallationTimer();
 
