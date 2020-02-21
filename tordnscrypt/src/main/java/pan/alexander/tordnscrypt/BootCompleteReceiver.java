@@ -160,6 +160,10 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
                 stopRefreshTorUnlockIPs(context);
 
+            } else {
+                startStopRestartModules(false, false, false);
+
+                stopRefreshTorUnlockIPs(context);
             }
         }
     }
