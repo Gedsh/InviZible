@@ -96,10 +96,11 @@ public class MainActivity extends LangAppCompatActivity
 
     public static DialogInterface modernDialog = null;
     private static final int CODE_IS_AP_ON = 100;
-    private static final int CODE_IS_VPN_ALLOWED = 101;
+    private static final int CODE_IS_VPN_ALLOWED = 110;
 
     public boolean childLockActive = false;
     public AccelerateDevelop accelerateDevelop;
+    private volatile boolean vpnRequested;
     private Timer timer;
     private Handler handler;
     private TopFragment topFragment;
@@ -172,6 +173,8 @@ public class MainActivity extends LangAppCompatActivity
     @Override
     public void onResume() {
         super.onResume();
+
+        vpnRequested = false;
 
         handler = new Handler();
 
@@ -286,10 +289,6 @@ public class MainActivity extends LangAppCompatActivity
         return locked;
     }
 
-    public TopFragment getTopFragment() {
-        return topFragment;
-    }
-
     public DNSCryptRunFragment getDNSCryptRunFragment() {
         return dNSCryptRunFragment;
     }
@@ -381,6 +380,7 @@ public class MainActivity extends LangAppCompatActivity
                 menuRootMode.setChecked(true);
                 modulesStatus.setMode(ROOT_MODE);
                 mode = ROOT_MODE;
+                new PrefManager(this).setStrPref("OPERATION_MODE", mode.toString());
             }
 
             if (mode == ROOT_MODE && fixTTL) {
@@ -416,10 +416,12 @@ public class MainActivity extends LangAppCompatActivity
                 menuVPNMode.setChecked(true);
                 modulesStatus.setMode(VPN_MODE);
                 mode = VPN_MODE;
+                new PrefManager(this).setStrPref("OPERATION_MODE", mode.toString());
             } else {
                 menuProxiesMode.setChecked(true);
                 modulesStatus.setMode(PROXY_MODE);
                 mode = PROXY_MODE;
+                new PrefManager(this).setStrPref("OPERATION_MODE", mode.toString());
             }
 
             if (mode == PROXY_MODE) {
@@ -669,6 +671,7 @@ public class MainActivity extends LangAppCompatActivity
         if (requestCode == CODE_IS_AP_ON) {
             checkHotspotState();
         } if (requestCode == CODE_IS_VPN_ALLOWED) {
+            vpnRequested = false;
             startVPNService(resultCode);
         }
     }
@@ -886,11 +889,14 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     public void prepareVPNService() {
+        Log.i(LOG_TAG, "MainActivity prepare VPN Service");
+
         final Intent prepareIntent = VpnService.prepare(this);
 
         if (prepareIntent == null) {
             startVPNService(RESULT_OK);
-        } else {
+        } else if (!vpnRequested){
+            vpnRequested = true;
             startActivityForResult(prepareIntent, CODE_IS_VPN_ALLOWED);
         }
 
@@ -904,6 +910,7 @@ public class MainActivity extends LangAppCompatActivity
             Toast.makeText(this, getText(R.string.vpn_mode_active), Toast.LENGTH_SHORT).show();
         } else if (resultCode == RESULT_CANCELED) {
             Toast.makeText(this, getText(R.string.vpn_mode_off), Toast.LENGTH_LONG).show();
+            ModulesAux.stopModulesIfRunning(this);
         }
     }
 

@@ -25,6 +25,8 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.preference.PreferenceManager;
 
+import java.util.concurrent.locks.ReentrantLock;
+
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
@@ -38,6 +40,8 @@ import static pan.alexander.tordnscrypt.vpn.service.ServiceVPN.EXTRA_COMMAND;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPN.EXTRA_REASON;
 
 public class ServiceVPNHelper {
+
+    private static final ReentrantLock reentrantLock = new ReentrantLock();
 
     public static void start(String reason, Context context) {
         Intent intent = new Intent(context, ServiceVPN.class);
@@ -80,6 +84,9 @@ public class ServiceVPNHelper {
     }
 
     public static void prepareVPNServiceIfRequired(Activity activity, ModulesStatus modulesStatus) {
+
+        reentrantLock.lock();
+
         OperationMode operationMode = modulesStatus.getMode();
 
         boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
@@ -91,6 +98,8 @@ public class ServiceVPNHelper {
                 && !prefs.getBoolean("VPNServiceEnabled", false)) {
             ((MainActivity) activity).prepareVPNService();
         }
+
+        reentrantLock.unlock();
     }
 
     private static void sendIntent(Context context, Intent intent) {
