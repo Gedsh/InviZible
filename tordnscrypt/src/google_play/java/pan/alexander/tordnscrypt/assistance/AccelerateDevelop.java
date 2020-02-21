@@ -124,7 +124,9 @@ public class AccelerateDevelop implements BillingClientStateListener {
             List<Purchase> purchasesList = queryPurchases(); //query for purchases
 
             //if the purchase has already been made to give the goods
-            handlePurchases(purchasesList);
+            if (purchasesList != null) {
+                handlePurchases(purchasesList);
+            }
         }
     }
 
@@ -203,6 +205,11 @@ public class AccelerateDevelop implements BillingClientStateListener {
 
         for (int i = 0; i < purchasesList.size(); i++) {
             Purchase purchase = purchasesList.get(i);
+
+            if (purchase == null) {
+                continue;
+            }
+
             String purchaseId = purchase.getSku();
             int purchaseState = purchase.getPurchaseState();
             boolean acknowledged = purchase.isAcknowledged();
