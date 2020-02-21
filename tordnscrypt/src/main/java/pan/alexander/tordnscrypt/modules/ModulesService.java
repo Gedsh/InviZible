@@ -44,7 +44,6 @@ import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
@@ -752,18 +751,6 @@ public class ModulesService extends Service {
                 Log.i(LOG_TAG, "ModulesService unregister receiver exception " + e.getMessage());
             }
         }
-    }
-
-    private boolean isDnsCryptSavedStateRunning() {
-        return new PrefManager(this).getBoolPref("DNSCrypt Running");
-    }
-
-    private boolean isTorSavedStateRunning() {
-        return new PrefManager(this).getBoolPref("Tor Running");
-    }
-
-    private boolean isITPDSavedStateRunning() {
-        return new PrefManager(this).getBoolPref("I2PD Running");
     }
 
     private void makeDelay(int sec) {

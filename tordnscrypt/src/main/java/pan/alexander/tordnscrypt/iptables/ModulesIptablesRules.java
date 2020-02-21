@@ -30,7 +30,6 @@ import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 
 import static pan.alexander.tordnscrypt.iptables.Tethering.usbModemAddressesRange;
-import static pan.alexander.tordnscrypt.iptables.Tethering.vpnInterfaceName;
 import static pan.alexander.tordnscrypt.iptables.Tethering.wifiAPAddressesRange;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;

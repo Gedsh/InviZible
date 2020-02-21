@@ -47,8 +47,7 @@ public class Tethering {
     static final String usbModemAddressesRange = "192.168.42.0/24";
     private static final String addressVPN = "10.1.10.1";
 
-    static String vpnInterfaceName = "tun0";
-
+    private static String vpnInterfaceName = "tun0";
     private static String wifiAPInterfaceName = "wlan0";
     private static String usbModemInterfaceName = "rndis0";
 
@@ -631,7 +630,7 @@ public class Tethering {
         final String addressesRangeUSB = "192.168.42.";
         final String addressesRangeWiFi = "192.168.43.";
 
-        this.usbTetherOn = false;
+        usbTetherOn = false;
 
         try {
             for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
@@ -669,7 +668,7 @@ public class Tethering {
                     }
 
                     if (hostAddress.contains(addressesRangeUSB)) {
-                        this.usbTetherOn = true;
+                        usbTetherOn = true;
                         usbModemInterfaceName = intf.getName();
                         Log.i(LOG_TAG, "USB Modem interface name " + usbModemInterfaceName);
                     }
@@ -679,10 +678,10 @@ public class Tethering {
             Log.e(LOG_TAG, "Tethering SocketException " + e.getMessage() + " " + e.getCause());
         }
 
-        if (this.usbTetherOn && !new PrefManager(context).getBoolPref("ModemIsON")) {
+        if (usbTetherOn && !new PrefManager(context).getBoolPref("ModemIsON")) {
             new PrefManager(context).setBoolPref("ModemIsON", true);
             ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
-        } else if (!this.usbTetherOn && new PrefManager(context).getBoolPref("ModemIsON")) {
+        } else if (!usbTetherOn && new PrefManager(context).getBoolPref("ModemIsON")) {
             new PrefManager(context).setBoolPref("ModemIsON", false);
             ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
         }
