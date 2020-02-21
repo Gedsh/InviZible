@@ -46,6 +46,8 @@ import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
+import static pan.alexander.tordnscrypt.utils.RootExecService.COMMAND_RESULT;
+import static pan.alexander.tordnscrypt.utils.RootExecService.InstallerMark;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class Installer implements TopFragment.OnActivityChangeListener {
@@ -88,25 +90,24 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             mainActivity.runOnUiThread(installerUIChanger.startModulesProgressBarIndeterminate());
 
 
+            registerReceiver(activity);
+
             if (ModulesStatus.getInstance().isRootAvailable()
                     && ModulesStatus.getInstance().isUseModulesWithRoot()) {
-                registerReceiver(activity);
-
                 stopAllRunningModulesWithRootCommand();
-
-                if (!waitUntilAllModulesStopped()) {
-                    throw new IllegalStateException("Unexpected interruption");
-                }
-
-                if (interruptInstallation) {
-                    throw new IllegalStateException("Installation interrupted");
-                }
-
-                unRegisterReceiver(activity);
-
             } else {
                 stopAllRunningModulesWithNoRootCommand();
             }
+
+            if (!waitUntilAllModulesStopped()) {
+                throw new IllegalStateException("Unexpected interruption");
+            }
+
+            if (interruptInstallation) {
+                throw new IllegalStateException("Installation interrupted");
+            }
+
+            unRegisterReceiver(activity);
 
             removeInstallationDirsIfExists();
             createLogsDir();
@@ -372,16 +373,49 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         Intent intent = new Intent(activity, RootExecService.class);
         intent.setAction(RootExecService.RUN_COMMAND);
         intent.putExtra("Commands", rootCommands);
-        intent.putExtra("Mark", RootExecService.InstallerMark);
+        intent.putExtra("Mark", InstallerMark);
         RootExecService.performAction(activity, intent);
     }
 
     protected void stopAllRunningModulesWithNoRootCommand() {
-        new PrefManager(activity).setBoolPref("DNSCrypt Running", false);
-        new PrefManager(activity).setBoolPref("Tor Running", false);
-        new PrefManager(activity).setBoolPref("I2PD Running", false);
+        new Thread(() -> {
+            ModulesAux.stopModulesIfRunning(activity);
 
-        ModulesAux.stopModulesIfRunning(activity);
+            int counter = 15;
+
+            while (counter > 0) {
+                if (activity != null
+                        && !isDnsCryptSavedStateRunning()
+                        && !isTorSavedStateRunning()
+                        && !isITPDSavedStateRunning()) {
+                    sendModulesStopResult("checkModulesRunning");
+                    break;
+                } else {
+                    try {
+                        TimeUnit.SECONDS.sleep(1);
+                        counter--;
+                    } catch (InterruptedException ignored) {
+                        counter = 0;
+                        break;
+                    }
+                }
+            }
+
+            if (counter <= 0) {
+                sendModulesStopResult("");
+            }
+
+        }).start();
+
+
+    }
+
+    private void sendModulesStopResult(String result) {
+        RootCommands comResult = new RootCommands(new String[]{result});
+        Intent intent = new Intent(COMMAND_RESULT);
+        intent.putExtra("CommandsResult", comResult);
+        intent.putExtra("Mark", InstallerMark);
+        activity.sendBroadcast(intent);
     }
 
     protected void createLogsDir() {
@@ -405,11 +439,13 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         } else {
             ModulesVersions.getInstance().refreshVersions(activity);
         }
+
+        new PrefManager(activity).setBoolPref("refresh_main_activity", true);
     }
 
     protected void registerReceiver(Activity activity) {
         br = new InstallerReceiver();
-        IntentFilter intentFilter = new IntentFilter(RootExecService.COMMAND_RESULT);
+        IntentFilter intentFilter = new IntentFilter(COMMAND_RESULT);
         activity.registerReceiver(br, intentFilter);
 
         Log.i(LOG_TAG, "Installer: registerReceiver OK");
@@ -436,5 +472,17 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         this.activity = mainActivity;
         this.mainActivity = mainActivity;
         installerUIChanger.setMainActivity(mainActivity);
+    }
+
+    private boolean isDnsCryptSavedStateRunning() {
+        return new PrefManager(activity).getBoolPref("DNSCrypt Running");
+    }
+
+    private boolean isTorSavedStateRunning() {
+        return new PrefManager(activity).getBoolPref("Tor Running");
+    }
+
+    private boolean isITPDSavedStateRunning() {
+        return new PrefManager(activity).getBoolPref("I2PD Running");
     }
 }

@@ -62,24 +62,23 @@ class RestoreHelper extends Installer {
                     throw new IllegalStateException("No file to restore " + pathBackup + "/InvizibleBackup.zip");
                 }
 
+                registerReceiver(activity);
+
                 if (ModulesStatus.getInstance().isUseModulesWithRoot()) {
-                    registerReceiver(activity);
-
                     stopAllRunningModulesWithRootCommand();
-
-                    if (!waitUntilAllModulesStopped()) {
-                        throw new IllegalStateException("Unexpected interruption");
-                    }
-
-                    if (interruptInstallation) {
-                        throw new IllegalStateException("Installation interrupted");
-                    }
-
-                    unRegisterReceiver(activity);
-
                 } else {
                     stopAllRunningModulesWithNoRootCommand();
                 }
+
+                if (!waitUntilAllModulesStopped()) {
+                    throw new IllegalStateException("Unexpected interruption");
+                }
+
+                if (interruptInstallation) {
+                    throw new IllegalStateException("Installation interrupted");
+                }
+
+                unRegisterReceiver(activity);
 
                 removeInstallationDirsIfExists();
                 createLogsDir();
