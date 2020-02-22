@@ -406,7 +406,10 @@ public class ModulesKiller {
                 Log.i(LOG_TAG, "Kill " + module + " with root: result false");
             }
         } else {
-            killWithPid(signal, pid, delaySec);
+
+            if (!pid.isEmpty()) {
+                killWithPid(signal, pid, delaySec);
+            }
 
             if (thread != null) {
                 result = !thread.isAlive();
