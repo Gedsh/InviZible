@@ -77,7 +77,6 @@
             android:fontFamily="sans-serif-medium"
             android:gravity="bottom"
             android:scrollbars="vertical"
-            android:text="@string/tvTorDefaultLog"
             android:textSize="@dimen/fragment_log_text_size"
             android:typeface="monospace" />
     </androidx.appcompat.widget.LinearLayoutCompat>

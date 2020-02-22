@@ -34,7 +34,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:fontFamily="sans-serif-medium"
-                    android:text="@string/tvTorDefaultLog"
                     android:textIsSelectable="true"
                     android:textSize="@dimen/fragment_log_text_size"
                     android:typeface="monospace" />

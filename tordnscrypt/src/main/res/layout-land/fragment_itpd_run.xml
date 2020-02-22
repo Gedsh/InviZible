@@ -76,7 +76,6 @@
             android:layout_marginBottom="9dp"
             android:fontFamily="sans-serif-medium"
             android:scrollbars="vertical"
-            android:text="@string/tvITPDDefaultLog"
             android:textSize="@dimen/fragment_log_text_size"
             android:typeface="monospace" />
         <androidx.appcompat.widget.AppCompatTextView
