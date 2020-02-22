@@ -133,3 +133,6 @@
 
 **InviZible Pro beta 0.6.6**
 * Bug fixes and performance improvements.
+
+**InviZible Pro beta 0.6.7**
+* Bug fixes
