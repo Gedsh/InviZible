@@ -288,6 +288,8 @@ public class ModulesService extends Service {
                     return true;
                 }
 
+                modulesStatus.setDnsCryptState(STARTING);
+
             } catch (InterruptedException e) {
                 Log.e(LOG_TAG, "ModulesService restartDNSCrypt join interrupted!");
             }
@@ -413,6 +415,8 @@ public class ModulesService extends Service {
                     return true;
                 }
 
+                modulesStatus.setTorState(STARTING);
+
             } catch (InterruptedException e) {
                 Log.e(LOG_TAG, "ModulesService restartTor join interrupted!");
             }
@@ -536,6 +540,8 @@ public class ModulesService extends Service {
                 if (modulesStatus.getItpdState() == RUNNING) {
                     return true;
                 }
+
+                modulesStatus.setItpdState(STARTING);
 
             } catch (InterruptedException e) {
                 Log.e(LOG_TAG, "ModulesService restartITPD join interrupted!");
