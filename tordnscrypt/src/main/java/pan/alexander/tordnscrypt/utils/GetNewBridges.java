@@ -51,7 +51,7 @@ import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
-import pan.alexander.tordnscrypt.settings.PreferencesTorBridges;
+import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 

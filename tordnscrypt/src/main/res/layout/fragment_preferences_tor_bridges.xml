@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".settings.PreferencesTorBridges">
+    tools:context=".settings.tor_bridges.PreferencesTorBridges">
 
     <androidx.appcompat.widget.LinearLayoutCompat
         android:id="@+id/linearLayout6"

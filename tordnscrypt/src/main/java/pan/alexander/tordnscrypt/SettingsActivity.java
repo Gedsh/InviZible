@@ -38,7 +38,7 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.PreferencesCommonFragment;
 import pan.alexander.tordnscrypt.settings.dnscrypt_servers.PreferencesDNSCryptServers;
 import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
-import pan.alexander.tordnscrypt.settings.PreferencesTorBridges;
+import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges;
 import pan.alexander.tordnscrypt.settings.PreferencesTorFragment;
 import pan.alexander.tordnscrypt.settings.SettingsParser;
 import pan.alexander.tordnscrypt.settings.ShowLogFragment;
