@@ -186,7 +186,7 @@ public class PathVars {
         return itpdPath;
     }
 
-    String getObfsPath() {
+    public String getObfsPath() {
         return obfsPath;
     }
 
@@ -199,7 +199,8 @@ public class PathVars {
     }
 
     public String getITPDHttpProxyPort() {
-        return preferences.getString("HTTP proxy port", "4444");
+        String itpdHttpProxyPort = preferences.getString("HTTP proxy port", "4444");
+        return itpdHttpProxyPort.replaceAll(".+:", "");
     }
 
     public String getTorTransPort() {
@@ -208,7 +209,11 @@ public class PathVars {
     }
 
     public String getDNSCryptFallbackRes() {
-        return preferences.getString("fallback_resolver", "9.9.9.9");
+        String dnsCryptFallbackResolver = preferences.getString("fallback_resolver", "9.9.9.9");
+        if (dnsCryptFallbackResolver.contains(":")) {
+            dnsCryptFallbackResolver = dnsCryptFallbackResolver.substring(0, dnsCryptFallbackResolver.indexOf(":"));
+        }
+        return dnsCryptFallbackResolver;
     }
 
     public String getTorDNSPort() {
@@ -216,14 +221,17 @@ public class PathVars {
     }
 
     public String getTorSOCKSPort() {
-        return preferences.getString("SOCKSPort", "9050");
+        String torSocksPort = preferences.getString("SOCKSPort", "9050");
+        return torSocksPort.replaceAll(".+:", "");
     }
 
     public String getTorHTTPTunnelPort() {
-        return preferences.getString("HTTPTunnelPort", "8118");
+        String torHttpTunnelPort = preferences.getString("HTTPTunnelPort", "8118");
+        return torHttpTunnelPort.replaceAll(".+:", "");
     }
 
     public String getITPDSOCKSPort() {
-        return preferences.getString("Socks proxy port", "4447");
+        String itpdSocksPort = preferences.getString("Socks proxy port", "4447");
+        return itpdSocksPort.replaceAll(".+:", "");
     }
 }
