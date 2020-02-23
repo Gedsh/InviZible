@@ -344,6 +344,8 @@ class ModulesStarterHelper {
         modulesStatus.setTorState(STOPPED);
         modulesStatus.setItpdState(STOPPED);
 
+        cleanModulesFolders();
+
         handler.postDelayed(() -> Toast.makeText(service, R.string.top_fragment_address_already_in_use, Toast.LENGTH_LONG).show(), 5000);
 
         handler.postDelayed(() -> System.exit(0), 10000);
@@ -359,10 +361,19 @@ class ModulesStarterHelper {
 
         ModulesKiller.forceCloseApp(PathVars.getInstance(service));
 
+        cleanModulesFolders();
+
         if (!useModulesWithRoot) {
             handler.postDelayed(() -> Toast.makeText(service, R.string.top_fragment_address_already_in_use, Toast.LENGTH_LONG).show(), 5000);
             handler.postDelayed(() -> System.exit(0), 10000);
         }
+    }
+
+    private void cleanModulesFolders() {
+        new Thread(() -> {
+            FileOperations.deleteDirSynchronous(service, appDataDir + "/tor_data");
+            FileOperations.deleteDirSynchronous(service, appDataDir + "/i2pd_data");
+        }).start();
     }
 
     private void saveModulesAreStopped() {
