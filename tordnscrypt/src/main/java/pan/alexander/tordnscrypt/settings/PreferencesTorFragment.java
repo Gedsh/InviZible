@@ -144,14 +144,20 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         super.onStop();
 
         try {
-            if (key_tor.contains("ExcludeExitNodes"))
-                val_tor.set(key_tor.indexOf("ExcludeExitNodes"),sp.getString("ExcludeExitNodesCountries",""));
-            if (key_tor.contains("ExitNodes"))
-                val_tor.set(key_tor.indexOf("ExitNodes"),sp.getString("ExitNodesCountries",""));
-            if (key_tor.contains("EntryNodes"))
-                val_tor.set(key_tor.indexOf("EntryNodes"),sp.getString("EntryNodesCountries",""));
-            if (key_tor.contains("ExcludeNodes"))
-                val_tor.set(key_tor.indexOf("ExcludeNodes"),sp.getString("ExcludeNodesCountries",""));
+            String excludeExitNodes = sp.getString("ExcludeExitNodesCountries","");
+            String exitNodes = sp.getString("ExitNodesCountries","");
+            String entryNodes = sp.getString("EntryNodesCountries","");
+            String excludeNodes = sp.getString("ExcludeNodesCountries","");
+
+            if (key_tor.contains("ExcludeExitNodes") && !excludeExitNodes.isEmpty()) {
+                val_tor.set(key_tor.indexOf("ExcludeExitNodes"), excludeExitNodes);
+            } else if (key_tor.contains("ExitNodes") && !exitNodes.isEmpty()) {
+                val_tor.set(key_tor.indexOf("ExitNodes"), exitNodes);
+            } else if (key_tor.contains("EntryNodes") && !entryNodes.isEmpty()) {
+                val_tor.set(key_tor.indexOf("EntryNodes"), entryNodes);
+            } else if (key_tor.contains("ExcludeNodes") && !excludeNodes.isEmpty()) {
+                val_tor.set(key_tor.indexOf("ExcludeNodes"), excludeNodes);
+            }
         } catch (Exception e){
             Log.e(LOG_TAG,"PreferenceTorFragment onStop exception "+e.getMessage());
             Toast.makeText(getActivity(),R.string.wrong,Toast.LENGTH_LONG).show();
