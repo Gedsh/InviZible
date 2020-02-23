@@ -135,4 +135,7 @@
 * Bug fixes and performance improvements.
 
 **InviZible Pro beta 0.6.7**
-* Bug fixes
+* Bug fixes.
+
+**InviZible Pro beta 0.6.8**
+* Fixed rare bugs related to tor bridges, hotspot, tor nodes selection.
