@@ -141,7 +141,10 @@ public class AccelerateDevelop implements BillingClientStateListener {
         String signature = new PrefManager(activity).getStrPref("gpSign");
 
         if (!signedData.isEmpty() && !signature.isEmpty() && verifyValidSignature(signedData, signature)) {
+            Log.w(LOG_TAG, "BillingServiceDisconnected but saved signature is correct. Allowing...");
             payComplete();
+        } else {
+            Log.w(LOG_TAG, "BillingServiceDisconnected. Skipping...");
         }
     }
 
@@ -204,80 +207,87 @@ public class AccelerateDevelop implements BillingClientStateListener {
         }
 
         for (int i = 0; i < purchasesList.size(); i++) {
-            Purchase purchase = purchasesList.get(i);
 
-            if (purchase == null) {
-                continue;
-            }
+            try {
 
-            String purchaseId = purchase.getSku();
-            int purchaseState = purchase.getPurchaseState();
-            boolean acknowledged = purchase.isAcknowledged();
+                Purchase purchase = purchasesList.get(i);
 
-            if(TextUtils.equals(mSkuId, purchaseId) && purchaseState == Purchase.PurchaseState.PURCHASED) {
+                if (purchase == null) {
+                    continue;
+                }
 
-                if (!verifyValidSignature(purchase.getOriginalJson(), purchase.getSignature())) {
-                    if (!acknowledged && activity != null) {
-                        activity.runOnUiThread(() -> {
-                            DialogFragment dialogFragment = NotificationDialogFragment.newInstance(R.string.wrong_purchase_signature_gp);
-                            if (dialogFragment != null && activity != null) {
-                                dialogFragment.show(activity.getSupportFragmentManager(), "wrong_purchase_signature");
+                String purchaseId = purchase.getSku();
+                int purchaseState = purchase.getPurchaseState();
+                boolean acknowledged = purchase.isAcknowledged();
+
+                if(TextUtils.equals(mSkuId, purchaseId) && purchaseState == Purchase.PurchaseState.PURCHASED) {
+
+                    if (!verifyValidSignature(purchase.getOriginalJson(), purchase.getSignature())) {
+                        if (!acknowledged && activity != null) {
+                            activity.runOnUiThread(() -> {
+                                DialogFragment dialogFragment = NotificationDialogFragment.newInstance(R.string.wrong_purchase_signature_gp);
+                                if (dialogFragment != null && activity != null) {
+                                    dialogFragment.show(activity.getSupportFragmentManager(), "wrong_purchase_signature");
+                                }
+                            });
+                        }
+
+                        Log.w(LOG_TAG, "Got a purchase: " + purchase + "; but signature is bad. Skipping...");
+                        return;
+                    }
+
+                    if (!acknowledged) {
+                        AcknowledgePurchaseParams acknowledgePurchaseParams =
+                                AcknowledgePurchaseParams.newBuilder()
+                                        .setPurchaseToken(purchase.getPurchaseToken())
+                                        .build();
+                        mBillingClient.acknowledgePurchase(acknowledgePurchaseParams, new AcknowledgePurchaseResponseListener() {
+                            @Override
+                            public void onAcknowledgePurchaseResponse(BillingResult billingResult) {
+                                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                                    Log.i(LOG_TAG, "Purchase is acknowledged " + purchase.getSku());
+
+                                    if (activity != null) {
+                                        activity.runOnUiThread(() -> {
+
+                                            if (activity == null) {
+                                                return;
+                                            }
+
+                                            String thanks = activity.getString(R.string.thanks_for_donate);
+                                            if (!thanks.contains(".")) {
+                                                return;
+                                            }
+
+                                            DialogFragment dialogFragment = NotificationDialogFragment.newInstance(
+                                                    thanks.substring(0, thanks.indexOf(".")));
+                                            if (dialogFragment != null && activity != null) {
+                                                dialogFragment.show(activity.getSupportFragmentManager(), "thanks_for_donate");
+                                            }
+                                        });
+                                    }
+                                } else {
+                                    Log.i(LOG_TAG, "Purchase is not acknowledged " + purchase.getSku() + " " + billingResult.getDebugMessage());
+                                }
                             }
                         });
                     }
 
-                    Log.w(LOG_TAG, "Got a purchase: " + purchase + "; but signature is bad. Skipping...");
+                    payComplete();
                     return;
+                } else if (purchaseState == Purchase.PurchaseState.PENDING) {
+                    Log.i(LOG_TAG, "Purchase is pending " + purchase.getSku());
+
+                    NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                            activity, activity.getText(R.string.pending_purchase).toString()
+                                    + " " + purchase.getSku()
+                                    + " " + purchase.getOrderId(), "pending_purchase");
+                    if (notificationHelper != null) {
+                        notificationHelper.show(activity.getSupportFragmentManager(), NotificationHelper.TAG_HELPER);
+                    }
                 }
-
-                if (!acknowledged) {
-                    AcknowledgePurchaseParams acknowledgePurchaseParams =
-                            AcknowledgePurchaseParams.newBuilder()
-                                    .setPurchaseToken(purchase.getPurchaseToken())
-                                    .build();
-                    mBillingClient.acknowledgePurchase(acknowledgePurchaseParams, new AcknowledgePurchaseResponseListener() {
-                        @Override
-                        public void onAcknowledgePurchaseResponse(BillingResult billingResult) {
-                            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                                Log.i(LOG_TAG, "Purchase is acknowledged " + purchase.getSku());
-
-                                if (activity != null) {
-                                    activity.runOnUiThread(() -> {
-
-                                        if (activity == null) {
-                                            return;
-                                        }
-
-                                        String thanks = activity.getString(R.string.thanks_for_donate);
-                                        if (!thanks.contains(".")) {
-                                            return;
-                                        }
-
-                                        DialogFragment dialogFragment = NotificationDialogFragment.newInstance(
-                                                thanks.substring(0, thanks.indexOf(".")));
-                                        if (dialogFragment != null && activity != null) {
-                                            dialogFragment.show(activity.getSupportFragmentManager(), "thanks_for_donate");
-                                        }
-                                    });
-                                }
-                            } else {
-                                Log.i(LOG_TAG, "Purchase is not acknowledged " + purchase.getSku() + " " + billingResult.getDebugMessage());
-                            }
-                        }
-                    });
-                }
-
-                payComplete();
-            } else if (purchaseState == Purchase.PurchaseState.PENDING) {
-                Log.i(LOG_TAG, "Purchase is pending " + purchase.getSku());
-
-                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                        activity, activity.getText(R.string.pending_purchase).toString()
-                                + " " + purchase.getSku()
-                                + " " + purchase.getOrderId(), "pending_purchase");
-                if (notificationHelper != null) {
-                    notificationHelper.show(activity.getSupportFragmentManager(), NotificationHelper.TAG_HELPER);
-                }
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "AccelerateDevelop handlePurchase Exception " + e.getMessage() + " " + e.getCause());
             }
         }
     }
