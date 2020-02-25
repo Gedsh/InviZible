@@ -117,9 +117,6 @@ include ':tordnscrypt'
 It is expected that you can solve build problems yourself, so there is no support for building. 
 If you cannot build yourself, there are prebuilt versions of **InviZible Pro** available [here](https://github.com/Gedsh/InviZible/releases/latest).
 
-For application signing, you can use your signature. But without the original signature, you will see a warning about this.
-All features will continue to work as with original signature in any case.
-
 #### Translating
 
 If you would like to translate this application into other languages,
