@@ -561,7 +561,9 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
         File certificateFolderDir = new File(certificateFolder);
 
-        if (certificateFolderDir.isDirectory() && Objects.requireNonNull(certificateFolderDir.listFiles()).length > 0) {
+        if (certificateFolderDir.isDirectory()
+                && certificateFolderDir.listFiles() != null
+                && Objects.requireNonNull(certificateFolderDir.listFiles()).length > 0) {
             return;
         }
 

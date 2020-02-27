@@ -437,9 +437,9 @@ public class ModulesKiller {
     private void killWithPid(String signal, String pid, int delay) {
         try {
             if (signal.isEmpty()) {
-                android.os.Process.sendSignal(Integer.valueOf(pid), 15);
+                android.os.Process.sendSignal(Integer.parseInt(pid), 15);
             } else {
-                android.os.Process.killProcess(Integer.valueOf(pid));
+                android.os.Process.killProcess(Integer.parseInt(pid));
             }
             makeDelay(delay);
         } catch (Exception e) {
