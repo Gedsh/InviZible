@@ -678,7 +678,7 @@ public class FileOperations {
 
         reentrantLock.lock();
 
-        List<String> lines = null;
+        List<String> lines = new LinkedList<>();
 
         try {
 
@@ -699,8 +699,6 @@ public class FileOperations {
             } else {
                 throw new IllegalStateException("readTextFileSynchronous no file " + filePath);
             }
-
-            lines = new LinkedList<>();
 
             try (FileInputStream fstream = new FileInputStream(filePath);
                  BufferedReader br = new BufferedReader(new InputStreamReader(fstream))) {
