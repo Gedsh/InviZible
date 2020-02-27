@@ -3,9 +3,11 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/gedsh/invizible?style=plastic)
 ![GitHub Releases](https://img.shields.io/github/downloads/gedsh/invizible/latest/total?color=blue&style=plastic)
 
-## [Google Play version](https://play.google.com/store/apps/details?id=pan.alexander.tordnscrypt.gp)
+### [Google Play stable version](https://play.google.com/store/apps/details?id=pan.alexander.tordnscrypt.gp)
 
-## [Download the latest beta version](https://github.com/Gedsh/InviZible/releases/latest)
+### [Download the latest beta version](https://github.com/Gedsh/InviZible/releases/latest)
+
+### [IzzyOnDroid F-Droid beta version](https://apt.izzysoft.de/fdroid/index/apk/pan.alexander.tordnscrypt)
 
 ## Android application for Internet privacy and security
 
@@ -136,6 +138,18 @@ InviZible Pro uses:
 
 This product is produced independently from the **Tor®**, **DNSCrypt**, **Purple I2P** software 
 and carries no guarantee from The Above Projects about quality, suitability or anything else.
+
+## Donations
+
+**Bitcoin**: 1Ds4DTm32Dx7suEB7Fc6u94PdQpaxhYv6Z
+
+**Bitcoin Cache**: qzl4w4ahh7na2z23056qawwdyuclkgty5gc4q8tw88
+
+**USD PAX**: 0xdA1Dd53FE6501140E3Dcd5134323dfccF20aD536
+
+**Ether**: 0xdA1Dd53FE6501140E3Dcd5134323dfccF20aD536
+
+**Stellar**: GBID6I3VYR4NIFLZWI3MEQH3M2H72COC3HQDI5WMYYQGAC3TE55TSKAX
 
 ## License
 
