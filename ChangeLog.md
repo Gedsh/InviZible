@@ -139,3 +139,11 @@
 
 **InviZible Pro beta 0.6.8**
 * Fixed rare bugs related to tor bridges, hotspot, tor nodes selection.
+
+**InviZible Pro beta 0.6.9**
+* Update Purple I2P to 2.30.0.
+* Remove dnswarden servers from the default settings.
+* Fix modules autostart on some devices.
+* Add request to force close the application.
+* Fix DNS leak on some devices.
+* Other fixes.
