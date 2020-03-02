@@ -28,6 +28,7 @@ import android.text.Html;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 
 import java.util.ArrayList;
@@ -37,6 +38,7 @@ import java.util.TimerTask;
 
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
@@ -537,11 +539,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             ModulesAux.requestModulesStatusUpdate(context);
 
             if (fragmentManager != null) {
-                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                        context, context.getText(R.string.helper_dnscrypt_stopped).toString(), "dnscrypt_suddenly_stopped");
-                if (notificationHelper != null) {
-                    notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
-                }
+                DialogFragment notification = NotificationDialogFragment.newInstance(R.string.helper_dnscrypt_stopped);
+                notification.show(fragmentManager, "NotificationDialogFragment");
             }
 
             Log.e(LOG_TAG, context.getText(R.string.helper_dnscrypt_stopped).toString());

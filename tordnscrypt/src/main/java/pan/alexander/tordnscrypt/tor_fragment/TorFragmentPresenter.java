@@ -28,6 +28,7 @@ import android.text.Html;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
 
@@ -39,6 +40,7 @@ import java.util.TimerTask;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
+import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
@@ -268,11 +270,8 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
             ModulesAux.requestModulesStatusUpdate(context);
 
             if (view.getFragmentFragmentManager() != null) {
-                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                        context, context.getText(R.string.helper_tor_stopped).toString(), "tor_suddenly_stopped");
-                if (notificationHelper != null) {
-                    notificationHelper.show(view.getFragmentFragmentManager(), NotificationHelper.TAG_HELPER);
-                }
+                DialogFragment notification = NotificationDialogFragment.newInstance(R.string.helper_tor_stopped);
+                notification.show(view.getFragmentFragmentManager(), "NotificationDialogFragment");
             }
 
             Log.e(LOG_TAG, context.getText(R.string.helper_tor_stopped).toString());
@@ -378,7 +377,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
             return;
         }
 
-        int perc = Integer.valueOf(bootstrapPerc);
+        int perc = Integer.parseInt(bootstrapPerc);
 
         if (0 <= perc && perc < 100) {
 

@@ -26,6 +26,7 @@ import android.text.Html;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.fragment.app.DialogFragment;
 import androidx.preference.PreferenceManager;
 
 import java.io.BufferedReader;
@@ -39,7 +40,7 @@ import java.util.TimerTask;
 
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
+import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
@@ -300,11 +301,8 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
             ModulesAux.requestModulesStatusUpdate(context);
 
             if (view.getFragmentFragmentManager() != null) {
-                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                        context, context.getText(R.string.helper_itpd_stopped).toString(), "itpd_suddenly_stopped");
-                if (notificationHelper != null) {
-                    notificationHelper.show(view.getFragmentFragmentManager(), NotificationHelper.TAG_HELPER);
-                }
+                DialogFragment notification = NotificationDialogFragment.newInstance(R.string.helper_itpd_stopped);
+                notification.show(view.getFragmentFragmentManager(), "NotificationDialogFragment");
             }
 
             Log.e(LOG_TAG, context.getText(R.string.helper_itpd_stopped).toString());
