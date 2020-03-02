@@ -277,7 +277,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP || refreshPeriodHours == 0) {
                     return true;
                 }
-                if (Boolean.valueOf(newValue.toString())) {
+                if (Boolean.parseBoolean(newValue.toString())) {
 
                     ComponentName jobService = new ComponentName(getActivity(), GetIPsJobService.class);
                     JobInfo.Builder getIPsJobBuilder = new JobInfo.Builder(mJobId, jobService);
@@ -315,7 +315,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 if (modulesStatus.getMode() == ROOT_MODE) {
                     Preference prefTorSiteUnlock = findPreference("prefTorSiteUnlock");
                     if (prefTorSiteUnlock != null && prefTorAppUnlock != null) {
-                        if (Boolean.valueOf(newValue.toString())) {
+                        if (Boolean.parseBoolean(newValue.toString())) {
                             prefTorSiteUnlock.setEnabled(false);
                             prefTorAppUnlock.setEnabled(false);
                         } else {
@@ -325,7 +325,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                     }
                 } else if (modulesStatus.getMode() == VPN_MODE) {
                     if (prefTorAppUnlock != null) {
-                        if (Boolean.valueOf(newValue.toString())) {
+                        if (Boolean.parseBoolean(newValue.toString())) {
                             prefTorAppUnlock.setEnabled(false);
                         } else {
                             prefTorAppUnlock.setEnabled(true);
@@ -346,9 +346,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 if (appVersion.startsWith("g") && !accelerated) {
                     if (getFragmentManager() != null) {
                         DialogFragment notificationDialogFragment = NotificationDialogFragment.newInstance(R.string.only_premium_feature);
-                        if (notificationDialogFragment != null) {
-                            notificationDialogFragment.show(getFragmentManager(), "NotificationDialogFragment");
-                        }
+                        notificationDialogFragment.show(getFragmentManager(), "NotificationDialogFragment");
                     }
                     return false;
                 }

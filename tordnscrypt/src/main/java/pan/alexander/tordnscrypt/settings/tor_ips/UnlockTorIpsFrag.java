@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.settings;
+package pan.alexander.tordnscrypt.settings.tor_ips;
 /*
     This file is part of InviZible Pro.
 
@@ -59,6 +59,7 @@ import java.util.Set;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
+import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
@@ -69,9 +70,6 @@ import static pan.alexander.tordnscrypt.TopFragment.appSign;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
-/**
- * A simple {@link Fragment} subclass.
- */
 public class UnlockTorIpsFrag extends Fragment {
 
     private RecyclerView rvListHostip;
@@ -268,21 +266,7 @@ public class UnlockTorIpsFrag extends Fragment {
         super.onDestroy();
     }
 
-    public class HostIP {
-        boolean active;
-        boolean inputHost;
-        boolean inputIP;
-        String host;
-        String IP;
 
-        HostIP(String host, String IP, boolean inputHost, boolean inputIP, boolean active) {
-            this.host = host;
-            this.IP = IP;
-            this.inputHost = inputHost;
-            this.inputIP = inputIP;
-            this.active = active;
-        }
-    }
 
     public class HostIPAdapter extends RecyclerView.Adapter<UnlockTorIpsFrag.HostIPAdapter.HostIPViewHolder> {
 

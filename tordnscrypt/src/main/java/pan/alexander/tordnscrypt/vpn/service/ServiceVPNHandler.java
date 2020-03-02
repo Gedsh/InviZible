@@ -316,7 +316,7 @@ class ServiceVPNHandler extends Handler {
         }
     }
 
-    private class StartFailedException extends IllegalStateException {
+    private static class StartFailedException extends IllegalStateException {
         StartFailedException(String msg) {
             super(msg);
         }

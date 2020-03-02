@@ -44,7 +44,7 @@ import pan.alexander.tordnscrypt.settings.SettingsParser;
 import pan.alexander.tordnscrypt.settings.ShowLogFragment;
 import pan.alexander.tordnscrypt.settings.ShowRulesRecycleFrag;
 import pan.alexander.tordnscrypt.settings.UnlockTorAppsFragment;
-import pan.alexander.tordnscrypt.settings.UnlockTorIpsFrag;
+import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
