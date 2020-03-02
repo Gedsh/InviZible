@@ -362,8 +362,10 @@
     <string name="main_fragment_access_i2p">Доступ к I2P сайтам с помощью Purple I2P</string>
     <string name="tvTorConnecting">Подключение</string>
     <string name="pref_fast_exclude_apps_from_ipro_summ">Приложения, открывающиеся в обход InviZible</string>
-    <string name="top_fragment_address_already_in_use">Некоторые модули не были правильно остановлены в последний раз.
-        Попробуйте запустить снова. Экстренное завершение…</string>
+    <string name="ask_force_close_title">Внимание</string>
+    <string name="ask_force_close_text">InviZible Pro не может запустить %s! Пожалуйста, проверьте настройки %s или попробуйте Завершить приложение.
+        Если это не помогает, перезагрузите ваше устройство.</string>
+    <string name="ask_force_close_btn">Завершить</string>
     <string name="add_custom_server_title">Добавить сервер</string>
     <string name="add_custom_server_error">Неправильная конфигурация сервера. Пожалуйста, проверьте поле SDNS.</string>
     <string name="pref_tor_clean_module_folder">Очистить папку модуля</string>

@@ -48,11 +48,13 @@ import java.util.TimerTask;
 import eu.chainfire.libsuperuser.Shell;
 import pan.alexander.tordnscrypt.dialogs.AgreementDialog;
 import pan.alexander.tordnscrypt.dialogs.AskAccelerateDevelop;
+import pan.alexander.tordnscrypt.dialogs.AskForceClose;
 import pan.alexander.tordnscrypt.dialogs.NewUpdateDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.dialogs.UpdateModulesDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.RootCheckingProgressDialog;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
+import pan.alexander.tordnscrypt.modules.ModulesStarterHelper;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Registration;
 import pan.alexander.tordnscrypt.utils.RootExecService;
@@ -131,10 +133,6 @@ public class TopFragment extends Fragment {
 
         RootChecker rootChecker = new RootChecker();
         rootChecker.execute();
-
-        if (onActivityChangeListener != null && getActivity() instanceof MainActivity) {
-            onActivityChangeListener.onActivityChange((MainActivity) getActivity());
-        }
     }
 
     @Override
@@ -150,6 +148,11 @@ public class TopFragment extends Fragment {
         super.onResume();
 
         if (getActivity() != null) {
+
+            if (onActivityChangeListener != null && getActivity() instanceof MainActivity) {
+                onActivityChangeListener.onActivityChange((MainActivity) getActivity());
+            }
+
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
             rootIsAvailableSaved = rootIsAvailable = new PrefManager(getActivity()).getBoolPref("rootIsAvailable");
             runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
@@ -645,15 +648,17 @@ public class TopFragment extends Fragment {
 
     private void receiverOnReceive(Intent intent) {
 
-        if (getActivity() == null || !isBroadcastMatch(intent)) {
+        if (getActivity() == null || intent.getAction() == null || !isBroadcastMatch(intent)) {
             return;
         }
 
-        if (getActivity() instanceof MainActivity) {
+        if (intent.getAction().equals(UpdateService.UPDATE_RESULT) && getActivity() instanceof MainActivity) {
             ((MainActivity) getActivity()).showUpdateResultMessage();
+            refreshModulesVersions();
+        } else if (intent.getAction().equals(ModulesStarterHelper.ASK_FORCE_CLOSE) && getFragmentManager() != null) {
+            DialogFragment dialogFragment = AskForceClose.getInstance(intent.getStringExtra(ModulesStarterHelper.MODULE_NAME));
+            dialogFragment.show(getFragmentManager(), "AskForceClose");
         }
-
-        refreshModulesVersions();
     }
 
     private boolean isBroadcastMatch(Intent intent) {
@@ -667,7 +672,7 @@ public class TopFragment extends Fragment {
             return false;
         }
 
-        if (!action.equals(UpdateService.UPDATE_RESULT)) {
+        if (!action.equals(UpdateService.UPDATE_RESULT) && !action.equals(ModulesStarterHelper.ASK_FORCE_CLOSE)) {
             return false;
         }
 
@@ -686,14 +691,18 @@ public class TopFragment extends Fragment {
                 receiverOnReceive(intent);
             }
         };
-        IntentFilter intentFilter = new IntentFilter(UpdateService.UPDATE_RESULT);
-        getActivity().registerReceiver(br, intentFilter);
+
+        IntentFilter intentFilterUpdate = new IntentFilter(UpdateService.UPDATE_RESULT);
+        IntentFilter intentFilterForceClose = new IntentFilter(ModulesStarterHelper.ASK_FORCE_CLOSE);
+        getActivity().registerReceiver(br, intentFilterUpdate);
+        getActivity().registerReceiver(br, intentFilterForceClose);
     }
 
     private void unRegisterReceiver() {
         try {
             if (br != null && getActivity() != null) {
                 getActivity().unregisterReceiver(br);
+                br = null;
             }
         } catch (Exception ignored) {
         }

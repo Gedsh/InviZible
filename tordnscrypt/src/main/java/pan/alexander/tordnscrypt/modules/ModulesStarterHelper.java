@@ -30,12 +30,12 @@ import com.jrummyapps.android.shell.Shell;
 
 import java.util.List;
 
-import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
+import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DNSCRYPT_KEYWORD;
 import static pan.alexander.tordnscrypt.modules.ModulesService.ITPD_KEYWORD;
 import static pan.alexander.tordnscrypt.modules.ModulesService.TOR_KEYWORD;
@@ -43,14 +43,16 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.COMMAND_RESULT;
 import static pan.alexander.tordnscrypt.utils.RootExecService.DNSCryptRunFragmentMark;
 import static pan.alexander.tordnscrypt.utils.RootExecService.I2PDRunFragmentMark;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.RootExecService.TopFragmentMark;
 import static pan.alexander.tordnscrypt.utils.RootExecService.TorRunFragmentMark;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
-import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
-import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 
-class ModulesStarterHelper {
+public class ModulesStarterHelper {
+
+    public final static String ASK_FORCE_CLOSE = "pan.alexander.tordnscrypt.AskForceClose";
+    public final static String MODULE_NAME = "pan.alexander.tordnscrypt.ModuleName";
 
     private final ModulesService service;
     private final Handler handler;
@@ -115,23 +117,27 @@ class ModulesStarterHelper {
 
                 if (modulesStatus.getDnsCryptState() != STOPPING && modulesStatus.getDnsCryptState() != STOPPED) {
 
-                    handler.post(() -> Toast.makeText(service, "DNSCrypt Module Fault: "
-                            + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr()
-                            + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
+                    if (appVersion.startsWith("b")) {
+                        handler.post(() -> Toast.makeText(service, "DNSCrypt Module Fault: "
+                                + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr()
+                                + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
+                    }
+
+                    sendAskForceCloseBroadcast(service, "DNSCrypt");
                 }
 
                 Log.e(LOG_TAG, "Error DNSCrypt: "
                         + shellResult.exitCode + " ERR=" + shellResult.getStderr()
                         + " OUT=" + shellResult.getStdout());
 
-                if (modulesStatus.getDnsCryptState() == STARTING
+                /*if (modulesStatus.getDnsCryptState() == STARTING
                         || (modulesStatus.getDnsCryptState() == RUNNING && modulesStatus.isUseModulesWithRoot())) {
                     if (modulesStatus.isRootAvailable()) {
                         forceStopModulesWithRootMethod();
                     } else {
                         forceStopModulesWithService();
                     }
-                }
+                }*/
 
                 modulesStatus.setDnsCryptState(STOPPED);
 
@@ -182,29 +188,31 @@ class ModulesStarterHelper {
                 }
 
                 if (modulesStatus.getTorState() != STOPPING && modulesStatus.getTorState() != STOPPED) {
-                    handler.post(() -> Toast.makeText(service, "Tor Module Fault: " + shellResult.exitCode
-                            + "\n\n ERR = " + shellResult.getStderr()
-                            + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
-
-
-                }
-
-                Log.e(LOG_TAG, "Error Tor: " + shellResult.exitCode
-                        + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
-
-                if (modulesStatus.getTorState() == STARTING
-                        || (modulesStatus.getTorState() == RUNNING && modulesStatus.isUseModulesWithRoot())) {
-                    if (modulesStatus.isRootAvailable()) {
-                        forceStopModulesWithRootMethod();
-                    } else {
-                        forceStopModulesWithService();
+                    if (appVersion.startsWith("b")) {
+                        handler.post(() -> Toast.makeText(service, "Tor Module Fault: " + shellResult.exitCode
+                                + "\n\n ERR = " + shellResult.getStderr()
+                                + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
                     }
+
+                    sendAskForceCloseBroadcast(service, "Tor");
 
                     //Try to update Selinux context and UID once again
                     if (shellResult.exitCode == 1) {
                         modulesStatus.setContextUIDUpdateRequested(true);
                     }
                 }
+
+                Log.e(LOG_TAG, "Error Tor: " + shellResult.exitCode
+                        + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
+
+                /*if (modulesStatus.getTorState() == STARTING
+                        || (modulesStatus.getTorState() == RUNNING && modulesStatus.isUseModulesWithRoot())) {
+                    if (modulesStatus.isRootAvailable()) {
+                        forceStopModulesWithRootMethod();
+                    } else {
+                        forceStopModulesWithService();
+                    }
+                }*/
 
                 modulesStatus.setTorState(STOPPED);
 
@@ -261,22 +269,26 @@ class ModulesStarterHelper {
                 }
 
                 if (modulesStatus.getItpdState() != STOPPING && modulesStatus.getItpdState() != STOPPED) {
-                    handler.post(() -> Toast.makeText(service, "Purple I2P Module Fault: "
-                            + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr()
-                            + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
+                    if (appVersion.startsWith("b")) {
+                        handler.post(() -> Toast.makeText(service, "Purple I2P Module Fault: "
+                                + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr()
+                                + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
+                    }
+
+                    sendAskForceCloseBroadcast(service, "I2P");
                 }
 
                 Log.e(LOG_TAG, "Error ITPD: " + shellResult.exitCode + " ERR="
                         + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
 
-                if (modulesStatus.getItpdState() == STARTING
+                /*if (modulesStatus.getItpdState() == STARTING
                         || (modulesStatus.getItpdState() == RUNNING && modulesStatus.isUseModulesWithRoot())) {
                     if (modulesStatus.isRootAvailable()) {
                         forceStopModulesWithRootMethod();
                     } else {
                         forceStopModulesWithService();
                     }
-                }
+                }*/
 
                 modulesStatus.setItpdState(STOPPED);
 
@@ -329,56 +341,10 @@ class ModulesStarterHelper {
         service.sendBroadcast(intent);
     }
 
-    private void forceStopModulesWithService() {
-
-        if (modulesStatus.isUseModulesWithRoot()) {
-            return;
-        }
-
-        saveModulesAreStopped();
-
-        Log.e(LOG_TAG, "FORCE CLOSE ALL NO ROOT METHOD");
-
-        modulesStatus.setUseModulesWithRoot(true);
-        modulesStatus.setDnsCryptState(STOPPED);
-        modulesStatus.setTorState(STOPPED);
-        modulesStatus.setItpdState(STOPPED);
-
-        cleanModulesFolders();
-
-        handler.postDelayed(() -> Toast.makeText(service, R.string.top_fragment_address_already_in_use, Toast.LENGTH_LONG).show(), 5000);
-
-        handler.postDelayed(() -> System.exit(0), 10000);
-    }
-
-    private void forceStopModulesWithRootMethod() {
-
-        saveModulesAreStopped();
-
-        Log.e(LOG_TAG, "FORCE CLOSE ALL ROOT METHOD");
-
-        boolean useModulesWithRoot = modulesStatus.isUseModulesWithRoot();
-
-        ModulesKiller.forceCloseApp(PathVars.getInstance(service));
-
-        cleanModulesFolders();
-
-        if (!useModulesWithRoot) {
-            handler.postDelayed(() -> Toast.makeText(service, R.string.top_fragment_address_already_in_use, Toast.LENGTH_LONG).show(), 5000);
-            handler.postDelayed(() -> System.exit(0), 10000);
-        }
-    }
-
-    private void cleanModulesFolders() {
-        new Thread(() -> {
-            FileOperations.deleteDirSynchronous(service, appDataDir + "/tor_data");
-            FileOperations.deleteDirSynchronous(service, appDataDir + "/i2pd_data");
-        }).start();
-    }
-
-    private void saveModulesAreStopped() {
-        new PrefManager(service).setBoolPref("DNSCrypt Running", false);
-        new PrefManager(service).setBoolPref("Tor Running", false);
-        new PrefManager(service).setBoolPref("I2PD Running", false);
+    private void sendAskForceCloseBroadcast(Context context, String module) {
+        Intent intent = new Intent(ASK_FORCE_CLOSE);
+        intent.putExtra("Mark", TopFragmentMark);
+        intent.putExtra(MODULE_NAME, module);
+        context.sendBroadcast(intent);
     }
 }
