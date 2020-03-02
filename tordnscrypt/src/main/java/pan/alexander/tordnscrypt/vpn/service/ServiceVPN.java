@@ -42,7 +42,6 @@ import android.os.Looper;
 import android.os.ParcelFileDescriptor;
 import android.os.PowerManager;
 import android.os.Process;
-import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -160,8 +159,8 @@ public class ServiceVPN extends VpnService {
         // Get custom DNS servers
         SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
         boolean ip6 = prefs.getBoolean("ipv6", false);
-        String vpnDns1 = prefs.getString("dns", "127.0.0.1");
-        String vpnDns2 = prefs.getString("dns2", "127.0.0.1");
+        String vpnDns1 = prefs.getString("dns", "9.9.9.9");
+        String vpnDns2 = prefs.getString("dns2", "149.112.112.112");
         Log.i(LOG_TAG, "VPN DNS system=" + TextUtils.join(",", sysDns) + " config=" + vpnDns1 + "," + vpnDns2);
 
         if (vpnDns1 != null)
