@@ -28,11 +28,12 @@ import android.content.SharedPreferences;
 import androidx.preference.PreferenceManager;
 
 import android.net.VpnService;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
-import java.util.Objects;
-
 import pan.alexander.tordnscrypt.modules.ModulesAux;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
 import pan.alexander.tordnscrypt.utils.ApManager;
@@ -58,9 +59,11 @@ public class BootCompleteReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(final Context context, Intent intent) {
 
-        Log.i(LOG_TAG, "Receive Boot Completed");
-
         final String BOOT_COMPLETE = "android.intent.action.BOOT_COMPLETED";
+        final String QUICKBOOT_POWERON = "android.intent.action.QUICKBOOT_POWERON";
+        final String HTC_QUICKBOOT_POWERON = "com.htc.intent.action.QUICKBOOT_POWERON";
+        final String REBOOT = "android.intent.action.REBOOT";
+        final String MY_PACKAGE_REPLACED = "android.intent.action.MY_PACKAGE_REPLACED";
         this.context = context.getApplicationContext();
 
         final PathVars pathVars = PathVars.getInstance(context.getApplicationContext());
@@ -75,7 +78,19 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         }
 
 
-        if (Objects.requireNonNull(intent.getAction()).equalsIgnoreCase(BOOT_COMPLETE)) {
+        String action = intent.getAction();
+
+        if (action == null) {
+            return;
+        }
+
+        Log.i(LOG_TAG, "Receive " + action);
+
+        if (action.equalsIgnoreCase(BOOT_COMPLETE)
+                || action.equalsIgnoreCase(QUICKBOOT_POWERON)
+                || action.equalsIgnoreCase(HTC_QUICKBOOT_POWERON)
+                || action.equalsIgnoreCase(REBOOT)
+                || action.equalsIgnoreCase(MY_PACKAGE_REPLACED)) {
 
             new PrefManager(context).setBoolPref("APisON", false);
             new PrefManager(context).setBoolPref("ModemIsON", false);
@@ -85,6 +100,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
             boolean rootIsAvailable = new PrefManager(context).getBoolPref("rootIsAvailable");
             boolean runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+            boolean fixTTL = shPref.getBoolean("pref_common_fix_ttl", false);
             String operationMode = new PrefManager(context).getStrPref("OPERATION_MODE");
 
             OperationMode mode = UNDEFINED;
@@ -98,16 +114,10 @@ public class BootCompleteReceiver extends BroadcastReceiver {
             boolean autoStartTor = shPref.getBoolean("swAutostartTor", false);
             boolean autoStartITPD = shPref.getBoolean("swAutostartITPD", false);
 
-            if ((autoStartDNSCrypt || autoStartTor || autoStartITPD) && (mode == VPN_MODE)) {
-                final Intent prepareIntent = VpnService.prepare(context);
-
-                if (prepareIntent == null) {
-                    shPref.edit().putBoolean("VPNServiceEnabled", true).apply();
-
-                    ServiceVPNHelper.start("Boot complete", context);
-                } else {
-                    return;
-                }
+            if (action.equalsIgnoreCase(MY_PACKAGE_REPLACED)) {
+                autoStartDNSCrypt = new PrefManager(context).getBoolPref("DNSCrypt Running");
+                autoStartTor = new PrefManager(context).getBoolPref("Tor Running");
+                autoStartITPD = new PrefManager(context).getBoolPref("I2PD Running");
             }
 
             if (autoStartITPD) {
@@ -115,7 +125,13 @@ public class BootCompleteReceiver extends BroadcastReceiver {
             }
 
             if (tethering_autostart) {
-                startHOTSPOT();
+
+                ModulesStatus.getInstance().setFixTTL(fixTTL);
+
+                if (!action.equalsIgnoreCase(MY_PACKAGE_REPLACED)) {
+                    startHOTSPOT();
+                }
+
             }
 
             if (autoStartDNSCrypt && autoStartTor && autoStartITPD) {
@@ -164,6 +180,17 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                 startStopRestartModules(false, false, false);
 
                 stopRefreshTorUnlockIPs(context);
+            }
+
+            if ((autoStartDNSCrypt || autoStartTor || autoStartITPD) && (mode == VPN_MODE || fixTTL)) {
+                final Intent prepareIntent = VpnService.prepare(context);
+
+                if (prepareIntent == null) {
+                    shPref.edit().putBoolean("VPNServiceEnabled", true).apply();
+
+                    Handler handler = new Handler(Looper.getMainLooper());
+                    handler.postDelayed(() -> ServiceVPNHelper.start("Boot complete", context), 2000);
+                }
             }
         }
     }
