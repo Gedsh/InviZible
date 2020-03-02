@@ -29,6 +29,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 
+import java.util.Locale;
+
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
@@ -52,7 +54,13 @@ public class Registration {
                     })
                     .setNegativeButton(R.string.cancel, (dialog, id) -> dialog.dismiss())
                     .setNeutralButton(R.string.donate_button, (dialogInterface, i) -> {
-                        Intent donatePage = new Intent(Intent.ACTION_VIEW, Uri.parse("https://invizible.net/donate"));
+                        String link;
+                        if (Locale.getDefault().getLanguage().equalsIgnoreCase("ru")) {
+                            link = "https://invizible.net/ru/donate/";
+                        } else {
+                            link = "https://invizible.net/en/donate/";
+                        }
+                        Intent donatePage = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
                         context.startActivity(donatePage);
                         dialogInterface.dismiss();
                     })

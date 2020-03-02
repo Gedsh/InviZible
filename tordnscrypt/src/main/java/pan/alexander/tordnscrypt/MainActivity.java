@@ -55,6 +55,7 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -805,7 +806,13 @@ public class MainActivity extends LangAppCompatActivity
                     accelerateDevelop.launchBilling(AccelerateDevelop.mSkuId);
                 }
             } else {
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://invizible.net/ru/donate/"));
+                String link;
+                if (Locale.getDefault().getLanguage().equalsIgnoreCase("ru")) {
+                    link = "https://invizible.net/ru/donate/";
+                } else {
+                    link = "https://invizible.net/en/donate/";
+                }
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
                 startActivity(intent);
             }
         } else if (id == R.id.nav_Code) {
