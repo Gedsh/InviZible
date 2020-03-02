@@ -104,6 +104,7 @@ public class ModulesStateLoop extends TimerTask {
 
         if (stopCounter <= 0) {
             Log.i(LOG_TAG, "ModulesStateLoop stopCounter is zero. Stop service.");
+            modulesStatus.setContextUIDUpdateRequested(false);
             safeStopModulesService();
         }
     }
@@ -228,6 +229,12 @@ public class ModulesStateLoop extends TimerTask {
     }
 
     private void updateContextUID(ModuleState dnsCryptState, ModuleState torState, ModuleState itpdState) {
+
+        if (!modulesStatus.isRootAvailable()) {
+            modulesStatus.setContextUIDUpdateRequested(false);
+            Log.w(LOG_TAG, "Modules Selinux context and UID not updated. Root is Not Available");
+            return;
+        }
 
         if (dnsCryptState != STOPPED) {
             return;
