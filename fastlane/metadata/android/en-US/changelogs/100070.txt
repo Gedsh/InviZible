@@ -1,0 +1,4 @@
+**InviZible Pro beta 0.7.0**
+* Added snowflake bridges support.
+* Replaced the obfs4 bridge binary with a self-build file.
+* Minor fixes.

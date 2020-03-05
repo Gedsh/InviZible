@@ -147,3 +147,8 @@
 * Added request to force close the application.
 * Fixed DNS leak on some devices.
 * Other fixes.
+
+**InviZible Pro beta 0.7.0**
+* Added snowflake bridges support.
+* Replaced the obfs4 bridge binary with a self-build file.
+* Minor fixes.
