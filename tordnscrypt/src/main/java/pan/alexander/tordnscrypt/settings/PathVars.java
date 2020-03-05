@@ -43,6 +43,7 @@ public class PathVars {
     private String torPath;
     private String itpdPath;
     private String obfsPath;
+    private String snowflakePath;
     private boolean bbOK;
 
 
@@ -69,6 +70,7 @@ public class PathVars {
         torPath = nativeLibPath + "/libtor.so";
         itpdPath = nativeLibPath + "/libi2pd.so";
         obfsPath = nativeLibPath + "/libobfs4proxy.so";
+        snowflakePath = nativeLibPath + "/libsnowflake.so";
     }
 
     public static PathVars getInstance(Context context) {
@@ -188,6 +190,10 @@ public class PathVars {
 
     public String getObfsPath() {
         return obfsPath;
+    }
+
+    public String getSnowflakePath() {
+        return snowflakePath;
     }
 
     public String getTorVirtAdrNet() {

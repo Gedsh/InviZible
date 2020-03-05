@@ -134,12 +134,14 @@
         <item>obfs4</item>
         <item>obfs3</item>
         <item>meek_lite</item>
+        <item>snowflake</item>
     </string-array>
     <string-array name="tor_bridges_own_obfs">
         <item>obfs4</item>
         <item>obfs3</item>
         <item>scramblesuit</item>
         <item>meek_lite</item>
+        <item>snowflake</item>
         <item>none</item>
     </string-array>
     <string name="pref_fast_use_tor_bridges_transport_select">Pls select obfuscation type:</string>

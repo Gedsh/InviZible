@@ -6,5 +6,6 @@ public enum BridgeType {
     scramblesuit,
     meek_lite,
     none,
+    snowflake,
     undefined
 }

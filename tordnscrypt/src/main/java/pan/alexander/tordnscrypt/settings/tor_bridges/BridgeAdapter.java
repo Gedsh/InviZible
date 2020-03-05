@@ -163,7 +163,8 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
 
             String tvBridgeText;
             if ((bridgeIP[0].contains("obfs3") || bridgeIP[0].contains("obfs4")
-                    || bridgeIP[0].contains("scramblesuit") || bridgeIP[0].contains("meek_lite"))
+                    || bridgeIP[0].contains("scramblesuit") || bridgeIP[0].contains("meek_lite")
+                    || bridgeIP[0].contains("snowflake"))
                     && bridgeIP.length > 1) {
                 tvBridgeText = bridgeIP[0] + " " + bridgeIP[1];
             } else {

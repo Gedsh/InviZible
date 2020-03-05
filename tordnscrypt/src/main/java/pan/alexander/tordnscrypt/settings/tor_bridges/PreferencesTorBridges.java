@@ -67,6 +67,7 @@ import static pan.alexander.tordnscrypt.utils.enums.BridgeType.none;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.obfs3;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.obfs4;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.scramblesuit;
+import static pan.alexander.tordnscrypt.utils.enums.BridgeType.snowflake;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.undefined;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 
@@ -81,6 +82,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     private RecyclerView rvBridges;
     private String appDataDir;
     private String obfsPath;
+    private String snowflakePath;
     private List<String> tor_conf;
     private List<String> tor_conf_orig;
     private List<ObfsBridge> bridgeList;
@@ -113,6 +115,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         appDataDir = pathVars.getAppDataDir();
         obfsPath = pathVars.getObfsPath();
+        snowflakePath = pathVars.getSnowflakePath();
 
 
         bridges_custom_file_path = appDataDir + "/app_data/tor/bridges_custom.lst";
@@ -269,8 +272,16 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         if (!currentBridges.isEmpty() && !currentBridgesType.equals(undefined)) {
 
             if (!currentBridgesType.equals(none)) {
-                String clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
-                        + obfsPath;
+
+                String clientTransportPlugin;
+                if (currentBridgesType.equals(snowflake)) {
+                    clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
+                            + snowflakePath + " -url https://snowflake-broker.azureedge.net/ -front ajax.aspnetcdn.com -ice stun:stun.l.google.com:19302";
+                } else {
+                    clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
+                            + obfsPath;
+                }
+
 
                 tor_conf.add(clientTransportPlugin);
             }
@@ -438,10 +449,17 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     } else {
                         ownBridgesOperation(bridgesListNew);
                     }
+                } else if (bridges.contains("snowflake")) {
+                    currentBridgesType = snowflake;
+                    if (!spOwnBridges.getSelectedItem().toString().equals("snowflake")) {
+                        spOwnBridges.setSelection(4);
+                    } else {
+                        ownBridgesOperation(bridgesListNew);
+                    }
                 } else {
                     currentBridgesType = none;
                     if (!spOwnBridges.getSelectedItem().toString().equals("none")) {
-                        spOwnBridges.setSelection(4);
+                        spOwnBridges.setSelection(5);
                     } else {
                         ownBridgesOperation(bridgesListNew);
                     }
@@ -612,7 +630,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 }
                 bridgeList.add(obfsBridge);
             } else if (obfsTypeSp.equals(none) && !line.contains("obfs4") && !line.contains("obfs3")
-                    && !line.contains("scramblesuit") && !line.contains("meek_lite") && !line.isEmpty()) {
+                    && !line.contains("scramblesuit") && !line.contains("meek_lite") && !line.contains("snowflake")
+                    && !line.isEmpty()) {
                 obfsBridge = new ObfsBridge(line, obfsTypeSp, false);
                 if (currentBridges.contains(line)) {
                     obfsBridge.active = true;
@@ -698,6 +717,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                             currentBridgesType = scramblesuit;
                         } else if (testBridge.contains("meek_lite")) {
                             currentBridgesType = meek_lite;
+                        } else if (testBridge.contains("snowflake")) {
+                            currentBridgesType = snowflake;
                         } else {
                             currentBridgesType = none;
                         }
