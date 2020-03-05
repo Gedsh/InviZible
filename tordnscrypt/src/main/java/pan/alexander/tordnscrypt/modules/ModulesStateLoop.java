@@ -32,6 +32,7 @@ import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
@@ -211,18 +212,20 @@ public class ModulesStateLoop extends TimerTask {
 
         } else if (useModulesWithRoot && operationMode == ROOT_MODE) {
 
-            if (dnsCryptState != STOPPED && dnsCryptState != RUNNING) {
+            if (dnsCryptState != STOPPED && dnsCryptState != RUNNING && dnsCryptState != FAULT) {
                 return;
-            } else if (torState != STOPPED && torState != RUNNING) {
+            } else if (torState != STOPPED && torState != RUNNING && torState != FAULT) {
                 return;
-            } else if (itpdState != STOPPED && itpdState != RUNNING) {
+            } else if (itpdState != STOPPED && itpdState != RUNNING && itpdState != FAULT) {
                 return;
             } else if (modulesStatus.isContextUIDUpdateRequested()) {
                 return;
             }
 
             stopCounter--;
-        } else if (dnsCryptState == STOPPED && torState == STOPPED && itpdState == STOPPED) {
+        } else if ((dnsCryptState == STOPPED || dnsCryptState == FAULT)
+                && (torState == STOPPED || torState == FAULT)
+                && (itpdState == STOPPED || itpdState == FAULT)) {
             stopCounter--;
         }
 
