@@ -60,7 +60,7 @@ public class PathVars {
 
         String nativeLibPath = context.getApplicationInfo().nativeLibraryDir;
 
-        if (!isModulesInstalled(context)) {
+        if (!isModulesInstalled(context) || new PrefManager(context).getStrPref("appUID").isEmpty()) {
             saveAppUID(context);
         }
 
