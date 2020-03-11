@@ -42,7 +42,7 @@ android {
         targetSdkVersion 29
         versionCode 70
 
-        resConfigs "en", "ru-rRU" , "ru-rUA", "pl"
+        resConfigs "en", "ru-rRU" , "ru-rUA", "pl", "de"
 
         externalNativeBuild {
             cmake {

@@ -30,12 +30,14 @@ public class LanguageList {
             null,
             "RW5nbGlzaCAoRW5nbGlzaCk=",
             "UnVzc2lhbiAo0KDRg9GB0YHQutC40Lkp",
+            "R2VybWFuIChEZXV0c2NoZSk=",
             "UG9saXNoIChQb2xza2kp"
     };
     private static final String[] MACHINE = {
             "",
             "en",
             "ru",
+            "de",
             "pl"
     };
     private static String[] mHuman;
