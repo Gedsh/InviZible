@@ -454,10 +454,15 @@
     <string name="pref_itpd_HTTP_proxy_enabled">HTTP proxy</string>
     <string name="pref_itpd_HTTP_proxy_port">HTTP proxy port</string>
     <string name="pref_itpd_HTTP_proxy_port_summ">The port to listen on (HTTP Proxy).</string>
+    <string name="pref_itpd_use_HTTP_outproxy">HTTP outproxy</string>
+    <string name="pref_itpd_HTTP_outproxy_address">HTTP outproxy address</string>
     <string name="pref_itpd_Socks_proxy">Socks proxy</string>
     <string name="pref_itpd_Socks_proxy_enabled">Socks proxy</string>
     <string name="pref_itpd_Socks_proxy_port">Socks proxy port</string>
     <string name="pref_itpd_Socks_proxy_port_summ">The port to listen on (SOCKS Proxy).</string>
+    <string name="pref_itpd_use_Socks_outproxy">SOCKS outproxy</string>
+    <string name="pref_itpd_Socks_outproxy_address">SOCKS outproxy address</string>
+    <string name="pref_itpd_Socks_outproxy_port">SOCKS outproxy port</string>
     <string name="pref_itpd_SAM_interface">SAM interface</string>
     <string name="pref_itpd_SAM_interface_enabled">SAM interface</string>
     <string name="pref_itpd_SAM_interface_port">SAM interface port</string>

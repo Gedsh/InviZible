@@ -111,8 +111,8 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                 if (!val_saved_str.isEmpty() && !val_saved_str.equals(val)) {
                     editor.putString(key, val);
                 }
-                if (isbool && val_saved_bool != Boolean.valueOf(val)) {
-                    editor.putBoolean(key, Boolean.valueOf(val));
+                if (isbool && val_saved_bool != Boolean.parseBoolean(val)) {
+                    editor.putBoolean(key, Boolean.parseBoolean(val));
                 }
 
                 if (key.equals("#proxy") && sp.getBoolean("Enable proxy", false)) {
@@ -186,8 +186,8 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
 
                 if (!val_saved_str.isEmpty() && !val_saved_str.equals(val)) {
                     editor.putString(key, val);
-                } else if (isbool && val_saved_bool != Boolean.valueOf(val)) {
-                    editor.putBoolean(key, Boolean.valueOf(val));
+                } else if (isbool && val_saved_bool != Boolean.parseBoolean(val)) {
+                    editor.putBoolean(key, Boolean.parseBoolean(val));
                 }
 
 
@@ -294,10 +294,18 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     key = "HTTP proxy";
                 } else if (header.equals("[httpproxy]") && key.equals("port")) {
                     key = "HTTP proxy port";
+                } else if (header.equals("[httpproxy]") && key.matches("#?outproxy")) {
+                    key = "HTTP outproxy address";
                 } else if (header.equals("[socksproxy]") && key.equals("enabled")) {
                     key = "Socks proxy";
                 } else if (header.equals("[socksproxy]") && key.equals("port")) {
                     key = "Socks proxy port";
+                }else if (header.equals("[socksproxy]") && key.matches("#?outproxy.enabled")) {
+                    key = "Socks outproxy";
+                } else if (header.equals("[socksproxy]") && key.matches("#?outproxy")) {
+                    key = "Socks outproxy address";
+                } else if (header.equals("[socksproxy]") && key.matches("#?outproxyport")) {
+                    key = "Socks outproxy port";
                 } else if (header.equals("[sam]") && key.equals("enabled")) {
                     key = "SAM interface";
                 } else if (header.equals("[sam]") && key.equals("port")) {
@@ -332,8 +340,8 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
 
                 if (val_saved_str != null && !val_saved_str.isEmpty() && !val_saved_str.equals(val) && !isbool) {
                     editor.putString(key, val);
-                } else if (isbool && val_saved_bool != Boolean.valueOf(val)) {
-                    editor.putBoolean(key, Boolean.valueOf(val));
+                } else if (isbool && val_saved_bool != Boolean.parseBoolean(val)) {
+                    editor.putBoolean(key, Boolean.parseBoolean(val));
                 }
 
 

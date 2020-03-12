@@ -52,6 +52,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
     private ArrayList<String> key_itpd_orig;
     private ArrayList<String> val_itpd_orig;
     private String appDataDir;
+    private boolean isChanged;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -82,8 +83,14 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
         preferences.add(findPreference("ntcpproxy"));
         preferences.add(findPreference("HTTP proxy"));
         preferences.add(findPreference("HTTP proxy port"));
+        preferences.add(findPreference("HTTP outproxy"));
+        preferences.add(findPreference("HTTP outproxy address"));
+        preferences.add(findPreference("HTTP outproxy port"));
         preferences.add(findPreference("Socks proxy"));
         preferences.add(findPreference("Socks proxy port"));
+        preferences.add(findPreference("Socks outproxy"));
+        preferences.add(findPreference("Socks outproxy address"));
+        preferences.add(findPreference("Socks outproxy port"));
         preferences.add(findPreference("SAM interface"));
         preferences.add(findPreference("SAM interface port"));
         preferences.add(findPreference("elgamal"));
@@ -146,7 +153,6 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
         }
 
         List<String> itpd_conf = new LinkedList<>();
-        boolean isChanged = false;
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
         if (key_itpd.indexOf("subscriptions") >= 0)
@@ -162,11 +168,27 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                 case "incoming host":
                     key_itpd.set(i, "host");
                     break;
+                case "HTTP outproxy address":
+                    if (sp.getBoolean("HTTP outproxy", false)) {
+                        key_itpd.set(i, "outproxy");
+                    } else {
+                        key_itpd.set(i, "#outproxy");
+                    }
+                    break;
                 case "incoming port":
                 case "Socks proxy port":
                 case "HTTP proxy port":
                 case "SAM interface port":
                     key_itpd.set(i, "port");
+                    break;
+                case "Socks outproxy":
+                    key_itpd.set(i, "outproxy.enabled");
+                    break;
+                case "Socks outproxy port":
+                    key_itpd.set(i, "outproxyport");
+                    break;
+                case "Socks outproxy address":
+                    key_itpd.set(i, "outproxy");
                     break;
                 case "ntcp2 enabled":
                 case "SAM interface":
@@ -203,7 +225,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
     public boolean onPreferenceChange(Preference preference, Object newValue) {
         try {
             if (Objects.equals(preference.getKey(), "Allow incoming connections")) {
-                if (Boolean.valueOf(newValue.toString())) {
+                if (Boolean.parseBoolean(newValue.toString())) {
                     key_itpd.set(key_itpd.indexOf("#host"), "incoming host");
                     key_itpd.set(key_itpd.indexOf("#port"), "incoming port");
                 } else {
@@ -212,11 +234,14 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                 }
                 return true;
             } else if (Objects.equals(preference.getKey(), "Enable ntcpproxy")) {
-                if (Boolean.valueOf(newValue.toString())) {
+                if (Boolean.parseBoolean(newValue.toString())) {
                     key_itpd.set(key_itpd.indexOf("#ntcpproxy"), "ntcpproxy");
                 } else {
                     key_itpd.set(key_itpd.indexOf("ntcpproxy"), "#ntcpproxy");
                 }
+                return true;
+            } else if (Objects.equals(preference.getKey(), "HTTP outproxy")) {
+                isChanged = true;
                 return true;
             }
 

@@ -114,6 +114,18 @@
             android:singleLine="true"
             android:summary="@string/pref_itpd_HTTP_proxy_port_summ"
             android:title="@string/pref_itpd_HTTP_proxy_port" />
+        <SwitchPreference
+            android:id="@+id/pref_itpd_use_HTTP_outproxy"
+            android:defaultValue="false"
+            android:key="HTTP outproxy"
+            android:title="@string/pref_itpd_use_HTTP_outproxy" />
+        <EditTextPreference
+            android:id="@+id/pref_itpd_HTTP_outproxy_address"
+            android:defaultValue="http://false.i2p"
+            android:key="HTTP outproxy address"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:title="@string/pref_itpd_HTTP_outproxy_address" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_itpd_Socks_proxy"
         android:key="itpd_category_socks_proxy">
@@ -131,6 +143,25 @@
             android:singleLine="true"
             android:summary="@string/pref_itpd_Socks_proxy_port_summ"
             android:title="@string/pref_itpd_Socks_proxy_port" />
+        <SwitchPreference
+            android:id="@+id/pref_itpd_use_Socks_outproxy"
+            android:defaultValue="false"
+            android:key="Socks outproxy"
+            android:title="@string/pref_itpd_use_Socks_outproxy" />
+        <EditTextPreference
+            android:id="@+id/pref_itpd_Socks_outproxy_address"
+            android:defaultValue="127.0.0.1"
+            android:key="Socks outproxy address"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:title="@string/pref_itpd_Socks_outproxy_address" />
+        <EditTextPreference
+            android:id="@+id/pref_itpd_Socks_outproxy_port"
+            android:defaultValue="9050"
+            android:key="Socks outproxy port"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:title="@string/pref_itpd_Socks_outproxy_port" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_itpd_SAM_interface"
         android:key="category_itpd_sam_interface">

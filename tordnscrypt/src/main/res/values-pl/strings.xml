@@ -464,4 +464,9 @@
     </string>
     <string name="pref_common_refresh_rules_summ">Zaktualizuj reguły przy każdej zmianie łączności</string>
     <string name="pref_common_refresh_rules">Odśwież reguły</string>
+    <string name="pref_itpd_use_HTTP_outproxy">HTTP outproxy</string>
+    <string name="pref_itpd_HTTP_outproxy_address">HTTP outproxy address</string>
+    <string name="pref_itpd_use_Socks_outproxy">SOCKS outproxy</string>
+    <string name="pref_itpd_Socks_outproxy_address">SOCKS outproxy address</string>
+    <string name="pref_itpd_Socks_outproxy_port">SOCKS outproxy port</string>
 </resources>
