@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">InviZible Pro</string>
     <string name="nav_header_title">Tor, DNSCrypt и I2P</string>
     <string name="nav_header_subtitle">лучшее решение для приватности</string>
     <string name="action_settings">Настройки</string>

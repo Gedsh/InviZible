@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name">InviZible Pro</string>
     <string name="nav_header_title">Tor mit DNSCrypt und I2P</string>
     <string name="nav_header_subtitle">Die beste Lösung für deine Privatsphäre</string>
     <string name="action_settings">Einstellungen</string>
@@ -14,7 +13,7 @@
 
     <string name="swRunOnBoot">Starte beim Booten</string>
 
-    <string name="root_available">Prüfe ob Root verfügbar ist...</string>
+    <string name="root_available">Prüfe ob Root verfügbar ist…</string>
 
     <string name="please_wait">Bitte warten…</string>
     <string name="dont_show">Nicht wieder anzeigen</string>
