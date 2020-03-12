@@ -29,16 +29,18 @@ public class LanguageList {
     private static final String[] HUMAN_RAW = {
             null,
             "RW5nbGlzaCAoRW5nbGlzaCk=",
-            "UnVzc2lhbiAo0KDRg9GB0YHQutC40Lkp",
             "R2VybWFuIChEZXV0c2NoZSk=",
-            "UG9saXNoIChQb2xza2kp"
+            "UGVyc2lhbiAo2YHYp9ix2LPbjCk=",
+            "UG9saXNoIChQb2xza2kp",
+            "UnVzc2lhbiAo0KDRg9GB0YHQutC40Lkp"
     };
     private static final String[] MACHINE = {
             "",
             "en",
-            "ru",
             "de",
-            "pl"
+            "fa",
+            "pl",
+            "ru"
     };
     private static String[] mHuman;
 
