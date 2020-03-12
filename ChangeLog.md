@@ -152,3 +152,9 @@
 * Added snowflake bridges support.
 * Replaced the obfs4 bridge binary with a self-build file.
 * Minor fixes.
+
+**InviZible Pro beta 0.7.1**
+* Fixed Tor bridges for android 4.4.2.
+* Added German and Persian languages.
+* Added I2P outproxy option.
+* Fixed backup when "Run modules with Root" option activated.
