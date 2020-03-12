@@ -124,6 +124,9 @@ If you cannot build yourself, there are prebuilt versions of **InviZible Pro** a
 If you would like to translate this application into other languages,
 please send an email to the developer [invizible.soft@gmail.com](mailto:invizible.soft@gmail.com)
 
+Thanks to the [POEditor](https://poeditor.com/) you can translate InviZible Pro to your language with pleasure and for free.
+Just follow this [link](https://poeditor.com/join/project/h6ulNL9gEd).
+
 ## Attribution
 
 InviZible Pro uses:
