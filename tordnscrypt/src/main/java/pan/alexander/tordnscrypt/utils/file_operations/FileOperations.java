@@ -59,7 +59,7 @@ import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.write
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class FileOperations {
-    private final CountDownLatch latch = new CountDownLatch(1);
+    private CountDownLatch latch;
     private static final Map<String, List<String>> linesListMap = new HashMap<>();
     private static final ReentrantLock reentrantLock = new ReentrantLock();
     private static OnFileOperationsCompleteListener callback;
@@ -114,7 +114,20 @@ public class FileOperations {
                     }
                 }
 
-                File inFile = new File(inputPath + "/" + inputFile);
+                File inFile = null;
+
+                try {
+                    inFile = new File(inputPath + "/" + inputFile);
+                } catch (Exception e) {
+                    Log.w(LOG_TAG, "File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+                    FileOperations fileOperations = new FileOperations();
+                    fileOperations.restoreAccess(context, inputPath + "/" + inputFile);
+                }
+
+                if (inFile == null) {
+                    throw new IllegalStateException("File is no accessible " + inputPath + "/" + inputFile);
+                }
+
                 if (!inFile.canRead()) {
                     if (!inFile.setReadable(true)) {
                         Log.w(LOG_TAG, "Unable to chmod file " + inFile.toString());
@@ -210,7 +223,20 @@ public class FileOperations {
                     }
                 }
 
-                File inFile = new File(inputPath + "/" + inputFile);
+                File inFile = null;
+
+                try {
+                    inFile = new File(inputPath + "/" + inputFile);
+                } catch (Exception e) {
+                    Log.w(LOG_TAG, "File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+                    FileOperations fileOperations = new FileOperations();
+                    fileOperations.restoreAccess(context, inputPath + "/" + inputFile);
+                }
+
+                if (inFile == null) {
+                    throw new IllegalStateException("File is no accessible " + inputPath + "/" + inputFile);
+                }
+
                 if (!inFile.canRead()) {
                     if (!inFile.setReadable(true)) {
                         Log.w(LOG_TAG, "Unable to chmod file " + inFile.toString());
@@ -296,7 +322,20 @@ public class FileOperations {
                 }
             }
 
-            File inFile = new File(inputPath + "/" + inputFile);
+            File inFile = null;
+
+            try {
+                inFile = new File(inputPath + "/" + inputFile);
+            } catch (Exception e) {
+                Log.w(LOG_TAG, "File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+                FileOperations fileOperations = new FileOperations();
+                fileOperations.restoreAccess(context, inputPath + "/" + inputFile);
+            }
+
+            if (inFile == null) {
+                throw new IllegalStateException("File is no accessible " + inputPath + "/" + inputFile);
+            }
+
             if (!inFile.canRead()) {
                 if (!inFile.setReadable(true)) {
                     Log.w(LOG_TAG, "Unable to chmod file " + inFile.toString());
@@ -335,7 +374,20 @@ public class FileOperations {
 
             reentrantLock.lock();
 
-            File inDir = new File(inputPath);
+            File inDir = null;
+
+            try {
+                inDir = new File(inputPath);
+            } catch (Exception e) {
+                Log.w(LOG_TAG, "Dir is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+                FileOperations fileOperations = new FileOperations();
+                fileOperations.restoreAccess(context, inputPath);
+            }
+
+            if (inDir == null) {
+                throw new IllegalStateException("File is no accessible " + inputPath);
+            }
+
             if (!inDir.canRead()) {
                 if (!inDir.setReadable(true)) {
                     Log.w(LOG_TAG, "Unable to chmod dir " + inDir.toString());
@@ -381,7 +433,20 @@ public class FileOperations {
         try {
             reentrantLock.lock();
 
-            File usedFile = new File(inputPath + "/" + inputFile);
+            File usedFile = null;
+
+            try {
+                usedFile = new File(inputPath + "/" + inputFile);
+            } catch (Exception e) {
+                Log.w(LOG_TAG, "File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+                FileOperations fileOperations = new FileOperations();
+                fileOperations.restoreAccess(context, inputPath + "/" + inputFile);
+            }
+
+            if (usedFile == null) {
+                throw new IllegalStateException("File is no accessible " + inputPath + "/" + inputFile);
+            }
+
             if (usedFile.exists()) {
                 if (!usedFile.canRead() || !usedFile.canWrite()) {
                     if (!usedFile.setReadable(true) || !usedFile.setWritable(true)) {
@@ -426,7 +491,20 @@ public class FileOperations {
             try {
                 reentrantLock.lock();
 
-                File usedFile = new File(inputPath + "/" + inputFile);
+                File usedFile = null;
+
+                try {
+                    usedFile = new File(inputPath + "/" + inputFile);
+                } catch (Exception e) {
+                    Log.w(LOG_TAG, "File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+                    FileOperations fileOperations = new FileOperations();
+                    fileOperations.restoreAccess(context, inputPath + "/" + inputFile);
+                }
+
+                if (usedFile == null) {
+                    throw new IllegalStateException("File is no accessible " + inputPath + "/" + inputFile);
+                }
+
                 if (usedFile.exists()) {
                     if (!usedFile.canRead() || !usedFile.canWrite()) {
                         if (!usedFile.setReadable(true) || !usedFile.setWritable(true)) {
@@ -486,7 +564,20 @@ public class FileOperations {
         boolean result = false;
         try{
 
-            File usedDir = new File(inputPath);
+            File usedDir = null;
+
+            try {
+                usedDir = new File(inputPath);
+            } catch (Exception e) {
+                Log.w(LOG_TAG, "Dir is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+                FileOperations fileOperations = new FileOperations();
+                fileOperations.restoreAccess(context, inputPath);
+            }
+
+            if (usedDir == null) {
+                throw new IllegalStateException("Dir is no accessible " + inputPath);
+            }
+
             if (usedDir.isDirectory()) {
                 if (!usedDir.canRead() || !usedDir.canWrite()) {
                     if (!usedDir.setReadable(true) || !usedDir.setWritable(true)) {
@@ -548,7 +639,20 @@ public class FileOperations {
 
                 linesListMap.remove(filePath);
 
-                File f = new File(filePath);
+                File f = null;
+
+                try {
+                    f = new File(filePath);
+                } catch (Exception e) {
+                    Log.w(LOG_TAG, "File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+                    FileOperations fileOperations = new FileOperations();
+                    fileOperations.restoreAccess(context, filePath);
+                }
+
+                if (f == null) {
+                    throw new IllegalStateException("File is no accessible " + filePath);
+                }
+
                 if (f.isFile()) {
                     if (f.setReadable(true, false)) {
                         Log.i(LOG_TAG, "readTextFile take " + filePath + " success");
@@ -617,7 +721,19 @@ public class FileOperations {
 
                 reentrantLock.lock();
 
-                File f = new File(filePath);
+                File f = null;
+
+                try {
+                    f = new File(filePath);
+                } catch (Exception e) {
+                    Log.w(LOG_TAG, "File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+                    FileOperations fileOperations = new FileOperations();
+                    fileOperations.restoreAccess(context, filePath);
+                }
+
+                if (f == null) {
+                    throw new IllegalStateException("File is no accessible " + filePath);
+                }
 
                 if (f.isFile()) {
                     if (f.setReadable(true, false) && f.setWritable(true)) {
@@ -682,7 +798,20 @@ public class FileOperations {
 
         try {
 
-            File f = new File(filePath);
+            File f = null;
+
+            try {
+                f = new File(filePath);
+            } catch (Exception e) {
+                Log.w(LOG_TAG, "File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+                FileOperations fileOperations = new FileOperations();
+                fileOperations.restoreAccess(context, filePath);
+            }
+
+            if (f == null) {
+                throw new IllegalStateException("File is no accessible " + filePath);
+            }
+
             if (f.isFile()) {
                 if (f.setReadable(true, false)) {
                     Log.i(LOG_TAG, "readTextFileSynchronous take " + filePath + " success");
@@ -725,7 +854,19 @@ public class FileOperations {
         boolean result = true;
         try {
 
-            File f = new File(filePath);
+            File f = null;
+
+            try {
+                f = new File(filePath);
+            } catch (Exception e) {
+                Log.w(LOG_TAG, "File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+                FileOperations fileOperations = new FileOperations();
+                fileOperations.restoreAccess(context, filePath);
+            }
+
+            if (f == null) {
+                throw new IllegalStateException("File is no accessible " + filePath);
+            }
 
             if (f.isFile()) {
                 if (f.setReadable(true, false) && f.setWritable(true)) {
@@ -828,6 +969,7 @@ public class FileOperations {
     }
 
     private void waitRestoreAccessWithRoot() {
+        latch = new CountDownLatch(1);
         try {
             latch.await();
         } catch (InterruptedException e) {

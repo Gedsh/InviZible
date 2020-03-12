@@ -19,6 +19,10 @@ package pan.alexander.tordnscrypt.utils.zipUtil;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.util.Log;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -31,6 +35,10 @@ import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+
+import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class ZipFileManager {
     private String zipFile;
@@ -100,7 +108,7 @@ public class ZipFileManager {
 
     }
 
-    public void createZip(String ... inputSource) throws Exception {
+    public void createZip(Context context, String ... inputSource) throws Exception {
         List<File> inputSources = new ArrayList<>();
         for (String source: inputSource) {
             inputSources.add(new File(source));
@@ -117,14 +125,16 @@ public class ZipFileManager {
 
         try (ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(zipFile))) {
             for (File inputFile: inputSources) {
-                addZipEntry(zipOutputStream, removeEndSlash(Objects.requireNonNull(inputFile.getParent())), inputFile.getName());
+                addZipEntry(context, zipOutputStream, removeEndSlash(Objects.requireNonNull(inputFile.getParent())), inputFile.getName());
             }
         }
     }
 
-    private void addZipEntry(ZipOutputStream zipOutputStream, String inputPath, String fileName) throws Exception {
+    private void addZipEntry(Context context, ZipOutputStream zipOutputStream, String inputPath, String fileName) throws Exception {
 
         String fullPath = inputPath + "/" + fileName;
+
+        checkAndRestoreAccess(context, fullPath);
 
         File inputFile = new File(fullPath);
         if (inputFile.isDirectory()) {
@@ -134,7 +144,7 @@ public class ZipFileManager {
             if (files != null) {
                 for (File file: files) {
                     String nextFileName = file.getAbsolutePath().replace(inputPath + "/", "");
-                    addZipEntry(zipOutputStream, inputPath, nextFileName);
+                    addZipEntry(context, zipOutputStream, inputPath, nextFileName);
                 }
             }
         } else if (inputFile.isFile()) {
@@ -147,10 +157,6 @@ public class ZipFileManager {
         } else {
             throw new IllegalStateException("createZip input fault: input no file and no dir " + fullPath);
         }
-
-
-
-
     }
 
     private void copyData(InputStream in, OutputStream out) throws Exception {
@@ -166,5 +172,37 @@ public class ZipFileManager {
             path = path.substring(0, path.lastIndexOf("/"));
         }
         return path;
+    }
+
+    @SuppressLint("SetWorldReadable")
+    private void checkAndRestoreAccess(Context context, String path) {
+        File f = null;
+
+        try {
+            f = new File(path);
+        } catch (Exception e) {
+            Log.w(LOG_TAG, "ZipFileManager File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+            FileOperations fileOperations = new FileOperations();
+            fileOperations.restoreAccess(context, path);
+        }
+
+        if (f == null) {
+            throw new IllegalStateException("ZipFileManager File is no accessible " + path);
+        }
+
+        if (f.isFile() && !f.canRead()) {
+            if (f.setReadable(true, false)) {
+                Log.i(LOG_TAG, "ZipFileManager take " + path + " success");
+            } else {
+                Log.w(LOG_TAG, "ZipFileManager take " + path + " warning");
+                FileOperations fileOperations = new FileOperations();
+                fileOperations.restoreAccess(context, path);
+                if (f.setReadable(true, false)) {
+                    Log.i(LOG_TAG, "ZipFileManager take " + path + " success");
+                } else {
+                    throw new IllegalStateException("ZipFileManager File is no accessible " + path + " error");
+                }
+            }
+        }
     }
 }

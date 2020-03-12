@@ -95,7 +95,7 @@ class BackupHelper {
 
     private void compressAllToZip(String outputFilePath, String ... inputSources) throws Exception {
         ZipFileManager zipFileManager = new ZipFileManager(outputFilePath);
-        zipFileManager.createZip(inputSources);
+        zipFileManager.createZip(context, inputSources);
     }
 
     private void saveSharedPreferencesToFile(SharedPreferences pref, String dst) {

@@ -101,7 +101,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
     private void saveLogsMethodOne(Context context) {
         try {
             ZipFileManager zipFileManager = new ZipFileManager(appDataDir + "/logs/InvizibleLogs.txt");
-            zipFileManager.createZip(appDataDir + "/logs_dir");
+            zipFileManager.createZip(context, appDataDir + "/logs_dir");
             FileOperations.deleteDirSynchronous(context,appDataDir + "/logs_dir");
         } catch (Exception e) {
             Log.e(LOG_TAG, "Create zip file for first method failed  " + e.getMessage() + " " + e.getCause());
