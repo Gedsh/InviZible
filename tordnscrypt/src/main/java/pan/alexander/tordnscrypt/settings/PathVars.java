@@ -160,18 +160,6 @@ public class PathVars {
         return "10.191.0.2";
     }
 
-    public String getITPDTeleSocksProxyPort1() {
-        return "1080";
-    }
-
-    public String getITPDTeleSocksProxyPort2() {
-        return "4480";
-    }
-
-    public String getITPDTeleSocksProxyPort3() {
-        return "4481";
-    }
-
     public String getAppDataDir() {
         return appDataDir;
     }

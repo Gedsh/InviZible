@@ -28,17 +28,8 @@ import pan.alexander.tordnscrypt.utils.RootExecService;
 
 abstract class IptablesRulesSender implements IptablesRules {
     Context context;
-
+    PathVars pathVars;
     String appDataDir;
-    String dnsCryptPort;
-    String itpdHttpProxyPort;
-    String torSOCKSPort;
-    String torHTTPTunnelPort;
-    String itpdSOCKSPort;
-    String torTransPort;
-    String dnsCryptFallbackRes;
-    String torDNSPort;
-    String torVirtAdrNet;
     String busybox;
     String iptables;
     String rejectAddress;
@@ -53,17 +44,8 @@ abstract class IptablesRulesSender implements IptablesRules {
     IptablesRulesSender(Context context) {
         this.context = context;
 
-        PathVars pathVars = PathVars.getInstance(context);
+        pathVars = PathVars.getInstance(context);
         appDataDir = pathVars.getAppDataDir();
-        dnsCryptPort = pathVars.getDNSCryptPort();
-        itpdHttpProxyPort = pathVars.getITPDHttpProxyPort();
-        torSOCKSPort = pathVars.getTorSOCKSPort();
-        torHTTPTunnelPort = pathVars.getTorHTTPTunnelPort();
-        itpdSOCKSPort = pathVars.getITPDSOCKSPort();
-        torTransPort = pathVars.getTorTransPort();
-        dnsCryptFallbackRes = pathVars.getDNSCryptFallbackRes();
-        torDNSPort = pathVars.getTorDNSPort();
-        torVirtAdrNet = pathVars.getTorVirtAdrNet();
         busybox = pathVars.getBusyboxPath();
         iptables = pathVars.getIptablesPath();
         rejectAddress = pathVars.getRejectAddress();

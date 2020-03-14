@@ -38,13 +38,19 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.DatagramSocket;
 import java.net.ServerSocket;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
+import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
@@ -518,11 +524,32 @@ public class ModulesService extends Service {
     }
 
     private boolean stopITPDIfPortsIsBusy() {
-        boolean stopRequired = !isAvailable(pathVars.getITPDSOCKSPort())
-                || !isAvailable(pathVars.getITPDHttpProxyPort())
-                || !isAvailable(pathVars.getITPDTeleSocksProxyPort1())
-                || !isAvailable(pathVars.getITPDTeleSocksProxyPort2())
-                || !isAvailable(pathVars.getITPDTeleSocksProxyPort3());
+
+        Set<String> itpdTunnelsPorts = new HashSet<>();
+
+        List<String> lines = FileOperations.readTextFileSynchronous(this, pathVars.getAppDataDir() + "/app_data/i2pd/tunnels.conf");
+        for (String line : lines) {
+            if (line.matches("^port ?= ?\\d+")) {
+                String port = line.substring(line.indexOf("=") + 1).trim();
+                if (port.matches("\\d+")) {
+                    itpdTunnelsPorts.add(port);
+                }
+            }
+        }
+
+        new PrefManager(this).setSetStrPref("ITPDTunnelsPorts", itpdTunnelsPorts);
+
+        boolean stopRequired = false;
+
+        for (String port : itpdTunnelsPorts) {
+            if (!isAvailable(port)) {
+                stopRequired = true;
+            }
+        }
+
+        stopRequired = stopRequired ||
+                !isAvailable(pathVars.getITPDSOCKSPort())
+                || !isAvailable(pathVars.getITPDHttpProxyPort());
 
         if (stopRequired) {
             try {
