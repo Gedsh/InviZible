@@ -350,7 +350,6 @@
     <string name="pref_itpd_addressbook_defaulturl_summ">Subskrybcja URL ksiazki adresowej dla ustawien poczatkowych.</string>
     <string name="pref_itpd_addressbook_subscriptions_summ">URL subskrybcji ksiaki adresowej.</string>
     <string name="pref_itpd_not_exist">Ustawienie nie istnieje w i2pd.conf!</string>
-    <string name="pref_itpd_current_events">Obecne zdarzenia:</string>
 
     <string name="helper_dialog_title">Info</string>
     <string name="helper_after_install">Gratulacje! Mozesz zastosowac te narzedzia aby miec szybki dostep

@@ -292,7 +292,6 @@
     <string name="update_core_not_show_again">Больше не спрашивать</string>
     <string name="update_core_restart">Пожалуйста, перезапустите InviZible и позвольте завершить установку! После установки настройте заново Точку доступа, если вы пользовались ней!</string>
     <string name="pref_fast_language">Выбрать язык</string>
-    <string name="pref_itpd_current_events">Текущие события:</string>
     <string name="pref_fast_block_http">Заблокировать http</string>
     <string name="pref_fast_block_http_summ">Закрыть http порт 80</string>
     <string name="pref_common_block_http">Заблокировать http</string>
@@ -395,4 +394,11 @@
     <string name="pref_itpd_use_Socks_outproxy">SOCKS outproxy</string>
     <string name="pref_itpd_Socks_outproxy_address">SOCKS outproxy адрес</string>
     <string name="pref_itpd_Socks_outproxy_port">SOCKS outproxy порт</string>
+    <string name="pref_dnscrypt_edit_toml">Редактировать dnscrypt-proxy.toml</string>
+    <string name="pref_tor_edit_conf">Редактировать tor.conf</string>
+    <string name="pref_itpd_edit_tunnels">Редактировать tunnels.conf</string>
+    <string name="pref_itpd_edit_conf">Редактировать i2pd.conf</string>
+    <string name="save_changes">Сохранить изменения</string>
+    <string name="discard_changes">Отменить изменения</string>
+    <string name="config_changes_dialog_message">Вы хотите сохранить изменения? Это может нарушить работу InviZible Pro.</string>
 </resources>
