@@ -176,10 +176,6 @@ public class ModulesStateLoop extends TimerTask {
 
             if (modulesStatus.isIptablesRulesUpdateRequested()) {
                 modulesStatus.setIptablesRulesUpdateRequested(false);
-
-                if (!rootIsAvailable) {
-                    Log.w(LOG_TAG, "Iptables rules isn't updated, no root!");
-                }
             }
 
             if (iptablesRules != null && rootIsAvailable && operationMode == ROOT_MODE) {

@@ -183,7 +183,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         switch (preference.getKey()) {
             case "swShowNotification":
-                if (!Boolean.valueOf(newValue.toString())) {
+                if (!Boolean.parseBoolean(newValue.toString())) {
                     Intent intent = new Intent(getActivity(), ModulesService.class);
                     intent.setAction(ModulesService.actionDismissNotification);
                     getActivity().startService(intent);
@@ -194,7 +194,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 }
                 break;
             case "pref_common_tor_tethering":
-                allowTorTether = Boolean.valueOf(newValue.toString());
+                allowTorTether = Boolean.parseBoolean(newValue.toString());
                 readTorConf();
                 if (new PrefManager(getActivity()).getBoolPref("Tor Running")) {
                     ModulesRestarter.restartTor(getActivity());
@@ -203,7 +203,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 }
                 break;
             case "pref_common_itpd_tethering":
-                allowITPDtether = Boolean.valueOf(newValue.toString());
+                allowITPDtether = Boolean.parseBoolean(newValue.toString());
                 readITPDConf();
                 readITPDTunnelsConf();
                 if (new PrefManager(getActivity()).getBoolPref("I2PD Running")) {
@@ -215,7 +215,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             case "pref_common_tor_route_all":
                 Preference prefTorSiteUnlockTether = findPreference("prefTorSiteUnlockTether");
                 if (prefTorSiteUnlockTether != null) {
-                    if (Boolean.valueOf(newValue.toString())) {
+                    if (Boolean.parseBoolean(newValue.toString())) {
                         prefTorSiteUnlockTether.setEnabled(false);
                     } else {
                         prefTorSiteUnlockTether.setEnabled(true);
@@ -237,7 +237,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             case "swUseModulesRoot":
                 ModulesStatus modulesStatus = ModulesStatus.getInstance();
                 ModulesAux.stopModulesIfRunning(getActivity());
-                boolean newOptionValue = Boolean.valueOf(newValue.toString());
+                boolean newOptionValue = Boolean.parseBoolean(newValue.toString());
                 modulesStatus.setUseModulesWithRoot(newOptionValue);
                 modulesStatus.setContextUIDUpdateRequested(true);
                 ModulesAux.requestModulesStatusUpdate(getActivity());
@@ -248,11 +248,11 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 }
 
                 Log.i(LOG_TAG, "PreferencesCommonFragment switch to "
-                        + (Boolean.valueOf(newValue.toString())? "Root" : "No Root"));
+                        + (Boolean.parseBoolean(newValue.toString())? "Root" : "No Root"));
                 break;
             case "pref_common_fix_ttl":
                 modulesStatus = ModulesStatus.getInstance();
-                boolean fixed = Boolean.valueOf(newValue.toString());
+                boolean fixed = Boolean.parseBoolean(newValue.toString());
                 modulesStatus.setFixTTL(fixed);
                 modulesStatus.setIptablesRulesUpdateRequested(true);
 

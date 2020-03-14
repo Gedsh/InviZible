@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -670,7 +671,7 @@ public class FileOperations {
                     throw new IllegalStateException("readTextFile no file " + filePath);
                 }
 
-                List<String> linesList = new LinkedList<>();
+                List<String> linesList = new ArrayList<>();
 
                 try (FileInputStream fstream = new FileInputStream(filePath);
                      BufferedReader br = new BufferedReader(new InputStreamReader(fstream))) {
@@ -794,7 +795,7 @@ public class FileOperations {
 
         reentrantLock.lock();
 
-        List<String> lines = new LinkedList<>();
+        List<String> lines = new ArrayList<>();
 
         try {
 
