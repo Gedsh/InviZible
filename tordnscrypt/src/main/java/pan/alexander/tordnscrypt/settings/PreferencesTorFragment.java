@@ -36,6 +36,7 @@ import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
@@ -102,11 +103,15 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             }
         }
 
+        Preference editTorConfDirectly = findPreference("editTorConfDirectly");
+        if (editTorConfDirectly != null) {
+            editTorConfDirectly.setOnPreferenceClickListener(this);
+        }
+
         Preference cleanTorFolder = findPreference("cleanTorFolder");
         if (cleanTorFolder != null) {
             cleanTorFolder.setOnPreferenceClickListener(this);
         }
-
 
         if (getArguments() != null) {
             key_tor = getArguments().getStringArrayList("key_tor");
@@ -193,6 +198,8 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
         if (torRunning) {
             ModulesRestarter.restartTor(getActivity());
+            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
+            ModulesAux.requestModulesStatusUpdate(getActivity());
         }
 
     }
@@ -202,7 +209,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
         try {
             if(Objects.equals(preference.getKey(), "ExcludeExitNodes")){
-                if (Boolean.valueOf(newValue.toString())){
+                if (Boolean.parseBoolean(newValue.toString())){
                     key_tor.set(key_tor.indexOf("#ExcludeExitNodes"),"ExcludeExitNodes");
                     FragmentTransaction fTrans;
                     if (getFragmentManager() != null) {
@@ -221,7 +228,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 return true;
             }
             if(Objects.equals(preference.getKey(), "ExitNodes")){
-                if (Boolean.valueOf(newValue.toString())){
+                if (Boolean.parseBoolean(newValue.toString())){
                     key_tor.set(key_tor.indexOf("#ExitNodes"),"ExitNodes");
                     FragmentTransaction fTrans;
                     if (getFragmentManager() != null) {
@@ -240,7 +247,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 return true;
             }
             if(Objects.equals(preference.getKey(), "ExcludeNodes")){
-                if (Boolean.valueOf(newValue.toString())){
+                if (Boolean.parseBoolean(newValue.toString())){
                     key_tor.set(key_tor.indexOf("#ExcludeNodes"),"ExcludeNodes");
                     FragmentTransaction fTrans;
                     if (getFragmentManager() != null) {
@@ -259,7 +266,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 return true;
             }
             if(Objects.equals(preference.getKey(), "EntryNodes")){
-                if (Boolean.valueOf(newValue.toString())){
+                if (Boolean.parseBoolean(newValue.toString())){
                     key_tor.set(key_tor.indexOf("#EntryNodes"),"EntryNodes");
                     FragmentTransaction fTrans;
                     if (getFragmentManager() != null) {
@@ -278,7 +285,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 return true;
             }
             if(Objects.equals(preference.getKey(), "Enable SOCKS proxy")){
-                if(Boolean.valueOf(newValue.toString())){
+                if(Boolean.parseBoolean(newValue.toString())){
                     key_tor.set(key_tor.indexOf("#SOCKSPort"),"SOCKSPort");
                 } else {
                     key_tor.set(key_tor.indexOf("SOCKSPort"),"#SOCKSPort");
@@ -286,7 +293,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 return true;
             }
             if(Objects.equals(preference.getKey(), "Enable HTTPTunnel")){
-                if(Boolean.valueOf(newValue.toString())){
+                if(Boolean.parseBoolean(newValue.toString())){
                     key_tor.set(key_tor.indexOf("#HTTPTunnelPort"),"HTTPTunnelPort");
                 } else {
                     key_tor.set(key_tor.indexOf("HTTPTunnelPort"),"#HTTPTunnelPort");
@@ -294,7 +301,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 return true;
             }
             if(Objects.equals(preference.getKey(), "Enable Transparent proxy")){
-                if(Boolean.valueOf(newValue.toString())){
+                if(Boolean.parseBoolean(newValue.toString())){
                     key_tor.set(key_tor.indexOf("#TransPort"),"TransPort");
                 } else {
                     key_tor.set(key_tor.indexOf("TransPort"),"#TransPort");
@@ -302,7 +309,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 return true;
             }
             if(Objects.equals(preference.getKey(), "Enable DNS")){
-                if(Boolean.valueOf(newValue.toString())){
+                if(Boolean.parseBoolean(newValue.toString())){
                     key_tor.set(key_tor.indexOf("#DNSPort"),"DNSPort");
                 } else {
                     key_tor.set(key_tor.indexOf("DNSPort"),"#DNSPort");
@@ -355,6 +362,9 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             }).start();
 
 
+            return true;
+        } else if ("editTorConfDirectly".equals(preference.getKey())) {
+            ConfigEditorFragment.openEditorFragment(getFragmentManager(), "tor.conf");
             return true;
         }
         return false;

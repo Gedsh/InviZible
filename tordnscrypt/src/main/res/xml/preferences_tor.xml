@@ -157,6 +157,11 @@
     <PreferenceCategory
         android:title="@string/pref_common_categ_other">
         <Preference
+            android:key="editTorConfDirectly"
+            android:title="@string/pref_tor_edit_conf"
+            android:summary="@string/pref_advanced">
+        </Preference>
+        <Preference
             android:key="cleanTorFolder"
             android:title="@string/pref_tor_clean_module_folder">
         </Preference>

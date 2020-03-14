@@ -286,6 +286,16 @@
     <PreferenceCategory
         android:title="@string/pref_common_categ_other">
         <Preference
+            android:key="editITPDConfDirectly"
+            android:title="@string/pref_itpd_edit_conf"
+            android:summary="@string/pref_advanced">
+        </Preference>
+        <Preference
+            android:key="editTunnelsDirectly"
+            android:title="@string/pref_itpd_edit_tunnels"
+            android:summary="@string/pref_advanced">
+        </Preference>
+        <Preference
             android:key="cleanITPDFolder"
             android:title="@string/pref_tor_clean_module_folder">
         </Preference>

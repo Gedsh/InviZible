@@ -36,6 +36,7 @@ import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
@@ -112,11 +113,20 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
             }
         }
 
+        Preference editITPDConfDirectly = findPreference("editITPDConfDirectly");
+        if (editITPDConfDirectly != null) {
+            editITPDConfDirectly.setOnPreferenceClickListener(this);
+        }
+
+        Preference editTunnelsDirectly = findPreference("editTunnelsDirectly");
+        if (editTunnelsDirectly != null) {
+            editTunnelsDirectly.setOnPreferenceClickListener(this);
+        }
+
         Preference cleanITPDFolder = findPreference("cleanITPDFolder");
         if (cleanITPDFolder != null) {
             cleanITPDFolder.setOnPreferenceClickListener(this);
         }
-
 
         if (getArguments() != null) {
             key_itpd = getArguments().getStringArrayList("key_itpd");
@@ -216,6 +226,8 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
 
         if (itpdRunning) {
             ModulesRestarter.restartITPD(getActivity());
+            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
+            ModulesAux.requestModulesStatusUpdate(getActivity());
         }
 
 
@@ -266,12 +278,13 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
             return false;
         }
 
-        if (ModulesStatus.getInstance().getItpdState() != STOPPED) {
-            Toast.makeText(getActivity(), R.string.btnITPDStop, Toast.LENGTH_SHORT).show();
-            return true;
-        }
-
         if ("cleanITPDFolder".equals(preference.getKey())) {
+
+            if (ModulesStatus.getInstance().getItpdState() != STOPPED) {
+                Toast.makeText(getActivity(), R.string.btnITPDStop, Toast.LENGTH_SHORT).show();
+                return true;
+            }
+
             new Thread(() -> {
                 boolean successfully = false;
                 if (getActivity() != null) {
@@ -289,6 +302,12 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
             }).start();
 
 
+            return true;
+        } else if ("editITPDConfDirectly".equals(preference.getKey())) {
+            ConfigEditorFragment.openEditorFragment(getFragmentManager(), "i2pd.conf");
+            return true;
+        } else if ("editTunnelsDirectly".equals(preference.getKey())) {
+            ConfigEditorFragment.openEditorFragment(getFragmentManager(), "tunnels.conf");
             return true;
         }
         return false;

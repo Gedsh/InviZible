@@ -34,14 +34,16 @@ import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
-public class PreferencesDNSFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
+public class PreferencesDNSFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener {
 
     private ArrayList<String> key_toml;
     private ArrayList<String> val_toml;
@@ -90,6 +92,11 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
             } else if (!appVersion.startsWith("g")){
                 Log.e(LOG_TAG, "PreferencesDNSFragment preference is null exception");
             }
+        }
+
+        Preference editDNSTomlDirectly = findPreference("editDNSTomlDirectly");
+        if (editDNSTomlDirectly != null) {
+            editDNSTomlDirectly.setOnPreferenceClickListener(this);
         }
 
         if (getArguments() != null) {
@@ -149,6 +156,8 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
 
         if (dnsCryptRunning) {
             ModulesRestarter.restartDNSCrypt(getActivity());
+            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
+            ModulesAux.requestModulesStatusUpdate(getActivity());
         }
     }
 
@@ -182,21 +191,21 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
                 val_toml.set(key_toml.lastIndexOf("refresh_delay"), newValue.toString());
                 return true;
             } else if (Objects.equals(preference.getKey(), "Enable proxy")) {
-                if (Boolean.valueOf(newValue.toString())) {
+                if (Boolean.parseBoolean(newValue.toString())) {
                     key_toml.set(key_toml.indexOf("#proxy"), "proxy");
                 } else {
                     key_toml.set(key_toml.indexOf("proxy"), "#proxy");
                 }
                 return true;
             } else if (Objects.equals(preference.getKey().trim(), "Enable Query logging")) {
-                if (Boolean.valueOf(newValue.toString())) {
+                if (Boolean.parseBoolean(newValue.toString())) {
                     key_toml.set(val_toml.indexOf("\"" + appDataDir + "/cache/query.log\""), "file");
                 } else {
                     key_toml.set(val_toml.indexOf("\"" + appDataDir + "/cache/query.log\""), "#file");
                 }
                 return true;
             } else if (Objects.equals(preference.getKey().trim(), "Enable Suspicious logging")) {
-                if (Boolean.valueOf(newValue.toString())) {
+                if (Boolean.parseBoolean(newValue.toString())) {
                     key_toml.set(val_toml.indexOf("\"" + appDataDir + "/cache/nx.log\""), "file");
                 } else {
                     key_toml.set(val_toml.indexOf("\"" + appDataDir + "/cache/nx.log\""), "#file");
@@ -215,6 +224,15 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
             Toast.makeText(getActivity(), R.string.wrong, Toast.LENGTH_LONG).show();
         }
 
+        return false;
+    }
+
+    @Override
+    public boolean onPreferenceClick(Preference preference) {
+        if ("editDNSTomlDirectly".equals(preference.getKey())) {
+            ConfigEditorFragment.openEditorFragment(getFragmentManager(), "dnscrypt-proxy.toml");
+            return true;
+        }
         return false;
     }
 
