@@ -30,6 +30,7 @@ public class LanguageList {
             null,
             "RW5nbGlzaCAoRW5nbGlzaCk=",
             "R2VybWFuIChEZXV0c2NoZSk=",
+            "SW5kb25lc2lhbiAoYmFoYXNhIEluZG9uZXNpYSk=",
             "UGVyc2lhbiAo2YHYp9ix2LPbjCk=",
             "UG9saXNoIChQb2xza2kp",
             "UnVzc2lhbiAo0KDRg9GB0YHQutC40Lkp"
@@ -38,6 +39,7 @@ public class LanguageList {
             "",
             "en",
             "de",
+            "in",
             "fa",
             "pl",
             "ru"

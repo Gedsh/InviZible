@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_header_title">"Tor dengan DNSCrypt dan I2P"</string>
+    <string name="nav_header_subtitle">"Solusi terbaik untuk privasimu"</string>
+    <string name="action_settings">"Setelan"</string>
+    <string name="tvITPDStop">"I2P Berhenti"</string>
+    <string name="tvITPDRunning">"I2P Berjalan"</string>
+    <string name="tvITPDStarting">"I2P Memulai"</string>
+    <string name="tvITPDStopping">"I2P Berhenti"</string>
+    <string name="tvITPDInstalling">"Memasang I2P"</string>
+    <string name="tvITPDInstalled">"I2P Terpasang"</string>
+    <string name="tvITPDNotInstalled">"I2P Tidak Terpasang"</string>
+    <string name="swRunOnBoot">"Mulai Saat Boot"</string>
+    <string name="root_available">"Memeriksa jika Root tersedia..."</string>
+    <string name="please_wait">"Silahkan tunggu..."</string>
+    <string name="dont_show">"Jangan tampilkan lagi"</string>
+    <string name="tvDNSStop">"DNSCrypt Berhenti"</string>
+    <string name="tvDNSInstalled">"DNSCrypt Terpasang"</string>
+    <string name="tvDNSInstalling">"Memasang DNSCrypt"</string>
+    <string name="tvDNSNotInstalled">"DNSCrypt Tidak Terpasang"</string>
+    <string name="tvDNSStarting">"Memulai DNSCrypt"</string>
+    <string name="tvDNSRunning">"DNSCrypt Berjalan"</string>
+    <string name="tvDNSStopping">"DNSCrypt Berhenti"</string>
+    <string name="tvTorStop">"Tor Berhenti"</string>
+    <string name="tvTorInstalled">"Tor Terpasang"</string>
+    <string name="tvTorInstalling">"Memasang Tor"</string>
+    <string name="tvTorNotInstalled">"Tor Tidak Terpasang"</string>
+    <string name="tvTorStarting">"Memulai Tor"</string>
+    <string name="tvTorConnecting">"Menghubungkan"</string>
+    <string name="tvTorRunning">"Tor Berjalan"</string>
+    <string name="tvTorStopping">"Tor Berhenti"</string>
+    <string name="cancel">"Batal"</string>
+    <string name="error">"Kesalahan!"</string>
+    <string name="warning">"Perhatian!"</string>
+    <string name="install">"Pasang"</string>
+    <string name="exit">"Keluar"</string>
+    <string name="done">"Selesai"</string>
+    <string name="wrong">"Ada sesuatu yang salah!"</string>
+    <string name="install_message">"Apakah kamu ingin menyelesaikan pemasangan?"</string>
+    <string name="premium">"Versi Premium"</string>
+    <string name="agree">"Saya terima"</string>
+    <string name="disagree">"Saya tolak"</string>
+    <string name="message_no_root_used">"Kamu bisa menggunakan InviZible Pro dengan mode VPN lokal, atau aplikasi proxy atau lokal VPN dengan fitur mode proxy."</string>
+    <string name="message_no_root_used_kitkat">"Kamu bisa menggunakan InviZible Pro dengan aplikasi dengan proxy atau Lokal VPN dengan fitur di proxy mode."</string>
+    <string name="write_file_error">"Simpan file Error!"</string>
+    <string name="drawer_menu_commonSettings">"Pengaturan Umum"</string>
+    <string name="drawer_menu_DNSSettings">"Pengaturan DNSCrypt"</string>
+    <string name="drawer_menu_TorSettings">"Pengaturan Tor"</string>
+    <string name="drawer_menu_I2PDSettings">"Pengaturan I2P"</string>
+    <string name="drawer_menu_fastSettings">"Pengaturan Cepat"</string>
+    <string name="drawer_menu_backup">"Cadangkan &amp; Kembalikan"</string>
+    <string name="drawer_menu_about">"Tentang"</string>
+    <string name="drawer_menu_help">"Catatan"</string>
+    <string name="drawer_menu_donate">"Donasi"</string>
+    <string name="btnRestoreBackup">"Kembalikan Semua"</string>
+    <string name="btnSaveBackup">"Simpan Semua"</string>
+    <string name="etPathBackup">"Folder Path:"</string>
+    <string name="backupFolder">"Pilih folder cadangan"</string>
+    <string name="title_activity_settings">"Pengaturan"</string>
+    <string name="pref_fast_categ_autostart">"Mulai otomatis"</string>
+    <string name="pref_fast_dns_autostart">"Mulai DNSCrypt saat boot"</string>
+    <string name="pref_fast_tor_autostart">"Mulai Tor saat Boot"</string>
+    <string name="pref_fast_itpd_autostart">"Mulai I2P saat Boot"</string>
+    <string name="pref_fast_autostart_delay">"Tunda"</string>
+    <string name="pref_fast_autostart_delay_summ">"Gunakan penundaan (detik) hanya jika memulai otomatis bekerja Tidak Benar"</string>
+    <string name="pref_fast_dns_server">"Server DNSCrypt"</string>
+    <string name="pref_fast_select_dns_server">"Pilih Server DNSCrypt"</string>
+    <string name="pref_fast_tor">"Pengaturan Tor"</string>
+    <string name="pref_fast_routing">"Pengaturan Rute"</string>
+    <string name="pref_fast_all_through_tor">"Semua rute trafik melalui Tor"</string>
+    <string name="pref_fast_all_through_ipro">"Semua rute trafik melalui InviZible"</string>
+    <string name="pref_fast_unlock_with_tor">"Pilih website"</string>
+    <string name="pref_fast_unlock_with_tor_summ">"Daftar website dibuka dengan Tor"</string>
+    <string name="pref_fast_unlock_apps_with_tor">"Pilih Aplikasi"</string>
+    <string name="pref_fast_unlock_apps_with_tor_summ">"Daftar aplikasi menggunakan Tor"</string>
+    <string name="pref_fast_unlock_apps_with_ipro_summ">"Daftar aplikasi menggunakan InviZible"</string>
+    <string name="pref_fast_exclude_from_tor">"Kecualikan website"</string>
+    <string name="pref_fast_exclude_from_tor_summ">"Daftar WebSites untuk membuka secara langsung"</string>
+    <string name="pref_fast_exclude_apps_from_tor">"Kecualikan aplikasi"</string>
+    <string name="pref_fast_exclude_apps_from_tor_summ">"Daftar aplikasi untuk dibuka langsung"</string>
+    <string name="pref_fast_exclude_apps_from_ipro_summ">"Daftar aplikasi untuk dibuka langsung"</string>
+    <string name="pref_fast_site_refresh_interval">"Segarkan Interval"</string>
+    <string name="pref_fast_site_refresh_interval_summ">"Periode dalam jam untuk menyegarkan IP Website. Untuk Android 5.1 dan lebih tinggi. Masukkan 0 untuk berhenti menyegarkan."</string>
+    <string name="pref_fast_use_tor_bridges">"Bridge"</string>
+    <string name="pref_fast_use_tor_bridges_summ">"Gunakan itu jika kamu tidak bisa terkoneksi pada jaringan Tor"</string>
+    <string name="pref_fast_use_tor_bridges_no">"Tidak menggunakan Bridge"</string>
+    <string name="pref_fast_use_tor_bridges_default">"Gunakan daftar default Bridge"</string>
+    <string name="pref_fast_use_tor_bridges_own">"Gunakan daftar Bridge sendiri"</string>
+    <string name="pref_fast_use_tor_bridges_request">"Meminta Bridge"</string>
+    <string name="pref_fast_use_tor_bridges_add">"Tambahkan Bridge"</string>
+    <string name="pref_fast_use_tor_bridges_edit">"Ubah Bridge"</string>
+    <string name="pref_fast_use_tor_bridges_deactivate">"Mohon mematikan bridge dahulu!"</string>
+    <string name="pref_fast_use_tor_bridges_obfs">"Obfuscation"</string>
+    <string name="pref_fast_use_tor_bridges_transport_select">"Silahkan pilih tipe obfuscation:"</string>
+    <string name="pref_fast_use_tor_bridges_enter_characters">"Silahkan masukkan karakter dari gambar"</string>
+    <string name="pref_fast_use_tor_bridges_request_dialog">"Permintaan Bridge baru"</string>
+    <string name="pref_fast_use_tor_bridges_show_dialog">"Bridge baru Anda dari bridges.torproject.org:"</string>
+    <string name="pref_fast_use_tor_bridges_add_dialog">"Simpan"</string>
+    <string name="pref_fast_use_tor_bridges_close_dialog">"Tutup"</string>
+    <string name="pref_fast_unlock_host_wrong">"Host name salah!"</string>
+    <string name="pref_fast_theme">"Pilih Tema"</string>
+    <string name="pref_fast_language">"Pilih bahasa"</string>
+    <string name="pref_fast_block_http">"Blokir http"</string>
+    <string name="pref_fast_block_http_summ">"Tolak koneksi ke http port 80"</string>
+    <string name="pref_fast_categ_update">"Pembaruan"</string>
+    <string name="pref_fast_auto_update">"Perbarui Otomatis"</string>
+    <string name="pref_fast_auto_update_summ">"Cek InviZible Pro dan peerbarui modul setiap hari"</string>
+    <string name="pref_fast_chek_update">"Cek Pembaruan"</string>
+    <string name="pref_fast_chek_update_summ">"Cek bila versi baru tersedia sekarang"</string>
+    <string name="pref_fast_through_tor_update">"Perbarui secara ketat melalui Tor"</string>
+    <string name="pref_fast_through_tor_update_summ">"Cek pembaruan hanya dengan Tor dan ketika Tor sedang berjalan"</string>
+    <string name="pref_common_categ_run_with_root">"Gunakan Privileges Root"</string>
+    <string name="pref_common_run_with_root">"Jalankan Modul dengan Root"</string>
+    <string name="pref_common_run_with_root_summ">"Gunakan Privileges Root untuk DNSCrypt, Tor, I2P "</string>
+    <string name="pref_common_categ_other">"Lainnya"</string>
+    <string name="pref_common_block_http">"Blokir HOTSPOT http"</string>
+    <string name="pref_common_block_http_summ">"Tolak koneksi ke http port 80 untuk HOTSPOT"</string>
+    <string name="pref_common_notification_summ">"Lindungi aplikasi dengan Mode No Root untuk mencegah aplikasi tertutup oleh android"</string>
+    <string name="pref_common_refresh_rules">"Segaran aturan"</string>
+    <string name="pref_common_refresh_rules_summ">"Perbarui aturan pada setiap perubahan konektivitas"</string>
+    <string name="pref_common_show_notification">"Tampilkan notifikasi"</string>
+    <string name="pref_common_wakelock">"Cegah perangkat tidur"</string>
+    <string name="pref_common_wakelock_summ">"Biasanya perlindungan dengan Mode No Root mencegah aplikasi terbunuh oleh android. Mungkin menghabiskan baterai"</string>
+    <string name="pref_common_show_help">"Pesan bantuan"</string>
+    <string name="pref_common_show_help_summ">"Selalu Tampilkan pesan Bantuan"</string>
+    <string name="pref_common_notification_helper">"Silahkan kecualikan InviZible Pro dari Pengoptimalan Baterai Android.
+	Jika tidak android akan mematikan DNSCrypt, Tor, atau I2P kapanpun. Pada sistem
+	seperti MIUI, membutuhkan beberapa langkah, untuk mengecualikan InviZible Pro dari
+	Pengoptimalan Baterai (misal. Pengaturan-&gt;Baterai-&gt;Penghemat Daya-&gt;Pilih InviZible Pro-&gt;Tidak ada batasan Latar Belakang,
+	Pengaturan-&gt;bolehkan mulai otomatis dan Tekan Tahan Tombol Home-&gt;Buka Recent App-&gt;Kemudian swipe kebawah InviZible Pro
+	dan klik kunci pada memori)."</string>
+    <string name="pref_common_use_busybox">"Pilih BusyBox"</string>
+    <string name="pref_common_categ_hotspot">"Experimental-HOTSPOT"</string>
+    <string name="pref_common_tethering_autostart">"Memulai Penambatan saat Boot"</string>
+    <string name="pref_common_tor_tethering">"Bolehkan Penambatan Tor"</string>
+    <string name="pref_common_tor_route_all">"Semua rute melalui Tor"</string>
+    <string name="pref_common_tor_route_all_summ">"Semua rute trafik masuk melalui Tor"</string>
+    <string name="pref_common_unblock_with_tor">"Pilih Website"</string>
+    <string name="pref_common_unblock_with_tor_summ">"Daftar Website untuk membuka dengan Tor untuk HOTSPOT"</string>
+    <string name="pref_common_excludes_from_tor">"Kecualikan Website"</string>
+    <string name="pref_common_excludes_from_tor_summ">"Daftar Website untuk membuka langsung untuk HOTSPOT"</string>
+    <string name="pref_common_itpd_tethering">"Bolehkan penambatan I2P"</string>
+    <string name="pref_common_fix_ttl">"Perbaiki TTL"</string>
+    <string name="pref_common_fix_ttl_summ">"TTL akan diperbaiki ke 64 menggunakan VPN lokal. Dukungan kernel tidak diperlukan.
+	Itu hanya bisa digunakan pada \"mode root\" dengan opsi menonaktifkan \"Menjalankan Modul dengan Root\".
+	Untuk memperbaiki TTL silahkan mulai DNSCrypt atau/dan Tor."</string>
+    <string name="pref_common_tethering_settings">"Buka konfigurasi Penambatan"</string>
+    <string name="pref_common_restart_dnscrypt">"Silahkan mulai ulang DNSCrypt"</string>
+    <string name="pref_common_restart_tor">"Silahkan mulai ulang Tor"</string>
+    <string name="pref_common_restart_itpd">"Silahkan mulai ulang I2P"</string>
+    <string name="pref_common_use_iptables">"Pilih Iptables"</string>
+    <string name="pref_common_log_root_commands">"Simpan perintah Root untuk Log"</string>
+    <string name="notification_text">"DNSCrypt, Tor, I2P dilindungi. Jangan disembunyikan."</string>
+    <string name="notification_temp_text">"Pemberitahuan ini harus segera menghilang."</string>
+    <string name="tvSettings_text">"Silahkan tunggu..."</string>
+    <string name="toastSettings_saved">"Pengaturan tersimpan"</string>
+    <string name="pref_dnscrypt_global_settings_categ">"PENGATURAN GLOBAL"</string>
+    <string name="pref_advanced">" Hanya untuk pengguna mahir!"</string>
+    <string name="pref_dnscrypt_select_server_names">"Pilih setidaknya satu server!"</string>
+    <string name="pref_dnscrypt_local_port_summ">"Port lokal untuk listen to"</string>
+    <string name="pref_dnscrypt_require_servers_categ">"Memerlukan server (dari sumber statis + jarak jauh) untuk memenuhi properti tertentu."</string>
+    <string name="pref_dnscrypt_dnscrypt_servers_summ">"Gunakan server yang mengimplementasikan protokol DNSCrypt."</string>
+    <string name="pref_dnscrypt_doh_servers_summ">"Gunakan server yang mengimplementasikan protokol DNS-over-HTTPS."</string>
+    <string name="pref_dnscrypt_require_servers_prop_categ">"Memerlukan server yang ditentukan oleh sumber jarak jauh untuk memenuhi properti tertentu."</string>
+    <string name="pref_dnscrypt_require_dnssec_summ">"Server harus mendukung ekstensi keamanan DNS (DNSSEC)."</string>
+    <string name="pref_dnscrypt_require_nolog_summ">"Server tidak boleh mencatat permintaan pengguna (deklaratif)."</string>
+    <string name="pref_dnscrypt_require_nofilter_summ">"Server tidak boleh menerapkan daftar hitamnya sendiri (untuk kontrol orang tua, pemblokiran iklan ...)."</string>
+    <string name="pref_dnscrypt_force_tcp_categ">"Selalu gunakan TCP untuk terhubung ke server upstream."</string>
+    <string name="pref_dnscrypt_force_tcp_summ">" Ini bisa bermanfaat jika Anda perlu merutekan semuanya melalui Tor.
+
+         Kalau tidak, biarkan ini false, karena tidak meningkatkan keamanan (dnscrypt-proxy akan selalu mengenkripsi semuanya bahkan menggunakan UDP), dan hanya dapat meningkatkan latensi."</string>
+    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"Proxy HTTP / SOCKS."</string>
+    <string name="pref_dnscrypt_use_proxy">"Aktifkan proxy"</string>
+    <string name="pref_dnscrypt_proxy_summ">"Merutekan semua koneksi TCP ke node Tor lokal.
+         Tor tidak mendukung UDP, jadi setel force_tcp ke true juga."</string>
+    <string name="pref_dnscrypt_proxy">"proxy_port"</string>
+    <string name="pref_dnscrypt_other_categ">"Pengaturan Lainnya."</string>
+    <string name="pref_dnscrypt_fallback_resolver_summ">"Fallback resolver.
+         Ini adalah resolver DNS normal yang tidak dienkripsi, yang hanya akan digunakan untuk kueri satu-shot
+         ketika mengambil daftar resolvers awal, dan hanya jika konfigurasi DNS sistem tidak berfungsi.
+         Ini tidak akan pernah digunakan jika daftar telah di-cache.
+         Orang-orang di Cina mungkin perlu menggunakan 114.114.114.114:53 di sini."</string>
+    <string name="pref_dnscrypt_ignore_system_dns_summ">"Jangan biarkan dnscrypt-proxy mencoba menggunakan pengaturan DNS sistem. Tanpa syarat menggunakan fallback resolver.."</string>
+    <string name="pref_dnscrypt_filters_categ">"FILTERS"</string>
+    <string name="pref_dnscrypt_forwarding_rules_summ">"Merutekan query untuk domain tertentu ke sekumpulan server khusus. Dinonaktifkan sementara "</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">"Cloaking mengembalikan alamat yang telah ditentukan untuk nama tertentu.
+
+         Selain bertindak sebagai file HOSTS, ia juga dapat mengembalikan alamat IP dari nama yang berbeda. Ini juga akan melakukan perataan CNAME.."</string>
+    <string name="pref_dnscrypt_query_log_categ">"Pencatatan kueri."</string>
+    <string name="pref_dnscrypt_query_log_summ">"Catat permintaan klien ke file."</string>
+    <string name="pref_dnscrypt_query_log">"Aktifkan Pencatatan kueri"</string>
+    <string name="pref_dnscrypt_ignored_qtypes_summ">"Jangan mencatat jenis permintaan ini, untuk mengurangi verbositas. Tetap kosong untuk mencatat semuanya."</string>
+    <string name="open_query_log">"Buka Log Kueri"</string>
+    <string name="pref_dnscrypt_nx_log_categ">"Pencatatan kueri yang mencurigakan."</string>
+    <string name="pref_dnscrypt_nx_log_summ">"Catat kueri untuk zona yang tidak ada.
+
+         Kueri ini dapat mengungkapkan keberadaan malware, aplikasi yang rusak / usang, dan perangkat yang memberi sinyal keberadaannya kepada pihak ketiga."</string>
+    <string name="pref_dnscrypt_nx_log">"Aktifkan Pencatatan yang Mencurigakan"</string>
+    <string name="open_nx_log">"Buka Log Mencurigakan"</string>
+    <string name="pref_dnscrypt_blacklist_categ">"Pemblokiran berbasis pola (daftar hitam)."</string>
+    <string name="pref_dnscrypt_blacklist">"Daftar hitam"</string>
+    <string name="pref_dnscrypt_blacklist_summ">"Daftar hitam dibuat dari satu pola per baris."</string>
+    <string name="pref_dnscrypt_ipblacklist_categ">"Pemblokiran IP berbasis pola (daftar hitam IP)."</string>
+    <string name="pref_dnscrypt_ipblacklist">"Daftar Hitam IP"</string>
+    <string name="pref_dnscrypt_ipblacklist_summ">"Daftar Hitam IP dibuat dari satu pola per baris."</string>
+    <string name="pref_dnscrypt_whitelist_categ">"Daftar putih berbasis pola (bypass daftar hitam)."</string>
+    <string name="pref_dnscrypt_whitelist">"Daftar putih"</string>
+    <string name="pref_dnscrypt_whitelist_summ">"Daftar putih mendukung pola yang sama dengan daftar hitam. Jika nama cocok dengan entri daftar putih, sesi yang sesuai akan memotong nama dan filter IP."</string>
+    <string name="pref_dnscrypt_sources_categ">"Server"</string>
+    <string name="pref_dnscrypt_sources">"Sumber"</string>
+    <string name="pref_dnscrypt_sources_summ">"Daftar jauh dari server yang tersedia."</string>
+    <string name="pref_dnscrypt_refresh_delay_summ">"Daftar sumber kedaluwarsa setelah refresh_delay jam."</string>
+    <string name="pref_dnscrypt_relays_categ">"Relay"</string>
+    <string name="pref_dnscrypt_relays">"Sumber"</string>
+    <string name="pref_dnscrypt_relays_delay_summ">"Relai daftar kedaluwarsa setelah refresh_delay jam."</string>
+    <string name="pref_dnscrypt_relays_title">"Relai DNSCrypt"</string>
+    <string name="pref_dnscrypt_not_exist">"Preferensi tidak ada di dnscrypt-proxy.toml!"</string>
+    <string name="btn_dnscrypt_delete_log">"Hapus log"</string>
+    <string name="title_dnscrypt_query_log">"Log Kueri DNSCrypt"</string>
+    <string name="title_dnscrypt_nx_log">"DNSCrypt Log Mencurigakan"</string>
+    <string name="dnscrypt_empty_log">"Log itu Kosong"</string>
+    <string name="pref_dnscrypt_block_unqualified_summ">"Segera tanggapi kueri A dan AAAA untuk nama host tanpa nama domain."</string>
+    <string name="pref_dnscrypt_block_undelegated_summ">"Segera tanggapi kueri untuk zona lokal alih-alih membocorkannya ke resolusi hulu (selalu menyebabkan kesalahan atau batas waktu)."</string>
+    <string name="pref_tor_virtual_addr_network_IPv4_summ">"Ketika Tor perlu menetapkan alamat virtual (tidak digunakan) karena perintah MAPADDRESS dari pengontrol atau fitur AutomapHostsOnResolve, Tor mengambil alamat yang belum ditetapkan dari kisaran ini."</string>
+    <string name="pref_tor_avoid_disc_writes_summ">"Jika bukan nol, cobalah untuk menulis ke disk lebih jarang."</string>
+    <string name="pref_tor_connections_padding_summ">"Opsi ini mengatur penggunaan padding Tor untuk mempertahankan terhadap beberapa bentuk analisis lalu lintas. Nonaktifkan untuk menghemat bandwidth."</string>
+    <string name="pref_tor_reduced_connections_padding_summ">"Jika disetel diaktifkan, Tor tidak akan menahan ATAU koneksi terbuka terlalu lama, dan akan mengirimkan bantalan lebih sedikit pada koneksi ini. Aktifkan untuk menghemat bandwidth."</string>
+    <string name="pref_tor_exclude_exit_nodes_summ">"Daftar kode negara yang tidak pernah digunakan ketika memilih node keluar, yang memberikan lalu lintas untuk Anda di luar jaringan Tor."</string>
+    <string name="pref_tor_exit_nodes_summ">"Daftar kode negara untuk digunakan sebagai simpul keluar - yaitu simpul yang memberikan lalu lintas untuk Anda di luar jaringan Tor."</string>
+    <string name="pref_tor_exclude_nodes_summ">"Daftar kode negara yang harus dihindari saat membangun sirkuit."</string>
+    <string name="pref_tor_entry_nodes_summ">"Daftar kode negara node yang digunakan untuk hop pertama di sirkuit normal Anda."</string>
+    <string name="pref_tor_strict_nodes_summ">"Jika StrictNodes diaktifkan, Tor akan memperlakukan semata-mata opsi ExcludeNodes sebagai persyaratan untuk mengikuti semua sirkuit yang Anda hasilkan, bahkan jika melakukannya akan merusak fungsionalitas untuk Anda."</string>
+    <string name="pref_tor_fascist_firewall_summ">"Jika diaktifkan, Tor hanya akan membuat koneksi keluar ke ORs yang berjalan pada port yang diizinkan firewall Anda (standarnya adalah 80 dan 443)."</string>
+    <string name="pref_tor_new_circuit_period_summ">"Setiap NUM detik pertimbangkan apakah akan membangun sirkuit baru."</string>
+    <string name="pref_tor_max_circuit_dirtiness_summ">"Jangan ragu untuk menggunakan kembali sirkuit yang pertama kali digunakan paling banyak NUM detik yang lalu, tetapi jangan pernah pasang stream baru ke sirkuit yang terlalu lama."</string>
+    <string name="pref_tor_enforce_distinct_subnets_summ">"Jika diaktifkan, Tor tidak akan menempatkan dua server yang alamat IP-nya terlalu dekat pada sirkuit yang sama. Saat ini, dua alamat terlalu dekat jika mereka berada dalam kisaran yang sama /16 range."</string>
+    <string name="pref_tor_enable_SOCKS_proxy">"Aktifkan proksi SOCKS"</string>
+    <string name="pref_tor_SOCKS_port_summ">"Buka port ini untuk mendengarkan koneksi dari aplikasi yang berbicara SOCKS."</string>
+    <string name="pref_tor_enable_HTTPTunnel_proxy">"Aktifkan HTTPTunnel"</string>
+    <string name="pref_tor_HTTPTunnel_port_summ">"Buka port ini untuk mendengarkan koneksi proxy menggunakan protokol HTTP CONNECT, bukan SOCKS."</string>
+    <string name="pref_tor_enable_transparent_proxy">"Aktifkan proxy transparan"</string>
+    <string name="pref_tor_trans_port_summ">"Buka port ini untuk mendengarkan koneksi proxy transparan."</string>
+    <string name="pref_tor_enable_DNS">"Aktifkan DNS"</string>
+    <string name="pref_tor_DNS_port_summ">"Buka port ini untuk mendengarkan permintaan DNS UDP, dan menyelesaikannya secara anonim."</string>
+    <string name="pref_tor_client_use_IPv4_summ">"Jika dinonaktifkan, Tor akan menghindari koneksi ke server direktori dan entri node melalui IPv4."</string>
+    <string name="pref_tor_client_use_IPv6_summ">"Jika diaktifkan, Tor mungkin terhubung ke server direktori atau entri node melalui IPv6."</string>
+    <string name="pref_tor_not_exist">"Preferensi tidak ada di dnscrypt-proxy.toml!"</string>
+    <string name="pref_tor_unlock">"Host atau IP untuk membuka blokir"</string>
+    <string name="pref_tor_clearnet">"Host atau IP untuk jalan pintas"</string>
+    <string name="pref_tor_unlock_edit">"Edit Host atau IP"</string>
+    <string name="pref_tor_unlock_disabled">"Dinonaktifkan"</string>
+    <string name="pref_tor_unlock_app">"Aplikasi untuk Torify"</string>
+    <string name="pref_tor_clearnet_app">"Aplikasi untuk jalan pintas Tor"</string>
+    <string name="pref_tor_clean_module_folder">"Bersihkan folder modul"</string>
+    <string name="pref_routing_unlock_app">"Aplikasi untuk digunakan dengan InviZible"</string>
+    <string name="pref_routing_clearnet_app">"Aplikasi untuk jalan pintas InviZible"</string>
+    <string name="country_select_select_all">"Pilih Semua"</string>
+    <string name="country_select_unselect_all">"Hapus Pilihan"</string>
+    <string name="pref_itpd_common">"Pengaturan umum"</string>
+    <string name="pref_itpd_com_incom_connect">"Izinkan koneksi masuk"</string>
+    <string name="pref_itpd_com_port_summ">"Port untuk mendengarkan koneksi yang masuk."</string>
+    <string name="pref_itpd_com_host_summ">"Router eksternal IP untuk koneksi masuk."</string>
+    <string name="pref_itpd_com_ipv4_summ">"Aktifkan komunikasi melalui IPv4."</string>
+    <string name="pref_itpd_com_ipv6_summ">"Aktifkan komunikasi melalui IPv6."</string>
+    <string name="pref_itpd_com_notransit_summ">"Router tidak akan menerima terowongan transit, menonaktifkan lalu lintas transit sepenuhnya."</string>
+    <string name="pref_itpd_com_floodfill_summ">"Router akan menjadi floodfill."</string>
+    <string name="pref_itpd_com_bandwidth_summ">"Batas bandwidth dalam KBps."</string>
+    <string name="pref_itpd_com_share_summ">"Maks % batas bandwidth untuk transit. 0–100."</string>
+    <string name="pref_itpd_com_ssu_summ">"Aktifkan protokol transport SSU (gunakan UDP)."</string>
+    <string name="pref_itpd_com_ntcp_summ">"Aktifkan protokol transport NTCP (gunakan TCP)."</string>
+    <string name="pref_itpd_com_use_ntcpproxy">"Aktifkan ntcpproxy"</string>
+    <string name="pref_itpd_com_ntcpproxy_summ">"Tentukan server proxy untuk NTCP. Seharusnya http://address:port atau socks://address:port."</string>
+    <string name="pref_itpd_HTTP_proxy">"Proxy HTTP"</string>
+    <string name="pref_itpd_HTTP_proxy_enabled">"Proxy HTTP"</string>
+    <string name="pref_itpd_HTTP_proxy_port">"Port proxy HTTP"</string>
+    <string name="pref_itpd_HTTP_proxy_port_summ">"Port untuk mendengarkan (Proxy HTTP)."</string>
+    <string name="pref_itpd_Socks_proxy">"Proksi socks"</string>
+    <string name="pref_itpd_Socks_proxy_enabled">"Proksi socks"</string>
+    <string name="pref_itpd_Socks_proxy_port">"Socks port proxy"</string>
+    <string name="pref_itpd_Socks_proxy_port_summ">"Port untuk mendengarkan (SOCKS Proxy)."</string>
+    <string name="pref_itpd_SAM_interface">"Antarmuka SAM"</string>
+    <string name="pref_itpd_SAM_interface_enabled">"Antarmuka SAM"</string>
+    <string name="pref_itpd_SAM_interface_port">"Port antarmuka SAM"</string>
+    <string name="pref_itpd_SAM_interface_port_summ">"Port bridge SAM."</string>
+    <string name="pref_itpd_Cryptography">"Kriptografi"</string>
+    <string name="pref_itpd_elgamal_summ">"Gunakan tabel prakomputasi ElGamal."</string>
+    <string name="pref_itpd_UPNP_summ">"Mengaktifkan atau menonaktifkan UPnP."</string>
+    <string name="pref_itpd_ntcp2_enabled">"ntcp2 diaktifkan"</string>
+    <string name="pref_itpd_reseeding_summ">"Verifikasi tanda tangan .su3."</string>
+    <string name="pref_itpd_limits">"Batas"</string>
+    <string name="pref_itpd_limits_transittunnels_summ">"Timpa jumlah maksimum terowongan transit. 2500 secara default."</string>
+    <string name="pref_itpd_limits_openfiles_summ">"Batasi jumlah deskriptor file terbuka (0 - gunakan batas sistem)."</string>
+    <string name="pref_itpd_limits_coresize_summ">"Ukuran maksimum corefile dalam Kb (0 - gunakan batas sistem)."</string>
+    <string name="pref_itpd_limits_ntcpsoft_summ">"Ambang untuk memulai backoff probabalistic dengan sesi ntcp (0 - gunakan batas sistem)."</string>
+    <string name="pref_itpd_limits_ntcphard_summ">"Jumlah maksimum sesi ntcp (0 - gunakan batas sistem)."</string>
+    <string name="pref_itpd_addressbook_defaulturl_summ">"URL berlangganan AddressBook untuk pengaturan awal."</string>
+    <string name="pref_itpd_addressbook_subscriptions_summ">"URL langganan AddressBook."</string>
+    <string name="pref_itpd_not_exist">"Prererensi tidak ada di i2pd.conf!"</string>
+    <string name="helper_dialog_title">"Info"</string>
+    <string name="helper_after_install">"Selamat! Anda dapat menggunakan alat ini untuk memiliki akses cepat
+        untuk semua situs web tanpa batasan sekarang. Mulai DNSCrypt dengan atau tanpa Tor dan I2P seperti yang diminta (Mode Cepat). Atau bisa Anda gunakan
+        alat ini untuk meningkatkan privasi. Mulai Tor dengan atau tanpa I2P seperti yang diminta (Enhanced Privacy Mode)."</string>
+    <string name="helper_dnscrypt_stopped">"Sepertinya DNSCrypt terbunuh oleh sistem android.
+        Koneksi internet Anda dipulihkan. Periksa Pengaturan perangkat!"</string>
+    <string name="helper_tor_stopped">"Sepertinya Tor terbunuh oleh sistem android.
+        Koneksi internet Anda dipulihkan. Periksa Pengaturan perangkat!"</string>
+    <string name="helper_itpd_stopped">"Sepertinya I2P terbunuh oleh sistem android. Periksa Pengaturan perangkat!"</string>
+    <string name="helper_dnscrypt_no_internet">"Sepertinya InviZible Pro TIDAK BISA terhubung ke INTERNET.
+        Silakan periksa aturan FIREWALL. Izinkan koneksi untuk aplikasi InviZible Pro dan untuk ROOT."</string>
+    <string name="helper_tor_use_bridges">"Sepertinya Tor TIDAK BISA terhubung ke INTERNET.
+        ISP dapat memblokir koneksi Tor. Anda dapat mencoba menggunakan Bridges. Silakan temukan di MENU -&gt; Pengaturan Cepat -&gt; Bridge"</string>
+    <string name="action_mode_child_lock">"Kunci Anak"</string>
+    <string name="action_mode_dialog_message_lock">"Anda dapat mengunci kontrol aplikasi ini. Silakan masukkan kata sandi, atau gunakan sebelumnya."</string>
+    <string name="action_mode_dialog_message_unlock">"Silakan masukkan kata sandi."</string>
+    <string name="action_mode_dialog_wrong_pass">"Kata sandi salah!"</string>
+    <string name="action_mode_dialog_unlocked">"Kontrol Tidak Terkunci"</string>
+    <string name="action_mode_dialog_locked">"Kontrol Terkunci"</string>
+    <string name="action_mode_hotspot">"HOTSPOT"</string>
+    <string name="help_activity_save_logs">"Simpan log"</string>
+    <string name="help_activity_path">"Path untuk log:"</string>
+    <string name="help_activity_logs_saved">"Log Disimpan. Silakan kirim InvizibleLogs.txt ke pengembang. Anda dapat menemukan log di folder:"</string>
+    <string name="update_core_title">"Memperbarui"</string>
+    <string name="update_core_message">"Beberapa modul InviZible siap diperbarui. Apakah Anda ingin memperbarui? Ini akan menimpa pengaturan modul Anda!"</string>
+    <string name="update_core_yes">"Memperbarui"</string>
+    <string name="update_core_no">"Nanti"</string>
+    <string name="update_core_not_show_again">"Jangan tanya lagi"</string>
+    <string name="update_core_restart">"Silakan mulai kembali InviZible Pro dan izinkan instalasi lengkap! Setelah instalasi mengkonfigurasi ulang HOTSPOT, jika Anda menggunakannya!"</string>
+    <string name="update_notification">"Mengunduh file"</string>
+    <string name="update_interrupt_notification">"Pengunduhan dihentikan"</string>
+    <string name="cancel_download">"BATAL UNDUH"</string>
+    <string name="update_new_version">"Versi baru:"</string>
+    <string name="update_ipro_has_apdate">"Pembaruan InviZible Pro tersedia. Apakah Anda ingin mengunduh dan memperbaruinya? Pembaruan akan berlanjut di latar belakang."</string>
+    <string name="update_dnscrypt_has_apdate">"Pembaruan DNSCrypt tersedia. Apakah Anda ingin mengunduh dan memperbaruinya? Pembaruan akan berlanjut di latar belakang."</string>
+    <string name="update_tor_has_apdate">"Pembaruan Tor tersedia. Apakah Anda ingin mengunduh dan memperbaruinya? Pembaruan akan berlanjut di latar belakang."</string>
+    <string name="update_itpd_has_apdate">"Pembaruan I2P ungu tersedia. Apakah Anda ingin mengunduh dan memperbaruinya? Pembaruan akan berlanjut di latar belakang."</string>
+    <string name="update_checking_title">"Memeriksa Pembaruan"</string>
+    <string name="update_checking_message">"Harap tunggu sementara Pembaruan sedang memeriksa."</string>
+    <string name="update_check_warning">"Server pembaruan tidak tersedia untuk sementara. Silakan coba lagi nanti."</string>
+    <string name="update_check_warning_menu">"Server pembaruan tidak tersedia."</string>
+    <string name="update_fault">"Perbarui kesalahan."</string>
+    <string name="update_check_no_update">"Tidak Ada Pembaruan Ditemukan."</string>
+    <string name="update_last_check">"Cek terakhir:"</string>
+    <string name="update_found">"Pembaruan ditemukan."</string>
+    <string name="update_installed">"Pembaruan telah diinstal."</string>
+    <string name="update_over_three_activations">"Sepertinya Anda sudah mengaktifkan 3 salinan InviZible dengan kode ini. Jika salah, silakan hubungi pengembang."</string>
+    <string name="update_wrong_code">"Sepertinya kode PRO Anda salah. Silakan hubungi pengembang."</string>
+    <string name="update_over_five_times">"Anda memeriksa pembaruan InviZible Pro lebih dari 5 kali sehari. Silakan coba lagi nanti."</string>
+    <string name="verifier_error">"Sepertinya InviZible ini versi tidak resmi. Harap berhati-hati!"</string>
+    <string name="only_for_pro">"Hanya untuk versi PRO"</string>
+    <string name="donate">"Donasi"</string>
+    <string name="donate_project">"Proyek Pro InviZible membutuhkan bantuan Anda. Silakan kunjungi halaman donasi atau masukkan kode registrasi yang diterima."</string>
+    <string name="donate_button">"Mengunjungi"</string>
+    <string name="enter_code_button">"Memasukkan kode"</string>
+    <string name="enter_code">"Memasukkan kode"</string>
+    <string name="thanks_for_donate">"Proyek Pro InviZible dan penulisnya menyampaikan penghargaan
+        untuk bantuan. Apakah Anda ingin mengunduh dan meningkatkan ke PRO? Pembaruan akan berlanjut di latar belakang."</string>
+    <string name="pref_dnscrypt_relays_summ">"Daftar jarak jauh dari relay yang tersedia."</string>
+    <string name="vpn_mode_active">"Mode VPN aktif"</string>
+    <string name="vpn_mode_off">"Mode VPN tidak aktif"</string>
+    <string name="vpn_mode_error">"Kesalahan mode VPN!"</string>
+    <string name="vpn_tor_tether_summ">"Harap konfigurasikan penggunaan server proxy dalam pengaturan perangkat yang terhubung. Nilai default: IP: 10.1.10.1 Port: 8118"</string>
+    <string name="main_fragment_hide_ip">"Sembunyikan IP dengan TOR"</string>
+    <string name="main_fragment_protect_dns">"Lindungi DNS dengan DNSCRYPT"</string>
+    <string name="main_fragment_access_i2p">"Akses ke situs I2P dengan Purple I2P"</string>
+    <string name="ask_force_close_title">"Perhatian"</string>
+    <string name="ask_force_close_text">"InviZible Pro tidak dapat memulai %s! Silakan periksa pengaturan %s atau coba tutup paksa aplikasi.
+        Jika ini tidak membantu, silakan reboot perangkat Anda."</string>
+    <string name="ask_force_close_btn">"Tutup paksa"</string>
+    <string name="add_custom_server_title">"Tambahkan server khusus"</string>
+    <string name="add_custom_server_error">"Konfigurasi server khusus tidak valid. Silakan periksa bidang SDNS."</string>
+    <string name="pending_purchase">"Harap perhatikan bahwa Anda memiliki pembelian yang tertunda:"</string>
+    <string name="buy_premium_gp">"Proyek Pro InviZible membutuhkan bantuan Anda. Tekan OK untuk membeli fitur premium."</string>
+    <string name="wrong_purchase_signature_gp">"Maaf, tetapi tidak mungkin untuk mengkonfirmasi pembelian Anda. Anda akan menerima pengembalian dana setelah 3 hari."</string>
+    <string name="only_premium_feature">"Sayangnya, fitur ini hanya tersedia untuk versi premium."</string>
+    <string name="agreement_text">"        \tTerima kasih telah memilih InviZible Pro. Saya harap ini bermanfaat untuk privasi Anda dan kenyamanan penggunaan Internet.
+        
+\tInviZible Pro termasuk Tor, DNSCrypt dan Purple I2P sebagai modul.
+        
+\tInviZible Pro dapat menggunakan root, jika perangkat Anda memiliki hak root, atau menggunakan VPN lokal untuk mengirimkan lalu lintas Internet ke jaringan Tor, DNSCrypt, dan I2P.
+        
+\tProduk ini diproduksi secara independen dari perangkat lunak Tor®, DNSCrypt, Purple I2P dan tidak memberikan jaminan dari The Above Projects mengenai kualitas, kesesuaian, atau apa pun.
+        
+\tInviZible Pro didistribusikan dengan harapan akan bermanfaat, tetapi TANPA GARANSI APA PUN; bahkan tanpa jaminan tersirat DAGANG atau KECOCOKAN UNTUK TUJUAN TERTENTU.
+        
+\tHak cipta © 2019-2020
+        
+\tGarmatin Oleksandr
+        
+\tinvizible.soft@gmail.com
+        
+\tinvizible.net/en/privacy
+        "</string>
+    <string name="pref_itpd_use_HTTP_outproxy">"HTTP outproxy"</string>
+    <string name="pref_itpd_HTTP_outproxy_address">"Alamat HTTP outproxy"</string>
+    <string name="pref_itpd_use_Socks_outproxy">"SOCKS mengeluarkan proksi"</string>
+    <string name="pref_itpd_Socks_outproxy_address">"SOCKS alamat palsu"</string>
+    <string name="pref_itpd_Socks_outproxy_port">"SOCKS outproxy port"</string>
+</resources>
