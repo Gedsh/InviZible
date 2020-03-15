@@ -154,8 +154,8 @@
             android:summary="@string/pref_tor_client_use_IPv6_summ"
             android:title="@string/pref_tor_client_use_IPv6" />
     </PreferenceCategory>
-    <PreferenceCategory
-        android:title="@string/pref_common_categ_other">
+    <PreferenceCategory android:title="@string/pref_common_categ_other"
+        android:key="pref_tor_other">
         <Preference
             android:key="editTorConfDirectly"
             android:title="@string/pref_tor_edit_conf"

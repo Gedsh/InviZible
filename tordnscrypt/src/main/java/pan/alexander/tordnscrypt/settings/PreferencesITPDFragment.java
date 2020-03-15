@@ -375,5 +375,11 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
             categoryHTTPProxy.removePreference(enableHTTP);
         }
 
+        PreferenceCategory otherCategory = findPreference("pref_itpd_other");
+        Preference editITPDConfDirectly = findPreference("editITPDConfDirectly");
+        if (otherCategory != null && editITPDConfDirectly != null) {
+            otherCategory.removePreference(editITPDConfDirectly);
+        }
+
     }
 }

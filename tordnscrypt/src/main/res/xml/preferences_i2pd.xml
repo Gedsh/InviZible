@@ -283,8 +283,8 @@
                 android:targetPackage="@string/package_name" />
         </Preference>
     </PreferenceCategory>
-    <PreferenceCategory
-        android:title="@string/pref_common_categ_other">
+    <PreferenceCategory android:title="@string/pref_common_categ_other"
+        android:key="pref_itpd_other">
         <Preference
             android:key="editITPDConfDirectly"
             android:title="@string/pref_itpd_edit_conf"

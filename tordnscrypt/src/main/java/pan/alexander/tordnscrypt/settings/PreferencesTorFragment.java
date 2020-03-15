@@ -393,5 +393,11 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 }
             }
         }
+
+        PreferenceCategory otherCategory = findPreference("pref_tor_other");
+        Preference editTorConfDirectly = findPreference("editTorConfDirectly");
+        if (otherCategory != null && editTorConfDirectly != null) {
+            otherCategory.removePreference(editTorConfDirectly);
+        }
     }
 }

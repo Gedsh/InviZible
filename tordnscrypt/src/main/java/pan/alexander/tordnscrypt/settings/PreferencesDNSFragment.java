@@ -246,6 +246,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
         categories.add(findPreference("pref_dnscrypt_blacklist"));
         categories.add(findPreference("pref_dnscrypt_ipblacklist"));
         categories.add(findPreference("pref_dnscrypt_whitelist"));
+        categories.add(findPreference("pref_dnscrypt_other"));
 
         for (PreferenceCategory category : categories) {
             if (dnscryptSettings != null && category != null) {
@@ -258,6 +259,13 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
 
         if (requireServersCategory != null && requireNofilter != null) {
             requireServersCategory.removePreference(requireNofilter);
+        }
+
+        PreferenceCategory queryLogCategory = findPreference("pref_dnscrypt_query_log");
+        Preference ignoredQtypes = findPreference("ignored_qtypes");
+
+        if (queryLogCategory  != null && ignoredQtypes != null) {
+            queryLogCategory .removePreference(ignoredQtypes);
         }
     }
 }

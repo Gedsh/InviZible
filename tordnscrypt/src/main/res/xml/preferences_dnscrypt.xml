@@ -261,8 +261,8 @@
             android:summary="@string/pref_dnscrypt_relays_delay_summ"
             android:title="@string/pref_dnscrypt_relays_delay" />
     </PreferenceCategory>
-    <PreferenceCategory
-        android:title="@string/pref_common_categ_other">
+    <PreferenceCategory android:title="@string/pref_common_categ_other"
+        android:key="pref_dnscrypt_other">
         <Preference
             android:key="editDNSTomlDirectly"
             android:title="@string/pref_dnscrypt_edit_toml"
