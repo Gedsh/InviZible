@@ -396,6 +396,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
             huc.setRequestMethod("GET");  //OR  huc.setRequestMethod ("HEAD");
             huc.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 9.0.1; " +
                     "Mi Mi) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Mobile Safari/537.36");
+            huc.setConnectTimeout(1000);
             huc.connect();
             int code = huc.getResponseCode();
             if (code != HttpURLConnection.HTTP_OK) {
