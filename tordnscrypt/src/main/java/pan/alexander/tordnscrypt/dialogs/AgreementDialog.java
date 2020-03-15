@@ -26,8 +26,6 @@ import android.view.View;
 
 import androidx.appcompat.app.AlertDialog;
 
-import java.util.Objects;
-
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 
@@ -35,14 +33,22 @@ public class AgreementDialog {
     public static AlertDialog.Builder getDialogBuilder(Context context) {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(context, R.style.CustomDialogTheme);
 
-        LayoutInflater lInflater = (LayoutInflater) Objects.requireNonNull(context).getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        if (lInflater != null) {
-            @SuppressLint("InflateParams")
-            View view = lInflater.inflate(R.layout.agreement_layout, null, false);
-            if (view != null) {
-                alertDialog.setView(view);
-            }
+        LayoutInflater lInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        if (lInflater == null) {
+            new PrefManager(context).setBoolPref("Agreement", true);
+            return null;
         }
+
+        @SuppressLint("InflateParams")
+        View view = lInflater.inflate(R.layout.agreement_layout, null, false);
+
+        if (view == null) {
+            new PrefManager(context).setBoolPref("Agreement", true);
+            return null;
+        }
+
+        alertDialog.setView(view);
 
         alertDialog.setCancelable(false);
 

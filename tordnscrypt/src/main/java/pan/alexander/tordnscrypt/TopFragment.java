@@ -715,7 +715,10 @@ public class TopFragment extends Fragment {
         }
 
         if (!new PrefManager(getActivity()).getBoolPref("Agreement")) {
-            AgreementDialog.getDialogBuilder(getActivity()).show();
+            AlertDialog.Builder agreementDialogBuilder = AgreementDialog.getDialogBuilder(getActivity());
+            if (agreementDialogBuilder != null) {
+                agreementDialogBuilder.show();
+            }
         }
     }
 }

@@ -19,10 +19,10 @@ package pan.alexander.tordnscrypt.installer;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.drawerlayout.widget.DrawerLayout;
 import android.util.Log;
 
-import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.dialogs.AgreementDialog;
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptRunFragment;
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDRunFragment;
@@ -212,7 +212,12 @@ class InstallerUIChanger {
 
     Runnable showDialogAfterInstallation() {
         if (appVersion.endsWith("p")) {
-            return () -> AgreementDialog.getDialogBuilder(mainActivity).show();
+            return () -> {
+                AlertDialog.Builder agreementDialogBuilder = AgreementDialog.getDialogBuilder(mainActivity);
+                if (agreementDialogBuilder != null) {
+                    agreementDialogBuilder.show();
+                }
+            };
         } else {
             return () -> DialogAfterInstallation.getDialogBuilder(mainActivity).show();
         }
