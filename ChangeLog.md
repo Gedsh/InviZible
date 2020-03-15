@@ -156,5 +156,13 @@
 **InviZible Pro beta 0.7.1**
 * Fixed Tor bridges for android 4.4.2.
 * Added German and Persian languages.
-* Added I2P outproxy option.
+* Added I2P outproxy options.
 * Fixed backup when "Run modules with Root" option activated.
+
+**InviZible Pro beta 0.7.2**
+* Added Indonesian language.
+* Updated languages.
+* Added Edit configuration files options.
+* Fixed modules ports changing.
+* Fixed use of system DNS when "ignore_system_dns" option is disabled.
+* Other fixes.

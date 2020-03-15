@@ -1,0 +1,7 @@
+**InviZible Pro beta 0.7.2**
+* Added Indonesian language.
+* Updated languages.
+* Added Edit configuration files options.
+* Fixed modules ports changing.
+* Fixed use of system DNS when "ignore_system_dns" option is disabled.
+* Other fixes.
