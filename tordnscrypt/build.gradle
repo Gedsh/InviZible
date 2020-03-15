@@ -10,7 +10,7 @@ android {
 
         fdroid{
             applicationId "pan.alexander.tordnscrypt"
-            versionName "0.7.1-beta"
+            versionName "0.7.2-beta"
             dimension = 'version'
             resValue 'string', 'package_name', applicationId
         }
@@ -40,7 +40,7 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 29
-        versionCode 71
+        versionCode 72
 
         resConfigs "en", "ru-rRU", "ru-rUA", "pl", "de", "fa", "in"
 
