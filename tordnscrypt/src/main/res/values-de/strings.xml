@@ -296,7 +296,6 @@ Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">"Addressbuch Bereitstellungs URL für die Ersteinrichtung."</string>
     <string name="pref_itpd_addressbook_subscriptions_summ">"Addressbuch Bereitstellungs URLs."</string>
     <string name="pref_itpd_not_exist">"Voreinstellung existiert nicht in i2pd.conf!"</string>
-    <string name="pref_itpd_current_events">"Aktuelle Ereignisse:"</string>
     <string name="helper_dialog_title">"Info"</string>
     <string name="helper_after_install">"Gratuliere! Du kannst dieses Tool nun benutzen, um ohne Einschränkungen 
 		schnellen Zugang zu allen Webseiten zu haben. Starte DNSCrypt mit oder ohne Tor und I2P wie gewünscht (Schneller Modus). Du kannst dieses Tool ebenfalls verwenden,

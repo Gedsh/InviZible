@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <!-- Fuzzy -->
     <string name="nav_header_title">"Tor به همراه DNSCrypt و l2P"</string>
     <string name="nav_header_subtitle">"بهترین راه‌حل برای حفظ حریم خصوصی شما"</string>
     <string name="action_settings">"تنظیمات"</string>
@@ -14,12 +12,18 @@
     <string name="tvITPDInstalling">"I2P در حال نصب"</string>
     <string name="tvITPDInstalled">"I2P نصب شد"</string>
     <string name="tvITPDNotInstalled">"I2P نصب نشد"</string>
-    <string name="swRunOnBoot">"شروع خودکار پس از راه‌اندازی مجدد"</string>
+
+    <!-- شروع پس از راه اندازی -->
+    <string name="swRunOnBoot">"شروع پس از راه‌اندازی"</string>
+
+    <!-- ...بررسی در دسترس بودن روت -->
     <string name="root_available">"بررسی روت بودن دستگاه..."</string>
     <string name="please_wait">"لطفاً صبر کنید..."</string>
     <string name="dont_show">"مجدداً نشان داده نشود"</string>
     <string name="tvDNSStop">"DNSCrypt متوقف شد"</string>
     <string name="tvDNSInstalled">"DNSCrypt نصب شد"</string>
+
+    <!-- DNSCrypt در حال نصب -->
     <string name="tvDNSInstalling">"نصب DNSCrypt"</string>
     <string name="tvDNSNotInstalled">"DNSCrypt نصب نشد"</string>
     <string name="tvDNSStarting">"در حال راه‌اندازی DNSCrypt"</string>
@@ -40,6 +44,8 @@
     <string name="warning">"هشدار!"</string>
     <string name="install">"نصب"</string>
     <string name="exit">"خروج"</string>
+
+    <!-- انجام شده -->
     <string name="done">"انجام"</string>
     <string name="wrong">"مشکلی پیش آمد!"</string>
     <string name="install_message">"آیا می‌خواهید نصب را کامل کنید؟"</string>
@@ -59,17 +65,23 @@
     <string name="drawer_menu_backup">"پشتیبان‌گیری و بازیابی"</string>
     <string name="drawer_menu_about">"درباره"</string>
     <string name="drawer_menu_help">"گزارش‌ها"</string>
+
+    <!-- اهدا -->
     <string name="drawer_menu_donate">"کمک مالی"</string>
     <string name="btnRestoreBackup">"بازیابی همه"</string>
     <string name="btnSaveBackup">"ذخیره همه"</string>
     <string name="etPathBackup">"مسیر پوشه:"</string>
     <string name="backupFolder">"انتخاب پوشه پشتیبان‌گیری:"</string>
-
-    <!-- Fuzzy -->
     <string name="title_activity_settings">"تنظیمات"</string>
     <string name="pref_fast_categ_autostart">"شروع خودکار"</string>
+
+    <!-- هنگام راه اندازی DNSCrypt شروع -->
     <string name="pref_fast_dns_autostart">"فعال‌سازی DNSCrypt هنگام راه‌اندازی"</string>
+
+    <!-- هنگام راه اندازی Tor شروع -->
     <string name="pref_fast_tor_autostart">"شروع Tor هنگام راه‌اندازی مجدد"</string>
+
+    <!-- هنگام راه اندازی I2P شروع -->
     <string name="pref_fast_itpd_autostart">"شروع I2P هنگام راه‌اندازی مجدد"</string>
     <string name="pref_fast_autostart_delay">"تأخیر"</string>
     <string name="pref_fast_autostart_delay_summ">"شروع با تأخیر (در چند ثانیه) تنها اگر شروع خودکار به درستی کار نکرد"</string>
@@ -81,6 +93,8 @@
     <string name="pref_fast_all_through_ipro">"انتقال کل ترافیک از طریق InviZible"</string>
     <string name="pref_fast_unlock_with_tor">"انتخاب وب‌سایت‌ها"</string>
     <string name="pref_fast_unlock_with_tor_summ">"سایت‌هایی که با Tor باز شوند"</string>
+
+    <!-- انتخاب برنامه ها -->
     <string name="pref_fast_unlock_apps_with_tor">"برنامه‌ها را انتخاب کنید"</string>
     <string name="pref_fast_unlock_apps_with_tor_summ">"برنامه‌هایی که با Tor می‌توان استفاده کرد"</string>
     <string name="pref_fast_unlock_apps_with_ipro_summ">"برنامه‌هایی که با InviZible می‌توان استفاده کرد"</string>
@@ -373,7 +387,7 @@ Tor از UDP پشتیبانی نمی‌کند، لذا force-tcp را همچنی
     <string name="main_fragment_protect_dns">"حفاظت از DNS توسط DNSCrypt"</string>
     <string name="main_fragment_access_i2p">"دسترسی به سایت‌های I2P توسط Purple I2P"</string>
     <string name="ask_force_close_title">"توجه"</string>
-    <string name="ask_force_close_text">"InviZible Pro نمی‌تواند اجرا شود! لطفاً تنظیمات s% را بررسی نمایید و یا سعی نمایید برنامه را به‌صورت اجباری ببندید.
+    <string name="ask_force_close_text">"InviZible Pro نمی‌تواند اجرا شود %s! لطفاً تنظیمات %s را بررسی نمایید و یا سعی نمایید برنامه را به‌صورت اجباری ببندید.
 اگر این موارد پاسخگو نبودند، لطفاً دستگاه خود را مجدداً راه‌اندازی نمایید."</string>
     <string name="ask_force_close_btn">"بستن اجباری"</string>
     <string name="add_custom_server_title">"افزودن سرور سفارشی"</string>
@@ -399,4 +413,9 @@ Garmatin Oleksandr
 invizible.soft@gmail.com
 
 invizible.net/en/privacy"</string>
+    <string name="pref_itpd_use_HTTP_outproxy">"پروکسی"</string>
+    <string name="pref_itpd_HTTP_outproxy_address">"HTTP outproxy address"</string>
+    <string name="pref_itpd_use_Socks_outproxy">"SOCKS outproxy"</string>
+    <string name="pref_itpd_Socks_outproxy_address">"SOCKS outproxy address"</string>
+    <string name="pref_itpd_Socks_outproxy_port">"SOCKS outproxy port"</string>
 </resources>
