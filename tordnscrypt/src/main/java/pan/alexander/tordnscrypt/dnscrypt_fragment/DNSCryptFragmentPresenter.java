@@ -23,6 +23,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.text.Html;
 import android.util.Log;
@@ -30,6 +31,7 @@ import android.widget.Toast;
 
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.preference.PreferenceManager;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -40,6 +42,7 @@ import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
+import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
@@ -59,6 +62,7 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
@@ -238,6 +242,10 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
         view.setDNSCryptStatus(R.string.tvDNSRunning, R.color.textModuleStatusColorRunning);
         view.setStartButtonText(R.string.btnDNSCryptStop);
+
+        if (new PrefManager(view.getFragmentActivity()).getBoolPref("DNSCryptSystemDNSAllowed")) {
+            ModulesIptablesRules.denyDNSCryptSystemDNS(view.getFragmentActivity());
+        }
     }
 
     private void setDnsCryptStopping() {
@@ -381,7 +389,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             if (!savedResourceRecords.isEmpty() && view != null && view.getFragmentActivity() != null) {
                 savedResourceRecords.clear();
                 view.getFragmentActivity().runOnUiThread(() -> {
-                    if (view != null && view.getFragmentActivity() != null  && logFile != null) {
+                    if (view != null && view.getFragmentActivity() != null && logFile != null) {
                         view.setDNSCryptLogViewText(Html.fromHtml(logFile.readLastLines()));
                     }
                 });
@@ -551,6 +559,13 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     private void runDNSCrypt(Context context) {
         if (context == null) {
             return;
+        }
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+
+        if (!sharedPreferences.getBoolean("ignore_system_dns", false)
+                && modulesStatus.getMode() == ROOT_MODE) {
+            new PrefManager(context).setBoolPref("DNSCryptSystemDNSAllowed", true);
         }
 
         ModulesRunner.runDNSCrypt(context);

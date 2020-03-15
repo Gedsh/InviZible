@@ -46,6 +46,7 @@ import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
@@ -132,6 +133,11 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                     startHOTSPOT();
                 }
 
+            }
+
+            if (autoStartDNSCrypt && mode == ROOT_MODE
+                    && !shPref.getBoolean("ignore_system_dns", false)) {
+                new PrefManager(context).setBoolPref("DNSCryptSystemDNSAllowed", true);
             }
 
             if (autoStartDNSCrypt && autoStartTor && autoStartITPD) {

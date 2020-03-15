@@ -104,6 +104,11 @@ public class ModulesStateLoop extends TimerTask {
         }
 
         if (stopCounter <= 0) {
+
+            if (new PrefManager(modulesService).getBoolPref("DNSCryptSystemDNSAllowed")) {
+                ModulesIptablesRules.denyDNSCryptSystemDNS(modulesService);
+            }
+
             Log.i(LOG_TAG, "ModulesStateLoop stopCounter is zero. Stop service.");
             modulesStatus.setContextUIDUpdateRequested(false);
             safeStopModulesService();

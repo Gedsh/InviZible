@@ -20,13 +20,17 @@ package pan.alexander.tordnscrypt.iptables;
 */
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 
 import androidx.preference.PreferenceManager;
 
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.Arr;
 import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.RootCommands;
+import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 
 import static pan.alexander.tordnscrypt.iptables.Tethering.usbModemAddressesRange;
@@ -91,6 +95,13 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             blockHOTSPOT = "";
         }
 
+        String dnsCryptSystemDNSAllowedNat = "";
+        String dnsCryptSystemDNSAllowedFilter = "";
+        if (new PrefManager(context).getBoolPref("DNSCryptSystemDNSAllowed")) {
+            dnsCryptSystemDNSAllowedFilter = iptables + "-A tordnscrypt -p udp -d --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT";
+            dnsCryptSystemDNSAllowedNat = iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT";
+        }
+
 
         if (dnsCryptState == RUNNING && torState == RUNNING) {
 
@@ -113,6 +124,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + pathVars.getITPDHttpProxyPort(),
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + pathVars.getITPDHttpProxyPort(),
+                        dnsCryptSystemDNSAllowedNat,
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
@@ -122,6 +134,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-N tordnscrypt",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT",
+                        dnsCryptSystemDNSAllowedFilter,
                         iptables + "-A tordnscrypt -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                         blockHttpRuleFilterAll,
                         iptables + "-A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
@@ -151,6 +164,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + pathVars.getITPDHttpProxyPort(),
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + pathVars.getITPDHttpProxyPort(),
+                        dnsCryptSystemDNSAllowedNat,
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
@@ -179,6 +193,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j RETURN",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j RETURN",
                         iptables + "-A tordnscrypt -m owner --uid-owner $TOR_UID -j RETURN",
+                        dnsCryptSystemDNSAllowedFilter,
                         iptables + "-A tordnscrypt -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                         blockHttpRuleFilterAll,
                         iptables + "-A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
@@ -215,6 +230,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     iptables + "-t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
                     iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + pathVars.getITPDHttpProxyPort(),
                     iptables + "-t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + pathVars.getITPDHttpProxyPort(),
+                    dnsCryptSystemDNSAllowedNat,
                     iptables + "-t nat -A tordnscrypt_nat_output -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                     iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                     iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
@@ -223,6 +239,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     iptables + "-N tordnscrypt",
                     iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT",
                     iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT",
+                    dnsCryptSystemDNSAllowedFilter,
                     iptables + "-A tordnscrypt -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                     blockHttpRuleFilterAll,
                     iptables + "-A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
@@ -339,5 +356,30 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                 "ip rule delete from " + wifiAPAddressesRange + " lookup 63",
                 "ip rule delete from " + usbModemAddressesRange + " lookup 62",
         };
+    }
+
+    public static void denyDNSCryptSystemDNS(Context context) {
+
+        new PrefManager(context).setBoolPref("DNSCryptSystemDNSAllowed", false);
+
+        String iptables = PathVars.getInstance(context).getIptablesPath();
+
+        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+        String appUID = new PrefManager(context).getStrPref("appUID");
+        if (runModulesWithRoot) {
+            appUID = "0";
+        }
+
+        String[] commands = {
+                iptables + "-D tordnscrypt -p udp -d --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT || true",
+                iptables + "-t nat -D tordnscrypt_nat_output -p udp --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT || true"
+        };
+        RootCommands rootCommands = new RootCommands(commands);
+        Intent intent = new Intent(context, RootExecService.class);
+        intent.setAction(RootExecService.RUN_COMMAND);
+        intent.putExtra("Commands", rootCommands);
+        intent.putExtra("Mark", RootExecService.NullMark);
+        RootExecService.performAction(context, intent);
     }
 }
