@@ -88,6 +88,7 @@ public class ConfigEditorFragment extends Fragment implements OnTextFileOperatio
         return view;
     }
 
+
     @Override
     public void onStop() {
 
@@ -130,7 +131,7 @@ public class ConfigEditorFragment extends Fragment implements OnTextFileOperatio
 
             final StringBuilder stringBuilder = new StringBuilder();
 
-            for (String line: lines) {
+            for (String line : lines) {
                 stringBuilder.append(line).append(System.lineSeparator());
             }
 

@@ -130,15 +130,6 @@ public class ModulesStarterHelper {
                         + shellResult.exitCode + " ERR=" + shellResult.getStderr()
                         + " OUT=" + shellResult.getStdout());
 
-                /*if (modulesStatus.getDnsCryptState() == STARTING
-                        || (modulesStatus.getDnsCryptState() == RUNNING && modulesStatus.isUseModulesWithRoot())) {
-                    if (modulesStatus.isRootAvailable()) {
-                        forceStopModulesWithRootMethod();
-                    } else {
-                        forceStopModulesWithService();
-                    }
-                }*/
-
                 modulesStatus.setDnsCryptState(STOPPED);
 
                 sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
@@ -204,15 +195,6 @@ public class ModulesStarterHelper {
 
                 Log.e(LOG_TAG, "Error Tor: " + shellResult.exitCode
                         + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
-
-                /*if (modulesStatus.getTorState() == STARTING
-                        || (modulesStatus.getTorState() == RUNNING && modulesStatus.isUseModulesWithRoot())) {
-                    if (modulesStatus.isRootAvailable()) {
-                        forceStopModulesWithRootMethod();
-                    } else {
-                        forceStopModulesWithService();
-                    }
-                }*/
 
                 modulesStatus.setTorState(STOPPED);
 
@@ -280,15 +262,6 @@ public class ModulesStarterHelper {
 
                 Log.e(LOG_TAG, "Error ITPD: " + shellResult.exitCode + " ERR="
                         + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
-
-                /*if (modulesStatus.getItpdState() == STARTING
-                        || (modulesStatus.getItpdState() == RUNNING && modulesStatus.isUseModulesWithRoot())) {
-                    if (modulesStatus.isRootAvailable()) {
-                        forceStopModulesWithRootMethod();
-                    } else {
-                        forceStopModulesWithService();
-                    }
-                }*/
 
                 modulesStatus.setItpdState(STOPPED);
 

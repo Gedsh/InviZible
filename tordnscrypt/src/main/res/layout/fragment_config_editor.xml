@@ -1,24 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.appcompat.widget.LinearLayoutCompat
-    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/llConfigEditor"
+    android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <LinearLayout
+        <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" >
+            android:orientation="vertical">
 
-            <EditText
+            <androidx.appcompat.widget.AppCompatEditText
                 android:id="@+id/etConfigEditor"
-                style="@style/Base.Widget.MaterialComponents.TextInputEditText"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:bufferType="editable"
+                android:clickable="true"
+                android:cursorVisible="true"
                 android:ems="10"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
                 android:fontFamily="serif"
                 android:gravity="start"
                 android:imeOptions="actionDone"
@@ -26,7 +30,7 @@
                 android:scrollHorizontally="false"
                 android:singleLine="false"
                 android:textSize="14sp" />
-        </LinearLayout>
+        </androidx.appcompat.widget.LinearLayoutCompat>
     </ScrollView>
 
 </androidx.appcompat.widget.LinearLayoutCompat>
