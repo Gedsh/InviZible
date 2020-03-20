@@ -40,9 +40,9 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.TorRunFragmentMark
 public class ModulesVersions {
     private static volatile ModulesVersions holder;
 
-    private String dnsCryptVersion;
-    private String torVersion;
-    private String itpdVersion;
+    private String dnsCryptVersion = "";
+    private String torVersion = "";
+    private String itpdVersion = "";
 
     private Shell.Console console;
 
@@ -68,15 +68,15 @@ public class ModulesVersions {
 
             checkModulesVersions(pathVars);
 
-            if (isBinaryFileAccessible(pathVars.getDNSCryptPath())) {
+            if (isBinaryFileAccessible(pathVars.getDNSCryptPath()) && !dnsCryptVersion.isEmpty()) {
                 sendResult(context, dnsCryptVersion, DNSCryptRunFragmentMark);
             }
 
-            if (isBinaryFileAccessible(pathVars.getTorPath())) {
+            if (isBinaryFileAccessible(pathVars.getTorPath()) && !torVersion.isEmpty()) {
                 sendResult(context, torVersion, TorRunFragmentMark);
             }
 
-            if (isBinaryFileAccessible(pathVars.getITPDPath())) {
+            if (isBinaryFileAccessible(pathVars.getITPDPath()) && !itpdVersion.isEmpty()) {
                 sendResult(context, itpdVersion, I2PDRunFragmentMark);
             }
 
@@ -107,6 +107,10 @@ public class ModulesVersions {
     }
 
     private void checkModulesVersions(PathVars pathVars) {
+        if (console == null || console.isClosed()) {
+            return;
+        }
+
         dnsCryptVersion = console.run(
                 "echo 'DNSCrypt_version'",
                 pathVars.getDNSCryptPath() + " --version")
