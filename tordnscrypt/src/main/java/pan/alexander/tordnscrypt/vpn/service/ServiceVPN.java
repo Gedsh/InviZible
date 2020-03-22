@@ -159,7 +159,7 @@ public class ServiceVPN extends VpnService {
         // Get custom DNS servers
         SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
         boolean ip6 = prefs.getBoolean("ipv6", false);
-        String vpnDns1 = prefs.getString("dns", "9.9.9.9");
+        String vpnDns1 = PathVars.getInstance(context).getDNSCryptFallbackRes();
         String vpnDns2 = prefs.getString("dns2", "149.112.112.112");
         Log.i(LOG_TAG, "VPN DNS system=" + TextUtils.join(",", sysDns) + " config=" + vpnDns1 + "," + vpnDns2);
 
@@ -232,6 +232,11 @@ public class ServiceVPN extends VpnService {
         // Build VPN service
         BuilderVPN builder = new BuilderVPN(this);
         builder.setSession(getString(R.string.app_name));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            builder.setMetered(Util.isMeteredNetwork(this));
+        }
+
 
         // VPN address
         String vpn4 = prefs.getString("vpn4", "10.1.10.1");
