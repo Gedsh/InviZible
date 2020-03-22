@@ -300,23 +300,23 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         String line = "";
 
         StringBuilder dnscrypt_servers = new StringBuilder();
-        dnscrypt_servers.append("[\"");
+        dnscrypt_servers.append("['");
 
         for (int i = 0; i < list_dns_servers.size(); i++) {
             if (list_dns_servers.get(i).isChecked()) {
                 dnscrypt_servers_current.add(list_dns_servers.get(i).getName());
 
                 dnscrypt_servers.append(list_dns_servers.get(i).getName());
-                dnscrypt_servers.append("\", \"");
+                dnscrypt_servers.append("', '");
             }
         }
 
-        if (dnscrypt_servers.toString().equals("[\"")) {
+        if (dnscrypt_servers.toString().equals("['")) {
             Toast.makeText(getActivity(), getText(R.string.pref_dnscrypt_select_server_names), Toast.LENGTH_LONG).show();
             return line;
         }
 
-        dnscrypt_servers.delete(dnscrypt_servers.length() - 4, dnscrypt_servers.length()).append("\"]");
+        dnscrypt_servers.delete(dnscrypt_servers.length() - 4, dnscrypt_servers.length()).append("']");
 
         line = dnscrypt_servers.toString();
 
@@ -371,7 +371,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
             }
         }
 
-        int size = (dnscrypt_proxy_toml.size() <= dnscrypt_proxy_toml_new.size() ? dnscrypt_proxy_toml.size() : dnscrypt_proxy_toml_new.size());
+        int size = (Math.min(dnscrypt_proxy_toml.size(), dnscrypt_proxy_toml_new.size()));
 
         for (int i = 0; i < size; i++) {
             if (!dnscrypt_proxy_toml.get(i).equals(dnscrypt_proxy_toml_new.get(i))) {
@@ -511,10 +511,6 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         if (currentFileOperation == FileOperationsVariants.readTextFile && tag.equals("own-resolvers.md")) {
 
             ArrayList<DNSServerItem> ownDNSCryptServers = parseOwnDNSCryptServers(lines);
-
-            if (ownDNSCryptServers == null) {
-                return;
-            }
 
             savedOwnDNSCryptServers = new ArrayList<>();
             savedOwnDNSCryptServers.addAll(ownDNSCryptServers);

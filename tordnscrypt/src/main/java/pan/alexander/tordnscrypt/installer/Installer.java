@@ -359,16 +359,16 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             } else if (line.matches("(^| )\\{ ?server_name([ =]).+")) {
                 line = "";
             } else if (line.matches("(^| )server_names([ =]).+")) {
-                line = "server_names = [\"ams-dnscrypt-nl\", " +
-                        "\"ams-doh-nl\", " +
-                        "\"cs-swe\", " +
-                        "\"dns.digitale-gesellschaft.ch\", " +
-                        "\"doh-fi-snopyta\", " +
-                        "\"doh-ibksturm\", " +
-                        "\"libredns\", " +
-                        "\"opennic-R4SAS\", " +
-                        "\"publicarray-au\", " +
-                        "\"scaleway-fr\"]";
+                line = "server_names = ['ams-dnscrypt-nl', " +
+                        "'ams-doh-nl', " +
+                        "'cs-swe', " +
+                        "'dns.digitale-gesellschaft.ch', " +
+                        "'doh-fi-snopyta', " +
+                        "'doh-ibksturm', " +
+                        "'libredns', " +
+                        "'opennic-R4SAS', " +
+                        "'publicarray-au', " +
+                        "'scaleway-fr']";
             }
 
             if (!line.isEmpty()) {

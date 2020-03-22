@@ -167,18 +167,18 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
 
         try {
             if (Objects.equals(preference.getKey(), "listen_port")) {
-                String val = "[\"127.0.0.1:" + newValue.toString() + "\"]";
+                String val = "['127.0.0.1:" + newValue.toString() + "']";
                 val_toml.set(key_toml.indexOf("listen_addresses"), val);
                 return true;
             } else if (Objects.equals(preference.getKey(), "fallback_resolver")) {
-                String val = "\"" + newValue.toString() + ":53\"";
+                String val = "'" + newValue.toString() + ":53'";
                 val_toml.set(key_toml.indexOf("fallback_resolver"), val);
                 if (key_toml.indexOf("netprobe_address") > 0) {
                     val_toml.set(key_toml.indexOf("netprobe_address"), val);
                 }
                 return true;
             } else if (Objects.equals(preference.getKey(), "proxy_port")) {
-                String val = "\"socks5://127.0.0.1:" + newValue.toString() + "\"";
+                String val = "'socks5://127.0.0.1:" + newValue.toString() + "'";
                 val_toml.set(key_toml.indexOf("proxy"), val);
                 return true;
             } else if (Objects.equals(preference.getKey(), "Sources")) {
@@ -198,17 +198,39 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
                 }
                 return true;
             } else if (Objects.equals(preference.getKey().trim(), "Enable Query logging")) {
+
+                int position = val_toml.indexOf("\"" + appDataDir + "/cache/query.log\"");
+
                 if (Boolean.parseBoolean(newValue.toString())) {
-                    key_toml.set(val_toml.indexOf("\"" + appDataDir + "/cache/query.log\""), "file");
+                    if (position > 0) {
+                        key_toml.set(val_toml.indexOf("\"" + appDataDir + "/cache/query.log\""), "file");
+                    } else {
+                        key_toml.set(val_toml.indexOf("'" + appDataDir + "/cache/query.log'"), "file");
+                    }
                 } else {
-                    key_toml.set(val_toml.indexOf("\"" + appDataDir + "/cache/query.log\""), "#file");
+                    if (position > 0) {
+                        key_toml.set(val_toml.indexOf("\"" + appDataDir + "/cache/query.log\""), "#file");
+                    } else {
+                        key_toml.set(val_toml.indexOf("'" + appDataDir + "/cache/query.log'"), "#file");
+                    }
                 }
                 return true;
             } else if (Objects.equals(preference.getKey().trim(), "Enable Suspicious logging")) {
+
+                int position = val_toml.indexOf("\"" + appDataDir + "/cache/nx.log\"");
+
                 if (Boolean.parseBoolean(newValue.toString())) {
-                    key_toml.set(val_toml.indexOf("\"" + appDataDir + "/cache/nx.log\""), "file");
+                    if (position > 0) {
+                        key_toml.set(val_toml.indexOf("\"" + appDataDir + "/cache/nx.log\""), "file");
+                    } else {
+                        key_toml.set(val_toml.indexOf("'" + appDataDir + "/cache/nx.log'"), "file");
+                    }
                 } else {
-                    key_toml.set(val_toml.indexOf("\"" + appDataDir + "/cache/nx.log\""), "#file");
+                    if (position > 0) {
+                        key_toml.set(val_toml.indexOf("\"" + appDataDir + "/cache/nx.log\""), "#file");
+                    } else {
+                        key_toml.set(val_toml.indexOf("'" + appDataDir + "/cache/nx.log'"), "#file");
+                    }
                 }
                 return true;
             }

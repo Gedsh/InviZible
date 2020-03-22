@@ -227,7 +227,7 @@
         android:key="pref_dnscrypt_servers">
         <EditTextPreference
             android:id="@+id/sources"
-            android:defaultValue="urls = ['https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v2/public-resolvers.md', 'https://download.dnscrypt.info/resolvers-list/v2/public-resolvers.md']"
+            android:defaultValue="['https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v2/public-resolvers.md', 'https://download.dnscrypt.info/resolvers-list/v2/public-resolvers.md']"
             android:key="Sources"
             android:selectAllOnFocus="false"
             android:singleLine="false"
@@ -246,7 +246,7 @@
         android:key="pref_dnscrypt_relays">
         <EditTextPreference
             android:id="@+id/relays"
-            android:defaultValue="urls = ['https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v2/relays.md', 'https://download.dnscrypt.info/resolvers-list/v2/relays.md'] "
+            android:defaultValue="['https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v2/relays.md', 'https://download.dnscrypt.info/resolvers-list/v2/relays.md']"
             android:key="Relays"
             android:selectAllOnFocus="false"
             android:singleLine="false"

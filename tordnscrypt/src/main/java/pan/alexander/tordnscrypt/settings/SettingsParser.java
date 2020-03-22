@@ -80,19 +80,30 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
 
                 if (key.equals("listen_addresses")) {
                     key = "listen_port";
-                    val = val.substring(val.indexOf(":") + 1, val.indexOf("\"", 3)).trim();
-                }
-                if (key.equals("fallback_resolver"))
-                    val = val.substring(val.indexOf("\"") + 1, val.indexOf(":")).trim();
-                if (key.equals("proxy")) {
+                    if (val.contains("\"")) {
+                        val = val.substring(val.indexOf(":") + 1, val.indexOf("\"", 3)).trim();
+                    } else if (val.contains("'")) {
+                        val = val.substring(val.indexOf(":") + 1, val.indexOf("'", 3)).trim();
+                    }
+                } else if (key.equals("fallback_resolver")) {
+                    if (val.contains("\"")) {
+                        val = val.substring(val.indexOf("\"") + 1, val.indexOf(":")).trim();
+                    } else if (val.contains("'")) {
+                        val = val.substring(val.indexOf("'") + 1, val.indexOf(":")).trim();
+                    }
+                } else if (key.equals("proxy")) {
                     key = "proxy_port";
-                    val = val.substring(val.indexOf(":", 10) + 1, val.indexOf("\"", 10)).trim();
-                }
-                if (header.equals("[sources.public-resolvers]") && key.equals("urls"))
+                    if (val.contains("\"")) {
+                        val = val.substring(val.indexOf(":", 10) + 1, val.indexOf("\"", 10)).trim();
+                    } else if (val.contains("'")) {
+                        val = val.substring(val.indexOf(":", 10) + 1, val.indexOf("'", 10)).trim();
+                    }
+                } else if (header.equals("[sources.public-resolvers]") && key.equals("urls")) {
                     key = "Sources";
+                }
 
-                if (header.equals("[sources.relays]") && key.equals("urls")) key = "Relays";
-                if (header.equals("[sources.relays]") && key.equals("refresh_delay"))
+                if (header.matches("\\[sources\\.'?relays'?]") && key.equals("urls")) key = "Relays";
+                if (header.matches("\\[sources\\.'?relays'?]") && key.equals("refresh_delay"))
                     key = "refresh_delay_relays";
 
 
@@ -461,7 +472,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
 
         if (line.matches("server_names .+")) {
             String temp = line.substring(line.indexOf("[") + 1, line.indexOf("]")).trim();
-            temp = temp.replace("\"", "").trim();
+            temp = temp.replace("\"", "").replace("'", "").trim();
             dnscrypt_servers.addAll(Arrays.asList(temp.trim().split(", ?")));
         } else if (line.contains("routes")) {
             lockRoutes = true;
