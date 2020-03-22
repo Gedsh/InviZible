@@ -57,6 +57,7 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
+import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
@@ -632,7 +633,11 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
         SharedPreferences spref = PreferenceManager.getDefaultSharedPreferences(activity);
         boolean throughTorUpdate = spref.getBoolean("pref_fast through_tor_update", false);
-        if (throughTorUpdate) {
+        boolean autoUpdate = spref.getBoolean("pref_fast_auto_update", true)
+                && !appVersion.startsWith("l") && !appVersion.endsWith("p") && !appVersion.startsWith("f");
+        String lastUpdateResult = new PrefManager(activity).getStrPref("LastUpdateResult");
+        if (autoUpdate &&
+                (throughTorUpdate || lastUpdateResult.isEmpty() || lastUpdateResult.equals(activity.getString(R.string.update_check_warning_menu)))) {
             FragmentManager fm = activity.getSupportFragmentManager();
             TopFragment topFragment = (TopFragment) fm.findFragmentByTag("topFragmentTAG");
             if (topFragment != null) {

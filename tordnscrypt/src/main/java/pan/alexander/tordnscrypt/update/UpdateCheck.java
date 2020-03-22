@@ -300,7 +300,7 @@ public class UpdateCheck {
 
 
                 String url = domainName + "/ru/update";
-                String serverAnswerEncoded = HttpsRequest.post(url, HttpsRequest.hashMapToUrl(request));
+                String serverAnswerEncoded = HttpsRequest.post(context, url, HttpsRequest.hashMapToUrl(request));
 
                 //Uses for testing purposes:
                 //((MainActivity) context).showUpdateMessage(serverAnswerEncoded);

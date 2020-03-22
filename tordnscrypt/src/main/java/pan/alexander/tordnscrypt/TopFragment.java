@@ -513,13 +513,17 @@ public class TopFragment extends Fragment {
             boolean throughTorUpdate = spref.getBoolean("pref_fast through_tor_update", false);
             boolean torRunning = new PrefManager(getActivity()).getBoolPref("Tor Running");
             boolean torReady = new PrefManager(getActivity()).getBoolPref("Tor Ready");
+            String lastUpdateResult = new PrefManager(getActivity()).getStrPref("LastUpdateResult");
             if (!throughTorUpdate || (torRunning && torReady)) {
                 long updateTimeCurrent = System.currentTimeMillis();
                 String updateTimeLastStr = new PrefManager(getActivity()).getStrPref("updateTimeLast");
                 if (!updateTimeLastStr.isEmpty()) {
                     long updateTimeLast = Long.parseLong(updateTimeLastStr);
-                    int UPDATES_CHECK_INTERVAL_HOURS = 24;
-                    if (updateTimeCurrent - updateTimeLast > 1000 * 60 * 60 * UPDATES_CHECK_INTERVAL_HOURS)
+                    final int UPDATES_CHECK_INTERVAL_HOURS = 24;
+                    int interval = 1000 * 60 * 60 * UPDATES_CHECK_INTERVAL_HOURS;
+                    if ((updateTimeCurrent - updateTimeLast > interval)
+                            || lastUpdateResult.isEmpty()
+                            || lastUpdateResult.equals(getString(R.string.update_check_warning_menu)))
                         checkNewVer();
                 } else {
                     checkNewVer();

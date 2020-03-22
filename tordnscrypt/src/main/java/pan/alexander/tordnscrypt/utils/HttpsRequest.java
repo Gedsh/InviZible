@@ -18,6 +18,7 @@ package pan.alexander.tordnscrypt.utils;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.content.Context;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -28,6 +29,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -36,14 +39,33 @@ import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.settings.PathVars;
+
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 
 public class HttpsRequest {
     private static final int READTIMEOUT = 30;
     private static final int CONNECTTIMEOUT = 30;
-    public static String post(String serverUrl, String dataToSend) throws IOException {
+    public static String post(Context context, String serverUrl, String dataToSend) throws IOException {
+
+        Proxy proxy = null;
+        if (ModulesStatus.getInstance().getTorState() == RUNNING) {
+            PathVars pathVars = PathVars.getInstance(context);
+            proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", Integer.parseInt(pathVars.getTorSOCKSPort())));
+        }
+
+
         URL url = new URL(serverUrl);
-        HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+
+        HttpsURLConnection con;
+        if (proxy == null) {
+            con = (HttpsURLConnection) url.openConnection();
+        } else {
+            con = (HttpsURLConnection) url.openConnection(proxy);
+        }
+
         //set timeout of 30 seconds
         con.setConnectTimeout(1000 * CONNECTTIMEOUT);
         con.setReadTimeout(1000 * READTIMEOUT);

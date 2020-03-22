@@ -41,6 +41,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URL;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -52,11 +54,14 @@ import javax.net.ssl.HttpsURLConnection;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.RootExecService.TopFragmentMark;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 
 public class UpdateService extends Service {
     private static final String STOP_DOWNLOAD_ACTION = "pan.alexander.tordnscrypt.STOP_DOWNLOAD_ACTION";
@@ -155,11 +160,25 @@ public class UpdateService extends Service {
                 String urlToDownload = intent.getStringExtra("url");
                 String fileToDownload = intent.getStringExtra("file");
                 String hash = intent.getStringExtra("hash");
+
                 try {
+
+                    Proxy proxy = null;
+                    if (ModulesStatus.getInstance().getTorState() == RUNNING) {
+                        PathVars pathVars = PathVars.getInstance(UpdateService.this);
+                        proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", Integer.parseInt(pathVars.getTorSOCKSPort())));
+                    }
 
                     //create url and connect
                     URL url = new URL(urlToDownload);
-                    HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
+
+                    HttpsURLConnection con;
+                    if (proxy == null) {
+                        con = (HttpsURLConnection) url.openConnection();
+                    } else {
+                        con = (HttpsURLConnection) url.openConnection(proxy);
+                    }
+
                     con.setConnectTimeout(1000 * CONNECTTIMEOUT);
                     con.setReadTimeout(1000 * READTIMEOUT);
                     con.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 9.0.1; " +
