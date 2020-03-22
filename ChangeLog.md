@@ -166,3 +166,11 @@
 * Fixed modules ports changing.
 * Fixed use of system DNS when "ignore_system_dns" option is disabled.
 * Other fixes.
+
+**InviZible Pro beta 0.7.3**
+* Updated DNSCrypt version to 2.0.40.
+* Updated DNSCrypt configuration file.
+* Updated Tor configuration file.
+* Fixed Tor countries selection.
+* Added notification if private DNS is switched on.
+* Fixed app update when the update server is unavailable.
