@@ -136,7 +136,7 @@ public class PathVars {
         return path;
     }
 
-    private boolean isModulesInstalled(Context context) {
+    public boolean isModulesInstalled(Context context) {
         return new PrefManager(Objects.requireNonNull(context)).getBoolPref("DNSCrypt Installed")
                 && new PrefManager(Objects.requireNonNull(context)).getBoolPref("Tor Installed")
                 && new PrefManager(Objects.requireNonNull(context)).getBoolPref("I2PD Installed");

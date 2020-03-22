@@ -20,7 +20,6 @@ package pan.alexander.tordnscrypt;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
-import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.fragment.app.Fragment;
 import android.content.Intent;
@@ -39,11 +38,10 @@ import pan.alexander.tordnscrypt.settings.PreferencesCommonFragment;
 import pan.alexander.tordnscrypt.settings.dnscrypt_servers.PreferencesDNSCryptServers;
 import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges;
-import pan.alexander.tordnscrypt.settings.PreferencesTorFragment;
 import pan.alexander.tordnscrypt.settings.SettingsParser;
 import pan.alexander.tordnscrypt.settings.ShowLogFragment;
 import pan.alexander.tordnscrypt.settings.ShowRulesRecycleFrag;
-import pan.alexander.tordnscrypt.settings.UnlockTorAppsFragment;
+import pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment;
 import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
@@ -53,8 +51,6 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 public class SettingsActivity extends LangAppCompatActivity
         implements PreferencesDNSCryptServers.OnServersChangeListener {
 
-    public static ArrayList<String> key_tor;
-    public static ArrayList<String> val_tor;
     SettingsParser settingsParser;
     public static final String dnscrypt_proxy_toml_tag = "pan.alexander.tordnscrypt/app_data/dnscrypt-proxy/dnscrypt-proxy.toml";
     public static final String tor_conf_tag = "pan.alexander.tordnscrypt/app_data/tor/tor.conf";
@@ -237,25 +233,5 @@ public class SettingsActivity extends LangAppCompatActivity
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onBackPressed() {
-        FragmentManager fm = getSupportFragmentManager();
-
-        Fragment frgCountry = fm.findFragmentByTag("CountrySelectFragment");
-        if (frgCountry != null && frgCountry.isVisible() && key_tor != null && val_tor != null) {
-            Bundle bundle = new Bundle();
-            bundle.putStringArrayList("key_tor", key_tor);
-            bundle.putStringArrayList("val_tor", val_tor);
-            PreferencesTorFragment frag = new PreferencesTorFragment();
-            frag.setArguments(bundle);
-            FragmentTransaction fTrans = getSupportFragmentManager().beginTransaction();
-            fTrans.replace(android.R.id.content, frag);
-            fTrans.commit();
-            return;
-        }
-
-        super.onBackPressed();
     }
 }
