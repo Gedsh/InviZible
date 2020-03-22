@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.utils.enums;
+package pan.alexander.tordnscrypt.settings.tor_countries;
 
 /*
     This file is part of InviZible Pro.
@@ -19,12 +19,12 @@ package pan.alexander.tordnscrypt.utils.enums;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-public enum BridgeType {
-    obfs4,
-    obfs3,
-    scramblesuit,
-    meek_lite,
-    none,
-    snowflake,
-    undefined
+class Countries {
+    String countryName;
+    String countryCode;
+
+    Countries(String countryName, String countryCode) {
+        this.countryName = countryName;
+        this.countryCode = countryCode;
+    }
 }

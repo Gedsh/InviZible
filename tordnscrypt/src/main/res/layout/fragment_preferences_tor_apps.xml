@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".settings.UnlockTorAppsFragment">
+    tools:context=".settings.tor_apps.UnlockTorAppsFragment">
 
     <androidx.cardview.widget.CardView
         android:id="@+id/cardTorAppFragment"

@@ -25,6 +25,7 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import androidx.preference.PreferenceManager;
 
+import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
@@ -41,7 +42,7 @@ public class ModulesAux {
         modulesStatus.setRootAvailable(rootIsAvailable);
         modulesStatus.setUseModulesWithRoot(runModulesWithRoot);
 
-        if (operationMode != UNDEFINED) {
+        if (operationMode != UNDEFINED && PathVars.getInstance(context).isModulesInstalled(context)) {
             modulesStatus.setMode(operationMode);
         } else if (rootIsAvailable){
             modulesStatus.setMode(ROOT_MODE);

@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.settings;
+package pan.alexander.tordnscrypt.settings.tor_apps;
 /*
     This file is part of InviZible Pro.
 
@@ -58,6 +58,7 @@ import java.util.Set;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.TorRefreshIPsWork;
 import pan.alexander.tordnscrypt.utils.Verifier;
@@ -285,42 +286,6 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
         return true;
     }
 
-    private class AppUnlock {
-        String name;
-        String pack;
-        String uid;
-        Drawable icon;
-        boolean system;
-        boolean active;
-
-        AppUnlock(String name, String pack, String uid, Drawable icon, boolean system, boolean active) {
-            this.name = name;
-            this.pack = pack;
-            this.uid = uid;
-            this.icon = icon;
-            this.system = system;
-            this.active = active;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            AppUnlock appUnlock = (AppUnlock) o;
-            return system == appUnlock.system &&
-                    active == appUnlock.active &&
-                    name.equals(appUnlock.name) &&
-                    pack.equals(appUnlock.pack) &&
-                    uid.equals(appUnlock.uid) &&
-                    icon.equals(appUnlock.icon);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(name, pack, uid, icon, system, active);
-        }
-    }
-
     private class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHolder> {
         LayoutInflater lInflater = (LayoutInflater) Objects.requireNonNull(getActivity()).getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -468,7 +433,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
                         for (String permInfo : pInfo.requestedPermissions) {
                             if (permInfo.equals("android.permission.INTERNET")) {
                                 appUseInternet = true;
-
+                                break;
                             }
                         }
 

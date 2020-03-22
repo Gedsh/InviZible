@@ -153,10 +153,10 @@ public class MainActivity extends LangAppCompatActivity
             TorRunFragment torRunFragment = new TorRunFragment();
             ITPDRunFragment itpdRunFragment = new ITPDRunFragment();
 
-            adapter.addFragment(adapter.new ViewPagerFragment("Main", mainFragment));
-            adapter.addFragment(adapter.new ViewPagerFragment("DNS", dnsCryptRunFragment));
-            adapter.addFragment(adapter.new ViewPagerFragment("Tor", torRunFragment));
-            adapter.addFragment(adapter.new ViewPagerFragment("I2P", itpdRunFragment));
+            adapter.addFragment(new ViewPagerAdapter.ViewPagerFragment("Main", mainFragment));
+            adapter.addFragment(new ViewPagerAdapter.ViewPagerFragment("DNS", dnsCryptRunFragment));
+            adapter.addFragment(new ViewPagerAdapter.ViewPagerFragment("Tor", torRunFragment));
+            adapter.addFragment(new ViewPagerAdapter.ViewPagerFragment("I2P", itpdRunFragment));
 
             viewPager.setAdapter(adapter);
 

@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.settings;
+package pan.alexander.tordnscrypt.settings.tor_countries;
 /*
     This file is part of InviZible Pro.
 
@@ -19,7 +19,6 @@ package pan.alexander.tordnscrypt.settings;
 */
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,7 +33,6 @@ import androidx.appcompat.widget.LinearLayoutCompat;
 import androidx.appcompat.widget.SearchView;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
-import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -42,18 +40,20 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
+import static pan.alexander.tordnscrypt.settings.PreferencesTorFragment.key_tor;
+import static pan.alexander.tordnscrypt.settings.PreferencesTorFragment.val_tor;
 
 public class CountrySelectFragment extends Fragment implements CompoundButton.OnCheckedChangeListener, SearchView.OnQueryTextListener {
 
-    static final int entryNodes = 100;
-    static final int excludeNodes = 200;
-    static final int exitNodes = 300;
-    static final int excludeExitNodes = 400;
+    public static final int entryNodes = 100;
+    public static final int excludeNodes = 200;
+    public static final int exitNodes = 300;
+    public static final int excludeExitNodes = 400;
     private int current_nodes_type = 0;
     private String countries = "";
     private RecyclerView.Adapter rvAdapter;
     private ArrayList<Countries> countriesListCurrent;
-    private ArrayList<Countries> countriesListSaved = null;
+    private ArrayList<Countries> countriesListSaved;
 
     public CountrySelectFragment() {
 
@@ -179,60 +179,27 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
     public void onStop() {
         super.onStop();
 
-        if (getActivity() == null) {
+        if (getActivity() == null || key_tor == null || val_tor == null) {
             return;
         }
 
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        SharedPreferences.Editor editor = sp.edit();
         countries = ((CountriesAdapter) rvAdapter).getCheckedCountries();
 
-        if (current_nodes_type == entryNodes) {
-            editor.putString("EntryNodesCountries", countries);
-            editor.apply();
-        } else if (current_nodes_type == excludeNodes) {
-            editor.putString("ExcludeNodesCountries", countries);
-            editor.apply();
-        } else if (current_nodes_type == excludeExitNodes) {
-            editor.putString("ExcludeExitNodesCountries", countries);
-            editor.apply();
-        } else if (current_nodes_type == exitNodes) {
-            editor.putString("ExitNodesCountries", countries);
-            editor.apply();
-        }
-    }
-
-    private final class Countries {
-        String countryName;
-        String countryCode;
-
-        Countries(String countryName, String countryCode) {
-            this.countryName = countryName;
-            this.countryCode = countryCode;
-        }
-    }
-
-    private class SelectedCountries {
-        ArrayList<String> countriesList = new ArrayList<>();
-
-        SelectedCountries(String countries) {
-            if (!countries.isEmpty()) {
-                String[] arr = countries.split(",");
-                for (String str : arr) {
-                    this.countriesList.add(str.trim().replaceAll("[^A-Z]+", ""));
-                }
-            } else if (current_nodes_type == entryNodes) {
-                for (Countries country : countriesListCurrent) {
-                    this.countriesList.add(country.countryCode);
-                }
-            }
+        if (current_nodes_type == entryNodes && key_tor.contains("EntryNodes")) {
+            val_tor.set(key_tor.indexOf("EntryNodes"), countries);
+        } else if (current_nodes_type == excludeNodes && key_tor.contains("ExcludeNodes")) {
+            val_tor.set(key_tor.indexOf("ExcludeNodes"), countries);
+        } else if (current_nodes_type == excludeExitNodes && key_tor.contains("ExcludeExitNodes")) {
+            val_tor.set(key_tor.indexOf("ExcludeExitNodes"), countries);
+        } else if (current_nodes_type == exitNodes && key_tor.contains("ExitNodes")) {
+            val_tor.set(key_tor.indexOf("ExitNodes"), countries);
         }
     }
 
     private class CountriesAdapter extends RecyclerView.Adapter<CountriesAdapter.CountriesViewHolder> {
 
 
-        SelectedCountries selectedCountries = new SelectedCountries(countries);
+        SelectedCountries selectedCountries = new SelectedCountries(countries, current_nodes_type, countriesListCurrent);
         LayoutInflater lInflater = (LayoutInflater) Objects.requireNonNull(getActivity()).getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         @NonNull
