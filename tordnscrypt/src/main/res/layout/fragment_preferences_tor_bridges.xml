@@ -23,8 +23,7 @@
             android:focusable="false"
             app:cardBackgroundColor="@color/cardsColor"
             app:cardCornerRadius="5dp"
-            app:cardUseCompatPadding="true"
-            app:contentPadding="4dp">
+            app:cardUseCompatPadding="true">
 
             <androidx.appcompat.widget.AppCompatRadioButton
                 android:id="@+id/rbNoBridges"
@@ -43,8 +42,7 @@
             android:focusable="false"
             app:cardBackgroundColor="@color/cardsColor"
             app:cardCornerRadius="5dp"
-            app:cardUseCompatPadding="true"
-            app:contentPadding="4dp">
+            app:cardUseCompatPadding="true">
 
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
@@ -79,8 +77,7 @@
             android:focusable="false"
             app:cardBackgroundColor="@color/cardsColor"
             app:cardCornerRadius="5dp"
-            app:cardUseCompatPadding="true"
-            app:contentPadding="4dp">
+            app:cardUseCompatPadding="true">
 
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"

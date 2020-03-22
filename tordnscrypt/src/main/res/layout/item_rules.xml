@@ -19,7 +19,7 @@
         app:cardBackgroundColor="@color/cardsColor"
         app:cardCornerRadius="5dp"
         app:cardUseCompatPadding="true"
-        app:contentPadding="8dp">
+        app:contentPadding="4dp">
 
         <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
