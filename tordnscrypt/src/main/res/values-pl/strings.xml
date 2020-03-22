@@ -298,7 +298,7 @@
     <string name="pref_tor_DNS_port_summ">Otworz ten port do nasluchu zapytan DNS po UDP i rozwiaz anonimowo.</string>
     <string name="pref_tor_client_use_IPv4_summ">Jesli zablokowane, Tor bedzie unikal wysylania zapytan do directory servers i nodow wejsciowych po IPv4.</string>
     <string name="pref_tor_client_use_IPv6_summ">Jesli zaznaczone, Tor moze komunikowac sie z directory servers i nodami wejsciowymi po IPv6.</string>
-    <string name="pref_tor_not_exist">Ustawienie nie istnieje w dnscrypt-proxy.toml!</string>
+    <string name="pref_tor_not_exist">Ustawienie nie istnieje w tor.conf!</string>
     <string name="pref_tor_unlock">Host lub IP ktory chesz odblokowac</string>
     <string name="pref_tor_clearnet">Host lub IP ktory chcesz pominac</string>
     <string name="pref_tor_unlock_edit">Edytuj Host lub IP</string>

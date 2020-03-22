@@ -213,7 +213,7 @@
     <string name="pref_tor_DNS_port_summ">Открыть этот порт для UDP DNS запросов, и анонимного ответа.</string>
     <string name="pref_tor_client_use_IPv4_summ">Если ВЫКЛЮЧИТЬ, Tor будет избегать соединений с входными серверами, использующими IPv4.</string>
     <string name="pref_tor_client_use_IPv6_summ">Если ВКЛЮЧИТЬ, Tor может пытаться соединиться с входными серверами, использующими IPv6.</string>
-    <string name="pref_tor_not_exist">Настройка не существует в dnscrypt-proxy.toml!</string>
+    <string name="pref_tor_not_exist">Настройка не существует в tor.conf!</string>
     <string name="pref_tor_unlock">Сайт или IP для Tor</string>
     <string name="pref_tor_clearnet">Сайт или IP без Tor</string>
     <string name="pref_tor_unlock_edit">Редактировать сайт или IP</string>
