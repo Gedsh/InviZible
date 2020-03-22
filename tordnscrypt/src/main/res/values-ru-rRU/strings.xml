@@ -400,4 +400,5 @@
     <string name="save_changes">Сохранить изменения</string>
     <string name="discard_changes">Отменить изменения</string>
     <string name="config_changes_dialog_message">Вы хотите сохранить изменения? Это может нарушить работу InviZible Pro.</string>
+    <string name="helper_dnscrypt_private_dns">Пожалуйста, отключите \"Частный DNS\" в настройках телефона. Эта опция мешает работе DNSCrypt.</string>
 </resources>

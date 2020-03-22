@@ -27,7 +27,10 @@ import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkInfo;
 import android.os.Build;
+import android.provider.Settings;
 import android.util.Log;
+
+import androidx.core.net.ConnectivityManagerCompat;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -148,5 +151,19 @@ public class Util {
         } catch (SecurityException ignored) {
             return false;
         }
+    }
+
+    public static boolean isPrivateDns(Context context) {
+        String dns_mode = Settings.Global.getString(context.getContentResolver(), "private_dns_mode");
+        Log.i(LOG_TAG, "Private DNS mode=" + dns_mode);
+        if (dns_mode == null) {
+            dns_mode = "off";
+        }
+        return (!"off".equals(dns_mode));
+    }
+
+    public static boolean isMeteredNetwork(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        return (cm != null && ConnectivityManagerCompat.isActiveNetworkMetered(cm));
     }
 }

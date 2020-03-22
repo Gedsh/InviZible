@@ -52,6 +52,7 @@ import pan.alexander.tordnscrypt.utils.OwnFileReader;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.vpn.ResourceRecord;
+import pan.alexander.tordnscrypt.vpn.Util;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPN;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
@@ -561,6 +562,17 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             return;
         }
 
+        if (Util.isPrivateDns(context)) {
+            FragmentManager fragmentManager = view.getFragmentFragmentManager();
+            if (fragmentManager != null) {
+                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                        context, context.getText(R.string.helper_dnscrypt_private_dns).toString(), "helper_dnscrypt_private_dns");
+                if (notificationHelper != null) {
+                    notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
+                }
+            }
+        }
+
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 
         if (!sharedPreferences.getBoolean("ignore_system_dns", false)
@@ -618,8 +630,6 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
 
         view.setDNSCryptStartButtonEnabled(false);
-
-        //cleanLogFileNoRootMethod(context);
 
 
         if (new PrefManager(context).getBoolPref("Tor Running")

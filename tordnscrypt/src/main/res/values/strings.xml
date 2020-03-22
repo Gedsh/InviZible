@@ -359,6 +359,8 @@
     <string name="pref_dnscrypt_block_undelegated_summ">Immediately respond to queries for local zones instead of leaking them to upstream resolvers (always causing errors or timeouts).</string>
     <string name="pref_dnscrypt_edit_toml">Edit dnscrypt-proxy.toml directly</string>
 
+    <string name="helper_dnscrypt_private_dns">Please turn off \"Private DNS\" in Android network settings. This option interferes with DNSCrypt.</string>
+
     <string name="pref_tor_virtual_addr_network_IPv4" translatable="false">VirtualAddrNetworkIPv4</string>
     <string name="pref_tor_virtual_addr_network_IPv4_summ">When Tor needs to assign a virtual (unused) address because of a MAPADDRESS command from the controller or the AutomapHostsOnResolve feature, Tor picks an unassigned address from this range.</string>
     <string name="pref_tor_avoid_disc_writes" translatable="false">AvoidDiskWrites</string>
