@@ -174,3 +174,8 @@
 * Fixed Tor countries selection.
 * Added notification if private DNS is switched on.
 * Fixed app update when the update server is unavailable.
+
+**InviZible Pro beta 0.7.4**
+* Updated DNSCrypt version to 2.0.41.
+* Fixed real-time logs when log files do not exist.
+* Implemented DNSCrypt servers search.
