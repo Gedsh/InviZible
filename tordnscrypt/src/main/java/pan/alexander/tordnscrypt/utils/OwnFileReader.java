@@ -58,6 +58,7 @@ public class OwnFileReader {
         File file = new File(filePath);
 
         if (!file.exists()) {
+            reentrantLock.unlock();
             return "";
         }
 
