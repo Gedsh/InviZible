@@ -33,6 +33,8 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.LinearLayoutCompat;
+import androidx.appcompat.widget.SearchView;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -50,19 +52,24 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
     private FragmentManager fragmentManager;
     private PreferencesDNSCryptServers preferencesDNSCryptServers;
     private ArrayList<DNSServerItem> list_dns_servers;
+    private ArrayList<DNSServerItem> list_dns_servers_saved;
     private ArrayList<DNSServerRelays> routes_current;
     private LayoutInflater lInflater;
     private boolean relaysMdExist;
+    private SearchView searchDNSServer;
 
-    DNSServersAdapter(Context context,
+    DNSServersAdapter(Context context, SearchView searchDNSServer,
                       PreferencesDNSCryptServers preferencesDNSCryptServers,
                       FragmentManager fragmentManager,
                       ArrayList<DNSServerItem> list_dns_servers,
+                      ArrayList<DNSServerItem> list_dns_servers_saved,
                       ArrayList<DNSServerRelays> routes_current, boolean relaysMdExist) {
         this.context = context;
+        this.searchDNSServer = searchDNSServer;
         this.preferencesDNSCryptServers = preferencesDNSCryptServers;
         this.fragmentManager = fragmentManager;
         this.list_dns_servers = list_dns_servers;
+        this.list_dns_servers_saved = list_dns_servers_saved;
         this.routes_current = routes_current;
         this.relaysMdExist = relaysMdExist;
 
@@ -92,7 +99,18 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
     }
 
     private void setItem(int position, DNSServerItem dnsServer) {
+        int positionInSaved = list_dns_servers_saved.indexOf(getItem(position));
+        if (positionInSaved > 0) {
+            list_dns_servers_saved.set(positionInSaved, dnsServer);
+        }
         list_dns_servers.set(position, dnsServer);
+    }
+
+    private void removeItem(int position) {
+        if (getItem(position) != null) {
+            list_dns_servers_saved.remove(getItem(position));
+        }
+        list_dns_servers.remove(position);
     }
 
 
@@ -102,17 +120,19 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
             CompoundButton.OnCheckedChangeListener,
             View.OnFocusChangeListener {
 
+        private CardView cardDNSServer;
         private TextView tvDNSServerName;
         private CheckBox chbDNSServer;
         private TextView tvDNSServerDescription;
         private TextView tvDNSServerFlags;
         private Button btnDNSServerRelay;
         private ImageButton delBtnDNSServer;
+        private LinearLayoutCompat llDNSServer;
 
         DNSServersViewHolder(@NonNull View itemView) {
             super(itemView);
 
-            CardView cardDNSServer = itemView.findViewById(R.id.cardDNSServer);
+            cardDNSServer = itemView.findViewById(R.id.cardDNSServer);
             cardDNSServer.setFocusable(true);
 
             cardDNSServer.setOnClickListener(this);
@@ -133,9 +153,17 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
 
             delBtnDNSServer = itemView.findViewById(R.id.delBtnDNSServer);
             delBtnDNSServer.setOnClickListener(this);
+
+            llDNSServer = itemView.findViewById(R.id.llDNSServer);
         }
 
         private void bind(int position) {
+
+            if (position == 0 && searchDNSServer != null) {
+                llDNSServer.setPadding(0, searchDNSServer.getHeight() + cardDNSServer.getContentPaddingBottom(), 0, 0);
+            } else {
+                llDNSServer.setPadding(0, 0, 0, 0);
+            }
 
             DNSServerItem dnsServer = list_dns_servers.get(position);
 
@@ -227,12 +255,11 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
                     break;
                 case R.id.btnDNSServerRelay:
                     position = getAdapterPosition();
-                    saveLastAdapterPositionToReturnIt(position);
                     openDNSRelaysPref(position);
                     break;
                 case R.id.delBtnDNSServer:
                     position = getAdapterPosition();
-                    list_dns_servers.remove(position);
+                    removeItem(position);
                     DNSServersAdapter.this.notifyItemRemoved(position);
                     break;
             }
@@ -265,7 +292,6 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
             if (view.getId() == R.id.cardDNSServer
                     || view.getId() == R.id.btnDNSServerRelay) {
                 int position = getAdapterPosition();
-                saveLastAdapterPositionToReturnIt(position);
                 openDNSRelaysPref(position);
             }
             return true;
@@ -287,9 +313,5 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
             fragmentTransaction.addToBackStack("preferencesDNSCryptRelaysTag");
             fragmentTransaction.commit();
         }
-    }
-
-    private void saveLastAdapterPositionToReturnIt(int position) {
-        preferencesDNSCryptServers.setLastAdapterPosition(position);
     }
 }
