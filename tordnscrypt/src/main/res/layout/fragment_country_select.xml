@@ -16,14 +16,14 @@
         android:focusable="false"
         app:cardBackgroundColor="@color/cardsColor"
         app:cardCornerRadius="4dp"
-        app:cardUseCompatPadding="true"
-        app:contentPadding="8dp">
+        app:cardUseCompatPadding="true">
 
         <androidx.appcompat.widget.LinearLayoutCompat
             android:id="@+id/linearLayout4"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingEnd="8dp">
 
             <androidx.appcompat.widget.SearchView
                 android:id="@+id/searhTorCountry"
