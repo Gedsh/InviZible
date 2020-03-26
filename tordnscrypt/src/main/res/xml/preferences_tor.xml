@@ -153,6 +153,13 @@
             android:key="ClientUseIPv6"
             android:summary="@string/pref_tor_client_use_IPv6_summ"
             android:title="@string/pref_tor_client_use_IPv6" />
+        <EditTextPreference
+            android:id="@+id/pref_tor_snowflake_stun"
+            android:defaultValue="stun.l.google.com:19302"
+            android:key="pref_tor_snowflake_stun"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:title="@string/pref_tor_snowflake_stun" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_common_categ_other"
         android:key="pref_tor_other">

@@ -54,6 +54,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
     private ArrayList<String> key_tor_orig;
     private ArrayList<String> val_tor_orig;
     private String appDataDir;
+    private boolean isChanged;
 
 
     @Override
@@ -93,6 +94,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         preferences.add(findPreference("DNSPort"));
         preferences.add(findPreference("ClientUseIPv4"));
         preferences.add(findPreference("ClientUseIPv6"));
+        preferences.add(findPreference("pref_tor_snowflake_stun"));
 
         for (Preference preference : preferences) {
             if (preference != null) {
@@ -144,7 +146,6 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         super.onStop();
 
         List<String> tor_conf = new LinkedList<>();
-        boolean isChanged = false;
         for (int i = 0; i < key_tor.size(); i++) {
 
             if (!(key_tor_orig.get(i).equals(key_tor.get(i)) && val_tor_orig.get(i).equals(val_tor.get(i))) && !isChanged) {
@@ -237,6 +238,18 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 key_tor.set(key_tor.indexOf("#DNSPort"), "DNSPort");
             } else if (key_tor.contains("DNSPort")) {
                 key_tor.set(key_tor.indexOf("DNSPort"), "#DNSPort");
+            }
+            return true;
+        } else if (Objects.equals(preference.getKey(), "pref_tor_snowflake_stun")) {
+            if (key_tor.contains("ClientTransportPlugin") && getActivity() != null) {
+                boolean saveExtendedLogs = new PrefManager(getActivity()).getBoolPref("swRootCommandsLog");
+                String saveLogsString = "";
+                if (saveExtendedLogs) {
+                    saveLogsString = " -log " + appDataDir + "/logs/Snowflake.log";
+                }
+                int index = key_tor.indexOf("ClientTransportPlugin");
+                String clientTransportPlugin = val_tor.get(index);
+                val_tor.set(index, clientTransportPlugin.replaceAll("stun:.+", "stun:" + newValue.toString().trim() + saveLogsString));
             }
             return true;
         }

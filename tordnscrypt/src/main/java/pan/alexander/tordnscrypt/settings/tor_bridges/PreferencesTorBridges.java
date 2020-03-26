@@ -19,11 +19,13 @@ package pan.alexander.tordnscrypt.settings.tor_bridges;
 */
 
 import android.annotation.SuppressLint;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AlertDialog;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
@@ -269,6 +271,15 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             currentBridgesTypeToSave = currentBridgesType.toString();
         }
 
+        boolean saveExtendedLogs = new PrefManager(getActivity()).getBoolPref("swRootCommandsLog");
+        String saveLogsString = "";
+        if (saveExtendedLogs) {
+            saveLogsString = " -log " + appDataDir + "/logs/Snowflake.log";
+        }
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String stunServer = sharedPreferences.getString("pref_tor_snowflake_stun", "stun.l.google.com:19302");
+
         if (!currentBridges.isEmpty() && !currentBridgesType.equals(undefined)) {
 
             if (!currentBridgesType.equals(none)) {
@@ -276,7 +287,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 String clientTransportPlugin;
                 if (currentBridgesType.equals(snowflake)) {
                     clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
-                            + snowflakePath + " -url https://snowflake-broker.azureedge.net/ -front ajax.aspnetcdn.com -ice stun:stun.l.google.com:19302";
+                            + snowflakePath + " -url https://snowflake-broker.azureedge.net/" +
+                            " -front ajax.aspnetcdn.com -ice stun:" + stunServer.trim() + saveLogsString;
                 } else {
                     clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
                             + obfsPath;

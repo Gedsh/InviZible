@@ -410,6 +410,7 @@
     <string name="pref_tor_unlock_disabled">Disabled</string>
     <string name="pref_tor_unlock_app">Apps to Torify</string>
     <string name="pref_tor_clearnet_app">Apps to bypass Tor</string>
+    <string name="pref_tor_snowflake_stun">STUN server for SnowFlake bridges</string>
     <string name="pref_tor_edit_conf">Edit tor.conf directly</string>
     <string name="pref_tor_clean_module_folder">Clean module folder</string>
 
