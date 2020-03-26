@@ -179,3 +179,12 @@
 * Updated DNSCrypt version to 2.0.41.
 * Fixed real-time logs when log files do not exist.
 * Implemented DNSCrypt servers search.
+
+**InviZible Pro beta 0.7.5**
+* Updated DNSCrypt to version 2.0.42.
+* Updated DNSCrypt configuration file.
+* Updated snowflake binary.
+* Fixed checking InviZible update manually.
+* Implemented snowflake bridge log.
+* Implemented option for using different STUN servers with the snowflake bridge.
+* Implemented the use of Tor http proxy to request new bridges.
