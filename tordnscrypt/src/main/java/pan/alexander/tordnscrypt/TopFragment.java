@@ -28,16 +28,17 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
-import androidx.fragment.app.Fragment;
-import androidx.appcompat.app.AlertDialog;
-import androidx.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
 
 import java.util.Arrays;
 import java.util.List;
@@ -53,19 +54,19 @@ import pan.alexander.tordnscrypt.dialogs.NewUpdateDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.dialogs.UpdateModulesDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.RootCheckingProgressDialog;
-import pan.alexander.tordnscrypt.modules.ModulesAux;
-import pan.alexander.tordnscrypt.modules.ModulesStarterHelper;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.Registration;
-import pan.alexander.tordnscrypt.utils.RootExecService;
-import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.installer.Installer;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
 import pan.alexander.tordnscrypt.modules.ModulesService;
+import pan.alexander.tordnscrypt.modules.ModulesStarterHelper;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.modules.ModulesVersions;
 import pan.alexander.tordnscrypt.update.UpdateCheck;
 import pan.alexander.tordnscrypt.update.UpdateService;
+import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.Registration;
+import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
@@ -193,8 +194,10 @@ public class TopFragment extends Fragment {
 
         closePleaseWaitDialog();
 
-        if (updateCheck != null && updateCheck.context != null)
+        if (updateCheck != null && updateCheck.context != null) {
             updateCheck.context = null;
+            updateCheck = null;
+        }
     }
 
     @Override
@@ -311,7 +314,7 @@ public class TopFragment extends Fragment {
     }
 
     private void showDonDialog() {
-        if (getActivity()== null) {
+        if (getActivity() == null) {
             return;
         }
 
@@ -336,7 +339,7 @@ public class TopFragment extends Fragment {
                 if (getActivity() != null && getFragmentManager() != null && !accelerated) {
                     accelerateDevelop.show(getFragmentManager(), "accelerateDevelop");
                 }
-            },5000);
+            }, 5000);
 
         }
     }
@@ -522,7 +525,7 @@ public class TopFragment extends Fragment {
                     final int UPDATES_CHECK_INTERVAL_HOURS = 24;
                     int interval = 1000 * 60 * 60 * UPDATES_CHECK_INTERVAL_HOURS;
                     if ((updateTimeCurrent - updateTimeLast > interval)
-                            || lastUpdateResult.isEmpty()
+                            || (lastUpdateResult.isEmpty() && ((updateTimeCurrent - updateTimeLast) > 300000))
                             || lastUpdateResult.equals(getString(R.string.update_check_warning_menu)))
                         checkNewVer();
                 } else {
@@ -540,11 +543,12 @@ public class TopFragment extends Fragment {
 
         Handler handler = new Handler();
 
-        new PrefManager(getActivity()).setStrPref("LastUpdateResult", "");
-
         Runnable runnable = () -> {
-            if (getActivity() == null)
+            if (getActivity() == null || updateCheck != null) {
                 return;
+            }
+
+            new PrefManager(getActivity()).setStrPref("LastUpdateResult", "");
             new PrefManager(getActivity()).setStrPref("updateTimeLast", String.valueOf(System.currentTimeMillis()));
 
             updateCheck = new UpdateCheck(getActivity());

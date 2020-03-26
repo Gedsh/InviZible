@@ -269,7 +269,7 @@ public class UpdateCheck {
         return Base64.encodeToString(key, Base64.DEFAULT);
     }
 
-    public void requestUpdateData(final String domainName, final String appSign) {
+    public synchronized void requestUpdateData(final String domainName, final String appSign) {
         if (appVersion.endsWith("p") || appVersion.startsWith("f")) {
             return;
         }
