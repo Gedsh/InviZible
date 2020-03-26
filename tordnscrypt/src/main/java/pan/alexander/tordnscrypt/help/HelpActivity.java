@@ -293,6 +293,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
             if (!newValue) {
                 FileOperations.deleteFile(getApplicationContext(), appDataDir + "/logs", "RootExec.log", "RootExec.log");
+                FileOperations.deleteFile(getApplicationContext(), appDataDir + "/logs", "Snowflake.log", "Snowflake.log");
             }
         }
     }
