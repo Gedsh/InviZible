@@ -19,14 +19,11 @@ package pan.alexander.tordnscrypt.utils;
 */
 
 import android.annotation.SuppressLint;
-
 import android.app.Activity;
-import androidx.fragment.app.FragmentManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import androidx.appcompat.app.AlertDialog;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -38,30 +35,44 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.FragmentManager;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
+import javax.net.ssl.HttpsURLConnection;
+
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 
 public class GetNewBridges {
 
-    private Activity activity;
     public static DialogInterface dialogPleaseWait;
+
+    private static final int READTIMEOUT = 180;
+    private static final int CONNECTTIMEOUT = 180;
+    private static String transport;
+
+    private Activity activity;
     private Thread threadRequestCodeImage;
     private Thread threadRequestBridges;
-    private static String transport;
 
     public GetNewBridges(Activity activity) {
         this.activity = activity;
@@ -75,18 +86,32 @@ public class GetNewBridges {
             Bitmap codeImage = null;
             final String captcha_challenge_field_value;
             try {
-                URL url = new URL("https://bridges.torproject.org/bridges?transport="+transport);
-                HttpURLConnection huc =  (HttpURLConnection)  url.openConnection ();
-                huc.setRequestMethod ("GET");
-                huc.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) " +
-                        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36");
-                huc.connect () ;
+                Proxy proxy = null;
+                if (ModulesStatus.getInstance().getTorState() == RUNNING) {
+                    PathVars pathVars = PathVars.getInstance(activity);
+                    proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", Integer.parseInt(pathVars.getTorHTTPTunnelPort())));
+                }
 
-                final int code = huc.getResponseCode();
+                URL url = new URL("https://bridges.torproject.org/bridges?transport=" + transport);
+
+                HttpsURLConnection con;
+                if (proxy == null) {
+                    con = (HttpsURLConnection) url.openConnection();
+                } else {
+                    con = (HttpsURLConnection) url.openConnection(proxy);
+                }
+                con.setConnectTimeout(1000 * CONNECTTIMEOUT);
+                con.setReadTimeout(1000 * READTIMEOUT);
+                con.setRequestMethod("GET");
+                con.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) " +
+                        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36");
+                con.connect();
+
+                final int code = con.getResponseCode();
                 if (code == HttpURLConnection.HTTP_OK) {
                     BufferedReader in = new BufferedReader(
                             new InputStreamReader(
-                                    huc.getInputStream()));
+                                    con.getInputStream()));
                     String inputLine;
                     boolean imageFound = false;
                     boolean keywordFound = false;
@@ -94,26 +119,26 @@ public class GetNewBridges {
 
                     while ((inputLine = in.readLine()) != null) {
                         if (inputLine.contains("data:image/jpeg;base64") && !imageFound) {
-                            String[] imgCodeBase64 = inputLine.replace("data:image/jpeg;base64,","").split("\"");
+                            String[] imgCodeBase64 = inputLine.replace("data:image/jpeg;base64,", "").split("\"");
 
-                            if (imgCodeBase64.length<4) {
+                            if (imgCodeBase64.length < 4) {
                                 activity.runOnUiThread(() -> {
-                                    if (dialogPleaseWait!=null){
+                                    if (dialogPleaseWait != null) {
                                         dialogPleaseWait.cancel();
                                     }
-                                    Toast.makeText(activity, "Tor Project web site error!",Toast.LENGTH_LONG).show();
-                                    Log.e(LOG_TAG,"Tor Project web site error");
+                                    Toast.makeText(activity, "Tor Project web site error!", Toast.LENGTH_LONG).show();
+                                    Log.e(LOG_TAG, "Tor Project web site error");
                                 });
                                 return;
                             }
 
-                            byte[] data = Base64.decode(imgCodeBase64[3],Base64.DEFAULT);
+                            byte[] data = Base64.decode(imgCodeBase64[3], Base64.DEFAULT);
 
                             codeImage = BitmapFactory.decodeByteArray(data, 0, data.length);
 
                             imageFound = true;
 
-                            if (codeImage==null)
+                            if (codeImage == null)
                                 return;
 
 
@@ -121,25 +146,25 @@ public class GetNewBridges {
                             keywordFound = true;
                         } else if (inputLine.contains("value") && keywordFound) {
                             String[] secretCodeArr = inputLine.split("\"");
-                            if (secretCodeArr.length>1) {
+                            if (secretCodeArr.length > 1) {
                                 captcha_challenge_field_value = secretCodeArr[1];
 
                                 final Bitmap finalCodeImage = codeImage;
                                 activity.runOnUiThread(() -> {
-                                    if (dialogPleaseWait!=null){
+                                    if (dialogPleaseWait != null) {
                                         dialogPleaseWait.cancel();
                                     }
 
-                                    showCodeImage(finalCodeImage,captcha_challenge_field_value);
+                                    showCodeImage(finalCodeImage, captcha_challenge_field_value);
                                 });
                                 break;
                             } else {
                                 activity.runOnUiThread(() -> {
-                                    if (dialogPleaseWait!=null){
+                                    if (dialogPleaseWait != null) {
                                         dialogPleaseWait.cancel();
                                     }
-                                    Toast.makeText(activity, "Tor Project web site error!",Toast.LENGTH_LONG).show();
-                                    Log.e(LOG_TAG,"Tor Project web site error");
+                                    Toast.makeText(activity, "Tor Project web site error!", Toast.LENGTH_LONG).show();
+                                    Log.e(LOG_TAG, "Tor Project web site error");
                                 });
                                 return;
                             }
@@ -151,24 +176,23 @@ public class GetNewBridges {
                     in.close();
                 } else {
                     activity.runOnUiThread(() -> {
-                        Toast.makeText(activity, "Tor Project web site unavailable! "+ code,Toast.LENGTH_LONG).show();
-                        Log.e(LOG_TAG,"Tor Project web site unavailable! " + code);
+                        Toast.makeText(activity, "Tor Project web site unavailable! " + code, Toast.LENGTH_LONG).show();
+                        Log.e(LOG_TAG, "Tor Project web site unavailable! " + code);
                     });
                 }
-                huc.disconnect();
+                con.disconnect();
             } catch (final IOException e) {
                 activity.runOnUiThread(() -> {
-                    if (dialogPleaseWait!=null)
+                    if (dialogPleaseWait != null)
                         dialogPleaseWait.dismiss();
-                    Toast.makeText(activity, "Error: " +e.getMessage(),Toast.LENGTH_LONG).show();
+                    Toast.makeText(activity, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
-                Log.e(LOG_TAG,"requestCodeImage function fault " + e.getMessage());
+                Log.e(LOG_TAG, "requestCodeImage function fault " + e.getMessage());
             }
         });
 
         threadRequestCodeImage.start();
     }
-
 
 
     private DialogInterface modernProgressDialog() {
@@ -177,7 +201,7 @@ public class GetNewBridges {
         builder.setMessage(R.string.please_wait);
         builder.setIcon(R.drawable.ic_visibility_off_black_24dp);
 
-        ProgressBar progressBar = new ProgressBar(activity,null,android.R.attr.progressBarStyleHorizontal);
+        ProgressBar progressBar = new ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal);
         progressBar.setBackgroundResource(R.drawable.background_10dp_padding);
         progressBar.setBackgroundResource(R.drawable.background_10dp_padding);
         progressBar.setIndeterminate(true);
@@ -258,7 +282,7 @@ public class GetNewBridges {
         builder.setView(view);
 
         builder.setPositiveButton(R.string.ok, (dialogInterface, i) -> {
-            requestNewBridges(etCode.getText().toString(),secretCode);
+            requestNewBridges(etCode.getText().toString(), secretCode);
             dialogPleaseWait = modernProgressDialog();
         });
 
@@ -271,29 +295,43 @@ public class GetNewBridges {
             Bitmap codeImage = null;
             final String captcha_challenge_field_value;
             try {
-                String query = "captcha_challenge_field="+secretCode+
-                        "&captcha_response_field="+imageCode+
+                Proxy proxy = null;
+                if (ModulesStatus.getInstance().getTorState() == RUNNING) {
+                    PathVars pathVars = PathVars.getInstance(activity);
+                    proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", Integer.parseInt(pathVars.getTorHTTPTunnelPort())));
+                }
+
+                String query = "captcha_challenge_field=" + secretCode +
+                        "&captcha_response_field=" + imageCode +
                         "&submit=submit";
-                URL url = new URL("https://bridges.torproject.org/bridges?transport="+transport);
-                HttpURLConnection huc =  (HttpURLConnection)  url.openConnection ();
+                URL url = new URL("https://bridges.torproject.org/bridges?transport=" + transport);
+
+                HttpsURLConnection con;
+                if (proxy == null) {
+                    con = (HttpsURLConnection) url.openConnection();
+                } else {
+                    con = (HttpsURLConnection) url.openConnection(proxy);
+                }
+
                 //Set to POST
-                huc.setDoOutput(true);
-                huc.setRequestMethod("POST");
-                huc.setRequestProperty("Content-Length", String.valueOf(query.getBytes().length));
-                huc.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 9.0.1; " +
+                con.setDoOutput(true);
+                con.setRequestMethod("POST");
+                con.setRequestProperty("Content-Length", String.valueOf(query.getBytes().length));
+                con.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 9.0.1; " +
                         "Mi Mi) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Mobile Safari/537.36");
-                huc.setReadTimeout(10000);
-                Writer writer = new OutputStreamWriter(huc.getOutputStream());
+                con.setConnectTimeout(1000 * CONNECTTIMEOUT);
+                con.setReadTimeout(1000 * READTIMEOUT);
+                Writer writer = new OutputStreamWriter(con.getOutputStream());
                 writer.write(query);
                 writer.flush();
                 writer.close();
 
 
-                final int code = huc.getResponseCode();
+                final int code = con.getResponseCode();
                 if (code == HttpURLConnection.HTTP_OK) {
                     BufferedReader in = new BufferedReader(
                             new InputStreamReader(
-                                    huc.getInputStream()));
+                                    con.getInputStream()));
                     String inputLine;
                     boolean keyWordBridge = false;
                     boolean wrongImageCode = false;
@@ -306,7 +344,7 @@ public class GetNewBridges {
                         if (inputLine.contains("id=\"bridgelines\"") && !wrongImageCode) {
                             keyWordBridge = true;
                         } else if (inputLine.contains("<br />") && keyWordBridge && !wrongImageCode) {
-                            newBridges.add(inputLine.replace("<br />","").trim());
+                            newBridges.add(inputLine.replace("<br />", "").trim());
                         } else if (!inputLine.contains("<br />") && keyWordBridge && !wrongImageCode) {
                             break;
                         } else if (inputLine.contains("captcha-submission-container")) {
@@ -317,25 +355,25 @@ public class GetNewBridges {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
                             if (inputLine.contains("data:image/jpeg;base64") && !imageFound) {
-                                String[] imgCodeBase64 = inputLine.replace("data:image/jpeg;base64,","").split("\"");
+                                String[] imgCodeBase64 = inputLine.replace("data:image/jpeg;base64,", "").split("\"");
 
-                                if (imgCodeBase64.length<4) {
+                                if (imgCodeBase64.length < 4) {
                                     activity.runOnUiThread(() -> {
-                                        if (dialogPleaseWait!=null)
+                                        if (dialogPleaseWait != null)
                                             dialogPleaseWait.dismiss();
-                                        Toast.makeText(activity, "Tor Project web site error!",Toast.LENGTH_LONG).show();
-                                        Log.e(LOG_TAG,"Tor Project web site error");
+                                        Toast.makeText(activity, "Tor Project web site error!", Toast.LENGTH_LONG).show();
+                                        Log.e(LOG_TAG, "Tor Project web site error");
                                     });
                                     return;
                                 }
 
-                                byte[] data = Base64.decode(imgCodeBase64[3],Base64.DEFAULT);
+                                byte[] data = Base64.decode(imgCodeBase64[3], Base64.DEFAULT);
 
                                 codeImage = BitmapFactory.decodeByteArray(data, 0, data.length);
 
                                 imageFound = true;
 
-                                if (codeImage==null)
+                                if (codeImage == null)
                                     return;
 
 
@@ -343,24 +381,24 @@ public class GetNewBridges {
                                 keywordCaptchaFound = true;
                             } else if (inputLine.contains("value") && keywordCaptchaFound) {
                                 String[] secretCodeArr = inputLine.split("\"");
-                                if (secretCodeArr.length>1) {
+                                if (secretCodeArr.length > 1) {
                                     captcha_challenge_field_value = secretCodeArr[1];
 
                                     final Bitmap finalCodeImage = codeImage;
                                     activity.runOnUiThread(() -> {
-                                        if (dialogPleaseWait!=null){
+                                        if (dialogPleaseWait != null) {
                                             dialogPleaseWait.cancel();
                                         }
 
-                                        showCodeImage(finalCodeImage,captcha_challenge_field_value);
+                                        showCodeImage(finalCodeImage, captcha_challenge_field_value);
                                     });
                                     break;
                                 } else {
                                     activity.runOnUiThread(() -> {
-                                        if (dialogPleaseWait!=null)
+                                        if (dialogPleaseWait != null)
                                             dialogPleaseWait.dismiss();
-                                        Toast.makeText(activity, "Tor Project web site error!",Toast.LENGTH_LONG).show();
-                                        Log.e(LOG_TAG,"Tor Project web site error");
+                                        Toast.makeText(activity, "Tor Project web site error!", Toast.LENGTH_LONG).show();
+                                        Log.e(LOG_TAG, "Tor Project web site error");
                                     });
                                     return;
                                 }
@@ -373,41 +411,41 @@ public class GetNewBridges {
                     }
 
                     if (keyWordBridge && !wrongImageCode) {
-                        for (String bridge:newBridges) {
-                            sb.append(bridge).append((char)10);
+                        for (String bridge : newBridges) {
+                            sb.append(bridge).append((char) 10);
                         }
                         activity.runOnUiThread(() -> {
-                            if (dialogPleaseWait!=null)
+                            if (dialogPleaseWait != null)
                                 dialogPleaseWait.dismiss();
                             showBridges(sb.toString());
                         });
                     } else if (!keyWordBridge && !wrongImageCode) {
                         activity.runOnUiThread(() -> {
-                            if (dialogPleaseWait!=null)
+                            if (dialogPleaseWait != null)
                                 dialogPleaseWait.dismiss();
-                            Toast.makeText(activity, "Tor Project web site error!",Toast.LENGTH_LONG).show();
-                            Log.e(LOG_TAG,"Tor Project web site error");
+                            Toast.makeText(activity, "Tor Project web site error!", Toast.LENGTH_LONG).show();
+                            Log.e(LOG_TAG, "Tor Project web site error");
                         });
                     }
                     in.close();
                 } else {
                     activity.runOnUiThread(() -> {
-                        if (dialogPleaseWait!=null)
+                        if (dialogPleaseWait != null)
                             dialogPleaseWait.dismiss();
-                        Toast.makeText(activity, "Tor Project web site unavailable! "+ code,Toast.LENGTH_LONG).show();
-                        Log.e(LOG_TAG,"Tor Project web site unavailable! " + code);
+                        Toast.makeText(activity, "Tor Project web site unavailable! " + code, Toast.LENGTH_LONG).show();
+                        Log.e(LOG_TAG, "Tor Project web site unavailable! " + code);
                     });
                 }
-                huc.disconnect();
+                con.disconnect();
 
 
             } catch (final IOException e) {
                 activity.runOnUiThread(() -> {
-                    if (dialogPleaseWait!=null)
+                    if (dialogPleaseWait != null)
                         dialogPleaseWait.dismiss();
-                    Toast.makeText(activity, "Error: " +e.getMessage(),Toast.LENGTH_LONG).show();
+                    Toast.makeText(activity, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
-                Log.e(LOG_TAG,"requestNewBridges function fault " + e.getMessage());
+                Log.e(LOG_TAG, "requestNewBridges function fault " + e.getMessage());
             }
         });
         threadRequestBridges.start();
@@ -427,12 +465,12 @@ public class GetNewBridges {
         builder.setView(tvBridges);
 
         builder.setPositiveButton(R.string.pref_fast_use_tor_bridges_add_dialog, (dialogInterface, i) -> {
-            FragmentManager fm = ((SettingsActivity)activity).getSupportFragmentManager();
+            FragmentManager fm = ((SettingsActivity) activity).getSupportFragmentManager();
             PreferencesTorBridges frgPreferencesTorBridges = (PreferencesTorBridges) fm.findFragmentByTag("PreferencesTorBridges");
-            if (frgPreferencesTorBridges!=null) {
+            if (frgPreferencesTorBridges != null) {
                 frgPreferencesTorBridges.readCurrentCustomBridges(bridges);
             } else {
-                Toast.makeText(activity, "Unable to save bridges!",Toast.LENGTH_LONG).show();
+                Toast.makeText(activity, "Unable to save bridges!", Toast.LENGTH_LONG).show();
             }
 
         });
