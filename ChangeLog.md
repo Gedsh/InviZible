@@ -188,3 +188,7 @@
 * Implemented snowflake bridge log.
 * Implemented option for using different STUN servers with the snowflake bridge.
 * Implemented the use of Tor http proxy to request new bridges.
+
+**InviZible Pro beta 0.7.6**
+* Implemented IsolateDestAddr IsolateDestPort Tor options.
+* Fixed app update and Tor bridges request for android 4.4.2.
