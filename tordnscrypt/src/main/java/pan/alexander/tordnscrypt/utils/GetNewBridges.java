@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -100,6 +101,11 @@ public class GetNewBridges {
                 } else {
                     con = (HttpsURLConnection) url.openConnection(proxy);
                 }
+
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                    con.setHostnameVerifier((hostname, session) -> true);
+                }
+
                 con.setConnectTimeout(1000 * CONNECTTIMEOUT);
                 con.setReadTimeout(1000 * READTIMEOUT);
                 con.setRequestMethod("GET");
@@ -311,6 +317,10 @@ public class GetNewBridges {
                     con = (HttpsURLConnection) url.openConnection();
                 } else {
                     con = (HttpsURLConnection) url.openConnection(proxy);
+                }
+
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                    con.setHostnameVerifier((hostname, session) -> true);
                 }
 
                 //Set to POST

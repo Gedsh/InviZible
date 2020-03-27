@@ -19,6 +19,7 @@ package pan.alexander.tordnscrypt.utils;
 */
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -53,7 +54,7 @@ public class HttpsRequest {
         Proxy proxy = null;
         if (ModulesStatus.getInstance().getTorState() == RUNNING) {
             PathVars pathVars = PathVars.getInstance(context);
-            proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", Integer.parseInt(pathVars.getTorSOCKSPort())));
+            proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", Integer.parseInt(pathVars.getTorHTTPTunnelPort())));
         }
 
 
@@ -64,6 +65,10 @@ public class HttpsRequest {
             con = (HttpsURLConnection) url.openConnection();
         } else {
             con = (HttpsURLConnection) url.openConnection(proxy);
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            con.setHostnameVerifier((hostname, session) -> true);
         }
 
         //set timeout of 30 seconds

@@ -166,7 +166,7 @@ public class UpdateService extends Service {
                     Proxy proxy = null;
                     if (ModulesStatus.getInstance().getTorState() == RUNNING) {
                         PathVars pathVars = PathVars.getInstance(UpdateService.this);
-                        proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", Integer.parseInt(pathVars.getTorSOCKSPort())));
+                        proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", Integer.parseInt(pathVars.getTorHTTPTunnelPort())));
                     }
 
                     //create url and connect
@@ -177,6 +177,10 @@ public class UpdateService extends Service {
                         con = (HttpsURLConnection) url.openConnection();
                     } else {
                         con = (HttpsURLConnection) url.openConnection(proxy);
+                    }
+
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                        con.setHostnameVerifier((hostname, session) -> true);
                     }
 
                     con.setConnectTimeout(1000 * CONNECTTIMEOUT);
