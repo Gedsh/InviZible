@@ -183,6 +183,10 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     val_tor.add(val);
                 }
 
+                if (key.equals("SOCKSPort") || key.equals("HTTPTunnelPort") || key.equals("TransPort")) {
+                    val = val.replaceAll(".+:", "").replaceAll("\\D+", "");
+                }
+
                 String val_saved_str = "";
                 boolean val_saved_bool = false;
                 boolean isbool = false;

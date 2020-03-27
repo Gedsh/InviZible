@@ -89,6 +89,18 @@
             android:summary="@string/pref_tor_enforce_distinct_subnets_summ"
             android:title="@string/pref_tor_enforce_distinct_subnets" />
         <SwitchPreference
+            android:id="@+id/pref_tor_isolate_dest_address"
+            android:defaultValue="false"
+            android:key="pref_tor_isolate_dest_address"
+            android:title="@string/pref_tor_isolate_dest_address"
+            android:summary="@string/pref_tor_isolate_dest_address_summ"/>
+        <SwitchPreference
+            android:id="@+id/pref_tor_isolate_dest_port"
+            android:defaultValue="false"
+            android:key="pref_tor_isolate_dest_port"
+            android:title="@string/pref_tor_isolate_dest_port"
+            android:summary="@string/pref_tor_isolate_dest_port_summ"/>
+        <SwitchPreference
             android:id="@+id/pref_tor_enable_SOCKS_proxy"
             android:defaultValue="true"
             android:key="Enable SOCKS proxy"

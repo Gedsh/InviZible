@@ -18,6 +18,7 @@ package pan.alexander.tordnscrypt.settings;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -27,6 +28,7 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceManager;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -49,6 +51,8 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
 public class PreferencesTorFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener {
 
+    static final String ISOLATE_DEST_ADDRESS = "IsolateDestAddr";
+    static final String ISOLATE_DEST_PORT = "IsolateDestPort";
     public static ArrayList<String> key_tor;
     public static ArrayList<String> val_tor;
     private ArrayList<String> key_tor_orig;
@@ -95,6 +99,8 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         preferences.add(findPreference("ClientUseIPv4"));
         preferences.add(findPreference("ClientUseIPv6"));
         preferences.add(findPreference("pref_tor_snowflake_stun"));
+        preferences.add(findPreference("pref_tor_isolate_dest_address"));
+        preferences.add(findPreference("pref_tor_isolate_dest_port"));
 
         for (Preference preference : preferences) {
             if (preference != null) {
@@ -148,7 +154,10 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         List<String> tor_conf = new LinkedList<>();
         for (int i = 0; i < key_tor.size(); i++) {
 
-            if (!(key_tor_orig.get(i).equals(key_tor.get(i)) && val_tor_orig.get(i).equals(val_tor.get(i))) && !isChanged) {
+            if (key_tor.size() != key_tor_orig.size()
+                    || (!(key_tor_orig.get(i).equals(key_tor.get(i))
+                    && val_tor_orig.get(i).equals(val_tor.get(i)))
+                    && !isChanged)) {
                 isChanged = true;
             }
 
@@ -179,6 +188,15 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
+
+        if (getActivity() == null) {
+            return false;
+        }
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        boolean isolateDestAddress = sharedPreferences.getBoolean("pref_tor_isolate_dest_address", false);
+        boolean isolateDestPort = sharedPreferences.getBoolean("pref_tor_isolate_dest_port", false);
+        boolean allowTorTethering = sharedPreferences.getBoolean("pref_common_tor_tethering", false);
 
         if (Objects.equals(preference.getKey(), "ExcludeExitNodes")) {
             if (Boolean.parseBoolean(newValue.toString()) && key_tor.contains("#ExcludeExitNodes")) {
@@ -252,6 +270,50 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 val_tor.set(index, clientTransportPlugin.replaceAll("stun:.+", "stun:" + newValue.toString().trim() + saveLogsString));
             }
             return true;
+        } else if (Objects.equals(preference.getKey(), "SOCKSPort")
+                || Objects.equals(preference.getKey(), "HTTPTunnelPort")
+                || Objects.equals(preference.getKey(), "TransPort")) {
+            newValue = addIsolateFlags(newValue, allowTorTethering, isolateDestAddress, isolateDestPort);
+        } else if (Objects.equals(preference.getKey(), "pref_tor_isolate_dest_address")) {
+            if (key_tor.contains("SOCKSPort")) {
+                int index = key_tor.indexOf("SOCKSPort");
+                String val = val_tor.get(index).replaceAll(".+:", "").replaceAll("\\D+", "");
+                val = addIsolateFlags(val, allowTorTethering, Boolean.parseBoolean(newValue.toString()), isolateDestPort);
+                val_tor.set(index, val);
+            }
+            if (key_tor.contains("HTTPTunnelPort")) {
+                int index = key_tor.indexOf("HTTPTunnelPort");
+                String val = val_tor.get(index).replaceAll(".+:", "").replaceAll("\\D+", "");
+                val = addIsolateFlags(val, allowTorTethering, Boolean.parseBoolean(newValue.toString()), isolateDestPort);
+                val_tor.set(index, val);
+            }
+            if (key_tor.contains("TransPort")) {
+                int index = key_tor.indexOf("TransPort");
+                String val = val_tor.get(index).replaceAll(".+:", "").replaceAll("\\D+", "");
+                val = addIsolateFlags(val, allowTorTethering, Boolean.parseBoolean(newValue.toString()), isolateDestPort);
+                val_tor.set(index, val);
+            }
+            return true;
+        } else if (Objects.equals(preference.getKey(), "pref_tor_isolate_dest_port")) {
+            if (key_tor.contains("SOCKSPort")) {
+                int index = key_tor.indexOf("SOCKSPort");
+                String val = val_tor.get(index).replaceAll(".+:", "").replaceAll("\\D+", "");
+                val = addIsolateFlags(val, allowTorTethering, isolateDestAddress, Boolean.parseBoolean(newValue.toString()));
+                val_tor.set(index, val);
+            }
+            if (key_tor.contains("HTTPTunnelPort")) {
+                int index = key_tor.indexOf("HTTPTunnelPort");
+                String val = val_tor.get(index).replaceAll(".+:", "").replaceAll("\\D+", "");
+                val = addIsolateFlags(val, allowTorTethering, isolateDestAddress, Boolean.parseBoolean(newValue.toString()));
+                val_tor.set(index, val);
+            }
+            if (key_tor.contains("TransPort")) {
+                int index = key_tor.indexOf("TransPort");
+                String val = val_tor.get(index).replaceAll(".+:", "").replaceAll("\\D+", "");
+                val = addIsolateFlags(val, allowTorTethering, isolateDestAddress, Boolean.parseBoolean(newValue.toString()));
+                val_tor.set(index, val);
+            }
+            return true;
         }
 
         if (key_tor.contains(preference.getKey().trim())) {
@@ -263,6 +325,20 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
 
         return false;
+    }
+
+    private String addIsolateFlags(Object val, boolean allowTorTethering, boolean isolateDestinationAddress, boolean isolateDestinationPort) {
+        String value = val.toString();
+        if (allowTorTethering) {
+            value = "0.0.0.0:" + value;
+        }
+        if (isolateDestinationAddress) {
+            value += " " + ISOLATE_DEST_ADDRESS;
+        }
+        if (isolateDestinationPort) {
+            value += " " + ISOLATE_DEST_PORT;
+        }
+        return value;
     }
 
     private void openCountrySelectFragment(int nodesType, String keyStr) {

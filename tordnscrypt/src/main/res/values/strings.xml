@@ -413,6 +413,10 @@
     <string name="pref_tor_snowflake_stun">STUN server for SnowFlake bridges</string>
     <string name="pref_tor_edit_conf">Edit tor.conf directly</string>
     <string name="pref_tor_clean_module_folder">Clean module folder</string>
+    <string name="pref_tor_isolate_dest_address" translatable="false">IsolateDestAddr</string>
+    <string name="pref_tor_isolate_dest_address_summ">Don’t share circuits with streams targeting a different destination address.</string>
+    <string name="pref_tor_isolate_dest_port" translatable="false">IsolateDestPort</string>
+    <string name="pref_tor_isolate_dest_port_summ">Don’t share circuits with streams targeting a different destination port.</string>
 
     <string name="pref_routing_unlock_app">Apps to use with InviZible</string>
     <string name="pref_routing_clearnet_app">Apps to bypass InviZible</string>

@@ -59,6 +59,8 @@ import pan.alexander.tordnscrypt.utils.file_operations.OnTextFileOperationsCompl
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
+import static pan.alexander.tordnscrypt.settings.PreferencesTorFragment.ISOLATE_DEST_ADDRESS;
+import static pan.alexander.tordnscrypt.settings.PreferencesTorFragment.ISOLATE_DEST_PORT;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -272,34 +274,40 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             return;
         }
 
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        boolean isolateDestAddress = sharedPreferences.getBoolean("pref_tor_isolate_dest_address", false);
+        boolean isolateDestPort = sharedPreferences.getBoolean("pref_tor_isolate_dest_port", false);
+
         String line;
         for (int i = 0; i < torConf.size(); i++) {
             line = torConf.get(i);
             if (line.contains("TransPort")) {
-                if (allowTorTether) {
-                    line = "TransPort " + "0.0.0.0:" + torTransPort;
-                } else {
-                    line = "TransPort " + torTransPort;
-                }
+                line = "TransPort " + addIsolateFlags(torTransPort, allowTorTether, isolateDestAddress, isolateDestPort);
                 torConf.set(i, line);
             } else if (line.contains("SOCKSPort")) {
-                if (allowTorTether) {
-                    line = "SOCKSPort " + "0.0.0.0:" + torSocksPort;
-                } else {
-                    line = "SOCKSPort " + torSocksPort;
-                }
+                line = "SOCKSPort " + addIsolateFlags(torSocksPort, allowTorTether, isolateDestAddress, isolateDestPort);
                 torConf.set(i, line);
             } else if (line.contains("HTTPTunnelPort")) {
-                if (allowTorTether) {
-                    line = "HTTPTunnelPort " + "0.0.0.0:" + torHTTPTunnelPort;
-                } else {
-                    line = "HTTPTunnelPort " + torHTTPTunnelPort;
-                }
+                line = "HTTPTunnelPort " + addIsolateFlags(torHTTPTunnelPort, allowTorTether, isolateDestAddress, isolateDestPort);
                 torConf.set(i, line);
             }
         }
 
         FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/tor.conf", torConf, "ignored");
+    }
+
+    private String addIsolateFlags(String port, boolean allowTorTethering, boolean isolateDestinationAddress, boolean isolateDestinationPort) {
+        String value = port;
+        if (allowTorTethering) {
+            value = "0.0.0.0:" + value;
+        }
+        if (isolateDestinationAddress) {
+            value += " " + ISOLATE_DEST_ADDRESS;
+        }
+        if (isolateDestinationPort) {
+            value += " " + ISOLATE_DEST_PORT;
+        }
+        return value;
     }
 
     private void readITPDConf() {
