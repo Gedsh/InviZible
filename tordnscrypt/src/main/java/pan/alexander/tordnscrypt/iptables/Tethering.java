@@ -123,8 +123,10 @@ public class Tethering {
             int i = 0;
             for (String port : ports) {
                 if (!port.isEmpty()) {
-                    bypassITPDTunnelPorts[i++] = iptables + "-t nat -A tordnscrypt_prerouting -p tcp -m tcp --dport " + port + " -j ACCEPT";
-                    bypassITPDTunnelPorts[i++] = iptables + "-t nat -A tordnscrypt_prerouting -p udp -m udp --dport " + port + " -j ACCEPT";
+                    bypassITPDTunnelPorts[i] = iptables + "-t nat -A tordnscrypt_prerouting -p tcp -m tcp --dport " + port + " -j ACCEPT";
+                    i++;
+                    bypassITPDTunnelPorts[i] = iptables + "-t nat -A tordnscrypt_prerouting -p udp -m udp --dport " + port + " -j ACCEPT";
+                    i++;
                 }
             }
         }
