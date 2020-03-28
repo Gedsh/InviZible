@@ -185,16 +185,16 @@ public class ModulesService extends Service {
             modulesStatus.setDnsCryptState(STARTING);
         }
 
-        if (!modulesStatus.isUseModulesWithRoot()) {
-            Thread previousDnsCryptThread = modulesKiller.getDnsCryptThread();
-
-            if (previousDnsCryptThread != null && previousDnsCryptThread.isAlive()) {
-                changeDNSCryptStatus(previousDnsCryptThread);
-                return;
-            }
-        }
-
         new Thread(() -> {
+
+            if (!modulesStatus.isUseModulesWithRoot()) {
+                Thread previousDnsCryptThread = modulesKiller.getDnsCryptThread();
+
+                if (previousDnsCryptThread != null && previousDnsCryptThread.isAlive()) {
+                    changeDNSCryptStatus(previousDnsCryptThread);
+                    return;
+                }
+            }
 
             try {
                 Thread previousDnsCryptThread = checkPreviouslyRunningDNSCryptModule();
@@ -308,16 +308,17 @@ public class ModulesService extends Service {
             modulesStatus.setTorState(STARTING);
         }
 
-        if (!modulesStatus.isUseModulesWithRoot()) {
-            Thread previousTorThread = modulesKiller.getTorThread();
-
-            if (previousTorThread != null && previousTorThread.isAlive()) {
-                changeTorStatus(previousTorThread);
-                return;
-            }
-        }
-
         new Thread(() -> {
+
+            if (!modulesStatus.isUseModulesWithRoot()) {
+                Thread previousTorThread = modulesKiller.getTorThread();
+
+                if (previousTorThread != null && previousTorThread.isAlive()) {
+                    changeTorStatus(previousTorThread);
+                    return;
+                }
+            }
+
             try {
                 Thread previousTorThread = checkPreviouslyRunningTorModule();
 
@@ -435,16 +436,17 @@ public class ModulesService extends Service {
             modulesStatus.setItpdState(STARTING);
         }
 
-        if (!modulesStatus.isUseModulesWithRoot()) {
-            Thread previousITPDThread = modulesKiller.getItpdThread();
-
-            if (previousITPDThread != null && previousITPDThread.isAlive()) {
-                changeITPDStatus(previousITPDThread);
-                return;
-            }
-        }
-
         new Thread(() -> {
+
+            if (!modulesStatus.isUseModulesWithRoot()) {
+                Thread previousITPDThread = modulesKiller.getItpdThread();
+
+                if (previousITPDThread != null && previousITPDThread.isAlive()) {
+                    changeITPDStatus(previousITPDThread);
+                    return;
+                }
+            }
+
             try {
                 Thread previousITPDThread = checkPreviouslyRunningITPDModule();
 
