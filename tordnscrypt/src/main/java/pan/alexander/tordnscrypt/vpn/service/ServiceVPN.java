@@ -76,6 +76,7 @@ import pan.alexander.tordnscrypt.vpn.Rule;
 import pan.alexander.tordnscrypt.vpn.Usage;
 import pan.alexander.tordnscrypt.vpn.Util;
 
+import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridges;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -504,7 +505,12 @@ public class ServiceVPN extends VpnService {
             Log.e(LOG_TAG, "VPN Redirect Ports Parse Exception " + e.getMessage() + " " + e.getCause());
         }
 
-        if (dnsCryptState == RUNNING) {
+        boolean torReady = new PrefManager(this).getBoolPref("Tor Ready");
+        boolean useDefaultBridges = new PrefManager(this).getBoolPref("useDefaultBridges");
+        boolean bridgesSnowflake = new PrefManager(this).getStrPref("defaultBridgesObfs").equals(snowFlakeBridges);
+        boolean dnsCryptSystemDNSAllowed = new PrefManager(this).getBoolPref("DNSCryptSystemDNSAllowed");
+
+        if (dnsCryptState == RUNNING && !dnsCryptSystemDNSAllowed) {
             addForwardPortRule(17, 53, "127.0.0.1", dnsCryptPort, Process.myUid());
             addForwardPortRule(6, 53, "127.0.0.1", dnsCryptPort, Process.myUid());
 
@@ -512,7 +518,7 @@ public class ServiceVPN extends VpnService {
                 addForwardAddressRule(17, "10.191.0.1", "127.0.0.1", itpdHttpPort, Process.myUid());
                 addForwardAddressRule(6, "10.191.0.1", "127.0.0.1", itpdHttpPort, Process.myUid());
             }
-        } else if (torState == RUNNING) {
+        } else if (torState == RUNNING && (torReady || !useDefaultBridges || !bridgesSnowflake)) {
             addForwardPortRule(17, 53, "127.0.0.1", torDNSPort, Process.myUid());
             addForwardPortRule(6, 53, "127.0.0.1", torDNSPort, Process.myUid());
         }
@@ -625,9 +631,9 @@ public class ServiceVPN extends VpnService {
 
         packet.allowed = false;
         // https://android.googlesource.com/platform/system/core/+/master/include/private/android_filesystem_config.h
-        if (!canFilter  || fixTTL) {
+        if ((!canFilter  || fixTTL) && isSupported(packet.protocol)) {
             packet.allowed = true;
-        } else if (packet.uid == ownUID) {
+        } else if (packet.uid == ownUID && isSupported(packet.protocol)) {
             // Allow self
             packet.allowed = true;
             Log.w(LOG_TAG, "Allowing self " + packet);
@@ -656,7 +662,7 @@ public class ServiceVPN extends VpnService {
 
             if (mapUidAllowed != null && mapUidAllowed.containsKey(packet.uid)) {
                 Boolean allow = mapUidAllowed.get(packet.uid);
-                if (allow != null) {
+                if (allow != null && isSupported(packet.protocol)) {
                     packet.allowed = allow;
                     //Log.i(LOG_TAG, "Packet " + packet.toString() + " is allowed " + allow);
                 }

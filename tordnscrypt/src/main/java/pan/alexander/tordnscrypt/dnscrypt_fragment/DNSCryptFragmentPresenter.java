@@ -125,6 +125,16 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     }
 
     public void onStop(Context context) {
+
+        if (new PrefManager(view.getFragmentActivity()).getBoolPref("DNSCryptSystemDNSAllowed")) {
+            if (modulesStatus.getMode() == ROOT_MODE) {
+                ModulesIptablesRules.denySystemDNS(view.getFragmentActivity());
+            } else if (modulesStatus.getMode() == VPN_MODE) {
+                new PrefManager(context).setBoolPref("DNSCryptSystemDNSAllowed", false);
+                ServiceVPNHelper.reload("DNSCrypt Deny system DNS", view.getFragmentActivity());
+            }
+        }
+
         stopDisplayLog();
         unbindVPNService(context);
         view = null;
@@ -245,7 +255,13 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         view.setStartButtonText(R.string.btnDNSCryptStop);
 
         if (new PrefManager(view.getFragmentActivity()).getBoolPref("DNSCryptSystemDNSAllowed")) {
-            ModulesIptablesRules.denyDNSCryptSystemDNS(view.getFragmentActivity());
+            if (modulesStatus.getMode() == ROOT_MODE) {
+                ModulesIptablesRules.denySystemDNS(view.getFragmentActivity());
+            } else if (modulesStatus.getMode() == VPN_MODE) {
+                new PrefManager(view.getFragmentActivity()).setBoolPref("DNSCryptSystemDNSAllowed", false);
+                ServiceVPNHelper.reload("DNSCrypt Deny system DNS", view.getFragmentActivity());
+            }
+
         }
     }
 
@@ -575,8 +591,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 
-        if (!sharedPreferences.getBoolean("ignore_system_dns", false)
-                && modulesStatus.getMode() == ROOT_MODE) {
+        if (!sharedPreferences.getBoolean("ignore_system_dns", false)) {
             new PrefManager(context).setBoolPref("DNSCryptSystemDNSAllowed", true);
         }
 
