@@ -31,7 +31,8 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
-import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridges;
+import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
+import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -121,11 +122,14 @@ public class ModulesStateLoop extends TimerTask {
         }
 
         boolean useDefaultBridges = new PrefManager(modulesService).getBoolPref("useDefaultBridges");
-        boolean bridgesSnowflake = new PrefManager(modulesService).getStrPref("defaultBridgesObfs").equals(snowFlakeBridges);
+        boolean useOwnBridges = new PrefManager(modulesService).getBoolPref("useOwnBridges");
+        boolean bridgesSnowflakeDefault = new PrefManager(modulesService).getStrPref("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
+        boolean bridgesSnowflakeOwn = new PrefManager(modulesService).getStrPref("ownBridgesObfs").equals(snowFlakeBridgesOwn);
         boolean dnsCryptSystemDNSAllowed = new PrefManager(modulesService).getBoolPref("DNSCryptSystemDNSAllowed");
 
         if (dnsCryptSystemDNSAllowed
-                || (dnsCryptState == STOPPED && torState == RUNNING && useModulesWithRoot && useDefaultBridges && bridgesSnowflake)) {
+                || (dnsCryptState == STOPPED && torState == RUNNING && useModulesWithRoot
+                && (useDefaultBridges && bridgesSnowflakeDefault || useOwnBridges && bridgesSnowflakeOwn))) {
             ModulesIptablesRules.denySystemDNS(modulesService);
         }
     }

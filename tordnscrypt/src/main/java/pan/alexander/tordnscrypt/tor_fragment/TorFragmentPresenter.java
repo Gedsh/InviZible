@@ -32,6 +32,8 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
 
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Timer;
@@ -42,6 +44,7 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
+import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
@@ -59,6 +62,8 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
+import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
+import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
@@ -66,6 +71,8 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
@@ -402,12 +409,14 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
             view.setTorProgressBarProgress(0);
 
-            new PrefManager(Objects.requireNonNull(context)).setBoolPref("Tor Ready", true);
+            checkInternetAvailable();
+
+            /*new PrefManager(Objects.requireNonNull(context)).setBoolPref("Tor Ready", true);
 
             /////////////////Check Updates///////////////////////////////////////////////
             if (view != null && view.getFragmentActivity() != null && view.getFragmentActivity() instanceof MainActivity) {
                 checkInvizibleUpdates((MainActivity)view.getFragmentActivity());
-            }
+            }*/
         }
     }
 
@@ -661,5 +670,56 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
         }
 
         ModulesKiller.stopTor(context);
+    }
+
+    private void checkInternetAvailable() {
+        Thread thread = new Thread(() -> {
+
+            try {
+                URL url = new URL("https://www.torproject.org/");
+                URLConnection connection = url.openConnection();
+                connection.setConnectTimeout(30000);
+                connection.connect();
+
+                if (view == null || view.getFragmentActivity() == null) {
+                    return;
+                }
+
+                Context context = view.getFragmentActivity();
+                boolean torReady = new PrefManager(context).getBoolPref("Tor Ready");
+                boolean useDefaultBridges = new PrefManager(context).getBoolPref("useDefaultBridges");
+                boolean useOwnBridges = new PrefManager(context).getBoolPref("useOwnBridges");
+                boolean bridgesSnowflakeDefault = new PrefManager(context).getStrPref("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
+                boolean bridgesSnowflakeOwn = new PrefManager(context).getStrPref("ownBridgesObfs").equals(snowFlakeBridgesOwn);
+
+                if (!torReady) {
+
+                    new PrefManager(Objects.requireNonNull(context)).setBoolPref("Tor Ready", true);
+
+                    if (useDefaultBridges && bridgesSnowflakeDefault || useOwnBridges && bridgesSnowflakeOwn) {
+                        if (modulesStatus != null && modulesStatus.getMode() == ROOT_MODE) {
+                            ModulesIptablesRules.denySystemDNS(context);
+                        } else if (modulesStatus != null && modulesStatus.getMode() == VPN_MODE) {
+                            ServiceVPNHelper.reload("Tor Deny system DNS", context);
+                        }
+                    }
+
+                } else {
+                    return;
+                }
+
+                /////////////////Check Updates///////////////////////////////////////////////
+                if (view != null && view.getFragmentActivity() != null && view.getFragmentActivity() instanceof MainActivity) {
+                    checkInvizibleUpdates((MainActivity)view.getFragmentActivity());
+                }
+            } catch (Exception e) {
+                Log.w(LOG_TAG, "TorFragmentPresenter Internet Not Connected. " + e.getMessage() + " " + e.getCause());
+            }
+        });
+
+        if (view != null && view.getFragmentActivity() != null
+                && !new PrefManager(Objects.requireNonNull(view.getFragmentActivity())).getBoolPref("Tor Ready")) {
+            thread.start();
+        }
     }
 }

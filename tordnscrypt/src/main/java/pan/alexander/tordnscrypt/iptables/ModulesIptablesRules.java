@@ -35,7 +35,8 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 
 import static pan.alexander.tordnscrypt.iptables.Tethering.usbModemAddressesRange;
 import static pan.alexander.tordnscrypt.iptables.Tethering.wifiAPAddressesRange;
-import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridges;
+import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
+import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
@@ -100,29 +101,33 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
         String dnsCryptSystemDNSAllowedNat = "";
         String dnsCryptSystemDNSAllowedFilter = "";
-        String rootDNSAllowedNat = "";
-        String rootDNSAllowedFilter = "";
+        String dnsCryptRootDNSAllowedNat = "";
+        String dnsCryptRootDNSAllowedFilter = "";
         if (dnsCryptSystemDNSAllowed) {
             dnsCryptSystemDNSAllowedFilter = iptables + "-A tordnscrypt -p udp --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT";
             dnsCryptSystemDNSAllowedNat = iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT";
             if (!runModulesWithRoot) {
-                rootDNSAllowedNat = iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -m owner --uid-owner 0 -j ACCEPT";
-                rootDNSAllowedFilter = iptables + "-A tordnscrypt -p udp --dport 53 -m owner --uid-owner 0 -j ACCEPT";
+                dnsCryptRootDNSAllowedNat = iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -m owner --uid-owner 0 -j ACCEPT";
+                dnsCryptRootDNSAllowedFilter = iptables + "-A tordnscrypt -p udp --dport 53 -m owner --uid-owner 0 -j ACCEPT";
             }
         }
 
         boolean torReady = new PrefManager(context).getBoolPref("Tor Ready");
         boolean useDefaultBridges = new PrefManager(context).getBoolPref("useDefaultBridges");
-        boolean bridgesSnowflake = new PrefManager(context).getStrPref("defaultBridgesObfs").equals(snowFlakeBridges);
+        boolean useOwnBridges = new PrefManager(context).getBoolPref("useOwnBridges");
+        boolean bridgesSnowflakeDefault = new PrefManager(context).getStrPref("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
+        boolean bridgesSnowflakeOwn = new PrefManager(context).getStrPref("ownBridgesObfs").equals(snowFlakeBridgesOwn);
 
         String torSystemDNSAllowedNat = "";
         String torSystemDNSAllowedFilter = "";
-        if (!torReady && useDefaultBridges && bridgesSnowflake) {
+        String torRootDNSAllowedNat = "";
+        String torRootDNSAllowedFilter = "";
+        if (!torReady && (useDefaultBridges && bridgesSnowflakeDefault || useOwnBridges && bridgesSnowflakeOwn)) {
             torSystemDNSAllowedFilter = iptables + "-A tordnscrypt -p udp --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT";
             torSystemDNSAllowedNat = iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT";
             if (!runModulesWithRoot) {
-                rootDNSAllowedNat = iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -m owner --uid-owner 0 -j ACCEPT";
-                rootDNSAllowedFilter = iptables + "-A tordnscrypt -p udp --dport 53 -m owner --uid-owner 0 -j ACCEPT";
+                torRootDNSAllowedNat = iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -m owner --uid-owner 0 -j ACCEPT";
+                torRootDNSAllowedFilter = iptables + "-A tordnscrypt -p udp --dport 53 -m owner --uid-owner 0 -j ACCEPT";
             }
         }
 
@@ -149,7 +154,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + pathVars.getITPDHttpProxyPort(),
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + pathVars.getITPDHttpProxyPort(),
                         dnsCryptSystemDNSAllowedNat,
-                        rootDNSAllowedNat,
+                        dnsCryptRootDNSAllowedNat,
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
@@ -160,7 +165,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT",
                         dnsCryptSystemDNSAllowedFilter,
-                        rootDNSAllowedFilter,
+                        dnsCryptRootDNSAllowedFilter,
                         iptables + "-A tordnscrypt -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                         blockHttpRuleFilterAll,
                         iptables + "-A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
@@ -191,7 +196,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + pathVars.getITPDHttpProxyPort(),
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + pathVars.getITPDHttpProxyPort(),
                         dnsCryptSystemDNSAllowedNat,
-                        rootDNSAllowedNat,
+                        dnsCryptRootDNSAllowedNat,
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
@@ -221,7 +226,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j RETURN",
                         iptables + "-A tordnscrypt -m owner --uid-owner $TOR_UID -j RETURN",
                         dnsCryptSystemDNSAllowedFilter,
-                        rootDNSAllowedFilter,
+                        dnsCryptRootDNSAllowedFilter,
                         iptables + "-A tordnscrypt -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                         blockHttpRuleFilterAll,
                         iptables + "-A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
@@ -259,7 +264,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + pathVars.getITPDHttpProxyPort(),
                     iptables + "-t nat -A tordnscrypt_nat_output -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + pathVars.getITPDHttpProxyPort(),
                     dnsCryptSystemDNSAllowedNat,
-                    rootDNSAllowedNat,
+                    dnsCryptRootDNSAllowedNat,
                     iptables + "-t nat -A tordnscrypt_nat_output -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                     iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                     iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
@@ -269,7 +274,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT",
                     iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT",
                     dnsCryptSystemDNSAllowedFilter,
-                    rootDNSAllowedFilter,
+                    dnsCryptRootDNSAllowedFilter,
                     iptables + "-A tordnscrypt -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                     blockHttpRuleFilterAll,
                     iptables + "-A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
@@ -311,7 +316,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
                     iptables + "-t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
                     torSystemDNSAllowedNat,
-                    rootDNSAllowedNat,
+                    torRootDNSAllowedNat,
                     iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort(),
                     iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort(),
                     busybox + "cat " + appDataDir + "/app_data/tor/bridgesIP | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
@@ -335,7 +340,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getITPDHttpProxyPort() + " -j RETURN",
                     iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getTorTransPort() + " -j RETURN",
                     torSystemDNSAllowedFilter,
-                    rootDNSAllowedFilter,
+                    torRootDNSAllowedFilter,
                     iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -m owner --uid-owner 0 -j ACCEPT",
                     iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getTorDNSPort() + " -m owner --uid-owner 0 -j ACCEPT",
                     iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j RETURN",

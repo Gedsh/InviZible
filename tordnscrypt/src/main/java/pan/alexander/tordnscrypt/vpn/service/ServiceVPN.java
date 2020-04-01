@@ -76,7 +76,8 @@ import pan.alexander.tordnscrypt.vpn.Rule;
 import pan.alexander.tordnscrypt.vpn.Usage;
 import pan.alexander.tordnscrypt.vpn.Util;
 
-import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridges;
+import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
+import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -507,7 +508,9 @@ public class ServiceVPN extends VpnService {
 
         boolean torReady = new PrefManager(this).getBoolPref("Tor Ready");
         boolean useDefaultBridges = new PrefManager(this).getBoolPref("useDefaultBridges");
-        boolean bridgesSnowflake = new PrefManager(this).getStrPref("defaultBridgesObfs").equals(snowFlakeBridges);
+        boolean useOwnBridges = new PrefManager(this).getBoolPref("useOwnBridges");
+        boolean bridgesSnowflakeDefault = new PrefManager(this).getStrPref("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
+        boolean bridgesSnowflakeOwn = new PrefManager(this).getStrPref("ownBridgesObfs").equals(snowFlakeBridgesOwn);
         boolean dnsCryptSystemDNSAllowed = new PrefManager(this).getBoolPref("DNSCryptSystemDNSAllowed");
 
         if (dnsCryptState == RUNNING && !dnsCryptSystemDNSAllowed) {
@@ -518,7 +521,8 @@ public class ServiceVPN extends VpnService {
                 addForwardAddressRule(17, "10.191.0.1", "127.0.0.1", itpdHttpPort, Process.myUid());
                 addForwardAddressRule(6, "10.191.0.1", "127.0.0.1", itpdHttpPort, Process.myUid());
             }
-        } else if (torState == RUNNING && (torReady || !useDefaultBridges || !bridgesSnowflake)) {
+        } else if (torState == RUNNING
+                && (torReady || !(useDefaultBridges && bridgesSnowflakeDefault || useOwnBridges && bridgesSnowflakeOwn))) {
             addForwardPortRule(17, 53, "127.0.0.1", torDNSPort, Process.myUid());
             addForwardPortRule(6, 53, "127.0.0.1", torDNSPort, Process.myUid());
         }

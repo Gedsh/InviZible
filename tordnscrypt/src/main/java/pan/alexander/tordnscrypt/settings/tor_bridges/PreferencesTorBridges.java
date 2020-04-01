@@ -75,6 +75,8 @@ import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readT
 
 
 public class PreferencesTorBridges extends Fragment implements View.OnClickListener, OnTextFileOperationsCompleteListener, PreferencesBridges {
+    public final static String snowFlakeBridgesDefault = "3";
+    public final static String snowFlakeBridgesOwn = "4";
     private RadioButton rbNoBridges;
     private RadioButton rbDefaultBridges;
     private Spinner spDefaultBridges;
