@@ -24,11 +24,14 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.FileProvider;
+import androidx.preference.PreferenceManager;
+
 import android.util.Log;
 import android.util.SparseArray;
 
@@ -57,6 +60,7 @@ import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.WakeLocksManager;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -75,6 +79,7 @@ public class UpdateService extends Service {
     private final AtomicInteger currentNotificationId = new AtomicInteger(DEFAULT_NOTIFICATION_ID) ;
     private volatile SparseArray<DownloadThread> sparseArray;
     private boolean allowSendBroadcastAfterUpdate = true;
+    private WakeLocksManager wakeLocksManager;
 
     public UpdateService() {
     }
@@ -90,6 +95,15 @@ public class UpdateService extends Service {
 
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         sparseArray = new SparseArray<>();
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        wakeLocksManager = WakeLocksManager.getInstance();
+        if (!sharedPreferences.getBoolean("swWakelock", false) || !wakeLocksManager.isWakeLockHeld()) {
+            wakeLocksManager.managePowerWakelock(this, true);
+            wakeLocksManager.manageWiFiLock(this, true);
+        } else {
+            wakeLocksManager = null;
+        }
     }
 
     @Override
@@ -113,6 +127,15 @@ public class UpdateService extends Service {
         return START_NOT_STICKY;
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        if (wakeLocksManager != null) {
+            wakeLocksManager.stopPowerWakelock();
+            wakeLocksManager.stopWiFiLock();
+        }
+    }
 
     private class DownloadThread {
         Intent intent;

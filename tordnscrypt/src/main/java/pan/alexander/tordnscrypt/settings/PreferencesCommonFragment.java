@@ -260,6 +260,9 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
                 new PrefManager(getActivity()).setBoolPref("refresh_main_activity", true);
                 break;
+            case "swWakelock":
+                ModulesAux.requestModulesStatusUpdate(getActivity());
+                break;
         }
         return true;
     }
@@ -446,37 +449,12 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             return;
         }
 
-        Preference swTorTethering = findPreference("pref_common_tor_tethering");
-        if (swTorTethering != null) {
-            swTorTethering.setOnPreferenceChangeListener(this);
-        }
-
-        Preference swRouteAllThroughTor = findPreference("pref_common_tor_route_all");
-        if (swRouteAllThroughTor != null) {
-            swRouteAllThroughTor.setOnPreferenceChangeListener(this);
-        }
-
-        Preference swITPDTethering = findPreference("pref_common_itpd_tethering");
-        if (swITPDTethering != null) {
-            swITPDTethering.setOnPreferenceChangeListener(this);
-        }
-
         Preference swFixTTL = findPreference("pref_common_fix_ttl");
         if (swFixTTL != null) {
             swFixTTL.setOnPreferenceChangeListener(this);
 
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
             swFixTTL.setEnabled(!sharedPreferences.getBoolean("swUseModulesRoot", false));
-        }
-
-        Preference pref_common_block_http = findPreference("pref_common_block_http");
-        if (pref_common_block_http != null) {
-            pref_common_block_http.setOnPreferenceChangeListener(this);
-        }
-
-        Preference pref_common_use_modules_with_root = findPreference("swUseModulesRoot");
-        if (pref_common_use_modules_with_root != null) {
-            pref_common_use_modules_with_root.setOnPreferenceChangeListener(this);
         }
 
         Preference prefTorSiteUnlockTether = findPreference("prefTorSiteUnlockTether");
@@ -486,6 +464,20 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 prefTorSiteUnlockTether.setEnabled(false);
             } else {
                 prefTorSiteUnlockTether.setEnabled(true);
+            }
+        }
+
+        ArrayList<Preference> preferences = new ArrayList<>();
+        preferences.add(findPreference("pref_common_tor_tethering"));
+        preferences.add(findPreference("pref_common_tor_route_all"));
+        preferences.add(findPreference("pref_common_itpd_tethering"));
+        preferences.add(findPreference("pref_common_block_http"));
+        preferences.add(findPreference("swUseModulesRoot"));
+        preferences.add(findPreference("swWakelock"));
+
+        for (Preference preference : preferences) {
+            if (preference != null) {
+                preference.setOnPreferenceChangeListener(this);
             }
         }
     }

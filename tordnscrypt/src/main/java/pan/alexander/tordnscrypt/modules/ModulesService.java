@@ -18,16 +18,13 @@ package pan.alexander.tordnscrypt.modules;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.PowerManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -40,7 +37,6 @@ import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
@@ -48,6 +44,7 @@ import java.util.concurrent.TimeUnit;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.WakeLocksManager;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
@@ -84,7 +81,7 @@ public class ModulesService extends Service {
     static final String TOR_KEYWORD = "checkTrRunning";
     static final String ITPD_KEYWORD = "checkITPDRunning";
 
-    private static PowerManager.WakeLock wakeLock = null;
+    private static WakeLocksManager wakeLocksManager;
 
     ModulesBroadcastReceiver modulesBroadcastReceiver;
 
@@ -112,7 +109,7 @@ public class ModulesService extends Service {
 
         startModulesThreadsTimer();
 
-        startPowerWakelock();
+
     }
 
     @Override
@@ -133,6 +130,7 @@ public class ModulesService extends Service {
             notification.sendNotification(getString(R.string.app_name), getText(R.string.notification_text).toString());
         }
 
+        manageWakelocks();
 
         switch (action) {
             case actionStartDnsCrypt:
@@ -703,22 +701,19 @@ public class ModulesService extends Service {
         }
     }
 
-    @SuppressLint({"InvalidWakeLockTag", "WakelockTimeout"})
-    private void startPowerWakelock() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        if (sharedPreferences.getBoolean("swWakelock", false)) {
-            final String TAG = "AudioMix";
-            if (wakeLock == null) {
-                wakeLock = ((PowerManager) Objects.requireNonNull(getSystemService(Context.POWER_SERVICE))).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
-                wakeLock.acquire();
-            }
-        }
+    private void manageWakelocks() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean lock = sharedPreferences.getBoolean("swWakelock", false);
+
+        wakeLocksManager = WakeLocksManager.getInstance();
+        wakeLocksManager.managePowerWakelock(this, lock);
+        wakeLocksManager.manageWiFiLock(this, lock);
     }
 
-    private void stopPowerWakelock() {
-        if (wakeLock != null) {
-            wakeLock.release();
-            wakeLock = null;
+    private void releaseWakelocks() {
+        if (wakeLocksManager != null) {
+            wakeLocksManager.stopPowerWakelock();
+            wakeLocksManager.stopWiFiLock();
         }
     }
 
@@ -729,7 +724,8 @@ public class ModulesService extends Service {
 
     @Override
     public void onDestroy() {
-        stopPowerWakelock();
+
+        releaseWakelocks();
 
         stopModulesThreadsTimer();
 
