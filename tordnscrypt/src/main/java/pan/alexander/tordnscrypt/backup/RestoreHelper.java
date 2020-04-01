@@ -142,7 +142,9 @@ class RestoreHelper extends Installer {
     }
 
     private void restoreOldInfo(String code) {
-        new PrefManager(activity).setStrPref("registrationCode", code);
+        if (!code.isEmpty()) {
+            new PrefManager(activity).setStrPref("registrationCode", code);
+        }
     }
 
     private void refreshInstallationParameters() {
