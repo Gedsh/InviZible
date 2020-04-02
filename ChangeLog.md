@@ -192,3 +192,10 @@
 **InviZible Pro beta 0.7.6**
 * Implemented IsolateDestAddr IsolateDestPort Tor options.
 * Fixed app update and Tor bridges request for android 4.4.2.
+
+**InviZible Pro beta 0.7.7**
+* Improved power wakelock and implemented wifi wakelock for Prevent device sleep option and app update.
+* Fixed use of system DNS when ignore_system_dns is disabled.
+* Fixed use of system DNS with snowflake bridges.
+* Fixed restore code of PRO version from backup.
+* Improved Internet speed with Fix TTL enabled.
