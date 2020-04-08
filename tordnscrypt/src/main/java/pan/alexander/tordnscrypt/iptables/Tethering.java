@@ -54,6 +54,7 @@ public class Tethering {
 
     private PathVars pathVars;
     private String iptables;
+    private String ip6tables;
     private String appDataDir;
     private String busybox;
     private boolean apIsOn = false;
@@ -62,6 +63,7 @@ public class Tethering {
         this.context = context;
         pathVars = PathVars.getInstance(context);
         iptables = pathVars.getIptablesPath();
+        ip6tables = pathVars.getIp6tablesPath();
         appDataDir = pathVars.getAppDataDir();
         busybox = pathVars.getBusyboxPath();
     }
@@ -93,10 +95,10 @@ public class Tethering {
         String torSitesBypassPreroutingUDP = "";
         String torSitesBypassForwardUDP = "";
         if (routeAllThroughTorTether) {
-            torSitesBypassPreroutingTCP = busybox + "cat " + appDataDir + "/app_data/tor/clearnet_tether | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -p tcp -d $var1 -j ACCEPT; done";
-            torSitesBypassForwardTCP = busybox + "cat " + appDataDir + "/app_data/tor/clearnet_tether | while read var1; do " + iptables + "-A tordnscrypt_forward -p tcp -d $var1 -j ACCEPT; done";
-            torSitesBypassPreroutingUDP = busybox + "cat " + appDataDir + "/app_data/tor/clearnet_tether | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -p udp -d $var1 -j ACCEPT; done";
-            torSitesBypassForwardUDP = busybox + "cat " + appDataDir + "/app_data/tor/clearnet_tether | while read var1; do " + iptables + "-A tordnscrypt_forward -p udp -d $var1 -j ACCEPT; done";
+            torSitesBypassPreroutingTCP = busybox + "cat " + appDataDir + "/app_data/tor/clearnet_tether 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -p tcp -d $var1 -j ACCEPT; done";
+            torSitesBypassForwardTCP = busybox + "cat " + appDataDir + "/app_data/tor/clearnet_tether 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt_forward -p tcp -d $var1 -j ACCEPT; done";
+            torSitesBypassPreroutingUDP = busybox + "cat " + appDataDir + "/app_data/tor/clearnet_tether 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -p udp -d $var1 -j ACCEPT; done";
+            torSitesBypassForwardUDP = busybox + "cat " + appDataDir + "/app_data/tor/clearnet_tether 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt_forward -p udp -d $var1 -j ACCEPT; done";
 
         }
 
@@ -119,7 +121,7 @@ public class Tethering {
         String[] bypassITPDTunnelPorts = new String[]{""};
         Set<String> ports = new PrefManager(context).getSetStrPref("ITPDTunnelsPorts");
         if (ports != null && ports.size() > 0) {
-            bypassITPDTunnelPorts = new String[ports.size()*2];
+            bypassITPDTunnelPorts = new String[ports.size() * 2];
             int i = 0;
             for (String port : ports) {
                 if (!port.isEmpty()) {
@@ -144,14 +146,14 @@ public class Tethering {
             new PrefManager(context).setBoolPref("TetherIptablesRulesIsClean", true);
 
             tetheringCommands = new String[]{
-                    "ip6tables -D INPUT -j DROP || true",
-                    "ip6tables -I INPUT -j DROP || true",
-                    "ip6tables -D FORWARD -j DROP",
-                    "ip6tables -I FORWARD -j DROP",
-                    iptables + "-t nat -F tordnscrypt_prerouting",
-                    iptables + "-F tordnscrypt_forward",
-                    iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting || true",
-                    iptables + "-D FORWARD -j tordnscrypt_forward || true"
+                    ip6tables + "-D INPUT -j DROP 2> /dev/null || true",
+                    ip6tables + "-I INPUT -j DROP || true",
+                    ip6tables + "-D FORWARD -j DROP 2> /dev/null || true",
+                    ip6tables + "-I FORWARD -j DROP",
+                    iptables + "-t nat -F tordnscrypt_prerouting 2> /dev/null",
+                    iptables + "-F tordnscrypt_forward 2> /dev/null",
+                    iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting 2> /dev/null || true",
+                    iptables + "-D FORWARD -j tordnscrypt_forward 2> /dev/null || true"
             };
 
             if (ttlFixed) {
@@ -165,34 +167,34 @@ public class Tethering {
             if (!torTethering && !itpdTethering) {
                 tetheringCommands = new String[]{
                         iptables + "-I FORWARD -j DROP",
-                        "ip6tables -D INPUT -j DROP || true",
-                        "ip6tables -I INPUT -j DROP || true",
-                        "ip6tables -D FORWARD -j DROP",
-                        "ip6tables -I FORWARD -j DROP",
-                        iptables + "-t nat -F tordnscrypt_prerouting",
-                        iptables + "-F tordnscrypt_forward",
-                        iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting || true",
-                        iptables + "-D FORWARD -j tordnscrypt_forward || true",
+                        ip6tables + "-D INPUT -j DROP 2> /dev/null || true",
+                        ip6tables + "-I INPUT -j DROP || true",
+                        ip6tables + "-D FORWARD -j DROP 2> /dev/null || true",
+                        ip6tables + "-I FORWARD -j DROP",
+                        iptables + "-t nat -F tordnscrypt_prerouting 2> /dev/null",
+                        iptables + "-F tordnscrypt_forward 2> /dev/null",
+                        iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting 2> /dev/null || true",
+                        iptables + "-D FORWARD -j tordnscrypt_forward 2> /dev/null || true",
                         busybox + "sleep 1",
-                        iptables + "-t nat -N tordnscrypt_prerouting",
-                        iptables + "-N tordnscrypt_forward",
+                        iptables + "-t nat -N tordnscrypt_prerouting 2> /dev/null",
+                        iptables + "-N tordnscrypt_forward 2> /dev/null",
                         iptables + "-t nat -A PREROUTING -j tordnscrypt_prerouting",
                         iptables + "-A FORWARD -j tordnscrypt_forward",
                         busybox + "sleep 1",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j RETURN || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j RETURN || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j RETURN 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j RETURN 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT 2> /dev/null || true",
                         iptables + "-I tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                         iptables + "-I tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
-                        iptables + "-D tordnscrypt -p udp -m udp --dport 67 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -p udp -m udp --dport 68 -j ACCEPT || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --dport 67 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --dport 68 -j ACCEPT 2> /dev/null || true",
                         iptables + "-I tordnscrypt -p udp -m udp --dport 67 -j ACCEPT",
                         iptables + "-I tordnscrypt -p udp -m udp --dport 68 -j ACCEPT",
-                        iptables + "-D tordnscrypt -p udp -m udp --sport 67 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -p udp -m udp --sport 68 -j ACCEPT || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --sport 67 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --sport 68 -j ACCEPT 2> /dev/null || true",
                         iptables + "-I tordnscrypt -p udp -m udp --sport 67 -j ACCEPT",
                         iptables + "-I tordnscrypt -p udp -m udp --sport 68 -j ACCEPT",
                         busybox + "sleep 1",
@@ -205,46 +207,46 @@ public class Tethering {
                         iptables + "-A tordnscrypt_forward -p udp --dport 53 -j ACCEPT",
                         blockHttpRuleForwardTCP,
                         blockHttpRuleForwardUDP,
-                        iptables + "-D FORWARD -j DROP || true"
+                        iptables + "-D FORWARD -j DROP 2> /dev/null || true"
                 };
 
                 if (ttlFix) {
                     tetheringCommands = Arr.ADD2(tetheringCommands, fixTTLCommands());
-                } else if (ttlFixed){
+                } else if (ttlFixed) {
                     tetheringCommands = Arr.ADD2(tetheringCommands, unfixTTLCommands());
                 }
 
             } else if (torTethering && routeAllThroughTorTether && itpdTethering) {
                 tetheringCommands = new String[]{
                         iptables + "-I FORWARD -j DROP",
-                        "ip6tables -D INPUT -j DROP || true",
-                        "ip6tables -I INPUT -j DROP",
-                        "ip6tables -D FORWARD -j DROP || true",
-                        "ip6tables -I FORWARD -j DROP",
-                        iptables + "-t nat -F tordnscrypt_prerouting",
-                        iptables + "-F tordnscrypt_forward",
-                        iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting || true",
-                        iptables + "-D FORWARD -j tordnscrypt_forward || true",
+                        ip6tables + "-D INPUT -j DROP 2> /dev/null || true",
+                        ip6tables + "-I INPUT -j DROP || true",
+                        ip6tables + "-D FORWARD -j DROP 2> /dev/null || true",
+                        ip6tables + "-I FORWARD -j DROP",
+                        iptables + "-t nat -F tordnscrypt_prerouting 2> /dev/null",
+                        iptables + "-F tordnscrypt_forward 2> /dev/null",
+                        iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting 2> /dev/null || true",
+                        iptables + "-D FORWARD -j tordnscrypt_forward 2> /dev/null || true",
                         busybox + "sleep 1",
-                        iptables + "-t nat -N tordnscrypt_prerouting",
-                        iptables + "-N tordnscrypt_forward",
+                        iptables + "-t nat -N tordnscrypt_prerouting 2> /dev/null",
+                        iptables + "-N tordnscrypt_forward 2> /dev/null",
                         iptables + "-t nat -A PREROUTING -j tordnscrypt_prerouting",
                         iptables + "-A FORWARD -j tordnscrypt_forward",
                         busybox + "sleep 1",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j RETURN || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j RETURN || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j RETURN 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j RETURN 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT 2> /dev/null || true",
                         iptables + "-I tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                         iptables + "-I tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
-                        iptables + "-D tordnscrypt -p udp -m udp --dport 67 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -p udp -m udp --dport 68 -j ACCEPT || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --dport 67 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --dport 68 -j ACCEPT 2> /dev/null || true",
                         iptables + "-I tordnscrypt -p udp -m udp --dport 67 -j ACCEPT",
                         iptables + "-I tordnscrypt -p udp -m udp --dport 68 -j ACCEPT",
-                        iptables + "-D tordnscrypt -p udp -m udp --sport 67 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -p udp -m udp --sport 68 -j ACCEPT || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --sport 67 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --sport 68 -j ACCEPT 2> /dev/null || true",
                         iptables + "-I tordnscrypt -p udp -m udp --sport 67 -j ACCEPT",
                         iptables + "-I tordnscrypt -p udp -m udp --sport 68 -j ACCEPT",
                         busybox + "sleep 1",
@@ -270,7 +272,7 @@ public class Tethering {
                 String[] tetheringCommandsPart2 = {
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -j REDIRECT --to-ports " + pathVars.getTorTransPort(),
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p tcp -j REDIRECT --to-ports " + pathVars.getTorTransPort(),
-                        iptables + "i-A tordnscrypt_forward -p udp --dport 53 -j ACCEPT",
+                        iptables + "-A tordnscrypt_forward -p udp --dport 53 -j ACCEPT",
                         iptables + "-A tordnscrypt_forward -p tcp --dport 53 -j ACCEPT",
                         blockHttpRuleForwardTCP,
                         blockHttpRuleForwardUDP,
@@ -278,7 +280,7 @@ public class Tethering {
                         torSitesBypassForwardUDP,
                         iptables + "-A tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j RETURN",
                         iptables + "-A tordnscrypt_forward -j REJECT",
-                        iptables + "-D FORWARD -j DROP || true"
+                        iptables + "-D FORWARD -j DROP 2> /dev/null || true"
                 };
 
                 tetheringCommands = Arr.ADD3(tetheringCommands, bypassITPDTunnelPorts, tetheringCommandsPart2);
@@ -292,34 +294,34 @@ public class Tethering {
             } else if (torTethering && itpdTethering) {
                 tetheringCommands = new String[]{
                         iptables + "-I FORWARD -j DROP",
-                        "ip6tables -D INPUT -j DROP || true",
-                        "ip6tables -I INPUT -j DROP",
-                        "ip6tables -D FORWARD -j DROP || true",
-                        "ip6tables -I FORWARD -j DROP",
-                        iptables + "-t nat -F tordnscrypt_prerouting",
-                        iptables + "-F tordnscrypt_forward",
-                        iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting || true",
-                        iptables + "-D FORWARD -j tordnscrypt_forward || true",
+                        ip6tables + "-D INPUT -j DROP 2> /dev/null || true",
+                        ip6tables + "-I INPUT -j DROP || true",
+                        ip6tables + "-D FORWARD -j DROP 2> /dev/null || true",
+                        ip6tables + "-I FORWARD -j DROP",
+                        iptables + "-t nat -F tordnscrypt_prerouting 2> /dev/null",
+                        iptables + "-F tordnscrypt_forward 2> /dev/null",
+                        iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting 2> /dev/null || true",
+                        iptables + "-D FORWARD -j tordnscrypt_forward 2> /dev/null || true",
                         busybox + "sleep 1",
-                        iptables + "-t nat -N tordnscrypt_prerouting",
-                        iptables + "-N tordnscrypt_forward",
+                        iptables + "-t nat -N tordnscrypt_prerouting 2> /dev/null",
+                        iptables + "-N tordnscrypt_forward 2> /dev/null",
                         iptables + "-t nat -A PREROUTING -j tordnscrypt_prerouting",
                         iptables + "-A FORWARD -j tordnscrypt_forward",
                         busybox + "sleep 1",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j RETURN || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j RETURN || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j RETURN 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j RETURN 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT 2> /dev/null || true",
                         iptables + "-I tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                         iptables + "-I tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
-                        iptables + "-D tordnscrypt -p udp -m udp --dport 67 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -p udp -m udp --dport 68 -j ACCEPT || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --dport 67 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --dport 68 -j ACCEPT 2> /dev/null || true",
                         iptables + "-I tordnscrypt -p udp -m udp --dport 67 -j ACCEPT",
                         iptables + "-I tordnscrypt -p udp -m udp --dport 68 -j ACCEPT",
-                        iptables + "-D tordnscrypt -p udp -m udp --sport 67 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -p udp -m udp --sport 68 -j ACCEPT || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --sport 67 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --sport 68 -j ACCEPT 2> /dev/null || true",
                         iptables + "-I tordnscrypt -p udp -m udp --sport 67 -j ACCEPT",
                         iptables + "-I tordnscrypt -p udp -m udp --sport 68 -j ACCEPT",
                         busybox + "sleep 1",
@@ -335,13 +337,13 @@ public class Tethering {
                         blockHttpRulePreroutingTCPusb,
                         blockHttpRulePreroutingUDPusb,
                         busybox + "sleep 1",
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
+                        busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
+                        busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
                         iptables + "-A tordnscrypt_forward -p tcp --dport 53 -j ACCEPT",
                         iptables + "-A tordnscrypt_forward -p udp --dport 53 -j ACCEPT",
                         blockHttpRuleForwardTCP,
                         blockHttpRuleForwardUDP,
-                        iptables + "-D FORWARD -j DROP || true"
+                        iptables + "-D FORWARD -j DROP 2> /dev/null || true"
                 };
 
                 if (ttlFix) {
@@ -353,34 +355,34 @@ public class Tethering {
             } else if (itpdTethering) {
                 tetheringCommands = new String[]{
                         iptables + "-I FORWARD -j DROP",
-                        "ip6tables -D INPUT -j DROP || true",
-                        "ip6tables -I INPUT -j DROP",
-                        "ip6tables -D FORWARD -j DROP || true",
-                        "ip6tables -I FORWARD -j DROP",
-                        iptables + "-t nat -F tordnscrypt_prerouting",
-                        iptables + "-F tordnscrypt_forward",
-                        iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting || true",
-                        iptables + "-D FORWARD -j tordnscrypt_forward || true",
+                        ip6tables + "-D INPUT -j DROP 2> /dev/null || true",
+                        ip6tables + "-I INPUT -j DROP || true",
+                        ip6tables + "-D FORWARD -j DROP 2> /dev/null || true",
+                        ip6tables + "-I FORWARD -j DROP",
+                        iptables + "-t nat -F tordnscrypt_prerouting 2> /dev/null",
+                        iptables + "-F tordnscrypt_forward 2> /dev/null",
+                        iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting 2> /dev/null || true",
+                        iptables + "-D FORWARD -j tordnscrypt_forward 2> /dev/null || true",
                         busybox + "sleep 1",
-                        iptables + "-t nat -N tordnscrypt_prerouting",
-                        iptables + "-N tordnscrypt_forward",
+                        iptables + "-t nat -N tordnscrypt_prerouting 2> /dev/null",
+                        iptables + "-N tordnscrypt_forward 2> /dev/null",
                         iptables + "-t nat -A PREROUTING -j tordnscrypt_prerouting",
                         iptables + "-A FORWARD -j tordnscrypt_forward",
                         busybox + "sleep 1",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j RETURN || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j RETURN || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j RETURN 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j RETURN 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT 2> /dev/null || true",
                         iptables + "-I tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                         iptables + "-I tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
-                        iptables + "-D tordnscrypt -p udp -m udp --dport 67 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -p udp -m udp --dport 68 -j ACCEPT || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --dport 67 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --dport 68 -j ACCEPT 2> /dev/null || true",
                         iptables + "-I tordnscrypt -p udp -m udp --dport 67 -j ACCEPT",
                         iptables + "-I tordnscrypt -p udp -m udp --dport 68 -j ACCEPT",
-                        iptables + "-D tordnscrypt -p udp -m udp --sport 67 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -p udp -m udp --sport 68 -j ACCEPT || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --sport 67 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --sport 68 -j ACCEPT 2> /dev/null || true",
                         iptables + "-I tordnscrypt -p udp -m udp --sport 67 -j ACCEPT",
                         iptables + "-I tordnscrypt -p udp -m udp --sport 68 -j ACCEPT",
                         busybox + "sleep 1",
@@ -394,7 +396,7 @@ public class Tethering {
                         iptables + "-A tordnscrypt_forward -p udp --dport 53 -j ACCEPT",
                         blockHttpRuleForwardTCP,
                         blockHttpRuleForwardUDP,
-                        iptables + "-D FORWARD -j DROP || true"
+                        iptables + "-D FORWARD -j DROP 2> /dev/null || true"
                 };
 
                 if (ttlFix) {
@@ -406,34 +408,34 @@ public class Tethering {
             } else if (routeAllThroughTorTether) {
                 tetheringCommands = new String[]{
                         iptables + "-I FORWARD -j DROP",
-                        "ip6tables -D INPUT -j DROP || true",
-                        "ip6tables -I INPUT -j DROP",
-                        "ip6tables -D FORWARD -j DROP || true",
-                        "ip6tables -I FORWARD -j DROP",
-                        iptables + "-t nat -F tordnscrypt_prerouting",
-                        iptables + "-F tordnscrypt_forward",
-                        iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting || true",
-                        iptables + "-D FORWARD -j tordnscrypt_forward || true",
+                        ip6tables + "-D INPUT -j DROP 2> /dev/null || true",
+                        ip6tables + "-I INPUT -j DROP || true",
+                        ip6tables + "-D FORWARD -j DROP 2> /dev/null || true",
+                        ip6tables + "-I FORWARD -j DROP",
+                        iptables + "-t nat -F tordnscrypt_prerouting 2> /dev/null",
+                        iptables + "-F tordnscrypt_forward 2> /dev/null",
+                        iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting 2> /dev/null || true",
+                        iptables + "-D FORWARD -j tordnscrypt_forward 2> /dev/null || true",
                         busybox + "sleep 1",
-                        iptables + "-t nat -N tordnscrypt_prerouting",
-                        iptables + "-N tordnscrypt_forward",
+                        iptables + "-t nat -N tordnscrypt_prerouting 2> /dev/null",
+                        iptables + "-N tordnscrypt_forward 2> /dev/null",
                         iptables + "-t nat -A PREROUTING -j tordnscrypt_prerouting",
                         iptables + "-A FORWARD -j tordnscrypt_forward",
                         busybox + "sleep 1",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j RETURN || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j RETURN || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j RETURN 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j RETURN 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT 2> /dev/null || true",
                         iptables + "-I tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                         iptables + "-I tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
-                        iptables + "-D tordnscrypt -p udp -m udp --dport 67 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -p udp -m udp --dport 68 -j ACCEPT || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --dport 67 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --dport 68 -j ACCEPT 2> /dev/null || true",
                         iptables + "-I tordnscrypt -p udp -m udp --dport 67 -j ACCEPT",
                         iptables + "-I tordnscrypt -p udp -m udp --dport 68 -j ACCEPT",
-                        iptables + "-D tordnscrypt -p udp -m udp --sport 67 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -p udp -m udp --sport 68 -j ACCEPT || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --sport 67 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --sport 68 -j ACCEPT 2> /dev/null || true",
                         iptables + "-I tordnscrypt -p udp -m udp --sport 67 -j ACCEPT",
                         iptables + "-I tordnscrypt -p udp -m udp --sport 68 -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_prerouting -d " + wifiAPAddressesRange + " -j ACCEPT",
@@ -458,7 +460,7 @@ public class Tethering {
                         torSitesBypassForwardUDP,
                         iptables + "-A tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j RETURN",
                         iptables + "-A tordnscrypt_forward -j REJECT",
-                        iptables + "-D FORWARD -j DROP || true"
+                        iptables + "-D FORWARD -j DROP 2> /dev/null || true"
                 };
 
                 if (ttlFix) {
@@ -470,34 +472,34 @@ public class Tethering {
             } else {
                 tetheringCommands = new String[]{
                         iptables + "-I FORWARD -j DROP",
-                        "ip6tables -D INPUT -j DROP || true",
-                        "ip6tables -I INPUT -j DROP || true",
-                        "ip6tables -D FORWARD -j DROP",
-                        "ip6tables -I FORWARD -j DROP",
-                        iptables + "-t nat -F tordnscrypt_prerouting",
-                        iptables + "-F tordnscrypt_forward",
-                        iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting || true",
-                        iptables + "-D FORWARD -j tordnscrypt_forward || true",
+                        ip6tables + "-D INPUT -j DROP 2> /dev/null || true",
+                        ip6tables + "-I INPUT -j DROP || true",
+                        ip6tables + "-D FORWARD -j DROP 2> /dev/null || true",
+                        ip6tables + "-I FORWARD -j DROP",
+                        iptables + "-t nat -F tordnscrypt_prerouting 2> /dev/null",
+                        iptables + "-F tordnscrypt_forward 2> /dev/null",
+                        iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting 2> /dev/null || true",
+                        iptables + "-D FORWARD -j tordnscrypt_forward 2> /dev/null || true",
                         busybox + "sleep 1",
-                        iptables + "-t nat -N tordnscrypt_prerouting",
-                        iptables + "-N tordnscrypt_forward",
+                        iptables + "-t nat -N tordnscrypt_prerouting 2> /dev/null",
+                        iptables + "-N tordnscrypt_forward 2> /dev/null",
                         iptables + "-t nat -A PREROUTING -j tordnscrypt_prerouting",
                         iptables + "-A FORWARD -j tordnscrypt_forward",
                         busybox + "sleep 1",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j RETURN || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j RETURN || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j RETURN 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j RETURN 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT 2> /dev/null || true",
                         iptables + "-I tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                         iptables + "-I tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
-                        iptables + "-D tordnscrypt -p udp -m udp --dport 67 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -p udp -m udp --dport 68 -j ACCEPT || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --dport 67 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --dport 68 -j ACCEPT 2> /dev/null || true",
                         iptables + "-I tordnscrypt -p udp -m udp --dport 67 -j ACCEPT",
                         iptables + "-I tordnscrypt -p udp -m udp --dport 68 -j ACCEPT",
-                        iptables + "-D tordnscrypt -p udp -m udp --sport 67 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -p udp -m udp --sport 68 -j ACCEPT || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --sport 67 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --sport 68 -j ACCEPT 2> /dev/null || true",
                         iptables + "-I tordnscrypt -p udp -m udp --sport 67 -j ACCEPT",
                         iptables + "-I tordnscrypt -p udp -m udp --sport 68 -j ACCEPT",
                         busybox + "sleep 1",
@@ -509,13 +511,13 @@ public class Tethering {
                         blockHttpRulePreroutingTCPusb,
                         blockHttpRulePreroutingUDPusb,
                         busybox + "sleep 1",
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
+                        busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
+                        busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
                         iptables + "-A tordnscrypt_forward -p tcp --dport 53 -j ACCEPT",
                         iptables + "-A tordnscrypt_forward -p udp --dport 53 -j ACCEPT",
                         blockHttpRuleForwardTCP,
                         blockHttpRuleForwardUDP,
-                        iptables + "-D FORWARD -j DROP || true"
+                        iptables + "-D FORWARD -j DROP 2> /dev/null || true"
                 };
 
                 if (ttlFix) {
@@ -531,34 +533,34 @@ public class Tethering {
             if (torTethering) {
                 tetheringCommands = new String[]{
                         iptables + "-I FORWARD -j DROP",
-                        "ip6tables -D INPUT -j DROP || true",
-                        "ip6tables -I INPUT -j DROP",
-                        "ip6tables -D FORWARD -j DROP || true",
-                        "ip6tables -I FORWARD -j DROP",
-                        iptables + "-t nat -F tordnscrypt_prerouting",
-                        iptables + "-F tordnscrypt_forward",
-                        iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting || true",
-                        iptables + "-D FORWARD -j tordnscrypt_forward || true",
+                        ip6tables + "-D INPUT -j DROP 2> /dev/null || true",
+                        ip6tables + "-I INPUT -j DROP || true",
+                        ip6tables + "-D FORWARD -j DROP 2> /dev/null || true",
+                        ip6tables + "-I FORWARD -j DROP",
+                        iptables + "-t nat -F tordnscrypt_prerouting 2> /dev/null",
+                        iptables + "-F tordnscrypt_forward 2> /dev/null",
+                        iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting 2> /dev/null || true",
+                        iptables + "-D FORWARD -j tordnscrypt_forward 2> /dev/null || true",
                         busybox + "sleep 1",
-                        iptables + "-t nat -N tordnscrypt_prerouting",
-                        iptables + "-N tordnscrypt_forward",
+                        iptables + "-t nat -N tordnscrypt_prerouting 2> /dev/null",
+                        iptables + "-N tordnscrypt_forward 2> /dev/null",
                         iptables + "-t nat -A PREROUTING -j tordnscrypt_prerouting",
                         iptables + "-A FORWARD -j tordnscrypt_forward",
                         busybox + "sleep 1",
-                        iptables + "-D tordnscrypt -p udp -m udp --dport 67 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -p udp -m udp --dport 68 -j ACCEPT || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --dport 67 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --dport 68 -j ACCEPT 2> /dev/null || true",
                         iptables + "-I tordnscrypt -p udp -m udp --dport 67 -j ACCEPT",
                         iptables + "-I tordnscrypt -p udp -m udp --dport 68 -j ACCEPT",
-                        iptables + "-D tordnscrypt -p udp -m udp --sport 67 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -p udp -m udp --sport 68 -j ACCEPT || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --sport 67 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -p udp -m udp --sport 68 -j ACCEPT 2> /dev/null || true",
                         iptables + "-I tordnscrypt -p udp -m udp --sport 67 -j ACCEPT",
                         iptables + "-I tordnscrypt -p udp -m udp --sport 68 -j ACCEPT",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -m owner --uid-owner 0 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getTorDNSPort() + " -m owner --uid-owner 0 -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j RETURN || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getTorDNSPort() + " -j RETURN || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT || true",
-                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -m owner --uid-owner 0 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getTorDNSPort() + " -m owner --uid-owner 0 -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j RETURN 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getTorDNSPort() + " -j RETURN 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT 2> /dev/null || true",
+                        iptables + "-D tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT 2> /dev/null || true",
                         iptables + "-I tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
                         iptables + "-I tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
                         busybox + "sleep 1",
@@ -583,7 +585,7 @@ public class Tethering {
                         torSitesBypassForwardUDP,
                         iptables + "-A tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j RETURN",
                         iptables + "-A tordnscrypt_forward -j REJECT",
-                        iptables + "-D FORWARD -j DROP || true"
+                        iptables + "-D FORWARD -j DROP 2> /dev/null || true"
                 };
 
                 if (ttlFix) {
@@ -601,14 +603,14 @@ public class Tethering {
                 new PrefManager(context).setBoolPref("TetherIptablesRulesIsClean", true);
 
                 tetheringCommands = new String[]{
-                        "ip6tables -D INPUT -j DROP || true",
-                        "ip6tables -I INPUT -j DROP",
-                        "ip6tables -D FORWARD -j DROP || true",
-                        "ip6tables -I FORWARD -j DROP",
-                        iptables + "-t nat -F tordnscrypt_prerouting",
-                        iptables + "-F tordnscrypt_forward",
-                        iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting || true",
-                        iptables + "-D FORWARD -j tordnscrypt_forward || true",
+                        ip6tables + "-D INPUT -j DROP 2> /dev/null || true",
+                        ip6tables + "-I INPUT -j DROP || true",
+                        ip6tables + "-D FORWARD -j DROP 2> /dev/null || true",
+                        ip6tables + "-I FORWARD -j DROP",
+                        iptables + "-t nat -F tordnscrypt_prerouting 2> /dev/null",
+                        iptables + "-F tordnscrypt_forward 2> /dev/null",
+                        iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting 2> /dev/null || true",
+                        iptables + "-D FORWARD -j tordnscrypt_forward 2> /dev/null || true",
                 };
 
                 if (ttlFixed) {
@@ -704,29 +706,29 @@ public class Tethering {
     private String[] fixTTLCommands() {
         new PrefManager(context).setBoolPref("TTLisFixed", true);
 
-        return new String[] {
+        return new String[]{
                 iptables + "-I FORWARD -j DROP",
-                "echo 64 > /proc/sys/net/ipv4/ip_default_ttl",
-                "ip rule delete from " + wifiAPAddressesRange + " lookup 63",
-                "ip rule delete from " + usbModemAddressesRange + " lookup 62",
-                iptables + "-D FORWARD -j tordnscrypt_forward || true",
+                "echo 64 > /proc/sys/net/ipv4/ip_default_ttl 2> /dev/null || true",
+                "ip rule delete from " + wifiAPAddressesRange + " lookup 63 2> /dev/null || true",
+                "ip rule delete from " + usbModemAddressesRange + " lookup 62 2> /dev/null || true",
+                iptables + "-D FORWARD -j tordnscrypt_forward 2> /dev/null || true",
                 //iptables + "-t nat -D POSTROUTING -o " + vpnInterfaceName + " -j MASQUERADE || true",
-                iptables + "-D tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j RETURN && "
-                        + iptables + "-I tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j ACCEPT",
-                iptables + "-D tordnscrypt_forward -o !" + vpnInterfaceName + " -j REJECT || true",
+                iptables + "-D tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j RETURN 2> /dev/null && "
+                        + iptables + "-I tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j ACCEPT 2> /dev/null || true",
+                iptables + "-D tordnscrypt_forward -o !" + vpnInterfaceName + " -j REJECT 2> /dev/null || true",
                 iptables + "-I tordnscrypt_forward -o !" + vpnInterfaceName + " -j REJECT",
-                iptables + "-I FORWARD -j tordnscrypt_forward",
                 iptables + "-A tordnscrypt_forward -p all -j ACCEPT",
+                iptables + "-I FORWARD -j tordnscrypt_forward",
                 //iptables + "-t nat -I POSTROUTING -o " + vpnInterfaceName + " -j MASQUERADE",
-                "ip rule add from " + wifiAPAddressesRange + " lookup 63",
-                "ip rule add from " + usbModemAddressesRange + " lookup 62",
-                "ip route add default dev tun0 scope link table 63",
-                "ip route add default dev tun0 scope link table 62",
-                "ip route add " + wifiAPAddressesRange + " dev " + wifiAPInterfaceName + " scope link table 63 || true",
-                "ip route add " + usbModemAddressesRange + " dev " + usbModemInterfaceName + " scope link table 62 || true",
-                "ip route add broadcast 255.255.255.255 dev " + wifiAPInterfaceName + " scope link table 63 || true",
-                "ip route add broadcast 255.255.255.255 dev " + usbModemInterfaceName + " scope link table 62 || true",
-                iptables + "-D FORWARD -j DROP || true"
+                "ip rule add from " + wifiAPAddressesRange + " lookup 63 2> /dev/null || true",
+                "ip rule add from " + usbModemAddressesRange + " lookup 62 2> /dev/null || true",
+                "ip route add default dev tun0 scope link table 63 2> /dev/null || true",
+                "ip route add default dev tun0 scope link table 62 2> /dev/null || true",
+                "ip route add " + wifiAPAddressesRange + " dev " + wifiAPInterfaceName + " scope link table 63 2> /dev/null || true",
+                "ip route add " + usbModemAddressesRange + " dev " + usbModemInterfaceName + " scope link table 62 2> /dev/null || true",
+                "ip route add broadcast 255.255.255.255 dev " + wifiAPInterfaceName + " scope link table 63 2> /dev/null || true",
+                "ip route add broadcast 255.255.255.255 dev " + usbModemInterfaceName + " scope link table 62 2> /dev/null || true",
+                iptables + "-D FORWARD -j DROP 2> /dev/null || true"
                 //iptables + "-D PREROUTING -t mangle -p udp --dport 53 -j MARK --set-mark 111 || true",
                 //iptables + "-A PREROUTING -t mangle -p udp --dport 53 -j MARK --set-mark 111",
                 //"ip rule add from " + wifiAPAddressesRange + " fwmark 111 lookup 62"
@@ -736,10 +738,10 @@ public class Tethering {
     private String[] unfixTTLCommands() {
         new PrefManager(context).setBoolPref("TTLisFixed", false);
 
-        return new String[] {
-                "ip rule delete from " + wifiAPAddressesRange + " lookup 63",
-                "ip rule delete from " + usbModemAddressesRange + " lookup 62",
-                iptables + "-D tordnscrypt_forward -o !" + vpnInterfaceName + " -j REJECT || true",
+        return new String[]{
+                "ip rule delete from " + wifiAPAddressesRange + " lookup 63 2> /dev/null || true",
+                "ip rule delete from " + usbModemAddressesRange + " lookup 62 2> /dev/null || true",
+                iptables + "-D tordnscrypt_forward -o !" + vpnInterfaceName + " -j REJECT 2> /dev/null || true",
                 //iptables + "-t nat -D POSTROUTING -o " + vpnInterfaceName + " -j MASQUERADE || true"
         };
     }

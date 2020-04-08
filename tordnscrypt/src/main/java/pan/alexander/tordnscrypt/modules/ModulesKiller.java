@@ -24,8 +24,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
-import androidx.preference.PreferenceManager;
 import android.util.Log;
+
+import androidx.preference.PreferenceManager;
 
 import java.io.File;
 import java.util.List;
@@ -319,7 +320,7 @@ public class ModulesKiller {
 
             if (!result) {
 
-                if (rootIsAvailable ) {
+                if (rootIsAvailable) {
                     Log.w(LOG_TAG, "ModulesKiller cannot stop I2P. Stop with root method!");
                     result = killModule(itpdPath, itpdPid, itpdThread, true, "SIGKILL", 10);
                 }
@@ -576,6 +577,7 @@ public class ModulesKiller {
         if (modulesStatus.isRootAvailable()) {
 
             String iptablesPath = pathVars.getIptablesPath();
+            String ip6tablesPath = pathVars.getIp6tablesPath();
             String busyboxPath = pathVars.getBusyboxPath();
 
             modulesStatus.setUseModulesWithRoot(true);
@@ -584,16 +586,16 @@ public class ModulesKiller {
             modulesStatus.setItpdState(STOPPED);
 
             final String[] commands = new String[]{
-                    "ip6tables -D OUTPUT -j DROP || true",
-                    "ip6tables -I OUTPUT -j DROP",
-                    iptablesPath + "-t nat -F tordnscrypt_nat_output",
-                    iptablesPath + "-t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                    iptablesPath + "-F tordnscrypt",
-                    iptablesPath + "-D OUTPUT -j tordnscrypt || true",
-                    iptablesPath + "-t nat -F tordnscrypt_prerouting",
-                    iptablesPath + "-F tordnscrypt_forward",
-                    iptablesPath + "-t nat -D PREROUTING -j tordnscrypt_prerouting || true",
-                    iptablesPath + "-D FORWARD -j tordnscrypt_forward || true",
+                    ip6tablesPath + "-D OUTPUT -j DROP 2> /dev/null || true",
+                    ip6tablesPath + "-I OUTPUT -j DROP",
+                    iptablesPath + "-t nat -F tordnscrypt_nat_output 2> /dev/null",
+                    iptablesPath + "-t nat -D OUTPUT -j tordnscrypt_nat_output 2> /dev/null || true",
+                    iptablesPath + "-F tordnscrypt 2> /dev/null",
+                    iptablesPath + "-D OUTPUT -j tordnscrypt 2> /dev/null || true",
+                    iptablesPath + "-t nat -F tordnscrypt_prerouting 2> /dev/null",
+                    iptablesPath + "-F tordnscrypt_forward 2> /dev/null",
+                    iptablesPath + "-t nat -D PREROUTING -j tordnscrypt_prerouting 2> /dev/null || true",
+                    iptablesPath + "-D FORWARD -j tordnscrypt_forward 2> /dev/null || true",
                     busyboxPath + "killall -s SIGTERM libdnscrypt-proxy.so",
                     busyboxPath + "killall -s SIGTERM libtor.so",
                     busyboxPath + "killall -s SIGTERM libi2pd.so"

@@ -185,21 +185,21 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
         String[] logcatCommands = {
                 "cd " + appDataDir,
-                busyboxPath + "rm -rf logs_dir",
-                busyboxPath + "mkdir -m 655 -p logs_dir",
-                busyboxPath + "cp -R logs logs_dir",
-                "logcat -d | grep " + pid + " > logs_dir/logcat.log",
-                iptables + "-L -v > logs_dir/filter.log",
-                iptables + "-t nat -L -v > logs_dir/nat.log",
-                iptables + "-t mangle -L -v > logs_dir/mangle.log",
-                iptables + "-t raw -L -v > logs_dir/raw.log",
-                busyboxPath + "cp -R shared_prefs logs_dir",
-                busyboxPath + "sleep 1",
-                busyboxPath + "echo \"" + info + "\" > logs_dir/device_info.log",
-                "restorecon -R logs_dir",
-                busyboxPath + "chown -R " + appUID + "." + appUID + " logs_dir",
-                busyboxPath + "chmod -R 755 logs_dir",
-                busyboxPath + "echo 'Logs Saved'"
+                busyboxPath + "rm -rf logs_dir 2> /dev/null",
+                busyboxPath + "mkdir -m 655 -p logs_dir 2> /dev/null",
+                busyboxPath + "cp -R logs logs_dir 2> /dev/null",
+                "logcat -d | grep " + pid + " > logs_dir/logcat.log 2> /dev/null",
+                iptables + "-L -v > logs_dir/filter.log 2> /dev/null",
+                iptables + "-t nat -L -v > logs_dir/nat.log 2> /dev/null",
+                iptables + "-t mangle -L -v > logs_dir/mangle.log 2> /dev/null",
+                iptables + "-t raw -L -v > logs_dir/raw.log 2> /dev/null",
+                busyboxPath + "cp -R shared_prefs logs_dir 2> /dev/null",
+                busyboxPath + "sleep 1 2> /dev/null",
+                busyboxPath + "echo \"" + info + "\" > logs_dir/device_info.log 2> /dev/null",
+                "restorecon -R logs_dir 2> /dev/null",
+                busyboxPath + "chown -R " + appUID + "." + appUID + " logs_dir 2> /dev/null",
+                busyboxPath + "chmod -R 755 logs_dir 2> /dev/null",
+                busyboxPath + "echo 'Logs Saved' 2> /dev/null"
         };
         RootCommands rootCommands = new RootCommands(logcatCommands);
         Intent intent = new Intent(this, RootExecService.class);

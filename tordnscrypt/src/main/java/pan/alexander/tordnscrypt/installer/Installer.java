@@ -331,7 +331,8 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
             if (activity != null
                     && activity.getText(R.string.package_name).toString().contains(".gp")
-                    && path.contains("dnscrypt-proxy.toml")) {
+                    && path.contains("dnscrypt-proxy.toml")
+                    && !PathVars.isModulesInstalled(activity)) {
                 lines = prepareDNSCryptForGP(lines);
             }
 
@@ -392,24 +393,24 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         }
 
         String[] commandsInstall = {
-                "ip6tables -D OUTPUT -j DROP || true",
-                "ip6tables -I OUTPUT -j DROP",
-                "iptables -t nat -F tordnscrypt_nat_output",
-                "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                "iptables -F tordnscrypt",
-                "iptables -D OUTPUT -j tordnscrypt || true",
-                "iptables -t nat -F tordnscrypt_prerouting",
-                "iptables -F tordnscrypt_forward",
-                "iptables -t nat -D PREROUTING -j tordnscrypt_prerouting || true",
-                "iptables -D FORWARD -j tordnscrypt_forward || true",
-                busyboxNative + "pkill -SIGTERM /libdnscrypt-proxy.so",
-                busyboxNative + "pkill -SIGTERM /libtor.so",
-                busyboxNative + "pkill -SIGTERM /libi2pd.so",
-                busyboxNative + "sleep 7",
-                busyboxNative + "pgrep -l /libdnscrypt-proxy.so",
-                busyboxNative + "pgrep -l /libtor.so",
-                busyboxNative + "pgrep -l /libi2pd.so",
-                busyboxNative + "echo 'checkModulesRunning'"
+                "ip6tables -D OUTPUT -j DROP 2> /dev/null || true",
+                "ip6tables -I OUTPUT -j DROP 2> /dev/null",
+                "iptables -t nat -F tordnscrypt_nat_output 2> /dev/null",
+                "iptables -t nat -D OUTPUT -j tordnscrypt_nat_output 2> /dev/null || true",
+                "iptables -F tordnscrypt 2> /dev/null",
+                "iptables -D OUTPUT -j tordnscrypt 2> /dev/null || true",
+                "iptables -t nat -F tordnscrypt_prerouting 2> /dev/null",
+                "iptables -F tordnscrypt_forward 2> /dev/null",
+                "iptables -t nat -D PREROUTING -j tordnscrypt_prerouting 2> /dev/null || true",
+                "iptables -D FORWARD -j tordnscrypt_forward 2> /dev/null || true",
+                busyboxNative + "pkill -SIGTERM /libdnscrypt-proxy.so 2> /dev/null",
+                busyboxNative + "pkill -SIGTERM /libtor.so 2> /dev/null",
+                busyboxNative + "pkill -SIGTERM /libi2pd.so 2> /dev/null",
+                busyboxNative + "sleep 7 2> /dev/null",
+                busyboxNative + "pgrep -l /libdnscrypt-proxy.so 2> /dev/null",
+                busyboxNative + "pgrep -l /libtor.so 2> /dev/null",
+                busyboxNative + "pgrep -l /libi2pd.so 2> /dev/null",
+                busyboxNative + "echo 'checkModulesRunning' 2> /dev/null"
         };
 
         RootCommands rootCommands = new RootCommands(commandsInstall);

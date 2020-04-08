@@ -147,10 +147,11 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
     private void checkITPDVersionWithRoot(Context context) {
         if (context != null && presenter.isITPDInstalled(context)) {
             String[] commandsCheck = {
-                    busyboxPath + "pgrep -l /libi2pd.so",
-                    busyboxPath + "echo 'checkITPDRunning'",
-                    busyboxPath + "echo 'ITPD_version'",
-                    itpdPath + " --version"};
+                    busyboxPath + "pgrep -l /libi2pd.so 2> /dev/null",
+                    busyboxPath + "echo 'checkITPDRunning' 2> /dev/null",
+                    busyboxPath + "echo 'ITPD_version' 2> /dev/null",
+                    itpdPath + " --version 2> /dev/null"
+            };
             RootCommands rootCommands = new RootCommands(commandsCheck);
             Intent intent = new Intent(context, RootExecService.class);
             intent.setAction(RootExecService.RUN_COMMAND);

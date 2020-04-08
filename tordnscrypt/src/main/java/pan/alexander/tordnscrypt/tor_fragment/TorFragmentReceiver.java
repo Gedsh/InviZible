@@ -150,10 +150,10 @@ public class TorFragmentReceiver extends BroadcastReceiver {
         if (context != null && presenter.isTorInstalled(context)) {
 
             String[] commandsCheck = {
-                    busyboxPath + "pgrep -l /libtor.so",
-                    busyboxPath + "echo 'checkTrRunning'",
-                    busyboxPath + "echo 'Tor_version'",
-                    torPath + " --version"
+                    busyboxPath + "pgrep -l /libtor.so 2> /dev/null",
+                    busyboxPath + "echo 'checkTrRunning' 2> /dev/null",
+                    busyboxPath + "echo 'Tor_version' 2> /dev/null",
+                    torPath + " --version 2> /dev/null"
             };
             RootCommands rootCommands = new RootCommands(commandsCheck);
             Intent intent = new Intent(context, RootExecService.class);

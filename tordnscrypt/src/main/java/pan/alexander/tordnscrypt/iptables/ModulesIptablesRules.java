@@ -72,14 +72,14 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         String torAppsBypassFilterTCP = "";
         String torAppsBypassFilterUDP = "";
         if (routeAllThroughTor) {
-            torSitesBypassNatTCP = busybox + "cat " + appDataDir + "/app_data/tor/clearnet | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j RETURN; done";
-            torSitesBypassFilterTCP = busybox + "cat " + appDataDir + "/app_data/tor/clearnet | while read var1; do " + iptables + "-A tordnscrypt -p tcp -d $var1 -j RETURN; done";
-            torSitesBypassNatUDP = busybox + "cat " + appDataDir + "/app_data/tor/clearnet | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p udp -d $var1 -j RETURN; done";
-            torSitesBypassFilterUDP = busybox + "cat " + appDataDir + "/app_data/tor/clearnet | while read var1; do " + iptables + "-A tordnscrypt -p udp -d $var1 -j RETURN; done";
-            torAppsBypassNatTCP = busybox + "cat " + appDataDir + "/app_data/tor/clearnetApps | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j RETURN; done";
-            torAppsBypassNatUDP = busybox + "cat " + appDataDir + "/app_data/tor/clearnetApps | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p udp -m owner --uid-owner $var1 -j RETURN; done";
-            torAppsBypassFilterTCP = busybox + "cat " + appDataDir + "/app_data/tor/clearnetApps | while read var1; do " + iptables + "-A tordnscrypt -p tcp -m owner --uid-owner $var1 -j RETURN; done";
-            torAppsBypassFilterUDP = busybox + "cat " + appDataDir + "/app_data/tor/clearnetApps | while read var1; do " + iptables + "-A tordnscrypt -p udp -m owner --uid-owner $var1 -j RETURN; done";
+            torSitesBypassNatTCP = busybox + "cat " + appDataDir + "/app_data/tor/clearnet 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j RETURN; done";
+            torSitesBypassFilterTCP = busybox + "cat " + appDataDir + "/app_data/tor/clearnet 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt -p tcp -d $var1 -j RETURN; done";
+            torSitesBypassNatUDP = busybox + "cat " + appDataDir + "/app_data/tor/clearnet 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p udp -d $var1 -j RETURN; done";
+            torSitesBypassFilterUDP = busybox + "cat " + appDataDir + "/app_data/tor/clearnet 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt -p udp -d $var1 -j RETURN; done";
+            torAppsBypassNatTCP = busybox + "cat " + appDataDir + "/app_data/tor/clearnetApps 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j RETURN; done";
+            torAppsBypassNatUDP = busybox + "cat " + appDataDir + "/app_data/tor/clearnetApps 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p udp -m owner --uid-owner $var1 -j RETURN; done";
+            torAppsBypassFilterTCP = busybox + "cat " + appDataDir + "/app_data/tor/clearnetApps 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt -p tcp -m owner --uid-owner $var1 -j RETURN; done";
+            torAppsBypassFilterUDP = busybox + "cat " + appDataDir + "/app_data/tor/clearnetApps 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt -p udp -m owner --uid-owner $var1 -j RETURN; done";
         }
 
         String blockHttpRuleFilterAll = "";
@@ -91,7 +91,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             blockHttpRuleNatUDP = iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 80 -j DNAT --to-destination " + rejectAddress;
         }
 
-        String unblockHOTSPOT = iptables + "-D FORWARD -j DROP || true";
+        String unblockHOTSPOT = iptables + "-D FORWARD -j DROP 2> /dev/null || true";
         String blockHOTSPOT = iptables + "-I FORWARD -j DROP";
         if (apIsOn || modemIsOn) {
             blockHOTSPOT = "";
@@ -139,15 +139,15 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
                 commands = new String[]{
                         iptables + "-I OUTPUT -j DROP",
-                        "ip6tables -D OUTPUT -j DROP || true",
-                        "ip6tables -I OUTPUT -j DROP",
-                        iptables + "-t nat -F tordnscrypt_nat_output",
-                        iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                        iptables + "-F tordnscrypt",
-                        iptables + "-D OUTPUT -j tordnscrypt || true",
+                        ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
+                        ip6tables + "-I OUTPUT -j DROP",
+                        iptables + "-t nat -F tordnscrypt_nat_output 2> /dev/null",
+                        iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output 2> /dev/null || true",
+                        iptables + "-F tordnscrypt 2> /dev/null",
+                        iptables + "-D OUTPUT -j tordnscrypt 2> /dev/null || true",
                         busybox + "sleep 1",
                         "TOR_UID=" + appUID,
-                        iptables + "-t nat -N tordnscrypt_nat_output",
+                        iptables + "-t nat -N tordnscrypt_nat_output 2> /dev/null",
                         iptables + "-t nat -I OUTPUT -j tordnscrypt_nat_output",
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
@@ -161,7 +161,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
                         blockHttpRuleNatTCP,
                         blockHttpRuleNatUDP,
-                        iptables + "-N tordnscrypt",
+                        iptables + "-N tordnscrypt 2> /dev/null",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT",
                         dnsCryptSystemDNSAllowedFilter,
@@ -170,26 +170,26 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         blockHttpRuleFilterAll,
                         iptables + "-A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
                         iptables + "-I OUTPUT -j tordnscrypt",
-                        busybox + "cat " + appDataDir + "/app_data/tor/bridgesIP | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlock | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlockApps | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
+                        busybox + "cat " + appDataDir + "/app_data/tor/bridgesIP  2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
+                        busybox + "cat " + appDataDir + "/app_data/tor/unlock 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
+                        busybox + "cat " + appDataDir + "/app_data/tor/unlockApps 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
                         unblockHOTSPOT,
                         blockHOTSPOT,
-                        iptables + "-D OUTPUT -j DROP || true"
+                        iptables + "-D OUTPUT -j DROP 2> /dev/null || true"
                 };
             } else {
 
                 commands = new String[]{
                         iptables + "-I OUTPUT -j DROP",
-                        "ip6tables -D OUTPUT -j DROP || true",
-                        "ip6tables -I OUTPUT -j DROP",
-                        iptables + "-t nat -F tordnscrypt_nat_output",
-                        iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                        iptables + "-F tordnscrypt",
-                        iptables + "-D OUTPUT -j tordnscrypt || true",
+                        ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
+                        ip6tables + "-I OUTPUT -j DROP",
+                        iptables + "-t nat -F tordnscrypt_nat_output 2> /dev/null",
+                        iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output 2> /dev/null || true",
+                        iptables + "-F tordnscrypt 2> /dev/null",
+                        iptables + "-D OUTPUT -j tordnscrypt 2> /dev/null || true",
                         busybox + "sleep 1",
                         "TOR_UID=" + appUID,
-                        iptables + "-t nat -N tordnscrypt_nat_output",
+                        iptables + "-t nat -N tordnscrypt_nat_output 2> /dev/null",
                         iptables + "-t nat -I OUTPUT -j tordnscrypt_nat_output",
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
@@ -200,7 +200,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
-                        busybox + "cat " + appDataDir + "/app_data/tor/bridgesIP | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
+                        busybox + "cat " + appDataDir + "/app_data/tor/bridgesIP 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
                         iptables + "-t nat -A tordnscrypt_nat_output -m owner --uid-owner $TOR_UID -j RETURN",
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
                         blockHttpRuleNatTCP,
@@ -210,7 +210,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         torAppsBypassNatTCP,
                         torAppsBypassNatUDP,
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
-                        iptables + "-N tordnscrypt",
+                        iptables + "-N tordnscrypt 2> /dev/null",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getTorSOCKSPort() + " -j RETURN",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorSOCKSPort() + " -j RETURN",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getTorHTTPTunnelPort() + " -j RETURN",
@@ -238,7 +238,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-I OUTPUT -j tordnscrypt",
                         unblockHOTSPOT,
                         blockHOTSPOT,
-                        iptables + "-D OUTPUT -j DROP || true"
+                        iptables + "-D OUTPUT -j DROP 2> /dev/null || true"
                 };
             }
 
@@ -249,15 +249,15 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
             commands = new String[]{
                     iptables + "-I OUTPUT -j DROP",
-                    "ip6tables -D OUTPUT -j DROP || true",
-                    "ip6tables -I OUTPUT -j DROP",
-                    iptables + "-t nat -F tordnscrypt_nat_output",
-                    iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                    iptables + "-F tordnscrypt",
-                    iptables + "-D OUTPUT -j tordnscrypt || true",
+                    ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
+                    ip6tables + "-I OUTPUT -j DROP",
+                    iptables + "-t nat -F tordnscrypt_nat_output 2> /dev/null",
+                    iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output 2> /dev/null || true",
+                    iptables + "-F tordnscrypt 2> /dev/null",
+                    iptables + "-D OUTPUT -j tordnscrypt 2> /dev/null || true",
                     busybox + "sleep 1",
                     "TOR_UID=" + appUID,
-                    iptables + "-t nat -N tordnscrypt_nat_output",
+                    iptables + "-t nat -N tordnscrypt_nat_output 2> /dev/null",
                     iptables + "-t nat -I OUTPUT -j tordnscrypt_nat_output",
                     iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
                     iptables + "-t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
@@ -270,7 +270,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                     blockHttpRuleNatTCP,
                     blockHttpRuleNatUDP,
-                    iptables + "-N tordnscrypt",
+                    iptables + "-N tordnscrypt 2> /dev/null",
                     iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT",
                     iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -m owner --uid-owner 0 -j ACCEPT",
                     dnsCryptSystemDNSAllowedFilter,
@@ -281,7 +281,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     iptables + "-I OUTPUT -j tordnscrypt",
                     unblockHOTSPOT,
                     blockHOTSPOT,
-                    iptables + "-D OUTPUT -j DROP || true"
+                    iptables + "-D OUTPUT -j DROP 2> /dev/null || true"
             };
 
             String[] commandsTether = tethering.activateTethering(false);
@@ -290,12 +290,12 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         } else if (dnsCryptState == STOPPED && torState == STOPPED) {
 
             commands = new String[]{
-                    "ip6tables -D OUTPUT -j DROP || true",
-                    iptables + "-t nat -F tordnscrypt_nat_output",
-                    iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                    iptables + "-F tordnscrypt",
+                    ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
+                    iptables + "-t nat -F tordnscrypt_nat_output 2> /dev/null",
+                    iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output 2> /dev/null || true",
+                    iptables + "-F tordnscrypt 2> /dev/null",
                     iptables + "-A tordnscrypt -j RETURN",
-                    iptables + "-D OUTPUT -j tordnscrypt || true",
+                    iptables + "-D OUTPUT -j tordnscrypt 2> /dev/null || true",
                     unblockHOTSPOT
             };
 
@@ -306,12 +306,12 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
             commands = new String[]{
                     iptables + "-I OUTPUT -j DROP",
-                    iptables + "-t nat -F tordnscrypt_nat_output",
-                    iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                    iptables + "-F tordnscrypt",
-                    iptables + "-D OUTPUT -j tordnscrypt || true",
+                    iptables + "-t nat -F tordnscrypt_nat_output 2> /dev/null",
+                    iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output 2> /dev/null || true",
+                    iptables + "-F tordnscrypt 2> /dev/null",
+                    iptables + "-D OUTPUT -j tordnscrypt 2> /dev/null || true",
                     "TOR_UID=" + appUID,
-                    iptables + "-t nat -N tordnscrypt_nat_output",
+                    iptables + "-t nat -N tordnscrypt_nat_output 2> /dev/null",
                     iptables + "-t nat -I OUTPUT -j tordnscrypt_nat_output",
                     iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
                     iptables + "-t nat -A tordnscrypt_nat_output -p udp -d 127.0.0.1/32 -j RETURN",
@@ -319,7 +319,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     torRootDNSAllowedNat,
                     iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort(),
                     iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort(),
-                    busybox + "cat " + appDataDir + "/app_data/tor/bridgesIP | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
+                    busybox + "cat " + appDataDir + "/app_data/tor/bridgesIP 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
                     iptables + "-t nat -A tordnscrypt_nat_output -m owner --uid-owner $TOR_UID -j RETURN",
                     iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
                     blockHttpRuleNatTCP,
@@ -329,7 +329,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     torAppsBypassNatTCP,
                     torAppsBypassNatUDP,
                     iptables + "-t nat -A tordnscrypt_nat_output -p tcp -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
-                    iptables + "-N tordnscrypt",
+                    iptables + "-N tordnscrypt 2> /dev/null",
                     iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getTorSOCKSPort() + " -j RETURN",
                     iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorSOCKSPort() + " -j RETURN",
                     iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getTorHTTPTunnelPort() + " -j RETURN",
@@ -356,7 +356,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     iptables + "-I OUTPUT -j tordnscrypt",
                     unblockHOTSPOT,
                     blockHOTSPOT,
-                    iptables + "-D OUTPUT -j DROP || true"
+                    iptables + "-D OUTPUT -j DROP 2> /dev/null || true"
             };
 
             String[] commandsTether = tethering.activateTethering(true);
@@ -377,23 +377,23 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         }
 
         return new String[]{
-                "ip6tables -D OUTPUT -j DROP || true",
-                iptables + "-t nat -F tordnscrypt_nat_output",
-                iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output || true",
-                iptables + "-F tordnscrypt",
-                iptables + "-A tordnscrypt -j RETURN",
-                iptables + "-D OUTPUT -j tordnscrypt || true",
+                ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
+                iptables + "-t nat -F tordnscrypt_nat_output 2> /dev/null || true",
+                iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output 2> /dev/null || true",
+                iptables + "-F tordnscrypt 2> /dev/null || true",
+                iptables + "-A tordnscrypt -j RETURN 2> /dev/null || true",
+                iptables + "-D OUTPUT -j tordnscrypt 2> /dev/null || true",
 
-                "ip6tables -D INPUT -j DROP || true",
-                "ip6tables -D FORWARD -j DROP || true",
-                iptables + "-t nat -F tordnscrypt_prerouting",
-                iptables + "-F tordnscrypt_forward",
-                iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting || true",
-                iptables + "-D FORWARD -j tordnscrypt_forward || true",
-                iptables + "-D FORWARD -j DROP || true",
+                ip6tables + "-D INPUT -j DROP 2> /dev/null || true",
+                ip6tables + "-D FORWARD -j DROP 2> /dev/null || true",
+                iptables + "-t nat -F tordnscrypt_prerouting 2> /dev/null || true",
+                iptables + "-F tordnscrypt_forward 2> /dev/null || true",
+                iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting 2> /dev/null || true",
+                iptables + "-D FORWARD -j tordnscrypt_forward 2> /dev/null || true",
+                iptables + "-D FORWARD -j DROP 2> /dev/null || true",
 
-                "ip rule delete from " + wifiAPAddressesRange + " lookup 63",
-                "ip rule delete from " + usbModemAddressesRange + " lookup 62",
+                "ip rule delete from " + wifiAPAddressesRange + " lookup 63 2> /dev/null || true",
+                "ip rule delete from " + usbModemAddressesRange + " lookup 62 2> /dev/null || true"
         };
     }
 
@@ -411,15 +411,14 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         }
 
         String[] commands = {
-                iptables + "-D tordnscrypt -p udp -d --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT || true",
-                iptables + "-t nat -D tordnscrypt_nat_output -p udp --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT || true"
-
+                iptables + "-D tordnscrypt -p udp --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
+                iptables + "-t nat -D tordnscrypt_nat_output -p udp --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true"
         };
 
         if (!runModulesWithRoot) {
             String[] commandsNoRunModulesWithRoot = {
-                    iptables + "-D tordnscrypt -p udp -d --dport 53 -m owner --uid-owner 0 -j ACCEPT || true",
-                    iptables + "-t nat -D tordnscrypt_nat_output -p udp --dport 53 -m owner --uid-owner 0 -j ACCEPT || true"
+                    iptables + "-D tordnscrypt -p udp --dport 53 -m owner --uid-owner 0 -j ACCEPT 2> /dev/null || true",
+                    iptables + "-t nat -D tordnscrypt_nat_output -p udp --dport 53 -m owner --uid-owner 0 -j ACCEPT 2> /dev/null || true"
             };
 
             commands = Arr.ADD2(commands, commandsNoRunModulesWithRoot);

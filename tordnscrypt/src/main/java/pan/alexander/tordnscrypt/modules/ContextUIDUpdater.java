@@ -45,32 +45,32 @@ class ContextUIDUpdater {
         String[] commands;
         if (ModulesStatus.getInstance().isUseModulesWithRoot()) {
             commands = new String[]{
-                    busyboxPath + "chown -R 0.0 " + appDataDir + "/app_data/dnscrypt-proxy",
-                    busyboxPath + "chown -R 0.0 " + appDataDir + "/dnscrypt-proxy.pid",
-                    busyboxPath + "chown -R 0.0 " + appDataDir + "/tor_data",
-                    busyboxPath + "chown -R 0.0 " + appDataDir + "/tor.pid",
-                    busyboxPath + "chown -R 0.0 " + appDataDir + "/i2pd_data",
-                    busyboxPath + "chown -R 0.0 " + appDataDir + "/i2pd.pid"
+                    busyboxPath + "chown -R 0.0 " + appDataDir + "/app_data/dnscrypt-proxy 2> /dev/null",
+                    busyboxPath + "chown -R 0.0 " + appDataDir + "/dnscrypt-proxy.pid 2> /dev/null",
+                    busyboxPath + "chown -R 0.0 " + appDataDir + "/tor_data 2> /dev/null",
+                    busyboxPath + "chown -R 0.0 " + appDataDir + "/tor.pid 2> /dev/null",
+                    busyboxPath + "chown -R 0.0 " + appDataDir + "/i2pd_data 2> /dev/null",
+                    busyboxPath + "chown -R 0.0 " + appDataDir + "/i2pd.pid 2> /dev/null"
             };
         } else {
             commands = new String[]{
-                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/app_data/dnscrypt-proxy",
-                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/dnscrypt-proxy.pid",
-                    "restorecon -R " + appDataDir + "/app_data/dnscrypt-proxy",
-                    "restorecon -R " + appDataDir + "/dnscrypt-proxy.pid",
+                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/app_data/dnscrypt-proxy 2> /dev/null",
+                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/dnscrypt-proxy.pid 2> /dev/null",
+                    "restorecon -R " + appDataDir + "/app_data/dnscrypt-proxy 2> /dev/null",
+                    "restorecon -R " + appDataDir + "/dnscrypt-proxy.pid 2> /dev/null",
 
-                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/tor_data",
-                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/tor.pid",
-                    "restorecon -R " + appDataDir + "/tor_data",
-                    "restorecon -R " + appDataDir + "/tor.pid",
+                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/tor_data 2> /dev/null",
+                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/tor.pid 2> /dev/null",
+                    "restorecon -R " + appDataDir + "/tor_data 2> /dev/null",
+                    "restorecon -R " + appDataDir + "/tor.pid 2> /dev/null",
 
-                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/i2pd_data",
-                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/i2pd.pid",
-                    "restorecon -R " + appDataDir + "/i2pd_data",
-                    "restorecon -R " + appDataDir + "/i2pd.pid",
+                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/i2pd_data 2> /dev/null",
+                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/i2pd.pid 2> /dev/null",
+                    "restorecon -R " + appDataDir + "/i2pd_data 2> /dev/null",
+                    "restorecon -R " + appDataDir + "/i2pd.pid 2> /dev/null",
 
-                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/logs",
-                    "restorecon -R " + appDataDir + "/logs"
+                    busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/logs 2> /dev/null",
+                    "restorecon -R " + appDataDir + "/logs 2> /dev/null"
             };
         }
 

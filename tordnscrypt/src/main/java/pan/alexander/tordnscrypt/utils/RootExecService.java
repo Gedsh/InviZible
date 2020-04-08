@@ -27,8 +27,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 import androidx.preference.PreferenceManager;
@@ -38,6 +40,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -46,6 +50,9 @@ import java.util.concurrent.Executors;
 import eu.chainfire.libsuperuser.Shell;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
+
+import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 
 public class RootExecService extends Service {
     public RootExecService() {
@@ -71,6 +78,7 @@ public class RootExecService extends Service {
     private final String ANDROID_CHANNEL_ID = "InviZible";
     private ExecutorService executorService;
     private NotificationManager notificationManager;
+    private Handler handler = new Handler();
 
 
     @Override
@@ -144,9 +152,31 @@ public class RootExecService extends Service {
     }
 
 
-    @SuppressWarnings("deprecation")
     private List<String> runCommands(String[] runCommands) {
-        List<String> result = Shell.SU.run(runCommands);
+        //List<String> result = Shell.SU.run(runCommands);
+
+        List<String> result = new ArrayList<>();
+        List<String> error = new ArrayList<>();
+
+        int exitCode = execWithSU(runCommands, result, error);
+
+        if (!error.isEmpty() || exitCode != 0)  {
+
+            String exitCodeStr = exitCode == 0 ? "" : "Exit code=" + exitCode + " ";
+            String errorStr = error.isEmpty() ? "" : "STDERR=" + error + " ";
+            String resultStr = result.isEmpty() ? "" : "STDOUT=" + result;
+
+            String errorMessageFinal = "Warning executing root commands.\n"
+                    + exitCodeStr + errorStr + resultStr;
+
+            Log.e(LOG_TAG, errorMessageFinal + " Commands:" + Arrays.toString(runCommands));
+
+            if (errorStr.contains(" -w ") || exitCode == 4) {
+                handler.postDelayed(() -> ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true), 5000);
+            } else if (appVersion.startsWith("b")) {
+                handler.post(() -> Toast.makeText(this, errorMessageFinal, Toast.LENGTH_LONG).show());
+            }
+        }
 
         if (saveRootLogs) {
             String appDataDir = getApplicationContext().getApplicationInfo().dataDir;
@@ -170,11 +200,9 @@ public class RootExecService extends Service {
                 writer.println("--------------------");
                 writer.println("RESULT");
 
-                if (result != null) {
-                    for (String res : result) {
-                        writer.println(res);
-                        Log.i(LOG_TAG, "ROOT COMMANDS RESULT " + res);
-                    }
+                for (String res : result) {
+                    writer.println(res);
+                    Log.i(LOG_TAG, "ROOT COMMANDS RESULT " + res);
                 }
                 writer.println("********************");
 
@@ -185,6 +213,19 @@ public class RootExecService extends Service {
         }
         return result;
 
+    }
+
+    private int execWithSU(String[] runCommands, List<String> result, List<String> error) {
+
+        int exitCode = -1;
+
+        try {
+            exitCode = Shell.Pool.SU.run(runCommands, result, error, true);
+        } catch (Shell.ShellDiedException e) {
+            Log.e(LOG_TAG, "RootExecService SU shell is died " + e.getMessage());
+        }
+
+        return exitCode;
     }
 
     private void sendResult(List<String> commandsResult, int mark) {
