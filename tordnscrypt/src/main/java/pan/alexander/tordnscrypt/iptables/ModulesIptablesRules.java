@@ -291,10 +291,10 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
             commands = new String[]{
                     ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
-                    iptables + "-t nat -F tordnscrypt_nat_output 2> /dev/null",
+                    iptables + "-t nat -F tordnscrypt_nat_output 2> /dev/null || true",
                     iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output 2> /dev/null || true",
-                    iptables + "-F tordnscrypt 2> /dev/null",
-                    iptables + "-A tordnscrypt -j RETURN",
+                    iptables + "-F tordnscrypt 2> /dev/null || true",
+                    iptables + "-A tordnscrypt -j RETURN 2> /dev/null || true",
                     iptables + "-D OUTPUT -j tordnscrypt 2> /dev/null || true",
                     unblockHOTSPOT
             };
