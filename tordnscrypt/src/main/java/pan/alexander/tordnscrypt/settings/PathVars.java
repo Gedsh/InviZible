@@ -27,6 +27,7 @@ import android.util.Log;
 
 import androidx.preference.PreferenceManager;
 
+import java.io.File;
 import java.util.Objects;
 
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -108,6 +109,28 @@ public class PathVars {
         return path;
     }
 
+    public String getIp6tablesPath() {
+        String iptablesSelector = preferences.getString("pref_common_use_iptables", "1");
+
+        String path;
+        switch (iptablesSelector) {
+            case "2":
+                path = "ip6tables ";
+                break;
+            case "1":
+
+            default:
+                if (new File(appDataDir + "/app_bin/ip6tables").isFile()) {
+                    path = appDataDir + "/app_bin/ip6tables ";
+                } else {
+                    path = "ip6tables ";
+                }
+                break;
+        }
+
+        return path;
+    }
+
     public String getBusyboxPath() {
 
         String busyBoxSelector = preferences.getString("pref_common_use_busybox", "1");
@@ -136,7 +159,7 @@ public class PathVars {
         return path;
     }
 
-    public boolean isModulesInstalled(Context context) {
+    public static boolean isModulesInstalled(Context context) {
         return new PrefManager(Objects.requireNonNull(context)).getBoolPref("DNSCrypt Installed")
                 && new PrefManager(Objects.requireNonNull(context)).getBoolPref("Tor Installed")
                 && new PrefManager(Objects.requireNonNull(context)).getBoolPref("I2PD Installed");

@@ -32,6 +32,7 @@ abstract class IptablesRulesSender implements IptablesRules {
     String appDataDir;
     String busybox;
     String iptables;
+    String ip6tables;
     String rejectAddress;
 
     boolean runModulesWithRoot;
@@ -48,6 +49,7 @@ abstract class IptablesRulesSender implements IptablesRules {
         appDataDir = pathVars.getAppDataDir();
         busybox = pathVars.getBusyboxPath();
         iptables = pathVars.getIptablesPath();
+        ip6tables = pathVars.getIp6tablesPath();
         rejectAddress = pathVars.getRejectAddress();
 
         tethering = new Tethering(context);
