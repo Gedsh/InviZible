@@ -42,7 +42,7 @@
     <string name="disagree">"Ablehnen"</string>
     <string name="message_no_root_used">"Du kannst InviZible Pro entweder im lokalen VPN Modus benutzen, als eigenen Proxy für lokale Applikationen oder lokale VPN Features im Proxy Modus nutzen."</string>
     <string name="message_no_root_used_kitkat">"Du kannst InviZible Pro entweder als eigenen Proxy für lokale Applikationen oder lokale VPN Features im Proxy Modus nutzen."</string>
-    <string name="write_file_error">"Fehler beim Speicher der Datei!"</string>
+    <string name="write_file_error">"Fehler beim Speichern der Datei!"</string>
     <string name="drawer_menu_commonSettings">"Allgemeine Einstellungen"</string>
     <string name="drawer_menu_DNSSettings">"DNSCrypt Einstellungen"</string>
     <string name="drawer_menu_TorSettings">"Tor Einstellungen"</string>
@@ -124,11 +124,8 @@
     <string name="pref_common_show_help">"Hilfe Messages"</string>
     <string name="pref_common_show_help_summ">"Hilfe Messages immer anzeigen"</string>
     <string name="pref_common_notification_helper">"Bitte deaktiviere die Batterieoptimierung deines Telefons für InviZible Pro.
-        Andernfalls können DNSCrypt, Tor oder I2P jederzeit durch Android beendet werden. Auf manchen Systemen,
-        wie zB MIUI, können zusätzliche Schritte nötig sein, um InviZible Pro von den Batterie
-        Optimierungen auszuschliessen (zB Safety-&gt;Battery-&gt;Power Saving-&gt;Select InviZible Pro-&gt;No Background Restrictions,
-        Safety-&gt;allow auto start and Long Press The Home Button-&gt;Open the Recent App-&gt;Then Swipe InviZible Pro
-        Downward and click sign lock in memory)."</string>
+Andernfalls können DNSCrypt, Tor oder I2P jederzeit durch Android beendet werden. Auf manchen Systemen, wie zB MIUI, können zusätzliche Schritte nötig sein, um InviZible Pro von den Batterie Optimierungen auszuschliessen.
+(zB Safety-&gt;Battery-&gt;Power Saving-&gt;Select InviZible Pro-&gt;No Background Restrictions, Safety-&gt;allow auto start and Long Press The Home Button-&gt;Open the Recent App-&gt;Then Swipe InviZible Pro Downward and click sign lock in memory)."</string>
     <string name="pref_common_use_busybox">"BusyBox auswählen"</string>
     <string name="pref_common_categ_hotspot">"HOTSPOT-Experimentell"</string>
     <string name="pref_common_tethering_autostart">"Starte Tethering beim Booten"</string>
@@ -142,7 +139,7 @@
     <string name="pref_common_itpd_tethering">"Erlaube I2P Tethering"</string>
     <string name="pref_common_fix_ttl">"TTL festlegen"</string>
     <string name="pref_common_fix_ttl_summ">"TTL wird bei Benutzung des lokalen VPN auf 64 festgelegt. Kernel Unterstützung wird nicht benötigt.
-        Dies kann nur im \"root mode\" mit deaktivierter \"Run Modules With Root\" Option angewandt werden.
+Dies kann nur im \"root mode\" mit deaktivierter \"Run Modules With Root\" Option angewandt werden.
 Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="pref_common_tethering_settings">"Öffne die Tethering Konfiguration"</string>
     <string name="pref_common_restart_dnscrypt">"Bitte starte DNSCrypt neu"</string>
@@ -168,24 +165,23 @@ Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Benutze immer TCP um zu Upstream Servern zu verbinden."</string>
     <string name="pref_dnscrypt_force_tcp_summ">" Dies kann nützlich sein, wenn du jeglichen Datenverkehr durch Tor schicken musst.
 
-        Andernfalls belasse dies auf \"Deaktiviert\", da es die Sicherheit nicht verbessert und nur die Latenz erhöht.(Dnscrypt-Proxy wird immer alles (auch UDP) verschlüsseln)"</string>
+ Andernfalls belasse dies auf \"Deaktiviert\", da es die Sicherheit nicht verbessert und nur die Latenz erhöht.(Dnscrypt-Proxy wird immer alles (auch UDP) verschlüsseln)"</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"HTTP / SOCKS Proxy."</string>
     <string name="pref_dnscrypt_use_proxy">"Proxy aktivieren"</string>
     <string name="pref_dnscrypt_proxy_summ">"Route alle TCP Verbindungen zu einem lokalen Tor Knoten.
-        Da Tor UDP nicht unterstützt, setze force_tcp ebenfalls auf aktiv."</string>
+Da Tor UDP nicht unterstützt, setze force_tcp ebenfalls auf aktiv."</string>
     <string name="pref_dnscrypt_proxy">"proxy_port"</string>
     <string name="pref_dnscrypt_other_categ">"Andere Einstellungen."</string>
     <string name="pref_dnscrypt_fallback_resolver_summ">"Fallback Resolver.
-        Dies ist ein normaler, nicht verschlüsselter DNS Resolver, der nur für einmalige Anfragen benutzt wird,
-        um die Liste von Eingangsresolvern zu beziehen, und dies nur, wenn die System DNS Konfiguration nicht funktioniert.
-        Er wird nie benutzt sobald sich Listen im Cache befinden.
-        Personen in China müssen hier möglicherweise 114.114.114.114:53 benutzen."</string>
+Dies ist ein normaler, nicht verschlüsselter DNS Resolver, der nur für einmalige Anfragen benutzt wird, um die Liste von Eingangsresolvern zu beziehen, und dies nur, wenn die System DNS Konfiguration nicht funktioniert.
+Er wird nie benutzt sobald sich Listen im Cache befinden.
+Personen in China müssen hier möglicherweise 114.114.114.114:53 benutzen."</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">"Lasse Dnscrypt-proxy niemals versuchen die DNS Einstellungen des Systems zu verwenden. Verwende den Fallback Resolver.."</string>
     <string name="pref_dnscrypt_filters_categ">"FILTER"</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Route Anfragen für spezifische Domains zu festgelegten Servern weiter. Temporär deaktiviert. "</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">"Cloaking gibt für spezifische Namen eine festgelegte Adresse zurück.
 
-       Zusätzlich zur Funktion als HOSTS Datei, kann Cloaking auch die IP Adresse eines unterschiedlichen Namens zurückgeben. CNAME Flattening wird ebenso durchgeführt.."</string>
+Zusätzlich zur Funktion als HOSTS Datei, kann Cloaking auch die IP Adresse eines unterschiedlichen Namens zurückgeben. CNAME Flattening wird ebenso durchgeführt.."</string>
     <string name="pref_dnscrypt_query_log_categ">"Logging von Anfragen."</string>
     <string name="pref_dnscrypt_query_log_summ">"Logge Client-Anfragen in eine Datei."</string>
     <string name="pref_dnscrypt_query_log">"Aktiviere das Logging von Anfragen"</string>
@@ -194,7 +190,7 @@ Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="pref_dnscrypt_nx_log_categ">"Logging von verdächtigen Anfragen."</string>
     <string name="pref_dnscrypt_nx_log_summ">"Logge Anfragen für nichtexistente Zonen.
 
-        Die Anfragen können das Vorhandensein von Malware, kaputten Applikationen oder Geräten an Dritte melden bzw aufdecken.."</string>
+Die Anfragen können das Vorhandensein von Malware, kaputten Applikationen oder Geräten an Dritte melden bzw aufdecken.."</string>
     <string name="pref_dnscrypt_nx_log">"Aktiviere Verdächtiges Logging"</string>
     <string name="open_nx_log">"Öffne das Verdächtigen Log"</string>
     <string name="pref_dnscrypt_blacklist_categ">"Schema gestütztes Blocking (Blacklist)."</string>
@@ -297,18 +293,16 @@ Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="pref_itpd_addressbook_subscriptions_summ">"Addressbuch Bereitstellungs URLs."</string>
     <string name="pref_itpd_not_exist">"Voreinstellung existiert nicht in i2pd.conf!"</string>
     <string name="helper_dialog_title">"Info"</string>
-    <string name="helper_after_install">"Gratuliere! Du kannst dieses Tool nun benutzen, um ohne Einschränkungen 
-		schnellen Zugang zu allen Webseiten zu haben. Starte DNSCrypt mit oder ohne Tor und I2P wie gewünscht (Schneller Modus). Du kannst dieses Tool ebenfalls verwenden,
-        um deine Privatsphäre zu verbessern. Starte Tor mit oder ohne I2P wie gewünscht (Verbesserte Privatsphäre Modus)."</string>
+    <string name="helper_after_install">"Gratuliere! Du kannst dieses Tool nun benutzen, um ohne Einschränkungen schnellen Zugang zu allen Webseiten zu haben. Starte DNSCrypt mit oder ohne Tor und I2P wie gewünscht (Schneller Modus). Du kannst dieses Tool ebenfalls verwenden, um deine Privatsphäre zu verbessern. Starte Tor mit oder ohne I2P wie gewünscht (Verbesserte Privatsphäre Modus)."</string>
     <string name="helper_dnscrypt_stopped">"Es sieht aus, als wäre DNSCrypt vom System beendet worden.
-        Deine Internetverbindung wurde wiederhergestellt. Bitte überprüfe deine Geräteeinstellungen!"</string>
+Deine Internetverbindung wurde wiederhergestellt. Bitte überprüfe deine Geräteeinstellungen!"</string>
     <string name="helper_tor_stopped">"Es sieht aus, als wäre Tor vom System beendet worden.
-        Deine Internetverbindung wurde wiederhergestellt. Bitte überprüfe deine Geräteeinstellungen!"</string>
+Deine Internetverbindung wurde wiederhergestellt. Bitte überprüfe deine Geräteeinstellungen!"</string>
     <string name="helper_itpd_stopped">"Es sieht aus, als wäre I2P vom System beendet worden. Bitte überprüfe deine Geräteeinstellungen!"</string>
     <string name="helper_dnscrypt_no_internet">"Es sieht aus, als könnte InviZible Pro NICHT ins INTERNET verbinden.
-        Bitte überprüfe deine FIREWALL Regeln. Erlaube Verbindungen für InviZible Pro und für ROOT Applikationen."</string>
+Bitte überprüfe deine FIREWALL Regeln. Erlaube Verbindungen für InviZible Pro und für ROOT Applikationen."</string>
     <string name="helper_tor_use_bridges">"Es sieht aus, als könnte Tor NICHT ins INTERNET verbinden.
-        Dein ISP könnte Tor Verbindungen blockieren. Du kannst versuchen Tor Bridges zu verwenden. Du findest diese in  MENÜ -&gt; Schnelleinstellungen -&gt; Bridges"</string>
+Dein ISP könnte Tor Verbindungen blockieren. Du kannst versuchen Tor Bridges zu verwenden. Du findest diese in  MENÜ -&gt; Schnelleinstellungen -&gt; Bridges"</string>
     <string name="action_mode_child_lock">"Kindersicherung"</string>
     <string name="action_mode_dialog_message_lock">"Du kannst die Konfiguration dieser App sperren. Bitte gib hierzu ein Passwort ein oder benutze das Bestehende."</string>
     <string name="action_mode_dialog_message_unlock">"Bitte Passwort eingeben."</string>
@@ -320,11 +314,13 @@ Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="help_activity_path">"Pfad für Logs:"</string>
     <string name="help_activity_logs_saved">"Logs gespeichert. Bitte sende InvizibleLogs.txt an den Entwickler. Du findest die Logs in folgendem Ordner:"</string>
     <string name="update_core_title">"Update"</string>
-    <string name="update_core_message">"Einige InviZible Module sind bereit für ein Update.         Möchtest du die Updates durchführen? Dies wird die Moduleinstellungen überschreiben!"</string>
+    <string name="update_core_message">"Einige InviZible Module sind bereit für ein Update.
+Möchtest du die Updates durchführen? Dies wird die Moduleinstellungen überschreiben!"</string>
     <string name="update_core_yes">"Update"</string>
     <string name="update_core_no">"Später"</string>
     <string name="update_core_not_show_again">"Nicht wieder fragen"</string>
-    <string name="update_core_restart">"Bitte starte InviZible Pro neu und erlaube die komplette Installation!         Konfiguriere nach der Installation HOTSPOT neu, falls du ihn benutzt!"</string>
+    <string name="update_core_restart">"Bitte starte InviZible Pro neu und erlaube die komplette Installation!
+Konfiguriere nach der Installation HOTSPOT neu, falls du ihn benutzt!"</string>
     <string name="update_notification">"Datei wird heruntergeladen"</string>
     <string name="update_interrupt_notification">"Der Download wurde abgebrochen"</string>
     <string name="cancel_download">"DOWNLOAD ABBRECHEN"</string>
@@ -353,7 +349,7 @@ Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="enter_code_button">"Code eingeben"</string>
     <string name="enter_code">"Code eingeben"</string>
     <string name="thanks_for_donate">"InviZible Pro Project und sein Entwickler möchten sich für deine Unterstützung bedanken.
-        Möchtest du den Download und das Upgrade auf PRO durchführen? Die Installation läuft im Hintergrund weiter."</string>
+Möchtest du den Download und das Upgrade auf PRO durchführen? Die Installation läuft im Hintergrund weiter."</string>
     <string name="pref_dnscrypt_relays_summ">"Remote Listen von verfügbaren Relays."</string>
     <string name="vpn_mode_active">"VPN Modus ist aktiv"</string>
     <string name="vpn_mode_off">"VPN Modus ist aus"</string>
@@ -364,7 +360,7 @@ Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="main_fragment_access_i2p">"Zugang zu I2P Seiten mit Purple I2P"</string>
     <string name="ask_force_close_title">"Achtung"</string>
     <string name="ask_force_close_text">"InviZible Pro kann nicht starten %s! Bitte überprüfe %s Einstellungen oder versuche die App manuell zu beenden.
-        Falls das nicht helfen sollte, starte dein Gerät bitte neu."</string>
+Falls das nicht helfen sollte, starte dein Gerät bitte neu."</string>
     <string name="ask_force_close_btn">"Erzwinge Beenden"</string>
     <string name="add_custom_server_title">"Eigenen Server hinzufügen"</string>
     <string name="add_custom_server_error">"Ungültige Server Konfiguration. Bitte überprüfe das SDNS Feld."</string>
@@ -396,4 +392,11 @@ Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="pref_itpd_use_Socks_outproxy">"Ausgehender SOCKS Proxy"</string>
     <string name="pref_itpd_Socks_outproxy_address">"Ausgehende SOCKS Proxy Adresse"</string>
     <string name="pref_itpd_Socks_outproxy_port">"Ausgehender SOCKS Proxy Port"</string>
+    <string name="save_changes">"Speichere Änderungen"</string>
+    <string name="discard_changes">"Verwerfe Änderungen"</string>
+    <string name="pref_dnscrypt_edit_toml">"Bearbeite dnscrypt-proxy.toml direkt"</string>
+    <string name="pref_tor_edit_conf">"Bearbeite tor.conf direkt"</string>
+    <string name="pref_itpd_edit_conf">"Bearbeite i2pd.conf direkt"</string>
+    <string name="pref_itpd_edit_tunnels">"Bearbeite tunnels.conf direkt"</string>
+    <string name="config_changes_dialog_message">"Möchtest du die Änderungen speichern ? Dies kann die Funktionalität von InviZible Pro beeinträchtigen."</string>
 </resources>
