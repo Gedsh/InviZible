@@ -1,0 +1,5 @@
+**InviZible Pro beta 0.7.8**
+* Implemented iptables execution control.
+* Built in ip6tables.
+* Updated German language.
+* Important fixes.

@@ -199,3 +199,9 @@
 * Fixed use of system DNS with snowflake bridges.
 * Fixed restore code of PRO version from backup.
 * Improved Internet speed with Fix TTL enabled.
+
+**InviZible Pro beta 0.7.8**
+* Implemented iptables execution control.
+* Built in ip6tables.
+* Updated German language.
+* Important fixes.
