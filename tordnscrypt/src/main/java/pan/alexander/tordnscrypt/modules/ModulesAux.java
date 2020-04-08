@@ -42,7 +42,7 @@ public class ModulesAux {
         modulesStatus.setRootAvailable(rootIsAvailable);
         modulesStatus.setUseModulesWithRoot(runModulesWithRoot);
 
-        if (operationMode != UNDEFINED && PathVars.getInstance(context).isModulesInstalled(context)) {
+        if (operationMode != UNDEFINED && PathVars.isModulesInstalled(context)) {
             modulesStatus.setMode(operationMode);
         } else if (rootIsAvailable){
             modulesStatus.setMode(ROOT_MODE);

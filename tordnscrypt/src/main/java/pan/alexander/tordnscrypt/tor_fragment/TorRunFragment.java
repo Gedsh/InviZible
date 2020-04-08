@@ -37,8 +37,6 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import java.util.Objects;
-
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
@@ -120,8 +118,8 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
         super.onStop();
 
         try {
-            if (receiver != null) {
-                Objects.requireNonNull(getActivity()).unregisterReceiver(receiver);
+            if (getActivity() != null && receiver != null) {
+                getActivity().unregisterReceiver(receiver);
             }
         } catch (Exception e) {
             Log.e(LOG_TAG, "TorFragment onStop exception " + e.getMessage() + " " + e.getCause());

@@ -330,7 +330,6 @@ public class UnlockTorIpsFrag extends Fragment {
 
             }
             unlockHostIP.remove(position);
-            //rvAdapter.notifyItemRemoved(position);
             notifyDataSetChanged();
         }
 
@@ -645,6 +644,10 @@ public class UnlockTorIpsFrag extends Fragment {
         protected void onProgressUpdate(Integer... values) {
             super.onProgressUpdate(values);
 
+            if (rvAdapter == null) {
+                return;
+            }
+
             rvAdapter.notifyDataSetChanged();
         }
 
@@ -657,6 +660,10 @@ public class UnlockTorIpsFrag extends Fragment {
     }
 
     private void getHostOrIp(final int position, final boolean addHostIP, final boolean editHostIP) {
+        if (unlockHostIP == null || rvAdapter == null || rvListHostip == null) {
+            return;
+        }
+
         boolean active = unlockHostIP.get(position).active;
         if (unlockHostIP.get(position).inputHost) {
             String host = unlockHostIP.get(position).host;
@@ -679,6 +686,11 @@ public class UnlockTorIpsFrag extends Fragment {
 
                 });
             } catch (UnknownHostException | MalformedURLException e) {
+
+                if (unlockHostIP == null || rvAdapter == null || rvListHostip == null) {
+                    return;
+                }
+
                 String ip = getString(R.string.pref_fast_unlock_host_wrong);
                 unlockHostIP.set(position, new HostIP(host, ip, true, false, active));
                 Log.e(LOG_TAG, "UnlockTorIpsFrag getHostOrIp exception " + e.getMessage() + " " + e.getCause());
@@ -732,6 +744,11 @@ public class UnlockTorIpsFrag extends Fragment {
 
                 });
             } catch (IOException e) {
+
+                if (unlockHostIP == null || rvAdapter == null || rvListHostip == null) {
+                    return;
+                }
+
                 host = "";
                 unlockHostIP.set(position, new HostIP(host, IP, false, true, active));
                 Log.e(LOG_TAG, "UnlockTorIpsFrag getHostOrIp exception " + e.getMessage() + " " + e.getCause());

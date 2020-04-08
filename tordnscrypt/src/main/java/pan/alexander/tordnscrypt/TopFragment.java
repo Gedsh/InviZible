@@ -61,6 +61,7 @@ import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStarterHelper;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.modules.ModulesVersions;
+import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.update.UpdateCheck;
 import pan.alexander.tordnscrypt.update.UpdateService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -174,7 +175,7 @@ public class TopFragment extends Fragment {
                 ModulesAux.requestModulesStatusUpdate(getActivity());
             }
 
-            if (!isModulesNotInstalled(getActivity()) && appVersion.endsWith("p")) {
+            if (PathVars.isModulesInstalled(getActivity()) && appVersion.endsWith("p")) {
                 checkAgreement();
             }
         }
@@ -288,7 +289,7 @@ public class TopFragment extends Fragment {
                     }
                 }
 
-                if (isModulesNotInstalled(getActivity())) {
+                if (!PathVars.isModulesInstalled(getActivity())) {
                     actionModulesNotInstalled();
                 } else {
 
@@ -591,12 +592,6 @@ public class TopFragment extends Fragment {
             }
         } catch (Exception ignored) {
         }
-    }
-
-    private boolean isModulesNotInstalled(Context context) {
-        return !new PrefManager(context).getBoolPref("DNSCrypt Installed")
-                || !new PrefManager(context).getBoolPref("Tor Installed")
-                || !new PrefManager(context).getBoolPref("I2PD Installed");
     }
 
     private void startModulesStarterServiceIfStoppedBySystem() {

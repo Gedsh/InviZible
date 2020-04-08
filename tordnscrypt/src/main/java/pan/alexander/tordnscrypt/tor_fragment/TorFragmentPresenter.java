@@ -32,12 +32,16 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
 
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.locks.ReentrantLock;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
@@ -87,6 +91,8 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     private volatile OwnFileReader logFile;
     private int displayLogPeriod = -1;
+
+    private final ReentrantLock reentrantLock = new ReentrantLock();
 
     public TorFragmentPresenter(TorFragmentView view) {
         this.view = view;
@@ -145,6 +151,10 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
     }
 
     private void setTorInstalled(boolean installed) {
+        if (view == null) {
+            return;
+        }
+
         if (installed) {
             view.setTorStartButtonEnabled(true);
         } else {
@@ -153,10 +163,18 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
     }
 
     private void setTorStarting(Context context, int percents) {
+        if (view == null) {
+            return;
+        }
+
         view.setTorStatus(context.getText(R.string.tvTorConnecting) + " " + percents + "%", R.color.textModuleStatusColorStarting);
     }
 
     private void setTorStarting() {
+        if (view == null) {
+            return;
+        }
+
         view.setTorStatus(R.string.tvTorStarting, R.color.textModuleStatusColorStarting);
     }
 
@@ -676,36 +694,50 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
         Thread thread = new Thread(() -> {
 
             try {
-                URL url = new URL("https://www.torproject.org/");
-                URLConnection connection = url.openConnection();
-                connection.setConnectTimeout(30000);
-                connection.connect();
 
                 if (view == null || view.getFragmentActivity() == null) {
                     return;
                 }
 
+                reentrantLock.lock();
+
                 Context context = view.getFragmentActivity();
+
                 boolean torReady = new PrefManager(context).getBoolPref("Tor Ready");
+
+                if (torReady) {
+                    reentrantLock.unlock();
+                    return;
+                }
+
+                Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1",
+                        Integer.parseInt(PathVars.getInstance(context).getTorHTTPTunnelPort())));
+
+                URL url = new URL("https://www.torproject.org/");
+
+                HttpsURLConnection con;
+                con = (HttpsURLConnection) url.openConnection(proxy);
+
+                con.setConnectTimeout(1000 * 60);
+                con.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 9.0.1; " +
+                        "Mi Mi) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Mobile Safari/537.36");
+                con.connect();
+
+                Log.i(LOG_TAG, "Tor connection is available. Tor ready.");
+
                 boolean useDefaultBridges = new PrefManager(context).getBoolPref("useDefaultBridges");
                 boolean useOwnBridges = new PrefManager(context).getBoolPref("useOwnBridges");
                 boolean bridgesSnowflakeDefault = new PrefManager(context).getStrPref("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
                 boolean bridgesSnowflakeOwn = new PrefManager(context).getStrPref("ownBridgesObfs").equals(snowFlakeBridgesOwn);
 
-                if (!torReady) {
+                new PrefManager(Objects.requireNonNull(context)).setBoolPref("Tor Ready", true);
 
-                    new PrefManager(Objects.requireNonNull(context)).setBoolPref("Tor Ready", true);
-
-                    if (useDefaultBridges && bridgesSnowflakeDefault || useOwnBridges && bridgesSnowflakeOwn) {
-                        if (modulesStatus != null && modulesStatus.getMode() == ROOT_MODE) {
-                            ModulesIptablesRules.denySystemDNS(context);
-                        } else if (modulesStatus != null && modulesStatus.getMode() == VPN_MODE) {
-                            ServiceVPNHelper.reload("Tor Deny system DNS", context);
-                        }
+                if (useDefaultBridges && bridgesSnowflakeDefault || useOwnBridges && bridgesSnowflakeOwn) {
+                    if (modulesStatus != null && modulesStatus.getMode() == ROOT_MODE) {
+                        ModulesIptablesRules.denySystemDNS(context);
+                    } else if (modulesStatus != null && modulesStatus.getMode() == VPN_MODE) {
+                        ServiceVPNHelper.reload("Tor Deny system DNS", context);
                     }
-
-                } else {
-                    return;
                 }
 
                 /////////////////Check Updates///////////////////////////////////////////////
@@ -714,6 +746,10 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
                 }
             } catch (Exception e) {
                 Log.w(LOG_TAG, "TorFragmentPresenter Internet Not Connected. " + e.getMessage() + " " + e.getCause());
+            } finally {
+                if (reentrantLock.isLocked()) {
+                    reentrantLock.unlock();
+                }
             }
         });
 

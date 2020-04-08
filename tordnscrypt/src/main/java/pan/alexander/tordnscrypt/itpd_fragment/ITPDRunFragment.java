@@ -35,8 +35,6 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import java.util.Objects;
-
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.utils.RootExecService;
@@ -124,8 +122,8 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
         super.onStop();
 
         try {
-            if (receiver != null) {
-                Objects.requireNonNull(getActivity()).unregisterReceiver(receiver);
+            if (getActivity() != null && receiver != null) {
+                getActivity().unregisterReceiver(receiver);
             }
         } catch (Exception e) {
             Log.e(LOG_TAG, "ITPDRunFragment onStop exception " + e.getMessage() + " " + e.getCause());

@@ -331,7 +331,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
                     lock = true;
 
                     try {
-                        TimeUnit.SECONDS.sleep(10);
+                        TimeUnit.SECONDS.sleep(5);
                     } catch (InterruptedException e) {
                         Log.w(LOG_TAG, "ModulesBroadcastReceiver sleep interruptedException " + e.getMessage());
                     }

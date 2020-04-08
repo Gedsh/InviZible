@@ -47,8 +47,6 @@ import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
-import java.util.Objects;
-
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDFragmentPresenter;
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDFragmentReceiver;
@@ -180,23 +178,29 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
         try {
             if (dnsCryptFragmentReceiver != null) {
-                Objects.requireNonNull(getActivity()).unregisterReceiver(dnsCryptFragmentReceiver);
+                getActivity().unregisterReceiver(dnsCryptFragmentReceiver);
             }
 
             if (torFragmentReceiver != null) {
-                Objects.requireNonNull(getActivity()).unregisterReceiver(torFragmentReceiver);
+                getActivity().unregisterReceiver(torFragmentReceiver);
             }
 
             if (itpdFragmentReceiver != null) {
-                Objects.requireNonNull(getActivity()).unregisterReceiver(itpdFragmentReceiver);
+                getActivity().unregisterReceiver(itpdFragmentReceiver);
             }
         } catch (Exception e) {
             Log.e(LOG_TAG, "MainFragment onStop exception " + e.getMessage() + " " + e.getCause());
         }
 
-        dnsCryptFragmentPresenter.onStop(getActivity());
-        torFragmentPresenter.onStop();
-        itpdFragmentPresenter.onStop();
+        if (dnsCryptFragmentPresenter != null) {
+            dnsCryptFragmentPresenter.onStop(getActivity());
+        }
+        if (torFragmentPresenter != null) {
+            torFragmentPresenter.onStop();
+        }
+        if (itpdFragmentPresenter != null) {
+            itpdFragmentPresenter.onStop();
+        }
     }
 
     @Override

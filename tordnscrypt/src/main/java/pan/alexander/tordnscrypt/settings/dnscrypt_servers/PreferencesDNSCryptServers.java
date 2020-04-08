@@ -677,6 +677,10 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
     }
 
     private boolean searchServer(String searchText) {
+        if (dNSServersAdapter == null || list_dns_servers == null || list_dns_servers_saved == null) {
+            return false;
+        }
+
         searchQuery  = searchText;
 
         if (searchText == null || searchText.isEmpty()) {
