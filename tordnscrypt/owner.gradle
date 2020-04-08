@@ -150,6 +150,8 @@ android {
         }
     }
 
+    viewBinding.enabled = true
+
 }
 
 

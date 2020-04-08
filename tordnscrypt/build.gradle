@@ -105,6 +105,8 @@ android {
         }
     }
 
+    viewBinding.enabled = true
+
 }
 
 repositories {
