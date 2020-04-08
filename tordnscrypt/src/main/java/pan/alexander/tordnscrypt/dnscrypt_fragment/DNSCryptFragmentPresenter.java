@@ -126,12 +126,12 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
     public void onStop(Context context) {
 
-        if (new PrefManager(view.getFragmentActivity()).getBoolPref("DNSCryptSystemDNSAllowed")) {
+        if (new PrefManager(context).getBoolPref("DNSCryptSystemDNSAllowed")) {
             if (modulesStatus.getMode() == ROOT_MODE) {
-                ModulesIptablesRules.denySystemDNS(view.getFragmentActivity());
+                ModulesIptablesRules.denySystemDNS(context);
             } else if (modulesStatus.getMode() == VPN_MODE) {
                 new PrefManager(context).setBoolPref("DNSCryptSystemDNSAllowed", false);
-                ServiceVPNHelper.reload("DNSCrypt Deny system DNS", view.getFragmentActivity());
+                ServiceVPNHelper.reload("DNSCrypt Deny system DNS", context);
             }
         }
 
@@ -574,7 +574,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     }
 
     private void runDNSCrypt(Context context) {
-        if (context == null) {
+        if (context == null || view == null) {
             return;
         }
 

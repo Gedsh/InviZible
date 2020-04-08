@@ -37,8 +37,6 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import java.util.Objects;
-
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.utils.RootExecService;
@@ -121,9 +119,13 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
     public void onStop() {
         super.onStop();
 
+        if (getActivity() == null) {
+            return;
+        }
+
         try {
             if (receiver != null) {
-                Objects.requireNonNull(getActivity()).unregisterReceiver(receiver);
+                getActivity().unregisterReceiver(receiver);
             }
         } catch (Exception e) {
             Log.e(LOG_TAG, "DNSCryptRunFragment onStop exception " + e.getMessage() + " " + e.getCause());
