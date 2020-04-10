@@ -45,6 +45,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
@@ -372,12 +374,47 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         builder.setPositiveButton(getText(R.string.ok), (dialogInterface, i) -> {
             List<String> bridgesListNew = new ArrayList<>();
-            String[] bridgesArrNew = input.getText().toString().split(System.lineSeparator());
+
+            String inputLinesStr = input.getText().toString().trim();
+
+            String inputBridgesType = "";
+            Pattern pattern = Pattern.compile("^(\\d{1,3}\\.){3}\\d{1,3}:\\d+ +\\w+");
+            if (inputLinesStr.contains("obfs4")) {
+                inputBridgesType = "obfs4";
+                pattern = Pattern.compile("^obfs4 +(\\d{1,3}\\.){3}\\d{1,3}:\\d+ +\\w+ +cert=.+ +iat-mode=\\d");
+            } else if (inputLinesStr.contains("obfs3")) {
+                inputBridgesType = "obfs3";
+                pattern = Pattern.compile("^obfs3 +(\\d{1,3}\\.){3}\\d{1,3}:\\d+ +\\w+");
+            } else if (inputLinesStr.contains("scramblesuit")) {
+                inputBridgesType = "scramblesuit";
+                pattern = Pattern.compile("^scramblesuit +(\\d{1,3}\\.){3}\\d{1,3}:\\d+ +\\w+( +password=\\w+)?");
+            } else if (inputLinesStr.contains("meek_lite")) {
+                inputBridgesType = "meek_lite";
+                pattern = Pattern.compile("^meek_lite +(\\d{1,3}\\.){3}\\d{1,3}:\\d+ +\\w+ +url=https://[\\w./]+ +front=[\\w./]+");
+            } else if (inputLinesStr.contains("snowflake")) {
+                inputBridgesType = "snowflake";
+                pattern = Pattern.compile("^snowflake +(\\d{1,3}\\.){3}\\d{1,3}:\\d+ +\\w+");
+            }
+
+            String[] bridgesArrNew;
+            if (inputBridgesType.isEmpty()) {
+                bridgesArrNew = inputLinesStr.split(System.lineSeparator());
+            } else {
+                bridgesArrNew = inputLinesStr.replace(System.lineSeparator(), " ").split(inputBridgesType);
+            }
 
             if (bridgesArrNew.length != 0) {
                 for (String brgNew : bridgesArrNew) {
-                    if (!brgNew.isEmpty()) {
-                        bridgesListNew.add(brgNew.trim());
+                    if (!brgNew.isEmpty() && inputBridgesType.isEmpty()) {
+                        Matcher matcher = pattern.matcher(brgNew.trim());
+                        if (matcher.matches()) {
+                            bridgesListNew.add(brgNew.trim());
+                        }
+                    } else if (!brgNew.isEmpty()) {
+                        Matcher matcher = pattern.matcher(inputBridgesType + " " + brgNew.trim());
+                        if (matcher.matches()) {
+                            bridgesListNew.add(inputBridgesType + " " + brgNew.trim());
+                        }
                     }
                 }
 
