@@ -27,8 +27,9 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.ResultReceiver;
-import androidx.annotation.RequiresApi;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -65,7 +66,7 @@ public class ApManager {
 
             if (method != null) {
                 Object on = method.invoke(wifiManager);
-                if (on != null && (Boolean)on) {
+                if (on != null && (Boolean) on) {
                     result = apStateON;
                 } else {
                     result = apStateOFF;
@@ -90,6 +91,7 @@ public class ApManager {
                     wifiManager.setWifiEnabled(false);
                 }
             }
+
 
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
                 result = configureHotspotBeforeNougat(wifiManager);
@@ -192,7 +194,7 @@ public class ApManager {
                 }
             } else if (apState == apStateON) {
                 if (mReservation instanceof WifiManager.LocalOnlyHotspotReservation) {
-                    ((WifiManager.LocalOnlyHotspotReservation)mReservation).close();
+                    ((WifiManager.LocalOnlyHotspotReservation) mReservation).close();
                     mReservation = null;
                 } else {
                     throw new Exception("ApManager mReservation = null");

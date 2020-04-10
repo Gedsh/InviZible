@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -163,7 +164,9 @@ public class RootExecService extends Service {
         if (!error.isEmpty() || exitCode != 0)  {
 
             String exitCodeStr = exitCode == 0 ? "" : "Exit code=" + exitCode + " ";
-            String errorStr = error.isEmpty() ? "" : "STDERR=" + error + " ";
+            String errorStr = error.isEmpty() ? "" : "STDERR="
+                    + new LinkedHashSet<>(error).toString()
+                    .replace(", Try `iptables -h' or 'iptables --help' for more information.", "") + " ";
             String resultStr = result.isEmpty() ? "" : "STDOUT=" + result;
 
             String errorMessageFinal = "Warning executing root commands.\n"
