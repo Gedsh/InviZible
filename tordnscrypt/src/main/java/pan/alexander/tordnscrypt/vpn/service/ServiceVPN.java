@@ -222,7 +222,8 @@ public class ServiceVPN extends VpnService {
 
     BuilderVPN getBuilder(List<Rule> listAllowed, List<Rule> listRule) {
         SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
-        boolean ip6 = prefs.getBoolean("ipv6", false);
+        //boolean ip6 = prefs.getBoolean("ipv6", true);
+        boolean ip6 = true;
         boolean subnet = prefs.getBoolean("VPN subnet", true);
         boolean tethering = prefs.getBoolean("VPN tethering", true);
         boolean lan = prefs.getBoolean("VPN lan", false);
@@ -319,8 +320,10 @@ public class ServiceVPN extends VpnService {
             builder.addRoute("0.0.0.0", 0);
         }
 
-        if (ip6)
-            builder.addRoute("2000::", 3); // unicast
+        if (ip6) {
+            builder.addRoute("::", 0);
+            //builder.addRoute("2000::", 3); // unicast
+        }
 
         // MTU
         int mtu = jni_get_mtu();
@@ -573,14 +576,21 @@ public class ServiceVPN extends VpnService {
 
     // Called from native code
     public void dnsResolved(ResourceRecord rr) {
-        if (!resourceRecords.isEmpty() && !rr.equals(resourceRecords.get(resourceRecords.size() - 1))) {
+        if (!resourceRecords.isEmpty()) {
+
+            ResourceRecord previousRR = resourceRecords.get(resourceRecords.size() - 1);
+
+            if (rr.equals(previousRR) || rr.AName.equals(previousRR.AName) && rr.QName.equals(previousRR.QName)
+                    && rr.HInfo.equals(previousRR.HInfo) && rr.Resource.equals(previousRR.Resource)) {
+                return;
+            }
 
             if (resourceRecords.size() > 200) {
                 resourceRecords.removeFirst();
             }
 
             resourceRecords.add(rr);
-        } else if (resourceRecords.isEmpty()) {
+        } else {
             resourceRecords.add(rr);
         }
         //Log.i(LOG_TAG, "VPN DNS resolved " + rr.toString());
@@ -641,6 +651,8 @@ public class ServiceVPN extends VpnService {
             // Allow self
             packet.allowed = true;
             Log.w(LOG_TAG, "Allowing self " + packet);
+        } else if (packet.saddr.contains(":") || packet.daddr.contains(":")){
+            Log.i(LOG_TAG, "Block ipv6 " + packet);
         } else if (blockHttp && packet.dport == 80 && !packet.daddr.matches("^10\\..+")) {
             Log.w(LOG_TAG, "Block http " + packet);
         } else if (packet.protocol == 17 /* UDP */ && !filterUDP) {
