@@ -149,7 +149,7 @@
         который не поддерживает шифрование. Используется только для скачивания списка серверов,
         которые поддерживают шифрование, если системный DNS сервер не работает. Он никогда не используется,
         если загружен список серверов, которые поддерживают шифрование. В Китае можно использовать 114.114.114.114 </string>
-    <string name="pref_dnscrypt_forwarding_rules_summ">Перенаправить запросы к выбраным сайтам на определенные сервера. Пока деактивированно.</string>
+    <string name="pref_dnscrypt_forwarding_rules_summ">Перенаправить запросы к выбраным сайтам на определенные сервера.</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking возвращает предопределенные адреса для
         выбранных сайтов. Работает как дополнительный HOSTS файл.</string>
     <string name="pref_dnscrypt_query_log_categ">Логировать запросы.</string>
@@ -405,4 +405,24 @@
     <string name="discard_changes">Отменить изменения</string>
     <string name="config_changes_dialog_message">Вы хотите сохранить изменения? Это может нарушить работу InviZible Pro.</string>
     <string name="helper_dnscrypt_private_dns">Пожалуйста, отключите \"Частный DNS\" в настройках телефона. Эта опция мешает работе DNSCrypt.</string>
+    <string name="import_dnscrypt_rules_dialog_title">Импорт правил</string>
+    <string name="import_dnscrypt_rules_dialog_message">Пожалуйста подождите… Импортировано %d правил(а).</string>
+    <string name="import_dnscrypt_rules_complete_dialog_message">Готово! Импортировано %d правил(а).</string>
+    <string name="pref_dnscrypt_import_blacklist">Импортировать черный список</string>
+    <string name="pref_dnscrypt_import_blacklist_summ">Импортировать список доменов или файл hosts. Вы можете выбрать несколько файлов, повторяющиеся строки будут удалены.</string>
+    <string name="pref_dnscrypt_erase_blacklist">Стереть черный список</string>
+    <string name="pref_dnscrypt_import_ipblacklist">Импортировать черный список IP</string>
+    <string name="pref_dnscrypt_import_ipblacklist_summ">Импортировать черный список IP. Вы можете выбрать несколько файлов, повторяющиеся строки будут удалены.</string>
+    <string name="pref_dnscrypt_erase_ipblacklist">Стереть черный список IP</string>
+    <string name="pref_dnscrypt_import_whitelist">Импортировать белый список</string>
+    <string name="pref_dnscrypt_import_whitelist_summ">Импортировать список доменов. Вы можете выбрать несколько файлов, повторяющиеся строки будут удалены.</string>
+    <string name="pref_dnscrypt_erase_whitelist">Стереть белый список</string>
+    <string name="pref_dnscrypt_import_forwarding_rules">Импортировать forwarding rules</string>
+    <string name="pref_dnscrypt_import_forwarding_rules_summ">Импортировать файлы перенаправлений. Вы можете выбрать несколько файлов, повторяющиеся строки будут удалены.</string>
+    <string name="pref_dnscrypt_erase_forwarding_rules">Очистить forwarding rules</string>
+    <string name="pref_dnscrypt_import_cloaking_rules">Импортировать cloaking rules</string>
+    <string name="pref_dnscrypt_import_cloaking_rules_summ">Импортировать файлы переопределений. Вы можете выбрать несколько файлов, повторяющиеся строки будут удалены.</string>
+    <string name="pref_dnscrypt_erase_cloaking_rules">Очистить cloaking rules</string>
+    <string name="erase_dnscrypt_rules_dialog_message">Готово! Правила стерты.</string>
+    <string name="dnscrypt_many_rules_dialog_message">Слишком много правил для отображения. Показана только первая 1000.</string>
 </resources>

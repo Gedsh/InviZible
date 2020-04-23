@@ -112,10 +112,90 @@
             android:title="@string/pref_dnscrypt_block_undelegated"
             android:summary="@string/pref_dnscrypt_block_undelegated_summ"/>
     </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_dnscrypt_blacklist_categ"
+        android:key="pref_dnscrypt_blacklist">
+        <Preference
+            android:key="blacklist"
+            android:title="@string/pref_dnscrypt_blacklist"
+            android:summary="@string/pref_dnscrypt_blacklist_summ">
+            <intent
+                android:action="blacklist_Pref"
+                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetPackage="@string/package_name" />
+        </Preference>
+        <com.github.angads25.filepicker.view.FilePickerPreference
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:key="local_blacklist"
+            android:title="@string/pref_dnscrypt_import_blacklist"
+            android:summary="@string/pref_dnscrypt_import_blacklist_summ"
+            android:defaultValue="/storage/emulated/0/Download:"
+            app:error_dir="/storage/emulated/0/Downloads"
+            app:root_dir="/storage/emulated/0/Download"
+            app:selection_mode="multi_mode"
+            app:selection_type="file_select"
+            app:extensions="txt:"/>
+        <Preference
+            android:key="erase_blacklist"
+            android:title="@string/pref_dnscrypt_erase_blacklist">
+        </Preference>
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_dnscrypt_whitelist_categ"
+        android:key="pref_dnscrypt_whitelist">
+        <Preference
+            android:key="whitelist"
+            android:title="@string/pref_dnscrypt_whitelist"
+            android:summary="@string/pref_dnscrypt_whitelist_summ">
+            <intent
+                android:action="whitelist_Pref"
+                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetPackage="@string/package_name" />
+        </Preference>
+        <com.github.angads25.filepicker.view.FilePickerPreference
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:key="local_whitelist"
+            android:title="@string/pref_dnscrypt_import_whitelist"
+            android:summary="@string/pref_dnscrypt_import_whitelist_summ"
+            android:defaultValue="/storage/emulated/0/Download:"
+            app:error_dir="/storage/emulated/0/Downloads"
+            app:root_dir="/storage/emulated/0/Download"
+            app:selection_mode="multi_mode"
+            app:selection_type="file_select"
+            app:extensions="txt:"/>
+        <Preference
+            android:key="erase_whitelist"
+            android:title="@string/pref_dnscrypt_erase_whitelist">
+        </Preference>
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_dnscrypt_ipblacklist_categ"
+        android:key="pref_dnscrypt_ipblacklist">
+        <Preference
+            android:key="ipblacklist"
+            android:title="@string/pref_dnscrypt_ipblacklist"
+            android:summary="@string/pref_dnscrypt_ipblacklist_summ">
+            <intent
+                android:action="ipblacklist_Pref"
+                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetPackage="@string/package_name" />
+        </Preference>
+        <com.github.angads25.filepicker.view.FilePickerPreference
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:key="local_ipblacklist"
+            android:title="@string/pref_dnscrypt_import_ipblacklist"
+            android:summary="@string/pref_dnscrypt_import_ipblacklist_summ"
+            android:defaultValue="/storage/emulated/0/Download:"
+            app:error_dir="/storage/emulated/0/Downloads"
+            app:root_dir="/storage/emulated/0/Download"
+            app:selection_mode="multi_mode"
+            app:selection_type="file_select"
+            app:extensions="txt:"/>
+        <Preference
+            android:key="erase_ipblacklist"
+            android:title="@string/pref_dnscrypt_erase_ipblacklist">
+        </Preference>
+    </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_dnscrypt_forwarding_rules_categ"
         android:key="pref_dnscrypt_forwarding_rules">
         <Preference
-            android:enabled="false"
             android:key="forwarding_rules"
             android:title="@string/pref_dnscrypt_forwarding_rules"
             android:summary="@string/pref_dnscrypt_forwarding_rules_summ">
@@ -124,7 +204,21 @@
                 android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
-
+        <com.github.angads25.filepicker.view.FilePickerPreference
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:key="local_forwarding_rules"
+            android:title="@string/pref_dnscrypt_import_forwarding_rules"
+            android:summary="@string/pref_dnscrypt_import_forwarding_rules_summ"
+            android:defaultValue="/storage/emulated/0/Download:"
+            app:error_dir="/storage/emulated/0/Downloads"
+            app:root_dir="/storage/emulated/0/Download"
+            app:selection_mode="multi_mode"
+            app:selection_type="file_select"
+            app:extensions="txt:"/>
+        <Preference
+            android:key="erase_forwarding_rules"
+            android:title="@string/pref_dnscrypt_erase_forwarding_rules">
+        </Preference>
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_dnscrypt_cloaking_rules_categ"
         android:key="pref_dnscrypt_cloaking_rules">
@@ -137,7 +231,21 @@
                 android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
-
+        <com.github.angads25.filepicker.view.FilePickerPreference
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:key="local_cloaking_rules"
+            android:title="@string/pref_dnscrypt_import_cloaking_rules"
+            android:summary="@string/pref_dnscrypt_import_cloaking_rules_summ"
+            android:defaultValue="/storage/emulated/0/Download:"
+            app:error_dir="/storage/emulated/0/Downloads"
+            app:root_dir="/storage/emulated/0/Download"
+            app:selection_mode="multi_mode"
+            app:selection_type="file_select"
+            app:extensions="txt:"/>
+        <Preference
+            android:key="erase_cloaking_rules"
+            android:title="@string/pref_dnscrypt_erase_cloaking_rules">
+        </Preference>
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_dnscrypt_query_log_categ"
         android:key="pref_dnscrypt_query_log">
@@ -183,45 +291,6 @@
                 android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
-    </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_dnscrypt_blacklist_categ"
-        android:key="pref_dnscrypt_blacklist">
-        <Preference
-            android:key="blacklist"
-            android:title="@string/pref_dnscrypt_blacklist"
-            android:summary="@string/pref_dnscrypt_blacklist_summ">
-            <intent
-                android:action="blacklist_Pref"
-                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
-                android:targetPackage="@string/package_name" />
-        </Preference>
-
-    </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_dnscrypt_ipblacklist_categ"
-        android:key="pref_dnscrypt_ipblacklist">
-        <Preference
-            android:key="ipblacklist"
-            android:title="@string/pref_dnscrypt_ipblacklist"
-            android:summary="@string/pref_dnscrypt_ipblacklist_summ">
-            <intent
-                android:action="ipblacklist_Pref"
-                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
-                android:targetPackage="@string/package_name" />
-        </Preference>
-
-    </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_dnscrypt_whitelist_categ"
-        android:key="pref_dnscrypt_whitelist">
-        <Preference
-            android:key="whitelist"
-            android:title="@string/pref_dnscrypt_whitelist"
-            android:summary="@string/pref_dnscrypt_whitelist_summ">
-            <intent
-                android:action="whitelist_Pref"
-                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
-                android:targetPackage="@string/package_name" />
-        </Preference>
-
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_dnscrypt_sources_categ"
         android:key="pref_dnscrypt_servers">

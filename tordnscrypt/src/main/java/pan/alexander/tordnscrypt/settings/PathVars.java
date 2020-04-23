@@ -251,4 +251,64 @@ public class PathVars {
         String itpdSocksPort = preferences.getString("Socks proxy port", "4447");
         return itpdSocksPort.replaceAll(".+:", "");
     }
+
+    public String getDNSCryptBlackListPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/blacklist.txt";
+    }
+
+    public String getDNSCryptLocalBlackListPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/blacklist-local.txt";
+    }
+
+    public String getDNSCryptRemoteBlackListPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/blacklist-remote.txt";
+    }
+
+    public String getDNSCryptIPBlackListPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/ip-blacklist.txt";
+    }
+
+    public String getDNSCryptLocalIPBlackListPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/ip-blacklist-local.txt";
+    }
+
+    public String getDNSCryptRemoteIPBlackListPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/ip-blacklist-remote.txt";
+    }
+
+    public String getDNSCryptWhiteListPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/whitelist.txt";
+    }
+
+    public String getDNSCryptLocalWhiteListPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/whitelist-local.txt";
+    }
+
+    public String getDNSCryptRemoteWhiteListPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/whitelist-remote.txt";
+    }
+
+    public String getDNSCryptCloakingRulesPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/cloaking-rules.txt";
+    }
+
+    public String getDNSCryptLocalCloakingRulesPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/cloaking-rules-local.txt";
+    }
+
+    public String getDNSCryptRemoteCloakingRulesPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/cloaking-rules-remote.txt";
+    }
+
+    public String getDNSCryptForwardingRulesPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/forwarding-rules.txt";
+    }
+
+    public String getDNSCryptLocalForwardingRulesPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/forwarding-rules-local.txt";
+    }
+
+    public String getDNSCryptRemoteForwardingRulesPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/forwarding-rules-remote.txt";
+    }
 }

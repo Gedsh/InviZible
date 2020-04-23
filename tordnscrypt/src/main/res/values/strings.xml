@@ -296,12 +296,18 @@
 
     <string name="pref_dnscrypt_forwarding_rules_categ" translatable="false">Forwarding rules.</string>
     <string name="pref_dnscrypt_forwarding_rules" translatable="false">forwarding_rules</string>
-    <string name="pref_dnscrypt_forwarding_rules_summ">Route queries for specific domains to a dedicated set of servers. Disabled temporally </string>
+    <string name="pref_dnscrypt_forwarding_rules_summ">Route queries for specific domains to a dedicated set of servers.</string>
+    <string name="pref_dnscrypt_import_forwarding_rules">Import forwarding rules</string>
+    <string name="pref_dnscrypt_import_forwarding_rules_summ">Import a forwarding rules file. You can select multiple files, duplicate lines will be removed.</string>
+    <string name="pref_dnscrypt_erase_forwarding_rules">Erase forwarding rules</string>
 
     <string name="pref_dnscrypt_cloaking_rules_categ" translatable="false">Cloaking rules.</string>
     <string name="pref_dnscrypt_cloaking_rules" translatable="false">cloaking_rules</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking returns a predefined address for a specific name.\n
         In addition to acting as a HOSTS file, it can also return the IP address of a different name. It will also do CNAME flattening..</string>
+    <string name="pref_dnscrypt_import_cloaking_rules">Import cloaking rules</string>
+    <string name="pref_dnscrypt_import_cloaking_rules_summ">Import a cloaking rules file. You can select multiple files, duplicate lines will be removed.</string>
+    <string name="pref_dnscrypt_erase_cloaking_rules">Erase cloaking rules</string>
 
     <string name="pref_dnscrypt_query_log_categ">Query logging.</string>
     <string name="pref_dnscrypt_query_log_summ">Log client queries to a file.</string>
@@ -319,14 +325,24 @@
     <string name="pref_dnscrypt_blacklist_categ">Pattern-based blocking (blacklist).</string>
     <string name="pref_dnscrypt_blacklist">Blacklist</string>
     <string name="pref_dnscrypt_blacklist_summ">Blacklist are made of one pattern per line.</string>
+    <string name="pref_dnscrypt_import_blacklist">Import blacklist</string>
+    <string name="pref_dnscrypt_import_blacklist_summ">Import a domain list or hosts file. You can select multiple files, duplicate lines will be removed.</string>
+    <string name="pref_dnscrypt_erase_blacklist">Erase blacklist</string>
+
 
     <string name="pref_dnscrypt_ipblacklist_categ">Pattern-based IP blocking (IP blacklist).</string>
     <string name="pref_dnscrypt_ipblacklist">IP Blacklist</string>
     <string name="pref_dnscrypt_ipblacklist_summ">IP Blacklist are made of one pattern per line.</string>
+    <string name="pref_dnscrypt_import_ipblacklist">Import IP blacklist</string>
+    <string name="pref_dnscrypt_import_ipblacklist_summ">Import IP blacklist. You can select multiple files, duplicate lines will be removed.</string>
+    <string name="pref_dnscrypt_erase_ipblacklist">Erase IP blacklist</string>
 
     <string name="pref_dnscrypt_whitelist_categ">Pattern-based whitelisting (blacklists bypass).</string>
     <string name="pref_dnscrypt_whitelist">Whitelist</string>
     <string name="pref_dnscrypt_whitelist_summ">Whitelist support the same patterns as blacklists. If a name matches a whitelist entry, the corresponding session will bypass names and IP filters.</string>
+    <string name="pref_dnscrypt_import_whitelist">Import whitelist</string>
+    <string name="pref_dnscrypt_import_whitelist_summ">Import a domain list. You can select multiple files, duplicate lines will be removed.</string>
+    <string name="pref_dnscrypt_erase_whitelist">Erase whitelist</string>
 
     <string name="pref_dnscrypt_sources_categ">Servers</string>
     <string name="pref_dnscrypt_sources">Sources</string>
@@ -360,6 +376,13 @@
     <string name="pref_dnscrypt_edit_toml">Edit dnscrypt-proxy.toml directly</string>
 
     <string name="helper_dnscrypt_private_dns">Please turn off \"Private DNS\" in Android network settings. This option interferes with DNSCrypt.</string>
+
+    <string name="import_dnscrypt_rules_dialog_title">Import Rules</string>
+    <string name="import_dnscrypt_rules_dialog_message">Please wait… Imported %d rules.</string>
+    <string name="import_dnscrypt_rules_complete_dialog_message">Done! Imported %d rules.</string>
+    <string name="erase_dnscrypt_rules_dialog_message">Done! The rules are erased.</string>
+    <string name="dnscrypt_many_rules_dialog_message">Too many rules to display. Only the first 1000 is shown.</string>
+
 
     <string name="pref_tor_virtual_addr_network_IPv4" translatable="false">VirtualAddrNetworkIPv4</string>
     <string name="pref_tor_virtual_addr_network_IPv4_summ">When Tor needs to assign a virtual (unused) address because of a MAPADDRESS command from the controller or the AutomapHostsOnResolve feature, Tor picks an unassigned address from this range.</string>
