@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.settings;
+package pan.alexander.tordnscrypt.settings.show_rules;
 /*
     This file is part of InviZible Pro.
 
@@ -27,6 +27,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import androidx.appcompat.widget.LinearLayoutCompat;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -45,10 +46,10 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -56,9 +57,6 @@ import pan.alexander.tordnscrypt.utils.PrefManager;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 
-/**
- * A simple {@link Fragment} subclass.
- */
 public class ShowRulesRecycleFrag extends Fragment {
 
     private RecyclerView mRecyclerView;
@@ -68,6 +66,7 @@ public class ShowRulesRecycleFrag extends Fragment {
     private ArrayList<String> others_list;
     private ArrayList<String> original_rules;
     private FloatingActionButton btnAddRule;
+    private boolean readOnly;
 
 
     public ShowRulesRecycleFrag() {}
@@ -103,11 +102,22 @@ public class ShowRulesRecycleFrag extends Fragment {
         rules_list = new ArrayList<>();
         others_list = new ArrayList<>();
         original_rules = new ArrayList<>();
-        String[] lockedItems = {"stun.", ".in-addr.arpa", "in-adr.arpa", ".i2p", ".lib", ".onion"};
+        String[] lockedItems = {".i2p", "onion"};
         boolean match;
         boolean active;
         boolean locked;
         boolean subscription;
+
+        if (rules_file.size() > 1000) {
+            rules_file.subList(1000, rules_file.size()).clear();
+            rules_file.trimToSize();
+            readOnly = true;
+
+            DialogFragment dialogFragment = NotificationDialogFragment.newInstance(R.string.dnscrypt_many_rules_dialog_message);
+            if (isAdded()) {
+                dialogFragment.show(getParentFragmentManager(), "TooManyRules");
+            }
+        }
 
         for (int i = 0; i < rules_file.size(); i++) {
             match = !rules_file.get(i).matches("#.*#.*") && !rules_file.get(i).isEmpty();
@@ -150,30 +160,35 @@ public class ShowRulesRecycleFrag extends Fragment {
         final RecyclerView.Adapter mAdapter = new RulesAdapter(rules_list);
         mRecyclerView.setAdapter(mAdapter);
 
-        if (file_path.contains("forwarding_rules.txt")) {
+        if (file_path.endsWith("forwarding-rules.txt")) {
             getActivity().setTitle(R.string.title_dnscrypt_forwarding_rules);
-        } else if (file_path.contains("cloaking_rules.txt")) {
+        } else if (file_path.endsWith("cloaking-rules.txt")) {
             getActivity().setTitle(R.string.title_dnscrypt_cloaking_rules);
-        } else if (file_path.contains("blacklist.txt")) {
-            getActivity().setTitle(R.string.title_dnscrypt_blacklist);
-        } else if (file_path.contains("ip-blacklist.txt")) {
+        } else if (file_path.endsWith("ip-blacklist.txt")) {
             getActivity().setTitle(R.string.title_dnscrypt_ip_blacklist);
-        } else if (file_path.contains("whitelist.txt")) {
+        } else if (file_path.endsWith("blacklist.txt")) {
+            getActivity().setTitle(R.string.title_dnscrypt_blacklist);
+        } else if (file_path.endsWith("whitelist.txt")) {
             getActivity().setTitle(R.string.title_dnscrypt_whitelist);
-        } else if (file_path.contains("subscriptions")) {
+        } else if (file_path.endsWith("subscriptions")) {
             getActivity().setTitle(R.string.pref_itpd_addressbook_subscriptions);
         }
 
-
         btnAddRule = getActivity().findViewById(R.id.floatingBtnAddRule);
-        btnAddRule.setAlpha(0.8f);
-        btnAddRule.setOnClickListener(v -> {
-            boolean subscription = file_path.contains("subscriptions");
-            rules_list.add(new Rules("", true, false, subscription));
-            mAdapter.notifyDataSetChanged();
-            mRecyclerView.scrollToPosition(rules_list.size() - 1);
-        });
-        btnAddRule.requestFocus();
+        if (readOnly) {
+            btnAddRule.setVisibility(View.GONE);
+        } else {
+            btnAddRule.setAlpha(0.8f);
+            btnAddRule.setOnClickListener(v -> {
+                boolean subscription = file_path.contains("subscriptions");
+                rules_list.add(new Rules("", true, false, subscription));
+                mAdapter.notifyDataSetChanged();
+                mRecyclerView.scrollToPosition(rules_list.size() - 1);
+            });
+            btnAddRule.requestFocus();
+        }
+
+
 
     }
 
@@ -223,26 +238,10 @@ public class ShowRulesRecycleFrag extends Fragment {
         }
     }
 
-    public class Rules {
-
-        String text;
-        boolean active;
-        boolean locked;
-        boolean subscription;
-
-
-        Rules(String text, boolean active, boolean locked, boolean subscription) {
-            this.text = text;
-            this.active = active;
-            this.locked = locked;
-            this.subscription = subscription;
-        }
-    }
-
     public class RulesAdapter extends RecyclerView.Adapter<RulesAdapter.RuleViewHolder> {
 
         ArrayList<Rules> list_rules_adapter;
-        LayoutInflater lInflater = (LayoutInflater) Objects.requireNonNull(getActivity()).getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        LayoutInflater lInflater = (LayoutInflater) requireActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         RulesAdapter(ArrayList<Rules> rules_list) {
             list_rules_adapter = rules_list;
@@ -295,12 +294,18 @@ public class ShowRulesRecycleFrag extends Fragment {
                 delBtnRules = itemView.findViewById(R.id.delBtnRules);
                 llRules = itemView.findViewById(R.id.llRules);
                 swRuleActive = itemView.findViewById(R.id.swRuleActive);
-                if (!file_path.contains("subscriptions")) {
-                    swRuleActive.setOnCheckedChangeListener(activeListener);
-                    swRuleActive.setOnFocusChangeListener(onFocusChangeListener);
+
+                if (readOnly) {
+                    delBtnRules.setVisibility(View.GONE);
+                    swRuleActive.setVisibility(View.GONE);
+                } else {
+                    if (!file_path.contains("subscriptions")) {
+                        swRuleActive.setOnCheckedChangeListener(activeListener);
+                        swRuleActive.setOnFocusChangeListener(onFocusChangeListener);
+                    }
+                    etRule.addTextChangedListener(textWatcher);
+                    delBtnRules.setOnClickListener(onClickListener);
                 }
-                etRule.addTextChangedListener(textWatcher);
-                delBtnRules.setOnClickListener(onClickListener);
             }
 
             void bind(int position) {
@@ -309,7 +314,7 @@ public class ShowRulesRecycleFrag extends Fragment {
 
                 if (getRule(position).subscription) {
                     swRuleActive.setVisibility(View.GONE);
-                } else {
+                } else if (!readOnly) {
                     swRuleActive.setVisibility(View.VISIBLE);
                     swRuleActive.setChecked(getRule(position).active);
                 }

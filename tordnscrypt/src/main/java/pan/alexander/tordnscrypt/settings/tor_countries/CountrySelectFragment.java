@@ -40,8 +40,8 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
-import static pan.alexander.tordnscrypt.settings.PreferencesTorFragment.key_tor;
-import static pan.alexander.tordnscrypt.settings.PreferencesTorFragment.val_tor;
+import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.key_tor;
+import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.val_tor;
 
 public class CountrySelectFragment extends Fragment implements CompoundButton.OnCheckedChangeListener, SearchView.OnQueryTextListener {
 

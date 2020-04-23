@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.settings;
+package pan.alexander.tordnscrypt.settings.tor_preferences;
 /*
     This file is part of InviZible Pro.
 
@@ -40,6 +40,8 @@ import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.settings.ConfigEditorFragment;
+import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.tor_countries.CountrySelectFragment;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
@@ -51,8 +53,8 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
 public class PreferencesTorFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener {
 
-    static final String ISOLATE_DEST_ADDRESS = "IsolateDestAddr";
-    static final String ISOLATE_DEST_PORT = "IsolateDestPort";
+    public static final String ISOLATE_DEST_ADDRESS = "IsolateDestAddr";
+    public static final String ISOLATE_DEST_PORT = "IsolateDestPort";
     public static ArrayList<String> key_tor;
     public static ArrayList<String> val_tor;
     private ArrayList<String> key_tor_orig;
@@ -258,6 +260,10 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 key_tor.set(key_tor.indexOf("DNSPort"), "#DNSPort");
             }
             return true;
+        } else if (Objects.equals(preference.getKey(), "DNSPort")) {
+            ModifyForwardingRules modifyForwardingRules = new ModifyForwardingRules(getActivity(),
+                    "onion 127.0.0.1:" + newValue.toString().trim());
+            modifyForwardingRules.start();
         } else if (Objects.equals(preference.getKey(), "pref_tor_snowflake_stun")) {
             if (key_tor.contains("ClientTransportPlugin") && getActivity() != null) {
                 boolean saveExtendedLogs = new PrefManager(getActivity()).getBoolPref("swRootCommandsLog");
@@ -342,11 +348,11 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
     }
 
     private void openCountrySelectFragment(int nodesType, String keyStr) {
-        if (getFragmentManager() == null) {
+        if (!isAdded()) {
             return;
         }
 
-        FragmentTransaction fTrans = getFragmentManager().beginTransaction();
+        FragmentTransaction fTrans = getParentFragmentManager().beginTransaction();
         fTrans.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
         Fragment frg = new CountrySelectFragment();
         Bundle bndl = new Bundle();
@@ -360,7 +366,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
     @Override
     public boolean onPreferenceClick(Preference preference) {
-        if (getActivity() == null) {
+        if (getActivity() == null || !isAdded()) {
             return false;
         }
 
@@ -390,7 +396,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
             return true;
         } else if ("editTorConfDirectly".equals(preference.getKey())) {
-            ConfigEditorFragment.openEditorFragment(getFragmentManager(), "tor.conf");
+            ConfigEditorFragment.openEditorFragment(getParentFragmentManager(), "tor.conf");
             return true;
         }
         return false;

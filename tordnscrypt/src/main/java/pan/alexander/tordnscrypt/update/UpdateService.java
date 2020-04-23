@@ -98,7 +98,8 @@ public class UpdateService extends Service {
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         wakeLocksManager = WakeLocksManager.getInstance();
-        if (!sharedPreferences.getBoolean("swWakelock", false) || !wakeLocksManager.isWakeLockHeld()) {
+        if (!sharedPreferences.getBoolean("swWakelock", false)
+                || !wakeLocksManager.isPowerWakeLockHeld() && !wakeLocksManager.isWiFiWakeLockHeld()) {
             wakeLocksManager.managePowerWakelock(this, true);
             wakeLocksManager.manageWiFiLock(this, true);
         } else {

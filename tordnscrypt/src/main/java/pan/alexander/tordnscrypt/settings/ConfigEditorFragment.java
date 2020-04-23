@@ -147,7 +147,7 @@ public class ConfigEditorFragment extends Fragment implements OnTextFileOperatio
         }
     }
 
-    static void openEditorFragment(FragmentManager fragmentManager, String fileName) {
+    public static void openEditorFragment(FragmentManager fragmentManager, String fileName) {
         Bundle bundle = new Bundle();
         bundle.putString("fileName", fileName);
         ConfigEditorFragment configEditorFragment = new ConfigEditorFragment();

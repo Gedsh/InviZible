@@ -86,7 +86,6 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
         preferences.add(findPreference("HTTP proxy port"));
         preferences.add(findPreference("HTTP outproxy"));
         preferences.add(findPreference("HTTP outproxy address"));
-        preferences.add(findPreference("HTTP outproxy port"));
         preferences.add(findPreference("Socks proxy"));
         preferences.add(findPreference("Socks proxy port"));
         preferences.add(findPreference("Socks outproxy"));

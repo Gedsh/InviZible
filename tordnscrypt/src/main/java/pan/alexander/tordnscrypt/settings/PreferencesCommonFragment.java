@@ -59,8 +59,8 @@ import pan.alexander.tordnscrypt.utils.file_operations.OnTextFileOperationsCompl
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
-import static pan.alexander.tordnscrypt.settings.PreferencesTorFragment.ISOLATE_DEST_ADDRESS;
-import static pan.alexander.tordnscrypt.settings.PreferencesTorFragment.ISOLATE_DEST_PORT;
+import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.ISOLATE_DEST_ADDRESS;
+import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.ISOLATE_DEST_PORT;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -154,20 +154,16 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             getActivity(), getText(R.string.verifier_error).toString(), "5889");
-                    if (notificationHelper != null) {
-                        if (getFragmentManager() != null) {
-                            notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
-                        }
+                    if (notificationHelper != null && isAdded()) {
+                        notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
                     }
                 }
 
             } catch (Exception e) {
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                         getActivity(), getText(R.string.verifier_error).toString(), "5804");
-                if (notificationHelper != null) {
-                    if (getFragmentManager() != null) {
-                        notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
-                    }
+                if (notificationHelper != null && isAdded()) {
+                    notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
                 }
                 Log.e(LOG_TAG, "PreferencesCommonFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                         Arrays.toString(e.getStackTrace()));
@@ -190,8 +186,8 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                     intent.setAction(ModulesService.actionDismissNotification);
                     getActivity().startService(intent);
                     InfoNotificationProtectService infoNotification = new InfoNotificationProtectService();
-                    if (getFragmentManager() != null) {
-                        infoNotification.show(getFragmentManager(), "dialogProtectService");
+                    if (isAdded()) {
+                        infoNotification.show(getParentFragmentManager(), "dialogProtectService");
                     }
                 }
                 break;

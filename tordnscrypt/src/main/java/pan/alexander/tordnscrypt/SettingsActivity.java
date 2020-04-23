@@ -40,7 +40,7 @@ import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges;
 import pan.alexander.tordnscrypt.settings.SettingsParser;
 import pan.alexander.tordnscrypt.settings.ShowLogFragment;
-import pan.alexander.tordnscrypt.settings.ShowRulesRecycleFrag;
+import pan.alexander.tordnscrypt.settings.show_rules.ShowRulesRecycleFrag;
 import pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment;
 import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;

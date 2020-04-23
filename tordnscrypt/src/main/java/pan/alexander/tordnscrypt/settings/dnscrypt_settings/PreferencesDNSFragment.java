@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.settings;
+package pan.alexander.tordnscrypt.settings.dnscrypt_settings;
 /*
     This file is part of InviZible Pro.
 
@@ -19,13 +19,13 @@ package pan.alexander.tordnscrypt.settings;
 */
 
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.Toast;
+
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceScreen;
-
-import android.util.Log;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -34,16 +34,22 @@ import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.dialogs.progressDialogs.ImportRulesDialog;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.settings.ConfigEditorFragment;
+import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.enums.DNSCryptRulesVariant;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
-public class PreferencesDNSFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener {
+public class PreferencesDNSFragment extends PreferenceFragmentCompat
+        implements Preference.OnPreferenceChangeListener,
+        Preference.OnPreferenceClickListener {
 
     private ArrayList<String> key_toml;
     private ArrayList<String> val_toml;
@@ -85,18 +91,35 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
         preferences.add(findPreference("refresh_delay_relays"));
         preferences.add(findPreference("block_unqualified"));
         preferences.add(findPreference("block_undelegated"));
+        preferences.add(findPreference("local_blacklist"));
+        preferences.add(findPreference("local_whitelist"));
+        preferences.add(findPreference("local_ipblacklist"));
+        preferences.add(findPreference("local_forwarding_rules"));
+        preferences.add(findPreference("local_cloaking_rules"));
 
         for (Preference preference : preferences) {
             if (preference != null) {
                 preference.setOnPreferenceChangeListener(this);
-            } else if (!appVersion.startsWith("g")){
+            } else if (!appVersion.startsWith("g")) {
                 Log.e(LOG_TAG, "PreferencesDNSFragment preference is null exception");
             }
         }
 
-        Preference editDNSTomlDirectly = findPreference("editDNSTomlDirectly");
-        if (editDNSTomlDirectly != null) {
-            editDNSTomlDirectly.setOnPreferenceClickListener(this);
+        preferences = new ArrayList<>();
+
+        preferences.add(findPreference("erase_blacklist"));
+        preferences.add(findPreference("erase_whitelist"));
+        preferences.add(findPreference("erase_ipblacklist"));
+        preferences.add(findPreference("erase_forwarding_rules"));
+        preferences.add(findPreference("erase_cloaking_rules"));
+        preferences.add(findPreference("editDNSTomlDirectly"));
+
+        for (Preference preference : preferences) {
+            if (preference != null) {
+                preference.setOnPreferenceClickListener(this);
+            } else if (!appVersion.startsWith("g")) {
+                Log.e(LOG_TAG, "PreferencesDNSFragment preference is null exception");
+            }
         }
 
         if (getArguments() != null) {
@@ -164,6 +187,10 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
 
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
+
+        if (getActivity() == null) {
+            return false;
+        }
 
         try {
             if (Objects.equals(preference.getKey(), "listen_port")) {
@@ -233,6 +260,21 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
                     }
                 }
                 return true;
+            } else if (Objects.equals(preference.getKey().trim(), "local_blacklist") && isAdded()) {
+                importRules(DNSCryptRulesVariant.BLACKLIST_HOSTS, newValue);
+                return true;
+            } else if (Objects.equals(preference.getKey().trim(), "local_whitelist") && isAdded()) {
+                importRules(DNSCryptRulesVariant.WHITELIST_HOSTS, newValue);
+                return true;
+            } else if (Objects.equals(preference.getKey().trim(), "local_ipblacklist") && isAdded()) {
+                importRules(DNSCryptRulesVariant.BLACKLIST_IPS, newValue);
+                return true;
+            }  else if (Objects.equals(preference.getKey().trim(), "local_forwarding_rules") && isAdded()) {
+                importRules(DNSCryptRulesVariant.FORWARDING, newValue);
+                return true;
+            }  else if (Objects.equals(preference.getKey().trim(), "local_cloaking_rules") && isAdded()) {
+                importRules(DNSCryptRulesVariant.CLOAKING, newValue);
+                return true;
             }
 
             if (key_toml.contains(preference.getKey().trim())) {
@@ -249,13 +291,54 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
         return false;
     }
 
+    private void importRules(DNSCryptRulesVariant dnsCryptRulesVariant, Object newValue) {
+
+        if (getActivity() == null) {
+            return;
+        }
+
+        String filePath = newValue.toString();
+
+        ImportRules importRules = new ImportRules(getActivity(), dnsCryptRulesVariant,
+                true, filePath);
+        ImportRulesDialog importRulesDialog = ImportRulesDialog.newInstance();
+        importRules.setOnDNSCryptRuleAddLineListener(importRulesDialog);
+        importRulesDialog.show(getParentFragmentManager(), "ImportRulesDialog");
+        importRules.start();
+    }
+
     @Override
     public boolean onPreferenceClick(Preference preference) {
-        if ("editDNSTomlDirectly".equals(preference.getKey())) {
-            ConfigEditorFragment.openEditorFragment(getFragmentManager(), "dnscrypt-proxy.toml");
+        if ("editDNSTomlDirectly".equals(preference.getKey()) && isAdded()) {
+            ConfigEditorFragment.openEditorFragment(getParentFragmentManager(), "dnscrypt-proxy.toml");
+            return true;
+        } else if (Objects.equals(preference.getKey().trim(), "erase_blacklist") && isAdded()) {
+            eraseRules(DNSCryptRulesVariant.BLACKLIST_HOSTS, "remote_blacklist");
+            return true;
+        } else if (Objects.equals(preference.getKey().trim(), "erase_whitelist") && isAdded()) {
+            eraseRules(DNSCryptRulesVariant.WHITELIST_HOSTS, "remote_whitelist");
+            return true;
+        } else if (Objects.equals(preference.getKey().trim(), "erase_ipblacklist") && isAdded()) {
+            eraseRules(DNSCryptRulesVariant.BLACKLIST_IPS, "remote_ipblacklist");
+            return true;
+        } else if (Objects.equals(preference.getKey().trim(), "erase_forwarding_rules") && isAdded()) {
+            eraseRules(DNSCryptRulesVariant.FORWARDING, "remote_forwarding_rules");
+            return true;
+        } else if (Objects.equals(preference.getKey().trim(), "erase_cloaking_rules") && isAdded()) {
+            eraseRules(DNSCryptRulesVariant.CLOAKING, "remote_cloaking_rules");
             return true;
         }
         return false;
+    }
+
+    private void eraseRules(DNSCryptRulesVariant dnsCryptRulesVariant, String remoteRulesLinkPreferenceTag) {
+        if (getActivity() == null) {
+            return;
+        }
+
+        EraseRules eraseRules = new EraseRules(getActivity(), getParentFragmentManager(),
+                dnsCryptRulesVariant, remoteRulesLinkPreferenceTag);
+        eraseRules.start();
     }
 
     private void removePreferencesWithGPVersion() {
@@ -286,8 +369,8 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat implements 
         PreferenceCategory queryLogCategory = findPreference("pref_dnscrypt_query_log");
         Preference ignoredQtypes = findPreference("ignored_qtypes");
 
-        if (queryLogCategory  != null && ignoredQtypes != null) {
-            queryLogCategory .removePreference(ignoredQtypes);
+        if (queryLogCategory != null && ignoredQtypes != null) {
+            queryLogCategory.removePreference(ignoredQtypes);
         }
     }
 }

@@ -22,9 +22,6 @@ package pan.alexander.tordnscrypt.dialogs;
 import android.app.Dialog;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -76,12 +73,6 @@ public abstract class ExtendedDialogFragment extends DialogFragment {
         } catch (IllegalStateException e) {
             Log.w(LOG_TAG, "ExtendedDialogFragment Exception " + e.getMessage() + " " + e.getCause());
         }
-    }
-
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return super.onCreateView(inflater, container, savedInstanceState);
     }
 
     public abstract AlertDialog.Builder assignBuilder();

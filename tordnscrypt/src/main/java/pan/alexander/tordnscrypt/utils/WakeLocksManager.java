@@ -25,6 +25,8 @@ import android.net.wifi.WifiManager;
 import android.os.PowerManager;
 import android.util.Log;
 
+import org.jetbrains.annotations.NotNull;
+
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class WakeLocksManager {
@@ -47,7 +49,7 @@ public class WakeLocksManager {
     }
 
     @SuppressLint({"InvalidWakeLockTag", "WakelockTimeout"})
-    public void managePowerWakelock(Context context, boolean lock) {
+    public void managePowerWakelock(@NotNull Context context, boolean lock) {
         if (lock) {
             final String TAG = "AudioMix";
             PowerManager pm = (PowerManager) context.getApplicationContext().getSystemService(Context.POWER_SERVICE);
@@ -61,11 +63,11 @@ public class WakeLocksManager {
         }
     }
 
-    public void manageWiFiLock(Context context, boolean lock) {
+    public void manageWiFiLock(@NotNull Context context, boolean lock) {
         if (lock) {
             WifiManager wm = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             if (wifiWakeLock == null && wm != null) {
-                wifiWakeLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF , "InviZibleWifiLock");
+                wifiWakeLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF , "InviZible::WifiLock");
                 wifiWakeLock.acquire();
                 Log.i(LOG_TAG, "WakeLocksManager WiFi wake lock is acquired");
             }
@@ -90,9 +92,17 @@ public class WakeLocksManager {
         }
     }
 
-    public boolean isWakeLockHeld() {
-        if (powerWakeLock != null && wifiWakeLock != null) {
-            return powerWakeLock.isHeld() || wifiWakeLock.isHeld();
+    public boolean isPowerWakeLockHeld() {
+        if (powerWakeLock != null) {
+            return powerWakeLock.isHeld();
+        }
+
+        return false;
+    }
+
+    public boolean isWiFiWakeLockHeld() {
+        if (wifiWakeLock != null) {
+            return wifiWakeLock.isHeld();
         }
 
         return false;

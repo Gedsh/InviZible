@@ -32,7 +32,7 @@ public class ResourceRecord implements Serializable {
     public String AName;
     public String CName;
     public String HInfo;
-    public String Resource;
+    public String Resource = "";
     public int Rcode;
 
     private static DateFormat formatter = SimpleDateFormat.getDateTimeInstance();
