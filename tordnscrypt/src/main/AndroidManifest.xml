@@ -41,6 +41,7 @@
         android:banner="@drawable/banner_tv"
         android:extractNativeLibs="true"
         android:requestLegacyExternalStorage="true"
+        android:largeHeap="true"
         tools:ignore="AllowBackup"
         tools:targetApi="q">
 
