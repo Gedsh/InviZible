@@ -184,7 +184,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     public void onResume() {
         super.onResume();
 
-        if (getActivity() == null) {
+        if (getActivity() == null || !isAdded()) {
             return;
         }
 
@@ -195,7 +195,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             spOwnBridges.setSelection(Integer.parseInt(new PrefManager(getActivity()).getStrPref("ownBridgesObfs")));
 
 
-        bridgeAdapter = new BridgeAdapter((SettingsActivity) getActivity(), getFragmentManager(), this);
+        bridgeAdapter = new BridgeAdapter((SettingsActivity) getActivity(), getParentFragmentManager(), this);
         rvBridges.setAdapter(bridgeAdapter);
 
         boolean useNoBridges = new PrefManager(getActivity()).getBoolPref("useNoBridges");
@@ -225,21 +225,21 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 String appSignAlt = verifier.getApkSignature();
                 if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
 
-                    if (getFragmentManager() != null) {
+                    if (isAdded()) {
                         NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                                 getActivity(), getText(R.string.verifier_error).toString(), "3458");
                         if (notificationHelper != null) {
-                            notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                            notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
                         }
                     }
                 }
 
             } catch (Exception e) {
-                if (getFragmentManager() != null) {
+                if (isAdded()) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             getActivity(), getText(R.string.verifier_error).toString(), "64539");
                     if (notificationHelper != null) {
-                        notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                        notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
                     }
                 }
                 Log.e(LOG_TAG, "PreferencesTorBridges fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
@@ -292,7 +292,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 if (currentBridgesType.equals(snowflake)) {
                     clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
                             + snowflakePath + " -url https://snowflake-broker.azureedge.net/" +
-                            " -front ajax.aspnetcdn.com -ice stun:" + stunServer.trim() + saveLogsString;
+                            " -front ajax.aspnetcdn.com -ice stun:" + stunServer.trim() + " -max 3" + saveLogsString;
                 } else {
                     clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
                             + obfsPath;
@@ -398,9 +398,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
             String[] bridgesArrNew;
             if (inputBridgesType.isEmpty()) {
-                bridgesArrNew = inputLinesStr.split(System.lineSeparator());
+                bridgesArrNew = inputLinesStr.replaceAll("[^\\w\\n:+=/. -]", " ").replaceAll(" +", " ").split("\n");
             } else {
-                bridgesArrNew = inputLinesStr.replace(System.lineSeparator(), " ").split(inputBridgesType);
+                bridgesArrNew = inputLinesStr.replaceAll("[^\\w:+=/. -]", " ").replaceAll(" +", " ").split(inputBridgesType);
             }
 
             if (bridgesArrNew.length != 0) {
