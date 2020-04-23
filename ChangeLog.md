@@ -205,3 +205,11 @@
 * Built in ip6tables.
 * Updated German language.
 * Important fixes.
+
+**InviZible Pro beta 0.7.9**
+* Updated Purple I2P to version 2.31.0
+* Improved DNSCrypt real-time log
+* Improved ipv6 handling in VPN mode
+* Implemented local import of DNSCrypt filter files
+* Fixed bug for AfWall to work with 5354 port of DNSCrypt
+* Improved adding Tor bridges
