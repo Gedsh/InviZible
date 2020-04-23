@@ -448,9 +448,11 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                 continue;
             }
 
-            if (rr.Resource.equals("0.0.0.0") || rr.Resource.equals("127.0.0.1") || rr.HInfo.contains("dnscrypt") || rr.Rcode != 0) {
+            if (rr.Resource.equals("0.0.0.0") || rr.Resource.equals("127.0.0.1")
+                    || rr.HInfo.contains("dnscrypt") || rr.Rcode != 0) {
+
                 if (!rr.AName.isEmpty()) {
-                    lines.append("<font color=#f08080>").append(rr.AName);
+                    lines.append("<font color=#f08080>").append(rr.AName.toLowerCase());
 
                     if (rr.HInfo.contains("block_ipv6")) {
                         lines.append(" ipv6");
@@ -458,10 +460,16 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
                     lines.append("</font>");
                 } else {
-                    lines.append("<font color=#f08080>").append(rr.QName).append("</font>");
+                    lines.append("<font color=#f08080>").append(rr.QName.toLowerCase()).append("</font>");
                 }
-            } else {
-                lines.append("<font color=#0f7f7f>").append(rr.AName).append("</font>");
+            } else if (!rr.Resource.isEmpty()) {
+                lines.append("<font color=#0f7f7f>").append(rr.AName.toLowerCase()).append(" -> ").append(rr.Resource).append("</font>");
+            } else if (!rr.CName.isEmpty()){
+                lines.append("<font color=#0f7f7f>").append(rr.AName.toLowerCase()).append(" -> ").append(rr.CName.toLowerCase()).append("</font>");
+            } else if (!rr.AName.isEmpty()){
+                lines.append("<font color=#f08080>").append(rr.AName.toLowerCase()).append("</font>");
+            } else if (!rr.QName.isEmpty()) {
+                lines.append("<font color=#f08080>").append(rr.QName.toLowerCase()).append("</font>");
             }
 
             if (i < savedResourceRecords.size() - 1) {
