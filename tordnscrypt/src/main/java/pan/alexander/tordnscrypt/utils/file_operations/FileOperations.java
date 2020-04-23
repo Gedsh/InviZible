@@ -26,6 +26,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -654,7 +656,7 @@ public class FileOperations {
                 }
 
                 if (f.isFile()) {
-                    if (f.setReadable(true, false)) {
+                    if (f.canRead() || f.setReadable(true, false)) {
                         Log.i(LOG_TAG, "readTextFile take " + filePath + " success");
                     } else {
                         Log.w(LOG_TAG, "readTextFile take " + filePath + " warning");
@@ -736,7 +738,7 @@ public class FileOperations {
                 }
 
                 if (f.isFile()) {
-                    if (f.setReadable(true, false) && f.setWritable(true)) {
+                    if (f.canRead() && f.canWrite() || f.setReadable(true, false) && f.setWritable(true)) {
                         Log.i(LOG_TAG, "writeToTextFile writeTo " + filePath + " success");
                     } else {
                         Log.w(LOG_TAG, "writeToTextFile writeTo " + filePath + " warning");
@@ -790,6 +792,7 @@ public class FileOperations {
     }
 
     @SuppressLint("SetWorldReadable")
+    @NotNull
     public static List<String> readTextFileSynchronous(final Context context, final String filePath) {
 
         reentrantLock.lock();
@@ -813,7 +816,7 @@ public class FileOperations {
             }
 
             if (f.isFile()) {
-                if (f.setReadable(true, false)) {
+                if (f.canRead() || f.setReadable(true, false)) {
                     Log.i(LOG_TAG, "readTextFileSynchronous take " + filePath + " success");
                 } else {
                     Log.w(LOG_TAG, "readTextFileSynchronous take " + filePath + " warning");
@@ -869,7 +872,7 @@ public class FileOperations {
             }
 
             if (f.isFile()) {
-                if (f.setReadable(true, false) && f.setWritable(true)) {
+                if (f.canRead() && f.canWrite() || f.setReadable(true, false) && f.setWritable(true)) {
                     Log.i(LOG_TAG, "writeTextFileSynchronous writeTo " + filePath + " success");
                 } else {
                     Log.w(LOG_TAG, "writeTextFileSynchronous writeTo " + filePath + " warning");
