@@ -53,8 +53,6 @@ import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
-import static pan.alexander.tordnscrypt.TopFragment.appVersion;
-
 public class RootExecService extends Service {
     public RootExecService() {
     }
@@ -75,6 +73,7 @@ public class RootExecService extends Service {
 
     private static boolean saveRootLogs = false;
     private static String autoStartDelay = "0";
+    private static boolean showToastWithCommandsResultError;
 
     private final String ANDROID_CHANNEL_ID = "InviZible";
     private ExecutorService executorService;
@@ -105,6 +104,7 @@ public class RootExecService extends Service {
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
         autoStartDelay = shPref.getString("pref_fast_autostart_delay", "0");
+        showToastWithCommandsResultError = shPref.getBoolean("pref_common_show_help", false);
 
 
         Log.i(LOG_TAG, "RootExecService Root = " + true + " performAction");
@@ -154,8 +154,6 @@ public class RootExecService extends Service {
 
 
     private List<String> runCommands(String[] runCommands) {
-        //List<String> result = Shell.SU.run(runCommands);
-
         List<String> result = new ArrayList<>();
         List<String> error = new ArrayList<>();
 
@@ -176,7 +174,7 @@ public class RootExecService extends Service {
 
             if (errorStr.contains(" -w ") || exitCode == 4) {
                 handler.postDelayed(() -> ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true), 5000);
-            } else if (appVersion.startsWith("b")) {
+            } else if (showToastWithCommandsResultError) {
                 handler.post(() -> Toast.makeText(this, errorMessageFinal, Toast.LENGTH_LONG).show());
             }
         }
