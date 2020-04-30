@@ -207,9 +207,15 @@
 * Important fixes.
 
 **InviZible Pro beta 0.7.9**
-* Updated Purple I2P to version 2.31.0
-* Improved DNSCrypt real-time log
-* Improved ipv6 handling in VPN mode
-* Implemented local import of DNSCrypt filter files
-* Fixed bug for AfWall to work with 5354 port of DNSCrypt
-* Improved adding Tor bridges
+* Updated Purple I2P to version 2.31.0.
+* Improved DNSCrypt real-time log.
+* Improved ipv6 handling in VPN mode.
+* Implemented local import of DNSCrypt filter files.
+* Fixed bug for AfWall to work with 5354 port of DNSCrypt.
+* Improved adding Tor bridges.
+
+**InviZible Pro beta 0.8.0**
+* Changed DNSCrypt default servers.
+* Improved DNSCrypt real-time log.
+* Implemented apps list to use with Tor for VPN mode. Now all applications use DNSCrypt if it is running as in Root mode.
+* Fixes.
