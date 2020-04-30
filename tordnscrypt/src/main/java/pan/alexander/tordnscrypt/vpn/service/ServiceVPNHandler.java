@@ -54,12 +54,11 @@ import static pan.alexander.tordnscrypt.vpn.service.ServiceVPN.EXTRA_COMMAND;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPN.EXTRA_REASON;
 
 
-class ServiceVPNHandler extends Handler {
+public class ServiceVPNHandler extends Handler {
     private static ServiceVPNHandler serviceVPNHandler;
+    private static List<Rule> listRule;
     private final ServiceVPN serviceVPN;
     private ServiceVPN.Builder last_builder = null;
-
-
 
     private ServiceVPNHandler(Looper looper, ServiceVPN serviceVPN) {
         super(looper);
@@ -152,7 +151,7 @@ class ServiceVPNHandler extends Handler {
     private void start() {
         if (serviceVPN.vpn == null) {
 
-            List<Rule> listRule = Rule.getRules(serviceVPN);
+            listRule = Rule.getRules(serviceVPN);
             List<Rule> listAllowed = getAllowedRules(listRule);
 
             last_builder = serviceVPN.getBuilder(listAllowed, listRule);
@@ -167,7 +166,7 @@ class ServiceVPNHandler extends Handler {
     }
 
     private void reload() {
-        List<Rule> listRule = Rule.getRules(serviceVPN);
+        listRule = Rule.getRules(serviceVPN);
         List<Rule> listAllowed = getAllowedRules(listRule);
 
         ServiceVPN.Builder builder = serviceVPN.getBuilder(listAllowed, listRule);
@@ -320,5 +319,9 @@ class ServiceVPNHandler extends Handler {
         StartFailedException(String msg) {
             super(msg);
         }
+    }
+
+    public static List<Rule> getAppsList() {
+        return listRule;
     }
 }

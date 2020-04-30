@@ -33,6 +33,7 @@ import androidx.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import pan.alexander.tordnscrypt.utils.PrefManager;
 
@@ -41,17 +42,19 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 public class Rule {
     public int uid;
     public String packageName;
+    public String appName;
 
     public boolean apply = true;
 
+    private static PackageManager packageManager;
+
     private static List<PackageInfo> getPackages(Context context) {
-        PackageManager pm = context.getPackageManager();
-        return new ArrayList<>(pm.getInstalledPackages(0));
+        packageManager = context.getPackageManager();
+        return new ArrayList<>(packageManager.getInstalledPackages(0));
     }
 
-    private static String getLabel(PackageInfo info, Context context) {
-        PackageManager pm = context.getPackageManager();
-        return info.applicationInfo.loadLabel(pm).toString();
+    private static String getLabel(PackageInfo info) {
+        return info.applicationInfo.loadLabel(packageManager).toString();
     }
 
     private static boolean isSystem(String packageName, Context context) {
@@ -69,6 +72,22 @@ public class Rule {
     private Rule(PackageInfo info) {
         this.uid = info.applicationInfo.uid;
         this.packageName = info.packageName;
+
+        if (info.applicationInfo.uid == 0) {
+            this.appName = "Root";
+        } else if (info.applicationInfo.uid == 1013) {
+            this.appName = "Media server";
+        } else if (info.applicationInfo.uid == 1020) {
+            this.appName = "MulticastDNSResponder";
+        } else if (info.applicationInfo.uid == 1021) {
+            this.appName = "GPS";
+        } else if (info.applicationInfo.uid == 1051) {
+            this.appName = "DNS services";
+        } else if (info.applicationInfo.uid == 9999) {
+            this.appName = "Any app";
+        } else {
+            this.appName = getLabel(info);
+        }
     }
 
     public static List<Rule> getRules(Context context) {
@@ -87,7 +106,7 @@ public class Rule {
             Set<String> setUnlockApps = new PrefManager(context).getSetStrPref(unlockAppsStr);
 
             // Build rule list
-            List<Rule> listRules = new ArrayList<>();
+            List<Rule> listRules = new CopyOnWriteArrayList<>();
             List<PackageInfo> listPI = getPackages(context);
 
             int userId = Process.myUid() / 100000;

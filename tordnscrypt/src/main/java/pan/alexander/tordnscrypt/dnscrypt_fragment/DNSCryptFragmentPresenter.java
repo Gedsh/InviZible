@@ -33,7 +33,6 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -51,9 +50,10 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.OwnFileReader;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
-import pan.alexander.tordnscrypt.vpn.ResourceRecord;
+import pan.alexander.tordnscrypt.vpn.Rule;
 import pan.alexander.tordnscrypt.vpn.Util;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPN;
+import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHandler;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
@@ -78,7 +78,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     private ModuleState fixedModuleState;
     private ServiceConnection serviceConnection;
     private ServiceVPN serviceVPN;
-    private ArrayList<ResourceRecord> savedResourceRecords;
+    private volatile LinkedList<DNSQueryLogRecord> savedDNSQueryRawRecords;
+    private volatile DNSQueryLogRecords dnsQueryLogRecords;
 
     public DNSCryptFragmentPresenter(DNSCryptFragmentView view) {
         this.view = view;
@@ -94,7 +95,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
         modulesStatus = ModulesStatus.getInstance();
 
-        savedResourceRecords = new ArrayList<>();
+        savedDNSQueryRawRecords = new LinkedList<>();
 
         logFile = new OwnFileReader(context, appDataDir + "/logs/DnsCrypt.log");
 
@@ -122,6 +123,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         } else {
             setDNSCryptInstalled(false);
         }
+
+        dnsQueryLogRecords = new DNSQueryLogRecords(pathVars.getDNSCryptFallbackRes());
     }
 
     public void onStop(Context context) {
@@ -403,8 +406,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         }
 
         if (modulesStatus.getMode() != VPN_MODE) {
-            if (!savedResourceRecords.isEmpty() && view != null && view.getFragmentActivity() != null) {
-                savedResourceRecords.clear();
+            if (!savedDNSQueryRawRecords.isEmpty() && view != null && view.getFragmentActivity() != null) {
+                savedDNSQueryRawRecords.clear();
                 view.getFragmentActivity().runOnUiThread(() -> {
                     if (view != null && view.getFragmentActivity() != null && logFile != null) {
                         view.setDNSCryptLogViewText(Html.fromHtml(logFile.readLastLines()));
@@ -421,58 +424,101 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         }
 
         if (modulesStatus.getDnsCryptState() == RESTARTING) {
-            clearResourceRecords();
-            savedResourceRecords.clear();
+            clearDnsQueryRecords();
+            savedDNSQueryRawRecords.clear();
             return false;
         }
 
-        ArrayList<ResourceRecord> resourceRecords = new ArrayList<>(getResourceRecords());
+        lockDnsQueryRawRecordsListForRead(true);
 
-        if (resourceRecords.equals(savedResourceRecords) || resourceRecords.isEmpty()) {
+        LinkedList<DNSQueryLogRecord> dnsQueryRawRecords = getDnsQueryRawRecords();
+
+        if (dnsQueryRawRecords.equals(savedDNSQueryRawRecords) || dnsQueryRawRecords.isEmpty()) {
+            lockDnsQueryRawRecordsListForRead(false);
             return false;
         }
 
-        savedResourceRecords = resourceRecords;
+        savedDNSQueryRawRecords = new LinkedList<>(dnsQueryRawRecords);
 
-        ResourceRecord rr;
+        lockDnsQueryRawRecordsListForRead(false);
+
+        LinkedList<DNSQueryLogRecord> dnsQueryLogRecords = dnsQueryRawRecordsToLogRecords(savedDNSQueryRawRecords);
+
+        DNSQueryLogRecord record;
         StringBuilder lines = new StringBuilder();
 
         lines.append(savedLines);
 
         lines.append("<br />");
 
-        for (int i = 0; i < savedResourceRecords.size(); i++) {
-            rr = savedResourceRecords.get(i);
+        for (int i = 0; i < dnsQueryLogRecords.size(); i++) {
+            record = dnsQueryLogRecords.get(i);
 
-            if (appVersion.startsWith("g") && rr.HInfo.contains("block_ipv6")) {
+            if (appVersion.startsWith("g") && record.getBlockedByIpv6()) {
                 continue;
             }
 
-            if (rr.Resource.equals("0.0.0.0") || rr.Resource.equals("127.0.0.1")
-                    || rr.HInfo.contains("dnscrypt") || rr.Rcode != 0) {
+            if (record.getBlocked()) {
+                if (!record.getAName().isEmpty()) {
+                    lines.append("<font color=#f08080>").append(record.getAName().toLowerCase());
 
-                if (!rr.AName.isEmpty()) {
-                    lines.append("<font color=#f08080>").append(rr.AName.toLowerCase());
-
-                    if (rr.HInfo.contains("block_ipv6")) {
+                    if (record.getBlockedByIpv6()) {
                         lines.append(" ipv6");
                     }
 
                     lines.append("</font>");
                 } else {
-                    lines.append("<font color=#f08080>").append(rr.QName.toLowerCase()).append("</font>");
+                    lines.append("<font color=#f08080>").append(record.getQName().toLowerCase()).append("</font>");
                 }
-            } else if (!rr.Resource.isEmpty()) {
-                lines.append("<font color=#0f7f7f>").append(rr.AName.toLowerCase()).append(" -> ").append(rr.Resource).append("</font>");
-            } else if (!rr.CName.isEmpty()){
-                lines.append("<font color=#0f7f7f>").append(rr.AName.toLowerCase()).append(" -> ").append(rr.CName.toLowerCase()).append("</font>");
-            } else if (!rr.AName.isEmpty()){
-                lines.append("<font color=#f08080>").append(rr.AName.toLowerCase()).append("</font>");
-            } else if (!rr.QName.isEmpty()) {
-                lines.append("<font color=#f08080>").append(rr.QName.toLowerCase()).append("</font>");
+            } else {
+
+                if (record.getUid() != -1000 && !record.getIp().isEmpty()) {
+                    lines.append("<font color=#E7AD42>");
+                } else {
+                    lines.append("<font color=#009688>");
+                }
+
+                if (record.getUid() != -1000) {
+                    if (view != null && view.getFragmentActivity() != null) {
+
+                        String appName = "";
+
+                        for (Rule rule: ServiceVPNHandler.getAppsList()) {
+                            if (rule.uid == record.getUid()) {
+                                appName = rule.appName;
+                                break;
+                            }
+                        }
+
+                        if (appName.isEmpty() || record.getUid() == 1000) {
+                            appName = view.getFragmentActivity().getPackageManager().getNameForUid(record.getUid());
+                        }
+
+                        if (appName != null && !appName.isEmpty()) {
+                            lines.append("<b>").append(appName).append("</b>").append(" -> ");
+                        }
+                    }
+                }
+
+                if (!record.getAName().isEmpty()) {
+                    lines.append(record.getAName().toLowerCase());
+                }
+
+                if (!record.getCName().isEmpty()) {
+                    lines.append(" -> ").append(record.getCName().toLowerCase());
+                }
+
+                if (!record.getIp().isEmpty()) {
+                    if (record.getUid() == -1000) {
+                        lines.append(" -> ");
+                    }
+                    lines.append(record.getIp());
+                }
+
+                lines.append("</font>");
             }
 
-            if (i < savedResourceRecords.size() - 1) {
+            if (i < dnsQueryLogRecords.size() - 1) {
                 lines.append("<br />");
             }
         }
@@ -482,7 +528,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                 if (view != null && view.getFragmentActivity() != null) {
                     view.setDNSCryptLogViewText(Html.fromHtml(lines.toString()));
                 } else {
-                    savedResourceRecords.clear();
+                    savedDNSQueryRawRecords.clear();
                 }
             });
         }
@@ -490,17 +536,27 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         return true;
     }
 
-    private LinkedList<ResourceRecord> getResourceRecords() {
+    private LinkedList<DNSQueryLogRecord> getDnsQueryRawRecords() {
         if (serviceVPN != null) {
-            return serviceVPN.getResourceRecords();
+            return serviceVPN.getDnsQueryRawRecords();
         }
         return new LinkedList<>();
     }
 
-    private void clearResourceRecords() {
+    private void clearDnsQueryRecords() {
         if (serviceVPN != null) {
-            serviceVPN.clearResourceRecords();
+            serviceVPN.clearDnsQueryRawRecords();
         }
+    }
+
+    private void lockDnsQueryRawRecordsListForRead(boolean lock) {
+        if (serviceVPN != null) {
+            serviceVPN.lockDnsQueryRawRecordsListForRead(lock);
+        }
+    }
+
+    private LinkedList<DNSQueryLogRecord> dnsQueryRawRecordsToLogRecords(LinkedList<DNSQueryLogRecord> dnsQueryRawRecords) {
+        return dnsQueryLogRecords.convertRecords(dnsQueryRawRecords);
     }
 
     @Override
@@ -609,6 +665,10 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     private void stopDNSCrypt(Context context) {
         if (context == null) {
             return;
+        }
+
+        if (modulesStatus.getMode() == VPN_MODE) {
+            clearDnsQueryRecords();
         }
 
         ModulesKiller.stopDNSCrypt(context);

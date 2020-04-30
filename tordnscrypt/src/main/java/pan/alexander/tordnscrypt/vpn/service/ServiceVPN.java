@@ -61,6 +61,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSQueryLogRecord;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
@@ -93,6 +94,8 @@ public class ServiceVPN extends VpnService {
         }
     }
 
+    final static int linesInDNSQueryRawRecords = 500;
+
     static final String EXTRA_COMMAND = "Command";
     static final String EXTRA_REASON = "Reason";
 
@@ -112,7 +115,10 @@ public class ServiceVPN extends VpnService {
     private static int ownUID = Process.myUid();
 
     private Object networkCallback = null;
-    private ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
+
+    private final ReentrantReadWriteLock rrLock = new ReentrantReadWriteLock(true);
+    private final LinkedList<DNSQueryLogRecord> dnsQueryRawRecords = new LinkedList<>();
 
     private volatile Looper commandLooper;
     private volatile ServiceVPNHandler commandHandler;
@@ -128,15 +134,14 @@ public class ServiceVPN extends VpnService {
     private boolean routeAllThroughInviZible = true;
 
     @SuppressLint("UseSparseArrays")
-    private Map<Integer, Boolean> mapUidAllowed = new HashMap<>();
+    private final Map<Integer, Boolean> mapUidAllowed = new HashMap<>();
     @SuppressLint("UseSparseArrays")
-    private Map<Integer, Integer> mapUidKnown = new HashMap<>();
+    private final Map<Integer, Integer> mapUidKnown = new HashMap<>();
     @SuppressLint("UseSparseArrays")
-    private Map<Integer, Forward> mapForwardPort = new HashMap<>();
-    private Map<String, Forward> mapForwardAddress = new HashMap<>();
+    private final Map<Integer, Forward> mapForwardPort = new HashMap<>();
+    private final Map<String, Forward> mapForwardAddress = new HashMap<>();
 
-    private VPNBinder binder = new VPNBinder();
-    private LinkedList<ResourceRecord> resourceRecords = new LinkedList<>();
+    private final VPNBinder binder = new VPNBinder();
 
     private native long jni_init(int sdk);
 
@@ -333,7 +338,7 @@ public class ServiceVPN extends VpnService {
         // Add list of allowed applications
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 
-            if (routeAllThroughInviZible && !fixTTL) {
+            /*if (routeAllThroughInviZible && !fixTTL) {
                 try {
                     builder.addDisallowedApplication(getPackageName());
                 } catch (PackageManager.NameNotFoundException ex) {
@@ -382,6 +387,23 @@ public class ServiceVPN extends VpnService {
                         } catch (PackageManager.NameNotFoundException ex) {
                             Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
                         }
+                    }
+                }
+            }*/
+
+            try {
+                builder.addDisallowedApplication(getPackageName());
+            } catch (PackageManager.NameNotFoundException ex) {
+                Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+            }
+
+            if (fixTTL) {
+                for (Rule rule : listRule) {
+                    try {
+                        Log.i(LOG_TAG, "VPN Not routing " + rule.packageName);
+                        builder.addDisallowedApplication(rule.packageName);
+                    } catch (PackageManager.NameNotFoundException ex) {
+                        Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
                     }
                 }
             }
@@ -576,22 +598,38 @@ public class ServiceVPN extends VpnService {
 
     // Called from native code
     public void dnsResolved(ResourceRecord rr) {
-        if (!resourceRecords.isEmpty()) {
 
-            ResourceRecord previousRR = resourceRecords.get(resourceRecords.size() - 1);
+        try {
 
-            if (rr.equals(previousRR) || rr.AName.equals(previousRR.AName) && rr.QName.equals(previousRR.QName)
-                    && rr.HInfo.equals(previousRR.HInfo) && rr.Resource.equals(previousRR.Resource)) {
+            DNSQueryLogRecord lastRecord = null;
+
+            if (!dnsQueryRawRecords.isEmpty()) {
+                try {
+                    rrLock.readLock().lockInterruptibly();
+                    lastRecord = dnsQueryRawRecords.getLast();
+                    rrLock.readLock().unlock();
+                } catch (Exception ignored) {
+                }
+            }
+
+            DNSQueryLogRecord newRecord = new DNSQueryLogRecord(rr.QName, rr.AName, rr.CName, rr.HInfo, rr.Rcode, rr.Resource, -1000);
+
+            if (newRecord.equals(lastRecord)) {
                 return;
             }
 
-            if (resourceRecords.size() > 200) {
-                resourceRecords.removeFirst();
+            rrLock.writeLock().lockInterruptibly();
+
+            dnsQueryRawRecords.add(newRecord);
+
+            while (dnsQueryRawRecords.size() > linesInDNSQueryRawRecords) {
+                dnsQueryRawRecords.removeFirst();
             }
 
-            resourceRecords.add(rr);
-        } else {
-            resourceRecords.add(rr);
+        } catch (InterruptedException ignored) {} finally {
+            if (rrLock.isWriteLockedByCurrentThread()) {
+                rrLock.writeLock().unlock();
+            }
         }
         //Log.i(LOG_TAG, "VPN DNS resolved " + rr.toString());
     }
@@ -600,6 +638,24 @@ public class ServiceVPN extends VpnService {
     public boolean isDomainBlocked(String name) {
         //Log.i(LOG_TAG, " Ask domain is blocked " + name);
         return false;
+    }
+
+    // Called from native code
+    public boolean isUIDForTor(int uid) {
+
+        if (uid == ownUID) {
+            return false;
+        }
+
+        List<Rule> listRule = ServiceVPNHandler.getAppsList();
+
+        for (Rule rule : listRule) {
+            if (rule.uid == uid ) {
+                return rule.apply;
+            }
+        }
+
+        return routeAllThroughInviZible;
     }
 
     // Called from native code
@@ -641,6 +697,8 @@ public class ServiceVPN extends VpnService {
         boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
                 && !modulesStatus.isUseModulesWithRoot() && packet.saddr.matches("^192\\.168\\.(42|43)\\.\\d+");
 
+        addUIDtoDNSQueryRawRecords(packet.uid, packet.daddr, packet.dport);
+
         lock.readLock().lock();
 
         packet.allowed = false;
@@ -672,11 +730,11 @@ public class ServiceVPN extends VpnService {
             packet.allowed = true;
             Log.w(LOG_TAG, "Allowing unknown system " + packet);
         } else if (routeAllThroughInviZible && torIsRunning
-                && packet.protocol != 6 && packet.dport != 53) {
+                && packet.protocol != 6 && packet.dport != 53 && isUIDForTor(packet.uid)) {
             Log.w(LOG_TAG, "Disallowing non tcp traffic when Tor is running " + packet);
         } else {
 
-            if (mapUidAllowed != null && mapUidAllowed.containsKey(packet.uid)) {
+            if (mapUidAllowed.containsKey(packet.uid)) {
                 Boolean allow = mapUidAllowed.get(packet.uid);
                 if (allow != null && isSupported(packet.protocol)) {
                     packet.allowed = allow;
@@ -1039,13 +1097,69 @@ public class ServiceVPN extends VpnService {
         }
     }
 
-    public LinkedList<ResourceRecord> getResourceRecords() {
-        return resourceRecords;
+    public LinkedList<DNSQueryLogRecord> getDnsQueryRawRecords() {
+        return dnsQueryRawRecords;
     }
 
-    public void clearResourceRecords() {
-        if (resourceRecords != null && !resourceRecords.isEmpty()) {
-            resourceRecords.clear();
+    public void clearDnsQueryRawRecords() {
+        try {
+            rrLock.writeLock().lockInterruptibly();
+
+            if (!dnsQueryRawRecords.isEmpty()) {
+                dnsQueryRawRecords.clear();
+            }
+
+        } catch (InterruptedException ignored) {} finally {
+            if (rrLock.isWriteLockedByCurrentThread()) {
+                rrLock.writeLock().unlock();
+            }
         }
+    }
+
+    public void lockDnsQueryRawRecordsListForRead(boolean lock) {
+        try {
+            if (lock) {
+                rrLock.readLock().lockInterruptibly();
+            } else {
+                rrLock.readLock().unlock();
+            }
+        } catch (InterruptedException ignored) {}
+    }
+
+    private void addUIDtoDNSQueryRawRecords(int uid, String address, int port) {
+        if (uid == 0 && port == 53) {
+            return;
+        }
+
+        try {
+
+            DNSQueryLogRecord lastRecord = null;
+
+            if (!dnsQueryRawRecords.isEmpty()) {
+                try {
+                    rrLock.readLock().lockInterruptibly();
+                    lastRecord = dnsQueryRawRecords.getLast();
+                    rrLock.readLock().unlock();
+                } catch (Exception ignored) {
+                }
+            }
+
+
+            DNSQueryLogRecord newRecord = new DNSQueryLogRecord("", "", "", "", 0, address, uid);
+
+            if (newRecord.equals(lastRecord)) {
+                return;
+            }
+
+            rrLock.writeLock().lockInterruptibly();
+
+            dnsQueryRawRecords.add(newRecord);
+
+        } catch (InterruptedException ignored) {} finally {
+            if (rrLock.isWriteLockedByCurrentThread()) {
+                rrLock.writeLock().unlock();
+            }
+        }
+
     }
 }
