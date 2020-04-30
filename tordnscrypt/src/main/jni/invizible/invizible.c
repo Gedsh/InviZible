@@ -570,6 +570,40 @@ jboolean is_domain_blocked(const struct arguments *args, const char *name) {
     return jallowed;
 }
 
+static jmethodID midIsUIDForTor = NULL;
+
+jboolean is_uid_for_tor(const struct arguments *args, const int uid) {
+#ifdef PROFILE_JNI
+    float mselapsed;
+    struct timeval start, end;
+    gettimeofday(&start, NULL);
+#endif
+
+    jclass clsService = (*args->env)->GetObjectClass(args->env, args->instance);
+    ng_add_alloc(clsService, "clsService");
+
+    const char *signature = "(I)Z";
+    if (midIsUIDForTor == NULL)
+        midIsUIDForTor = jniGetMethodID(args->env, clsService, "isUIDForTor", signature);
+
+    jboolean juid_for_tor = (*args->env)->CallBooleanMethod(
+            args->env, args->instance, midIsUIDForTor, uid);
+    jniCheckException(args->env);
+
+    (*args->env)->DeleteLocalRef(args->env, clsService);
+    ng_delete_alloc(clsService, __FILE__, __LINE__);
+
+#ifdef PROFILE_JNI
+    gettimeofday(&end, NULL);
+    mselapsed = (end.tv_sec - start.tv_sec) * 1000.0 +
+                (end.tv_usec - start.tv_usec) / 1000.0;
+    if (mselapsed > PROFILE_JNI)
+        log_android(ANDROID_LOG_WARN, "is_uid_for_tor %f", mselapsed);
+#endif
+
+    return juid_for_tor;
+}
+
 static jmethodID midGetUidQ = NULL;
 
 jint get_uid_q(const struct arguments *args,

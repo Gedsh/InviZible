@@ -513,6 +513,8 @@ void dns_resolved(const struct arguments *args, const char *qname, const char *a
 
 jboolean is_domain_blocked(const struct arguments *args, const char *name);
 
+jboolean is_uid_for_tor(const struct arguments *args, const int uid);
+
 jint get_uid_q(const struct arguments *args,
                jint version,
                jint protocol,

@@ -43,7 +43,6 @@ import androidx.preference.PreferenceScreen;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
@@ -85,7 +84,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
         Preference prefDNSCryptServer = findPreference("prefDNSCryptServer");
         if (prefDNSCryptServer != null) {
-            prefDNSCryptServer.setSummary(new PrefManager(Objects.requireNonNull(getActivity())).getStrPref("DNSCrypt Servers"));
+            prefDNSCryptServer.setSummary(new PrefManager(requireActivity()).getStrPref("DNSCrypt Servers"));
         }
 
         Preference swAutostartTor = findPreference("swAutostartTor");
@@ -344,9 +343,9 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 return true;
             case "pref_fast_theme":
                 if (appVersion.startsWith("g") && !accelerated) {
-                    if (getFragmentManager() != null) {
+                    if (isAdded()) {
                         DialogFragment notificationDialogFragment = NotificationDialogFragment.newInstance(R.string.only_premium_feature);
-                        notificationDialogFragment.show(getFragmentManager(), "NotificationDialogFragment");
+                        notificationDialogFragment.show(getParentFragmentManager(), "NotificationDialogFragment");
                     }
                     return false;
                 }
@@ -394,7 +393,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
     private void changePreferencesWithVPNMode(Context context) {
         Preference pref_fast_all_through_tor = findPreference("pref_fast_all_through_tor");
         if (pref_fast_all_through_tor != null) {
-            pref_fast_all_through_tor.setTitle(R.string.pref_fast_all_through_ipro);
+            //pref_fast_all_through_tor.setTitle(R.string.pref_fast_all_through_ipro);
             pref_fast_all_through_tor.setOnPreferenceChangeListener(this);
         }
 
@@ -406,9 +405,9 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
         Preference prefTorAppUnlock = findPreference("prefTorAppUnlock");
 
-        if (prefTorAppUnlock != null) {
+        /*if (prefTorAppUnlock != null) {
             prefTorAppUnlock.setSummary(R.string.pref_fast_unlock_apps_with_ipro_summ);
-        }
+        }*/
 
         if (shPref.getBoolean("pref_fast_all_through_tor", true)) {
             if (prefTorAppUnlock != null) {
@@ -420,15 +419,15 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
             }
         }
 
-        Preference prefTorAppExclude = findPreference("prefTorAppExclude");
+        /*Preference prefTorAppExclude = findPreference("prefTorAppExclude");
         if (prefTorAppExclude != null) {
             prefTorAppExclude.setSummary(R.string.pref_fast_exclude_apps_from_ipro_summ);
-        }
+        }*/
 
         PreferenceCategory torSettingsCategory = findPreference("Tor Settings");
-        if (torSettingsCategory != null) {
+        /*if (torSettingsCategory != null) {
             torSettingsCategory.setTitle(R.string.pref_fast_routing);
-        }
+        }*/
 
         List<Preference> preferencesList = new ArrayList<>();
 

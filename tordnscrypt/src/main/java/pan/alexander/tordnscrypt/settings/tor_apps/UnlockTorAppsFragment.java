@@ -52,7 +52,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import pan.alexander.tordnscrypt.R;
@@ -122,23 +121,27 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
         boolean routeAllThroughTorDevice = shPref.getBoolean("pref_fast_all_through_tor", true);
 
         if (!routeAllThroughTorDevice) {
-            if (ModulesStatus.getInstance().getMode() == ROOT_MODE) {
-                Objects.requireNonNull(getActivity()).setTitle(R.string.pref_tor_unlock_app);
+            requireActivity().setTitle(R.string.pref_tor_unlock_app);
+
+            /*if (ModulesStatus.getInstance().getMode() == ROOT_MODE) {
+                requireActivity().setTitle(R.string.pref_tor_unlock_app);
             } else {
-                Objects.requireNonNull(getActivity()).setTitle(R.string.pref_routing_unlock_app);
-            }
+                requireActivity().setTitle(R.string.pref_routing_unlock_app);
+            }*/
 
             unlockAppsStr = "unlockApps";
         } else {
-            if (ModulesStatus.getInstance().getMode() == ROOT_MODE) {
-                Objects.requireNonNull(getActivity()).setTitle(R.string.pref_tor_clearnet_app);
+            requireActivity().setTitle(R.string.pref_tor_clearnet_app);
+
+            /*if (ModulesStatus.getInstance().getMode() == ROOT_MODE) {
+                requireActivity().setTitle(R.string.pref_tor_clearnet_app);
             } else {
-                Objects.requireNonNull(getActivity()).setTitle(R.string.pref_routing_clearnet_app);
-            }
+                requireActivity().setTitle(R.string.pref_routing_clearnet_app);
+            }*/
             unlockAppsStr = "clearnetApps";
         }
 
-        Set<String> setUnlockApps = new PrefManager(Objects.requireNonNull(getActivity())).getSetStrPref(unlockAppsStr);
+        Set<String> setUnlockApps = new PrefManager(requireActivity()).getSetStrPref(unlockAppsStr);
         ArrayList<String> unlockAppsArrListSaved = new ArrayList<>(setUnlockApps);
 
         RecyclerView rvListTorApps = getActivity().findViewById(R.id.rvTorApps);
@@ -158,16 +161,16 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
                 if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             getActivity(), getText(R.string.verifier_error).toString(), "11");
-                    if (notificationHelper != null && getFragmentManager() != null) {
-                        notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                    if (notificationHelper != null && isAdded()) {
+                        notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
                     }
                 }
 
             } catch (Exception e) {
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                         getActivity(), getText(R.string.verifier_error).toString(), "188");
-                if (notificationHelper != null && getFragmentManager() != null) {
-                    notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                if (notificationHelper != null && isAdded()) {
+                    notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
                 }
                 Log.e(LOG_TAG, "UnlockTorAppsFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                         Arrays.toString(e.getStackTrace()));
@@ -287,7 +290,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
     }
 
     private class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHolder> {
-        LayoutInflater lInflater = (LayoutInflater) Objects.requireNonNull(getActivity()).getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        LayoutInflater lInflater = (LayoutInflater) requireActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         TorAppsAdapter() {
         }

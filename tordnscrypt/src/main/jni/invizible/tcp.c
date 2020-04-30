@@ -316,12 +316,12 @@ void check_tcp_socket(const struct arguments *args,
                     // https://tools.ietf.org/html/rfc1928
                     // https://tools.ietf.org/html/rfc1929
                     // https://en.wikipedia.org/wiki/SOCKS#SOCKS5
-                    //bypass i2p, dns addresses and own uid from socks proxy
+                    //bypass i2p, dns addresses and selected UIDs from socks proxy
                     char *i2paddr = "10.191.0.1";
                     if (*socks5_addr && socks5_port
                     && (strcmp(dest, i2paddr) != 0)
                     && (ntohs(s->tcp.dest) != 53)
-                    && own_uid != s->tcp.uid) {
+                    && is_uid_for_tor(args, s->tcp.uid)) {
                         s->tcp.socks5 = SOCKS5_HELLO;
                     } else {
                         s->tcp.socks5 = SOCKS5_CONNECTED;
@@ -1090,10 +1090,10 @@ int open_tcp_socket(const struct arguments *args,
     struct sockaddr_in addr4;
     struct sockaddr_in6 addr6;
     if (redirect == NULL) {
-        //bypass dns addresses and own uid from socks proxy
+        //bypass dns addresses and selected UIDs from socks proxy
         if (*socks5_addr && socks5_port
             && (ntohs(cur->dest) != 53)
-            && own_uid != cur->uid) {
+            && is_uid_for_tor(args, cur->uid)) {
             log_android(ANDROID_LOG_INFO, "TCP%d SOCKS5 to %s/%u",
                         version, socks5_addr, socks5_port);
 
