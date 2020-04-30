@@ -18,7 +18,6 @@ package pan.alexander.tordnscrypt;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -40,9 +39,9 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
 
+import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -133,7 +132,7 @@ public class TopFragment extends Fragment {
         appVersion = getString(R.string.appVersion);
         appProcVersion = getString(R.string.appProcVersion);
 
-        RootChecker rootChecker = new RootChecker();
+        RootChecker rootChecker = new RootChecker(new WeakReference<>(this));
         rootChecker.execute();
     }
 
@@ -211,13 +210,20 @@ public class TopFragment extends Fragment {
     }
 
     //Check if root available
-    @SuppressLint("StaticFieldLeak")
-    private class RootChecker extends AsyncTask<Void, Void, Void> {
+    private static class RootChecker extends AsyncTask<Void, Void, Void> {
+
+        private TopFragment topFragment;
         private boolean suAvailable = false;
+
+        RootChecker(WeakReference<TopFragment> topFragmentWeakReference) {
+            this.topFragment = topFragmentWeakReference.get();
+        }
 
         @Override
         protected void onPreExecute() {
-            openPleaseWaitDialog();
+            if (topFragment != null) {
+                topFragment.openPleaseWaitDialog();
+            }
         }
 
         @Override
@@ -240,28 +246,32 @@ public class TopFragment extends Fragment {
                 }
             }
 
+            if (topFragment == null) {
+                return null;
+            }
+
             try {
-                Verifier verifier = new Verifier(getActivity());
+                Verifier verifier = new Verifier(topFragment.getActivity());
                 appSign = verifier.getApkSignatureZipModern();
                 String appSignAlt = verifier.getApkSignature();
                 verifier.encryptStr(TOP_BROADCAST, appSign, appSignAlt);
-                wrongSign = getString(R.string.encoded).trim();
+                wrongSign = topFragment.getString(R.string.encoded).trim();
                 if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
-                    if (getFragmentManager() != null) {
+                    if (topFragment.isAdded()) {
                         NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                getActivity(), getText(R.string.verifier_error).toString(), "1112");
+                                topFragment.getActivity(), topFragment.getText(R.string.verifier_error).toString(), "1112");
                         if (notificationHelper != null) {
-                            notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                            notificationHelper.show(topFragment.getParentFragmentManager(), NotificationHelper.TAG_HELPER);
                         }
                     }
                 }
 
             } catch (Exception e) {
-                if (getFragmentManager() != null) {
+                if (topFragment.isAdded()) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                            getActivity(), getText(R.string.verifier_error).toString(), "2235");
+                            topFragment.getActivity(), topFragment.getText(R.string.verifier_error).toString(), "2235");
                     if (notificationHelper != null) {
-                        notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                        notificationHelper.show(topFragment.getParentFragmentManager(), NotificationHelper.TAG_HELPER);
                     }
                 }
                 Log.e(LOG_TAG, "Top Fragment comparator fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
@@ -274,38 +284,42 @@ public class TopFragment extends Fragment {
         @Override
         protected void onPostExecute(Void result) {
 
-            closePleaseWaitDialog();
+            if (topFragment == null) {
+                return;
+            }
+
+            topFragment.closePleaseWaitDialog();
 
             try {
 
-                setSUInfo(suResult, suVersion);
-                setBBinfo(bbResult);
+                topFragment.setSUInfo(suResult, suVersion);
+                topFragment.setBBinfo(bbResult);
 
-                if (rootIsAvailable != rootIsAvailableSaved || mode == UNDEFINED) {
-                    ModulesAux.switchModes(getActivity(), rootIsAvailable, runModulesWithRoot, mode);
+                if (topFragment.rootIsAvailable != topFragment.rootIsAvailableSaved || topFragment.mode == UNDEFINED) {
+                    ModulesAux.switchModes(topFragment.getActivity(), topFragment.rootIsAvailable, topFragment.runModulesWithRoot, topFragment.mode);
 
-                    if (getActivity() != null) {
-                        getActivity().invalidateOptionsMenu();
+                    if (topFragment.getActivity() != null) {
+                        topFragment.getActivity().invalidateOptionsMenu();
                     }
                 }
 
-                if (!PathVars.isModulesInstalled(getActivity())) {
-                    actionModulesNotInstalled();
+                if (!PathVars.isModulesInstalled(topFragment.getActivity())) {
+                    topFragment.actionModulesNotInstalled();
                 } else {
 
-                    if (coreUpdateReady()) {
+                    if (topFragment.coreUpdateReady()) {
                         return;
                     }
 
-                    refreshModulesVersions();
+                    topFragment.refreshModulesVersions();
 
-                    stopInstallationTimer();
+                    topFragment.stopInstallationTimer();
 
                     ////////////////////////////CHECK UPDATES///////////////////////////////////////////
-                    checkUpdates();
+                    topFragment.checkUpdates();
 
                     /////////////////////////////DONATION////////////////////////////////////////////
-                    showDonDialog();
+                    topFragment.showDonDialog();
                 }
 
             } catch (Exception e) {
@@ -328,7 +342,7 @@ public class TopFragment extends Fragment {
                 }
             };
             handler.postDelayed(performRegistration, 5000);
-        } else if (appVersion.endsWith("p") && getFragmentManager() != null && !accelerated) {
+        } else if (appVersion.endsWith("p") && isAdded() && !accelerated) {
 
             if (!new PrefManager(getActivity()).getBoolPref("Agreement")) {
                 return;
@@ -337,8 +351,8 @@ public class TopFragment extends Fragment {
             Handler handler = new Handler();
             handler.postDelayed(() -> {
                 DialogFragment accelerateDevelop = AskAccelerateDevelop.getInstance();
-                if (getActivity() != null && getFragmentManager() != null && !accelerated) {
-                    accelerateDevelop.show(getFragmentManager(), "accelerateDevelop");
+                if (getActivity() != null && isAdded() && !accelerated) {
+                    accelerateDevelop.show(getParentFragmentManager(), "accelerateDevelop");
                 }
             }, 5000);
 
@@ -378,9 +392,9 @@ public class TopFragment extends Fragment {
                     || currentTorVersion < Integer.parseInt(TorVersion.replaceAll("\\D+", ""))
                     || currentITPDVersion < Integer.parseInt(ITPDVersion.replaceAll("\\D+", "")))
                     && !new PrefManager(getActivity()).getBoolPref("UpdateNotAllowed"))) {
-                if (getFragmentManager() != null) {
+                if (isAdded()) {
                     DialogFragment updateCore = UpdateModulesDialogFragment.getInstance();
-                    updateCore.show(getFragmentManager(), "UpdateModulesDialogFragment");
+                    updateCore.show(getParentFragmentManager(), "UpdateModulesDialogFragment");
                 }
                 return true;
             }
@@ -396,7 +410,7 @@ public class TopFragment extends Fragment {
         }
 
         PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences_common, true);
-        PreferenceManager.setDefaultValues(Objects.requireNonNull(getActivity()), R.xml.preferences_dnscrypt, true);
+        PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences_dnscrypt, true);
         PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences_dnscrypt_servers, true);
         PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences_fast, true);
         PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences_tor, true);
@@ -578,9 +592,9 @@ public class TopFragment extends Fragment {
 
         new PrefManager(getActivity()).setStrPref("LastUpdateResult", getActivity().getText(R.string.update_found).toString());
 
-        if (getFragmentManager() != null) {
+        if (isAdded()) {
             DialogFragment newUpdateDialogFragment = NewUpdateDialogFragment.newInstance(message, updateStr, fileName, hash);
-            newUpdateDialogFragment.show(getFragmentManager(), NewUpdateDialogFragment.TAG_NOT_FRAG);
+            newUpdateDialogFragment.show(getParentFragmentManager(), NewUpdateDialogFragment.TAG_NOT_FRAG);
         }
     }
 
@@ -651,16 +665,16 @@ public class TopFragment extends Fragment {
 
     private void receiverOnReceive(Intent intent) {
 
-        if (getActivity() == null || intent.getAction() == null || !isBroadcastMatch(intent)) {
+        if (getActivity() == null || intent.getAction() == null || !isBroadcastMatch(intent) || !isAdded()) {
             return;
         }
 
         if (intent.getAction().equals(UpdateService.UPDATE_RESULT) && getActivity() instanceof MainActivity) {
             ((MainActivity) getActivity()).showUpdateResultMessage();
             refreshModulesVersions();
-        } else if (intent.getAction().equals(ModulesStarterHelper.ASK_FORCE_CLOSE) && getFragmentManager() != null) {
+        } else if (intent.getAction().equals(ModulesStarterHelper.ASK_FORCE_CLOSE)) {
             DialogFragment dialogFragment = AskForceClose.getInstance(intent.getStringExtra(ModulesStarterHelper.MODULE_NAME));
-            dialogFragment.show(getFragmentManager(), "AskForceClose");
+            dialogFragment.show(getParentFragmentManager(), "AskForceClose");
         }
     }
 
