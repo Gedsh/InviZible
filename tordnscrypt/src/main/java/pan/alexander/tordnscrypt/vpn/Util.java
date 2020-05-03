@@ -166,4 +166,34 @@ public class Util {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         return (cm != null && ConnectivityManagerCompat.isActiveNetworkMetered(cm));
     }
+
+    public static boolean isIpInSubnet(final String ip, final String network) {
+        boolean result = false;
+
+        try {
+            String net = network;
+            int prefix = 0;
+            if (network.contains("/")) {
+                net = network.substring(0, network.indexOf("/"));
+                prefix = Integer.parseInt(network.substring(network.indexOf("/") + 1));
+            }
+
+            final byte[] ipBin = java.net.InetAddress.getByName(ip).getAddress();
+            final byte[] netBin = java.net.InetAddress.getByName(net).getAddress();
+            if (ipBin.length != netBin.length) return false;
+            int p = prefix;
+            int i = 0;
+            while (p >= 8) {
+                if (ipBin[i] != netBin[i]) return false;
+                ++i;
+                p -= 8;
+            }
+            final int m = (65280 >> p) & 255;
+            result = (ipBin[i] & m) == (netBin[i] & m);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "VPN UTIL isIpInSubnet exception " + e.getMessage() + e.getCause());
+        }
+
+        return result;
+    }
 }
