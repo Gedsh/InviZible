@@ -20,6 +20,11 @@ package pan.alexander.tordnscrypt.vpn;
 
 import androidx.annotation.NonNull;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -32,12 +37,32 @@ public class ResourceRecord implements Serializable {
     public String AName;
     public String CName;
     public String HInfo;
-    public String Resource = "";
+    public String Resource;
     public int Rcode;
+    private static final long serialVersionUID = 1L;
 
     private static DateFormat formatter = SimpleDateFormat.getDateTimeInstance();
 
     public ResourceRecord() {
+    }
+
+    public ResourceRecord deepCopy() {
+        ResourceRecord deepClone = null;
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             ObjectOutputStream out = new ObjectOutputStream(bos)) {
+
+            out.writeObject(this);
+
+            try (ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+                 ObjectInputStream in = new ObjectInputStream(bis)) {
+
+                deepClone = (ResourceRecord) in.readObject();
+
+            }
+
+        } catch (IOException | ClassNotFoundException ignored) {}
+
+        return deepClone;
     }
 
     private String trimToNotASCIISymbols(String line) {
@@ -101,17 +126,17 @@ public class ResourceRecord implements Serializable {
                     " AName " + AName +
                     " CName " + CName +
                     " " + rCodeToString(Rcode);
-        } else if (!Resource.isEmpty()){
+        } else if (!Resource.isEmpty()) {
             result = formatter.format(new Date(Time).getTime()) +
                     " QName " + QName +
                     " AName " + AName +
                     " Resource " + Resource +
                     " " + rCodeToString(Rcode);
-        } else if (!HInfo.isEmpty()){
+        } else if (!HInfo.isEmpty()) {
             result = formatter.format(new Date(Time).getTime()) +
                     " QName " + QName +
                     " AName " + AName +
-                    " HINFO " + trimToNotASCIISymbols(HInfo)+
+                    " HINFO " + trimToNotASCIISymbols(HInfo) +
                     " " + rCodeToString(Rcode);
         }
 
