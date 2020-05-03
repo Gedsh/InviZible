@@ -34,6 +34,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -80,6 +81,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     private ServiceVPN serviceVPN;
     private volatile LinkedList<DNSQueryLogRecord> savedDNSQueryRawRecords;
     private volatile DNSQueryLogRecords dnsQueryLogRecords;
+    private boolean torTethering;
 
     public DNSCryptFragmentPresenter(DNSCryptFragmentView view) {
         this.view = view;
@@ -96,6 +98,9 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         modulesStatus = ModulesStatus.getInstance();
 
         savedDNSQueryRawRecords = new LinkedList<>();
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        torTethering = sharedPreferences.getBoolean("pref_common_tor_tethering", false);
 
         logFile = new OwnFileReader(context, appDataDir + "/logs/DnsCrypt.log");
 
@@ -184,47 +189,52 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
             @Override
             public void run() {
-                if (view == null || view.getFragmentActivity() == null || logFile == null) {
-                    return;
-                }
-
-                final String lastLines = logFile.readLastLines();
-
-                if (++loop > 120) {
-                    loop = 0;
-                    displayLog(10000);
-                }
-
-                final boolean displayed = displayDnsResponses(lastLines);
-
-                if (view == null || view.getFragmentActivity() == null || logFile == null) {
-                    return;
-                }
-
-                view.getFragmentActivity().runOnUiThread(() -> {
-
-                    if (view == null || view.getFragmentActivity() == null || lastLines == null || lastLines.isEmpty()) {
+                try {
+                    if (view == null || view.getFragmentActivity() == null || logFile == null) {
                         return;
                     }
 
-                    if (!previousLastLines.contentEquals(lastLines)) {
+                    final String lastLines = logFile.readLastLines();
 
-                        dnsCryptStartedSuccessfully(lastLines);
-
-                        dnsCryptStartedWithError(view.getFragmentActivity(), lastLines);
-
-                        if (!displayed) {
-                            view.setDNSCryptLogViewText(Html.fromHtml(lastLines));
-                        }
-
-                        previousLastLines = lastLines;
+                    if (++loop > 120) {
+                        loop = 0;
+                        displayLog(10000);
                     }
 
-                    refreshDNSCryptState(view.getFragmentActivity());
+                    final boolean displayed = displayDnsResponses(lastLines);
 
-                });
+                    if (view == null || view.getFragmentActivity() == null || logFile == null) {
+                        return;
+                    }
 
+                    view.getFragmentActivity().runOnUiThread(() -> {
+
+                        if (view == null || view.getFragmentActivity() == null || lastLines == null || lastLines.isEmpty()) {
+                            return;
+                        }
+
+                        if (!previousLastLines.contentEquals(lastLines)) {
+
+                            dnsCryptStartedSuccessfully(lastLines);
+
+                            dnsCryptStartedWithError(view.getFragmentActivity(), lastLines);
+
+                            if (!displayed) {
+                                view.setDNSCryptLogViewText(Html.fromHtml(lastLines));
+                            }
+
+                            previousLastLines = lastLines;
+                        }
+
+                        refreshDNSCryptState(view.getFragmentActivity());
+
+                    });
+
+                } catch (Exception e) {
+                    Log.e(LOG_TAG, "DNSCryptFragmentPresenter timer run() exception " + e.getMessage() + " " + e.getCause());
+                }
             }
+
         }, 1000, period);
 
     }
@@ -483,10 +493,14 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
                         String appName = "";
 
-                        for (Rule rule: ServiceVPNHandler.getAppsList()) {
-                            if (rule.uid == record.getUid()) {
-                                appName = rule.appName;
-                                break;
+                        List<Rule> appList = ServiceVPNHandler.getAppsList();
+
+                        if (appList != null) {
+                            for (Rule rule : appList) {
+                                if (rule.uid == record.getUid()) {
+                                    appName = rule.appName;
+                                    break;
+                                }
                             }
                         }
 
@@ -496,6 +510,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
                         if (appName != null && !appName.isEmpty()) {
                             lines.append("<b>").append(appName).append("</b>").append(" -> ");
+                        } else if (appName == null && !torTethering) {
+                            lines.append("<b>").append("Unknown system traffic").append("</b>").append(" -> ");
                         }
                     }
                 }

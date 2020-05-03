@@ -328,41 +328,45 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
             @Override
             public void run() {
 
-                if (logFile == null) {
-                    return;
-                }
-
-                final String lastLines = logFile.readLastLines();
-
-                if (++loop > 120) {
-                    loop = 0;
-                    displayLog(10000);
-                }
-
-                if (view == null || view.getFragmentActivity() == null) {
-                    return;
-                }
-
-                view.getFragmentActivity().runOnUiThread(() -> {
-
-                    if (view == null || view.getFragmentActivity() == null || lastLines == null || lastLines.isEmpty()) {
+                try {
+                    if (logFile == null) {
                         return;
                     }
 
-                    if (!previousLastLines.contentEquals(lastLines)) {
+                    final String lastLines = logFile.readLastLines();
 
-                        if (!new PrefManager(view.getFragmentActivity()).getBoolPref("Tor Ready")) {
-                            torStartedSuccessfully(view.getFragmentActivity(), lastLines);
-                        }
-
-                        torStartedWithError(view.getFragmentActivity(), lastLines);
-                        view.setTorLogViewText(Html.fromHtml(lastLines));
-                        previousLastLines = lastLines;
+                    if (++loop > 120) {
+                        loop = 0;
+                        displayLog(10000);
                     }
 
-                    refreshTorState(view.getFragmentActivity());
+                    if (view == null || view.getFragmentActivity() == null) {
+                        return;
+                    }
 
-                });
+                    view.getFragmentActivity().runOnUiThread(() -> {
+
+                        if (view == null || view.getFragmentActivity() == null || lastLines == null || lastLines.isEmpty()) {
+                            return;
+                        }
+
+                        if (!previousLastLines.contentEquals(lastLines)) {
+
+                            if (!new PrefManager(view.getFragmentActivity()).getBoolPref("Tor Ready")) {
+                                torStartedSuccessfully(view.getFragmentActivity(), lastLines);
+                            }
+
+                            torStartedWithError(view.getFragmentActivity(), lastLines);
+                            view.setTorLogViewText(Html.fromHtml(lastLines));
+                            previousLastLines = lastLines;
+                        }
+
+                        refreshTorState(view.getFragmentActivity());
+
+                    });
+                } catch (Exception e) {
+                    Log.e(LOG_TAG, "TorFragmentPresenter timer run() exception " + e.getMessage() + " " + e.getCause());
+                }
             }
         }, 1000, period);
 

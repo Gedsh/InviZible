@@ -334,42 +334,46 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
             @Override
             public void run() {
 
-                if (view == null || view.getFragmentActivity() == null || logFile == null) {
-                    return;
-                }
-
-                final String lastLines = logFile.readLastLines();
-
-                final String htmlData = readITPDStatusFromHTML(view.getFragmentActivity());
-
-                if (++loop > 30) {
-                    loop = 0;
-                    displayLog(10000);
-                }
-
-                if (view == null || view.getFragmentActivity() == null) {
-                    return;
-                }
-
-                view.getFragmentActivity().runOnUiThread(() -> {
-
-                    if (view == null || view.getFragmentActivity() == null || lastLines == null || lastLines.isEmpty()) {
+                try {
+                    if (view == null || view.getFragmentActivity() == null || logFile == null) {
                         return;
                     }
 
-                    if (!previousLastLines.equals(lastLines)) {
-                        view.setITPDInfoLogText(Html.fromHtml(lastLines));
-                        previousLastLines = lastLines;
+                    final String lastLines = logFile.readLastLines();
+
+                    final String htmlData = readITPDStatusFromHTML(view.getFragmentActivity());
+
+                    if (++loop > 30) {
+                        loop = 0;
+                        displayLog(10000);
                     }
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        view.setITPDLogViewText(Html.fromHtml(htmlData, Html.FROM_HTML_MODE_LEGACY));
-                    } else {
-                        view.setITPDLogViewText(Html.fromHtml(htmlData));
+                    if (view == null || view.getFragmentActivity() == null) {
+                        return;
                     }
 
-                    refreshITPDState(view.getFragmentActivity());
-                });
+                    view.getFragmentActivity().runOnUiThread(() -> {
+
+                        if (view == null || view.getFragmentActivity() == null || lastLines == null || lastLines.isEmpty()) {
+                            return;
+                        }
+
+                        if (!previousLastLines.equals(lastLines)) {
+                            view.setITPDInfoLogText(Html.fromHtml(lastLines));
+                            previousLastLines = lastLines;
+                        }
+
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            view.setITPDLogViewText(Html.fromHtml(htmlData, Html.FROM_HTML_MODE_LEGACY));
+                        } else {
+                            view.setITPDLogViewText(Html.fromHtml(htmlData));
+                        }
+
+                        refreshITPDState(view.getFragmentActivity());
+                    });
+                } catch (Exception e) {
+                    Log.e(LOG_TAG, "ITPDFragmentPresenter timer run() exception " + e.getMessage() + " " + e.getCause());
+                }
             }
         }, 1000, period);
 
