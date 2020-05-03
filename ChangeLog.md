@@ -219,3 +219,8 @@
 * Improved DNSCrypt real-time log.
 * Implemented apps list to use with Tor for VPN mode. Now all applications use DNSCrypt if it is running as in Root mode.
 * Fixes.
+
+**InviZible Pro beta 0.8.1**
+* Updated Tor version to 4.2.7.
+* Fixed the use of Tor hidden services and I2P for VPN mode when "Rote All traffic through Tor" option is disabled.
+* Ensure compatibility with VPN mode and VPN Hotspot.
