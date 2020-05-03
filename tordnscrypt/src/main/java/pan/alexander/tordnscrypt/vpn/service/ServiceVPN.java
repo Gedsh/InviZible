@@ -131,7 +131,10 @@ public class ServiceVPN extends VpnService {
 
     private boolean filterUDP = true;
     private boolean blockHttp = false;
-    private boolean routeAllThroughInviZible = true;
+    private boolean routeAllThroughTor = true;
+    private boolean torTethering = false;
+    private String torVirtualAddressNetwork = "10.0.0.0/10";
+    private final String itpdRedirectAddress = "10.191.0.1";
 
     @SuppressLint("UseSparseArrays")
     private final Map<Integer, Boolean> mapUidAllowed = new HashMap<>();
@@ -601,32 +604,22 @@ public class ServiceVPN extends VpnService {
 
         try {
 
-            DNSQueryLogRecord lastRecord = null;
+            rrLock.writeLock().lockInterruptibly();
 
-            if (!dnsQueryRawRecords.isEmpty()) {
-                try {
-                    rrLock.readLock().lockInterruptibly();
-                    lastRecord = dnsQueryRawRecords.getLast();
-                    rrLock.readLock().unlock();
-                } catch (Exception ignored) {
+            DNSQueryLogRecord lastRecord = dnsQueryRawRecords.isEmpty() ? null : dnsQueryRawRecords.getLast();
+            DNSQueryLogRecord newRecord = new DNSQueryLogRecord(rr.QName, rr.AName, rr.CName, rr.HInfo, rr.Rcode, rr.Resource, -1000);
+
+            if (!newRecord.equals(lastRecord)) {
+                dnsQueryRawRecords.add(newRecord);
+
+                if (dnsQueryRawRecords.size() > linesInDNSQueryRawRecords) {
+                    dnsQueryRawRecords.removeFirst();
                 }
             }
 
-            DNSQueryLogRecord newRecord = new DNSQueryLogRecord(rr.QName, rr.AName, rr.CName, rr.HInfo, rr.Rcode, rr.Resource, -1000);
-
-            if (newRecord.equals(lastRecord)) {
-                return;
-            }
-
-            rrLock.writeLock().lockInterruptibly();
-
-            dnsQueryRawRecords.add(newRecord);
-
-            while (dnsQueryRawRecords.size() > linesInDNSQueryRawRecords) {
-                dnsQueryRawRecords.removeFirst();
-            }
-
-        } catch (InterruptedException ignored) {} finally {
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "ServiseVPN dnsResolved exception " + e.getMessage() + " " + e.getCause());
+        } finally {
             if (rrLock.isWriteLockedByCurrentThread()) {
                 rrLock.writeLock().unlock();
             }
@@ -641,21 +634,27 @@ public class ServiceVPN extends VpnService {
     }
 
     // Called from native code
-    public boolean isUIDForTor(int uid) {
+    public boolean isRedirectToTor(int uid, String destAddress) {
 
-        if (uid == ownUID) {
+        if (uid == ownUID || destAddress.equals(itpdRedirectAddress)) {
             return false;
+        }
+
+        if (!destAddress.isEmpty() && Util.isIpInSubnet(destAddress, torVirtualAddressNetwork)) {
+            return true;
         }
 
         List<Rule> listRule = ServiceVPNHandler.getAppsList();
 
-        for (Rule rule : listRule) {
-            if (rule.uid == uid ) {
-                return rule.apply;
+        if (listRule != null) {
+            for (Rule rule : listRule) {
+                if (rule.uid == uid) {
+                    return rule.apply;
+                }
             }
         }
 
-        return routeAllThroughInviZible;
+        return routeAllThroughTor;
     }
 
     // Called from native code
@@ -703,15 +702,17 @@ public class ServiceVPN extends VpnService {
 
         packet.allowed = false;
         // https://android.googlesource.com/platform/system/core/+/master/include/private/android_filesystem_config.h
-        if ((!canFilter  || fixTTL) && isSupported(packet.protocol)) {
+        if ((!canFilter || fixTTL) && isSupported(packet.protocol)) {
             packet.allowed = true;
         } else if (packet.uid == ownUID && isSupported(packet.protocol)) {
             // Allow self
             packet.allowed = true;
             Log.w(LOG_TAG, "Allowing self " + packet);
-        } else if (packet.saddr.contains(":") || packet.daddr.contains(":")){
+        } else if (packet.saddr.contains(":") || packet.daddr.contains(":")) {
             Log.i(LOG_TAG, "Block ipv6 " + packet);
-        } else if (blockHttp && packet.dport == 80 && !packet.daddr.matches("^10\\..+")) {
+        } else if (blockHttp && packet.dport == 80
+                && !Util.isIpInSubnet(packet.daddr, torVirtualAddressNetwork)
+                && !packet.daddr.equals(itpdRedirectAddress)) {
             Log.w(LOG_TAG, "Block http " + packet);
         } else if (packet.protocol == 17 /* UDP */ && !filterUDP) {
             // Allow unfiltered UDP
@@ -723,14 +724,14 @@ public class ServiceVPN extends VpnService {
             packet.allowed = true;
             Log.w(LOG_TAG, "Allowing disconnected system " + packet);
         } else if (packet.uid <= 2000 &&
-                !routeAllThroughInviZible &&
+                (!routeAllThroughTor || torTethering) &&
                 !mapUidKnown.containsKey(packet.uid)
                 && isSupported(packet.protocol)) {
             // Allow unknown system traffic
             packet.allowed = true;
             Log.w(LOG_TAG, "Allowing unknown system " + packet);
-        } else if (routeAllThroughInviZible && torIsRunning
-                && packet.protocol != 6 && packet.dport != 53 && isUIDForTor(packet.uid)) {
+        } else if (routeAllThroughTor && torIsRunning
+                && packet.protocol != 6 && packet.dport != 53 && isRedirectToTor(packet.uid, packet.daddr)) {
             Log.w(LOG_TAG, "Disallowing non tcp traffic when Tor is running " + packet);
         } else {
 
@@ -973,10 +974,14 @@ public class ServiceVPN extends VpnService {
         SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
         filterUDP = prefs.getBoolean("VPN filter_udp", true);
         blockHttp = prefs.getBoolean("pref_fast_block_http", false);
-        routeAllThroughInviZible = prefs.getBoolean("pref_fast_all_through_tor", true);
+        routeAllThroughTor = prefs.getBoolean("pref_fast_all_through_tor", true);
+        torTethering = prefs.getBoolean("pref_common_tor_tethering", false);
+
 
         pathVars = PathVars.getInstance(this);
         modulesStatus = ModulesStatus.getInstance();
+
+        torVirtualAddressNetwork = pathVars.getTorVirtAdrNet();
 
         if (intent != null) {
             boolean showNotification = intent.getBooleanExtra("showNotification", true);
@@ -1109,7 +1114,9 @@ public class ServiceVPN extends VpnService {
                 dnsQueryRawRecords.clear();
             }
 
-        } catch (InterruptedException ignored) {} finally {
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "ServiseVPN clearDnsQueryRawRecords exception " + e.getMessage() + " " + e.getCause());
+        } finally {
             if (rrLock.isWriteLockedByCurrentThread()) {
                 rrLock.writeLock().unlock();
             }
@@ -1123,39 +1130,33 @@ public class ServiceVPN extends VpnService {
             } else {
                 rrLock.readLock().unlock();
             }
-        } catch (InterruptedException ignored) {}
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "ServiseVPN lockDnsQueryRawRecordsListForRead exception " + e.getMessage() + " " + e.getCause());
+        }
     }
 
     private void addUIDtoDNSQueryRawRecords(int uid, String address, int port) {
-        if (uid == 0 && port == 53) {
-            return;
-        }
 
         try {
 
-            DNSQueryLogRecord lastRecord = null;
+            rrLock.writeLock().lockInterruptibly();
 
-            if (!dnsQueryRawRecords.isEmpty()) {
-                try {
-                    rrLock.readLock().lockInterruptibly();
-                    lastRecord = dnsQueryRawRecords.getLast();
-                    rrLock.readLock().unlock();
-                } catch (Exception ignored) {
+            if (uid != 0 || port != 53) {
+                DNSQueryLogRecord lastRecord = dnsQueryRawRecords.isEmpty() ? null : dnsQueryRawRecords.getLast();
+                DNSQueryLogRecord newRecord = new DNSQueryLogRecord("", "", "", "", 0, address, uid);
+
+                if (!newRecord.equals(lastRecord)) {
+                    dnsQueryRawRecords.add(newRecord);
+
+                    if (dnsQueryRawRecords.size() > linesInDNSQueryRawRecords) {
+                        dnsQueryRawRecords.removeFirst();
+                    }
                 }
             }
 
-
-            DNSQueryLogRecord newRecord = new DNSQueryLogRecord("", "", "", "", 0, address, uid);
-
-            if (newRecord.equals(lastRecord)) {
-                return;
-            }
-
-            rrLock.writeLock().lockInterruptibly();
-
-            dnsQueryRawRecords.add(newRecord);
-
-        } catch (InterruptedException ignored) {} finally {
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "ServiseVPN addUIDtoDNSQueryRawRecords exception " + e.getMessage() + " " + e.getCause());
+        } finally {
             if (rrLock.isWriteLockedByCurrentThread()) {
                 rrLock.writeLock().unlock();
             }
