@@ -316,12 +316,9 @@ void check_tcp_socket(const struct arguments *args,
                     // https://tools.ietf.org/html/rfc1928
                     // https://tools.ietf.org/html/rfc1929
                     // https://en.wikipedia.org/wiki/SOCKS#SOCKS5
-                    //bypass i2p, dns addresses and selected UIDs from socks proxy
-                    char *i2paddr = "10.191.0.1";
+
                     if (*socks5_addr && socks5_port
-                    && (strcmp(dest, i2paddr) != 0)
-                    && (ntohs(s->tcp.dest) != 53)
-                    && is_uid_for_tor(args, s->tcp.uid)) {
+                        && is_redirect_to_tor(args, s->tcp.uid, dest)) {
                         s->tcp.socks5 = SOCKS5_HELLO;
                     } else {
                         s->tcp.socks5 = SOCKS5_CONNECTED;
@@ -1051,9 +1048,7 @@ int open_tcp_socket(const struct arguments *args,
     int version;
     if (redirect == NULL) {
         //bypass dns addresses and own uid from socks proxy
-        if (*socks5_addr && socks5_port
-            && (ntohs(cur->dest) != 53)
-            && own_uid != cur->uid)
+        if (*socks5_addr && socks5_port)
             version = (strstr(socks5_addr, ":") == NULL ? 4 : 6);
         else
             version = cur->version;
@@ -1086,14 +1081,20 @@ int open_tcp_socket(const struct arguments *args,
         return -1;
     }
 
+    char dest[INET6_ADDRSTRLEN + 1];
+    if (version == 4) {
+        inet_ntop(AF_INET, &cur->daddr.ip4, dest, sizeof(dest));
+    } else {
+        inet_ntop(AF_INET6, &cur->daddr.ip6, dest, sizeof(dest));
+    }
+
     // Build target address
     struct sockaddr_in addr4;
     struct sockaddr_in6 addr6;
     if (redirect == NULL) {
-        //bypass dns addresses and selected UIDs from socks proxy
+
         if (*socks5_addr && socks5_port
-            && (ntohs(cur->dest) != 53)
-            && is_uid_for_tor(args, cur->uid)) {
+            && is_redirect_to_tor(args, cur->uid, dest)) {
             log_android(ANDROID_LOG_INFO, "TCP%d SOCKS5 to %s/%u",
                         version, socks5_addr, socks5_port);
 
