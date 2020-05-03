@@ -37,6 +37,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -183,7 +184,7 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
 
     private void editBridge(final int position) {
 
-        if (activity == null) {
+        if (activity == null || preferencesBridges == null) {
             return;
         }
 
@@ -192,6 +193,10 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
 
         List<ObfsBridge> bridgeList = preferencesBridges.getBridgeList();
         String bridges_file_path = preferencesBridges.get_bridges_file_path();
+
+        if (bridgeList == null || position >= bridgeList.size()) {
+            return;
+        }
 
         LayoutInflater inflater = activity.getLayoutInflater();
         @SuppressLint("InflateParams") final View inputView = inflater.inflate(R.layout.edit_text_for_dialog, null, false);
@@ -210,6 +215,10 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
         builder.setView(inputView);
 
         builder.setPositiveButton(activity.getText(R.string.ok), (dialog, i) -> {
+            if (preferencesBridges == null || position >= bridgeList.size()) {
+                return;
+            }
+
             String inputText = input.getText().toString();
 
             ObfsBridge brg = new ObfsBridge(inputText, obfsTypeEdit, false);
@@ -230,8 +239,16 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
     }
 
     private void deleteBridge(int position) {
+        if (preferencesBridges == null) {
+            return;
+        }
+
         List<ObfsBridge> bridgeList = preferencesBridges.getBridgeList();
         String bridges_file_path = preferencesBridges.get_bridges_file_path();
+
+        if (bridgeList == null || position >= bridgeList.size()) {
+            return;
+        }
 
         if (bridgeList.get(position).active && fragmentManager != null) {
             DialogFragment commandResult
@@ -242,7 +259,7 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
         bridgeList.remove(position);
         preferencesBridges.getBridgeAdapter().notifyItemRemoved(position);
 
-        List<String> tmpList = new LinkedList<>();
+        List<String> tmpList = new ArrayList<>();
         for (ObfsBridge tmpObfs : bridgeList) {
             tmpList.add(tmpObfs.bridge);
         }
