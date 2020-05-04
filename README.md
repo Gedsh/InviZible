@@ -102,6 +102,10 @@ There is no support for a building and developing things by yourself.
 ## Contributing
 
 #### Building
+To clone a project, use the command:
+```bash
+git clone --recursive https://github.com/Gedsh/InviZible
+```
 
 To build **InviZible Pro** please use **Android Studio**.
 
@@ -111,8 +115,9 @@ _Illegal character in opaque part at index 2: C:\KStore\keystore.properties_
 Please comment lines of the settings.gradle file in the project root, as shown below:
 
 ```bash
-include ':tordnscrypt'
-//Please comment below if you are not the project owner
+include ':tordnscrypt', ':filepicker'
+project(':filepicker').projectDir = new File('android-filepicker/filepicker')
+//Please comment line below if you are not the project owner
 //project(':tordnscrypt').buildFileName = 'owner.gradle'
 ```
 
