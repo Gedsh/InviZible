@@ -235,3 +235,8 @@
 * Renamed None Tor bridges type to Vanilla.
 * Fixed the use of IPv6Traffic and PreferIPv6 for the Tor.
 * Fixes.
+
+**InviZible Pro beta 0.8.3**
+* Fixed application update when the hotspot is turned on.
+* Fixed the use of bridges after the application update.
+* Fixed bug with incorrect bridge selection.
