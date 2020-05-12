@@ -208,7 +208,7 @@ public class PathVars {
     }
 
     public String getTorVirtAdrNet() {
-        return preferences.getString("VirtualAddrNetworkIPv4", "10.192.0.0/10");
+        return preferences.getString("VirtualAddrNetwork", "10.192.0.0/10");
     }
 
     public String getDNSCryptPort() {

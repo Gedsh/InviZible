@@ -29,9 +29,9 @@
             android:summary="@string/pref_tor_entry_nodes_summ"
             android:title="@string/pref_tor_entry_nodes" />
         <EditTextPreference
-            android:id="@+id/pref_tor_virtual_addr_network_IPv4"
+            android:id="@+id/pref_tor_virtual_addr_network"
             android:defaultValue="10.192.0.0/10"
-            android:key="VirtualAddrNetworkIPv4"
+            android:key="VirtualAddrNetwork"
             android:selectAllOnFocus="false"
             android:singleLine="true"
             android:summary="@string/pref_tor_virtual_addr_network_IPv4_summ"

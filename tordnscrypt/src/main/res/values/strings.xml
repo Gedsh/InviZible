@@ -391,7 +391,7 @@
     <string name="dnscrypt_many_rules_dialog_message">Too many rules to display. Only the first 1000 is shown.</string>
 
 
-    <string name="pref_tor_virtual_addr_network_IPv4" translatable="false">VirtualAddrNetworkIPv4</string>
+    <string name="pref_tor_virtual_addr_network_IPv4" translatable="false">VirtualAddrNetwork</string>
     <string name="pref_tor_virtual_addr_network_IPv4_summ">When Tor needs to assign a virtual (unused) address because of a MAPADDRESS command from the controller or the AutomapHostsOnResolve feature, Tor picks an unassigned address from this range.</string>
     <string name="pref_tor_avoid_disc_writes" translatable="false">AvoidDiskWrites</string>
     <string name="pref_tor_avoid_disc_writes_summ">If non-zero, try to write to disk less frequently.</string>

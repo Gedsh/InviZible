@@ -77,7 +77,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
         ArrayList<Preference> preferences = new ArrayList<>();
 
-        preferences.add(findPreference("VirtualAddrNetworkIPv4"));
+        preferences.add(findPreference("VirtualAddrNetwork"));
         preferences.add(findPreference("AvoidDiskWrites"));
         preferences.add(findPreference("ConnectionPadding"));
         preferences.add(findPreference("ReducedConnectionPadding"));
