@@ -330,8 +330,8 @@ public class ServiceVPN extends VpnService {
         }
 
         if (ip6) {
-            //builder.addRoute("::", 0);
-            builder.addRoute("2000::", 3); // unicast
+            builder.addRoute("::", 0);
+            //builder.addRoute("2000::", 3); // unicast
         }
 
         // MTU
