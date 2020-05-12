@@ -92,6 +92,8 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
             tetherStateChanged();
         } else if (action.equalsIgnoreCase(powerOFFFilterAction) || action.equalsIgnoreCase(shutdownFilterAction)) {
             powerOFFDetected();
+        } else if (action.equalsIgnoreCase(Intent.ACTION_PACKAGE_ADDED) || action.equalsIgnoreCase(Intent.ACTION_PACKAGE_REMOVED)) {
+            packageChanged();
         }
     }
 
@@ -101,6 +103,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
         registerAPisOn();
         registerUSBModemIsOn();
         registerPowerOFF();
+        registerPackageChanged();
     }
 
     void unregisterReceivers() {
@@ -163,6 +166,16 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
         receiverRegistered = true;
     }
 
+    private void registerPackageChanged() {
+        // Listen for added/removed applications
+        IntentFilter ifPackage = new IntentFilter();
+        ifPackage.addAction(Intent.ACTION_PACKAGE_ADDED);
+        ifPackage.addAction(Intent.ACTION_PACKAGE_REMOVED);
+        ifPackage.addDataScheme("package");
+        context.registerReceiver(this, ifPackage);
+        receiverRegistered = true;
+    }
+
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void listenNetworkChanges() {
         // Listen for network changes
@@ -180,7 +193,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
             @Override
             public void onAvailable(@NonNull Network network) {
                 Log.i(LOG_TAG, "ModulesBroadcastReceiver Available network=" + network);
-                updateIptablesRules();
+                updateIptablesRules(false);
             }
 
             @Override
@@ -194,7 +207,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
                             "ModulesBroadcastReceiver prv=" + (last_dns == null ? null : TextUtils.join(",", last_dns)));
                     last_dns = dns;
                     Log.i(LOG_TAG, "ModulesBroadcastReceiver Changed link properties=" + linkProperties);
-                    updateIptablesRules();
+                    updateIptablesRules(false);
                 }
             }
 
@@ -202,7 +215,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
             public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities networkCapabilities) {
                 if (ModulesBroadcastReceiver.this.currentNetworkHash != network.hashCode()) {
                     ModulesBroadcastReceiver.this.currentNetworkHash = network.hashCode();
-                    updateIptablesRules();
+                    updateIptablesRules(false);
 
                     Log.i(LOG_TAG, "ModulesBroadcastReceiver Changed capabilities=" + network);
                 }
@@ -211,7 +224,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
             @Override
             public void onLost(@NonNull Network network) {
                 Log.i(LOG_TAG, "ModulesBroadcastReceiver Lost network=" + network);
-                updateIptablesRules();
+                updateIptablesRules(false);
             }
 
             boolean same(List<InetAddress> last, List<InetAddress> current) {
@@ -251,14 +264,14 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
 
         // Reload rules when coming from idle mode
         if (pm != null && !pm.isDeviceIdleMode()) {
-            updateIptablesRules();
+            updateIptablesRules(false);
         }
     }
 
     private void connectivityStateChanged(Intent intent) {
         // Reload rules
         Log.i(LOG_TAG, "ModulesBroadcastReceiver Received " + intent);
-        updateIptablesRules();
+        updateIptablesRules(false);
     }
 
     private void apStateChanged() {
@@ -304,6 +317,11 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
         ModulesAux.stopModulesIfRunning(context);
     }
 
+    private void packageChanged() {
+        Log.i(LOG_TAG, "ModulesBroadcastReceiver packageChanged");
+        updateIptablesRules(true);
+    }
+
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void unlistenNetworkChanges() {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -312,12 +330,12 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
         }
     }
 
-    private void updateIptablesRules() {
+    private void updateIptablesRules(boolean forceUpdate) {
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         boolean refreshRules = sharedPreferences.getBoolean("swRefreshRules", false);
 
-        if (!refreshRules) {
+        if (!refreshRules && !forceUpdate) {
             return;
         }
 
