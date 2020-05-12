@@ -208,7 +208,7 @@ public class PathVars {
     }
 
     public String getTorVirtAdrNet() {
-        return preferences.getString("VirtualAddrNetworkIPv4", "10.0.0.0/10");
+        return preferences.getString("VirtualAddrNetworkIPv4", "10.192.0.0/10");
     }
 
     public String getDNSCryptPort() {
@@ -222,7 +222,7 @@ public class PathVars {
 
     public String getTorTransPort() {
         String torTransPort = preferences.getString("TransPort", "9040");
-        return torTransPort.replaceAll(".+:", "").replaceAll("\\D+", "");
+        return torTransPort.split(" ")[0];
     }
 
     public String getDNSCryptFallbackRes() {
@@ -239,12 +239,12 @@ public class PathVars {
 
     public String getTorSOCKSPort() {
         String torSocksPort = preferences.getString("SOCKSPort", "9050");
-        return torSocksPort.replaceAll(".+:", "").replaceAll("\\D+", "");
+        return torSocksPort.split(" ")[0];
     }
 
     public String getTorHTTPTunnelPort() {
         String torHttpTunnelPort = preferences.getString("HTTPTunnelPort", "8118");
-        return torHttpTunnelPort.replaceAll(".+:", "").replaceAll("\\D+", "");
+        return torHttpTunnelPort.split(" ")[0];
     }
 
     public String getITPDSOCKSPort() {

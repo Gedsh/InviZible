@@ -283,19 +283,19 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         } else if (Objects.equals(preference.getKey(), "pref_tor_isolate_dest_address")) {
             if (key_tor.contains("SOCKSPort")) {
                 int index = key_tor.indexOf("SOCKSPort");
-                String val = val_tor.get(index).replaceAll(".+:", "").replaceAll("\\D+", "");
+                String val = val_tor.get(index).split(" ")[0];
                 val = addIsolateFlags(val, allowTorTethering, Boolean.parseBoolean(newValue.toString()), isolateDestPort);
                 val_tor.set(index, val);
             }
             if (key_tor.contains("HTTPTunnelPort")) {
                 int index = key_tor.indexOf("HTTPTunnelPort");
-                String val = val_tor.get(index).replaceAll(".+:", "").replaceAll("\\D+", "");
+                String val = val_tor.get(index).split(" ")[0];
                 val = addIsolateFlags(val, allowTorTethering, Boolean.parseBoolean(newValue.toString()), isolateDestPort);
                 val_tor.set(index, val);
             }
             if (key_tor.contains("TransPort")) {
                 int index = key_tor.indexOf("TransPort");
-                String val = val_tor.get(index).replaceAll(".+:", "").replaceAll("\\D+", "");
+                String val = val_tor.get(index).split(" ")[0];
                 val = addIsolateFlags(val, allowTorTethering, Boolean.parseBoolean(newValue.toString()), isolateDestPort);
                 val_tor.set(index, val);
             }
@@ -303,19 +303,19 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         } else if (Objects.equals(preference.getKey(), "pref_tor_isolate_dest_port")) {
             if (key_tor.contains("SOCKSPort")) {
                 int index = key_tor.indexOf("SOCKSPort");
-                String val = val_tor.get(index).replaceAll(".+:", "").replaceAll("\\D+", "");
+                String val = val_tor.get(index).split(" ")[0];
                 val = addIsolateFlags(val, allowTorTethering, isolateDestAddress, Boolean.parseBoolean(newValue.toString()));
                 val_tor.set(index, val);
             }
             if (key_tor.contains("HTTPTunnelPort")) {
                 int index = key_tor.indexOf("HTTPTunnelPort");
-                String val = val_tor.get(index).replaceAll(".+:", "").replaceAll("\\D+", "");
+                String val = val_tor.get(index).split(" ")[0];
                 val = addIsolateFlags(val, allowTorTethering, isolateDestAddress, Boolean.parseBoolean(newValue.toString()));
                 val_tor.set(index, val);
             }
             if (key_tor.contains("TransPort")) {
                 int index = key_tor.indexOf("TransPort");
-                String val = val_tor.get(index).replaceAll(".+:", "").replaceAll("\\D+", "");
+                String val = val_tor.get(index).split(" ")[0];
                 val = addIsolateFlags(val, allowTorTethering, isolateDestAddress, Boolean.parseBoolean(newValue.toString()));
                 val_tor.set(index, val);
             }

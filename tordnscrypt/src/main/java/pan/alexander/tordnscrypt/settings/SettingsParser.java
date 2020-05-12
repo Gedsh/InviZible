@@ -187,7 +187,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                 }
 
                 if (key.equals("SOCKSPort") || key.equals("HTTPTunnelPort") || key.equals("TransPort")) {
-                    val = val.replaceAll(".+:", "").replaceAll("\\D+", "");
+                    val = val.split(" ")[0];
                 }
 
                 String val_saved_str = "";
