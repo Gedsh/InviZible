@@ -303,9 +303,19 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
             for (int i = 0; i < currentBridges.size(); i++) {
                 String currentBridge = currentBridges.get(i);
-                if (!currentBridge.isEmpty()) {
-                    tor_conf.add("Bridge " + currentBridge);
+
+                if (currentBridgesType == vanilla) {
+                    if (!currentBridge.isEmpty() && !currentBridge.contains(obfs4.toString())
+                            && !currentBridge.contains(obfs3.toString()) && !currentBridge.contains(scramblesuit.toString())
+                            && !currentBridge.contains(meek_lite.toString()) && !currentBridge.contains(snowflake.toString())) {
+                        tor_conf.add("Bridge " + currentBridge);
+                    }
+                } else {
+                    if (!currentBridge.isEmpty() && currentBridge.contains(currentBridgesType.toString())) {
+                        tor_conf.add("Bridge " + currentBridge);
+                    }
                 }
+
             }
         } else {
             for (int i = 0; i < tor_conf.size(); i++) {
@@ -468,42 +478,42 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
             if (!bridges.isEmpty()) {
                 if (bridges.contains("obfs4")) {
-                    currentBridgesType = obfs4;
+                    //currentBridgesType = obfs4;
                     if (!spOwnBridges.getSelectedItem().toString().equals("obfs4")) {
                         spOwnBridges.setSelection(0);
                     } else {
                         ownBridgesOperation(bridgesListNew);
                     }
                 } else if (bridges.contains("obfs3")) {
-                    currentBridgesType = obfs3;
+                    //currentBridgesType = obfs3;
                     if (!spOwnBridges.getSelectedItem().toString().equals("obfs3")) {
                         spOwnBridges.setSelection(1);
                     } else {
                         ownBridgesOperation(bridgesListNew);
                     }
                 } else if (bridges.contains("scramblesuit")) {
-                    currentBridgesType = scramblesuit;
+                    //currentBridgesType = scramblesuit;
                     if (!spOwnBridges.getSelectedItem().toString().equals("scramblesuit")) {
                         spOwnBridges.setSelection(2);
                     } else {
                         ownBridgesOperation(bridgesListNew);
                     }
                 } else if (bridges.contains("meek_lite")) {
-                    currentBridgesType = meek_lite;
+                    //currentBridgesType = meek_lite;
                     if (!spOwnBridges.getSelectedItem().toString().equals("meek_lite")) {
                         spOwnBridges.setSelection(3);
                     } else {
                         ownBridgesOperation(bridgesListNew);
                     }
                 } else if (bridges.contains("snowflake")) {
-                    currentBridgesType = snowflake;
+                    //currentBridgesType = snowflake;
                     if (!spOwnBridges.getSelectedItem().toString().equals("snowflake")) {
                         spOwnBridges.setSelection(4);
                     } else {
                         ownBridgesOperation(bridgesListNew);
                     }
                 } else {
-                    currentBridgesType = vanilla;
+                    //currentBridgesType = vanilla;
                     if (!spOwnBridges.getSelectedItem().toString().equals("vanilla")) {
                         spOwnBridges.setSelection(5);
                     } else {
@@ -520,6 +530,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             boolean useOwnBridges = new PrefManager(getActivity()).getBoolPref("useOwnBridges");
 
             if (!useOwnBridges) {
+                currentBridges.clear();
                 rbOwnBridges.performClick();
             }
         }
