@@ -224,3 +224,14 @@
 * Updated Tor version to 4.2.7.
 * Fixed the use of Tor hidden services and I2P for VPN mode when "Rote All traffic through Tor" option is disabled.
 * Ensure compatibility with VPN mode and VPN Hotspot app.
+
+**InviZible Pro beta 0.8.2**
+* Added DNS queries real-time log for the tethered device in Root mode with the Fix TTL option enabled.
+* Implemented iptables rules update when installing or uninstalling an application.
+* Improved request for new Tor bridges.
+* Added experimental IPv6 support.
+* Updated default DNSCrypt servers.
+* Changed default Tor VirtualAddrNetwork to 10.192.0.0/10.
+* Renamed None Tor bridges type to Vanilla.
+* Fixed the use of IPv6Traffic and PreferIPv6 for the Tor.
+* Fixes.
