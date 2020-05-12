@@ -50,6 +50,7 @@ import pan.alexander.tordnscrypt.dialogs.ShowBridgesDialog;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitDialogBridgesRequest;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.WakeLocksManager;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -61,6 +62,7 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
     private static final int READTIMEOUT = 180;
     private static final int CONNECTTIMEOUT = 180;
     private static String transport;
+    private static WakeLocksManager wakeLocksManager;
 
     private SettingsActivity activity;
     private HttpsURLConnection httpsURLConnection;
@@ -75,9 +77,13 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
         GetNewBridges.transport = transport;
 
         Thread threadRequestCodeImage = new Thread(() -> {
+
             Bitmap codeImage = null;
             final String captcha_challenge_field_value;
             try {
+
+                lockWakeLock();
+
                 Proxy proxy = null;
                 if (ModulesStatus.getInstance().getTorState() == RUNNING) {
                     PathVars pathVars = PathVars.getInstance(activity);
@@ -174,8 +180,13 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
 
                 bufferedReader.close();
                 httpsURLConnection.disconnect();
+
+                releaseWakeLock();
+
             } catch (final Exception e) {
                 Log.e(LOG_TAG, "requestCodeImage function fault " + e.getMessage());
+
+                releaseWakeLock();
 
                 activity = getCurrentActivity();
 
@@ -227,7 +238,7 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
         }
     }
 
-    private SettingsActivity getCurrentActivity() {
+    private synchronized SettingsActivity getCurrentActivity() {
         if (dialogPleaseWait != null && dialogPleaseWait.get() != null
                 && dialogPleaseWait.get().isAdded()) {
             return (SettingsActivity) dialogPleaseWait.get().getActivity();
@@ -244,7 +255,7 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
         }
     }
 
-    private void showCodeImage(Bitmap codeImage, final String secretCode) {
+    private synchronized void showCodeImage(Bitmap codeImage, final String secretCode) {
         DialogFragment showBridgesCodeImage = ShowBridgesCodeImage.INSTANCE.getInstance(codeImage, secretCode, new WeakReference<>(this));
 
         if (showBridgesCodeImage != null) {
@@ -252,9 +263,30 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
         }
     }
 
-    private void showBridges(final String bridges) {
+    private synchronized void showBridges(final String bridges) {
         DialogFragment dialog = ShowBridgesDialog.INSTANCE.getInstance(bridges);
         dialog.show(activity.getSupportFragmentManager(), "ShowBridgesDialog");
+    }
+
+    private synchronized void lockWakeLock() {
+
+        wakeLocksManager = WakeLocksManager.getInstance();
+
+        if (activity != null && !activity.isDestroyed()
+                && !wakeLocksManager.isWiFiWakeLockHeld() && !wakeLocksManager.isPowerWakeLockHeld()) {
+            wakeLocksManager.managePowerWakelock(activity, true);
+            wakeLocksManager.manageWiFiLock(activity, true);
+        } else {
+            wakeLocksManager = null;
+        }
+    }
+
+    private synchronized void releaseWakeLock() {
+        if (wakeLocksManager != null) {
+            wakeLocksManager.stopPowerWakelock();
+            wakeLocksManager.stopWiFiLock();
+            wakeLocksManager = null;
+        }
     }
 
     public void requestNewBridges(@NonNull final String imageCode, @NonNull final String secretCode) {
@@ -265,6 +297,9 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
             Bitmap codeImage = null;
             final String captcha_challenge_field_value;
             try {
+
+                lockWakeLock();
+
                 Proxy proxy = null;
                 if (ModulesStatus.getInstance().getTorState() == RUNNING) {
                     PathVars pathVars = PathVars.getInstance(activity);
@@ -429,8 +464,12 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
                 bufferedReader.close();
                 httpsURLConnection.disconnect();
 
+                releaseWakeLock();
+
             } catch (final Exception e) {
                 Log.e(LOG_TAG, "requestNewBridges function fault " + e.getMessage());
+
+                releaseWakeLock();
 
                 activity = getCurrentActivity();
 
