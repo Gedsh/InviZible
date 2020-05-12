@@ -222,7 +222,7 @@ public class PathVars {
 
     public String getTorTransPort() {
         String torTransPort = preferences.getString("TransPort", "9040");
-        return torTransPort.split(" ")[0];
+        return torTransPort.split(" ")[0].replaceAll(".+:", "").replaceAll("\\D+", "");
     }
 
     public String getDNSCryptFallbackRes() {
@@ -239,12 +239,12 @@ public class PathVars {
 
     public String getTorSOCKSPort() {
         String torSocksPort = preferences.getString("SOCKSPort", "9050");
-        return torSocksPort.split(" ")[0];
+        return torSocksPort.split(" ")[0].replaceAll(".+:", "").replaceAll("\\D+", "");
     }
 
     public String getTorHTTPTunnelPort() {
         String torHttpTunnelPort = preferences.getString("HTTPTunnelPort", "8118");
-        return torHttpTunnelPort.split(" ")[0];
+        return torHttpTunnelPort.split(" ")[0].replaceAll(".+:", "").replaceAll("\\D+", "");
     }
 
     public String getITPDSOCKSPort() {
