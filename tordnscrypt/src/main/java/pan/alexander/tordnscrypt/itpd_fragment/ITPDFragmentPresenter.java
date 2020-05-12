@@ -122,7 +122,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
     }
 
     private void setITPDStarting() {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -131,7 +131,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
     @Override
     public void setITPDRunning() {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -140,7 +140,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
     }
 
     private void setITPDStopping() {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -149,7 +149,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
     @Override
     public void setITPDStopped() {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -162,7 +162,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
     @Override
     public void setITPDInstalling() {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -171,7 +171,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
     @Override
     public void setITPDInstalled() {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -180,7 +180,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
     @Override
     public void setITPDStartButtonEnabled(boolean enabled) {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -189,7 +189,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
     @Override
     public void setITPDProgressBarIndeterminate(boolean indeterminate) {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -197,7 +197,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
     }
 
     private void setITPDInstalled(boolean installed) {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -210,7 +210,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
     @Override
     public void setITPDSomethingWrong() {
-        if (view == null || modulesStatus == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || modulesStatus == null) {
             return;
         }
 
@@ -300,7 +300,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
             ModulesAux.requestModulesStatusUpdate(context);
 
-            if (view.getFragmentFragmentManager() != null) {
+            if (view.getFragmentFragmentManager() != null && !view.getFragmentActivity().isFinishing()) {
                 DialogFragment notification = NotificationDialogFragment.newInstance(R.string.helper_itpd_stopped);
                 notification.show(view.getFragmentFragmentManager(), "NotificationDialogFragment");
             }
@@ -335,7 +335,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
             public void run() {
 
                 try {
-                    if (view == null || view.getFragmentActivity() == null || logFile == null) {
+                    if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || logFile == null) {
                         return;
                     }
 
@@ -348,13 +348,13 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
                         displayLog(10000);
                     }
 
-                    if (view == null || view.getFragmentActivity() == null) {
+                    if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
                         return;
                     }
 
                     view.getFragmentActivity().runOnUiThread(() -> {
 
-                        if (view == null || view.getFragmentActivity() == null || lastLines == null || lastLines.isEmpty()) {
+                        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || lastLines == null || lastLines.isEmpty()) {
                             return;
                         }
 
@@ -439,7 +439,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
     }
 
     public void startButtonOnClick(Context context) {
-        if (context == null || view == null || modulesStatus == null) {
+        if (context == null || view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || modulesStatus == null) {
             return;
         }
 
