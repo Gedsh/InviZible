@@ -130,6 +130,7 @@ public class ModulesStateLoop extends TimerTask {
         if (dnsCryptSystemDNSAllowed
                 || (dnsCryptState == STOPPED && torState == RUNNING && useModulesWithRoot
                 && (useDefaultBridges && bridgesSnowflakeDefault || useOwnBridges && bridgesSnowflakeOwn))) {
+            new PrefManager(modulesService).setBoolPref("DNSCryptSystemDNSAllowed", false);
             ModulesIptablesRules.denySystemDNS(modulesService);
         }
     }

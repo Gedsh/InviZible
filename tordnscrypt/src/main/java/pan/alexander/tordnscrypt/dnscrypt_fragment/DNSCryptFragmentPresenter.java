@@ -101,6 +101,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         torTethering = sharedPreferences.getBoolean("pref_common_tor_tethering", false);
+        boolean blockIPv6 = sharedPreferences.getBoolean("block_ipv6", true);
 
         logFile = new OwnFileReader(context, appDataDir + "/logs/DnsCrypt.log");
 
@@ -129,15 +130,21 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             setDNSCryptInstalled(false);
         }
 
-        dnsQueryLogRecords = new DNSQueryLogRecords(pathVars.getDNSCryptFallbackRes());
+        dnsQueryLogRecords = new DNSQueryLogRecords(blockIPv6, pathVars.getDNSCryptFallbackRes());
     }
 
     public void onStop(Context context) {
 
+        boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
+                && !modulesStatus.isUseModulesWithRoot();
+
         if (new PrefManager(context).getBoolPref("DNSCryptSystemDNSAllowed")) {
             if (modulesStatus.getMode() == ROOT_MODE) {
+                new PrefManager(context).setBoolPref("DNSCryptSystemDNSAllowed", false);
                 ModulesIptablesRules.denySystemDNS(context);
-            } else if (modulesStatus.getMode() == VPN_MODE) {
+            }
+
+            if (modulesStatus.getMode() == VPN_MODE || fixTTL) {
                 new PrefManager(context).setBoolPref("DNSCryptSystemDNSAllowed", false);
                 ServiceVPNHelper.reload("DNSCrypt Deny system DNS", context);
             }
@@ -190,7 +197,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             @Override
             public void run() {
                 try {
-                    if (view == null || view.getFragmentActivity() == null || logFile == null) {
+                    if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || logFile == null) {
                         return;
                     }
 
@@ -203,13 +210,13 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
                     final boolean displayed = displayDnsResponses(lastLines);
 
-                    if (view == null || view.getFragmentActivity() == null || logFile == null) {
+                    if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || logFile == null) {
                         return;
                     }
 
                     view.getFragmentActivity().runOnUiThread(() -> {
 
-                        if (view == null || view.getFragmentActivity() == null || lastLines == null || lastLines.isEmpty()) {
+                        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || lastLines == null || lastLines.isEmpty()) {
                             return;
                         }
 
@@ -260,17 +267,23 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
     @Override
     public void setDnsCryptRunning() {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
         view.setDNSCryptStatus(R.string.tvDNSRunning, R.color.textModuleStatusColorRunning);
         view.setStartButtonText(R.string.btnDNSCryptStop);
 
+        boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
+                && !modulesStatus.isUseModulesWithRoot();
+
         if (new PrefManager(view.getFragmentActivity()).getBoolPref("DNSCryptSystemDNSAllowed")) {
             if (modulesStatus.getMode() == ROOT_MODE) {
+                new PrefManager(view.getFragmentActivity()).setBoolPref("DNSCryptSystemDNSAllowed", false);
                 ModulesIptablesRules.denySystemDNS(view.getFragmentActivity());
-            } else if (modulesStatus.getMode() == VPN_MODE) {
+            }
+
+            if (modulesStatus.getMode() == VPN_MODE || fixTTL) {
                 new PrefManager(view.getFragmentActivity()).setBoolPref("DNSCryptSystemDNSAllowed", false);
                 ServiceVPNHelper.reload("DNSCrypt Deny system DNS", view.getFragmentActivity());
             }
@@ -279,7 +292,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     }
 
     private void setDnsCryptStopping() {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -288,7 +301,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
     @Override
     public void setDnsCryptStopped() {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -299,7 +312,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
     @Override
     public void setDnsCryptInstalling() {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -308,7 +321,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
     @Override
     public void setDnsCryptInstalled() {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -317,7 +330,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
     @Override
     public void setDNSCryptStartButtonEnabled(boolean enabled) {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -326,7 +339,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
     @Override
     public void setDNSCryptProgressBarIndeterminate(boolean indeterminate) {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -334,7 +347,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     }
 
     private void setDNSCryptInstalled(boolean installed) {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -374,7 +387,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
     private void dnsCryptStartedWithError(Context context, String lastLines) {
 
-        if (context == null || view == null) {
+        if (context == null || view == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -415,11 +428,14 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             return false;
         }
 
-        if (modulesStatus.getMode() != VPN_MODE) {
+        boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
+                && !modulesStatus.isUseModulesWithRoot();
+
+        if (modulesStatus.getMode() != VPN_MODE && !fixTTL) {
             if (!savedDNSQueryRawRecords.isEmpty() && view != null && view.getFragmentActivity() != null) {
                 savedDNSQueryRawRecords.clear();
                 view.getFragmentActivity().runOnUiThread(() -> {
-                    if (view != null && view.getFragmentActivity() != null && logFile != null) {
+                    if (view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isFinishing() && logFile != null) {
                         view.setDNSCryptLogViewText(Html.fromHtml(logFile.readLastLines()));
                     }
                 });
@@ -428,7 +444,9 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                 return false;
             }
 
-        } else if (view != null && view.getFragmentActivity() != null && modulesStatus.getMode() == VPN_MODE && !bound) {
+        } else if (view != null && view.getFragmentActivity() != null
+                && !view.getFragmentActivity().isFinishing()
+                && (modulesStatus.getMode() == VPN_MODE || fixTTL) && !bound) {
             bindToVPNService(view.getFragmentActivity());
             return false;
         }
@@ -489,7 +507,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                 }
 
                 if (record.getUid() != -1000) {
-                    if (view != null && view.getFragmentActivity() != null) {
+                    if (view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isFinishing()) {
 
                         String appName = "";
 
@@ -518,6 +536,10 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
                 if (!record.getAName().isEmpty()) {
                     lines.append(record.getAName().toLowerCase());
+
+                    if (record.getIp().contains(":")) {
+                        lines.append(" ipv6");
+                    }
                 }
 
                 if (!record.getCName().isEmpty()) {
@@ -539,7 +561,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             }
         }
 
-        if (view != null && view.getFragmentActivity() != null) {
+        if (view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isFinishing()) {
             view.getFragmentActivity().runOnUiThread(() -> {
                 if (view != null && view.getFragmentActivity() != null) {
                     view.setDNSCryptLogViewText(Html.fromHtml(lines.toString()));
@@ -578,7 +600,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     @Override
     public void refreshDNSCryptState(Context context) {
 
-        if (context == null || modulesStatus == null || view == null) {
+        if (context == null || modulesStatus == null || view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -592,7 +614,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
             displayLog(1000);
 
-        } else if (currentModuleState == RUNNING && view.getFragmentActivity() != null) {
+        } else if (currentModuleState == RUNNING && view.getFragmentActivity() != null && !view.getFragmentActivity().isFinishing()) {
 
             ServiceVPNHelper.prepareVPNServiceIfRequired(view.getFragmentActivity(), modulesStatus);
 
@@ -654,7 +676,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     }
 
     private void runDNSCrypt(Context context) {
-        if (context == null || view == null) {
+        if (context == null || view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 

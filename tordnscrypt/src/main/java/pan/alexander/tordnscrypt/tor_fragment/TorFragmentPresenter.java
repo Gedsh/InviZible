@@ -151,7 +151,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
     }
 
     private void setTorInstalled(boolean installed) {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -163,7 +163,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
     }
 
     private void setTorStarting(Context context, int percents) {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -171,7 +171,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
     }
 
     private void setTorStarting() {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -180,7 +180,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     @Override
     public void setTorRunning() {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -189,7 +189,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
     }
 
     private void setTorStopping() {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -198,7 +198,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     @Override
     public void setTorStopped(Context context) {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -215,7 +215,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     @Override
     public void setTorSomethingWrong() {
-        if (view == null || modulesStatus == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || modulesStatus == null) {
             return;
         }
 
@@ -241,7 +241,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
     @Override
     public void refreshTorState(Context context) {
 
-        if (context == null || modulesStatus == null || view == null) {
+        if (context == null || modulesStatus == null || view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -346,7 +346,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
                     view.getFragmentActivity().runOnUiThread(() -> {
 
-                        if (view == null || view.getFragmentActivity() == null || lastLines == null || lastLines.isEmpty()) {
+                        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || lastLines == null || lastLines.isEmpty()) {
                             return;
                         }
 
@@ -385,7 +385,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     private void torStartedSuccessfully(Context context, String lastLines) {
 
-        if (context == null || view == null || modulesStatus == null) {
+        if (context == null || view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || modulesStatus == null) {
             return;
         }
 
@@ -432,13 +432,6 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
             view.setTorProgressBarProgress(0);
 
             checkInternetAvailable();
-
-            /*new PrefManager(Objects.requireNonNull(context)).setBoolPref("Tor Ready", true);
-
-            /////////////////Check Updates///////////////////////////////////////////////
-            if (view != null && view.getFragmentActivity() != null && view.getFragmentActivity() instanceof MainActivity) {
-                checkInvizibleUpdates((MainActivity)view.getFragmentActivity());
-            }*/
         }
     }
 
@@ -453,7 +446,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
             if (lastLines.contains("Stuck at 0%") || lastLines.contains("Stuck at 5%")) {
 
-                if (view.getFragmentFragmentManager() != null) {
+                if (view.getFragmentFragmentManager() != null && !view.getFragmentActivity().isFinishing()) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             context, context.getText(R.string.helper_dnscrypt_no_internet).toString(), "helper_dnscrypt_no_internet");
                     if (notificationHelper != null) {
@@ -501,7 +494,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     @Override
     public void setTorInstalling() {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -510,7 +503,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     @Override
     public void setTorInstalled() {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -519,7 +512,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     @Override
     public void setTorStartButtonEnabled(boolean enabled) {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -528,7 +521,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     @Override
     public void setTorProgressBarIndeterminate(boolean indeterminate) {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -555,7 +548,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     public void startButtonOnClick(Context context) {
 
-        if (context == null || view == null || modulesStatus == null) {
+        if (context == null || view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || modulesStatus == null) {
             return;
         }
 
@@ -571,7 +564,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
         Thread thread = new Thread(() -> {
 
-            if (view == null || view.getFragmentActivity() == null || view.getFragmentFragmentManager() == null) {
+            if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || view.getFragmentFragmentManager() == null) {
                 return;
             }
 
@@ -699,7 +692,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
             try {
 
-                if (view == null || view.getFragmentActivity() == null) {
+                if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
                     return;
                 }
 
@@ -734,12 +727,19 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
                 boolean bridgesSnowflakeDefault = new PrefManager(context).getStrPref("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
                 boolean bridgesSnowflakeOwn = new PrefManager(context).getStrPref("ownBridgesObfs").equals(snowFlakeBridgesOwn);
 
-                new PrefManager(Objects.requireNonNull(context)).setBoolPref("Tor Ready", true);
+                boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
+                        && !modulesStatus.isUseModulesWithRoot();
+
+                new PrefManager(context).setBoolPref("Tor Ready", true);
 
                 if (useDefaultBridges && bridgesSnowflakeDefault || useOwnBridges && bridgesSnowflakeOwn) {
                     if (modulesStatus != null && modulesStatus.getMode() == ROOT_MODE) {
+                        new PrefManager(context).setBoolPref("DNSCryptSystemDNSAllowed", false);
                         ModulesIptablesRules.denySystemDNS(context);
-                    } else if (modulesStatus != null && modulesStatus.getMode() == VPN_MODE) {
+                    }
+
+                    if (modulesStatus != null && modulesStatus.getMode() == VPN_MODE || fixTTL) {
+                        new PrefManager(context).setBoolPref("DNSCryptSystemDNSAllowed", false);
                         ServiceVPNHelper.reload("Tor Deny system DNS", context);
                     }
                 }
