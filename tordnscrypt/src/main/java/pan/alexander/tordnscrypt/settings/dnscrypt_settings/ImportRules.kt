@@ -1,5 +1,24 @@
 package pan.alexander.tordnscrypt.settings.dnscrypt_settings
 
+/*
+    This file is part of InviZible Pro.
+
+    InviZible Pro is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    InviZible Pro is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+*/
+
 import android.content.Context
 import android.util.Log
 import pan.alexander.tordnscrypt.modules.ModulesRestarter
@@ -148,7 +167,6 @@ class ImportRules(private val context: Context,
         var linesCount = 0
         var hash = 0
         var hashes = IntArray(0)
-        val hashesNew = ArrayList<Int>()
         var savedTime = System.currentTimeMillis()
 
         val fileToAdd: String = if (localRules) {
@@ -173,6 +191,8 @@ class ImportRules(private val context: Context,
                         if (DNSCryptRulesVariant.BLACKLIST_HOSTS == rulesVariant) {
                             blackListFileIsHost = isInputFileFormatCorrect(inputFile, hostFileRegex)
                         }
+
+                        val hashesNew = ArrayList<Int>()
 
                         if (blackListFileIsHost || isInputFileFormatCorrect(inputFile, rulesRegex)) {
                             inputFile.bufferedReader().use {
@@ -204,11 +224,11 @@ class ImportRules(private val context: Context,
                                     line = it.readLine()?.trim()
                                 }
 
-                                onDNSCryptRuleAddLineListener?.onDNSCryptRuleLineAdded(linesCount)
-                                hashesNew.addAll(hashes.toList())
-                                hashes = hashesNew.toIntArray()
+                                val arrNew = IntArray(hashes.size + hashesNew.size)
+                                System.arraycopy(hashes, 0, arrNew, 0, hashes.size)
+                                System.arraycopy(hashesNew.toIntArray(), 0, arrNew, hashes.size, hashesNew.size)
+                                hashes = arrNew
                                 hashes.sort()
-                                hashesNew.clear()
                             }
                         }
                     } catch (e: Exception) {
@@ -217,6 +237,8 @@ class ImportRules(private val context: Context,
                 }
             }
         }
+
+        onDNSCryptRuleAddLineListener?.onDNSCryptRuleLineAdded(linesCount)
 
         if (linesCount > 0) {
             restartDNSCryptIfRequired()
