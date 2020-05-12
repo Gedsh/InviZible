@@ -24,7 +24,7 @@ public enum BridgeType {
     obfs3,
     scramblesuit,
     meek_lite,
-    none,
+    vanilla,
     snowflake,
     undefined
 }

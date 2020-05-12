@@ -41,6 +41,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -53,7 +54,6 @@ import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.GetNewBridges;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.BridgeType;
@@ -64,10 +64,9 @@ import pan.alexander.tordnscrypt.utils.file_operations.OnTextFileOperationsCompl
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
-import static pan.alexander.tordnscrypt.utils.GetNewBridges.dialogPleaseWait;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.meek_lite;
-import static pan.alexander.tordnscrypt.utils.enums.BridgeType.none;
+import static pan.alexander.tordnscrypt.utils.enums.BridgeType.vanilla;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.obfs3;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.obfs4;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.scramblesuit;
@@ -269,7 +268,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         tor_conf = tor_conf_clean;
 
         String currentBridgesTypeToSave;
-        if (currentBridgesType.equals(none)) {
+        if (currentBridgesType.equals(vanilla)) {
             currentBridgesTypeToSave = "";
         } else {
             currentBridgesTypeToSave = currentBridgesType.toString();
@@ -286,7 +285,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         if (!currentBridges.isEmpty() && !currentBridgesType.equals(undefined)) {
 
-            if (!currentBridgesType.equals(none)) {
+            if (!currentBridgesType.equals(vanilla)) {
 
                 String clientTransportPlugin;
                 if (currentBridgesType.equals(snowflake)) {
@@ -339,10 +338,6 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     public void onDestroy() {
         super.onDestroy();
 
-        if (dialogPleaseWait != null) {
-            dialogPleaseWait.cancel();
-        }
-
         FileOperations.deleteOnFileOperationCompleteListener();
     }
 
@@ -353,7 +348,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 FileOperations.readTextFile(getActivity(), appDataDir + "/app_data/tor/bridges_custom.lst", addBridgesTag);
                 break;
             case R.id.btnRequestBridges:
-                GetNewBridges getNewBridges = new GetNewBridges(getActivity());
+                GetNewBridges getNewBridges = new GetNewBridges(new WeakReference<>((SettingsActivity) getActivity()));
                 getNewBridges.selectTransport();
                 break;
         }
@@ -508,8 +503,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                         ownBridgesOperation(bridgesListNew);
                     }
                 } else {
-                    currentBridgesType = none;
-                    if (!spOwnBridges.getSelectedItem().toString().equals("none")) {
+                    currentBridgesType = vanilla;
+                    if (!spOwnBridges.getSelectedItem().toString().equals("vanilla")) {
                         spOwnBridges.setSelection(5);
                     } else {
                         ownBridgesOperation(bridgesListNew);
@@ -674,13 +669,13 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         for (String line : bridges_custom) {
             ObfsBridge obfsBridge;
-            if (!obfsTypeSp.equals(none) && line.contains(obfsTypeSp.toString())) {
+            if (!obfsTypeSp.equals(vanilla) && line.contains(obfsTypeSp.toString())) {
                 obfsBridge = new ObfsBridge(line, obfsTypeSp, false);
                 if (currentBridges.contains(line)) {
                     obfsBridge.active = true;
                 }
                 bridgeList.add(obfsBridge);
-            } else if (obfsTypeSp.equals(none) && !line.contains("obfs4") && !line.contains("obfs3")
+            } else if (obfsTypeSp.equals(vanilla) && !line.contains("obfs4") && !line.contains("obfs3")
                     && !line.contains("scramblesuit") && !line.contains("meek_lite") && !line.contains("snowflake")
                     && !line.isEmpty()) {
                 obfsBridge = new ObfsBridge(line, obfsTypeSp, false);
@@ -771,7 +766,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                         } else if (testBridge.contains("snowflake")) {
                             currentBridgesType = snowflake;
                         } else {
-                            currentBridgesType = none;
+                            currentBridgesType = vanilla;
                         }
                     } else {
                         currentBridgesType = undefined;
