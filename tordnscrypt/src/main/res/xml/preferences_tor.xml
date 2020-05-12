@@ -30,7 +30,7 @@
             android:title="@string/pref_tor_entry_nodes" />
         <EditTextPreference
             android:id="@+id/pref_tor_virtual_addr_network_IPv4"
-            android:defaultValue="10.0.0.0/10"
+            android:defaultValue="10.192.0.0/10"
             android:key="VirtualAddrNetworkIPv4"
             android:selectAllOnFocus="false"
             android:singleLine="true"
@@ -161,7 +161,7 @@
         <CheckBoxPreference
             android:id="@+id/pref_tor_client_use_IPv6"
             android:defaultValue="false"
-            android:enabled="false"
+            android:enabled="true"
             android:key="ClientUseIPv6"
             android:summary="@string/pref_tor_client_use_IPv6_summ"
             android:title="@string/pref_tor_client_use_IPv6" />

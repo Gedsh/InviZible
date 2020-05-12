@@ -1,4 +1,4 @@
-<resources>
+<resources tools:ignore="MissingTranslation" xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name" translatable="false">InviZible Pro</string>
     <string name="navigation_drawer_open" translatable="false">Open navigation drawer</string>
     <string name="navigation_drawer_close" translatable="false">Close navigation drawer</string>
@@ -144,7 +144,7 @@
         <item>scramblesuit</item>
         <item>meek_lite</item>
         <item>snowflake</item>
-        <item>none</item>
+        <item>vanilla</item>
     </string-array>
     <string name="pref_fast_use_tor_bridges_transport_select">Pls select obfuscation type:</string>
     <string name="pref_fast_use_tor_bridges_enter_characters">Pls enter characters from image</string>
@@ -262,6 +262,10 @@
     <string name="pref_dnscrypt_dnscrypt_servers" translatable="false">dnscrypt_servers</string>
     <string name="pref_dnscrypt_doh_servers_summ">Use servers implementing the DNS-over-HTTPS protocol.</string>
     <string name="pref_dnscrypt_doh_servers" translatable="false">doh_servers</string>
+    <string name="pref_dnscrypt_ipv4_servers" translatable="false">ipv4_servers</string>
+    <string name="pref_dnscrypt_ipv4_servers_summ">Use servers reachable over IPv4</string>
+    <string name="pref_dnscrypt_ipv6_servers" translatable="false">ipv6_servers</string>
+    <string name="pref_dnscrypt_ipv6_servers_summ">Use servers reachable over IPv6</string>
 
     <string name="pref_dnscrypt_require_servers_prop_categ">Require servers defined by remote sources to satisfy specific properties.</string>
     <string name="pref_dnscrypt_require_dnssec_summ">Server must support DNS security extensions (DNSSEC).</string>
@@ -374,6 +378,9 @@
     <string name="pref_dnscrypt_block_undelegated" translatable="false">block_undelegated</string>
     <string name="pref_dnscrypt_block_undelegated_summ">Immediately respond to queries for local zones instead of leaking them to upstream resolvers (always causing errors or timeouts).</string>
     <string name="pref_dnscrypt_edit_toml">Edit dnscrypt-proxy.toml directly</string>
+    <string name="pref_dnscrypt_block_ipv6" translatable="false">block_ipv6</string>
+    <string name="pref_dnscrypt_block_ipv6_summ">Immediately respond to IPv6-related queries with an empty response.
+        This makes things faster when there is no IPv6 connectivity, but can also cause reliability issues with some stub resolvers.</string>
 
     <string name="helper_dnscrypt_private_dns">Please turn off \"Private DNS\" in Android network settings. This option interferes with DNSCrypt.</string>
 

@@ -135,6 +135,7 @@ public class ServiceVPN extends VpnService {
     private boolean torTethering = false;
     private String torVirtualAddressNetwork = "10.0.0.0/10";
     private final String itpdRedirectAddress = "10.191.0.1";
+    private boolean blockIPv6 = false;
 
     @SuppressLint("UseSparseArrays")
     private final Map<Integer, Boolean> mapUidAllowed = new HashMap<>();
@@ -329,8 +330,8 @@ public class ServiceVPN extends VpnService {
         }
 
         if (ip6) {
-            builder.addRoute("::", 0);
-            //builder.addRoute("2000::", 3); // unicast
+            //builder.addRoute("::", 0);
+            builder.addRoute("2000::", 3); // unicast
         }
 
         // MTU
@@ -636,7 +637,10 @@ public class ServiceVPN extends VpnService {
     // Called from native code
     public boolean isRedirectToTor(int uid, String destAddress) {
 
-        if (uid == ownUID || destAddress.equals(itpdRedirectAddress)) {
+        boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
+                && !modulesStatus.isUseModulesWithRoot();
+
+        if (uid == ownUID || destAddress.equals(itpdRedirectAddress) || fixTTL) {
             return false;
         }
 
@@ -702,13 +706,13 @@ public class ServiceVPN extends VpnService {
 
         packet.allowed = false;
         // https://android.googlesource.com/platform/system/core/+/master/include/private/android_filesystem_config.h
-        if ((!canFilter || fixTTL) && isSupported(packet.protocol)) {
+        if ((!canFilter) && isSupported(packet.protocol)) {
             packet.allowed = true;
         } else if (packet.uid == ownUID && isSupported(packet.protocol)) {
             // Allow self
             packet.allowed = true;
             Log.w(LOG_TAG, "Allowing self " + packet);
-        } else if (packet.saddr.contains(":") || packet.daddr.contains(":")) {
+        } else if ((blockIPv6 || fixTTL) && (packet.saddr.contains(":") || packet.daddr.contains(":"))) {
             Log.i(LOG_TAG, "Block ipv6 " + packet);
         } else if (blockHttp && packet.dport == 80
                 && !Util.isIpInSubnet(packet.daddr, torVirtualAddressNetwork)
@@ -724,7 +728,7 @@ public class ServiceVPN extends VpnService {
             packet.allowed = true;
             Log.w(LOG_TAG, "Allowing disconnected system " + packet);
         } else if (packet.uid <= 2000 &&
-                (!routeAllThroughTor || torTethering) &&
+                (!routeAllThroughTor || torTethering || fixTTL) &&
                 !mapUidKnown.containsKey(packet.uid)
                 && isSupported(packet.protocol)) {
             // Allow unknown system traffic
@@ -976,6 +980,7 @@ public class ServiceVPN extends VpnService {
         blockHttp = prefs.getBoolean("pref_fast_block_http", false);
         routeAllThroughTor = prefs.getBoolean("pref_fast_all_through_tor", true);
         torTethering = prefs.getBoolean("pref_common_tor_tethering", false);
+        blockIPv6 = prefs.getBoolean("block_ipv6", true);
 
 
         pathVars = PathVars.getInstance(this);

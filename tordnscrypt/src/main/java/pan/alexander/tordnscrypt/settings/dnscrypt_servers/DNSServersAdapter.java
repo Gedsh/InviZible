@@ -303,6 +303,7 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
         Bundle bundle = new Bundle();
         bundle.putString("dnsServerName", dnsServer.getName());
         bundle.putSerializable("routesCurrent", routes_current);
+        bundle.putBoolean("dnsServerIPv6", dnsServer.isIpv6());
         PreferencesDNSCryptRelays preferencesDNSCryptRelays = new PreferencesDNSCryptRelays();
         preferencesDNSCryptRelays.setOnRoutesChangeListener(preferencesDNSCryptServers);
         preferencesDNSCryptRelays.setArguments(bundle);

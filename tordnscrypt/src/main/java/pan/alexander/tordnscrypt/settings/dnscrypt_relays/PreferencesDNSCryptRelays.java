@@ -53,6 +53,7 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
     private RecyclerView.Adapter<DNSRelaysAdapter.DNSRelaysViewHolder> adapter;
     private OnRoutesChangeListener onRoutesChangeListener;
     private static DialogFragment pleaseWaitDialog;
+    private boolean serverIPv6;
 
 
     public PreferencesDNSCryptRelays() {
@@ -80,7 +81,6 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
         takeArguments(getArguments());
 
         openPleaseWaitDialog();
-
     }
 
     @Override
@@ -159,6 +159,8 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
                 routesCurrent = (ArrayList<DNSServerRelays>) routesCurrentTmp;
             }
 
+            serverIPv6 = args.getBoolean("dnsServerIPv6");
+
         }
     }
 
@@ -186,9 +188,23 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
 
                 dnsRelayItem.setChecked(isDnsRelaySelected(name));
 
-                if (!name.contains("ipv6")) {
+                boolean addServer;
+
+                boolean relayIPv6 = false;
+                if (name.contains("ipv6")) {
+                    relayIPv6 = true;
+                }
+
+                if (serverIPv6) {
+                    addServer = relayIPv6;
+                } else {
+                    addServer = !relayIPv6;
+                }
+
+                if (addServer) {
                     dnsRelayItems.add(dnsRelayItem);
                 }
+
 
                 name = "";
                 description = "";
@@ -266,9 +282,9 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
     }
 
     private void openPleaseWaitDialog() {
-        if (getFragmentManager() != null) {
+        if (isAdded()) {
             pleaseWaitDialog = new PleaseWaitProgressDialog();
-            pleaseWaitDialog.show(getFragmentManager(), "PleaseWaitProgressDialog");
+            pleaseWaitDialog.show(getParentFragmentManager(), "PleaseWaitProgressDialog");
         }
     }
 

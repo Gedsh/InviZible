@@ -657,6 +657,14 @@ public class Tethering {
                 "ip rule delete from " + usbModemAddressesRange + " lookup 62 2> /dev/null || true",
                 iptables + "-D FORWARD -j tordnscrypt_forward 2> /dev/null || true",
                 //iptables + "-t nat -D POSTROUTING -o " + vpnInterfaceName + " -j MASQUERADE || true",
+                iptables + "-t nat -D tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes() + " 2> /dev/null || true",
+                iptables + "-t nat -D tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes() + " 2> /dev/null || true",
+                iptables + "-t nat -D tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes() + " 2> /dev/null || true",
+                iptables + "-t nat -D tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes() + " 2> /dev/null || true",
+                iptables + "-t nat -I tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes(),
+                iptables + "-t nat -I tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes(),
+                iptables + "-t nat -I tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes(),
+                iptables + "-t nat -I tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes(),
                 iptables + "-D tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j RETURN 2> /dev/null && "
                         + iptables + "-I tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j ACCEPT 2> /dev/null || true",
                 iptables + "-D tordnscrypt_forward -o !" + vpnInterfaceName + " -j REJECT 2> /dev/null || true",
@@ -685,7 +693,7 @@ public class Tethering {
         return new String[]{
                 "ip rule delete from " + wifiAPAddressesRange + " lookup 63 2> /dev/null || true",
                 "ip rule delete from " + usbModemAddressesRange + " lookup 62 2> /dev/null || true",
-                iptables + "-D tordnscrypt_forward -o !" + vpnInterfaceName + " -j REJECT 2> /dev/null || true",
+                //iptables + "-D tordnscrypt_forward -o !" + vpnInterfaceName + " -j REJECT 2> /dev/null || true",
                 //iptables + "-t nat -D POSTROUTING -o " + vpnInterfaceName + " -j MASQUERADE || true"
         };
     }

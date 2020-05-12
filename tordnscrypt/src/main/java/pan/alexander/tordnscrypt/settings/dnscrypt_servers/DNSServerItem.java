@@ -38,6 +38,7 @@ public class DNSServerItem {
     private boolean nofilter = false;
     private boolean protoDoH = false;
     private boolean protoDNSCrypt = false;
+    private boolean ipv6 = false;
     private boolean visibility = true;
     private String name;
     private String description;
@@ -57,6 +58,8 @@ public class DNSServerItem {
         boolean require_nolog = sp.getBoolean("require_nolog", false);
         boolean use_dns_servers = sp.getBoolean("dnscrypt_servers", true);
         boolean use_doh_servers = sp.getBoolean("doh_servers", true);
+        boolean use_ipv4_servers = sp.getBoolean("ipv4_servers", true);
+        boolean use_ipv6_servers = sp.getBoolean("ipv6_servers", false);
 
         if (context.getText(R.string.package_name).toString().contains(".gp")) {
             require_nofilter = true;
@@ -81,7 +84,6 @@ public class DNSServerItem {
             this.nofilter = true;
         }
 
-        boolean ipv6 = false;
         if (name.contains("v6") || name.contains("ip6")) {
             ipv6 = true;
         }
@@ -101,7 +103,11 @@ public class DNSServerItem {
         if (!use_doh_servers)
             this.visibility = this.visibility && !this.protoDoH;
 
-        this.visibility = this.visibility && !ipv6;
+        if (!use_ipv4_servers)
+            this.visibility = this.visibility && ipv6;
+
+        if (!use_ipv6_servers)
+            this.visibility = this.visibility && !ipv6;
     }
 
     public boolean isChecked() {
@@ -162,6 +168,10 @@ public class DNSServerItem {
 
     ArrayList<String> getRoutes() {
         return routes;
+    }
+
+    public boolean isIpv6() {
+        return ipv6;
     }
 
     @Override

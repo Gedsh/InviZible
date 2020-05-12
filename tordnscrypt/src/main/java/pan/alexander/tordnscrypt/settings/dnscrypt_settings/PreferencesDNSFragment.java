@@ -77,6 +77,8 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         preferences.add(findPreference("require_dnssec"));
         preferences.add(findPreference("require_nolog"));
         preferences.add(findPreference("require_nofilter"));
+        preferences.add(findPreference("ipv4_servers"));
+        preferences.add(findPreference("ipv6_servers"));
         preferences.add(findPreference("force_tcp"));
         preferences.add(findPreference("Enable proxy"));
         preferences.add(findPreference("proxy_port"));
@@ -91,6 +93,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         preferences.add(findPreference("refresh_delay_relays"));
         preferences.add(findPreference("block_unqualified"));
         preferences.add(findPreference("block_undelegated"));
+        preferences.add(findPreference("block_ipv6"));
         preferences.add(findPreference("local_blacklist"));
         preferences.add(findPreference("local_whitelist"));
         preferences.add(findPreference("local_ipblacklist"));

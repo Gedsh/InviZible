@@ -1,15 +1,35 @@
 package pan.alexander.tordnscrypt.dnscrypt_fragment
 
+/*
+    This file is part of InviZible Pro.
+
+    InviZible Pro is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    InviZible Pro is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+*/
+
 import java.util.*
 
-class DNSQueryLogRecords (private val vpnDNS1: String,
-                          private val vpnDNS2: String) {
+class DNSQueryLogRecords(private val blockIPv6: Boolean,
+                         private val vpnDNS1: String,
+                         private val vpnDNS2: String) {
 
-    constructor(vpnDNS1: String): this(vpnDNS1, "149.112.112.112")
+    constructor(blockIPv6: Boolean, vpnDNS1: String) : this(blockIPv6, vpnDNS1, "149.112.112.112")
 
     private lateinit var dnsQueryLogRecords: LinkedList<DNSQueryLogRecord>
 
-    fun convertRecords(dnsQueryRawRecords: LinkedList<DNSQueryLogRecord>):LinkedList<DNSQueryLogRecord>  {
+    fun convertRecords(dnsQueryRawRecords: LinkedList<DNSQueryLogRecord>): LinkedList<DNSQueryLogRecord> {
         dnsQueryLogRecords = LinkedList<DNSQueryLogRecord>()
         dnsQueryRawRecords.forEach { addRecord(it) }
         return dnsQueryLogRecords
@@ -91,10 +111,12 @@ class DNSQueryLogRecords (private val vpnDNS1: String,
 
     private fun setQueryBlocked(dnsQueryRawRecord: DNSQueryLogRecord): Boolean {
 
-        if (dnsQueryRawRecord.ip == "0.0.0.0" || dnsQueryRawRecord.ip == "127.0.0.1" || dnsQueryRawRecord.ip.contains(":")
+        if (dnsQueryRawRecord.ip == "0.0.0.0" || dnsQueryRawRecord.ip == "127.0.0.1" || dnsQueryRawRecord.ip == "::"
+                || dnsQueryRawRecord.ip.contains(":") && blockIPv6
                 || dnsQueryRawRecord.hInfo.contains("dnscrypt") || dnsQueryRawRecord.rCode != 0) {
 
-            if (dnsQueryRawRecord.hInfo.contains("block_ipv6") || dnsQueryRawRecord.ip.contains(":")) {
+            if (dnsQueryRawRecord.hInfo.contains("block_ipv6") || dnsQueryRawRecord.ip == "::"
+                    || dnsQueryRawRecord.ip.contains(":") && blockIPv6) {
                 dnsQueryRawRecord.blockedByIpv6 = true
             }
 

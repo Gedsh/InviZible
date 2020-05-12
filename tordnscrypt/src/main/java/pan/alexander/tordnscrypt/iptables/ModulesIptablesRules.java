@@ -138,15 +138,17 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
 
                 commands = new String[]{
+                        "TOR_UID=" + appUID,
                         iptables + "-I OUTPUT -j DROP",
                         ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
+                        ip6tables + "-D OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT 2> /dev/null || true",
                         ip6tables + "-I OUTPUT -j DROP",
+                        ip6tables + "-I OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT",
                         iptables + "-t nat -F tordnscrypt_nat_output 2> /dev/null",
                         iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output 2> /dev/null || true",
                         iptables + "-F tordnscrypt 2> /dev/null",
                         iptables + "-D OUTPUT -j tordnscrypt 2> /dev/null || true",
                         busybox + "sleep 1",
-                        "TOR_UID=" + appUID,
                         iptables + "-t nat -N tordnscrypt_nat_output 2> /dev/null",
                         iptables + "-t nat -I OUTPUT -j tordnscrypt_nat_output",
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
@@ -180,15 +182,17 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             } else {
 
                 commands = new String[]{
+                        "TOR_UID=" + appUID,
                         iptables + "-I OUTPUT -j DROP",
                         ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
+                        ip6tables + "-D OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT 2> /dev/null || true",
                         ip6tables + "-I OUTPUT -j DROP",
+                        ip6tables + "-I OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT",
                         iptables + "-t nat -F tordnscrypt_nat_output 2> /dev/null",
                         iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output 2> /dev/null || true",
                         iptables + "-F tordnscrypt 2> /dev/null",
                         iptables + "-D OUTPUT -j tordnscrypt 2> /dev/null || true",
                         busybox + "sleep 1",
-                        "TOR_UID=" + appUID,
                         iptables + "-t nat -N tordnscrypt_nat_output 2> /dev/null",
                         iptables + "-t nat -I OUTPUT -j tordnscrypt_nat_output",
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
@@ -246,15 +250,17 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         } else if (dnsCryptState == RUNNING && torState == STOPPED) {
 
             commands = new String[]{
+                    "TOR_UID=" + appUID,
                     iptables + "-I OUTPUT -j DROP",
                     ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
+                    ip6tables + "-D OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT 2> /dev/null || true",
                     ip6tables + "-I OUTPUT -j DROP",
+                    ip6tables + "-I OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT",
                     iptables + "-t nat -F tordnscrypt_nat_output 2> /dev/null",
                     iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output 2> /dev/null || true",
                     iptables + "-F tordnscrypt 2> /dev/null",
                     iptables + "-D OUTPUT -j tordnscrypt 2> /dev/null || true",
                     busybox + "sleep 1",
-                    "TOR_UID=" + appUID,
                     iptables + "-t nat -N tordnscrypt_nat_output 2> /dev/null",
                     iptables + "-t nat -I OUTPUT -j tordnscrypt_nat_output",
                     iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
@@ -288,7 +294,9 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         } else if (dnsCryptState == STOPPED && torState == STOPPED) {
 
             commands = new String[]{
+                    "TOR_UID=" + appUID,
                     ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
+                    ip6tables + "-D OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT 2> /dev/null || true",
                     iptables + "-t nat -F tordnscrypt_nat_output 2> /dev/null || true",
                     iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output 2> /dev/null || true",
                     iptables + "-F tordnscrypt 2> /dev/null || true",
@@ -303,12 +311,16 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         } else if (dnsCryptState == STOPPED && torState == RUNNING) {
 
             commands = new String[]{
+                    "TOR_UID=" + appUID,
                     iptables + "-I OUTPUT -j DROP",
+                    ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
+                    ip6tables + "-D OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT 2> /dev/null || true",
+                    ip6tables + "-I OUTPUT -j DROP",
+                    ip6tables + "-I OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT",
                     iptables + "-t nat -F tordnscrypt_nat_output 2> /dev/null",
                     iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output 2> /dev/null || true",
                     iptables + "-F tordnscrypt 2> /dev/null",
                     iptables + "-D OUTPUT -j tordnscrypt 2> /dev/null || true",
-                    "TOR_UID=" + appUID,
                     iptables + "-t nat -N tordnscrypt_nat_output 2> /dev/null",
                     iptables + "-t nat -I OUTPUT -j tordnscrypt_nat_output",
                     iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d 127.0.0.1/32 -j RETURN",
@@ -372,8 +384,17 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             modulesStatus.setIptablesRulesUpdateRequested(true);
         }
 
+        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
+        runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+        String appUID = new PrefManager(context).getStrPref("appUID");
+        if (runModulesWithRoot) {
+            appUID = "0";
+        }
+
         return new String[]{
+                "TOR_UID=" + appUID,
                 ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
+                ip6tables + "-D OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT 2> /dev/null || true",
                 iptables + "-t nat -F tordnscrypt_nat_output 2> /dev/null || true",
                 iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output 2> /dev/null || true",
                 iptables + "-F tordnscrypt 2> /dev/null || true",
@@ -394,8 +415,6 @@ public class ModulesIptablesRules extends IptablesRulesSender {
     }
 
     public static void denySystemDNS(Context context) {
-
-        new PrefManager(context).setBoolPref("DNSCryptSystemDNSAllowed", false);
 
         String iptables = PathVars.getInstance(context).getIptablesPath();
 

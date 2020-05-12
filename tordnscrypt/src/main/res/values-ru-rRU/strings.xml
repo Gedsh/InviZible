@@ -424,4 +424,8 @@
     <string name="pref_dnscrypt_erase_cloaking_rules">Очистить cloaking rules</string>
     <string name="erase_dnscrypt_rules_dialog_message">Готово! Правила стерты.</string>
     <string name="dnscrypt_many_rules_dialog_message">Слишком много правил для отображения. Показана только первая 1000.</string>
+    <string name="pref_dnscrypt_ipv4_servers_summ">Испоьзовать IPv4 сервера</string>
+    <string name="pref_dnscrypt_ipv6_servers_summ">Испоьзовать IPv6 сервера</string>
+    <string name="pref_dnscrypt_block_ipv6_summ">Немедленно отвечать на IPv6 запросы пустым ответом.
+        Это ускоряет работу при отсутствии подключения по протоколу IPv6, но иногда может вызывать проблемы.</string>
 </resources>
