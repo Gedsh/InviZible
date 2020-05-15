@@ -92,6 +92,9 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
     private volatile OwnFileReader logFile;
     private int displayLogPeriod = -1;
 
+    private HttpsURLConnection httpsURLConnection;
+    private Thread checkInetAvailableThread;
+
     private final ReentrantLock reentrantLock = new ReentrantLock();
 
     public TorFragmentPresenter(TorFragmentView view) {
@@ -139,6 +142,9 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     public void onStop() {
         stopDisplayLog();
+        if (checkInetAvailableThread != null && checkInetAvailableThread.isAlive()) {
+            checkInetAvailableThread.interrupt();
+        }
         view = null;
     }
 
@@ -209,7 +215,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
         view.setTorLogViewText();
 
         if (context != null) {
-            new PrefManager(Objects.requireNonNull(context)).setBoolPref("Tor Ready", false);
+            new PrefManager(context).setBoolPref("Tor Ready", false);
         }
     }
 
@@ -431,7 +437,11 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
             view.setTorProgressBarProgress(0);
 
-            checkInternetAvailable();
+            boolean torReady = new PrefManager(context).getBoolPref("Tor Ready");
+
+            if (!torReady) {
+                checkInternetAvailable();
+            }
         }
     }
 
@@ -605,9 +615,6 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
                 return;
             }
 
-
-            startRefreshTorUnlockIPs(context);
-
             setTorStarting();
 
             runTor(context);
@@ -621,8 +628,6 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
                 view.setTorStartButtonEnabled(true);
                 return;
             }
-
-            startRefreshTorUnlockIPs(context);
 
             setTorStarting();
 
@@ -688,7 +693,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
     }
 
     private void checkInternetAvailable() {
-        Thread thread = new Thread(() -> {
+        checkInetAvailableThread = new Thread(() -> {
 
             try {
 
@@ -700,25 +705,18 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
                 Context context = view.getFragmentActivity();
 
-                boolean torReady = new PrefManager(context).getBoolPref("Tor Ready");
-
-                if (torReady) {
-                    reentrantLock.unlock();
-                    return;
-                }
-
                 Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1",
                         Integer.parseInt(PathVars.getInstance(context).getTorHTTPTunnelPort())));
 
                 URL url = new URL("https://www.torproject.org/");
 
-                HttpsURLConnection con;
-                con = (HttpsURLConnection) url.openConnection(proxy);
+                httpsURLConnection = (HttpsURLConnection) url.openConnection(proxy);
 
-                con.setConnectTimeout(1000 * 60);
-                con.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 9.0.1; " +
+                httpsURLConnection.setConnectTimeout(1000 * 60 * 15);
+                httpsURLConnection.setReadTimeout(1000 * 60 * 15);
+                httpsURLConnection.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 9.0.1; " +
                         "Mi Mi) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Mobile Safari/537.36");
-                con.connect();
+                httpsURLConnection.connect();
 
                 Log.i(LOG_TAG, "Tor connection is available. Tor ready.");
 
@@ -744,13 +742,21 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
                     }
                 }
 
+                startRefreshTorUnlockIPs(context);
+
                 /////////////////Check Updates///////////////////////////////////////////////
                 if (view != null && view.getFragmentActivity() != null && view.getFragmentActivity() instanceof MainActivity) {
                     checkInvizibleUpdates((MainActivity)view.getFragmentActivity());
                 }
+
             } catch (Exception e) {
                 Log.w(LOG_TAG, "TorFragmentPresenter Internet Not Connected. " + e.getMessage() + " " + e.getCause());
             } finally {
+
+                if (httpsURLConnection != null) {
+                    httpsURLConnection.disconnect();
+                }
+
                 if (reentrantLock.isLocked()) {
                     reentrantLock.unlock();
                 }
@@ -758,8 +764,8 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
         });
 
         if (view != null && view.getFragmentActivity() != null
-                && !new PrefManager(Objects.requireNonNull(view.getFragmentActivity())).getBoolPref("Tor Ready")) {
-            thread.start();
+                && !new PrefManager(view.getFragmentActivity()).getBoolPref("Tor Ready")) {
+            checkInetAvailableThread.start();
         }
     }
 }
