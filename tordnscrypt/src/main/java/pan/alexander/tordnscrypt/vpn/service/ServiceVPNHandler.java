@@ -129,6 +129,8 @@ public class ServiceVPNHandler extends Handler {
         } catch (Throwable ex) {
             Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
 
+            serviceVPN.reloading = false;
+
             if (cmd == VPNCommand.START || cmd == VPNCommand.RELOAD) {
                 if (VpnService.prepare(serviceVPN) == null) {
                     Log.w(LOG_TAG, "VPN Handler prepared connected=" + serviceVPN.last_connected);
@@ -166,6 +168,8 @@ public class ServiceVPNHandler extends Handler {
     }
 
     private void reload() {
+        serviceVPN.reloading = true;
+
         listRule = Rule.getRules(serviceVPN);
         List<Rule> listAllowed = getAllowedRules(listRule);
 
@@ -236,6 +240,8 @@ public class ServiceVPNHandler extends Handler {
             throw new StartFailedException("VPN Handler Start VPN Service Failed");
 
         serviceVPN.startNative(serviceVPN.vpn, listAllowed, listRule);
+
+        serviceVPN.reloading = false;
     }
 
     private void stop() {

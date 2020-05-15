@@ -136,6 +136,7 @@ public class ServiceVPN extends VpnService {
     private String torVirtualAddressNetwork = "10.0.0.0/10";
     private final String itpdRedirectAddress = "10.191.0.1";
     private boolean blockIPv6 = false;
+    volatile boolean reloading;
 
     @SuppressLint("UseSparseArrays")
     private final Map<Integer, Boolean> mapUidAllowed = new HashMap<>();
@@ -397,6 +398,7 @@ public class ServiceVPN extends VpnService {
 
             try {
                 builder.addDisallowedApplication(getPackageName());
+                Log.i(LOG_TAG, "VPN Not routing " + getPackageName());
             } catch (PackageManager.NameNotFoundException ex) {
                 Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
             }
@@ -479,7 +481,7 @@ public class ServiceVPN extends VpnService {
                 try {
                     Log.i(LOG_TAG, "VPN Joining tunnel thread context=" + jni_context);
                     thread.join();
-                } catch (InterruptedException ignored) {
+                } catch (InterruptedException e) {
                     Log.i(LOG_TAG, "VPN Joined tunnel interrupted");
                 }
                 thread = tunnelThread;
@@ -712,6 +714,9 @@ public class ServiceVPN extends VpnService {
             // Allow self
             packet.allowed = true;
             Log.w(LOG_TAG, "Allowing self " + packet);
+        } else if (reloading) {
+            // Reload service
+            Log.i(LOG_TAG, "Block due to reloading " + packet);
         } else if ((blockIPv6 || fixTTL) && (packet.saddr.contains(":") || packet.daddr.contains(":"))) {
             Log.i(LOG_TAG, "Block ipv6 " + packet);
         } else if (blockHttp && packet.dport == 80
