@@ -41,6 +41,7 @@ import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 public class TorRefreshIPsWork {
     private Context context;
@@ -83,7 +84,7 @@ public class TorRefreshIPsWork {
         PathVars pathVars = PathVars.getInstance(context);
         appDataDir = pathVars.getAppDataDir();
 
-        getBridgesIP();
+        //getBridgesIP();
 
         Set<String> setUnlockHosts;
         Set<String> setUnlockIPs;
@@ -153,8 +154,10 @@ public class TorRefreshIPsWork {
                 Log.e(LOG_TAG, "TorRefreshIPsWork interrupt exception " + e.getMessage() + " " + e.getCause());
             }
 
-            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
-            ModulesAux.requestModulesStatusUpdate(context);
+            if (ModulesStatus.getInstance().getMode() == ROOT_MODE) {
+                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
+                ModulesAux.requestModulesStatusUpdate(context);
+            }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && getIPsJobService != null) {
                 getIPsJobService.finishJob();
