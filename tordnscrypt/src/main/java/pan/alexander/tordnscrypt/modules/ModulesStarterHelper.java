@@ -60,6 +60,7 @@ public class ModulesStarterHelper {
     private String busyboxPath;
     private String dnscryptPath;
     private String torPath;
+    private String obfsPath;
     private String itpdPath;
 
     private ModulesStatus modulesStatus;
@@ -71,6 +72,7 @@ public class ModulesStarterHelper {
         busyboxPath = pathVars.getBusyboxPath();
         dnscryptPath = pathVars.getDNSCryptPath();
         torPath = pathVars.getTorPath();
+        obfsPath = pathVars.getObfsPath();
         itpdPath = pathVars.getITPDPath();
         this.modulesStatus = ModulesStatus.getInstance();
     }
@@ -146,7 +148,9 @@ public class ModulesStarterHelper {
             final CommandResult shellResult;
             if (modulesStatus.isUseModulesWithRoot()) {
 
-                correctTorConfRunAsDaemon(service, appDataDir, true);
+                List<String> lines = correctTorConfRunAsDaemon(service, appDataDir, true);
+
+                correctObfsModulePath(lines);
 
                 torCmdString = torPath + " -f "
                         + appDataDir + "/app_data/tor/tor.conf -pidfile " + appDataDir + "/tor.pid";
@@ -164,7 +168,11 @@ public class ModulesStarterHelper {
                 }
 
             } else {
-                correctTorConfRunAsDaemon(service, appDataDir, false);
+
+                List<String> lines = correctTorConfRunAsDaemon(service, appDataDir, false);
+
+                correctObfsModulePath(lines);
+
                 torCmdString = torPath + " -f "
                         + appDataDir + "/app_data/tor/tor.conf -pidfile " + appDataDir + "/tor.pid";
                 new PrefManager(service).setBoolPref("TorStartedWithRoot", false);
@@ -270,7 +278,7 @@ public class ModulesStarterHelper {
         };
     }
 
-    private void correctTorConfRunAsDaemon(Context context, String appDataDir, boolean runAsDaemon) {
+    private List<String> correctTorConfRunAsDaemon(Context context, String appDataDir, boolean runAsDaemon) {
         String path = appDataDir + "/app_data/tor/tor.conf";
         List<String> lines = FileOperations.readTextFileSynchronous(context, path);
 
@@ -283,7 +291,42 @@ public class ModulesStarterHelper {
                     lines.set(i, "RunAsDaemon 0");
                     FileOperations.writeTextFileSynchronous(context, path, lines);
                 }
-                return;
+                return lines;
+            }
+        }
+
+        return lines;
+    }
+
+    private void correctObfsModulePath(List<String> lines) {
+        String savedObfsBinaryPath = new PrefManager(service).getStrPref("ObfsBinaryPath").trim();
+        String currentObfsBinaryPath = obfsPath;
+
+        if (!savedObfsBinaryPath.equals(currentObfsBinaryPath)) {
+
+            new PrefManager(service).setStrPref("ObfsBinaryPath", currentObfsBinaryPath);
+
+            boolean useDefaultBridges = new PrefManager(service).getBoolPref("useDefaultBridges");
+            boolean useOwnBridges = new PrefManager(service).getBoolPref("useOwnBridges");
+
+            if (useDefaultBridges || useOwnBridges) {
+                String filePath = appDataDir + "/app_data/tor/tor.conf";
+
+                String line;
+                for (int i = 0; i < lines.size(); i++) {
+                    line = lines.get(i);
+                    if (line.contains("ClientTransportPlugin ") && line.contains("/libobfs4proxy.so")) {
+                        line = line.replaceAll("/.+?/libobfs4proxy.so", service.getApplicationInfo().nativeLibraryDir+ "/libobfs4proxy.so");
+                        lines.set(i, line);
+                    } else if (line.contains("ClientTransportPlugin ") && line.contains("/libsnowflake.so")) {
+                        line = line.replaceAll("/.+?/libsnowflake.so", service.getApplicationInfo().nativeLibraryDir+ "/libsnowflake.so");
+                        lines.set(i, line);
+                    }
+                }
+
+                FileOperations.writeTextFileSynchronous(service, filePath, lines);
+
+                Log.i(LOG_TAG, "ModulesService Tor Obfs module path is corrected");
             }
         }
     }

@@ -41,7 +41,6 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
-import pan.alexander.tordnscrypt.BuildConfig;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -319,12 +318,6 @@ public class ModulesService extends Service {
             }
 
             try {
-                correctObfsModulePath();
-            } catch (Exception e) {
-                Log.e(LOG_TAG, "ModulesService correct Tor Obfs module path exception " + e.getMessage() + " " + e.getCause());
-            }
-
-            try {
                 Thread previousTorThread = checkPreviouslyRunningTorModule();
 
                 if (previousTorThread != null && previousTorThread.isAlive()) {
@@ -435,40 +428,7 @@ public class ModulesService extends Service {
         return false;
     }
 
-    private void correctObfsModulePath() {
-        String savedAppVersion = new PrefManager(this).getStrPref("AppVersion").trim();
-        String currentAppVersion = BuildConfig.VERSION_NAME.trim();
 
-        if (!savedAppVersion.equals(currentAppVersion)) {
-
-            new PrefManager(this).setStrPref("AppVersion", currentAppVersion);
-
-            boolean useDefaultBridges = new PrefManager(this).getBoolPref("useDefaultBridges");
-            boolean useOwnBridges = new PrefManager(this).getBoolPref("useOwnBridges");
-
-            if (useDefaultBridges || useOwnBridges) {
-                String filePath = pathVars.getAppDataDir() + "/app_data/tor/tor.conf";
-
-                List<String> lines = FileOperations.readTextFileSynchronous(this, filePath);
-
-                String line;
-                for (int i = 0; i < lines.size(); i++) {
-                    line = lines.get(i);
-                    if (line.contains("ClientTransportPlugin ") && line.contains("/libobfs4proxy.so")) {
-                        line = line.replaceAll("/.+?/libobfs4proxy.so", this.getApplicationInfo().nativeLibraryDir+ "/libobfs4proxy.so");
-                        lines.set(i, line);
-                    } else if (line.contains("ClientTransportPlugin ") && line.contains("/libsnowflake.so")) {
-                        line = line.replaceAll("/.+?/libsnowflake.so", this.getApplicationInfo().nativeLibraryDir+ "/libsnowflake.so");
-                        lines.set(i, line);
-                    }
-                }
-
-                FileOperations.writeTextFileSynchronous(this, filePath, lines);
-
-                Log.i(LOG_TAG, "ModulesService Tor Obfs module path is corrected");
-            }
-        }
-    }
 
     private void startITPD() {
 
