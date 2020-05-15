@@ -596,9 +596,9 @@ public class ModulesKiller {
                     iptablesPath + "-F tordnscrypt_forward 2> /dev/null",
                     iptablesPath + "-t nat -D PREROUTING -j tordnscrypt_prerouting 2> /dev/null || true",
                     iptablesPath + "-D FORWARD -j tordnscrypt_forward 2> /dev/null || true",
-                    busyboxPath + "killall -s SIGTERM libdnscrypt-proxy.so",
-                    busyboxPath + "killall -s SIGTERM libtor.so",
-                    busyboxPath + "killall -s SIGTERM libi2pd.so"
+                    busyboxPath + "killall -s SIGKILL libdnscrypt-proxy.so",
+                    busyboxPath + "killall -s SIGKILL libtor.so",
+                    busyboxPath + "killall -s SIGKILL libi2pd.so"
             };
 
             new Thread(() -> Shell.SU.run(commands)).start();
