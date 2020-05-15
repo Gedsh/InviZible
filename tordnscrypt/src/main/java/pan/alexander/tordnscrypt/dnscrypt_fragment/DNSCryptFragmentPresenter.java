@@ -82,6 +82,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     private volatile LinkedList<DNSQueryLogRecord> savedDNSQueryRawRecords;
     private volatile DNSQueryLogRecords dnsQueryLogRecords;
     private boolean torTethering;
+    private boolean apIsOn;
+    private boolean modemIsOn;
 
     public DNSCryptFragmentPresenter(DNSCryptFragmentView view) {
         this.view = view;
@@ -101,6 +103,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         torTethering = sharedPreferences.getBoolean("pref_common_tor_tethering", false);
+        apIsOn = new PrefManager(context).getBoolPref("APisON");
+        modemIsOn = new PrefManager(context).getBoolPref("ModemIsON");
         boolean blockIPv6 = sharedPreferences.getBoolean("block_ipv6", true);
 
         logFile = new OwnFileReader(context, appDataDir + "/logs/DnsCrypt.log");
@@ -528,7 +532,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
                         if (appName != null && !appName.isEmpty()) {
                             lines.append("<b>").append(appName).append("</b>").append(" -> ");
-                        } else if (appName == null && !torTethering) {
+                        } else if (appName == null && !torTethering && !apIsOn && !modemIsOn && !fixTTL) {
                             lines.append("<b>").append("Unknown system traffic").append("</b>").append(" -> ");
                         }
                     }
