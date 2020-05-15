@@ -240,3 +240,10 @@
 * Fixed application update when the hotspot is turned on.
 * Fixed the use of bridges after the application update.
 * Fixed bug with incorrect bridge selection.
+
+**InviZible Pro beta 0.8.4**
+* Fixed switching between default and custom bridges.
+* Improved the use of bridges after the application update.
+* Fixed DNS leak when restarting VPN service.
+* Fixed using usb modem with a remote hotspot.
+* Fixes.
