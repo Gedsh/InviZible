@@ -650,7 +650,7 @@ public class Tethering {
     private String[] fixTTLCommands() {
         new PrefManager(context).setBoolPref("TTLisFixed", true);
 
-        return new String[]{
+        String[] commands = new String[]{
                 iptables + "-I FORWARD -j DROP",
                 "echo 64 > /proc/sys/net/ipv4/ip_default_ttl 2> /dev/null || true",
                 "ip rule delete from " + wifiAPAddressesRange + " lookup 63 2> /dev/null || true",
@@ -685,6 +685,24 @@ public class Tethering {
                 //iptables + "-A PREROUTING -t mangle -p udp --dport 53 -j MARK --set-mark 111",
                 //"ip rule add from " + wifiAPAddressesRange + " fwmark 111 lookup 62"
         };
+
+        if (!usbTetherOn) {
+            for (int i = 0; i < commands.length; i++) {
+                String command = commands[i];
+                if (command.contains(usbModemInterfaceName) || command.contains(usbModemAddressesRange) || command.contains("table 62")) {
+                    commands[i] = "";
+                }
+            }
+        } else if (!apIsOn) {
+            for (int i = 0; i < commands.length; i++) {
+                String command = commands[i];
+                if (command.contains(wifiAPInterfaceName) || command.contains(wifiAPAddressesRange) || command.contains("table 63")) {
+                    commands[i] = "";
+                }
+            }
+        }
+
+        return commands;
     }
 
     private String[] unfixTTLCommands() {
