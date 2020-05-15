@@ -46,7 +46,9 @@ import java.util.Objects;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
+import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.BridgeType;
+import pan.alexander.tordnscrypt.utils.enums.BridgesSelector;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder> {
@@ -54,6 +56,7 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
     private FragmentManager fragmentManager;
     private LayoutInflater lInflater;
     private PreferencesBridges preferencesBridges;
+    private BridgesSelector currentBridgesSelector;
 
     BridgeAdapter(SettingsActivity activity, FragmentManager fragmentManager, PreferencesBridges preferencesBridges) {
         this.activity = activity;
@@ -104,10 +107,30 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
                 List<String> currentBridges = preferencesBridges.getCurrentBridges();
 
                 if (newValue) {
+
+                    boolean useNoBridges = new PrefManager(activity).getBoolPref("useNoBridges");
+                    boolean useDefaultBridges = new PrefManager(activity).getBoolPref("useDefaultBridges");
+                    boolean useOwnBridges = new PrefManager(activity).getBoolPref("useOwnBridges");
+
+                    if (!useNoBridges && !useDefaultBridges && !useOwnBridges) {
+                        currentBridgesSelector = BridgesSelector.NO_BRIDGES;
+                    } else if (useNoBridges) {
+                        currentBridgesSelector = BridgesSelector.NO_BRIDGES;
+                    } else if (useDefaultBridges) {
+                        currentBridgesSelector = BridgesSelector.DEFAULT_BRIDGES;
+                    } else {
+                        currentBridgesSelector = BridgesSelector.OWN_BRIDGES;
+                    }
+
                     BridgeType obfsType = getItem(getAdapterPosition()).obfsType;
                     if (!obfsType.equals(preferencesBridges.getCurrentBridgesType())) {
                         currentBridges.clear();
                         setCurrentBridgesType(obfsType);
+                    }
+
+                    if (!currentBridgesSelector.equals(preferencesBridges.getSavedBridgesSelector())) {
+                        currentBridges.clear();
+                        setSavedBridgesSelector(currentBridgesSelector);
                     }
 
                     boolean unicBridge = true;
@@ -271,5 +294,9 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
 
     private void setCurrentBridgesType(BridgeType type) {
         preferencesBridges.setCurrentBridgesType(type);
+    }
+
+    private void setSavedBridgesSelector(BridgesSelector selector) {
+        preferencesBridges.setSavedBridgesSelector(selector);
     }
 }
