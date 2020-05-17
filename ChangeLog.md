@@ -247,3 +247,8 @@
 * Fixed DNS leak when restarting VPN service.
 * Fixed using usb modem with a remote hotspot.
 * Fixes.
+
+**InviZible Pro beta 0.8.5**
+* Fixed "Do Not Use Bridges" option selection.
+* Improved real-time logs auto scroll feature.
+* Performance improvements.
