@@ -33,6 +33,7 @@ public interface ITPDFragmentView {
     void setITPDInfoLogText();
     void setITPDInfoLogText(Spanned text);
     void setStartButtonText(int textId);
+    void scrollITPDLogViewToBottom();
     Activity getFragmentActivity();
     FragmentManager getFragmentFragmentManager();
 }

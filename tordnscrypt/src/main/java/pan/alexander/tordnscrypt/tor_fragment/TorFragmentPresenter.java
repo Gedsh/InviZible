@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -52,6 +53,7 @@ import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
+import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
@@ -94,6 +96,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     private HttpsURLConnection httpsURLConnection;
     private Thread checkInetAvailableThread;
+    private boolean torLogAutoScroll = true;
 
     private final ReentrantLock reentrantLock = new ReentrantLock();
 
@@ -261,7 +264,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
             displayLog(1000);
 
-        } else if (currentModuleState == RUNNING && view.getFragmentActivity() != null) {
+        } else if (currentModuleState == RUNNING) {
 
             ServiceVPNHelper.prepareVPNServiceIfRequired(view.getFragmentActivity(), modulesStatus);
 
@@ -356,14 +359,17 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
                             return;
                         }
 
-                        if (!previousLastLines.contentEquals(lastLines)) {
+                        if (!previousLastLines.contentEquals(lastLines) && torLogAutoScroll) {
 
                             if (!new PrefManager(view.getFragmentActivity()).getBoolPref("Tor Ready")) {
                                 torStartedSuccessfully(view.getFragmentActivity(), lastLines);
                             }
 
                             torStartedWithError(view.getFragmentActivity(), lastLines);
+
                             view.setTorLogViewText(Html.fromHtml(lastLines));
+                            view.scrollTorLogViewToBottom();
+
                             previousLastLines = lastLines;
                         }
 
@@ -446,7 +452,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
     }
 
     private void torStartedWithError(Context context, String lastLines) {
-        if (view == null) {
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -480,7 +486,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     @Override
     public void startRefreshTorUnlockIPs(Context context) {
-        if (context == null) {
+        if (context == null || view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -570,13 +576,15 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
         view.setTorStartButtonEnabled(false);
 
-        //cleanLogFileNoRootMethod(context);
+        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || view.getFragmentFragmentManager() == null) {
+            return;
+        }
 
-        Thread thread = new Thread(() -> {
+        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+            ModulesService.executorService = Executors.newCachedThreadPool();
+        }
 
-            if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || view.getFragmentFragmentManager() == null) {
-                return;
-            }
+        ModulesService.executorService.submit(() -> {
 
             try {
                 Verifier verifier = new Verifier(view.getFragmentActivity());
@@ -604,7 +612,6 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
                         Arrays.toString(e.getStackTrace()));
             }
         });
-        thread.start();
 
         if (!new PrefManager(Objects.requireNonNull(context)).getBoolPref("Tor Running") &&
                 new PrefManager(context).getBoolPref("DNSCrypt Running")) {
@@ -656,7 +663,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     private void checkInvizibleUpdates(MainActivity activity) {
 
-        if (activity == null) {
+        if (activity == null || view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -677,7 +684,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     private void runTor(Context context) {
 
-        if (context == null) {
+        if (context == null || view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -685,7 +692,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
     }
 
     private void stopTor(Context context) {
-        if (context == null) {
+        if (context == null || view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -767,5 +774,9 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
                 && !new PrefManager(view.getFragmentActivity()).getBoolPref("Tor Ready")) {
             checkInetAvailableThread.start();
         }
+    }
+
+    public void torLogAutoScrollingAllowed(boolean allowed) {
+        torLogAutoScroll = allowed;
     }
 }

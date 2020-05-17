@@ -31,6 +31,7 @@ public interface DNSCryptFragmentView {
     void setDNSCryptLogViewText();
     void setDNSCryptLogViewText(Spanned text);
     void setStartButtonText(int textId);
+    void scrollDNSCryptLogViewToBottom();
     Activity getFragmentActivity();
     FragmentManager getFragmentFragmentManager();
 }

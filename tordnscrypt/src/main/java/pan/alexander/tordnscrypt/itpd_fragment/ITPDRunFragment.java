@@ -31,8 +31,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import pan.alexander.tordnscrypt.MainActivity;
@@ -47,13 +49,14 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.OnClickListener {
+public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.OnClickListener, ViewTreeObserver.OnScrollChangedListener {
 
     private Button btnITPDStart;
     private TextView tvITPDStatus;
     private ProgressBar pbITPD;
     private TextView tvITPDLog;
     private TextView tvITPDinfoLog;
+    private ScrollView svITPDLog;
 
     private ITPDFragmentPresenter presenter;
     private ITPDFragmentReceiver receiver;
@@ -83,7 +86,9 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
         tvITPDLog.setMovementMethod(ScrollingMovementMethod.getInstance());
 
         tvITPDinfoLog = view.findViewById(R.id.tvITPDinfoLog);
-        tvITPDinfoLog.setMovementMethod(ScrollingMovementMethod.getInstance());
+
+        svITPDLog = view.findViewById(R.id.svITPDLog);
+        svITPDLog.getViewTreeObserver().addOnScrollChangedListener(this);
 
         tvITPDStatus = view.findViewById(R.id.tvI2PDStatus);
 
@@ -200,7 +205,7 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
 
     @Override
     public FragmentManager getFragmentFragmentManager() {
-        return getFragmentManager();
+        return getParentFragmentManager();
     }
 
     public ITPDFragmentPresenterCallbacks getPresenter() {
@@ -209,5 +214,29 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
         }
 
         return presenter;
+    }
+
+    @Override
+    public void onScrollChanged() {
+        if (presenter != null && svITPDLog!= null) {
+            if (svITPDLog.canScrollVertically(1) && svITPDLog.canScrollVertically(-1)) {
+                presenter.itpdLogAutoScrollingAllowed(false);
+            } else {
+                presenter.itpdLogAutoScrollingAllowed(true);
+            }
+        }
+    }
+
+    @Override
+    public void scrollITPDLogViewToBottom() {
+        svITPDLog.post(() -> {
+            View lastChild = svITPDLog.getChildAt(svITPDLog.getChildCount() - 1);
+            int bottom = lastChild.getBottom() + svITPDLog.getPaddingBottom();
+            int sy = svITPDLog.getScrollY();
+            int sh = svITPDLog.getHeight();
+            int delta = bottom - (sy + sh);
+
+            svITPDLog.smoothScrollBy(0, delta);
+        });
     }
 }

@@ -84,6 +84,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     private boolean torTethering;
     private boolean apIsOn;
     private boolean modemIsOn;
+    private boolean dnsCryptLogAutoScroll = true;
 
     public DNSCryptFragmentPresenter(DNSCryptFragmentView view) {
         this.view = view;
@@ -224,7 +225,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                             return;
                         }
 
-                        if (!previousLastLines.contentEquals(lastLines)) {
+                        if (!previousLastLines.contentEquals(lastLines) && dnsCryptLogAutoScroll) {
 
                             dnsCryptStartedSuccessfully(lastLines);
 
@@ -232,6 +233,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
                             if (!displayed) {
                                 view.setDNSCryptLogViewText(Html.fromHtml(lastLines));
+                                view.scrollDNSCryptLogViewToBottom();
                             }
 
                             previousLastLines = lastLines;
@@ -441,6 +443,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                 view.getFragmentActivity().runOnUiThread(() -> {
                     if (view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isFinishing() && logFile != null) {
                         view.setDNSCryptLogViewText(Html.fromHtml(logFile.readLastLines()));
+                        view.scrollDNSCryptLogViewToBottom();
                     }
                 });
                 return true;
@@ -459,6 +462,10 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             clearDnsQueryRecords();
             savedDNSQueryRawRecords.clear();
             return false;
+        }
+
+        if (!dnsCryptLogAutoScroll) {
+            return true;
         }
 
         lockDnsQueryRawRecordsListForRead(true);
@@ -534,6 +541,10 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                             lines.append("<b>").append(appName).append("</b>").append(" -> ");
                         } else if (appName == null && !torTethering && !apIsOn && !modemIsOn && !fixTTL) {
                             lines.append("<b>").append("Unknown system traffic").append("</b>").append(" -> ");
+                        } else if (appName == null && apIsOn && fixTTL) {
+                            lines.append("<b>").append("WiFi").append("</b>").append(" -> ");
+                        } else if (appName == null && modemIsOn && fixTTL) {
+                            lines.append("<b>").append("USB").append("</b>").append(" -> ");
                         }
                     }
                 }
@@ -567,8 +578,9 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
         if (view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isFinishing()) {
             view.getFragmentActivity().runOnUiThread(() -> {
-                if (view != null && view.getFragmentActivity() != null) {
+                if (view != null && view.getFragmentActivity() != null && dnsCryptLogAutoScroll) {
                     view.setDNSCryptLogViewText(Html.fromHtml(lines.toString()));
+                    view.scrollDNSCryptLogViewToBottom();
                 } else {
                     savedDNSQueryRawRecords.clear();
                 }
@@ -618,7 +630,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
             displayLog(1000);
 
-        } else if (currentModuleState == RUNNING && view.getFragmentActivity() != null && !view.getFragmentActivity().isFinishing()) {
+        } else if (currentModuleState == RUNNING) {
 
             ServiceVPNHelper.prepareVPNServiceIfRequired(view.getFragmentActivity(), modulesStatus);
 
@@ -797,6 +809,10 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         }
 
         view.setDNSCryptProgressBarIndeterminate(true);
+    }
+
+    public void dnsCryptLogAutoScrollingAllowed(boolean allowed) {
+        dnsCryptLogAutoScroll = allowed;
     }
 
 }

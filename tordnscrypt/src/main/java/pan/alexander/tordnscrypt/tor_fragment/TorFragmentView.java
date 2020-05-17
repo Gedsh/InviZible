@@ -33,6 +33,7 @@ public interface TorFragmentView {
     void setTorLogViewText();
     void setTorLogViewText(Spanned text);
     void setStartButtonText(int textId);
+    void scrollTorLogViewToBottom();
     Activity getFragmentActivity();
     FragmentManager getFragmentFragmentManager();
 }

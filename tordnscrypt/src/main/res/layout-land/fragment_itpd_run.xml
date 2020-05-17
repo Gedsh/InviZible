@@ -4,89 +4,87 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     tools:context=".itpd_fragment.ITPDRunFragment">
 
-    <androidx.appcompat.widget.LinearLayoutCompat
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnITPDStart"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_marginStart="@dimen/run_btns_side_margin"
+        android:layout_marginTop="@dimen/run_btns_top_margin"
+        android:layout_marginEnd="@dimen/run_btns_side_margin"
+        android:background="@drawable/button_start_selector"
+        android:clickable="true"
+        android:focusable="true"
+        android:fontFamily="sans-serif-medium"
+        android:minHeight="@dimen/run_btns_min_width"
+        android:nextFocusDown="@id/svITPDLog"
+        android:singleLine="true"
+        android:text="@string/btnITPDStart"
+        android:textColor="@color/buttonTextColor"
+        android:textSize="@dimen/start_btns_text_size"
+        android:typeface="monospace" />
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnITPDStart"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/run_btns_side_margin"
-            android:layout_marginTop="@dimen/run_btns_top_margin"
-            android:layout_marginEnd="@dimen/run_btns_side_margin"
-            android:layout_weight="1"
-            android:background="@drawable/button_start_selector"
-            android:clickable="true"
-            android:enabled="false"
-            android:focusable="true"
-            android:fontFamily="sans-serif-medium"
-            android:minHeight="@dimen/run_btns_min_width"
-            android:nextFocusLeft="@id/btnTorStart"
-            android:nextFocusRight="@id/btnDNSCryptStart"
-            android:nextFocusDown="@id/btnDNSCryptStart"
-            android:nextFocusForward="@id/btnDNSCryptStart"
-            android:singleLine="true"
-            android:text="@string/btnITPDStart"
-            android:textColor="@color/buttonTextColor"
-            android:textSize="@dimen/start_btns_text_size"
-            android:typeface="monospace" />
-
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/tvI2PDStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/status_text_margin"
-            android:layout_weight="1"
-            android:fontFamily="serif"
-            android:singleLine="true"
-            android:text="@string/btnITPDStop"
-            android:textAlignment="center"
-            android:textColor="@color/textModuleStatusColorStopped"
-            android:textSize="@dimen/status_text_size"
-            android:typeface="monospace" />
-    </androidx.appcompat.widget.LinearLayoutCompat>
-
-    <androidx.appcompat.widget.LinearLayoutCompat
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvI2PDStatus"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_margin="@dimen/status_text_margin"
+        android:fontFamily="serif"
+        android:singleLine="true"
+        android:text="@string/tvITPDStop"
+        android:textAlignment="center"
+        android:textColor="@color/textModuleStatusColorStopped"
+        android:textSize="@dimen/status_text_size"
+        android:typeface="monospace" />
 
-        <ProgressBar
-            android:id="@+id/pbITPD"
-            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1" />
-    </androidx.appcompat.widget.LinearLayoutCompat>
-
-    <androidx.appcompat.widget.LinearLayoutCompat
+    <ProgressBar
+        android:id="@+id/pbITPD"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="wrap_content" />
 
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/tvITPDLog"
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvITPDLog"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="14dp"
+        android:background="@drawable/logs_scroll_view_selector"
+        android:clickable="false"
+        android:focusable="false"
+        android:fontFamily="sans-serif-medium"
+        android:textSize="@dimen/fragment_log_text_size"
+        android:typeface="monospace" />
+
+    <ScrollView
+        android:id="@+id/svITPDLog"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@drawable/logs_scroll_view_selector"
+        android:nextFocusUp="@id/btnITPDStart"
+        app:layout_constraintBottom_toTopOf="@+id/tvITPDLog"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="9dp"
-            android:fontFamily="sans-serif-medium"
-            android:scrollbars="vertical"
-            android:textSize="@dimen/fragment_log_text_size"
-            android:typeface="monospace" />
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/tvITPDinfoLog"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-medium"
-            android:gravity="bottom"
-            android:scrollbars="vertical"
-            android:textSize="@dimen/fragment_log_text_size"
-            android:typeface="monospace" />
-    </androidx.appcompat.widget.LinearLayoutCompat>
+            android:descendantFocusability="blocksDescendants"
+            android:orientation="vertical">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvITPDinfoLog"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginBottom="8dp"
+                android:fontFamily="sans-serif-medium"
+                android:textIsSelectable="false"
+                android:textSize="@dimen/fragment_log_text_size"
+                android:typeface="monospace" />
+        </LinearLayout>
+    </ScrollView>
 
 </androidx.appcompat.widget.LinearLayoutCompat>

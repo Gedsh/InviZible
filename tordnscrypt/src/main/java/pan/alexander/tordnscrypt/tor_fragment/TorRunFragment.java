@@ -28,13 +28,14 @@ import android.os.Bundle;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import android.text.Spanned;
-import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import pan.alexander.tordnscrypt.MainActivity;
@@ -46,13 +47,14 @@ import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 
-public class TorRunFragment extends Fragment implements TorFragmentView, View.OnClickListener {
+public class TorRunFragment extends Fragment implements TorFragmentView, View.OnClickListener, ViewTreeObserver.OnScrollChangedListener {
 
 
     private Button btnTorStart;
     private TextView tvTorStatus;
     private ProgressBar pbTor;
     private TextView tvTorLog;
+    private ScrollView svTorLog;
     private BroadcastReceiver receiver;
 
     private TorFragmentPresenter presenter;
@@ -79,7 +81,9 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
         pbTor = view.findViewById(R.id.pbTor);
 
         tvTorLog = view.findViewById(R.id.tvTorLog);
-        tvTorLog.setMovementMethod(ScrollingMovementMethod.getInstance());
+
+        svTorLog = view.findViewById(R.id.svTorLog);
+        svTorLog.getViewTreeObserver().addOnScrollChangedListener(this);
 
         tvTorStatus = view.findViewById(R.id.tvTorStatus);
 
@@ -195,7 +199,7 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
 
     @Override
     public FragmentManager getFragmentFragmentManager() {
-        return getFragmentManager();
+        return getParentFragmentManager();
     }
 
     public TorFragmentPresenterCallbacks getPresenter() {
@@ -204,5 +208,29 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
         }
 
         return presenter;
+    }
+
+    @Override
+    public void onScrollChanged() {
+        if (presenter != null && svTorLog != null) {
+            if (svTorLog.canScrollVertically(1) && svTorLog.canScrollVertically(-1)) {
+                presenter.torLogAutoScrollingAllowed(false);
+            } else {
+                presenter.torLogAutoScrollingAllowed(true);
+            }
+        }
+    }
+
+    @Override
+    public void scrollTorLogViewToBottom() {
+        svTorLog.post(() -> {
+            View lastChild = svTorLog.getChildAt(svTorLog.getChildCount() - 1);
+            int bottom = lastChild.getBottom() + svTorLog.getPaddingBottom();
+            int sy = svTorLog.getScrollY();
+            int sh = svTorLog.getHeight();
+            int delta = bottom - (sy + sh);
+
+            svTorLog.smoothScrollBy(0, delta);
+        });
     }
 }

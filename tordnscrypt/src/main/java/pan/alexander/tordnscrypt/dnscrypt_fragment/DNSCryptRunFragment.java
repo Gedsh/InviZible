@@ -28,13 +28,14 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import android.text.Spanned;
-import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import pan.alexander.tordnscrypt.MainActivity;
@@ -46,13 +47,14 @@ import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 
-public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentView, View.OnClickListener {
+public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentView, View.OnClickListener, ViewTreeObserver.OnScrollChangedListener {
 
 
     private Button btnDNSCryptStart;
     private TextView tvDNSStatus;
     private ProgressBar pbDNSCrypt;
     private TextView tvDNSCryptLog;
+    private ScrollView svDNSCryptLog;
     private BroadcastReceiver receiver;
 
     private DNSCryptFragmentPresenter presenter;
@@ -77,11 +79,13 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
         }
 
         btnDNSCryptStart.setOnClickListener(this);
+        btnDNSCryptStart.requestFocus();
 
         pbDNSCrypt = view.findViewById(R.id.pbDNSCrypt);
 
         tvDNSCryptLog = view.findViewById(R.id.tvDNSCryptLog);
-        tvDNSCryptLog.setMovementMethod(ScrollingMovementMethod.getInstance());
+        svDNSCryptLog = view.findViewById(R.id.svDNSCryptLog);
+        svDNSCryptLog.getViewTreeObserver().addOnScrollChangedListener(this);
 
         tvDNSStatus = view.findViewById(R.id.tvDNSStatus);
 
@@ -190,7 +194,7 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
 
     @Override
     public FragmentManager getFragmentFragmentManager() {
-        return getFragmentManager();
+        return getParentFragmentManager();
     }
 
     public DNSCryptFragmentPresenterCallbacks getPresenter() {
@@ -201,4 +205,27 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
         return presenter;
     }
 
+    @Override
+    public void onScrollChanged() {
+        if (presenter != null && svDNSCryptLog != null) {
+            if (svDNSCryptLog.canScrollVertically(1) && svDNSCryptLog.canScrollVertically(-1)) {
+                presenter.dnsCryptLogAutoScrollingAllowed(false);
+            } else {
+                presenter.dnsCryptLogAutoScrollingAllowed(true);
+            }
+        }
+    }
+
+    @Override
+    public void scrollDNSCryptLogViewToBottom() {
+        svDNSCryptLog.post(() -> {
+            View lastChild = svDNSCryptLog.getChildAt(svDNSCryptLog.getChildCount() - 1);
+            int bottom = lastChild.getBottom() + svDNSCryptLog.getPaddingBottom();
+            int sy = svDNSCryptLog.getScrollY();
+            int sh = svDNSCryptLog.getHeight();
+            int delta = bottom - (sy + sh);
+
+            svDNSCryptLog.smoothScrollBy(0, delta);
+        });
+    }
 }

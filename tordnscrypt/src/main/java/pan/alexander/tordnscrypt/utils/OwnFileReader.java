@@ -87,7 +87,7 @@ public class OwnFileReader {
             br = new BufferedReader(new InputStreamReader(fstream));
 
             for (String tmp; (tmp = br.readLine()) != null; )
-                if (lines.add(tmp) && lines.size() > 50) {
+                if (lines.add(tmp) && lines.size() > 100) {
                     lines.remove(0);
                 }
 

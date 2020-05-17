@@ -23,6 +23,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.IntentFilter;
+import android.content.res.Configuration;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Spanned;
@@ -31,6 +32,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -59,6 +61,7 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.tor_fragment.TorFragmentPresenter;
 import pan.alexander.tordnscrypt.tor_fragment.TorFragmentReceiver;
 import pan.alexander.tordnscrypt.tor_fragment.TorFragmentView;
+import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 
@@ -70,7 +73,8 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 
-public class MainFragment extends Fragment implements DNSCryptFragmentView, TorFragmentView, ITPDFragmentView, View.OnClickListener, CompoundButton.OnCheckedChangeListener {
+public class MainFragment extends Fragment implements DNSCryptFragmentView, TorFragmentView, ITPDFragmentView,
+        View.OnClickListener, CompoundButton.OnCheckedChangeListener, ViewTreeObserver.OnScrollChangedListener {
     private Button btnStartMainFragment;
     private CheckBox chbHideIpMainFragment;
     private CheckBox chbProtectDnsMainFragment;
@@ -104,6 +108,8 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
     private ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
+    private boolean orientationLandscape;
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
@@ -130,6 +136,8 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
             return view;
         }
 
+        orientationLandscape = Utils.INSTANCE.getScreenOrientation(getActivity()) == Configuration.ORIENTATION_LANDSCAPE;
+
         boolean hideIp = new PrefManager(getActivity()).getBoolPref("HideIp");
         boolean protectDns = new PrefManager(getActivity()).getBoolPref("ProtectDns");
         boolean accessITP = new PrefManager(getActivity()).getBoolPref("AccessITP");
@@ -155,7 +163,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     public void onStart() {
         super.onStart();
 
-        if (getActivity() == null) {
+        if (getActivity() == null || orientationLandscape) {
             return;
         }
 
@@ -206,7 +214,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     @Override
     public void onClick(View v) {
 
-        if (getActivity() == null) {
+        if (getActivity() == null || orientationLandscape) {
             return;
         }
 
@@ -256,7 +264,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 
-        if (getActivity() == null) {
+        if (getActivity() == null || orientationLandscape) {
             return;
         }
 
@@ -308,7 +316,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
     private void refreshStartButtonText() {
 
-        if (getActivity() == null) {
+        if (getActivity() == null || orientationLandscape) {
             return;
         }
 
@@ -378,7 +386,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
         dnsCryptFragmentReceiver = new DNSCryptFragmentReceiver(this, dnsCryptFragmentPresenter);
 
-        if (getActivity() != null) {
+        if (getActivity() != null && !orientationLandscape) {
             IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
             IntentFilter intentFilterTopFrg = new IntentFilter(TOP_BROADCAST);
 
@@ -414,9 +422,13 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     @SuppressLint("SetTextI18n")
     @Override
     public void setDNSCryptLogViewText() {
-        if (getActivity() != null && tvDNSCryptLog == null && svDNSCryptLog == null) {
+        if (getActivity() != null && tvDNSCryptLog == null && svDNSCryptLog == null && !orientationLandscape) {
             tvDNSCryptLog = getActivity().findViewById(R.id.tvDNSCryptLog);
             svDNSCryptLog = getActivity().findViewById(R.id.svDNSCryptLog);
+
+            if (svDNSCryptLog != null) {
+                svDNSCryptLog.getViewTreeObserver().addOnScrollChangedListener(this);
+            }
         }
 
         if (tvDNSCryptLog != null && svDNSCryptLog != null) {
@@ -430,9 +442,13 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
     @Override
     public void setDNSCryptLogViewText(Spanned text) {
-        if (getActivity() != null && tvDNSCryptLog == null && svDNSCryptLog == null) {
+        if (getActivity() != null && tvDNSCryptLog == null && svDNSCryptLog == null && !orientationLandscape) {
             tvDNSCryptLog = getActivity().findViewById(R.id.tvDNSCryptLog);
             svDNSCryptLog = getActivity().findViewById(R.id.svDNSCryptLog);
+
+            if (svDNSCryptLog != null) {
+                svDNSCryptLog.getViewTreeObserver().addOnScrollChangedListener(this);
+            }
         }
 
         if (tvDNSCryptLog != null && svDNSCryptLog != null) {
@@ -441,8 +457,12 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
             FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             params.gravity = Gravity.BOTTOM;
             svDNSCryptLog.setLayoutParams(params);
-            scrollToBottom(svDNSCryptLog);
         }
+    }
+
+    @Override
+    public void scrollDNSCryptLogViewToBottom() {
+        scrollToBottom(svDNSCryptLog);
     }
 
 
@@ -459,7 +479,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
         torFragmentReceiver = new TorFragmentReceiver(this, torFragmentPresenter);
 
-        if (getActivity() != null) {
+        if (getActivity() != null && !orientationLandscape) {
             IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
             IntentFilter intentFilterTopFrg = new IntentFilter(TOP_BROADCAST);
 
@@ -506,9 +526,13 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     @SuppressLint("SetTextI18n")
     @Override
     public void setTorLogViewText() {
-        if (getActivity() != null && tvTorLog == null && svTorLog == null) {
+        if (getActivity() != null && tvTorLog == null && svTorLog == null && !orientationLandscape) {
             tvTorLog = getActivity().findViewById(R.id.tvTorLog);
             svTorLog = getActivity().findViewById(R.id.svTorLog);
+
+            if (svTorLog != null) {
+                svTorLog.getViewTreeObserver().addOnScrollChangedListener(this);
+            }
         }
 
         if (tvTorLog != null && svTorLog != null) {
@@ -522,9 +546,13 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
     @Override
     public void setTorLogViewText(Spanned text) {
-        if (getActivity() != null && tvTorLog == null && svTorLog == null) {
+        if (getActivity() != null && tvTorLog == null && svTorLog == null && !orientationLandscape) {
             tvTorLog = getActivity().findViewById(R.id.tvTorLog);
             svTorLog = getActivity().findViewById(R.id.svTorLog);
+
+            if (svTorLog != null) {
+                svTorLog.getViewTreeObserver().addOnScrollChangedListener(this);
+            }
         }
 
         if (tvTorLog != null && svTorLog != null) {
@@ -533,17 +561,20 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
             FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             params.gravity = Gravity.BOTTOM;
             svTorLog.setLayoutParams(params);
-            scrollToBottom(svTorLog);
         }
     }
 
+    @Override
+    public void scrollTorLogViewToBottom() {
+        scrollToBottom(svTorLog);
+    }
 
     private void initITPDFragmentPresenter() {
         itpdFragmentPresenter = new ITPDFragmentPresenter(this);
 
         itpdFragmentReceiver = new ITPDFragmentReceiver(this, itpdFragmentPresenter);
 
-        if (getActivity() != null) {
+        if (getActivity() != null && !orientationLandscape) {
             IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
             IntentFilter intentFilterTopFrg = new IntentFilter(TOP_BROADCAST);
 
@@ -579,7 +610,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     @SuppressLint("SetTextI18n")
     @Override
     public void setITPDLogViewText() {
-        if (getActivity() != null && tvITPDLog == null) {
+        if (getActivity() != null && tvITPDLog == null && !orientationLandscape) {
             tvITPDLog = getActivity().findViewById(R.id.tvITPDLog);
             clITPDLog = getActivity().findViewById(R.id.clITPDLog);
         }
@@ -599,7 +630,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
     @Override
     public void setITPDLogViewText(Spanned text) {
-        if (getActivity() != null && tvITPDLog == null) {
+        if (getActivity() != null && tvITPDLog == null && !orientationLandscape) {
             tvITPDLog = getActivity().findViewById(R.id.tvITPDLog);
             clITPDLog = getActivity().findViewById(R.id.clITPDLog);
         }
@@ -619,9 +650,13 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
     @Override
     public void setITPDInfoLogText() {
-        if (getActivity() != null && tvITPDInfoLog == null && svITPDLog == null) {
+        if (getActivity() != null && tvITPDInfoLog == null && svITPDLog == null && !orientationLandscape) {
             tvITPDInfoLog = getActivity().findViewById(R.id.tvITPDinfoLog);
             svITPDLog = getActivity().findViewById(R.id.svITPDLog);
+
+            if (svITPDLog != null) {
+                svITPDLog.getViewTreeObserver().addOnScrollChangedListener(this);
+            }
         }
 
         if (tvITPDInfoLog!= null && svITPDLog != null) {
@@ -631,15 +666,23 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
     @Override
     public void setITPDInfoLogText(Spanned text) {
-        if (getActivity() != null && tvITPDInfoLog== null && svITPDLog == null) {
+        if (getActivity() != null && tvITPDInfoLog== null && svITPDLog == null && !orientationLandscape) {
             tvITPDInfoLog = getActivity().findViewById(R.id.tvITPDinfoLog);
             svITPDLog = getActivity().findViewById(R.id.svITPDLog);
+
+            if (svITPDLog != null) {
+                svITPDLog.getViewTreeObserver().addOnScrollChangedListener(this);
+            }
         }
 
         if (tvITPDInfoLog != null && svITPDLog != null) {
             tvITPDInfoLog.setText(text);
-            scrollToBottom(svITPDLog);
         }
+    }
+
+    @Override
+    public void scrollITPDLogViewToBottom() {
+        scrollToBottom(svITPDLog);
     }
 
     private void setChbAccessITPMainFragment(boolean checked) {
@@ -662,7 +705,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
     @Override
     public FragmentManager getFragmentFragmentManager() {
-        return getFragmentManager();
+        return getParentFragmentManager();
     }
 
     private synchronized void scrollToBottom(ScrollView scrollView) {
@@ -709,5 +752,33 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
         }
 
         return false;
+    }
+
+    @Override
+    public void onScrollChanged() {
+
+        if (dnsCryptFragmentPresenter != null && svDNSCryptLog != null) {
+            if (svDNSCryptLog.canScrollVertically(1) && svDNSCryptLog.canScrollVertically(-1)) {
+                dnsCryptFragmentPresenter.dnsCryptLogAutoScrollingAllowed(false);
+            } else {
+                dnsCryptFragmentPresenter.dnsCryptLogAutoScrollingAllowed(true);
+            }
+        }
+
+        if (torFragmentPresenter != null && svTorLog != null) {
+            if (svTorLog.canScrollVertically(1) && svTorLog.canScrollVertically(-1)) {
+                torFragmentPresenter.torLogAutoScrollingAllowed(false);
+            } else {
+                torFragmentPresenter.torLogAutoScrollingAllowed(true);
+            }
+        }
+
+        if (itpdFragmentPresenter != null && svITPDLog != null) {
+            if (svITPDLog.canScrollVertically(1) && svITPDLog.canScrollVertically(-1)) {
+                itpdFragmentPresenter.itpdLogAutoScrollingAllowed(false);
+            } else {
+                itpdFragmentPresenter.itpdLogAutoScrollingAllowed(true);
+            }
+        }
     }
 }

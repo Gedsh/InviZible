@@ -37,6 +37,7 @@ import java.net.URL;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Executors;
 
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
@@ -44,6 +45,7 @@ import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
+import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.OwnFileReader;
@@ -71,6 +73,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
     private volatile OwnFileReader logFile;
     private ModulesStatus modulesStatus;
     private ModuleState fixedModuleState;
+    private boolean itpdLogAutoScroll = true;
 
 
     public ITPDFragmentPresenter(ITPDFragmentView view) {
@@ -358,8 +361,9 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
                             return;
                         }
 
-                        if (!previousLastLines.equals(lastLines)) {
+                        if (!previousLastLines.equals(lastLines) && itpdLogAutoScroll) {
                             view.setITPDInfoLogText(Html.fromHtml(lastLines));
+                            view.scrollITPDLogViewToBottom();
                             previousLastLines = lastLines;
                         }
 
@@ -536,7 +540,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
     private void runITPD(Context context) {
 
-        if (context == null) {
+        if (context == null || view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -545,7 +549,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
     private void stopITPD(Context context) {
 
-        if (context == null) {
+        if (context == null || view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
 
@@ -562,17 +566,26 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
         final String certificateFolder = appDataDir + "/i2pd_data/certificates";
         final String certificateDestination = appDataDir + "/i2pd_data";
 
-        File certificateFolderDir = new File(certificateFolder);
-
-        if (certificateFolderDir.isDirectory()
-                && certificateFolderDir.listFiles() != null
-                && Objects.requireNonNull(certificateFolderDir.listFiles()).length > 0) {
-            return;
+        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+            ModulesService.executorService = Executors.newCachedThreadPool();
         }
 
-        new Thread(() -> {
+        ModulesService.executorService.submit(() -> {
+
+            File certificateFolderDir = new File(certificateFolder);
+
+            if (certificateFolderDir.isDirectory()
+                    && certificateFolderDir.listFiles() != null
+                    && Objects.requireNonNull(certificateFolderDir.listFiles()).length > 0) {
+                return;
+            }
+
             FileOperations.copyFolderSynchronous(context, certificateSource, certificateDestination);
             Log.i(LOG_TAG, "Copy i2p certificates");
-        }).start();
+        });
+    }
+
+    public void itpdLogAutoScrollingAllowed(boolean allowed) {
+        itpdLogAutoScroll = allowed;
     }
 }
