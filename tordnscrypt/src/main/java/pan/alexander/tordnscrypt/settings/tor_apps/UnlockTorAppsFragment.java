@@ -53,9 +53,12 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
+import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -80,7 +83,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
     private String unlockAppsStr;
     private ArrayList<AppUnlock> appsUnlock;
     private ArrayList<AppUnlock> savedAppsUnlockWhenSearch = null;
-    private Thread thread;
+    private FutureTask<?> futureTask;
 
 
     public UnlockTorAppsFragment() {
@@ -154,7 +157,11 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
 
         getDeviceApps(getActivity(), mAdapter, unlockAppsArrListSaved);
 
-        Thread thread = new Thread(() -> {
+        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+            ModulesService.executorService = Executors.newCachedThreadPool();
+        }
+
+        ModulesService.executorService.submit(() -> {
             try {
                 Verifier verifier = new Verifier(getActivity());
                 String appSignAlt = verifier.getApkSignature();
@@ -176,7 +183,6 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
                         Arrays.toString(e.getStackTrace()));
             }
         });
-        thread.start();
     }
 
     @Override
@@ -192,12 +198,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
             return;
         }
 
-        if (thread.isAlive()) {
-            try {
-                thread.interrupt();
-            } catch (Exception e) {
-                Log.e(LOG_TAG, "UnlockTorAppsFragment onStop exception " + e.getMessage() + " " + e.getCause());
-            }
+        if (futureTask != null && futureTask.cancel(true)) {
             return;
         }
 
@@ -420,9 +421,11 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
 
         final Iterator<ApplicationInfo> itAppInfo = lAppInfo.iterator();
 
+        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+            ModulesService.executorService = Executors.newCachedThreadPool();
+        }
 
-        Runnable fillAppsList = () -> {
-
+        futureTask = new FutureTask<>(() -> {
             while (itAppInfo.hasNext()) {
                 ApplicationInfo aInfo = itAppInfo.next();
                 boolean appUseInternet = false;
@@ -472,7 +475,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
                     final AppUnlock app = new AppUnlock(name, pack, uid, icon, system, active);
 
                     if (getActivity() == null)
-                        return;
+                        return null;
 
                     getActivity().runOnUiThread(() -> {
                         appsUnlock.add(app);
@@ -484,7 +487,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
             }
 
             if (getActivity() == null) {
-                return;
+                return null;
             }
 
             getActivity().runOnUiThread(() -> {
@@ -493,9 +496,11 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
             });
 
             System.gc();
-        };
-        thread = new Thread(fillAppsList);
-        thread.start();
+
+            return null;
+        });
+
+        ModulesService.executorService.submit(futureTask);
 
     }
 

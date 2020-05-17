@@ -41,6 +41,7 @@ import com.github.angads25.filepicker.view.FilePickerDialog;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.concurrent.Executors;
 
 import pan.alexander.tordnscrypt.BuildConfig;
 import pan.alexander.tordnscrypt.LangAppCompatActivity;
@@ -48,6 +49,7 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
+import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.file_operations.ExternalStoragePermissions;
@@ -144,7 +146,12 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                 if (modulesStatus.isRootAvailable()) {
                     collectLogsMethodOne(info);
                 } else {
-                    new Thread(br.saveLogs(getApplicationContext(), null)).start();
+
+                    if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+                        ModulesService.executorService = Executors.newCachedThreadPool();
+                    }
+
+                    ModulesService.executorService.submit(br.saveLogs(getApplicationContext(), null));
                 }
                 break;
             case R.id.etLogsPath:

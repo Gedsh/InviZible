@@ -24,6 +24,7 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
+import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -49,6 +50,7 @@ public class AppExitDetectService extends Service {
         super.onDestroy();
 
         FileOperations.removeAllOnFileOperationsListeners();
+        ModulesService.stopExecutorService();
 
         Log.i(LOG_TAG, "App Exit");
     }

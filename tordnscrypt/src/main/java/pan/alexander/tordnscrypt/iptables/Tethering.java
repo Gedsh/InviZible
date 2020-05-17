@@ -42,7 +42,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 public class Tethering {
     private Context context;
 
-    public static boolean usbTetherOn = false;
+    public static volatile boolean usbTetherOn = false;
 
     static final String wifiAPAddressesRange = "192.168.43.0/24";
     static final String usbModemAddressesRange = "192.168.42.0/24";

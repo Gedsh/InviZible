@@ -34,11 +34,13 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.Executors;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
+import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.ConfigEditorFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
@@ -261,9 +263,13 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             }
             return true;
         } else if (Objects.equals(preference.getKey(), "DNSPort")) {
+            if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+                ModulesService.executorService = Executors.newCachedThreadPool();
+            }
+
             ModifyForwardingRules modifyForwardingRules = new ModifyForwardingRules(getActivity(),
                     "onion 127.0.0.1:" + newValue.toString().trim());
-            modifyForwardingRules.start();
+            ModulesService.executorService.execute(modifyForwardingRules.getRunnable());
         } else if (Objects.equals(preference.getKey(), "pref_tor_snowflake_stun")) {
             if (key_tor.contains("ClientTransportPlugin") && getActivity() != null) {
                 boolean saveExtendedLogs = new PrefManager(getActivity()).getBoolPref("swRootCommandsLog");
@@ -377,7 +383,11 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 return true;
             }
 
-            new Thread(() -> {
+            if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+                ModulesService.executorService = Executors.newCachedThreadPool();
+            }
+
+            ModulesService.executorService.submit(() -> {
                 boolean successfully = false;
                 if (getActivity() != null) {
                     successfully = FileOperations.deleteDirSynchronous(getActivity(), appDataDir + "/tor_data");
@@ -391,7 +401,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                     }
 
                 }
-            }).start();
+            });
 
 
             return true;

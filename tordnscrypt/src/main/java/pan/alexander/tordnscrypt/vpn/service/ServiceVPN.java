@@ -127,7 +127,7 @@ public class ServiceVPN extends VpnService {
 
     private ModulesStatus modulesStatus;
 
-    private boolean canFilter = true;
+    public volatile boolean canFilter = true;
 
     private boolean filterUDP = true;
     private boolean blockHttp = false;
@@ -848,7 +848,7 @@ public class ServiceVPN extends VpnService {
 
         Log.i(LOG_TAG, "Create version=" + Util.getSelfVersionName(this) + "/" + Util.getSelfVersionCode(this));
 
-        canFilter = Util.canFilter(this);
+        Util.canFilterAsynchronous(this);
 
         if (jni_context != 0) {
             Log.w(LOG_TAG, "Create with context=" + jni_context);

@@ -959,16 +959,18 @@ public class FileOperations {
         if (stackCallbacks != null && !stackCallbacks.empty())
             FileOperations.stackCallbacks.removeAllElements();
 
-        if (executorService != null && !executorService.isShutdown()) {
-            executorService.shutdown();
-            try {
-                executorService.awaitTermination(10, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                executorService.shutdownNow();
-                Log.w(LOG_TAG, "FileOperations executorService awaitTermination has interrupted " + e.getMessage());
-            }
+        new Thread(() -> {
+            if (executorService != null && !executorService.isShutdown()) {
+                executorService.shutdown();
+                try {
+                    executorService.awaitTermination(10, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    executorService.shutdownNow();
+                    Log.w(LOG_TAG, "FileOperations executorService awaitTermination has interrupted " + e.getMessage());
+                }
 
-        }
+            }
+        }).start();
     }
 
     private void waitRestoreAccessWithRoot() {

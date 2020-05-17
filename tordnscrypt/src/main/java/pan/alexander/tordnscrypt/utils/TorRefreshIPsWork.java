@@ -33,9 +33,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.modules.ModulesAux;
+import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
@@ -60,18 +62,6 @@ public class TorRefreshIPsWork {
         this.getIPsJobService = getIPsJobService;
     }
 
-    private void getBridgesIP() {
-        Runnable getBridgesIPRunnable = () -> {
-            //////////////TO GET BRIDGES WITH TOR//////////////////////////////////////
-            ArrayList<String> bridgesIPlist = handleActionGetIP("https://bridges.torproject.org");
-            //////////////TO GET UPDATES WITH TOR//////////////////////////////////////
-            bridgesIPlist.addAll(handleActionGetIP("https://invizible.net"));
-            FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/bridgesIP", bridgesIPlist, "ignored");
-        };
-        Thread thread = new Thread(getBridgesIPRunnable);
-        thread.start();
-    }
-
     public void refreshIPs() {
         boolean rootIsAvailable = new PrefManager(context.getApplicationContext()).getBoolPref("rootIsAvailable");
         if (!rootIsAvailable) return;
@@ -83,8 +73,6 @@ public class TorRefreshIPsWork {
 
         PathVars pathVars = PathVars.getInstance(context);
         appDataDir = pathVars.getAppDataDir();
-
-        //getBridgesIP();
 
         Set<String> setUnlockHosts;
         Set<String> setUnlockIPs;
@@ -113,7 +101,11 @@ public class TorRefreshIPsWork {
 
     private void performBackgroundWork() {
 
-        Runnable performWorkRunnable = () -> {
+        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+            ModulesService.executorService = Executors.newCachedThreadPool();
+        }
+
+        ModulesService.executorService.submit(() -> {
             Log.i(LOG_TAG, "TorRefreshIPsWork performBackgroundWork");
 
             if (!unlockHostsDevice.isEmpty() || !unlockIPsDevice.isEmpty()) {
@@ -162,9 +154,7 @@ public class TorRefreshIPsWork {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && getIPsJobService != null) {
                 getIPsJobService.finishJob();
             }
-        };
-        Thread thread = new Thread(performWorkRunnable);
-        thread.start();
+        });
     }
 
 

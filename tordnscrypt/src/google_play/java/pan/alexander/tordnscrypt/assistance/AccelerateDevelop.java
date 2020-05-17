@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
 
 import javax.crypto.Cipher;
 
@@ -55,6 +56,7 @@ import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
+import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -86,9 +88,13 @@ public class AccelerateDevelop implements BillingClientStateListener {
                     }
                 }).build();
 
-        new Thread(() -> {
+        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+            ModulesService.executorService = Executors.newCachedThreadPool();
+        }
+
+        ModulesService.executorService.submit(() -> {
             mBillingClient.startConnection(AccelerateDevelop.this);
-        }).start();
+        });
     }
 
     public void launchBilling(String skuId) {
@@ -226,7 +232,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
                         if (!acknowledged && activity != null) {
                             activity.runOnUiThread(() -> {
                                 DialogFragment dialogFragment = NotificationDialogFragment.newInstance(R.string.wrong_purchase_signature_gp);
-                                if (dialogFragment != null && activity != null) {
+                                if (activity != null) {
                                     dialogFragment.show(activity.getSupportFragmentManager(), "wrong_purchase_signature");
                                 }
                             });
@@ -261,7 +267,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
 
                                             DialogFragment dialogFragment = NotificationDialogFragment.newInstance(
                                                     thanks.substring(0, thanks.indexOf(".")));
-                                            if (dialogFragment != null && activity != null) {
+                                            if (activity != null) {
                                                 dialogFragment.show(activity.getSupportFragmentManager(), "thanks_for_donate");
                                             }
                                         });

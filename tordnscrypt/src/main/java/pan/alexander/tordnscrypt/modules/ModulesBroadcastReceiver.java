@@ -43,6 +43,7 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.iptables.Tethering;
@@ -302,9 +303,8 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
     }
 
     private void tetherStateChanged() {
-        checkUSBModemState();
 
-        modulesStatus.setIptablesRulesUpdateRequested(true);
+        checkUSBModemState();
 
         Log.i(LOG_TAG, "ModulesBroadcastReceiver USB modem state is " + (Tethering.usbTetherOn ? "ON" : "OFF"));
     }
@@ -343,7 +343,11 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
                 && !modulesStatus.isUseModulesWithRoot()
                 && !lock) {
 
-            new Thread(() -> {
+            if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+                ModulesService.executorService = Executors.newCachedThreadPool();
+            }
+
+            ModulesService.executorService.submit(() -> {
                 if (!lock) {
 
                     lock = true;
@@ -362,59 +366,66 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
                     lock = false;
                 }
 
-            }).start();
+            });
         }
     }
 
     private void checkUSBModemState() {
         final String addressesRangeUSB = "192.168.42.";
 
-        Tethering.usbTetherOn = false;
+        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+            ModulesService.executorService = Executors.newCachedThreadPool();
+        }
 
-        try {
-            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
-                 en.hasMoreElements(); ) {
+        ModulesService.executorService.submit(() -> {
+            Tethering.usbTetherOn = false;
 
-                NetworkInterface intf = en.nextElement();
-                if (intf.isLoopback()) {
-                    continue;
-                }
-                if (intf.isVirtual()) {
-                    continue;
-                }
-                if (!intf.isUp()) {
-                    continue;
-                }
+            try {
+                for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
+                     en.hasMoreElements(); ) {
 
-                if (intf.isPointToPoint()) {
-                    continue;
-                }
-                if (intf.getHardwareAddress() == null) {
-                    continue;
-                }
+                    NetworkInterface intf = en.nextElement();
+                    if (intf.isLoopback()) {
+                        continue;
+                    }
+                    if (intf.isVirtual()) {
+                        continue;
+                    }
+                    if (!intf.isUp()) {
+                        continue;
+                    }
 
-                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses();
-                     enumIpAddr.hasMoreElements(); ) {
-                    InetAddress inetAddress = enumIpAddr.nextElement();
-                    String hostAddress = inetAddress.getHostAddress();
+                    if (intf.isPointToPoint()) {
+                        continue;
+                    }
+                    if (intf.getHardwareAddress() == null) {
+                        continue;
+                    }
 
-                    if (hostAddress.contains(addressesRangeUSB)) {
-                        Tethering.usbTetherOn = true;
-                        String usbModemInterfaceName = intf.getName();
-                        Log.i(LOG_TAG, "USB Modem interface name " + usbModemInterfaceName);
+                    for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses();
+                         enumIpAddr.hasMoreElements(); ) {
+                        InetAddress inetAddress = enumIpAddr.nextElement();
+                        String hostAddress = inetAddress.getHostAddress();
+
+                        if (hostAddress.contains(addressesRangeUSB)) {
+                            Tethering.usbTetherOn = true;
+                            String usbModemInterfaceName = intf.getName();
+                            Log.i(LOG_TAG, "USB Modem interface name " + usbModemInterfaceName);
+                        }
                     }
                 }
+            } catch (SocketException e) {
+                Log.e(LOG_TAG, "Tethering SocketException " + e.getMessage() + " " + e.getCause());
             }
-        } catch (SocketException e) {
-            Log.e(LOG_TAG, "Tethering SocketException " + e.getMessage() + " " + e.getCause());
-        }
 
-        if (Tethering.usbTetherOn && !new PrefManager(context).getBoolPref("ModemIsON")) {
-            new PrefManager(context).setBoolPref("ModemIsON", true);
-            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
-        } else if (!Tethering.usbTetherOn && new PrefManager(context).getBoolPref("ModemIsON")) {
-            new PrefManager(context).setBoolPref("ModemIsON", false);
-            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
-        }
+            if (Tethering.usbTetherOn && !new PrefManager(context).getBoolPref("ModemIsON")) {
+                new PrefManager(context).setBoolPref("ModemIsON", true);
+                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
+            } else if (!Tethering.usbTetherOn && new PrefManager(context).getBoolPref("ModemIsON")) {
+                new PrefManager(context).setBoolPref("ModemIsON", false);
+                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
+            }
+        });
+
     }
 }

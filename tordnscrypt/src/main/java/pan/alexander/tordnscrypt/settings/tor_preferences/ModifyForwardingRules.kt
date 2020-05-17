@@ -30,7 +30,7 @@ import java.io.File
 import java.io.PrintWriter
 
 class ModifyForwardingRules(private val context: Context,
-                            private val lineToReplaceTo: String) : Thread() {
+                            private val lineToReplaceTo: String) {
 
     private val forwardingRulesFile: String = PathVars.getInstance(context).dnsCryptForwardingRulesPath
     private val localForwardingRulesFile: String = PathVars.getInstance(context).dnsCryptLocalForwardingRulesPath
@@ -38,20 +38,22 @@ class ModifyForwardingRules(private val context: Context,
     private val tempFile: String = "$cacheDir/tmpForwardingRules.txt"
     private val lineToFindRegExp = Regex("^onion +127.0.0.1:\\d+$")
 
-    override fun run() {
-        try {
-            val dir = File(cacheDir)
-            if (!dir.isDirectory) {
-                dir.mkdirs()
+    fun getRunnable() : Runnable {
+        return Runnable {
+            try {
+                val dir = File(cacheDir)
+                if (!dir.isDirectory) {
+                    dir.mkdirs()
+                }
+
+                replaceLineInFile(forwardingRulesFile, tempFile)
+                replaceLineInFile(localForwardingRulesFile, tempFile)
+
+                restartDNSCryptIfRequired()
+
+            } catch (e: java.lang.Exception) {
+                Log.e(LOG_TAG, "ImportRules Exception " + e.message + " " + e.cause)
             }
-
-            replaceLineInFile(forwardingRulesFile, tempFile)
-            replaceLineInFile(localForwardingRulesFile, tempFile)
-
-            restartDNSCryptIfRequired()
-
-        } catch (e: java.lang.Exception) {
-            Log.e(LOG_TAG, "ImportRules Exception " + e.message + " " + e.cause)
         }
     }
 
@@ -81,7 +83,7 @@ class ModifyForwardingRules(private val context: Context,
 
             inputFile.bufferedReader().use {
                 var line = it.readLine()?.trim()
-                while (line != null && !currentThread().isInterrupted) {
+                while (line != null && !Thread.currentThread().isInterrupted) {
 
                     if (line.matches(lineToFindRegExp)) {
                         printWriter.println(lineToReplaceTo)

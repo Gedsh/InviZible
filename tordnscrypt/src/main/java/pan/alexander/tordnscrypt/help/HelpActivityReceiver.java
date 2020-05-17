@@ -33,8 +33,10 @@ import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.concurrent.Executors;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
@@ -72,8 +74,11 @@ public class HelpActivityReceiver extends BroadcastReceiver {
             return;
         }
 
-        Thread thread = new Thread(saveLogs(context, comResult));
-        thread.start();
+        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+            ModulesService.executorService = Executors.newCachedThreadPool();
+        }
+
+        ModulesService.executorService.submit(saveLogs(context, comResult));
     }
 
     Runnable saveLogs(final Context context, final RootCommands comResult) {

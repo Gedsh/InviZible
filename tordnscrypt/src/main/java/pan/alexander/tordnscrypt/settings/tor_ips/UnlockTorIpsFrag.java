@@ -53,12 +53,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Executors;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
+import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Verifier;
@@ -132,30 +133,30 @@ public class UnlockTorIpsFrag extends Fragment {
 
         if (deviceOrTether.equals("device")) {
             if (!routeAllThroughTorDevice) {
-                Objects.requireNonNull(getActivity()).setTitle(R.string.pref_tor_unlock);
+                getActivity().setTitle(R.string.pref_tor_unlock);
                 unlockHostsStr = "unlockHosts";
                 unlockIPsStr = "unlockIPs";
             } else {
-                Objects.requireNonNull(getActivity()).setTitle(R.string.pref_tor_clearnet);
+                getActivity().setTitle(R.string.pref_tor_clearnet);
                 unlockHostsStr = "clearnetHosts";
                 unlockIPsStr = "clearnetIPs";
             }
         } else if (deviceOrTether.equals("tether")) {
             if (!routeAllThroughTorTether) {
-                Objects.requireNonNull(getActivity()).setTitle(R.string.pref_tor_unlock);
+                getActivity().setTitle(R.string.pref_tor_unlock);
                 unlockHostsStr = "unlockHostsTether";
                 unlockIPsStr = "unlockIPsTether";
             } else {
-                Objects.requireNonNull(getActivity()).setTitle(R.string.pref_tor_clearnet);
+                getActivity().setTitle(R.string.pref_tor_clearnet);
                 unlockHostsStr = "clearnetHostsTether";
                 unlockIPsStr = "clearnetIPsTether";
             }
         }
 
 
-        Set<String> setUnlockHosts = new PrefManager(Objects.requireNonNull(getActivity())).getSetStrPref(unlockHostsStr);
+        Set<String> setUnlockHosts = new PrefManager(getActivity()).getSetStrPref(unlockHostsStr);
         unlockHosts = new ArrayList<>(setUnlockHosts);
-        Set<String> setUnlockIPs = new PrefManager(Objects.requireNonNull(getActivity())).getSetStrPref(unlockIPsStr);
+        Set<String> setUnlockIPs = new PrefManager(getActivity()).getSetStrPref(unlockIPsStr);
         unlockIPs = new ArrayList<>(setUnlockIPs);
 
 
@@ -168,34 +169,32 @@ public class UnlockTorIpsFrag extends Fragment {
         GetHostIP getHostIP = new GetHostIP(unlockHosts, unlockIPs);
         getHostIP.execute();
 
+        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+            ModulesService.executorService = Executors.newCachedThreadPool();
+        }
 
-        Thread thread = new Thread(() -> {
+        ModulesService.executorService.submit(() -> {
             try {
                 Verifier verifier = new Verifier(getActivity());
                 String appSignAlt = verifier.getApkSignature();
                 if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             getActivity(), getText(R.string.verifier_error).toString(), "123");
-                    if (notificationHelper != null) {
-                        if (getFragmentManager() != null) {
-                            notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
-                        }
+                    if (notificationHelper != null && isAdded()) {
+                        notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
                     }
                 }
 
             } catch (Exception e) {
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                         getActivity(), getText(R.string.verifier_error).toString(), "168");
-                if (notificationHelper != null) {
-                    if (getFragmentManager() != null) {
-                        notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
-                    }
+                if (notificationHelper != null && isAdded()) {
+                    notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
                 }
                 Log.e(LOG_TAG, "UnlockTorIpsFrag fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                         Arrays.toString(e.getStackTrace()));
             }
         });
-        thread.start();
 
         if (getActivity() == null) {
             return;
@@ -271,7 +270,7 @@ public class UnlockTorIpsFrag extends Fragment {
     public class HostIPAdapter extends RecyclerView.Adapter<UnlockTorIpsFrag.HostIPAdapter.HostIPViewHolder> {
 
         ArrayList<HostIP> unlockHostIP;
-        LayoutInflater lInflater = (LayoutInflater) Objects.requireNonNull(getActivity()).getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        LayoutInflater lInflater = (LayoutInflater) requireActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         HostIPAdapter(ArrayList<HostIP> unlockHostIP) {
             this.unlockHostIP = unlockHostIP;
@@ -523,9 +522,13 @@ public class UnlockTorIpsFrag extends Fragment {
                         hostsSet.add(host);
                         new PrefManager(getActivity()).setSetStrPref(unlockHostsStr, hostsSet);
                     }
-                    Thread thread = new Thread(() -> getHostOrIp(position, false, true));
 
-                    thread.start();
+                    if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+                        ModulesService.executorService = Executors.newCachedThreadPool();
+                    }
+
+                    ModulesService.executorService.submit(() -> getHostOrIp(position, false, true));
+
                     rvAdapter.notifyItemChanged(position);
                 });
                 builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
@@ -589,9 +592,12 @@ public class UnlockTorIpsFrag extends Fragment {
                 hostsSet.add(host);
                 new PrefManager(getActivity()).setSetStrPref(unlockHostsStr, hostsSet);
             }
-            Thread thread = new Thread(() -> getHostOrIp(unlockHostIP.size() - 1, true, false));
 
-            thread.start();
+            if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+                ModulesService.executorService = Executors.newCachedThreadPool();
+            }
+
+            ModulesService.executorService.submit(() -> getHostOrIp(unlockHostIP.size() - 1, true, false));
             rvAdapter.notifyDataSetChanged();
         });
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
@@ -665,7 +671,7 @@ public class UnlockTorIpsFrag extends Fragment {
         }
 
         boolean active = unlockHostIP.get(position).active;
-        if (unlockHostIP.get(position).inputHost) {
+        if (unlockHostIP.get(position).inputHost && getActivity() != null) {
             String host = unlockHostIP.get(position).host;
             try {
                 InetAddress[] addresses = InetAddress.getAllByName(new URL(host).getHost());
@@ -676,7 +682,7 @@ public class UnlockTorIpsFrag extends Fragment {
                 String ip = sb.substring(0, sb.length() - 2);
                 unlockHostIP.set(position, new HostIP(host, ip, true, false, active));
 
-                Objects.requireNonNull(getActivity()).runOnUiThread(() -> {
+                getActivity().runOnUiThread(() -> {
                     if (addHostIP) {
                         rvAdapter.notifyItemChanged(position);
                         rvListHostip.scrollToPosition(position);
@@ -695,7 +701,7 @@ public class UnlockTorIpsFrag extends Fragment {
                 unlockHostIP.set(position, new HostIP(host, ip, true, false, active));
                 Log.e(LOG_TAG, "UnlockTorIpsFrag getHostOrIp exception " + e.getMessage() + " " + e.getCause());
 
-                Objects.requireNonNull(getActivity()).runOnUiThread(() -> {
+                getActivity().runOnUiThread(() -> {
                     if (addHostIP) {
                         rvAdapter.notifyItemChanged(position);
                         rvListHostip.scrollToPosition(position);
@@ -704,7 +710,7 @@ public class UnlockTorIpsFrag extends Fragment {
                     }
                 });
             }
-        } else if (unlockHostIP.get(position).inputIP) {
+        } else if (unlockHostIP.get(position).inputIP && getActivity() != null) {
             String IP = unlockHostIP.get(position).IP;
             String host = "";
             try {
@@ -734,7 +740,7 @@ public class UnlockTorIpsFrag extends Fragment {
                 con.disconnect();
                 unlockHostIP.set(position, new HostIP(host, IP, false, true, active));
 
-                Objects.requireNonNull(getActivity()).runOnUiThread(() -> {
+                getActivity().runOnUiThread(() -> {
                     if (addHostIP) {
                         rvAdapter.notifyDataSetChanged();
                         rvListHostip.scrollToPosition(position);
@@ -745,7 +751,7 @@ public class UnlockTorIpsFrag extends Fragment {
                 });
             } catch (IOException e) {
 
-                if (unlockHostIP == null || rvAdapter == null || rvListHostip == null) {
+                if (unlockHostIP == null || rvAdapter == null || rvListHostip == null || getActivity() == null) {
                     return;
                 }
 
@@ -753,7 +759,7 @@ public class UnlockTorIpsFrag extends Fragment {
                 unlockHostIP.set(position, new HostIP(host, IP, false, true, active));
                 Log.e(LOG_TAG, "UnlockTorIpsFrag getHostOrIp exception " + e.getMessage() + " " + e.getCause());
 
-                Objects.requireNonNull(getActivity()).runOnUiThread(() -> {
+                getActivity().runOnUiThread(() -> {
                     if (addHostIP) {
                         rvAdapter.notifyDataSetChanged();
                         rvListHostip.scrollToPosition(position);

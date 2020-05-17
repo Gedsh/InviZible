@@ -44,13 +44,14 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
+import java.util.concurrent.Executors;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.AddDNSCryptServerDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
+import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.dnscrypt_relays.DNSServerRelays;
 import pan.alexander.tordnscrypt.settings.dnscrypt_relays.PreferencesDNSCryptRelays;
@@ -108,7 +109,11 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
         takeArguments();
 
-        Thread thread = new Thread(() -> {
+        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+            ModulesService.executorService = Executors.newCachedThreadPool();
+        }
+
+        ModulesService.executorService.submit(() -> {
             try {
                 Verifier verifier = new Verifier(getActivity());
                 String appSign = verifier.getApkSignatureZipModern();
@@ -117,25 +122,24 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             getActivity(), getText(R.string.verifier_error).toString(), "6787");
                     if (notificationHelper != null) {
-                        if (getFragmentManager() != null) {
-                            notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                        if (getParentFragment() != null && isAdded()) {
+                            notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
                         }
                     }
                 }
 
             } catch (Exception e) {
-                if (getFragmentManager() != null) {
+                if (getParentFragment() != null && isAdded()) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             getActivity(), getText(R.string.verifier_error).toString(), "8990");
                     if (notificationHelper != null) {
-                        notificationHelper.show(getFragmentManager(), NotificationHelper.TAG_HELPER);
+                        notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
                     }
                 }
                 Log.e(LOG_TAG, "PreferencesDNSCryptServers fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                         Arrays.toString(e.getStackTrace()));
             }
         });
-        thread.start();
 
     }
 
@@ -162,7 +166,11 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
     public void onStart() {
         super.onStart();
 
-        Objects.requireNonNull(getActivity()).setTitle(R.string.pref_fast_dns_server);
+        if (getActivity() == null) {
+            return;
+        }
+
+        getActivity().setTitle(R.string.pref_fast_dns_server);
 
         PathVars pathVars = PathVars.getInstance(getActivity());
         appDataDir = pathVars.getAppDataDir();
@@ -330,7 +338,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         rvDNSServers.setLayoutManager(mLayoutManager);
 
         dNSServersAdapter = new DNSServersAdapter(getActivity(), searchDNSServer,
-                this, getFragmentManager(),
+                this, getParentFragmentManager(),
                 list_dns_servers, list_dns_servers_saved, routes_current, isRelaysMdExist());
 
         try {
@@ -550,10 +558,10 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.ibAddOwnServer) {
-            if (getFragmentManager() != null) {
+            if (getParentFragment() != null && isAdded()) {
                 AddDNSCryptServerDialogFragment addServer = AddDNSCryptServerDialogFragment.getInstance();
                 addServer.setOnServerAddListener(this);
-                addServer.show(getFragmentManager(), "AddDNSCryptServerDialogFragment");
+                addServer.show(getParentFragmentManager(), "AddDNSCryptServerDialogFragment");
             }
         } else if (v.getId() == R.id.cardSearchDNSServer) {
             searchDNSServer.setIconified(false);

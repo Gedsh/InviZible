@@ -40,6 +40,7 @@ import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -95,7 +96,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
     private int displayLogPeriod = -1;
 
     private HttpsURLConnection httpsURLConnection;
-    private Thread checkInetAvailableThread;
+    private FutureTask<?> checkInetAvailableFutureTask;
     private boolean torLogAutoScroll = true;
 
     private final ReentrantLock reentrantLock = new ReentrantLock();
@@ -145,8 +146,8 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     public void onStop() {
         stopDisplayLog();
-        if (checkInetAvailableThread != null && checkInetAvailableThread.isAlive()) {
-            checkInetAvailableThread.interrupt();
+        if (checkInetAvailableFutureTask != null) {
+            checkInetAvailableFutureTask.cancel(true);
         }
         view = null;
     }
@@ -700,12 +701,12 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
     }
 
     private void checkInternetAvailable() {
-        checkInetAvailableThread = new Thread(() -> {
+        checkInetAvailableFutureTask = new FutureTask<>(() -> {
 
             try {
 
                 if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
-                    return;
+                    return null;
                 }
 
                 reentrantLock.lock();
@@ -768,11 +769,17 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
                     reentrantLock.unlock();
                 }
             }
+
+            return null;
         });
+
+        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+            ModulesService.executorService = Executors.newCachedThreadPool();
+        }
 
         if (view != null && view.getFragmentActivity() != null
                 && !new PrefManager(view.getFragmentActivity()).getBoolPref("Tor Ready")) {
-            checkInetAvailableThread.start();
+            ModulesService.executorService.submit(checkInetAvailableFutureTask);
         }
     }
 

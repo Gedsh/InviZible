@@ -42,6 +42,7 @@ import android.view.ViewGroup;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
@@ -146,7 +147,11 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         torSocksPort = pathVars.getTorSOCKSPort();
         torHTTPTunnelPort = pathVars.getTorHTTPTunnelPort();
 
-        Thread thread = new Thread(() -> {
+        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+            ModulesService.executorService = Executors.newCachedThreadPool();
+        }
+
+        ModulesService.executorService.submit(() -> {
             try {
                 Verifier verifier = new Verifier(getActivity());
                 String appSign = verifier.getApkSignatureZipModern();
@@ -169,7 +174,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                         Arrays.toString(e.getStackTrace()));
             }
         });
-        thread.start();
+
     }
 
     @Override

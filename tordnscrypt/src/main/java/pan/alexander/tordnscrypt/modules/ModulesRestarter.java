@@ -110,7 +110,7 @@ public class ModulesRestarter {
 
     private void killWithPid(String pid) {
         try {
-            android.os.Process.sendSignal(Integer.valueOf(pid), 1);
+            android.os.Process.sendSignal(Integer.parseInt(pid), 1);
         } catch (Exception e) {
             Log.e(LOG_TAG, "ModulesRestarter killWithPid exception " + e.getMessage() + " " + e.getCause());
         }

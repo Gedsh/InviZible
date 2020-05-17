@@ -33,10 +33,12 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.Executors;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
+import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
@@ -284,7 +286,11 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                 return true;
             }
 
-            new Thread(() -> {
+            if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+                ModulesService.executorService = Executors.newCachedThreadPool();
+            }
+
+            ModulesService.executorService.submit(() -> {
                 boolean successfully = false;
                 if (getActivity() != null) {
                     successfully = FileOperations.deleteDirSynchronous(getActivity(), appDataDir + "/i2pd_data");
@@ -298,7 +304,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                     }
 
                 }
-            }).start();
+            });
 
 
             return true;

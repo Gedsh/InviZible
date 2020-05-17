@@ -27,6 +27,7 @@ import com.jrummyapps.android.shell.Shell;
 import com.jrummyapps.android.shell.ShellNotFoundException;
 
 import java.io.File;
+import java.util.concurrent.Executors;
 
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.RootCommands;
@@ -61,7 +62,12 @@ public class ModulesVersions {
     }
 
     public void refreshVersions(final Context context) {
-        new Thread(() -> {
+
+        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+            ModulesService.executorService = Executors.newCachedThreadPool();
+        }
+
+        ModulesService.executorService.submit(() -> {
             openCommandShell();
 
             PathVars pathVars = getPathVars(context);
@@ -81,7 +87,7 @@ public class ModulesVersions {
             }
 
             closeCommandShell();
-        }).start();
+        });
     }
 
     private PathVars getPathVars(Context context) {

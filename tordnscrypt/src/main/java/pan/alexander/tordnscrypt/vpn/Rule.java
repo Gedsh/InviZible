@@ -190,6 +190,8 @@ public class Rule {
                     Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
                 }
 
+            packageManager = null;
+
             return listRules;
         }
     }

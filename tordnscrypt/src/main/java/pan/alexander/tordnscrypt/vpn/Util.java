@@ -36,6 +36,10 @@ import java.io.File;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+
+import pan.alexander.tordnscrypt.modules.ModulesService;
+import pan.alexander.tordnscrypt.vpn.service.ServiceVPN;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
@@ -132,6 +136,40 @@ public class Util {
             return info.applicationInfo.enabled;
         else
             return (setting == PackageManager.COMPONENT_ENABLED_STATE_ENABLED);
+    }
+
+    public static void canFilterAsynchronous(ServiceVPN serviceVPN) {
+
+        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+            ModulesService.executorService = Executors.newCachedThreadPool();
+        }
+
+        ModulesService.executorService.submit(() -> {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && serviceVPN != null) {
+                serviceVPN.canFilter = true;
+                return;
+            }
+
+            // https://android-review.googlesource.com/#/c/206710/1/untrusted_app.te
+            File tcp = new File("/proc/net/tcp");
+            File tcp6 = new File("/proc/net/tcp6");
+
+            try {
+                if (tcp.exists() && tcp.canRead() && serviceVPN != null)
+                    serviceVPN.canFilter = true;
+                    return;
+            } catch (SecurityException ignored) {}
+
+            try {
+                if (tcp6.exists() && tcp6.canRead() && serviceVPN != null){
+                    serviceVPN.canFilter = true;
+                }
+            } catch (SecurityException ignored) {
+                if (serviceVPN != null){
+                    serviceVPN.canFilter = false;
+                }
+            }
+        });
     }
 
     public static boolean canFilter(Context context) {

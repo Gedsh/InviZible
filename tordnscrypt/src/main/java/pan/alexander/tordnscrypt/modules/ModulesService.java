@@ -39,6 +39,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Timer;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.R;
@@ -81,6 +84,8 @@ public class ModulesService extends Service {
     static final String TOR_KEYWORD = "checkTrRunning";
     static final String ITPD_KEYWORD = "checkITPDRunning";
 
+    public static volatile ExecutorService executorService;
+
     private static WakeLocksManager wakeLocksManager;
 
     ModulesBroadcastReceiver modulesBroadcastReceiver;
@@ -100,6 +105,8 @@ public class ModulesService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        executorService = Executors.newCachedThreadPool();
 
         notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
 
@@ -735,6 +742,8 @@ public class ModulesService extends Service {
 
         unregisterModulesBroadcastReceiver();
 
+        stopExecutorService();
+
         super.onDestroy();
     }
 
@@ -866,5 +875,20 @@ public class ModulesService extends Service {
         } catch (IOException e) {
             Log.e(LOG_TAG, "Unable to create dnsCrypt log file " + e.getMessage());
         }
+    }
+
+    public static void stopExecutorService() {
+        new Thread(() -> {
+            if (executorService != null && !executorService.isShutdown()) {
+                executorService.shutdown();
+                try {
+                    executorService.awaitTermination(10, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    executorService.shutdownNow();
+                    Log.w(LOG_TAG, "ModulesService executorService awaitTermination has interrupted " + e.getMessage());
+                }
+
+            }
+        }).start();
     }
 }

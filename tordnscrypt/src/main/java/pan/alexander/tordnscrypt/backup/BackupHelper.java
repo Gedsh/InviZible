@@ -28,8 +28,10 @@ import android.util.Log;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
+import java.util.concurrent.Executors;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
@@ -48,7 +50,11 @@ class BackupHelper {
     }
 
     void saveAll() {
-        Runnable save = () -> {
+        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+            ModulesService.executorService = Executors.newCachedThreadPool();
+        }
+
+        ModulesService.executorService.submit(() -> {
             try {
                 SharedPreferences defaultSharedPref = PreferenceManager.getDefaultSharedPreferences(context);
                 saveSharedPreferencesToFile(defaultSharedPref, appDataDir + "/cache/defaultSharedPref");
@@ -87,10 +93,7 @@ class BackupHelper {
                 }
 
             }
-        };
-
-        Thread thread = new Thread(save);
-        thread.start();
+        });
     }
 
     private void compressAllToZip(String outputFilePath, String ... inputSources) throws Exception {

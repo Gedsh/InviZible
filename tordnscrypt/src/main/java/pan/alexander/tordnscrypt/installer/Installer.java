@@ -31,12 +31,14 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
+import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.modules.ModulesVersions;
 import pan.alexander.tordnscrypt.settings.PathVars;
@@ -422,7 +424,12 @@ public class Installer implements TopFragment.OnActivityChangeListener {
     }
 
     protected void stopAllRunningModulesWithNoRootCommand() {
-        new Thread(() -> {
+
+        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+            ModulesService.executorService = Executors.newCachedThreadPool();
+        }
+
+        ModulesService.executorService.submit(() -> {
             ModulesAux.stopModulesIfRunning(activity);
 
             int counter = 15;
@@ -449,7 +456,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
                 sendModulesStopResult("");
             }
 
-        }).start();
+        });
 
 
     }

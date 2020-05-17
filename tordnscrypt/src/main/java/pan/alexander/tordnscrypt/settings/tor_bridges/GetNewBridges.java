@@ -40,6 +40,8 @@ import java.net.Proxy;
 import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -48,6 +50,7 @@ import pan.alexander.tordnscrypt.dialogs.SelectBridgesTransport;
 import pan.alexander.tordnscrypt.dialogs.ShowBridgesCodeImage;
 import pan.alexander.tordnscrypt.dialogs.ShowBridgesDialog;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitDialogBridgesRequest;
+import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.WakeLocksManager;
@@ -76,7 +79,7 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
 
         GetNewBridges.transport = transport;
 
-        Thread threadRequestCodeImage = new Thread(() -> {
+        FutureTask<Object> threadRequestCodeImage = new FutureTask<>(() -> {
 
             Bitmap codeImage = null;
             final String captcha_challenge_field_value;
@@ -202,7 +205,7 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
                 activity = getCurrentActivity();
 
                 if (activity == null || activity.isDestroyed()) {
-                    return;
+                    return null;
                 }
 
                 activity.runOnUiThread(() -> {
@@ -219,12 +222,18 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
                     }
                 });
             }
+
+            return null;
         });
 
         if (dialogPleaseWait != null && dialogPleaseWait.get() != null)
             dialogPleaseWait.get().setThreadRequest(threadRequestCodeImage);
 
-        threadRequestCodeImage.start();
+        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+            ModulesService.executorService = Executors.newCachedThreadPool();
+        }
+
+        ModulesService.executorService.submit(threadRequestCodeImage);
     }
 
     public void showProgressDialog() {
@@ -293,7 +302,7 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////////////////If wrong image code try again/////////////////////////////////////////////////////////////////////////
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        Thread threadRequestBridges = new Thread(() -> {
+        FutureTask<Object> threadRequestBridges = new FutureTask<>(() -> {
             Bitmap codeImage = null;
             final String captcha_challenge_field_value;
             try {
@@ -485,7 +494,7 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
                 activity = getCurrentActivity();
 
                 if (activity == null || activity.isDestroyed()) {
-                    return;
+                    return null;
                 }
 
                 activity.runOnUiThread(() -> {
@@ -503,11 +512,16 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
                 });
 
             }
+            return null;
         });
 
         if (dialogPleaseWait != null && dialogPleaseWait.get() != null)
             dialogPleaseWait.get().setThreadRequest(threadRequestBridges);
 
-        threadRequestBridges.start();
+        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+            ModulesService.executorService = Executors.newCachedThreadPool();
+        }
+
+        ModulesService.executorService.submit(threadRequestBridges);
     }
 }

@@ -25,9 +25,10 @@ import android.widget.ProgressBar
 import androidx.appcompat.app.AlertDialog
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.dialogs.ExtendedDialogFragment
+import java.util.concurrent.FutureTask
 
 class PleaseWaitDialogBridgesRequest : ExtendedDialogFragment() {
-    var threadRequest: Thread? = null
+    var threadRequest: FutureTask<Any>? = null
 
     override fun assignBuilder(): AlertDialog.Builder? {
 
@@ -40,7 +41,7 @@ class PleaseWaitDialogBridgesRequest : ExtendedDialogFragment() {
         builder.setMessage(R.string.please_wait)
         builder.setIcon(R.drawable.ic_visibility_off_black_24dp)
         builder.setPositiveButton(R.string.cancel) { dialogInterface, _ ->
-            threadRequest?.let { if (it.isAlive) it.interrupt() }
+            threadRequest?.cancel(true)
             dialogInterface.dismiss()
         }
         val progressBar = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal)
@@ -54,7 +55,7 @@ class PleaseWaitDialogBridgesRequest : ExtendedDialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState)
 
-        if (threadRequest == null || !threadRequest!!.isAlive) {
+        if (threadRequest?.isDone == true) {
             dialog.dismiss()
         } else {
             dialog.setCanceledOnTouchOutside(false)
@@ -65,6 +66,6 @@ class PleaseWaitDialogBridgesRequest : ExtendedDialogFragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        threadRequest?.interrupt()
+        threadRequest?.cancel(true)
     }
 }

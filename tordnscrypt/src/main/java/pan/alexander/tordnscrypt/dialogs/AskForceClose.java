@@ -28,6 +28,8 @@ import android.util.Log;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
+import java.util.concurrent.Executors;
+
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesService;
@@ -120,11 +122,17 @@ public class AskForceClose extends ExtendedDialogFragment {
     }
 
     private void cleanModulesFolders(Context context) {
+
+        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+            ModulesService.executorService = Executors.newCachedThreadPool();
+        }
+
         String appDataDir = PathVars.getInstance(context).getAppDataDir();
-        new Thread(() -> {
+
+        ModulesService.executorService.submit(() -> {
             FileOperations.deleteDirSynchronous(context, appDataDir + "/tor_data");
             FileOperations.deleteDirSynchronous(context, appDataDir + "/i2pd_data");
-        }).start();
+        });
     }
 
     private void saveModulesAreStopped(Context context) {
