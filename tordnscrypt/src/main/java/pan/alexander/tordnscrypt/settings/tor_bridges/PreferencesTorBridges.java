@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,6 +54,7 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
+import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Verifier;
@@ -222,7 +224,11 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             savedBridgesSelector = BridgesSelector.OWN_BRIDGES;
         }
 
-        Thread thread = new Thread(() -> {
+        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
+            ModulesService.executorService = Executors.newCachedThreadPool();
+        }
+
+        ModulesService.executorService.submit(() -> {
             try {
                 Verifier verifier = new Verifier(getActivity());
                 String appSignAlt = verifier.getApkSignature();
@@ -249,7 +255,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                         Arrays.toString(e.getStackTrace()));
             }
         });
-        thread.start();
+
     }
 
     @Override
@@ -260,6 +266,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             return;
         }
 
+        if (!currentBridges.isEmpty()) {
             switch (savedBridgesSelector) {
                 case NO_BRIDGES:
                     new PrefManager(getActivity()).setBoolPref("useNoBridges", true);
@@ -282,6 +289,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     new PrefManager(getActivity()).setBoolPref("useOwnBridges", false);
                     break;
             }
+        }
 
         List<String> tor_conf_clean = new ArrayList<>();
 
