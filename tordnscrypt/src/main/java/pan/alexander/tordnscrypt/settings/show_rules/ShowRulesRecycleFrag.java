@@ -216,12 +216,14 @@ public class ShowRulesRecycleFrag extends Fragment {
         if (file_path.contains("subscriptions")) {
             SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
             StringBuilder sb = new StringBuilder();
-            String str;
+            String str = "";
             for (Rules rule : rules_list) {
                 if (rule.subscription)
                     sb.append(rule.text).append(", ");
             }
-            str = sb.toString().substring(0, sb.length() - 2);
+            if (sb.length() > 2) {
+                str = sb.toString().substring(0, sb.length() - 2);
+            }
             sp.edit().putString("subscriptions", str).apply();
         } else {
             others_list.addAll(rules_file_new);
