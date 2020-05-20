@@ -38,10 +38,10 @@ import java.net.ServerSocket;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.Timer;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.R;
@@ -68,6 +68,9 @@ public class ModulesService extends Service {
 
     public static final String actionStopService = "pan.alexander.tordnscrypt.action.STOP_SERVICE";
 
+    private final static int TIMER_HIGH_SPEED = 1000;
+    private final static int TIMER_LOW_SPEED = 30000;
+
     static final String actionStartDnsCrypt = "pan.alexander.tordnscrypt.action.START_DNSCRYPT";
     static final String actionStartTor = "pan.alexander.tordnscrypt.action.START_TOR";
     static final String actionStartITPD = "pan.alexander.tordnscrypt.action.START_ITPD";
@@ -79,6 +82,9 @@ public class ModulesService extends Service {
     static final String actionRestartITPD = "pan.alexander.tordnscrypt.action.RESTART_ITPD";
     static final String actionUpdateModulesStatus = "pan.alexander.tordnscrypt.action.UPDATE_MODULES_STATUS";
     static final String actionRecoverService = "pan.alexander.tordnscrypt.action.RECOVER_SERVICE";
+    static final String speedupLoop = "pan.alexander.tordnscrypt.action.SPEEDUP_LOOP";
+    static final String slowdownLoop = "pan.alexander.tordnscrypt.action.SLOWDOWN_LOOP";
+    static final String extraLoop = "pan.alexander.tordnscrypt.action.MAKE_EXTRA_LOOP";
 
     static final String DNSCRYPT_KEYWORD = "checkDNSRunning";
     static final String TOR_KEYWORD = "checkTrRunning";
@@ -95,7 +101,9 @@ public class ModulesService extends Service {
 
     private PathVars pathVars;
     private NotificationManager notificationManager;
-    private Timer checkModulesThreadsTimer;
+    private ScheduledExecutorService checkModulesThreadsTimer;
+    private ScheduledFuture<?> scheduledFuture;
+    private int timerPeriod = TIMER_HIGH_SPEED;
     private ModulesStateLoop checkModulesStateTask;
     private ModulesKiller modulesKiller;
 
@@ -175,6 +183,15 @@ public class ModulesService extends Service {
                 break;
             case actionStopService:
                 stopModulesService();
+                break;
+            case speedupLoop:
+                speedupTimer();
+                break;
+            case slowdownLoop:
+                slowdownTimer();
+                break;
+            case extraLoop:
+                makeExtraLoop();
                 break;
         }
 
@@ -406,7 +423,7 @@ public class ModulesService extends Service {
     private boolean stopTorIfPortsIsBusy() {
         boolean stopRequired = !isAvailable(pathVars.getTorDNSPort())
                 || !isAvailable(pathVars.getTorSOCKSPort())
-                || !isAvailable(pathVars.getTorTransPort() )
+                || !isAvailable(pathVars.getTorTransPort())
                 || !isAvailable(pathVars.getTorHTTPTunnelPort());
 
         if (stopRequired) {
@@ -434,7 +451,6 @@ public class ModulesService extends Service {
         }
         return false;
     }
-
 
 
     private void startITPD() {
@@ -689,15 +705,52 @@ public class ModulesService extends Service {
     }
 
     private void startModulesThreadsTimer() {
-        checkModulesThreadsTimer = new Timer();
+        checkModulesThreadsTimer = Executors.newSingleThreadScheduledExecutor();
         checkModulesStateTask = new ModulesStateLoop(this);
-        checkModulesThreadsTimer.schedule(checkModulesStateTask, 1, 1000);
+        scheduledFuture = checkModulesThreadsTimer.scheduleWithFixedDelay(checkModulesStateTask, 1, timerPeriod, TimeUnit.MILLISECONDS);
+    }
+
+    private void speedupTimer() {
+        if (timerPeriod != TIMER_HIGH_SPEED && checkModulesThreadsTimer != null
+                && !checkModulesThreadsTimer.isShutdown() && checkModulesStateTask != null) {
+
+            timerPeriod = TIMER_HIGH_SPEED;
+
+            if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
+                scheduledFuture.cancel(false);
+            }
+
+            scheduledFuture = checkModulesThreadsTimer.scheduleWithFixedDelay(checkModulesStateTask, 1, timerPeriod, TimeUnit.MILLISECONDS);
+
+            Log.i(LOG_TAG, "ModulesService speedUPTimer");
+        }
+    }
+
+    private void slowdownTimer() {
+        if (timerPeriod != TIMER_LOW_SPEED && checkModulesThreadsTimer != null
+                && !checkModulesThreadsTimer.isShutdown() && checkModulesStateTask != null) {
+
+            timerPeriod = TIMER_LOW_SPEED;
+
+            if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
+                scheduledFuture.cancel(false);
+            }
+
+            scheduledFuture = checkModulesThreadsTimer.scheduleWithFixedDelay(checkModulesStateTask, 1, timerPeriod, TimeUnit.MILLISECONDS);
+
+            Log.i(LOG_TAG, "ModulesService slowDOWNTimer");
+        }
+    }
+
+    private void makeExtraLoop() {
+        if (timerPeriod != TIMER_HIGH_SPEED && checkModulesStateTask != null && executorService != null && !executorService.isShutdown()) {
+            executorService.submit(checkModulesStateTask);
+        }
     }
 
     private void stopModulesThreadsTimer() {
-        if (checkModulesThreadsTimer != null) {
-            checkModulesThreadsTimer.purge();
-            checkModulesThreadsTimer.cancel();
+        if (checkModulesThreadsTimer != null && !checkModulesThreadsTimer.isShutdown()) {
+            checkModulesThreadsTimer.shutdown();
             checkModulesThreadsTimer = null;
         }
     }

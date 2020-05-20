@@ -42,10 +42,6 @@ public class ModulesRunner {
         sendStarterIntent(context, ModulesService.actionStartITPD);
     }
 
-    public static void recoverService(Context context) {
-        sendStarterIntent(context, ModulesService.actionRecoverService);
-    }
-
     private static void sendStarterIntent(Context context, String action) {
         Intent intent = new Intent(context, ModulesService.class);
         intent.setAction(action);

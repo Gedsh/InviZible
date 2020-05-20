@@ -36,7 +36,6 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
@@ -147,8 +146,8 @@ public class TorRefreshIPsWork {
             }
 
             if (ModulesStatus.getInstance().getMode() == ROOT_MODE) {
-                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
-                ModulesAux.requestModulesStatusUpdate(context);
+                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
+                //ModulesAux.requestModulesStatusUpdate(context);
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && getIPsJobService != null) {

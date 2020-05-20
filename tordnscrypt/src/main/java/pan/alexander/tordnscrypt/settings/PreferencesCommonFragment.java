@@ -201,8 +201,8 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 readTorConf();
                 if (new PrefManager(getActivity()).getBoolPref("Tor Running")) {
                     ModulesRestarter.restartTor(getActivity());
-                    ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
-                    ModulesAux.requestModulesStatusUpdate(getActivity());
+                    ModulesStatus.getInstance().setIptablesRulesUpdateRequested(getActivity(), true);
+                    //ModulesAux.requestModulesStatusUpdate(getActivity());
                 }
                 break;
             case "pref_common_itpd_tethering":
@@ -211,8 +211,8 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 readITPDTunnelsConf();
                 if (new PrefManager(getActivity()).getBoolPref("I2PD Running")) {
                     ModulesRestarter.restartITPD(getActivity());
-                    ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
-                    ModulesAux.requestModulesStatusUpdate(getActivity());
+                    ModulesStatus.getInstance().setIptablesRulesUpdateRequested(getActivity(), true);
+                    //ModulesAux.requestModulesStatusUpdate(getActivity());
                 }
                 break;
             case "pref_common_tor_route_all":
@@ -226,15 +226,15 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 }
 
                 if (new PrefManager(getActivity()).getBoolPref("Tor Running")) {
-                    ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
-                    ModulesAux.requestModulesStatusUpdate(getActivity());
+                    ModulesStatus.getInstance().setIptablesRulesUpdateRequested(getActivity(), true);
+                    //ModulesAux.requestModulesStatusUpdate(getActivity());
                 }
                 break;
             case "pref_common_block_http":
                 if (new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")
                         || new PrefManager(getActivity()).getBoolPref("Tor Running")) {
-                    ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
-                    ModulesAux.requestModulesStatusUpdate(getActivity());
+                    ModulesStatus.getInstance().setIptablesRulesUpdateRequested(getActivity(), true);
+                    //ModulesAux.requestModulesStatusUpdate(getActivity());
                 }
                 break;
             case "swUseModulesRoot":
@@ -243,7 +243,8 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 boolean newOptionValue = Boolean.parseBoolean(newValue.toString());
                 modulesStatus.setUseModulesWithRoot(newOptionValue);
                 modulesStatus.setContextUIDUpdateRequested(true);
-                ModulesAux.requestModulesStatusUpdate(getActivity());
+                ModulesAux.makeModulesStateExtraLoop(getActivity());
+                //ModulesAux.requestModulesStatusUpdate(getActivity());
 
                 Preference fixTTLPreference = findPreference("pref_common_fix_ttl");
                 if (fixTTLPreference != null) {
@@ -257,7 +258,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 modulesStatus = ModulesStatus.getInstance();
                 boolean fixed = Boolean.parseBoolean(newValue.toString());
                 modulesStatus.setFixTTL(fixed);
-                modulesStatus.setIptablesRulesUpdateRequested(true);
+                modulesStatus.setIptablesRulesUpdateRequested(getActivity(), true);
 
                 new PrefManager(getActivity()).setBoolPref("refresh_main_activity", true);
                 break;

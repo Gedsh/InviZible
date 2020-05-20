@@ -285,7 +285,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
 
                 new PrefManager(context).setBoolPref("APisON", true);
 
-                modulesStatus.setIptablesRulesUpdateRequested(true);
+                modulesStatus.setIptablesRulesUpdateRequested(context, true);
 
                 Log.i(LOG_TAG, "ModulesBroadcastReceiver AP is ON");
 
@@ -295,7 +295,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
             if (new PrefManager(context).getBoolPref("APisON")) {
                 new PrefManager(context).setBoolPref("APisON", false);
 
-                modulesStatus.setIptablesRulesUpdateRequested(true);
+                modulesStatus.setIptablesRulesUpdateRequested(context, true);
 
                 Log.i(LOG_TAG, "ModulesBroadcastReceiver AP is OFF");
             }
@@ -360,7 +360,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
 
                     if (context != null && modulesStatus.getMode() == ROOT_MODE
                             && !modulesStatus.isUseModulesWithRoot()) {
-                        modulesStatus.setIptablesRulesUpdateRequested(true);
+                        modulesStatus.setIptablesRulesUpdateRequested(context, true);
                     }
 
                     lock = false;
@@ -420,10 +420,10 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
 
             if (Tethering.usbTetherOn && !new PrefManager(context).getBoolPref("ModemIsON")) {
                 new PrefManager(context).setBoolPref("ModemIsON", true);
-                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
+                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
             } else if (!Tethering.usbTetherOn && new PrefManager(context).getBoolPref("ModemIsON")) {
                 new PrefManager(context).setBoolPref("ModemIsON", false);
-                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
+                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
             }
         });
 

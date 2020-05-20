@@ -198,6 +198,7 @@ public class ModulesStarterHelper {
                     //Try to update Selinux context and UID once again
                     if (shellResult.exitCode == 1) {
                         modulesStatus.setContextUIDUpdateRequested(true);
+                        ModulesAux.makeModulesStateExtraLoop(service);
                     }
                 }
 

@@ -55,7 +55,6 @@ import pan.alexander.tordnscrypt.dialogs.UpdateModulesDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.RootCheckingProgressDialog;
 import pan.alexander.tordnscrypt.installer.Installer;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
-import pan.alexander.tordnscrypt.modules.ModulesRunner;
 import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStarterHelper;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
@@ -71,6 +70,8 @@ import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 
 
@@ -171,7 +172,7 @@ public class TopFragment extends Fragment {
                 startModulesStarterServiceIfStoppedBySystem();
                 Log.e(LOG_TAG, "ModulesService stopped by system!");
             } else {
-                ModulesAux.requestModulesStatusUpdate(getActivity());
+                ModulesAux.speedupModulesStateLoopTimer(getActivity());
             }
 
             if (PathVars.isModulesInstalled(getActivity()) && appVersion.endsWith("p")) {
@@ -197,6 +198,16 @@ public class TopFragment extends Fragment {
         if (updateCheck != null && updateCheck.context != null) {
             updateCheck.context = null;
             updateCheck = null;
+        }
+
+        ModulesStatus modulesStatus = ModulesStatus.getInstance();
+
+        if (getActivity() != null && !modulesStatus.isUseModulesWithRoot()
+                && (modulesStatus.getDnsCryptState() == RUNNING || modulesStatus.getDnsCryptState() == STOPPED)
+                && (modulesStatus.getTorState() == RUNNING || modulesStatus.getTorState() == STOPPED)
+                && (modulesStatus.getItpdState() == RUNNING || modulesStatus.getItpdState() == STOPPED)
+                && !(modulesStatus.getDnsCryptState() == STOPPED && modulesStatus.getTorState() == STOPPED && modulesStatus.getItpdState() == STOPPED)) {
+            ModulesAux.slowdownModulesStateLoopTimer(getActivity());
         }
     }
 
@@ -614,7 +625,7 @@ public class TopFragment extends Fragment {
             return;
         }
 
-        ModulesRunner.recoverService(getActivity());
+        ModulesAux.recoverService(getActivity());
     }
 
     private boolean isModulesStarterServiceRunning() {

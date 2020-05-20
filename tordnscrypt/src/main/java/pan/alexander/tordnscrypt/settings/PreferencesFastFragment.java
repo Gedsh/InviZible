@@ -48,7 +48,6 @@ import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.language.Language;
-import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.GetIPsJobService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -301,12 +300,12 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
                 if (modulesStatus.getMode() == ROOT_MODE
                         && modulesStatus.getTorState() == RUNNING ) {
-                    modulesStatus.setIptablesRulesUpdateRequested(true);
-                    ModulesAux.requestModulesStatusUpdate(getActivity());
+                    modulesStatus.setIptablesRulesUpdateRequested(getActivity(), true);
+                    //ModulesAux.requestModulesStatusUpdate(getActivity());
                 } else if (modulesStatus.getMode() == VPN_MODE
                         && (modulesStatus.getDnsCryptState() == RUNNING
                         || modulesStatus.getTorState() == RUNNING )) {
-                    modulesStatus.setIptablesRulesUpdateRequested(true);
+                    modulesStatus.setIptablesRulesUpdateRequested(getActivity(), true);
                 }
 
                 Preference prefTorAppUnlock = findPreference("prefTorAppUnlock");
@@ -337,8 +336,8 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
             case "pref_fast_block_http":
                 if (new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")
                         || new PrefManager(getActivity()).getBoolPref("Tor Running")) {
-                    ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
-                    ModulesAux.requestModulesStatusUpdate(getActivity());
+                    ModulesStatus.getInstance().setIptablesRulesUpdateRequested(getActivity(), true);
+                    //ModulesAux.requestModulesStatusUpdate(getActivity());
                 }
                 return true;
             case "pref_fast_theme":

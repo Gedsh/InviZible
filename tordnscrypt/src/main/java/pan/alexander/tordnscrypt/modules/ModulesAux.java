@@ -79,6 +79,22 @@ public class ModulesAux {
         sendIntent(context, ModulesService.actionUpdateModulesStatus);
     }
 
+    public static void recoverService(Context context) {
+        sendIntent(context, ModulesService.actionRecoverService);
+    }
+
+    public static void speedupModulesStateLoopTimer(Context context) {
+        sendIntent(context, ModulesService.speedupLoop);
+    }
+
+    public static void slowdownModulesStateLoopTimer(Context context) {
+        sendIntent(context, ModulesService.slowdownLoop);
+    }
+
+    public static void makeModulesStateExtraLoop(Context context) {
+        sendIntent(context, ModulesService.extraLoop);
+    }
+
     private static void sendIntent(Context context, String action) {
         Intent intent = new Intent(context, ModulesService.class);
         intent.setAction(action);

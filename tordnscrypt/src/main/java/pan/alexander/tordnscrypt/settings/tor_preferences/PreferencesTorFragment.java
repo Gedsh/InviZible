@@ -38,7 +38,6 @@ import java.util.concurrent.Executors;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
-import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
@@ -184,8 +183,8 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
         if (torRunning) {
             ModulesRestarter.restartTor(getActivity());
-            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
-            ModulesAux.requestModulesStatusUpdate(getActivity());
+            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(getActivity(), true);
+            //ModulesAux.requestModulesStatusUpdate(getActivity());
         }
 
     }

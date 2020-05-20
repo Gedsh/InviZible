@@ -173,7 +173,7 @@ public class RootExecService extends Service {
             Log.e(LOG_TAG, errorMessageFinal + " Commands:" + Arrays.toString(runCommands));
 
             if (errorStr.contains(" -w ") || exitCode == 4) {
-                handler.postDelayed(() -> ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true), 5000);
+                handler.postDelayed(() -> ModulesStatus.getInstance().setIptablesRulesUpdateRequested(this, true), 5000);
             } else if (showToastWithCommandsResultError) {
                 handler.post(() -> Toast.makeText(this, errorMessageFinal, Toast.LENGTH_LONG).show());
             }

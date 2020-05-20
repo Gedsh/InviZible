@@ -256,8 +256,8 @@ public class UnlockTorIpsFrag extends Fragment {
         }
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
-        modulesStatus.setIptablesRulesUpdateRequested(true);
-        ModulesAux.requestModulesStatusUpdate(getActivity());
+        modulesStatus.setIptablesRulesUpdateRequested(getActivity(), true);
+        //ModulesAux.requestModulesStatusUpdate(getActivity());
     }
 
     @Override

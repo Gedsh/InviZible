@@ -230,7 +230,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
             TorRefreshIPsWork torRefreshIPsWork = new TorRefreshIPsWork(getActivity(), null);
             torRefreshIPsWork.refreshIPs();
         } else if (modulesStatus.getMode() == VPN_MODE) {
-            modulesStatus.setIptablesRulesUpdateRequested(true);
+            modulesStatus.setIptablesRulesUpdateRequested(getActivity(), true);
         }
     }
 

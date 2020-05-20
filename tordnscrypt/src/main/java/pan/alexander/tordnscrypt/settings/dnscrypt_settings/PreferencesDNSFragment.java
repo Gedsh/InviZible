@@ -182,8 +182,8 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
         if (dnsCryptRunning) {
             ModulesRestarter.restartDNSCrypt(getActivity());
-            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
-            ModulesAux.requestModulesStatusUpdate(getActivity());
+            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(getActivity(), true);
+            //ModulesAux.requestModulesStatusUpdate(getActivity());
         }
     }
 

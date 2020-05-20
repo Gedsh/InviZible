@@ -37,7 +37,6 @@ import java.util.concurrent.Executors;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
-import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -227,8 +226,8 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
 
         if (itpdRunning) {
             ModulesRestarter.restartITPD(getActivity());
-            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
-            ModulesAux.requestModulesStatusUpdate(getActivity());
+            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(getActivity(), true);
+            //ModulesAux.requestModulesStatusUpdate(getActivity());
         }
 
 
@@ -308,11 +307,11 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
 
 
             return true;
-        } else if ("editITPDConfDirectly".equals(preference.getKey())) {
-            ConfigEditorFragment.openEditorFragment(getFragmentManager(), "i2pd.conf");
+        } else if ("editITPDConfDirectly".equals(preference.getKey()) && isAdded()) {
+            ConfigEditorFragment.openEditorFragment(getParentFragmentManager(), "i2pd.conf");
             return true;
-        } else if ("editTunnelsDirectly".equals(preference.getKey())) {
-            ConfigEditorFragment.openEditorFragment(getFragmentManager(), "tunnels.conf");
+        } else if ("editTunnelsDirectly".equals(preference.getKey()) && isAdded()) {
+            ConfigEditorFragment.openEditorFragment(getParentFragmentManager(), "tunnels.conf");
             return true;
         }
         return false;

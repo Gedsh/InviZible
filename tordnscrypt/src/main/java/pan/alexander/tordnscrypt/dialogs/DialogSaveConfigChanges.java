@@ -31,7 +31,6 @@ import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
-import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -100,8 +99,8 @@ public class DialogSaveConfigChanges extends ExtendedDialogFragment {
             boolean routeAllThroughTorTether = sharedPreferences.getBoolean("pref_common_tor_route_all", false);
 
             if (torTethering && routeAllThroughTorTether && itpdTethering) {
-                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
-                ModulesAux.requestModulesStatusUpdate(getActivity());
+                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(getActivity(), true);
+                //ModulesAux.requestModulesStatusUpdate(getActivity());
             }
         }
     }
