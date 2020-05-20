@@ -23,6 +23,7 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 
 public interface IptablesRules {
     String[] configureIptables(ModuleState dnsCryptState, ModuleState torState, ModuleState itpdState);
+    void refreshFixTTLRules();
     String[] clearAll();
     void sendToRootExecService(String[] commands);
 }

@@ -19,6 +19,8 @@ package pan.alexander.tordnscrypt.modules;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.content.Context;
+
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
@@ -26,13 +28,14 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
 public final class ModulesStatus {
 
-    private ModuleState dnsCryptState = STOPPED;
-    private ModuleState torState = STOPPED;
-    private ModuleState itpdState = STOPPED;
+    private volatile ModuleState dnsCryptState = STOPPED;
+    private volatile ModuleState torState = STOPPED;
+    private volatile ModuleState itpdState = STOPPED;
 
     private volatile boolean rootAvailable = false;
     private volatile boolean useModulesWithRoot;
     private volatile boolean requestIptablesUpdate;
+    private volatile boolean requestFixTTLRulesUpdate;
     private volatile boolean requestContextUIDUpdate;
     private volatile boolean fixTTL;
     private volatile OperationMode mode;
@@ -57,27 +60,27 @@ public final class ModulesStatus {
         this.useModulesWithRoot = useModulesWithRoot;
     }
 
-    public synchronized ModuleState getDnsCryptState() {
+    public ModuleState getDnsCryptState() {
         return dnsCryptState;
     }
 
-    public synchronized ModuleState getTorState() {
+    public ModuleState getTorState() {
         return torState;
     }
 
-    public synchronized ModuleState getItpdState() {
+    public ModuleState getItpdState() {
         return itpdState;
     }
 
-    public synchronized void setDnsCryptState(ModuleState dnsCryptState) {
+    public void setDnsCryptState(ModuleState dnsCryptState) {
         this.dnsCryptState = dnsCryptState;
     }
 
-    public synchronized void setTorState(ModuleState torState) {
+    public void setTorState(ModuleState torState) {
         this.torState = torState;
     }
 
-    public synchronized void setItpdState(ModuleState itpdState) {
+    public void setItpdState(ModuleState itpdState) {
         this.itpdState = itpdState;
     }
 
@@ -93,12 +96,30 @@ public final class ModulesStatus {
         this.rootAvailable = rootIsAvailable;
     }
 
-    boolean isIptablesRulesUpdateRequested() {
+    synchronized boolean isIptablesRulesUpdateRequested() {
         return requestIptablesUpdate;
     }
 
-    public void setIptablesRulesUpdateRequested(final boolean requestIptablesUpdate) {
+    public synchronized void setIptablesRulesUpdateRequested(final boolean requestIptablesUpdate) {
         this.requestIptablesUpdate = requestIptablesUpdate;
+    }
+
+    public synchronized void setIptablesRulesUpdateRequested(Context context, final boolean requestIptablesUpdate) {
+        this.requestIptablesUpdate = requestIptablesUpdate;
+        ModulesAux.makeModulesStateExtraLoop(context);
+    }
+
+    boolean isFixTTLRulesUpdateRequested() {
+        return requestFixTTLRulesUpdate;
+    }
+
+    void setFixTTLRulesUpdateRequested(final boolean requestFixTTLRulesUpdate) {
+        this.requestFixTTLRulesUpdate = requestFixTTLRulesUpdate;
+    }
+
+    public void setFixTTLRulesUpdateRequested(Context context, final boolean requestFixTTLRulesUpdate) {
+        this.requestFixTTLRulesUpdate = requestFixTTLRulesUpdate;
+        ModulesAux.makeModulesStateExtraLoop(context);
     }
 
     public boolean isContextUIDUpdateRequested() {

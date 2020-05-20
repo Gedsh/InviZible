@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
@@ -50,6 +51,7 @@ import pan.alexander.tordnscrypt.vpn.Util;
 import static android.content.Context.CONNECTIVITY_SERVICE;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPN.EXTRA_COMMAND;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPN.EXTRA_REASON;
 
@@ -170,6 +172,15 @@ public class ServiceVPNHandler extends Handler {
     private void reload() {
         serviceVPN.reloading = true;
 
+        ModulesStatus modulesStatus = ModulesStatus.getInstance();
+        boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
+                && !modulesStatus.isUseModulesWithRoot();
+
+        String oldVpnInterfaceName = "";
+        if (fixTTL) {
+            oldVpnInterfaceName = ModulesIptablesRules.blockTethering(serviceVPN);
+        }
+
         listRule = Rule.getRules(serviceVPN);
         List<Rule> listAllowed = getAllowedRules(listRule);
 
@@ -240,6 +251,11 @@ public class ServiceVPNHandler extends Handler {
             throw new StartFailedException("VPN Handler Start VPN Service Failed");
 
         serviceVPN.startNative(serviceVPN.vpn, listAllowed, listRule);
+
+        if (fixTTL) {
+            modulesStatus.setFixTTLRulesUpdateRequested(serviceVPN, true);
+            ModulesIptablesRules.allowTethering(serviceVPN, oldVpnInterfaceName);
+        }
 
         serviceVPN.reloading = false;
     }

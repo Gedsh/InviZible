@@ -48,9 +48,9 @@ public class Tethering {
     static final String usbModemAddressesRange = "192.168.42.0/24";
     private static final String addressVPN = "10.1.10.1";
 
-    private static String vpnInterfaceName = "tun0";
-    private static String wifiAPInterfaceName = "wlan0";
-    private static String usbModemInterfaceName = "rndis0";
+    static String vpnInterfaceName = "tun0";
+    static String wifiAPInterfaceName = "wlan0";
+    static String usbModemInterfaceName = "rndis0";
 
     private PathVars pathVars;
     private String iptables;
@@ -568,7 +568,7 @@ public class Tethering {
         return tetheringCommands;
     }
 
-    private void setInterfaceNames() {
+    void setInterfaceNames() {
         final String addressesRangeUSB = "192.168.42.";
         final String addressesRangeWiFi = "192.168.43.";
 
@@ -622,10 +622,10 @@ public class Tethering {
 
         if (usbTetherOn && !new PrefManager(context).getBoolPref("ModemIsON")) {
             new PrefManager(context).setBoolPref("ModemIsON", true);
-            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
+            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
         } else if (!usbTetherOn && new PrefManager(context).getBoolPref("ModemIsON")) {
             new PrefManager(context).setBoolPref("ModemIsON", false);
-            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
+            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
         }
     }
 
@@ -647,7 +647,7 @@ public class Tethering {
         }
     }
 
-    private String[] fixTTLCommands() {
+    String[] fixTTLCommands() {
         new PrefManager(context).setBoolPref("TTLisFixed", true);
 
         String[] commands = new String[]{
@@ -667,15 +667,15 @@ public class Tethering {
                 iptables + "-t nat -I tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes(),
                 iptables + "-D tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j RETURN 2> /dev/null && "
                         + iptables + "-I tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j ACCEPT 2> /dev/null || true",
-                iptables + "-D tordnscrypt_forward -o !" + vpnInterfaceName + " -j REJECT 2> /dev/null || true",
                 iptables + "-I tordnscrypt_forward -o !" + vpnInterfaceName + " -j REJECT",
+                iptables + "-D tordnscrypt_forward -p all -j ACCEPT 2> /dev/null || true",
                 iptables + "-A tordnscrypt_forward -p all -j ACCEPT",
                 iptables + "-I FORWARD -j tordnscrypt_forward",
                 //iptables + "-t nat -I POSTROUTING -o " + vpnInterfaceName + " -j MASQUERADE",
                 "ip rule add from " + wifiAPAddressesRange + " lookup 63 2> /dev/null || true",
                 "ip rule add from " + usbModemAddressesRange + " lookup 62 2> /dev/null || true",
-                "ip route add default dev tun0 scope link table 63 2> /dev/null || true",
-                "ip route add default dev tun0 scope link table 62 2> /dev/null || true",
+                "ip route add default dev " + vpnInterfaceName + " scope link table 63 2> /dev/null || true",
+                "ip route add default dev " + vpnInterfaceName + " scope link table 62 2> /dev/null || true",
                 "ip route add " + wifiAPAddressesRange + " dev " + wifiAPInterfaceName + " scope link table 63 2> /dev/null || true",
                 "ip route add " + usbModemAddressesRange + " dev " + usbModemInterfaceName + " scope link table 62 2> /dev/null || true",
                 "ip route add broadcast 255.255.255.255 dev " + wifiAPInterfaceName + " scope link table 63 2> /dev/null || true",

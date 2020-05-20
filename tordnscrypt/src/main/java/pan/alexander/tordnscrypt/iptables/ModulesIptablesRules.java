@@ -22,6 +22,8 @@ package pan.alexander.tordnscrypt.iptables;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Handler;
+import android.util.Log;
 
 import androidx.preference.PreferenceManager;
 
@@ -34,9 +36,11 @@ import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 
 import static pan.alexander.tordnscrypt.iptables.Tethering.usbModemAddressesRange;
+import static pan.alexander.tordnscrypt.iptables.Tethering.vpnInterfaceName;
 import static pan.alexander.tordnscrypt.iptables.Tethering.wifiAPAddressesRange;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
@@ -381,7 +385,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
     public String[] clearAll() {
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
         if (modulesStatus.isFixTTL()) {
-            modulesStatus.setIptablesRulesUpdateRequested(true);
+            modulesStatus.setIptablesRulesUpdateRequested(context, true);
         }
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
@@ -414,6 +418,24 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         };
     }
 
+    @Override
+    public void refreshFixTTLRules() {
+        String savedVpnInterfaceName = vpnInterfaceName;
+        String savedWifiAPInterfaceName = Tethering.wifiAPInterfaceName;
+        String savedUsbModemInterfaceName = Tethering.usbModemInterfaceName;
+
+        tethering.setInterfaceNames();
+
+        if (!vpnInterfaceName.equals(savedVpnInterfaceName)
+                || !Tethering.wifiAPInterfaceName.equals(savedWifiAPInterfaceName)
+                || !Tethering.usbModemInterfaceName.equals(savedUsbModemInterfaceName)) {
+
+            sendToRootExecService(tethering.fixTTLCommands());
+
+            Log.i(LOG_TAG, "ModulesIptablesRules Refresh Fix TTL Rules vpnInterfaceName = " + vpnInterfaceName);
+        }
+    }
+
     public static void denySystemDNS(Context context) {
 
         String iptables = PathVars.getInstance(context).getIptablesPath();
@@ -439,6 +461,41 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             commands = Arr.ADD2(commands, commandsNoRunModulesWithRoot);
         }
 
+        executeCommands(context, commands);
+    }
+
+    public static String blockTethering(Context context) {
+        String iptables = PathVars.getInstance(context).getIptablesPath();
+
+        String[] commands = {
+                iptables + "-I FORWARD -j DROP",
+        };
+
+        executeCommands(context, commands);
+
+        return vpnInterfaceName;
+    }
+
+    public static void allowTethering(Context context, String oldVpnInterfaceName) {
+        String iptables = PathVars.getInstance(context).getIptablesPath();
+
+
+        String[] commands = {
+                iptables + "-D FORWARD -j DROP 2> /dev/null || true",
+        };
+
+        if (!oldVpnInterfaceName.equals(vpnInterfaceName)) {
+            commands = new String[] {
+                    iptables + "-D FORWARD -j DROP 2> /dev/null || true",
+                    iptables + "-D tordnscrypt_forward -o !" + oldVpnInterfaceName + " -j REJECT 2> /dev/null || true",
+            };
+        }
+
+        String[] finalCommands = commands;
+        new Handler().postDelayed(() -> executeCommands(context, finalCommands), 1000);
+    }
+
+    private static void executeCommands(Context context, String[] commands) {
         RootCommands rootCommands = new RootCommands(commands);
         Intent intent = new Intent(context, RootExecService.class);
         intent.setAction(RootExecService.RUN_COMMAND);

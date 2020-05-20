@@ -40,6 +40,7 @@ class BuilderVPN extends VpnService.Builder {
     private List<String> listDisallowed = new ArrayList<>();
     private List<String> listAllowed = new ArrayList<>();
     private String performAllowedOrDisallowed = "";
+    private boolean fixTTL;
 
     BuilderVPN(ServiceVPN serviceVPN) {
         serviceVPN.super();
@@ -107,7 +108,9 @@ class BuilderVPN extends VpnService.Builder {
         return this;
     }
 
-
+    void setFixTTL(boolean fixTTL) {
+        this.fixTTL = fixTTL;
+    }
 
     @Override
     public boolean equals(Object obj) {
@@ -132,6 +135,10 @@ class BuilderVPN extends VpnService.Builder {
         }
 
         if (!this.performAllowedOrDisallowed.equals(other.performAllowedOrDisallowed)) {
+            return false;
+        }
+
+        if (this.fixTTL != other.fixTTL) {
             return false;
         }
 
@@ -190,6 +197,6 @@ class BuilderVPN extends VpnService.Builder {
 
     @Override
     public int hashCode() {
-        return Objects.hash(networkInfo, mtu, listAddress, listRoute, listDns, listDisallowed, listAllowed, performAllowedOrDisallowed);
+        return Objects.hash(networkInfo, mtu, listAddress, listRoute, listDns, listDisallowed, listAllowed, performAllowedOrDisallowed, fixTTL);
     }
 }

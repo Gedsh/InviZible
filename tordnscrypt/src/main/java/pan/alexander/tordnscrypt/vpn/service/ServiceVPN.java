@@ -398,15 +398,17 @@ public class ServiceVPN extends VpnService {
 
             try {
                 builder.addDisallowedApplication(getPackageName());
-                Log.i(LOG_TAG, "VPN Not routing " + getPackageName());
+                //Log.i(LOG_TAG, "VPN Not routing " + getPackageName());
             } catch (PackageManager.NameNotFoundException ex) {
                 Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
             }
 
             if (fixTTL) {
+                builder.setFixTTL(true);
+
                 for (Rule rule : listRule) {
                     try {
-                        Log.i(LOG_TAG, "VPN Not routing " + rule.packageName);
+                        //Log.i(LOG_TAG, "VPN Not routing " + rule.packageName);
                         builder.addDisallowedApplication(rule.packageName);
                     } catch (PackageManager.NameNotFoundException ex) {
                         Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
@@ -738,7 +740,9 @@ public class ServiceVPN extends VpnService {
                 && isSupported(packet.protocol)) {
             // Allow unknown system traffic
             packet.allowed = true;
-            Log.w(LOG_TAG, "Allowing unknown system " + packet);
+            if (!fixTTL) {
+                Log.w(LOG_TAG, "Allowing unknown system " + packet);
+            }
         } else if (routeAllThroughTor && torIsRunning
                 && packet.protocol != 6 && packet.dport != 53 && isRedirectToTor(packet.uid, packet.daddr)) {
             Log.w(LOG_TAG, "Disallowing non tcp traffic when Tor is running " + packet);

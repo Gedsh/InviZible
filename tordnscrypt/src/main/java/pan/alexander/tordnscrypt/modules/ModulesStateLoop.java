@@ -19,10 +19,11 @@ package pan.alexander.tordnscrypt.modules;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.util.Log;
 
-import java.util.TimerTask;
+import androidx.preference.PreferenceManager;
 
 import pan.alexander.tordnscrypt.iptables.IptablesRules;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
@@ -41,7 +42,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
-public class ModulesStateLoop extends TimerTask {
+public class ModulesStateLoop implements Runnable {
     //Depends on timer, currently 10 sec
     private static final int STOP_COUNTER_DELAY = 10;
 
@@ -62,6 +63,8 @@ public class ModulesStateLoop extends TimerTask {
     private ModuleState savedTorState;
     private ModuleState savedItpdState;
 
+    private SharedPreferences sharedPreferences;
+
     ModulesStateLoop(ModulesService modulesService) {
         //Delay in sec before service can stop
         stopCounter = STOP_COUNTER_DELAY;
@@ -74,11 +77,13 @@ public class ModulesStateLoop extends TimerTask {
 
         contextUIDUpdater = new ContextUIDUpdater(modulesService);
 
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(modulesService);
+
         restoreModulesSavedState();
     }
 
     @Override
-    public void run() {
+    public synchronized void run() {
 
         if (modulesStatus == null) {
             return;
@@ -98,6 +103,8 @@ public class ModulesStateLoop extends TimerTask {
         if (!useModulesWithRoot) {
             updateModulesState(dnsCryptState, torState, itpdState);
         }
+
+        updateFixTTLRules();
 
         updateIptablesRules(dnsCryptState, torState, itpdState, operationMode, rootIsAvailable, useModulesWithRoot);
 
@@ -170,6 +177,17 @@ public class ModulesStateLoop extends TimerTask {
         }
     }
 
+    private void updateFixTTLRules() {
+        if (modulesStatus.isFixTTLRulesUpdateRequested()) {
+
+            modulesStatus.setFixTTLRulesUpdateRequested(false);
+
+            if (!modulesStatus.isIptablesRulesUpdateRequested()) {
+                iptablesRules.refreshFixTTLRules();
+            }
+        }
+    }
+
     private void updateIptablesRules(ModuleState dnsCryptState, ModuleState torState,
                                      ModuleState itpdState, OperationMode operationMode,
                                      boolean rootIsAvailable, boolean useModulesWithRoot) {
@@ -221,13 +239,15 @@ public class ModulesStateLoop extends TimerTask {
                 stopCounter = STOP_COUNTER_DELAY;
             }
 
-            if (modulesStatus.isFixTTL() && !modulesStatus.isUseModulesWithRoot() && (operationMode == ROOT_MODE)) {
+            boolean vpnServiceEnabled = sharedPreferences.getBoolean("VPNServiceEnabled", false);
+
+            if (modulesStatus.isFixTTL() && !modulesStatus.isUseModulesWithRoot() && (operationMode == ROOT_MODE) && vpnServiceEnabled) {
                 if ((dnsCryptState == STOPPED && torState == STOPPED) || useModulesWithRoot) {
                     ServiceVPNHelper.stop("All modules stopped", modulesService);
                 } else {
                     ServiceVPNHelper.reload("TTL is fixed", modulesService);
                 }
-            } else if (operationMode == ROOT_MODE || operationMode == PROXY_MODE){
+            } else if ((operationMode == ROOT_MODE || operationMode == PROXY_MODE) && vpnServiceEnabled){
                 ServiceVPNHelper.stop("TTL stop fixing", modulesService);
             }
 
