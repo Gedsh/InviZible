@@ -1,0 +1,3 @@
+**InviZible Pro beta 0.8.6**
+* Reduced power consumption.
+* Fixed Fix TTL feature.

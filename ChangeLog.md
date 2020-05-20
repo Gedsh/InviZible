@@ -252,3 +252,7 @@
 * Fixed "Do Not Use Bridges" option selection.
 * Improved real-time logs auto scroll feature.
 * Performance improvements.
+
+**InviZible Pro beta 0.8.6**
+* Reduced power consumption.
+* Fixed Fix TTL feature.
