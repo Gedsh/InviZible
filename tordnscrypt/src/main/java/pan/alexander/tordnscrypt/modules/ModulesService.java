@@ -124,7 +124,14 @@ public class ModulesService extends Service {
 
         startModulesThreadsTimer();
 
-
+        if (new PrefManager(this).getBoolPref("DNSCryptSystemDNSAllowed")) {
+            new Handler().postDelayed(() -> {
+                if (new PrefManager(this).getBoolPref("DNSCryptSystemDNSAllowed")) {
+                    new PrefManager(this).setBoolPref("DNSCryptSystemDNSAllowed", false);
+                    ModulesStatus.getInstance().setIptablesRulesUpdateRequested(this, true);
+                }
+            }, 10000);
+        }
     }
 
     @Override

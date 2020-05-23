@@ -135,8 +135,9 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
             }
 
-            if (autoStartDNSCrypt && mode == ROOT_MODE
-                    && !shPref.getBoolean("ignore_system_dns", false)) {
+            if (autoStartDNSCrypt && !runModulesWithRoot
+                    && !shPref.getBoolean("ignore_system_dns", false)
+                    && !action.equalsIgnoreCase(MY_PACKAGE_REPLACED)) {
                 new PrefManager(context).setBoolPref("DNSCryptSystemDNSAllowed", true);
             }
 
