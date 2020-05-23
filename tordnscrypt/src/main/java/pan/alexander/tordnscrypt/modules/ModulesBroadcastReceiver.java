@@ -411,6 +411,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
                             Tethering.usbTetherOn = true;
                             String usbModemInterfaceName = intf.getName();
                             Log.i(LOG_TAG, "USB Modem interface name " + usbModemInterfaceName);
+                            break;
                         }
                     }
                 }

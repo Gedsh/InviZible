@@ -612,7 +612,7 @@ public class ServiceVPN extends VpnService {
             rrLock.writeLock().lockInterruptibly();
 
             DNSQueryLogRecord lastRecord = dnsQueryRawRecords.isEmpty() ? null : dnsQueryRawRecords.getLast();
-            DNSQueryLogRecord newRecord = new DNSQueryLogRecord(rr.QName, rr.AName, rr.CName, rr.HInfo, rr.Rcode, rr.Resource, -1000);
+            DNSQueryLogRecord newRecord = new DNSQueryLogRecord(rr.QName, rr.AName, rr.CName, rr.HInfo, rr.Rcode, "", rr.Resource, -1000);
 
             if (!newRecord.equals(lastRecord)) {
                 dnsQueryRawRecords.add(newRecord);
@@ -704,7 +704,7 @@ public class ServiceVPN extends VpnService {
         boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
                 && !modulesStatus.isUseModulesWithRoot() && packet.saddr.matches("^192\\.168\\.(42|43)\\.\\d+");
 
-        addUIDtoDNSQueryRawRecords(packet.uid, packet.daddr, packet.dport);
+        addUIDtoDNSQueryRawRecords(packet.uid, packet.daddr, packet.dport, packet.saddr);
 
         lock.readLock().lock();
 
@@ -1149,15 +1149,15 @@ public class ServiceVPN extends VpnService {
         }
     }
 
-    private void addUIDtoDNSQueryRawRecords(int uid, String address, int port) {
+    private void addUIDtoDNSQueryRawRecords(int uid, String destinationAddress, int destinationPort, String sourceAddres) {
 
         try {
 
             rrLock.writeLock().lockInterruptibly();
 
-            if (uid != 0 || port != 53) {
+            if (uid != 0 || destinationPort != 53) {
                 DNSQueryLogRecord lastRecord = dnsQueryRawRecords.isEmpty() ? null : dnsQueryRawRecords.getLast();
-                DNSQueryLogRecord newRecord = new DNSQueryLogRecord("", "", "", "", 0, address, uid);
+                DNSQueryLogRecord newRecord = new DNSQueryLogRecord("", "", "", "", 0, sourceAddres, destinationAddress, uid);
 
                 if (!newRecord.equals(lastRecord)) {
                     dnsQueryRawRecords.add(newRecord);

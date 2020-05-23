@@ -21,6 +21,8 @@ package pan.alexander.tordnscrypt.dnscrypt_fragment
 
 import java.util.*
 
+const val recordsToCheck = 5
+
 class DNSQueryLogRecords(private val blockIPv6: Boolean,
                          private val vpnDNS1: String,
                          private val vpnDNS2: String) {
@@ -40,24 +42,8 @@ class DNSQueryLogRecords(private val blockIPv6: Boolean,
         if (!dnsQueryLogRecords.isEmpty() && dnsQueryRawRecord.uid != -1000) {
             addUID(dnsQueryRawRecord)
             return
-        } else if (!dnsQueryLogRecords.isEmpty()) {
-
-            val lastRecord = dnsQueryLogRecords.last
-
-            if (dnsQueryRawRecord.aName == lastRecord.aName
-                    && dnsQueryRawRecord.qName == lastRecord.qName
-                    && dnsQueryRawRecord.hInfo == lastRecord.hInfo
-                    && dnsQueryRawRecord.rCode == lastRecord.rCode) {
-
-                if (lastRecord.ip.contains(dnsQueryRawRecord.ip)) {
-                    return
-                } else if (dnsQueryRawRecord.ip.isNotEmpty() && lastRecord.ip.isNotEmpty()) {
-                    if (!lastRecord.ip.contains(dnsQueryRawRecord.ip)) {
-                        dnsQueryLogRecords[dnsQueryLogRecords.size - 1] = lastRecord.apply { ip = ip + ", " + dnsQueryRawRecord.ip }
-                    }
-                    return
-                }
-            }
+        } else if (!dnsQueryLogRecords.isEmpty() && isIdenticalRecord(dnsQueryRawRecord)) {
+            return
         }
 
         setQueryBlocked(dnsQueryRawRecord)
@@ -65,12 +51,42 @@ class DNSQueryLogRecords(private val blockIPv6: Boolean,
         dnsQueryLogRecords.add(dnsQueryRawRecord)
     }
 
+    private fun isIdenticalRecord(dnsQueryRawRecord: DNSQueryLogRecord) : Boolean {
+
+        var lastRecordIndex = 0
+        if (dnsQueryLogRecords.size - recordsToCheck > 0) {
+            lastRecordIndex = dnsQueryLogRecords.size - recordsToCheck - 1
+        }
+
+        for (i in dnsQueryLogRecords.size - 1 downTo lastRecordIndex) {
+            val lastRecord = dnsQueryLogRecords[i]
+
+            if (dnsQueryRawRecord.aName == lastRecord.aName
+                    && dnsQueryRawRecord.qName == lastRecord.qName
+                    && dnsQueryRawRecord.hInfo == lastRecord.hInfo
+                    && dnsQueryRawRecord.rCode == lastRecord.rCode
+                    && dnsQueryRawRecord.saddr == lastRecord.saddr) {
+
+                if (lastRecord.daddr.contains(dnsQueryRawRecord.daddr)) {
+                    return true
+                } else if (dnsQueryRawRecord.daddr.isNotEmpty() && lastRecord.daddr.isNotEmpty()) {
+                    if (!lastRecord.daddr.contains(dnsQueryRawRecord.daddr)) {
+                        dnsQueryLogRecords[i] = lastRecord.apply { daddr = daddr + ", " + dnsQueryRawRecord.daddr }
+                    }
+                    return true
+                }
+            }
+        }
+
+        return false
+    }
+
     private fun addUID(dnsQueryRawRecord: DNSQueryLogRecord) {
         var savedRecord: DNSQueryLogRecord? = null
         var savedIndex: Int = -1
         for (index in dnsQueryLogRecords.size - 1 downTo 0) {
             val record = dnsQueryLogRecords[index]
-            if (savedIndex < 0 && record.ip.contains(dnsQueryRawRecord.ip) && record.uid == -1000) {
+            if (savedIndex < 0 && record.daddr.contains(dnsQueryRawRecord.daddr) && record.uid == -1000) {
                 savedRecord = record
                 savedIndex = index
             } else if (savedRecord != null && savedRecord.aName == record.cName) {
@@ -84,7 +100,7 @@ class DNSQueryLogRecords(private val blockIPv6: Boolean,
         if (savedRecord != null && savedIndex >= 0) {
 
             val dnsQueryNewRecord = DNSQueryLogRecord(savedRecord.qName, savedRecord.aName, "",
-                    "", 0, "", dnsQueryRawRecord.uid)
+                    "", 0, dnsQueryRawRecord.saddr, "", dnsQueryRawRecord.uid)
 
             val previousDnsQueryLogRecord: DNSQueryLogRecord? = if (savedIndex - 1 >= 0) {
                 dnsQueryLogRecords[savedIndex - 1]
@@ -95,7 +111,7 @@ class DNSQueryLogRecords(private val blockIPv6: Boolean,
             if (previousDnsQueryLogRecord?.uid != dnsQueryRawRecord.uid) {
                 dnsQueryLogRecords.add(savedIndex, dnsQueryNewRecord)
             }
-        } else if (dnsQueryRawRecord.ip != vpnDNS1 && dnsQueryRawRecord.ip != vpnDNS2) {
+        } else if (dnsQueryRawRecord.daddr != vpnDNS1 && dnsQueryRawRecord.daddr != vpnDNS2) {
 
             val previousDnsQueryLogRecord: DNSQueryLogRecord? = if (savedIndex - 1 >= 0) {
                 dnsQueryLogRecords[savedIndex - 1]
@@ -111,18 +127,18 @@ class DNSQueryLogRecords(private val blockIPv6: Boolean,
 
     private fun setQueryBlocked(dnsQueryRawRecord: DNSQueryLogRecord): Boolean {
 
-        if (dnsQueryRawRecord.ip == "0.0.0.0" || dnsQueryRawRecord.ip == "127.0.0.1" || dnsQueryRawRecord.ip == "::"
-                || dnsQueryRawRecord.ip.contains(":") && blockIPv6
+        if (dnsQueryRawRecord.daddr == "0.0.0.0" || dnsQueryRawRecord.daddr == "127.0.0.1" || dnsQueryRawRecord.daddr == "::"
+                || dnsQueryRawRecord.daddr.contains(":") && blockIPv6
                 || dnsQueryRawRecord.hInfo.contains("dnscrypt") || dnsQueryRawRecord.rCode != 0) {
 
-            if (dnsQueryRawRecord.hInfo.contains("block_ipv6") || dnsQueryRawRecord.ip == "::"
-                    || dnsQueryRawRecord.ip.contains(":") && blockIPv6) {
+            if (dnsQueryRawRecord.hInfo.contains("block_ipv6") || dnsQueryRawRecord.daddr == "::"
+                    || dnsQueryRawRecord.daddr.contains(":") && blockIPv6) {
                 dnsQueryRawRecord.blockedByIpv6 = true
             }
 
             dnsQueryRawRecord.blocked = true
 
-        } else if (dnsQueryRawRecord.ip.isEmpty() && dnsQueryRawRecord.cName.isEmpty()) {
+        } else if (dnsQueryRawRecord.daddr.isEmpty() && dnsQueryRawRecord.cName.isEmpty()) {
             dnsQueryRawRecord.blocked = true
         }
 

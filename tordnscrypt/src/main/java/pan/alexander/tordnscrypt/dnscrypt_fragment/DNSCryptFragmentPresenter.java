@@ -43,6 +43,7 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
+import pan.alexander.tordnscrypt.iptables.Tethering;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
@@ -83,7 +84,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     private volatile DNSQueryLogRecords dnsQueryLogRecords;
     private boolean torTethering;
     private boolean apIsOn;
-    private boolean modemIsOn;
+    private String localEthernetDeviceAddress = "192.168.0.100";
     private boolean dnsCryptLogAutoScroll = true;
 
     public DNSCryptFragmentPresenter(DNSCryptFragmentView view) {
@@ -104,8 +105,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         torTethering = sharedPreferences.getBoolean("pref_common_tor_tethering", false);
+        localEthernetDeviceAddress = sharedPreferences.getString("pref_common_local_eth_device_addr", "192.168.0.100");
         apIsOn = new PrefManager(context).getBoolPref("APisON");
-        modemIsOn = new PrefManager(context).getBoolPref("ModemIsON");
         boolean blockIPv6 = sharedPreferences.getBoolean("block_ipv6", true);
 
         logFile = new OwnFileReader(context, appDataDir + "/logs/DnsCrypt.log");
@@ -511,7 +512,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                 }
             } else {
 
-                if (record.getUid() != -1000 && !record.getIp().isEmpty()) {
+                if (record.getUid() != -1000 && !record.getDaddr().isEmpty()) {
                     lines.append("<font color=#E7AD42>");
                 } else {
                     lines.append("<font color=#009688>");
@@ -539,12 +540,14 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
                         if (appName != null && !appName.isEmpty()) {
                             lines.append("<b>").append(appName).append("</b>").append(" -> ");
-                        } else if (appName == null && !torTethering && !apIsOn && !modemIsOn && !fixTTL) {
+                        } else if (!torTethering && !apIsOn && !Tethering.usbTetherOn && !Tethering.ethernetOn && !fixTTL) {
                             lines.append("<b>").append("Unknown system traffic").append("</b>").append(" -> ");
-                        } else if (appName == null && apIsOn && fixTTL) {
+                        } else if (apIsOn && fixTTL && record.getSaddr().contains("192.168.43.")) {
                             lines.append("<b>").append("WiFi").append("</b>").append(" -> ");
-                        } else if (appName == null && modemIsOn && fixTTL) {
+                        } else if (Tethering.usbTetherOn && fixTTL && record.getSaddr().contains("192.168.42.")) {
                             lines.append("<b>").append("USB").append("</b>").append(" -> ");
+                        } else if (Tethering.ethernetOn && fixTTL && record.getSaddr().contains(localEthernetDeviceAddress)) {
+                            lines.append("<b>").append("LAN").append("</b>").append(" -> ");
                         }
                     }
                 }
@@ -552,7 +555,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                 if (!record.getAName().isEmpty()) {
                     lines.append(record.getAName().toLowerCase());
 
-                    if (record.getIp().contains(":")) {
+                    if (record.getDaddr().contains(":")) {
                         lines.append(" ipv6");
                     }
                 }
@@ -561,11 +564,11 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                     lines.append(" -> ").append(record.getCName().toLowerCase());
                 }
 
-                if (!record.getIp().isEmpty()) {
+                if (!record.getDaddr().isEmpty()) {
                     if (record.getUid() == -1000) {
                         lines.append(" -> ");
                     }
-                    lines.append(record.getIp());
+                    lines.append(record.getDaddr());
                 }
 
                 lines.append("</font>");

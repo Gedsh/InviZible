@@ -19,16 +19,16 @@ package pan.alexander.tordnscrypt.dnscrypt_fragment
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-class DNSQueryLogRecord( val qName: String = "",
-                         val aName:String = "",
-                         var cName:String = "",
-                         val hInfo:String = "",
-                         val rCode: Int = 0,
-                         var ip:String = "",
-                         var uid:Int = -1000) {
+class DNSQueryLogRecord(val qName: String = "",
+                        val aName:String = "",
+                        var cName:String = "",
+                        val hInfo:String = "",
+                        val rCode: Int = 0,
+                        val saddr:String = "",
+                        var daddr:String = "",
+                        var uid:Int = -1000) {
     var blocked = false
     var blockedByIpv6 = false
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -40,7 +40,8 @@ class DNSQueryLogRecord( val qName: String = "",
         if (cName != other.cName) return false
         if (hInfo != other.hInfo) return false
         if (rCode != other.rCode) return false
-        if (ip != other.ip) return false
+        if (saddr != other.saddr) return false
+        if (daddr != other.daddr) return false
         if (uid != other.uid) return false
 
         return true
@@ -52,9 +53,11 @@ class DNSQueryLogRecord( val qName: String = "",
         result = 31 * result + cName.hashCode()
         result = 31 * result + hInfo.hashCode()
         result = 31 * result + rCode
-        result = 31 * result + ip.hashCode()
+        result = 31 * result + saddr.hashCode()
+        result = 31 * result + daddr.hashCode()
         result = 31 * result + uid
         return result
     }
+
 
 }
