@@ -236,7 +236,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
 
     @Override
     public void onCheckedChanged(CompoundButton compoundButton, boolean active) {
-        if (compoundButton.getId() == R.id.swTorAppSellectorAll) {
+        if (compoundButton.getId() == R.id.swTorAppSellectorAll && mAdapter != null && appsUnlock != null) {
             if (active) {
                 for (int i = 0; i < appsUnlock.size(); i++) {
                     AppUnlock app = appsUnlock.get(i);
