@@ -55,6 +55,13 @@
             android:key="pref_common_fix_ttl"
             android:title="@string/pref_common_fix_ttl"
             android:summary="@string/pref_common_fix_ttl_summ"/>
+        <EditTextPreference
+            android:id="@+id/pref_common_local_eth_device_addr"
+            android:defaultValue="192.168.0.100"
+            android:key="pref_common_local_eth_device_addr"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:title="@string/pref_common_local_eth_device_addr" />
         <Preference
             android:key="pref_common_tethering_settings"
             android:title="@string/pref_common_tethering_settings">

@@ -43,14 +43,17 @@ public class Tethering {
     private Context context;
 
     public static volatile boolean usbTetherOn = false;
+    public static volatile boolean ethernetOn = false;
 
     static final String wifiAPAddressesRange = "192.168.43.0/24";
     static final String usbModemAddressesRange = "192.168.42.0/24";
     private static final String addressVPN = "10.1.10.1";
+    private static String addressLocalPC = "192.168.0.100";
 
     static String vpnInterfaceName = "tun0";
     static String wifiAPInterfaceName = "wlan0";
     static String usbModemInterfaceName = "rndis0";
+    private static String ethernetInterfaceName = "eth0";
 
     private PathVars pathVars;
     private String iptables;
@@ -74,8 +77,6 @@ public class Tethering {
             return new String[]{""};
         }
 
-        setInterfaceNames();
-
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
         boolean dnsCryptRunning = modulesStatus.getDnsCryptState() == RUNNING;
         boolean torRunning = modulesStatus.getTorState() == RUNNING;
@@ -87,8 +88,11 @@ public class Tethering {
         boolean itpdTethering = shPref.getBoolean("pref_common_itpd_tethering", false) && itpdRunning;
         boolean routeAllThroughTorTether = shPref.getBoolean("pref_common_tor_route_all", false);
         boolean blockHotspotHttp = shPref.getBoolean("pref_common_block_http", false);
+        addressLocalPC = shPref.getString("pref_common_local_eth_device_addr", "192.168.0.100");
         boolean ttlFix = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE) && !modulesStatus.isUseModulesWithRoot();
         apIsOn = new PrefManager(context).getBoolPref("APisON");
+
+        setInterfaceNames();
 
         String torSitesBypassPreroutingTCP = "";
         String torSitesBypassForwardTCP = "";
@@ -108,6 +112,8 @@ public class Tethering {
         String blockHttpRulePreroutingUDPwifi = "";
         String blockHttpRulePreroutingTCPusb = "";
         String blockHttpRulePreroutingUDPusb = "";
+        String blockHttpRulePreroutingTCPeth = "";
+        String blockHttpRulePreroutingUDPeth = "";
         if (blockHotspotHttp) {
             blockHttpRuleForwardTCP = iptables + "-A tordnscrypt_forward -p tcp --dport 80 -j REJECT";
             blockHttpRuleForwardUDP = iptables + "-A tordnscrypt_forward -p udp --dport 80 -j REJECT";
@@ -115,6 +121,8 @@ public class Tethering {
             blockHttpRulePreroutingUDPwifi = iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p udp ! -d " + wifiAPAddressesRange + " --dport 80 -j RETURN";
             blockHttpRulePreroutingTCPusb = iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p tcp ! -d " + usbModemAddressesRange + " --dport 80 -j RETURN";
             blockHttpRulePreroutingUDPusb = iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p udp ! -d " + usbModemAddressesRange + " --dport 80 -j RETURN";
+            blockHttpRulePreroutingTCPeth = iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p tcp ! -d " + addressLocalPC + " --dport 80 -j RETURN";
+            blockHttpRulePreroutingUDPeth = iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p udp ! -d " + addressLocalPC + " --dport 80 -j RETURN";
         }
 
 
@@ -137,7 +145,7 @@ public class Tethering {
         boolean tetherIptablesRulesIsClean = new PrefManager(context).getBoolPref("TetherIptablesRulesIsClean");
         boolean ttlFixed = new PrefManager(context).getBoolPref("TTLisFixed");
 
-        if (!torTethering && !itpdTethering && ((!apIsOn && !usbTetherOn) || !dnsCryptRunning)) {
+        if (!torTethering && !itpdTethering && ((!apIsOn && !usbTetherOn && !ethernetOn) || !dnsCryptRunning)) {
 
             if (tetherIptablesRulesIsClean) {
                 return tetheringCommands;
@@ -194,6 +202,8 @@ public class Tethering {
                         blockHttpRulePreroutingUDPwifi,
                         blockHttpRulePreroutingTCPusb,
                         blockHttpRulePreroutingUDPusb,
+                        blockHttpRulePreroutingTCPeth,
+                        blockHttpRulePreroutingUDPeth,
                         busybox + "sleep 1",
                         iptables + "-A tordnscrypt_forward -p tcp --dport 53 -j ACCEPT",
                         iptables + "-A tordnscrypt_forward -p udp --dport 53 -j ACCEPT",
@@ -234,17 +244,22 @@ public class Tethering {
                         iptables + "-I tordnscrypt -p udp -m udp --sport 67 -j ACCEPT",
                         iptables + "-I tordnscrypt -p udp -m udp --sport 68 -j ACCEPT",
                         busybox + "sleep 1",
-                        iptables + "-t nat -A tordnscrypt_prerouting -d " + wifiAPAddressesRange + " -j ACCEPT",
-                        iptables + "-t nat -A tordnscrypt_prerouting -d " + usbModemAddressesRange + " -j ACCEPT",
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -d " + wifiAPAddressesRange + " -j ACCEPT",
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -d " + usbModemAddressesRange + " -j ACCEPT",
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -d " + addressLocalPC + " -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -d 10.191.0.1 -j REDIRECT --to-ports " + pathVars.getITPDHttpProxyPort(),
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p udp -d 10.191.0.1 -j REDIRECT --to-ports " + pathVars.getITPDHttpProxyPort(),
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p tcp -d 10.191.0.1 -j REDIRECT --to-ports " + pathVars.getITPDHttpProxyPort(),
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p udp -d 10.191.0.1 -j REDIRECT --to-ports " + pathVars.getITPDHttpProxyPort(),
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p tcp -d 10.191.0.1 -j REDIRECT --to-ports " + pathVars.getITPDHttpProxyPort(),
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p udp -d 10.191.0.1 -j REDIRECT --to-ports " + pathVars.getITPDHttpProxyPort(),
                         iptables + "-t nat -A tordnscrypt_prerouting -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j REDIRECT --to-ports " + pathVars.getTorTransPort(),
                         blockHttpRulePreroutingTCPwifi,
                         blockHttpRulePreroutingUDPwifi,
                         blockHttpRulePreroutingTCPusb,
                         blockHttpRulePreroutingUDPusb,
+                        blockHttpRulePreroutingTCPeth,
+                        blockHttpRulePreroutingUDPeth,
                         torSitesBypassPreroutingTCP,
                         torSitesBypassPreroutingUDP,
                         iptables + "-t nat -A tordnscrypt_prerouting -p tcp -m tcp --dport " + pathVars.getTorSOCKSPort() + " -j ACCEPT",
@@ -256,6 +271,7 @@ public class Tethering {
                 String[] tetheringCommandsPart2 = {
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -j REDIRECT --to-ports " + pathVars.getTorTransPort(),
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p tcp -j REDIRECT --to-ports " + pathVars.getTorTransPort(),
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p tcp -j REDIRECT --to-ports " + pathVars.getTorTransPort(),
                         iptables + "-A tordnscrypt_forward -p udp --dport 53 -j ACCEPT",
                         iptables + "-A tordnscrypt_forward -p tcp --dport 53 -j ACCEPT",
                         blockHttpRuleForwardTCP,
@@ -301,20 +317,26 @@ public class Tethering {
                         iptables + "-I tordnscrypt -p udp -m udp --sport 67 -j ACCEPT",
                         iptables + "-I tordnscrypt -p udp -m udp --sport 68 -j ACCEPT",
                         busybox + "sleep 1",
-                        iptables + "-t nat -A tordnscrypt_prerouting -d " + wifiAPAddressesRange + " -j ACCEPT",
-                        iptables + "-t nat -A tordnscrypt_prerouting -d " + usbModemAddressesRange + " -j ACCEPT",
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -d " + wifiAPAddressesRange + " -j ACCEPT",
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -d " + usbModemAddressesRange + " -j ACCEPT",
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -d " + addressLocalPC + " -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -d 10.191.0.1 -j REDIRECT --to-ports " + pathVars.getITPDHttpProxyPort(),
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p udp -d 10.191.0.1 -j REDIRECT --to-ports " + pathVars.getITPDHttpProxyPort(),
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p tcp -d 10.191.0.1 -j REDIRECT --to-ports " + pathVars.getITPDHttpProxyPort(),
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p udp -d 10.191.0.1 -j REDIRECT --to-ports " + pathVars.getITPDHttpProxyPort(),
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p tcp -d 10.191.0.1 -j REDIRECT --to-ports " + pathVars.getITPDHttpProxyPort(),
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p udp -d 10.191.0.1 -j REDIRECT --to-ports " + pathVars.getITPDHttpProxyPort(),
                         iptables + "-t nat -A tordnscrypt_prerouting -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j REDIRECT --to-ports " + pathVars.getTorTransPort(),
                         blockHttpRulePreroutingTCPwifi,
                         blockHttpRulePreroutingUDPwifi,
                         blockHttpRulePreroutingTCPusb,
                         blockHttpRulePreroutingUDPusb,
+                        blockHttpRulePreroutingTCPeth,
+                        blockHttpRulePreroutingUDPeth,
                         busybox + "sleep 1",
                         busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
                         busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
+                        busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
                         iptables + "-A tordnscrypt_forward -p tcp --dport 53 -j ACCEPT",
                         iptables + "-A tordnscrypt_forward -p udp --dport 53 -j ACCEPT",
                         blockHttpRuleForwardTCP,
@@ -354,12 +376,15 @@ public class Tethering {
                         iptables + "-I tordnscrypt -p udp -m udp --sport 67 -j ACCEPT",
                         iptables + "-I tordnscrypt -p udp -m udp --sport 68 -j ACCEPT",
                         busybox + "sleep 1",
-                        iptables + "-t nat -A tordnscrypt_prerouting -d " + wifiAPAddressesRange + " -j ACCEPT",
-                        iptables + "-t nat -A tordnscrypt_prerouting -d " + usbModemAddressesRange + " -j ACCEPT",
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -d " + wifiAPAddressesRange + " -j ACCEPT",
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -d " + usbModemAddressesRange + " -j ACCEPT",
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -d " + addressLocalPC + " -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -d 10.191.0.1 -j REDIRECT --to-ports " + pathVars.getITPDHttpProxyPort(),
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p udp -d 10.191.0.1 -j REDIRECT --to-ports " + pathVars.getITPDHttpProxyPort(),
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p tcp -d 10.191.0.1 -j REDIRECT --to-ports " + pathVars.getITPDHttpProxyPort(),
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p udp -d 10.191.0.1 -j REDIRECT --to-ports " + pathVars.getITPDHttpProxyPort(),
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p tcp -d 10.191.0.1 -j REDIRECT --to-ports " + pathVars.getITPDHttpProxyPort(),
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p udp -d 10.191.0.1 -j REDIRECT --to-ports " + pathVars.getITPDHttpProxyPort(),
                         iptables + "-A tordnscrypt_forward -p tcp --dport 53 -j ACCEPT",
                         iptables + "-A tordnscrypt_forward -p udp --dport 53 -j ACCEPT",
                         blockHttpRuleForwardTCP,
@@ -398,20 +423,24 @@ public class Tethering {
                         iptables + "-D tordnscrypt -p udp -m udp --sport 68 -j ACCEPT 2> /dev/null || true",
                         iptables + "-I tordnscrypt -p udp -m udp --sport 67 -j ACCEPT",
                         iptables + "-I tordnscrypt -p udp -m udp --sport 68 -j ACCEPT",
-                        iptables + "-t nat -A tordnscrypt_prerouting -d " + wifiAPAddressesRange + " -j ACCEPT",
-                        iptables + "-t nat -A tordnscrypt_prerouting -d " + usbModemAddressesRange + " -j ACCEPT",
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -d " + wifiAPAddressesRange + " -j ACCEPT",
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -d " + usbModemAddressesRange + " -j ACCEPT",
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -d " + addressLocalPC + " -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_prerouting -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j REDIRECT --to-ports " + pathVars.getTorTransPort(),
                         busybox + "sleep 1",
                         blockHttpRulePreroutingTCPwifi,
                         blockHttpRulePreroutingUDPwifi,
                         blockHttpRulePreroutingTCPusb,
                         blockHttpRulePreroutingUDPusb,
+                        blockHttpRulePreroutingTCPeth,
+                        blockHttpRulePreroutingUDPeth,
                         torSitesBypassPreroutingTCP,
                         torSitesBypassPreroutingUDP,
                         iptables + "-t nat -A tordnscrypt_prerouting -p tcp -m tcp --dport " + pathVars.getTorSOCKSPort() + " -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_prerouting -p udp -m udp --dport " + pathVars.getTorSOCKSPort() + " -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -j REDIRECT --to-ports " + pathVars.getTorTransPort(),
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p tcp -j REDIRECT --to-ports " + pathVars.getTorTransPort(),
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p tcp -j REDIRECT --to-ports " + pathVars.getTorTransPort(),
                         iptables + "-A tordnscrypt_forward -p tcp --dport 53 -j ACCEPT",
                         iptables + "-A tordnscrypt_forward -p udp --dport 53 -j ACCEPT",
                         blockHttpRuleForwardTCP,
@@ -455,16 +484,20 @@ public class Tethering {
                         iptables + "-I tordnscrypt -p udp -m udp --sport 67 -j ACCEPT",
                         iptables + "-I tordnscrypt -p udp -m udp --sport 68 -j ACCEPT",
                         busybox + "sleep 1",
-                        iptables + "-t nat -A tordnscrypt_prerouting -d " + wifiAPAddressesRange + " -j ACCEPT",
-                        iptables + "-t nat -A tordnscrypt_prerouting -d " + usbModemAddressesRange + " -j ACCEPT",
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -d " + wifiAPAddressesRange + " -j ACCEPT",
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -d " + usbModemAddressesRange + " -j ACCEPT",
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -d " + addressLocalPC + " -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_prerouting -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j REDIRECT --to-ports " + pathVars.getTorTransPort(),
                         blockHttpRulePreroutingTCPwifi,
                         blockHttpRulePreroutingUDPwifi,
                         blockHttpRulePreroutingTCPusb,
                         blockHttpRulePreroutingUDPusb,
+                        blockHttpRulePreroutingTCPeth,
+                        blockHttpRulePreroutingUDPeth,
                         busybox + "sleep 1",
                         busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
                         busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
+                        busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
                         iptables + "-A tordnscrypt_forward -p tcp --dport 53 -j ACCEPT",
                         iptables + "-A tordnscrypt_forward -p udp --dport 53 -j ACCEPT",
                         blockHttpRuleForwardTCP,
@@ -508,19 +541,23 @@ public class Tethering {
                         iptables + "-I tordnscrypt -p udp -m udp --sport 67 -j ACCEPT",
                         iptables + "-I tordnscrypt -p udp -m udp --sport 68 -j ACCEPT",
                         busybox + "sleep 1",
-                        iptables + "-t nat -A tordnscrypt_prerouting -d " + wifiAPAddressesRange + " -j ACCEPT",
-                        iptables + "-t nat -A tordnscrypt_prerouting -d " + usbModemAddressesRange + " -j ACCEPT",
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -d " + wifiAPAddressesRange + " -j ACCEPT",
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -d " + usbModemAddressesRange + " -j ACCEPT",
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -d " + addressLocalPC + " -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_prerouting -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j REDIRECT --to-ports " + pathVars.getTorTransPort(),
                         blockHttpRulePreroutingTCPwifi,
                         blockHttpRulePreroutingUDPwifi,
                         blockHttpRulePreroutingTCPusb,
                         blockHttpRulePreroutingUDPusb,
+                        blockHttpRulePreroutingTCPeth,
+                        blockHttpRulePreroutingUDPeth,
                         torSitesBypassPreroutingTCP,
                         torSitesBypassPreroutingUDP,
                         iptables + "-t nat -A tordnscrypt_prerouting -p tcp -m tcp --dport " + pathVars.getTorSOCKSPort() + " -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_prerouting -p udp -m udp --dport " + pathVars.getTorSOCKSPort() + " -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -j REDIRECT --to-ports " + pathVars.getTorTransPort(),
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p tcp -j REDIRECT --to-ports " + pathVars.getTorTransPort(),
+                        iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p tcp -j REDIRECT --to-ports " + pathVars.getTorTransPort(),
                         iptables + "-A tordnscrypt_forward -p tcp --dport 53 -j ACCEPT",
                         iptables + "-A tordnscrypt_forward -p udp --dport 53 -j ACCEPT",
                         blockHttpRuleForwardTCP,
@@ -565,7 +602,7 @@ public class Tethering {
 
         }
 
-        return tetheringCommands;
+        return cleanupCommands(tetheringCommands);
     }
 
     void setInterfaceNames() {
@@ -573,12 +610,14 @@ public class Tethering {
         final String addressesRangeWiFi = "192.168.43.";
 
         usbTetherOn = false;
+        ethernetOn = false;
 
         try {
             for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
                  en.hasMoreElements(); ) {
 
                 NetworkInterface intf = en.nextElement();
+
                 if (intf.isLoopback()) {
                     continue;
                 }
@@ -596,6 +635,12 @@ public class Tethering {
                 }
                 if (intf.getHardwareAddress() == null) {
                     continue;
+                }
+
+                if (intf.getName().replaceAll("\\d+", "").equalsIgnoreCase("eth")) {
+                    ethernetOn = true;
+                    ethernetInterfaceName = intf.getName();
+                    Log.i(LOG_TAG, "LAN interface name " + ethernetInterfaceName);
                 }
 
                 for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses();
@@ -655,16 +700,21 @@ public class Tethering {
                 "echo 64 > /proc/sys/net/ipv4/ip_default_ttl 2> /dev/null || true",
                 "ip rule delete from " + wifiAPAddressesRange + " lookup 63 2> /dev/null || true",
                 "ip rule delete from " + usbModemAddressesRange + " lookup 62 2> /dev/null || true",
+                "ip rule delete from " + addressLocalPC + " lookup 64 2> /dev/null || true",
                 iptables + "-D FORWARD -j tordnscrypt_forward 2> /dev/null || true",
                 //iptables + "-t nat -D POSTROUTING -o " + vpnInterfaceName + " -j MASQUERADE || true",
                 iptables + "-t nat -D tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes() + " 2> /dev/null || true",
                 iptables + "-t nat -D tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes() + " 2> /dev/null || true",
                 iptables + "-t nat -D tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes() + " 2> /dev/null || true",
                 iptables + "-t nat -D tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes() + " 2> /dev/null || true",
+                iptables + "-t nat -D tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes() + " 2> /dev/null || true",
+                iptables + "-t nat -D tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes() + " 2> /dev/null || true",
                 iptables + "-t nat -I tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes(),
                 iptables + "-t nat -I tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes(),
                 iptables + "-t nat -I tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes(),
                 iptables + "-t nat -I tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes(),
+                iptables + "-t nat -I tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes(),
+                iptables + "-t nat -I tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes(),
                 iptables + "-D tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j RETURN 2> /dev/null && "
                         + iptables + "-I tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j ACCEPT 2> /dev/null || true",
                 iptables + "-I tordnscrypt_forward -o !" + vpnInterfaceName + " -j REJECT",
@@ -674,18 +724,49 @@ public class Tethering {
                 //iptables + "-t nat -I POSTROUTING -o " + vpnInterfaceName + " -j MASQUERADE",
                 "ip rule add from " + wifiAPAddressesRange + " lookup 63 2> /dev/null || true",
                 "ip rule add from " + usbModemAddressesRange + " lookup 62 2> /dev/null || true",
+                "ip rule add from " + addressLocalPC + " lookup 64 2> /dev/null || true",
                 "ip route add default dev " + vpnInterfaceName + " scope link table 63 2> /dev/null || true",
                 "ip route add default dev " + vpnInterfaceName + " scope link table 62 2> /dev/null || true",
+                "ip route add default dev " + vpnInterfaceName + " scope link table 64 2> /dev/null || true",
                 "ip route add " + wifiAPAddressesRange + " dev " + wifiAPInterfaceName + " scope link table 63 2> /dev/null || true",
                 "ip route add " + usbModemAddressesRange + " dev " + usbModemInterfaceName + " scope link table 62 2> /dev/null || true",
+                "ip route add " + addressLocalPC + " dev " + ethernetInterfaceName + " scope link table 64 2> /dev/null || true",
                 "ip route add broadcast 255.255.255.255 dev " + wifiAPInterfaceName + " scope link table 63 2> /dev/null || true",
                 "ip route add broadcast 255.255.255.255 dev " + usbModemInterfaceName + " scope link table 62 2> /dev/null || true",
+                "ip route add broadcast 255.255.255.255 dev " + ethernetInterfaceName + " scope link table 64 2> /dev/null || true",
                 iptables + "-D FORWARD -j DROP 2> /dev/null || true"
                 //iptables + "-D PREROUTING -t mangle -p udp --dport 53 -j MARK --set-mark 111 || true",
                 //iptables + "-A PREROUTING -t mangle -p udp --dport 53 -j MARK --set-mark 111",
                 //"ip rule add from " + wifiAPAddressesRange + " fwmark 111 lookup 62"
         };
 
+        return cleanupCommands(commands);
+    }
+
+    private String[] unfixTTLCommands() {
+        new PrefManager(context).setBoolPref("TTLisFixed", false);
+
+        String[] commands;
+
+        if (ethernetOn) {
+            commands = new String[]{
+                    "ip rule delete from " + wifiAPAddressesRange + " lookup 63 2> /dev/null || true",
+                    "ip rule delete from " + usbModemAddressesRange + " lookup 62 2> /dev/null || true",
+                    "ip rule delete from " + addressLocalPC + " lookup 64 2> /dev/null || true",
+            };
+        } else {
+            commands = new String[]{
+                    "ip rule delete from " + wifiAPAddressesRange + " lookup 63 2> /dev/null || true",
+                    "ip rule delete from " + usbModemAddressesRange + " lookup 62 2> /dev/null || true",
+                    //iptables + "-D tordnscrypt_forward -o !" + vpnInterfaceName + " -j REJECT 2> /dev/null || true",
+                    //iptables + "-t nat -D POSTROUTING -o " + vpnInterfaceName + " -j MASQUERADE || true"
+            };
+        }
+
+        return commands;
+    }
+
+    private String[] cleanupCommands(String[] commands) {
         if (!usbTetherOn) {
             for (int i = 0; i < commands.length; i++) {
                 String command = commands[i];
@@ -702,17 +783,15 @@ public class Tethering {
             }
         }
 
+        if (!ethernetOn || addressLocalPC.trim().isEmpty()) {
+            for (int i = 0; i < commands.length; i++) {
+                String command = commands[i];
+                if (command.contains(ethernetInterfaceName) || command.contains(addressLocalPC) || command.contains("table 64")) {
+                    commands[i] = "";
+                }
+            }
+        }
+
         return commands;
-    }
-
-    private String[] unfixTTLCommands() {
-        new PrefManager(context).setBoolPref("TTLisFixed", false);
-
-        return new String[]{
-                "ip rule delete from " + wifiAPAddressesRange + " lookup 63 2> /dev/null || true",
-                "ip rule delete from " + usbModemAddressesRange + " lookup 62 2> /dev/null || true",
-                //iptables + "-D tordnscrypt_forward -o !" + vpnInterfaceName + " -j REJECT 2> /dev/null || true",
-                //iptables + "-t nat -D POSTROUTING -o " + vpnInterfaceName + " -j MASQUERADE || true"
-        };
     }
 }

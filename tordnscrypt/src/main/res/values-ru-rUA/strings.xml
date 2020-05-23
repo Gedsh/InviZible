@@ -429,4 +429,7 @@
     <string name="pref_dnscrypt_ipv6_servers_summ">Испоьзовать IPv6 сервера</string>
     <string name="pref_dnscrypt_block_ipv6_summ">Немедленно отвечать на IPv6 запросы пустым ответом.
         Это ускоряет работу при отсутствии подключения по протоколу IPv6, но иногда может вызывать проблемы.</string>
+    <string name="pref_common_local_eth_device_addr">IP адрес устройства в LAN</string>
+    <string name="pref_common_local_eth_device_addr_summ">Включите Зафиксировать TTL и настройте устройство в LAN, чтобы подключиться к InviZible.
+        Используйте шлюз: %s, DNS сервер: %s.</string>
 </resources>

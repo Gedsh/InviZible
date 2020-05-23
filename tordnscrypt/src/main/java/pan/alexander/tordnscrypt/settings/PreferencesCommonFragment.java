@@ -22,6 +22,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
@@ -52,6 +53,7 @@ import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
@@ -116,6 +118,8 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         } else {
             removePreferences();
         }
+
+        manageLANDeviceAddressPreference();
 
         if (appVersion.startsWith("g")) {
             PreferenceCategory hotspotSettingsCategory = findPreference("HOTSPOT");
@@ -261,6 +265,9 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 modulesStatus.setIptablesRulesUpdateRequested(getActivity(), true);
 
                 new PrefManager(getActivity()).setBoolPref("refresh_main_activity", true);
+                break;
+            case "pref_common_local_eth_device_addr":
+                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(getActivity(), true);
                 break;
             case "swWakelock":
                 ModulesAux.requestModulesStatusUpdate(getActivity());
@@ -476,6 +483,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         preferences.add(findPreference("pref_common_block_http"));
         preferences.add(findPreference("swUseModulesRoot"));
         preferences.add(findPreference("swWakelock"));
+        preferences.add(findPreference("pref_common_local_eth_device_addr"));
 
         for (Preference preference : preferences) {
             if (preference != null) {
@@ -502,6 +510,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             preferencesHOTSPOT.add(findPreference("pref_common_itpd_tethering"));
             preferencesHOTSPOT.add(findPreference("pref_common_block_http"));
             preferencesHOTSPOT.add(findPreference("pref_common_fix_ttl"));
+            preferencesHOTSPOT.add(findPreference("pref_common_local_eth_device_addr"));
 
             if (hotspotSettingsCategory != null) {
                 for (Preference preference : preferencesHOTSPOT) {
@@ -542,6 +551,27 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         if (categoryOther != null && selectBusybox != null) {
             categoryOther.removePreference(selectBusybox);
         }
+    }
+
+    private void manageLANDeviceAddressPreference() {
+
+        PreferenceCategory hotspotSettingsCategory = findPreference("HOTSPOT");
+        Preference localEthernetDeviceAddress = findPreference("pref_common_local_eth_device_addr");
+
+        if (getActivity() == null || hotspotSettingsCategory == null || localEthernetDeviceAddress == null) {
+            return;
+        }
+
+        if (Utils.INSTANCE.getScreenOrientation(getActivity()) == Configuration.ORIENTATION_PORTRAIT
+                || !Utils.INSTANCE.isLANInterfaceExist()) {
+            hotspotSettingsCategory.removePreference(localEthernetDeviceAddress);
+        } else {
+            String deviceIP = Utils.INSTANCE.getDeviceIP();
+            String summary = String.format(getString(R.string.pref_common_local_eth_device_addr_summ), deviceIP, deviceIP);
+            localEthernetDeviceAddress.setSummary(summary);
+        }
+
+
     }
 
     @Override
