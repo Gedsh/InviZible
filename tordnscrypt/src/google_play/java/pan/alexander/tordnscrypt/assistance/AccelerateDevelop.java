@@ -232,7 +232,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
                         if (!acknowledged && activity != null) {
                             activity.runOnUiThread(() -> {
                                 DialogFragment dialogFragment = NotificationDialogFragment.newInstance(R.string.wrong_purchase_signature_gp);
-                                if (activity != null) {
+                                if (activity != null && !activity.isDestroyed()) {
                                     dialogFragment.show(activity.getSupportFragmentManager(), "wrong_purchase_signature");
                                 }
                             });
@@ -267,7 +267,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
 
                                             DialogFragment dialogFragment = NotificationDialogFragment.newInstance(
                                                     thanks.substring(0, thanks.indexOf(".")));
-                                            if (activity != null) {
+                                            if (!activity.isDestroyed()) {
                                                 dialogFragment.show(activity.getSupportFragmentManager(), "thanks_for_donate");
                                             }
                                         });
