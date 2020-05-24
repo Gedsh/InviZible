@@ -121,20 +121,16 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
                 if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             getActivity(), getText(R.string.verifier_error).toString(), "6787");
-                    if (notificationHelper != null) {
-                        if (getParentFragment() != null && isAdded()) {
-                            notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
-                        }
+                    if (notificationHelper != null && isAdded()) {
+                        notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
                     }
                 }
 
             } catch (Exception e) {
-                if (getParentFragment() != null && isAdded()) {
-                    NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                            getActivity(), getText(R.string.verifier_error).toString(), "8990");
-                    if (notificationHelper != null) {
-                        notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
-                    }
+                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                        getActivity(), getText(R.string.verifier_error).toString(), "8990");
+                if (isAdded() && notificationHelper != null) {
+                    notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
                 }
                 Log.e(LOG_TAG, "PreferencesDNSCryptServers fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                         Arrays.toString(e.getStackTrace()));
@@ -558,7 +554,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.ibAddOwnServer) {
-            if (getParentFragment() != null && isAdded()) {
+            if (isAdded()) {
                 AddDNSCryptServerDialogFragment addServer = AddDNSCryptServerDialogFragment.getInstance();
                 addServer.setOnServerAddListener(this);
                 addServer.show(getParentFragmentManager(), "AddDNSCryptServerDialogFragment");

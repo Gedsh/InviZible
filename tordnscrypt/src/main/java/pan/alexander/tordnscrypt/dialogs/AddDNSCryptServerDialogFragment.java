@@ -68,9 +68,9 @@ public class AddDNSCryptServerDialogFragment extends ExtendedDialogFragment {
                             && etOwnServerDescription != null
                             && etOwnServerSDNS != null) {
 
-                        if (!saveOwnDNSCryptServer(getActivity()) && getFragmentManager() != null) {
+                        if (!saveOwnDNSCryptServer(getActivity()) && isAdded()) {
                             DialogFragment dialogFragment = NotificationDialogFragment.newInstance(R.string.add_custom_server_error);
-                            dialogFragment.show(getFragmentManager(), "add_custom_server_error");
+                            dialogFragment.show(getParentFragmentManager(), "add_custom_server_error");
                         }
                     }
 
