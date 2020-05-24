@@ -325,8 +325,6 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
             preferences.add(findPreference("Allow incoming connections"));
             preferences.add(findPreference("incoming host"));
             preferences.add(findPreference("incoming port"));
-            preferences.add(findPreference("ipv4"));
-            preferences.add(findPreference("ipv6"));
 
             for (Preference preference : preferences) {
                 if (preference != null) {

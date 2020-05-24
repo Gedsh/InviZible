@@ -416,13 +416,9 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
         if (torSettingsCategory != null) {
             ArrayList<Preference> preferences = new ArrayList<>();
-            preferences.add(findPreference("ClientUseIPv4"));
-            preferences.add(findPreference("ClientUseIPv6"));
             preferences.add(findPreference("AvoidDiskWrites"));
             preferences.add(findPreference("ConnectionPadding"));
             preferences.add(findPreference("ReducedConnectionPadding"));
-            preferences.add(findPreference("MaxCircuitDirtiness"));
-            preferences.add(findPreference("EnforceDistinctSubnets"));
             preferences.add(findPreference("Enable SOCKS proxy"));
             preferences.add(findPreference("Enable HTTPTunnel"));
             preferences.add(findPreference("Enable Transparent proxy"));

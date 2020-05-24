@@ -35,7 +35,6 @@ import java.util.Objects;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.ImportRulesDialog;
-import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.ConfigEditorFragment;
@@ -348,7 +347,6 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         PreferenceScreen dnscryptSettings = findPreference("dnscrypt_settings");
 
         ArrayList<PreferenceCategory> categories = new ArrayList<>();
-        categories.add(findPreference("pref_dnscrypt_filters_categ"));
         categories.add(findPreference("pref_dnscrypt_forwarding_rules"));
         categories.add(findPreference("pref_dnscrypt_cloaking_rules"));
         categories.add(findPreference("pref_dnscrypt_blacklist"));
