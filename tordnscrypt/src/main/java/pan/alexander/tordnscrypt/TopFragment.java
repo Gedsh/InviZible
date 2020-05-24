@@ -42,8 +42,10 @@ import androidx.preference.PreferenceManager;
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import eu.chainfire.libsuperuser.Shell;
 import pan.alexander.tordnscrypt.dialogs.AgreementDialog;
@@ -104,9 +106,11 @@ public class TopFragment extends Fragment {
 
     UpdateCheck updateCheck;
 
-    private Timer timer;
+    private ScheduledFuture<?> scheduledFuture;
     private BroadcastReceiver br;
     private OnActivityChangeListener onActivityChangeListener;
+
+    private static volatile ScheduledExecutorService modulesLogsTimer;
 
     public interface OnActivityChangeListener {
         void onActivityChange(MainActivity mainActivity);
@@ -132,6 +136,8 @@ public class TopFragment extends Fragment {
 
         appVersion = getString(R.string.appVersion);
         appProcVersion = getString(R.string.appProcVersion);
+
+        initModulesLogsTimer();
 
         RootChecker rootChecker = new RootChecker(new WeakReference<>(this));
         rootChecker.execute();
@@ -218,6 +224,8 @@ public class TopFragment extends Fragment {
         stopInstallationTimer();
 
         removeOnActivityChangeListener();
+
+        stopModulesLogsTimer();
     }
 
     //Check if root available
@@ -495,9 +503,11 @@ public class TopFragment extends Fragment {
 
         stopInstallationTimer();
 
-        timer = new Timer();
+        if (modulesLogsTimer == null || modulesLogsTimer.isShutdown()) {
+            initModulesLogsTimer();
+        }
 
-        timer.schedule(new TimerTask() {
+        scheduledFuture = modulesLogsTimer.scheduleAtFixedRate(new Runnable() {
             int loop = 0;
 
             @Override
@@ -507,7 +517,7 @@ public class TopFragment extends Fragment {
 
                 if (++loop > 15) {
                     stopInstallationTimer();
-                    Log.w(LOG_TAG, "TopFragment Timer cancel, loop > 10");
+                    Log.w(LOG_TAG, "TopFragment Timer cancel, loop > 15");
                 }
 
 
@@ -515,17 +525,15 @@ public class TopFragment extends Fragment {
                     Installer installer = new Installer(getActivity());
                     installer.installModules();
                     Log.i(LOG_TAG, "TopFragment Timer startRefreshModulesStatus Modules Installation");
-                    if (timer != null) timer.cancel();
+                    stopInstallationTimer();
                 }
             }
-        }, 3000, 1000);
+        }, 3, 1, TimeUnit.SECONDS);
     }
 
     private void stopInstallationTimer() {
-        if (timer != null) {
-            timer.purge();
-            timer.cancel();
-            timer = null;
+        if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
+            scheduledFuture.cancel(false);
         }
     }
 
@@ -749,4 +757,22 @@ public class TopFragment extends Fragment {
             }
         }
     }
+
+    private static void initModulesLogsTimer() {
+        if (modulesLogsTimer == null || modulesLogsTimer.isShutdown()) {
+            modulesLogsTimer = Executors.newScheduledThreadPool(0);
+        }
+    }
+
+    public static ScheduledExecutorService getModulesLogsTimer() {
+        return modulesLogsTimer;
+    }
+
+    private void stopModulesLogsTimer() {
+        if (modulesLogsTimer != null && !modulesLogsTimer.isShutdown()) {
+            modulesLogsTimer.shutdownNow();
+            modulesLogsTimer = null;
+        }
+    }
+
 }

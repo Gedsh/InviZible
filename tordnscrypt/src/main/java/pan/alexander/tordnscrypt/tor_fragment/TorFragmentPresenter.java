@@ -37,10 +37,11 @@ import java.net.Proxy;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -85,7 +86,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     public TorFragmentView view;
 
-    private Timer timer = null;
+    private ScheduledFuture<?> scheduledFuture;
     private int mJobId = PreferencesFastFragment.mJobId;
     private int refreshPeriodHours = 12;
 
@@ -127,14 +128,14 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
             if (modulesStatus.getTorState() == STOPPING){
                 setTorStopping();
 
-                displayLog(1000);
+                displayLog(1);
             } else if (isSavedTorStatusRunning(context) || modulesStatus.getTorState() == RUNNING) {
                 setTorRunning();
 
                 if (modulesStatus.getTorState() != RESTARTING) {
                     modulesStatus.setTorState(RUNNING);
                 }
-                displayLog(1000);
+                displayLog(1);
             } else {
                 setTorStopped(context);
                 modulesStatus.setTorState(STOPPED);
@@ -263,7 +264,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
         if (currentModuleState == STARTING) {
 
-            displayLog(1000);
+            displayLog(1);
 
         } else if (currentModuleState == RUNNING) {
 
@@ -324,14 +325,17 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
         displayLogPeriod = period;
 
-        if (timer != null) {
-            timer.purge();
-            timer.cancel();
+        if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
+            scheduledFuture.cancel(false);
         }
 
-        timer = new Timer();
+        ScheduledExecutorService timer = TopFragment.getModulesLogsTimer();
 
-        timer.schedule(new TimerTask() {
+        if (timer == null || timer.isShutdown()) {
+            return;
+        }
+
+        scheduledFuture = timer.scheduleAtFixedRate(new Runnable() {
             int loop = 0;
             String previousLastLines = "";
 
@@ -347,7 +351,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
                     if (++loop > 120) {
                         loop = 0;
-                        displayLog(10000);
+                        displayLog(10);
                     }
 
                     if (view == null || view.getFragmentActivity() == null) {
@@ -381,16 +385,14 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
                     Log.e(LOG_TAG, "TorFragmentPresenter timer run() exception " + e.getMessage() + " " + e.getCause());
                 }
             }
-        }, 1000, period);
+        }, 1, period, TimeUnit.SECONDS);
 
     }
 
     @Override
     public void stopDisplayLog() {
-        if (timer != null) {
-            timer.purge();
-            timer.cancel();
-            timer = null;
+        if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
+            scheduledFuture.cancel(false);
 
             displayLogPeriod = -1;
         }
@@ -440,7 +442,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
             setTorRunning();
 
-            displayLog(5000);
+            displayLog(5);
 
             view.setTorProgressBarProgress(0);
 
@@ -627,7 +629,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
             runTor(context);
 
-            displayLog(1000);
+            displayLog(1);
         } else if (!new PrefManager(context).getBoolPref("Tor Running") &&
                 !new PrefManager(context).getBoolPref("DNSCrypt Running")) {
 
@@ -641,7 +643,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
             runTor(context);
 
-            displayLog(1000);
+            displayLog(1);
         } else if (new PrefManager(Objects.requireNonNull(context)).getBoolPref("Tor Running") &&
                 new PrefManager(context).getBoolPref("DNSCrypt Running")) {
 

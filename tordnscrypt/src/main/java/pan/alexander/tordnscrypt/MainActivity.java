@@ -57,8 +57,9 @@ import android.widget.Toast;
 
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.assistance.AccelerateDevelop;
 import pan.alexander.tordnscrypt.backup.BackupActivity;
@@ -102,7 +103,7 @@ public class MainActivity extends LangAppCompatActivity
     public boolean childLockActive = false;
     public AccelerateDevelop accelerateDevelop;
     private volatile boolean vpnRequested;
-    private Timer timer;
+    private ScheduledFuture<?> scheduledFuture;
     private Handler handler;
     private TopFragment topFragment;
     private DNSCryptRunFragment dNSCryptRunFragment;
@@ -643,26 +644,30 @@ public class MainActivity extends LangAppCompatActivity
 
     private void checkHotspotState() {
 
-        if (timer != null) {
-            timer.cancel();
-            timer = null;
+        if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
+            scheduledFuture.cancel(false);
         }
 
-        timer = new Timer();
-        timer.schedule(new TimerTask() {
+        ScheduledExecutorService timer = TopFragment.getModulesLogsTimer();
+
+        if (timer == null || timer.isShutdown()) {
+            return;
+        }
+
+        scheduledFuture = timer.scheduleAtFixedRate(new Runnable() {
 
             int loop = 0;
 
             @Override
             public void run() {
 
-                if (++loop > 3) {
-                    timer.cancel();
+                if (++loop > 3 && scheduledFuture != null && !scheduledFuture.isCancelled()) {
+                    scheduledFuture.cancel(false);
                 }
 
                 runOnUiThread(() -> invalidateOptionsMenu());
             }
-        }, 3000, 5000);
+        }, 3, 5, TimeUnit.SECONDS);
     }
 
     @Override
@@ -956,8 +961,10 @@ public class MainActivity extends LangAppCompatActivity
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (timer != null)
-            timer.cancel();
+
+        if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
+            scheduledFuture.cancel(false);
+        }
 
         if (modernDialog != null) {
             modernDialog.dismiss();

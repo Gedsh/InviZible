@@ -35,12 +35,14 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
@@ -68,7 +70,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
     private int displayLogPeriod = -1;
 
     private ITPDFragmentView view;
-    private Timer timer;
+    private ScheduledFuture<?> scheduledFuture;
     private String appDataDir;
     private volatile OwnFileReader logFile;
     private ModulesStatus modulesStatus;
@@ -101,7 +103,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
             if (modulesStatus.getItpdState() == STOPPING){
                 setITPDStopping();
 
-                displayLog(10000);
+                displayLog(10);
             } else if (isSavedITPDStatusRunning(context) || modulesStatus.getItpdState() == RUNNING) {
                 setITPDRunning();
 
@@ -109,7 +111,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
                     modulesStatus.setItpdState(RUNNING);
                 }
 
-                displayLog(10000);
+                displayLog(10);
             } else {
                 setITPDStopped();
                 modulesStatus.setItpdState(STOPPED);
@@ -260,7 +262,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
         if (currentModuleState == STARTING) {
 
-            displayLog(1000);
+            displayLog(1);
 
         } else if (currentModuleState == RUNNING) {
 
@@ -322,15 +324,17 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
         displayLogPeriod = period;
 
-        if (timer != null) {
-            timer.purge();
-            timer.cancel();
+        if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
+            scheduledFuture.cancel(false);
         }
 
-        timer = new Timer();
+        ScheduledExecutorService timer = TopFragment.getModulesLogsTimer();
 
+        if (timer == null || timer.isShutdown()) {
+            return;
+        }
 
-        timer.schedule(new TimerTask() {
+        scheduledFuture = timer.scheduleAtFixedRate(new Runnable() {
             int loop = 0;
             String previousLastLines = "";
 
@@ -348,7 +352,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
                     if (++loop > 30) {
                         loop = 0;
-                        displayLog(10000);
+                        displayLog(10);
                     }
 
                     if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
@@ -379,16 +383,14 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
                     Log.e(LOG_TAG, "ITPDFragmentPresenter timer run() exception " + e.getMessage() + " " + e.getCause());
                 }
             }
-        }, 1000, period);
+        }, 1, period, TimeUnit.SECONDS);
 
     }
 
     @Override
     public void stopDisplayLog() {
-        if (timer != null) {
-            timer.purge();
-            timer.cancel();
-            timer = null;
+        if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
+            scheduledFuture.cancel(false);
 
             displayLogPeriod = -1;
         }
@@ -472,7 +474,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
             runITPD(context);
 
-            displayLog(1000);
+            displayLog(1);
         } else if (!new PrefManager(Objects.requireNonNull(context)).getBoolPref("I2PD Running") &&
                 !new PrefManager(context).getBoolPref("Tor Running")
                 && !new PrefManager(context).getBoolPref("DNSCrypt Running")) {
@@ -489,7 +491,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
             runITPD(context);
 
-            displayLog(1000);
+            displayLog(1);
         } else if (!new PrefManager(Objects.requireNonNull(context)).getBoolPref("I2PD Running") &&
                 !new PrefManager(context).getBoolPref("Tor Running")
                 && new PrefManager(context).getBoolPref("DNSCrypt Running")) {
@@ -506,7 +508,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
             runITPD(context);
 
-            displayLog(1000);
+            displayLog(1);
         } else if (!new PrefManager(Objects.requireNonNull(context)).getBoolPref("I2PD Running") &&
                 new PrefManager(context).getBoolPref("Tor Running")
                 && new PrefManager(context).getBoolPref("DNSCrypt Running")) {
@@ -523,7 +525,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
             runITPD(context);
 
-            displayLog(1000);
+            displayLog(1);
         } else if (new PrefManager(Objects.requireNonNull(context)).getBoolPref("I2PD Running")) {
 
             setITPDStopping();
