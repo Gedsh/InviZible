@@ -6,6 +6,7 @@ import android.graphics.Point
 import android.util.Log
 import android.view.Display
 import java.net.Inet4Address
+import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
 
@@ -69,5 +70,14 @@ object Utils {
         }
 
         return result
+    }
+
+    fun getHostByIP(IP: String): String {
+        var host = ""
+        try {
+            val addr = InetAddress.getByName(IP)
+            host = addr.hostName
+        } catch (e: Exception){}
+        return host
     }
 }

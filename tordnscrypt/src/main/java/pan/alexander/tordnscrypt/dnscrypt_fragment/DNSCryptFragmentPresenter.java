@@ -35,11 +35,13 @@ import androidx.preference.PreferenceManager;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
@@ -51,6 +53,7 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.OwnFileReader;
 import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.vpn.Rule;
 import pan.alexander.tordnscrypt.vpn.Util;
@@ -74,7 +77,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     private int displayLogPeriod = -1;
 
     private DNSCryptFragmentView view;
-    private Timer timer = null;
+    private ScheduledFuture<?> scheduledFuture;
     private volatile OwnFileReader logFile;
     private ModulesStatus modulesStatus;
     private ModuleState fixedModuleState;
@@ -86,6 +89,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     private boolean apIsOn;
     private String localEthernetDeviceAddress = "192.168.0.100";
     private boolean dnsCryptLogAutoScroll = true;
+    private boolean meteredNetwork = true;
 
     public DNSCryptFragmentPresenter(DNSCryptFragmentView view) {
         this.view = view;
@@ -117,7 +121,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             if (modulesStatus.getDnsCryptState() == STOPPING) {
                 setDnsCryptStopping();
 
-                displayLog(1000);
+                displayLog(1);
             } else if (isSavedDNSStatusRunning(context) || modulesStatus.getDnsCryptState() == RUNNING) {
                 setDnsCryptRunning();
 
@@ -125,7 +129,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                     modulesStatus.setDnsCryptState(RUNNING);
                 }
 
-                displayLog(1000);
+                displayLog(1);
 
             } else {
                 setDnsCryptStopped();
@@ -137,6 +141,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         }
 
         dnsQueryLogRecords = new DNSQueryLogRecords(blockIPv6, pathVars.getDNSCryptFallbackRes());
+
+        meteredNetwork = Util.isMeteredNetwork(context);
     }
 
     public void onStop(Context context) {
@@ -189,14 +195,18 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
         displayLogPeriod = period;
 
-        if (timer != null) {
-            timer.purge();
-            timer.cancel();
+        if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
+            scheduledFuture.cancel(false);
         }
 
-        timer = new Timer();
+        ScheduledExecutorService timer = TopFragment.getModulesLogsTimer();
 
-        timer.schedule(new TimerTask() {
+        if (timer == null || timer.isShutdown()) {
+            return;
+        }
+
+        scheduledFuture = timer.scheduleAtFixedRate(new Runnable() {
+
             int loop = 0;
             String previousLastLines = "";
 
@@ -211,7 +221,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
                     if (++loop > 120) {
                         loop = 0;
-                        displayLog(10000);
+                        displayLog(10);
                     }
 
                     final boolean displayed = displayDnsResponses(lastLines);
@@ -248,17 +258,14 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                     Log.e(LOG_TAG, "DNSCryptFragmentPresenter timer run() exception " + e.getMessage() + " " + e.getCause());
                 }
             }
-
-        }, 1000, period);
+        }, 1, period, TimeUnit.SECONDS);
 
     }
 
     @Override
     public void stopDisplayLog() {
-        if (timer != null) {
-            timer.purge();
-            timer.cancel();
-            timer = null;
+        if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
+            scheduledFuture.cancel(false);
 
             displayLogPeriod = -1;
         }
@@ -565,9 +572,19 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                 }
 
                 if (!record.getDaddr().isEmpty()) {
+
                     if (record.getUid() == -1000) {
                         lines.append(" -> ");
                     }
+
+                    if (!meteredNetwork && record.getUid() != -1000) {
+                        String ip = record.getDaddr().split(", ")[0];
+                        String host = Utils.INSTANCE.getHostByIP(ip);
+                        if (!host.isEmpty() && !host.equals(ip)) {
+                            lines.append(host).append(" -> ");
+                        }
+                    }
+
                     lines.append(record.getDaddr());
                 }
 
@@ -631,7 +648,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
         if (currentModuleState == STARTING) {
 
-            displayLog(1000);
+            displayLog(1);
 
         } else if (currentModuleState == RUNNING) {
 
@@ -643,7 +660,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
             view.setStartButtonText(R.string.btnDNSCryptStop);
 
-            displayLog(5000);
+            displayLog(5);
 
             if (modulesStatus.getMode() == VPN_MODE && !bound) {
                 bindToVPNService(context);
@@ -785,7 +802,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
             runDNSCrypt(context);
 
-            displayLog(1000);
+            displayLog(1);
         } else if (!new PrefManager(context).getBoolPref("Tor Running")
                 && !new PrefManager(context).getBoolPref("DNSCrypt Running")) {
 
@@ -799,7 +816,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
             runDNSCrypt(context);
 
-            displayLog(1000);
+            displayLog(1);
         } else if (!new PrefManager(context).getBoolPref("Tor Running")
                 && new PrefManager(context).getBoolPref("DNSCrypt Running")) {
             setDnsCryptStopping();

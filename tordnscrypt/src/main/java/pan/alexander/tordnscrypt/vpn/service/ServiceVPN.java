@@ -62,6 +62,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSQueryLogRecord;
+import pan.alexander.tordnscrypt.iptables.Tethering;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
@@ -702,7 +703,9 @@ public class ServiceVPN extends VpnService {
         boolean torIsRunning = modulesStatus.getTorState() == RUNNING;
 
         boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
-                && !modulesStatus.isUseModulesWithRoot() && packet.saddr.matches("^192\\.168\\.(42|43)\\.\\d+");
+                && !modulesStatus.isUseModulesWithRoot()
+                && (packet.saddr.matches("^192\\.168\\.(42|43)\\.\\d+")
+                || Tethering.ethernetOn && packet.saddr.contains(Tethering.addressLocalPC));
 
         addUIDtoDNSQueryRawRecords(packet.uid, packet.daddr, packet.dport, packet.saddr);
 

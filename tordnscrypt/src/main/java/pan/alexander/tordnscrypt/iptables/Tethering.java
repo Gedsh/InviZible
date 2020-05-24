@@ -48,7 +48,7 @@ public class Tethering {
     static final String wifiAPAddressesRange = "192.168.43.0/24";
     static final String usbModemAddressesRange = "192.168.42.0/24";
     private static final String addressVPN = "10.1.10.1";
-    private static String addressLocalPC = "192.168.0.100";
+    public static String addressLocalPC = "192.168.0.100";
 
     static String vpnInterfaceName = "tun0";
     static String wifiAPInterfaceName = "wlan0";
