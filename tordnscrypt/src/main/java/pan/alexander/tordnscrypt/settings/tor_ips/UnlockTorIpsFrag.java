@@ -44,7 +44,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -58,7 +57,6 @@ import java.util.concurrent.Executors;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
-import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -236,10 +234,8 @@ public class UnlockTorIpsFrag extends Fragment {
         if (deviceOrTether.equals("device")) {
             if (!routeAllThroughTorDevice) {
                 FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/unlock", ipsToUnlock, "ignored");
-                Toast.makeText(getActivity(), getText(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
             } else {
                 FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/clearnet", ipsToUnlock, "ignored");
-                Toast.makeText(getActivity(), getText(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
             }
 
             //////////////////////////////////////////////////////////////////////////////////////
@@ -248,16 +244,16 @@ public class UnlockTorIpsFrag extends Fragment {
         } else if (deviceOrTether.equals("tether")) {
             if (!routeAllThroughTorTether) {
                 FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/unlock_tether", ipsToUnlock, "ignored");
-                Toast.makeText(getActivity(), getText(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
             } else {
                 FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/clearnet_tether", ipsToUnlock, "ignored");
-                Toast.makeText(getActivity(), getText(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
             }
         }
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
         modulesStatus.setIptablesRulesUpdateRequested(getActivity(), true);
         //ModulesAux.requestModulesStatusUpdate(getActivity());
+
+        Toast.makeText(getActivity(), getText(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -679,8 +675,11 @@ public class UnlockTorIpsFrag extends Fragment {
                 for (InetAddress address : addresses) {
                     sb.append(address.getHostAddress()).append(", ");
                 }
+
                 String ip = sb.substring(0, sb.length() - 2);
-                unlockHostIP.set(position, new HostIP(host, ip, true, false, active));
+                if (unlockHostIP != null && position < unlockHostIP.size()) {
+                    unlockHostIP.set(position, new HostIP(host, ip, true, false, active));
+                }
 
                 getActivity().runOnUiThread(() -> {
                     if (addHostIP) {
@@ -701,62 +700,51 @@ public class UnlockTorIpsFrag extends Fragment {
                 unlockHostIP.set(position, new HostIP(host, ip, true, false, active));
                 Log.e(LOG_TAG, "UnlockTorIpsFrag getHostOrIp exception " + e.getMessage() + " " + e.getCause());
 
-                getActivity().runOnUiThread(() -> {
-                    if (addHostIP) {
-                        rvAdapter.notifyItemChanged(position);
-                        rvListHostip.scrollToPosition(position);
-                    } else if (editHostIP) {
-                        rvAdapter.notifyItemChanged(position);
-                    }
-                });
+                if (getActivity() != null && rvAdapter != null && rvListHostip != null) {
+                    getActivity().runOnUiThread(() -> {
+                        if (addHostIP) {
+                            rvAdapter.notifyItemChanged(position);
+                            rvListHostip.scrollToPosition(position);
+                        } else if (editHostIP) {
+                            rvAdapter.notifyItemChanged(position);
+                        }
+                    });
+                }
             }
         } else if (unlockHostIP.get(position).inputIP && getActivity() != null) {
             String IP = unlockHostIP.get(position).IP;
-            String host = "";
+            String host;
             try {
-                URL url = new URL("http://" + IP);
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                con.setInstanceFollowRedirects(false);
-                con.setRequestMethod("GET");  //OR  huc.setRequestMethod ("HEAD");
-                con.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 9.0.1; " +
-                        "Mi Mi) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Mobile Safari/537.36");
-                con.setConnectTimeout(500);
-                con.connect();
+                InetAddress addr = InetAddress.getByName(IP);
+                host = addr.getCanonicalHostName();
 
-                // HTML-Code from a website
-                int responseCode = con.getResponseCode();
-
-                // HTTP 200 OK
-                if (responseCode == 200) {
-                    InetAddress addr = InetAddress.getByName(IP);
-                    host = addr.getHostName();
-                    if (host.equals(IP)) host = "";
+                if (unlockHostIP != null && position < unlockHostIP.size()) {
+                    unlockHostIP.set(position, new HostIP(host, IP, false, true, active));
                 }
 
-                // HTTP 301 oder 302 redirect
-                else if (responseCode == 301 || responseCode == 302) {
-                    host = con.getHeaderField("Location");
+                if (getActivity() != null && rvAdapter != null && rvListHostip != null) {
+                    getActivity().runOnUiThread(() -> {
+                        if (addHostIP) {
+                            rvAdapter.notifyDataSetChanged();
+                            rvListHostip.scrollToPosition(position);
+                        } else if (editHostIP) {
+                            rvAdapter.notifyItemChanged(position);
+                        }
+
+                    });
                 }
-                con.disconnect();
-                unlockHostIP.set(position, new HostIP(host, IP, false, true, active));
 
-                getActivity().runOnUiThread(() -> {
-                    if (addHostIP) {
-                        rvAdapter.notifyDataSetChanged();
-                        rvListHostip.scrollToPosition(position);
-                    } else if (editHostIP) {
-                        rvAdapter.notifyItemChanged(position);
-                    }
-
-                });
             } catch (IOException e) {
 
                 if (unlockHostIP == null || rvAdapter == null || rvListHostip == null || getActivity() == null) {
                     return;
                 }
 
-                host = "";
-                unlockHostIP.set(position, new HostIP(host, IP, false, true, active));
+                if (position < unlockHostIP.size()) {
+                    host = " ";
+                    unlockHostIP.set(position, new HostIP(host, IP, false, true, active));
+                }
+
                 Log.e(LOG_TAG, "UnlockTorIpsFrag getHostOrIp exception " + e.getMessage() + " " + e.getCause());
 
                 getActivity().runOnUiThread(() -> {
