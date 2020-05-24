@@ -256,3 +256,11 @@
 **InviZible Pro beta 0.8.6**
 * Reduced power consumption.
 * Fixed Fix TTL feature.
+
+**InviZible Pro beta 0.8.7**
+* Fixed Add DNSCrypt server feature.
+* Implemented LAN Tethering for devices with a LAN connection.
+* Fixed use of DNSCrypt DNS after device reboot or app update with Fix TTL enabled.
+* Improved real-time Internet connections log.
+* Performance improvements.
+* Other fixes.
