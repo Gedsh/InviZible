@@ -134,6 +134,8 @@ public class ModulesStarterHelper {
 
                 modulesStatus.setDnsCryptState(STOPPED);
 
+                ModulesAux.makeModulesStateExtraLoop(service);
+
                 sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
             }
         };
@@ -207,6 +209,8 @@ public class ModulesStarterHelper {
 
                 modulesStatus.setTorState(STOPPED);
 
+                ModulesAux.makeModulesStateExtraLoop(service);
+
                 sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
             }
         };
@@ -273,6 +277,8 @@ public class ModulesStarterHelper {
                         + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
 
                 modulesStatus.setItpdState(STOPPED);
+
+                ModulesAux.makeModulesStateExtraLoop(service);
 
                 sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
             }
