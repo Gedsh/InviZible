@@ -19,8 +19,12 @@ package pan.alexander.tordnscrypt.modules;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.VpnService;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.preference.PreferenceManager;
@@ -221,6 +225,8 @@ public class ModulesStateLoop implements Runnable {
                 modulesStatus.setIptablesRulesUpdateRequested(false);
             }
 
+            boolean vpnServiceEnabled = sharedPreferences.getBoolean("VPNServiceEnabled", false);
+
             if (iptablesRules != null && rootIsAvailable && operationMode == ROOT_MODE) {
                 String[] commands = iptablesRules.configureIptables(dnsCryptState, torState, itpdState);
                 iptablesRules.sendToRootExecService(commands);
@@ -232,20 +238,22 @@ public class ModulesStateLoop implements Runnable {
 
                 if (dnsCryptState == STOPPED && torState == STOPPED) {
                     ServiceVPNHelper.stop("All modules stopped", modulesService);
-                } else {
+                } else if (vpnServiceEnabled) {
                     ServiceVPNHelper.reload("Modules state changed", modulesService);
+                } else {
+                    startVPNService();
                 }
 
                 stopCounter = STOP_COUNTER_DELAY;
             }
 
-            boolean vpnServiceEnabled = sharedPreferences.getBoolean("VPNServiceEnabled", false);
-
-            if (modulesStatus.isFixTTL() && !modulesStatus.isUseModulesWithRoot() && (operationMode == ROOT_MODE) && vpnServiceEnabled) {
-                if ((dnsCryptState == STOPPED && torState == STOPPED) || useModulesWithRoot) {
+            if (modulesStatus.isFixTTL() && !modulesStatus.isUseModulesWithRoot() && (operationMode == ROOT_MODE)) {
+                if (((dnsCryptState == STOPPED && torState == STOPPED) || useModulesWithRoot) && vpnServiceEnabled) {
                     ServiceVPNHelper.stop("All modules stopped", modulesService);
-                } else {
+                } else if (vpnServiceEnabled) {
                     ServiceVPNHelper.reload("TTL is fixed", modulesService);
+                } else {
+                    startVPNService();
                 }
             } else if ((operationMode == ROOT_MODE || operationMode == PROXY_MODE) && vpnServiceEnabled){
                 ServiceVPNHelper.stop("TTL stop fixing", modulesService);
@@ -310,6 +318,25 @@ public class ModulesStateLoop implements Runnable {
         String savedITPDStateStr = new PrefManager(modulesService).getStrPref("savedITPDState");
         if (!savedITPDStateStr.isEmpty()) {
             savedItpdState = ModuleState.valueOf(savedITPDStateStr);
+        }
+    }
+
+    private void startVPNService() {
+
+        //Start VPN service if it is not started by modules presenters
+
+        final Intent prepareIntent = VpnService.prepare(modulesService);
+
+        if (prepareIntent == null) {
+            Handler handler = new Handler(Looper.getMainLooper());
+            handler.postDelayed(() -> {
+                if (modulesService != null && modulesStatus != null && sharedPreferences != null
+                        && !sharedPreferences.getBoolean("VPNServiceEnabled", false)
+                        && (modulesStatus.getDnsCryptState() == RUNNING || modulesStatus.getTorState() == RUNNING)) {
+                    sharedPreferences.edit().putBoolean("VPNServiceEnabled", true).apply();
+                    ServiceVPNHelper.start("ModulesStateLoop start VPN service", modulesService);
+                }
+            }, 10000);
         }
     }
 

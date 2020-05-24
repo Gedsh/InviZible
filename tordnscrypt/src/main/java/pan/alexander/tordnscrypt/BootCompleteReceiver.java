@@ -46,7 +46,6 @@ import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
-import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
@@ -193,10 +192,11 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                 final Intent prepareIntent = VpnService.prepare(context);
 
                 if (prepareIntent == null) {
-                    shPref.edit().putBoolean("VPNServiceEnabled", true).apply();
-
                     Handler handler = new Handler(Looper.getMainLooper());
-                    handler.postDelayed(() -> ServiceVPNHelper.start("Boot complete", context), 2000);
+                    handler.postDelayed(() -> {
+                        shPref.edit().putBoolean("VPNServiceEnabled", true).apply();
+                        ServiceVPNHelper.start("Boot complete", context);
+                    }, 2000);
                 }
             }
         }
