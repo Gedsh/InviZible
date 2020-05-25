@@ -221,7 +221,13 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
                     if (++loop > 120) {
                         loop = 0;
-                        displayLog(10);
+
+                        if (modulesStatus != null && (modulesStatus.getMode() == VPN_MODE
+                                || modulesStatus.getMode() == ROOT_MODE && modulesStatus.isFixTTL() && !modulesStatus.isUseModulesWithRoot())) {
+                            displayLog(5);
+                        } else {
+                            displayLog(10);
+                        }
                     }
 
                     final boolean displayed = displayDnsResponses(lastLines);
@@ -660,7 +666,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
             view.setStartButtonText(R.string.btnDNSCryptStop);
 
-            displayLog(5);
+            displayLog(1);
 
             if (modulesStatus.getMode() == VPN_MODE && !bound) {
                 bindToVPNService(context);

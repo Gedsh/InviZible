@@ -103,7 +103,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
             if (modulesStatus.getItpdState() == STOPPING){
                 setITPDStopping();
 
-                displayLog(10);
+                displayLog(1);
             } else if (isSavedITPDStatusRunning(context) || modulesStatus.getItpdState() == RUNNING) {
                 setITPDRunning();
 
@@ -111,7 +111,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
                     modulesStatus.setItpdState(RUNNING);
                 }
 
-                displayLog(10);
+                displayLog(1);
             } else {
                 setITPDStopped();
                 modulesStatus.setItpdState(STOPPED);

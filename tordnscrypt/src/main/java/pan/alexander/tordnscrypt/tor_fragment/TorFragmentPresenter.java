@@ -442,7 +442,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
             setTorRunning();
 
-            displayLog(5);
+            displayLog(1);
 
             view.setTorProgressBarProgress(0);
 
