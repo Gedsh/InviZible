@@ -53,6 +53,8 @@ public class ModulesStateLoop implements Runnable {
     //Delay in sec before service can stop
     private static int stopCounter = STOP_COUNTER_DELAY;
 
+    private boolean iptablesUpdateTemporaryBlocked;
+
     private final ModulesStatus modulesStatus;
     private final ModulesService modulesService;
     private final IptablesRules iptablesRules;
@@ -69,6 +71,8 @@ public class ModulesStateLoop implements Runnable {
 
     private SharedPreferences sharedPreferences;
 
+    private Handler handler;
+
     ModulesStateLoop(ModulesService modulesService) {
         //Delay in sec before service can stop
         stopCounter = STOP_COUNTER_DELAY;
@@ -82,6 +86,8 @@ public class ModulesStateLoop implements Runnable {
         contextUIDUpdater = new ContextUIDUpdater(modulesService);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(modulesService);
+
+        handler = new Handler(Looper.getMainLooper());
 
         restoreModulesSavedState();
     }
@@ -210,6 +216,8 @@ public class ModulesStateLoop implements Runnable {
                 return;
             } else if (itpdState != STOPPED && itpdState != RUNNING) {
                 return;
+            } else if (iptablesUpdateTemporaryBlocked) {
+                return;
             }
 
             savedDNSCryptState = dnsCryptState;
@@ -257,6 +265,15 @@ public class ModulesStateLoop implements Runnable {
                 }
             } else if ((operationMode == ROOT_MODE || operationMode == PROXY_MODE) && vpnServiceEnabled){
                 ServiceVPNHelper.stop("TTL stop fixing", modulesService);
+            }
+
+            //Avoid too frequent iptables update
+            if (handler != null) {
+                iptablesUpdateTemporaryBlocked = true;
+                handler.postDelayed(() -> {
+                    iptablesUpdateTemporaryBlocked = false;
+                    ModulesAux.makeModulesStateExtraLoop(modulesService);
+                }, 10000);
             }
 
         } else if (useModulesWithRoot && operationMode == ROOT_MODE) {
@@ -327,8 +344,7 @@ public class ModulesStateLoop implements Runnable {
 
         final Intent prepareIntent = VpnService.prepare(modulesService);
 
-        if (prepareIntent == null) {
-            Handler handler = new Handler(Looper.getMainLooper());
+        if (handler != null && prepareIntent == null) {
             handler.postDelayed(() -> {
                 if (modulesService != null && modulesStatus != null && sharedPreferences != null
                         && !sharedPreferences.getBoolean("VPNServiceEnabled", false)
