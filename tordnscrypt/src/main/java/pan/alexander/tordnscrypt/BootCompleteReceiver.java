@@ -50,6 +50,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class BootCompleteReceiver extends BroadcastReceiver {
+    public static final String ALWAYS_ON_VPN = "pam.alexander.tordnscrypt.ALWAYS_ON_VPN";
     private final int mJobId = PreferencesFastFragment.mJobId;
 
     private Context context;
@@ -90,7 +91,8 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                 || action.equalsIgnoreCase(QUICKBOOT_POWERON)
                 || action.equalsIgnoreCase(HTC_QUICKBOOT_POWERON)
                 || action.equalsIgnoreCase(REBOOT)
-                || action.equalsIgnoreCase(MY_PACKAGE_REPLACED)) {
+                || action.equalsIgnoreCase(MY_PACKAGE_REPLACED)
+                || action.equals(ALWAYS_ON_VPN)) {
 
             new PrefManager(context).setBoolPref("APisON", false);
             new PrefManager(context).setBoolPref("ModemIsON", false);
@@ -114,7 +116,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
             boolean autoStartTor = shPref.getBoolean("swAutostartTor", false);
             boolean autoStartITPD = shPref.getBoolean("swAutostartITPD", false);
 
-            if (action.equalsIgnoreCase(MY_PACKAGE_REPLACED)) {
+            if (action.equalsIgnoreCase(MY_PACKAGE_REPLACED) || action.equalsIgnoreCase(ALWAYS_ON_VPN)) {
                 autoStartDNSCrypt = new PrefManager(context).getBoolPref("DNSCrypt Running");
                 autoStartTor = new PrefManager(context).getBoolPref("Tor Running");
                 autoStartITPD = new PrefManager(context).getBoolPref("I2PD Running");
@@ -128,7 +130,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
                 ModulesStatus.getInstance().setFixTTL(fixTTL);
 
-                if (!action.equalsIgnoreCase(MY_PACKAGE_REPLACED)) {
+                if (!action.equalsIgnoreCase(MY_PACKAGE_REPLACED) && !action.equalsIgnoreCase(ALWAYS_ON_VPN)) {
                     startHOTSPOT();
                 }
 
@@ -195,7 +197,15 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                     Handler handler = new Handler(Looper.getMainLooper());
                     handler.postDelayed(() -> {
                         shPref.edit().putBoolean("VPNServiceEnabled", true).apply();
-                        ServiceVPNHelper.start("Boot complete", context);
+
+                        String reason = "Boot complete";
+                        if (action.equals(MY_PACKAGE_REPLACED)) {
+                            reason = "MY_PACKAGE_REPLACED";
+                        } else if (action.equals(ALWAYS_ON_VPN)) {
+                            reason = "ALWAYS_ON_VPN";
+                        }
+
+                        ServiceVPNHelper.start(reason, context);
                     }, 2000);
                 }
             }

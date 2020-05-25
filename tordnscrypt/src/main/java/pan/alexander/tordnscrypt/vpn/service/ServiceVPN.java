@@ -59,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import pan.alexander.tordnscrypt.BootCompleteReceiver;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSQueryLogRecord;
@@ -993,6 +994,7 @@ public class ServiceVPN extends VpnService {
         routeAllThroughTor = prefs.getBoolean("pref_fast_all_through_tor", true);
         torTethering = prefs.getBoolean("pref_common_tor_tethering", false);
         blockIPv6 = prefs.getBoolean("block_ipv6", true);
+        boolean vpnEnabled = prefs.getBoolean("VPNServiceEnabled", false);
 
 
         pathVars = PathVars.getInstance(this);
@@ -1018,13 +1020,18 @@ public class ServiceVPN extends VpnService {
 
             // Recreate intent
             intent = new Intent(this, ServiceVPN.class);
-            intent.putExtra(EXTRA_COMMAND, VPNCommand.STOP);
+            intent.putExtra(EXTRA_COMMAND, vpnEnabled ? VPNCommand.START : VPNCommand.STOP);
         }
 
         VPNCommand cmd = (VPNCommand) intent.getSerializableExtra(EXTRA_COMMAND);
 
         if (cmd == null) {
-            intent.putExtra(EXTRA_COMMAND, VPNCommand.STOP);
+            if (vpnEnabled) {
+                Intent starterIntent = new Intent(BootCompleteReceiver.ALWAYS_ON_VPN);
+                sendBroadcast(starterIntent);
+            } else {
+                intent.putExtra(EXTRA_COMMAND, VPNCommand.STOP);
+            }
         }
 
         String reason = intent.getStringExtra(EXTRA_REASON);
