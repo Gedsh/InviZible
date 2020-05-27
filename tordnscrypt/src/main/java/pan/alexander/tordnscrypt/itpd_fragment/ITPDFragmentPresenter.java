@@ -111,7 +111,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
                     modulesStatus.setItpdState(RUNNING);
                 }
 
-                displayLog(1);
+                displayLog(5);
             } else {
                 setITPDStopped();
                 modulesStatus.setItpdState(STOPPED);

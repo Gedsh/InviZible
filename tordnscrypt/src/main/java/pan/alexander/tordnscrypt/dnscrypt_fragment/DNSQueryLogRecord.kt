@@ -27,6 +27,7 @@ class DNSQueryLogRecord(val qName: String = "",
                         val saddr:String = "",
                         var daddr:String = "",
                         var uid:Int = -1000) {
+    var reverseDNS = ""
     var blocked = false
     var blockedByIpv6 = false
     override fun equals(other: Any?): Boolean {

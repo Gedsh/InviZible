@@ -116,7 +116,7 @@ public class TorFragmentReceiver extends BroadcastReceiver {
                     modulesStatus.setTorState(RUNNING);
                     view.setStartButtonText(R.string.btnTorStop);
                     presenter.startRefreshTorUnlockIPs(context);
-                    presenter.displayLog(1);
+                    presenter.displayLog(5);
 
                 } else if (!sb.toString().toLowerCase().contains(torPath.toLowerCase())
                         && sb.toString().contains("checkTrRunning")) {

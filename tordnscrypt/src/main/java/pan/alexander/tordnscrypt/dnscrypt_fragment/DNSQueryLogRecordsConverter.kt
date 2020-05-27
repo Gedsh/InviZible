@@ -19,30 +19,43 @@ package pan.alexander.tordnscrypt.dnscrypt_fragment
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import java.util.*
+import android.util.Log
+import pan.alexander.tordnscrypt.modules.ModulesService
+import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.Utils.getHostByIP
+import java.util.concurrent.*
 
 const val recordsToCheck = 5
 
-class DNSQueryLogRecords(private val blockIPv6: Boolean,
-                         private val vpnDNS1: String,
-                         private val vpnDNS2: String) {
+class DNSQueryLogRecordsConverter(private val blockIPv6: Boolean,
+                                  private val meteredNetwork: Boolean,
+                                  private val vpnDNS1: String,
+                                  private val vpnDNS2: String) {
 
-    constructor(blockIPv6: Boolean, vpnDNS1: String) : this(blockIPv6, vpnDNS1, "149.112.112.112")
+    constructor(blockIPv6: Boolean, meteredNetwork: Boolean, vpnDNS1: String) : this(blockIPv6, meteredNetwork, vpnDNS1, "149.112.112.112")
 
-    private lateinit var dnsQueryLogRecords: LinkedList<DNSQueryLogRecord>
+    private val dnsQueryLogRecords = ArrayList<DNSQueryLogRecord>()
+    private val reverseLookupQueue = ArrayBlockingQueue<String>(100, true)
+    private val ipToHostAddressMap = HashMap<String, String>()
+    private var futureTask: Future<*>? = null
 
-    fun convertRecords(dnsQueryRawRecords: LinkedList<DNSQueryLogRecord>): LinkedList<DNSQueryLogRecord> {
-        dnsQueryLogRecords = LinkedList<DNSQueryLogRecord>()
+    fun convertRecords(dnsQueryRawRecords: ArrayList<DNSQueryLogRecord>): ArrayList<DNSQueryLogRecord> {
+
+        dnsQueryLogRecords.clear()
+
+        startReverseLookupQueue()
+
         dnsQueryRawRecords.forEach { addRecord(it) }
+
         return dnsQueryLogRecords
     }
 
     private fun addRecord(dnsQueryRawRecord: DNSQueryLogRecord) {
 
-        if (!dnsQueryLogRecords.isEmpty() && dnsQueryRawRecord.uid != -1000) {
+        if (dnsQueryLogRecords.isNotEmpty() && dnsQueryRawRecord.uid != -1000) {
             addUID(dnsQueryRawRecord)
             return
-        } else if (!dnsQueryLogRecords.isEmpty() && isIdenticalRecord(dnsQueryRawRecord)) {
+        } else if (dnsQueryLogRecords.isNotEmpty() && isIdenticalRecord(dnsQueryRawRecord)) {
             return
         }
 
@@ -51,7 +64,7 @@ class DNSQueryLogRecords(private val blockIPv6: Boolean,
         dnsQueryLogRecords.add(dnsQueryRawRecord)
     }
 
-    private fun isIdenticalRecord(dnsQueryRawRecord: DNSQueryLogRecord) : Boolean {
+    private fun isIdenticalRecord(dnsQueryRawRecord: DNSQueryLogRecord): Boolean {
 
         var lastRecordIndex = 0
         if (dnsQueryLogRecords.size - recordsToCheck > 0) {
@@ -120,7 +133,55 @@ class DNSQueryLogRecords(private val blockIPv6: Boolean,
             }
 
             if (previousDnsQueryLogRecord?.uid != dnsQueryRawRecord.uid) {
+
+                if (!meteredNetwork && dnsQueryRawRecord.daddr.isNotEmpty()) {
+                    val host = ipToHostAddressMap[dnsQueryRawRecord.daddr]
+
+                    if (host == null) {
+                        makeReverseLookup(dnsQueryRawRecord.daddr)
+                    } else {
+                        dnsQueryRawRecord.reverseDNS = host
+                    }
+                }
+
                 dnsQueryLogRecords.add(dnsQueryRawRecord)
+
+            }
+        }
+    }
+
+    private fun makeReverseLookup(ip: String) {
+        if (!reverseLookupQueue.contains(ip)) {
+            reverseLookupQueue.offer(ip)
+        }
+    }
+
+    private fun startReverseLookupQueue() {
+
+        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown) {
+            ModulesService.executorService = Executors.newCachedThreadPool()
+        }
+
+        futureTask = ModulesService.executorService.submit {
+            try {
+
+                while (!Thread.currentThread().isInterrupted) {
+                    val ip = reverseLookupQueue.take()
+
+                    val host = getHostByIP(ip)
+
+                    if (host != ip) {
+                        if (ipToHostAddressMap.size > 500) {
+                            ipToHostAddressMap.clear()
+                        }
+
+                        ipToHostAddressMap[ip] = host
+                    }
+                }
+
+            } catch (ignored: InterruptedException) {
+            } catch (exception: Exception) {
+                Log.e(LOG_TAG, "DNSQueryLogRecordsConverter reverse lookup exception " + exception.message + " " + exception.cause)
             }
         }
     }
@@ -143,5 +204,9 @@ class DNSQueryLogRecords(private val blockIPv6: Boolean,
         }
 
         return dnsQueryRawRecord.blocked
+    }
+
+    fun onStop() {
+        futureTask?.let { if (!it.isCancelled) it.cancel(true) }
     }
 }

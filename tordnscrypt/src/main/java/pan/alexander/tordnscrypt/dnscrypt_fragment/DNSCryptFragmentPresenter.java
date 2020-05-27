@@ -33,6 +33,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
@@ -53,7 +54,6 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.OwnFileReader;
 import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.vpn.Rule;
 import pan.alexander.tordnscrypt.vpn.Util;
@@ -83,13 +83,12 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     private ModuleState fixedModuleState;
     private ServiceConnection serviceConnection;
     private ServiceVPN serviceVPN;
-    private volatile LinkedList<DNSQueryLogRecord> savedDNSQueryRawRecords;
-    private volatile DNSQueryLogRecords dnsQueryLogRecords;
+    private volatile ArrayList<DNSQueryLogRecord> savedDNSQueryRawRecords;
+    private volatile DNSQueryLogRecordsConverter dnsQueryLogRecordsConverter;
     private boolean torTethering;
     private boolean apIsOn;
     private String localEthernetDeviceAddress = "192.168.0.100";
     private boolean dnsCryptLogAutoScroll = true;
-    private boolean meteredNetwork = true;
 
     public DNSCryptFragmentPresenter(DNSCryptFragmentView view) {
         this.view = view;
@@ -105,7 +104,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
         modulesStatus = ModulesStatus.getInstance();
 
-        savedDNSQueryRawRecords = new LinkedList<>();
+        savedDNSQueryRawRecords = new ArrayList<>();
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         torTethering = sharedPreferences.getBoolean("pref_common_tor_tethering", false);
@@ -129,7 +128,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                     modulesStatus.setDnsCryptState(RUNNING);
                 }
 
-                displayLog(1);
+                displayLog(5);
 
             } else {
                 setDnsCryptStopped();
@@ -140,9 +139,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             setDNSCryptInstalled(false);
         }
 
-        dnsQueryLogRecords = new DNSQueryLogRecords(blockIPv6, pathVars.getDNSCryptFallbackRes());
-
-        meteredNetwork = Util.isMeteredNetwork(context);
+        dnsQueryLogRecordsConverter = new DNSQueryLogRecordsConverter(blockIPv6, Util.isMeteredNetwork(context), pathVars.getDNSCryptFallbackRes());
     }
 
     public void onStop(Context context) {
@@ -160,6 +157,10 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                 new PrefManager(context).setBoolPref("DNSCryptSystemDNSAllowed", false);
                 ServiceVPNHelper.reload("DNSCrypt Deny system DNS", context);
             }
+        }
+
+        if (dnsQueryLogRecordsConverter != null) {
+            dnsQueryLogRecordsConverter.onStop();
         }
 
         stopDisplayLog();
@@ -491,11 +492,12 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             return false;
         }
 
-        savedDNSQueryRawRecords = new LinkedList<>(dnsQueryRawRecords);
+        savedDNSQueryRawRecords.clear();
+        savedDNSQueryRawRecords.addAll(dnsQueryRawRecords);
 
         lockDnsQueryRawRecordsListForRead(false);
 
-        LinkedList<DNSQueryLogRecord> dnsQueryLogRecords = dnsQueryRawRecordsToLogRecords(savedDNSQueryRawRecords);
+        ArrayList<DNSQueryLogRecord> dnsQueryLogRecords = dnsQueryRawRecordsToLogRecords(savedDNSQueryRawRecords);
 
         DNSQueryLogRecord record;
         StringBuilder lines = new StringBuilder();
@@ -583,12 +585,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                         lines.append(" -> ");
                     }
 
-                    if (!meteredNetwork && record.getUid() != -1000) {
-                        String ip = record.getDaddr().split(", ")[0];
-                        String host = Utils.INSTANCE.getHostByIP(ip);
-                        if (!host.isEmpty() && !host.equals(ip)) {
-                            lines.append(host).append(" -> ");
-                        }
+                    if (record.getUid() != -1000 && !record.getReverseDNS().isEmpty()) {
+                        lines.append(record.getReverseDNS()).append(" -> ");
                     }
 
                     lines.append(record.getDaddr());
@@ -616,6 +614,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         return true;
     }
 
+
+
     private LinkedList<DNSQueryLogRecord> getDnsQueryRawRecords() {
         if (serviceVPN != null) {
             return serviceVPN.getDnsQueryRawRecords();
@@ -635,8 +635,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         }
     }
 
-    private LinkedList<DNSQueryLogRecord> dnsQueryRawRecordsToLogRecords(LinkedList<DNSQueryLogRecord> dnsQueryRawRecords) {
-        return dnsQueryLogRecords.convertRecords(dnsQueryRawRecords);
+    private ArrayList<DNSQueryLogRecord> dnsQueryRawRecordsToLogRecords(ArrayList<DNSQueryLogRecord> dnsQueryRawRecords) {
+        return dnsQueryLogRecordsConverter.convertRecords(dnsQueryRawRecords);
     }
 
     @Override
@@ -666,7 +666,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
             view.setStartButtonText(R.string.btnDNSCryptStop);
 
-            displayLog(1);
+            displayLog(5);
 
             if (modulesStatus.getMode() == VPN_MODE && !bound) {
                 bindToVPNService(context);

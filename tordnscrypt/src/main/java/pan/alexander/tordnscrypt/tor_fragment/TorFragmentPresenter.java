@@ -135,7 +135,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
                 if (modulesStatus.getTorState() != RESTARTING) {
                     modulesStatus.setTorState(RUNNING);
                 }
-                displayLog(1);
+                displayLog(5);
             } else {
                 setTorStopped(context);
                 modulesStatus.setTorState(STOPPED);
@@ -442,7 +442,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
             setTorRunning();
 
-            displayLog(1);
+            displayLog(5);
 
             view.setTorProgressBarProgress(0);
 

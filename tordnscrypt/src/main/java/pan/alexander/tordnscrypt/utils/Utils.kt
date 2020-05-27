@@ -73,11 +73,7 @@ object Utils {
     }
 
     fun getHostByIP(IP: String): String {
-        var host = ""
-        try {
-            val addr = InetAddress.getByName(IP)
-            host = addr.hostName
-        } catch (e: Exception){}
-        return host
+        val addr = InetAddress.getByName(IP)
+        return addr.hostName
     }
 }
