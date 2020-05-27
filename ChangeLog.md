@@ -271,3 +271,6 @@
 * Fixed modules logs when Run modules with root option is enabled.
 * Prevented too frequent iptables updates.
 * Attempt to fix Always on VPN.
+
+**InviZible Pro beta 0.8.9**
+* Real-time Internet connections logs fixes and performance improvements
