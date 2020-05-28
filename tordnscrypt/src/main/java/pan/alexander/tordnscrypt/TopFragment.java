@@ -271,7 +271,7 @@ public class TopFragment extends Fragment {
 
             try {
                 Verifier verifier = new Verifier(topFragment.getActivity());
-                appSign = verifier.getApkSignatureZipModern();
+                appSign = verifier.getApkSignatureZip();
                 String appSignAlt = verifier.getApkSignature();
                 verifier.encryptStr(TOP_BROADCAST, appSign, appSignAlt);
                 wrongSign = topFragment.getString(R.string.encoded).trim();

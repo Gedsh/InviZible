@@ -158,7 +158,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         ModulesService.executorService.submit(() -> {
             try {
                 Verifier verifier = new Verifier(getActivity());
-                String appSign = verifier.getApkSignatureZipModern();
+                String appSign = verifier.getApkSignatureZip();
                 String appSignAlt = verifier.getApkSignature();
                 if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(

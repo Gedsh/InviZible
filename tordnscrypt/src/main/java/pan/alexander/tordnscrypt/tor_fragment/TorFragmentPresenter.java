@@ -591,7 +591,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
             try {
                 Verifier verifier = new Verifier(view.getFragmentActivity());
-                String appSign = verifier.getApkSignatureZipModern();
+                String appSign = verifier.getApkSignatureZip();
                 String appSignAlt = verifier.getApkSignature();
                 if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                     if (view.getFragmentFragmentManager() != null) {

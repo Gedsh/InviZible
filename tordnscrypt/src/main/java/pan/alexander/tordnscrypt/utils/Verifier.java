@@ -48,49 +48,47 @@ import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 
 public class Verifier {
 
     public Context context;
-    private final String LOG_TAG = RootExecService.LOG_TAG;
 
     public Verifier(Context context) {
         this.context = context;
     }
 
-    @SuppressWarnings("unused")
-    public String getApkSignatureZip() {
+    public String getApkSignatureZip() throws Exception {
 
-        try {
-            File apkFile = new File(context.getApplicationInfo().sourceDir);
+        File apkFile = new File(context.getApplicationInfo().sourceDir);
 
-            ZipFile zipFile = new ZipFile(apkFile);
-            Enumeration<? extends ZipEntry> entries = zipFile.entries();
-            while (entries.hasMoreElements()) {
-                ZipEntry ze = entries.nextElement();
-                String name = ze.getName().toUpperCase();
-                if (name.startsWith("META-INF/") && (name.endsWith(".RSA") || name.endsWith(".DSA"))) {
-                    InputStream inputStream = zipFile.getInputStream(ze);
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    byte[] buffer = new byte[8192];
-                    int len;
-                    while ((len = inputStream.read(buffer)) != -1) {
-                        baos.write(buffer, 0, len);
-                    }
-                    baos.close();
-                    zipFile.close();
-                    byte[] byteSign = baos.toByteArray();
-                    byteSign = CertificateFactory.getInstance("X509").generateCertificate(new ByteArrayInputStream(byteSign)).getEncoded();
-                    return Base64.encodeToString(MessageDigest.getInstance("md5").digest(byteSign), Base64.DEFAULT);
+        ZipFile zipFile = new ZipFile(apkFile);
+        Enumeration<? extends ZipEntry> entries = zipFile.entries();
+        while (entries.hasMoreElements()) {
+            ZipEntry ze = entries.nextElement();
+            String name = ze.getName().toUpperCase();
+            if (name.startsWith("META-INF/") && (name.endsWith(".RSA") || name.endsWith(".DSA"))) {
+                InputStream inputStream = zipFile.getInputStream(ze);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                byte[] buffer = new byte[8192];
+                int len;
+                while ((len = inputStream.read(buffer)) != -1) {
+                    baos.write(buffer, 0, len);
                 }
+                baos.close();
+                inputStream.close();
+                zipFile.close();
+                byte[] byteSign = baos.toByteArray();
+                byteSign = CertificateFactory.getInstance("X509").generateCertificate(new ByteArrayInputStream(byteSign)).getEncoded();
+                return Base64.encodeToString(MessageDigest.getInstance("md5").digest(byteSign), Base64.DEFAULT);
             }
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "Verification zp Failed" + e.getMessage() + " " + e.getCause());
         }
+
         return null;
     }
 
+    @SuppressWarnings("unused")
     public String getApkSignatureZipModern() throws Exception {
         File apkFile = new File(context.getApplicationInfo().sourceDir);
         ZipFile zipFile = new ZipFile(apkFile);
@@ -143,6 +141,7 @@ public class Verifier {
     }
 
     public void encryptStr(String text, String key, String vector) {
+
         try {
             if (TopFragment.debug) {
                 key = key.substring(key.length() - 16);
