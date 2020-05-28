@@ -137,19 +137,26 @@ public class ModulesService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        String action = intent.getAction();
-
-        boolean showNotification = intent.getBooleanExtra("showNotification", true);
-
-        if (action == null) {
-            stopService(startId);
-            return START_NOT_STICKY;
+        boolean showNotification = true;
+        if (intent != null) {
+            showNotification = intent.getBooleanExtra("showNotification", true);
         }
-
 
         if (showNotification) {
             ServiceNotification notification = new ServiceNotification(this, notificationManager);
             notification.sendNotification(getString(R.string.app_name), getText(R.string.notification_text).toString());
+        }
+
+        if (intent == null) {
+            stopService(startId);
+            return START_NOT_STICKY;
+        }
+
+        String action = intent.getAction();
+
+        if (action == null) {
+            stopService(startId);
+            return START_NOT_STICKY;
         }
 
         manageWakelocks();

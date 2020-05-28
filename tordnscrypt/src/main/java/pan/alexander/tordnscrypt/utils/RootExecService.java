@@ -118,37 +118,42 @@ public class RootExecService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent != null) {
-            final String action = intent.getAction();
-            if ((action == null) || (action.isEmpty())) {
 
-                stopSelf(startId);
-                return START_NOT_STICKY;
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-            if (action.equals(RUN_COMMAND)) {
+            NotificationChannel notificationChannel = new NotificationChannel
+                    (ANDROID_CHANNEL_ID, "NOTIFICATION_CHANNEL_INVIZIBLE", NotificationManager.IMPORTANCE_LOW);
+            notificationChannel.setDescription("Temp notification");
+            notificationChannel.enableLights(false);
+            notificationChannel.enableVibration(false);
+            notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+            assert notificationManager != null;
+            notificationManager.createNotificationChannel(notificationChannel);
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            sendNotification(getString(R.string.app_name), getText(R.string.notification_temp_text).toString());
 
-                    NotificationChannel notificationChannel = new NotificationChannel
-                            (ANDROID_CHANNEL_ID, "NOTIFICATION_CHANNEL_INVIZIBLE", NotificationManager.IMPORTANCE_LOW);
-                    notificationChannel.setDescription("Temp notification");
-                    notificationChannel.enableLights(false);
-                    notificationChannel.enableVibration(false);
-                    notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-                    assert notificationManager != null;
-                    notificationManager.createNotificationChannel(notificationChannel);
-
-                    sendNotification(getString(R.string.app_name), getText(R.string.notification_temp_text).toString());
-
-                }
-
-                RootCommands rootCommands = (RootCommands) intent.getSerializableExtra("Commands");
-                int mark = intent.getIntExtra("Mark", 0);
-                ExecRunnable execCommands = new ExecRunnable(rootCommands, mark, startId);
-                executorService.execute(execCommands);
-            }
         }
+
+        if (intent == null) {
+            stopSelf(startId);
+            return START_NOT_STICKY;
+        }
+
+        final String action = intent.getAction();
+
+        if ((action == null) || (action.isEmpty())) {
+
+            stopSelf(startId);
+            return START_NOT_STICKY;
+        }
+
+        if (action.equals(RUN_COMMAND)) {
+            RootCommands rootCommands = (RootCommands) intent.getSerializableExtra("Commands");
+            int mark = intent.getIntExtra("Mark", 0);
+            ExecRunnable execCommands = new ExecRunnable(rootCommands, mark, startId);
+            executorService.execute(execCommands);
+        }
+
         return START_NOT_STICKY;
     }
 

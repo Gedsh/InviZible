@@ -45,11 +45,12 @@ public class ModulesRunner {
     private static void sendStarterIntent(Context context, String action) {
         Intent intent = new Intent(context, ModulesService.class);
         intent.setAction(action);
-        intent.putExtra("showNotification", isShowNotification(context));
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            intent.putExtra("showNotification", true);
             context.startForegroundService(intent);
         } else {
+            intent.putExtra("showNotification", isShowNotification(context));
             context.startService(intent);
         }
     }

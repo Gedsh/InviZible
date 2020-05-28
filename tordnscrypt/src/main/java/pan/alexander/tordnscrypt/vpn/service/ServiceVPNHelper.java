@@ -103,11 +103,13 @@ public class ServiceVPNHelper {
     }
 
     private static void sendIntent(Context context, Intent intent) {
-        intent.putExtra("showNotification", isShowNotification(context));
+
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            intent.putExtra("showNotification", true);
             context.startForegroundService(intent);
         } else {
+            intent.putExtra("showNotification", isShowNotification(context));
             context.startService(intent);
         }
     }
