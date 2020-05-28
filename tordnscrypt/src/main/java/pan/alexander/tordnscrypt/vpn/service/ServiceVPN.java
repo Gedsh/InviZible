@@ -840,9 +840,9 @@ public class ServiceVPN extends VpnService {
 
             try {
                 if (Intent.ACTION_PACKAGE_ADDED.equals(intent.getAction())) {
-                    reload("Package added", context);
+                    reload("VPN Package added", context);
                 } else if (Intent.ACTION_PACKAGE_REMOVED.equals(intent.getAction())) {
-                    reload("Package deleted", context);
+                    reload("VPN Package deleted", context);
                 }
             } catch (Throwable ex) {
                 Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
@@ -854,12 +854,12 @@ public class ServiceVPN extends VpnService {
     public void onCreate() {
         notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
 
-        Log.i(LOG_TAG, "Create version=" + Util.getSelfVersionName(this) + "/" + Util.getSelfVersionCode(this));
+        Log.i(LOG_TAG, "VPN Create version=" + Util.getSelfVersionName(this) + "/" + Util.getSelfVersionCode(this));
 
         Util.canFilterAsynchronous(this);
 
         if (jni_context != 0) {
-            Log.w(LOG_TAG, "Create with context=" + jni_context);
+            Log.w(LOG_TAG, "VPN Create with context=" + jni_context);
             jni_stop(jni_context);
             synchronized (jni_lock) {
                 jni_done(jni_context);
@@ -1002,33 +1002,44 @@ public class ServiceVPN extends VpnService {
 
         torVirtualAddressNetwork = pathVars.getTorVirtAdrNet();
 
+        boolean showNotification = true;
         if (intent != null) {
-            boolean showNotification = intent.getBooleanExtra("showNotification", true);
-
-            if (showNotification) {
-                ServiceVPNNotification notification = new ServiceVPNNotification(this, notificationManager);
-                notification.sendNotification(getString(R.string.app_name), getText(R.string.notification_text).toString());
-            }
+            showNotification = intent.getBooleanExtra("showNotification", true);
         }
 
+        if (showNotification) {
+            ServiceVPNNotification notification = new ServiceVPNNotification(this, notificationManager);
+            notification.sendNotification(getString(R.string.app_name), getText(R.string.notification_text).toString());
+        }
 
         Log.i(LOG_TAG, "VPN Received " + intent);
 
         // Handle service restart
         if (intent == null) {
-            Log.i(LOG_TAG, "VPN Restart");
+            Log.i(LOG_TAG, "VPN OnStart Restart");
 
-            // Recreate intent
-            intent = new Intent(this, ServiceVPN.class);
-            intent.putExtra(EXTRA_COMMAND, vpnEnabled ? VPNCommand.START : VPNCommand.STOP);
+            if (vpnEnabled) {
+                Intent starterIntent = new Intent(BootCompleteReceiver.ALWAYS_ON_VPN);
+                sendBroadcast(starterIntent);
+                stopSelf(startId);
+                return START_NOT_STICKY;
+            } else {
+                // Recreate intent
+                intent = new Intent(this, ServiceVPN.class);
+                intent.putExtra(EXTRA_COMMAND, VPNCommand.STOP);
+            }
         }
 
         VPNCommand cmd = (VPNCommand) intent.getSerializableExtra(EXTRA_COMMAND);
 
         if (cmd == null) {
+            Log.i(LOG_TAG, "VPN OnStart ALWAYS_ON_VPN");
+
             if (vpnEnabled) {
                 Intent starterIntent = new Intent(BootCompleteReceiver.ALWAYS_ON_VPN);
                 sendBroadcast(starterIntent);
+                stopSelf(startId);
+                return START_NOT_STICKY;
             } else {
                 intent.putExtra(EXTRA_COMMAND, VPNCommand.STOP);
             }

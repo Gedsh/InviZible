@@ -50,7 +50,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class BootCompleteReceiver extends BroadcastReceiver {
-    public static final String ALWAYS_ON_VPN = "pam.alexander.tordnscrypt.ALWAYS_ON_VPN";
+    public static final String ALWAYS_ON_VPN = "pan.alexander.tordnscrypt.ALWAYS_ON_VPN";
     private final int mJobId = PreferencesFastFragment.mJobId;
 
     private Context context;
