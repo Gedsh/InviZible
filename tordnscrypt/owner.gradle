@@ -47,7 +47,7 @@ android {
 
         beta {
             applicationId "pan.alexander.tordnscrypt"
-            versionName "0.8.9"
+            versionName "0.9.0"
             dimension = 'version'
             signingConfig signingConfigs.betasign
             resValue 'string', 'package_name', applicationId
@@ -88,7 +88,7 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 29
-        versionCode 89
+        versionCode 90
 
         resConfigs "en", "ru-rRU", "ru-rUA", "pl", "de", "fa", "in"
 
@@ -177,7 +177,7 @@ dependencies {
     //noinspection GradleDynamicVersion
     implementation 'eu.chainfire:libsuperuser:1.1.0.+'
     implementation 'com.jrummyapps:android-shell:1.0.1'
-    implementation "androidx.core:core-ktx:1.2.0"
+    implementation "androidx.core:core-ktx:1.3.0"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation project(':filepicker')
 }
