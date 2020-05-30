@@ -29,12 +29,12 @@ import android.os.Build;
 import androidx.core.app.NotificationCompat;
 
 import pan.alexander.tordnscrypt.MainActivity;
-import pan.alexander.tordnscrypt.R;
 
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
 
-class ServiceNotification {
-    private final String ANDROID_CHANNEL_ID = "InviZible";
+public class ServiceNotification {
+    public static final String ANDROID_CHANNEL_ID = "InviZible";
+    public static final String ANDROID_CHANNEL_NAME = "NOTIFICATION_CHANNEL_INVIZIBLE";
     private final Service modulesService;
     private final NotificationManager notificationManager;
 
@@ -45,14 +45,17 @@ class ServiceNotification {
 
     void sendNotification(String Title, String Text) {
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (modulesService == null) {
+            return;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationManager != null) {
             NotificationChannel notificationChannel = new NotificationChannel
-                    (ANDROID_CHANNEL_ID, "NOTIFICATION_CHANNEL_INVIZIBLE", NotificationManager.IMPORTANCE_LOW);
+                    (ANDROID_CHANNEL_ID, ANDROID_CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW);
             notificationChannel.setDescription("Protect InviZible Pro");
             notificationChannel.enableLights(false);
             notificationChannel.enableVibration(false);
             notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-            assert notificationManager != null;
             notificationManager.createNotificationChannel(notificationChannel);
         }
 
@@ -66,7 +69,7 @@ class ServiceNotification {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(modulesService, ANDROID_CHANNEL_ID);
         builder.setContentIntent(contentIntent)
                 .setOngoing(true)   //Can't be swiped out
-                .setSmallIcon(R.drawable.ic_visibility_off_white_24dp)
+                .setSmallIcon(modulesService.getResources().getIdentifier("ic_service_notification", "drawable", modulesService.getPackageName()))
                 //.setLargeIcon(BitmapFactory.decodeResource(res, R.drawable.large))   // большая картинка
                 //.setTicker(Ticker)
                 .setContentTitle(Title) //Заголовок

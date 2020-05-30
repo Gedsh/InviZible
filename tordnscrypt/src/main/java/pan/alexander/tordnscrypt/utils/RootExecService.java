@@ -53,6 +53,9 @@ import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
+import static pan.alexander.tordnscrypt.modules.ServiceNotification.ANDROID_CHANNEL_ID;
+import static pan.alexander.tordnscrypt.modules.ServiceNotification.ANDROID_CHANNEL_NAME;
+
 public class RootExecService extends Service {
     public RootExecService() {
     }
@@ -75,7 +78,6 @@ public class RootExecService extends Service {
     private static String autoStartDelay = "0";
     private static boolean showToastWithCommandsResultError;
 
-    private final String ANDROID_CHANNEL_ID = "InviZible";
     private ExecutorService executorService;
     private NotificationManager notificationManager;
     private Handler handler = new Handler();
@@ -119,15 +121,14 @@ public class RootExecService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationManager != null) {
 
             NotificationChannel notificationChannel = new NotificationChannel
-                    (ANDROID_CHANNEL_ID, "NOTIFICATION_CHANNEL_INVIZIBLE", NotificationManager.IMPORTANCE_LOW);
+                    (ANDROID_CHANNEL_ID, ANDROID_CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW);
             notificationChannel.setDescription("Temp notification");
             notificationChannel.enableLights(false);
             notificationChannel.enableVibration(false);
             notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-            assert notificationManager != null;
             notificationManager.createNotificationChannel(notificationChannel);
 
             sendNotification(getString(R.string.app_name), getText(R.string.notification_temp_text).toString());
@@ -276,7 +277,7 @@ public class RootExecService extends Service {
             }
             sendResult(runCommands(rootCommands.getCommands()), mark);
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationManager != null) {
                 notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
                 stopForeground(true);
             }
@@ -297,7 +298,7 @@ public class RootExecService extends Service {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ANDROID_CHANNEL_ID);
         builder.setContentIntent(contentIntent)
                 .setOngoing(true)   //Can't be swiped out
-                .setSmallIcon(R.drawable.ic_visibility_off_white_24dp)
+                .setSmallIcon(getResources().getIdentifier("ic_service_notification", "drawable", getPackageName()))
                 //.setLargeIcon(BitmapFactory.decodeResource(res, R.drawable.large))   // большая картинка
                 //.setTicker(Ticker)
                 .setContentTitle(Title) //Заголовок

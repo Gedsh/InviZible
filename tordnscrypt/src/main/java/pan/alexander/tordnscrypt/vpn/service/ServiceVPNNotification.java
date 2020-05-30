@@ -29,12 +29,12 @@ import android.os.Build;
 import androidx.core.app.NotificationCompat;
 
 import pan.alexander.tordnscrypt.MainActivity;
-import pan.alexander.tordnscrypt.R;
 
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
+import static pan.alexander.tordnscrypt.modules.ServiceNotification.ANDROID_CHANNEL_ID;
+import static pan.alexander.tordnscrypt.modules.ServiceNotification.ANDROID_CHANNEL_NAME;
 
 class ServiceVPNNotification {
-    private final String ANDROID_CHANNEL_ID = "InviZible";
     private final Service serviceVPN;
     private final NotificationManager notificationManager;
 
@@ -45,14 +45,13 @@ class ServiceVPNNotification {
 
     void sendNotification(String Title, String Text) {
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationManager != null) {
             NotificationChannel notificationChannel = new NotificationChannel
-                    (ANDROID_CHANNEL_ID, "NOTIFICATION_CHANNEL_INVIZIBLE", NotificationManager.IMPORTANCE_LOW);
+                    (ANDROID_CHANNEL_ID, ANDROID_CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW);
             notificationChannel.setDescription("Protect VPN");
             notificationChannel.enableLights(false);
             notificationChannel.enableVibration(false);
             notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-            assert notificationManager != null;
             notificationManager.createNotificationChannel(notificationChannel);
         }
 
@@ -66,7 +65,7 @@ class ServiceVPNNotification {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(serviceVPN, ANDROID_CHANNEL_ID);
         builder.setContentIntent(contentIntent)
                 .setOngoing(true)   //Can't be swiped out
-                .setSmallIcon(R.drawable.ic_visibility_off_white_24dp)
+                .setSmallIcon(serviceVPN.getResources().getIdentifier("ic_service_notification", "drawable", serviceVPN.getPackageName()))
                 //.setLargeIcon(BitmapFactory.decodeResource(res, R.drawable.large))   // большая картинка
                 //.setTicker(Ticker)
                 .setContentTitle(Title) //Заголовок
