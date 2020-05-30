@@ -278,3 +278,8 @@
 **InviZible Pro beta 0.9.0**
 * Attempt to fix Always on VPN.
 * Fixed rare bugs with services.
+
+**InviZible Pro beta 0.9.1**
+* Real-time Internet connections logs improvements.
+* Performance improvements.
+* Attempt to fix RemoteServiceException.
