@@ -20,7 +20,7 @@ package pan.alexander.tordnscrypt.dnscrypt_fragment
 */
 
 import android.util.Log
-import pan.alexander.tordnscrypt.modules.ModulesService
+import pan.alexander.tordnscrypt.utils.CachedExecutor
 import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.Utils.getHostByIP
 import java.util.concurrent.*
@@ -99,7 +99,7 @@ class DNSQueryLogRecordsConverter(private val blockIPv6: Boolean,
         var savedIndex: Int = -1
         for (index in dnsQueryLogRecords.size - 1 downTo 0) {
             val record = dnsQueryLogRecords[index]
-            if (savedIndex < 0 && record.daddr.contains(dnsQueryRawRecord.daddr) && record.uid == -1000) {
+            if (savedIndex < 0 && record.daddr.contains(dnsQueryRawRecord.daddr)) {
                 savedRecord = record
                 savedIndex = index
             } else if (savedRecord != null && savedRecord.aName == record.cName) {
@@ -115,7 +115,7 @@ class DNSQueryLogRecordsConverter(private val blockIPv6: Boolean,
             val dnsQueryNewRecord = DNSQueryLogRecord(savedRecord.qName, savedRecord.aName, "",
                     "", 0, dnsQueryRawRecord.saddr, "", dnsQueryRawRecord.uid)
 
-            val previousDnsQueryLogRecord: DNSQueryLogRecord? = if (savedIndex - 1 >= 0) {
+            val previousDnsQueryLogRecord: DNSQueryLogRecord? = if (savedIndex > 0) {
                 dnsQueryLogRecords[savedIndex - 1]
             } else {
                 null
@@ -124,6 +124,7 @@ class DNSQueryLogRecordsConverter(private val blockIPv6: Boolean,
             if (previousDnsQueryLogRecord?.uid != dnsQueryRawRecord.uid) {
                 dnsQueryLogRecords.add(savedIndex, dnsQueryNewRecord)
             }
+
         } else if (dnsQueryRawRecord.daddr != vpnDNS1 && dnsQueryRawRecord.daddr != vpnDNS2) {
 
             val previousDnsQueryLogRecord: DNSQueryLogRecord? = if (savedIndex - 1 >= 0) {
@@ -158,11 +159,7 @@ class DNSQueryLogRecordsConverter(private val blockIPv6: Boolean,
 
     private fun startReverseLookupQueue() {
 
-        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown) {
-            ModulesService.executorService = Executors.newCachedThreadPool()
-        }
-
-        futureTask = ModulesService.executorService.submit {
+        futureTask = CachedExecutor.getExecutorService().submit {
             try {
 
                 while (!Thread.currentThread().isInterrupted) {
