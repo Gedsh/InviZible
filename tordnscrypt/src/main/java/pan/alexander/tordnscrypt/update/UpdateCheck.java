@@ -37,7 +37,6 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.HashMap;
-import java.util.concurrent.Executors;
 
 import javax.crypto.Cipher;
 
@@ -45,7 +44,7 @@ import pan.alexander.tordnscrypt.BuildConfig;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
-import pan.alexander.tordnscrypt.modules.ModulesService;
+import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.HttpsRequest;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 
@@ -276,11 +275,7 @@ public class UpdateCheck {
             return;
         }
 
-        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
-            ModulesService.executorService = Executors.newCachedThreadPool();
-        }
-
-        ModulesService.executorService.submit(() -> {
+        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
             try {
                 String rsaSign = RSASign(appSign);
 

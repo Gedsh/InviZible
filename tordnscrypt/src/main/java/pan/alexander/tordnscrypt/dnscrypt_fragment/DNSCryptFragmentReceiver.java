@@ -27,13 +27,12 @@ import android.util.Log;
 import androidx.fragment.app.FragmentManager;
 
 import java.util.Arrays;
-import java.util.concurrent.Executors;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
-import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
@@ -151,11 +150,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
                 FragmentManager fragmentManager = view.getFragmentFragmentManager();
 
-                if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
-                    ModulesService.executorService = Executors.newCachedThreadPool();
-                }
-
-                ModulesService.executorService.submit(() -> {
+                CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
                     try {
                         Verifier verifier = new Verifier(context);
                         String appSignAlt = verifier.getApkSignature();

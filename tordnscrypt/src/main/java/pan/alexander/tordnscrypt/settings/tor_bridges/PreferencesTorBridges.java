@@ -46,7 +46,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,8 +53,8 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
-import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.BridgeType;
@@ -224,11 +223,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             savedBridgesSelector = BridgesSelector.OWN_BRIDGES;
         }
 
-        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
-            ModulesService.executorService = Executors.newCachedThreadPool();
-        }
-
-        ModulesService.executorService.submit(() -> {
+        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
             try {
                 Verifier verifier = new Verifier(getActivity());
                 String appSignAlt = verifier.getApkSignature();

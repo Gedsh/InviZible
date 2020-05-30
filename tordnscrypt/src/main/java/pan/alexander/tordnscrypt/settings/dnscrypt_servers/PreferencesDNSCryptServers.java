@@ -44,17 +44,16 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Executors;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.AddDNSCryptServerDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
-import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.dnscrypt_relays.DNSServerRelays;
 import pan.alexander.tordnscrypt.settings.dnscrypt_relays.PreferencesDNSCryptRelays;
+import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
@@ -109,11 +108,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
         takeArguments();
 
-        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
-            ModulesService.executorService = Executors.newCachedThreadPool();
-        }
-
-        ModulesService.executorService.submit(() -> {
+        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
             try {
                 Verifier verifier = new Verifier(getActivity());
                 String appSign = verifier.getApkSignatureZip();

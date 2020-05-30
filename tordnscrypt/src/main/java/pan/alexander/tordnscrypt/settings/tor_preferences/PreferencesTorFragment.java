@@ -34,16 +34,15 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Executors;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
-import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.ConfigEditorFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.tor_countries.CountrySelectFragment;
+import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
@@ -262,13 +261,10 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             }
             return true;
         } else if (Objects.equals(preference.getKey(), "DNSPort")) {
-            if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
-                ModulesService.executorService = Executors.newCachedThreadPool();
-            }
 
             ModifyForwardingRules modifyForwardingRules = new ModifyForwardingRules(getActivity(),
                     "onion 127.0.0.1:" + newValue.toString().trim());
-            ModulesService.executorService.execute(modifyForwardingRules.getRunnable());
+            CachedExecutor.INSTANCE.getExecutorService().execute(modifyForwardingRules.getRunnable());
         } else if (Objects.equals(preference.getKey(), "pref_tor_snowflake_stun")) {
             if (key_tor.contains("ClientTransportPlugin") && getActivity() != null) {
                 boolean saveExtendedLogs = new PrefManager(getActivity()).getBoolPref("swRootCommandsLog");
@@ -382,11 +378,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 return true;
             }
 
-            if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
-                ModulesService.executorService = Executors.newCachedThreadPool();
-            }
-
-            ModulesService.executorService.submit(() -> {
+            CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
                 boolean successfully = false;
                 if (getActivity() != null) {
                     successfully = FileOperations.deleteDirSynchronous(getActivity(), appDataDir + "/tor_data");

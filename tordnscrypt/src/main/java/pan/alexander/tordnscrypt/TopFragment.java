@@ -64,6 +64,7 @@ import pan.alexander.tordnscrypt.modules.ModulesVersions;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.update.UpdateCheck;
 import pan.alexander.tordnscrypt.update.UpdateService;
+import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Registration;
 import pan.alexander.tordnscrypt.utils.RootExecService;
@@ -136,8 +137,6 @@ public class TopFragment extends Fragment {
 
         appVersion = getString(R.string.appVersion);
         appProcVersion = getString(R.string.appProcVersion);
-
-        initModulesLogsTimer();
 
         RootChecker rootChecker = new RootChecker(new WeakReference<>(this));
         rootChecker.execute();
@@ -248,6 +247,10 @@ public class TopFragment extends Fragment {
         @Override
         @SuppressWarnings("deprecation")
         protected Void doInBackground(Void... params) {
+
+            CachedExecutor.INSTANCE.startExecutorService();
+
+            initModulesLogsTimer();
 
             try {
                 suAvailable = Shell.SU.available();

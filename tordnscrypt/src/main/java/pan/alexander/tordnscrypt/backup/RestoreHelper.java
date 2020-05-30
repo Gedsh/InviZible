@@ -31,11 +31,10 @@ import java.io.FileInputStream;
 import java.io.ObjectInputStream;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Executors;
 
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
@@ -59,11 +58,7 @@ class RestoreHelper extends Installer {
 
     void restoreAll() {
 
-        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
-            ModulesService.executorService = Executors.newCachedThreadPool();
-        }
-
-        ModulesService.executorService.submit(() -> {
+        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
             try {
                 if (!isBackupExist()) {
                     throw new IllegalStateException("No file to restore " + pathBackup + "/InvizibleBackup.zip");

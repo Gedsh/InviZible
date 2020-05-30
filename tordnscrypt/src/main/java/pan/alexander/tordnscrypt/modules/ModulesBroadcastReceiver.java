@@ -43,11 +43,11 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.iptables.Tethering;
 import pan.alexander.tordnscrypt.utils.ApManager;
+import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -343,11 +343,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
                 && !modulesStatus.isUseModulesWithRoot()
                 && !lock) {
 
-            if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
-                ModulesService.executorService = Executors.newCachedThreadPool();
-            }
-
-            ModulesService.executorService.submit(() -> {
+            CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
                 if (!lock) {
 
                     lock = true;
@@ -373,11 +369,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
     private void checkUSBModemState() {
         final String addressesRangeUSB = "192.168.42.";
 
-        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
-            ModulesService.executorService = Executors.newCachedThreadPool();
-        }
-
-        ModulesService.executorService.submit(() -> {
+        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
             Tethering.usbTetherOn = false;
 
             try {

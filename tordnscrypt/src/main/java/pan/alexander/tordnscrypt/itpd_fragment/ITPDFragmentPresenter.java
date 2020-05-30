@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.itpd_fragment;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.os.Handler;
 import android.text.Html;
 import android.util.Log;
 import android.widget.Toast;
@@ -35,7 +36,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Objects;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -47,9 +47,9 @@ import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
-import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.OwnFileReader;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
@@ -316,7 +316,21 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
     }
 
     @Override
-    public void displayLog(int period) {
+    public synchronized void displayLog(int period) {
+
+        ScheduledExecutorService timer = TopFragment.getModulesLogsTimer();
+
+        if (timer == null || timer.isShutdown()) {
+            new Handler().postDelayed(() -> {
+
+                if (view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isDestroyed()) {
+                    displayLog(period);
+                }
+
+            }, 1000);
+
+            return;
+        }
 
         if (period == displayLogPeriod) {
             return;
@@ -326,12 +340,6 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
         if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
             scheduledFuture.cancel(false);
-        }
-
-        ScheduledExecutorService timer = TopFragment.getModulesLogsTimer();
-
-        if (timer == null || timer.isShutdown()) {
-            return;
         }
 
         scheduledFuture = timer.scheduleAtFixedRate(new Runnable() {
@@ -568,11 +576,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
         final String certificateFolder = appDataDir + "/i2pd_data/certificates";
         final String certificateDestination = appDataDir + "/i2pd_data";
 
-        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
-            ModulesService.executorService = Executors.newCachedThreadPool();
-        }
-
-        ModulesService.executorService.submit(() -> {
+        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
 
             File certificateFolderDir = new File(certificateFolder);
 

@@ -40,7 +40,6 @@ import java.net.Proxy;
 import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -50,9 +49,9 @@ import pan.alexander.tordnscrypt.dialogs.SelectBridgesTransport;
 import pan.alexander.tordnscrypt.dialogs.ShowBridgesCodeImage;
 import pan.alexander.tordnscrypt.dialogs.ShowBridgesDialog;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitDialogBridgesRequest;
-import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.WakeLocksManager;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -229,11 +228,7 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
         if (dialogPleaseWait != null && dialogPleaseWait.get() != null)
             dialogPleaseWait.get().setThreadRequest(threadRequestCodeImage);
 
-        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
-            ModulesService.executorService = Executors.newCachedThreadPool();
-        }
-
-        ModulesService.executorService.submit(threadRequestCodeImage);
+        CachedExecutor.INSTANCE.getExecutorService().submit(threadRequestCodeImage);
     }
 
     public void showProgressDialog() {
@@ -518,10 +513,6 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
         if (dialogPleaseWait != null && dialogPleaseWait.get() != null)
             dialogPleaseWait.get().setThreadRequest(threadRequestBridges);
 
-        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
-            ModulesService.executorService = Executors.newCachedThreadPool();
-        }
-
-        ModulesService.executorService.submit(threadRequestBridges);
+        CachedExecutor.INSTANCE.getExecutorService().submit(threadRequestBridges);
     }
 }

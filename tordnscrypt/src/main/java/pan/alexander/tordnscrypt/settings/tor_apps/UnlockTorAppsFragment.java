@@ -53,14 +53,13 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
-import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.TorRefreshIPsWork;
 import pan.alexander.tordnscrypt.utils.Verifier;
@@ -73,9 +72,7 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
-/**
- * A simple {@link Fragment} subclass.
- */
+
 public class UnlockTorAppsFragment extends Fragment implements CompoundButton.OnCheckedChangeListener, SearchView.OnQueryTextListener {
     private boolean isChanged;
     private RecyclerView.Adapter mAdapter;
@@ -157,11 +154,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
 
         getDeviceApps(getActivity(), mAdapter, unlockAppsArrListSaved);
 
-        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
-            ModulesService.executorService = Executors.newCachedThreadPool();
-        }
-
-        ModulesService.executorService.submit(() -> {
+        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
             try {
                 Verifier verifier = new Verifier(getActivity());
                 String appSignAlt = verifier.getApkSignature();
@@ -243,15 +236,14 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
                     app.active = true;
                     appsUnlock.set(i, app);
                 }
-                mAdapter.notifyDataSetChanged();
             } else {
                 for (int i = 0; i < appsUnlock.size(); i++) {
                     AppUnlock app = appsUnlock.get(i);
                     app.active = false;
                     appsUnlock.set(i, app);
                 }
-                mAdapter.notifyDataSetChanged();
             }
+            mAdapter.notifyDataSetChanged();
         }
     }
 
@@ -421,10 +413,6 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
 
         final Iterator<ApplicationInfo> itAppInfo = lAppInfo.iterator();
 
-        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
-            ModulesService.executorService = Executors.newCachedThreadPool();
-        }
-
         futureTask = new FutureTask<>(() -> {
             while (itAppInfo.hasNext()) {
                 ApplicationInfo aInfo = itAppInfo.next();
@@ -500,7 +488,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
             return null;
         });
 
-        ModulesService.executorService.submit(futureTask);
+        CachedExecutor.INSTANCE.getExecutorService().submit(futureTask);
 
     }
 

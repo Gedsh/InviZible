@@ -33,10 +33,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
@@ -100,11 +98,7 @@ public class TorRefreshIPsWork {
 
     private void performBackgroundWork() {
 
-        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
-            ModulesService.executorService = Executors.newCachedThreadPool();
-        }
-
-        ModulesService.executorService.submit(() -> {
+        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
             Log.i(LOG_TAG, "TorRefreshIPsWork performBackgroundWork");
 
             if (!unlockHostsDevice.isEmpty() || !unlockIPsDevice.isEmpty()) {

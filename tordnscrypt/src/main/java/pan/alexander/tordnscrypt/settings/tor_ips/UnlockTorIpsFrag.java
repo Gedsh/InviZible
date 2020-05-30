@@ -53,12 +53,11 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Executors;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
-import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
@@ -167,11 +166,7 @@ public class UnlockTorIpsFrag extends Fragment {
         GetHostIP getHostIP = new GetHostIP(unlockHosts, unlockIPs);
         getHostIP.execute();
 
-        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
-            ModulesService.executorService = Executors.newCachedThreadPool();
-        }
-
-        ModulesService.executorService.submit(() -> {
+        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
             try {
                 Verifier verifier = new Verifier(getActivity());
                 String appSignAlt = verifier.getApkSignature();
@@ -519,11 +514,7 @@ public class UnlockTorIpsFrag extends Fragment {
                         new PrefManager(getActivity()).setSetStrPref(unlockHostsStr, hostsSet);
                     }
 
-                    if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
-                        ModulesService.executorService = Executors.newCachedThreadPool();
-                    }
-
-                    ModulesService.executorService.submit(() -> getHostOrIp(position, false, true));
+                    CachedExecutor.INSTANCE.getExecutorService().submit(() -> getHostOrIp(position, false, true));
 
                     rvAdapter.notifyItemChanged(position);
                 });
@@ -589,11 +580,7 @@ public class UnlockTorIpsFrag extends Fragment {
                 new PrefManager(getActivity()).setSetStrPref(unlockHostsStr, hostsSet);
             }
 
-            if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
-                ModulesService.executorService = Executors.newCachedThreadPool();
-            }
-
-            ModulesService.executorService.submit(() -> getHostOrIp(unlockHostIP.size() - 1, true, false));
+            CachedExecutor.INSTANCE.getExecutorService().submit(() -> getHostOrIp(unlockHostIP.size() - 1, true, false));
             rvAdapter.notifyDataSetChanged();
         });
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());

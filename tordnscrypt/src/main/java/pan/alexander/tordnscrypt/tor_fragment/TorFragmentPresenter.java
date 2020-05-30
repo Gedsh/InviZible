@@ -24,6 +24,7 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Handler;
 import android.text.Html;
 import android.util.Log;
 import android.widget.Toast;
@@ -37,7 +38,6 @@ import java.net.Proxy;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -55,10 +55,10 @@ import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
-import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
+import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.GetIPsJobService;
 import pan.alexander.tordnscrypt.utils.OwnFileReader;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -317,7 +317,21 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
     }
 
     @Override
-    public void displayLog(int period) {
+    public synchronized void displayLog(int period) {
+
+        ScheduledExecutorService timer = TopFragment.getModulesLogsTimer();
+
+        if (timer == null || timer.isShutdown()) {
+            new Handler().postDelayed(() -> {
+
+                if (view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isDestroyed()) {
+                    displayLog(period);
+                }
+
+            }, 1000);
+
+            return;
+        }
 
         if (period == displayLogPeriod) {
             return;
@@ -327,12 +341,6 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
         if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
             scheduledFuture.cancel(false);
-        }
-
-        ScheduledExecutorService timer = TopFragment.getModulesLogsTimer();
-
-        if (timer == null || timer.isShutdown()) {
-            return;
         }
 
         scheduledFuture = timer.scheduleAtFixedRate(new Runnable() {
@@ -583,11 +591,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
             return;
         }
 
-        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
-            ModulesService.executorService = Executors.newCachedThreadPool();
-        }
-
-        ModulesService.executorService.submit(() -> {
+        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
 
             try {
                 Verifier verifier = new Verifier(view.getFragmentActivity());
@@ -775,13 +779,9 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
             return null;
         });
 
-        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
-            ModulesService.executorService = Executors.newCachedThreadPool();
-        }
-
         if (view != null && view.getFragmentActivity() != null
                 && !new PrefManager(view.getFragmentActivity()).getBoolPref("Tor Ready")) {
-            ModulesService.executorService.submit(checkInetAvailableFutureTask);
+            CachedExecutor.INSTANCE.getExecutorService().submit(checkInetAvailableFutureTask);
         }
     }
 

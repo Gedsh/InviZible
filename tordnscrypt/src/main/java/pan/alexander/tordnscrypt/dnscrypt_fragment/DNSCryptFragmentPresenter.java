@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.os.Handler;
 import android.os.IBinder;
 import android.text.Html;
 import android.util.Log;
@@ -188,7 +189,21 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     }
 
     @Override
-    public void displayLog(int period) {
+    public synchronized void displayLog(int period) {
+
+        ScheduledExecutorService timer = TopFragment.getModulesLogsTimer();
+
+        if (timer == null || timer.isShutdown()) {
+            new Handler().postDelayed(() -> {
+
+                if (view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isDestroyed()) {
+                    displayLog(period);
+                }
+
+            }, 1000);
+
+            return;
+        }
 
         if (period == displayLogPeriod) {
             return;
@@ -198,12 +213,6 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
         if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
             scheduledFuture.cancel(false);
-        }
-
-        ScheduledExecutorService timer = TopFragment.getModulesLogsTimer();
-
-        if (timer == null || timer.isShutdown()) {
-            return;
         }
 
         scheduledFuture = timer.scheduleAtFixedRate(new Runnable() {

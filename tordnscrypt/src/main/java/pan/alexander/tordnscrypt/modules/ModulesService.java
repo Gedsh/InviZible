@@ -46,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.WakeLocksManager;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
@@ -90,8 +91,6 @@ public class ModulesService extends Service {
     static final String TOR_KEYWORD = "checkTrRunning";
     static final String ITPD_KEYWORD = "checkITPDRunning";
 
-    public static volatile ExecutorService executorService;
-
     private static WakeLocksManager wakeLocksManager;
 
     ModulesBroadcastReceiver modulesBroadcastReceiver;
@@ -113,8 +112,6 @@ public class ModulesService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        executorService = Executors.newCachedThreadPool();
 
         notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
 
@@ -757,7 +754,8 @@ public class ModulesService extends Service {
     }
 
     private void makeExtraLoop() {
-        if (timerPeriod != TIMER_HIGH_SPEED && checkModulesStateTask != null && executorService != null && !executorService.isShutdown()) {
+        ExecutorService executorService = CachedExecutor.INSTANCE.getExecutorService();
+        if (timerPeriod != TIMER_HIGH_SPEED && checkModulesStateTask != null && !executorService.isShutdown()) {
             executorService.submit(checkModulesStateTask);
         }
     }
@@ -809,7 +807,7 @@ public class ModulesService extends Service {
 
         unregisterModulesBroadcastReceiver();
 
-        stopExecutorService();
+        CachedExecutor.INSTANCE.stopExecutorService();
 
         super.onDestroy();
     }
@@ -942,20 +940,5 @@ public class ModulesService extends Service {
         } catch (IOException e) {
             Log.e(LOG_TAG, "Unable to create dnsCrypt log file " + e.getMessage());
         }
-    }
-
-    public static void stopExecutorService() {
-        new Thread(() -> {
-            if (executorService != null && !executorService.isShutdown()) {
-                executorService.shutdown();
-                try {
-                    executorService.awaitTermination(10, TimeUnit.SECONDS);
-                } catch (InterruptedException e) {
-                    executorService.shutdownNow();
-                    Log.w(LOG_TAG, "ModulesService executorService awaitTermination has interrupted " + e.getMessage());
-                }
-
-            }
-        }).start();
     }
 }
