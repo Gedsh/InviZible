@@ -283,3 +283,9 @@
 * Real-time Internet connections logs improvements.
 * Performance improvements.
 * Attempt to fix RemoteServiceException.
+
+**InviZible Pro beta 0.9.2**
+* Attempt to fix RemoteServiceException.
+* Fixed "Please wait" message when starting modules.
+* Fixed service icon does not disappear.
+* Real-time Internet connections logs improvements.
