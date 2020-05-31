@@ -118,7 +118,7 @@ public class ModulesStateLoop implements Runnable {
 
         updateIptablesRules(dnsCryptState, torState, itpdState, operationMode, rootIsAvailable, useModulesWithRoot);
 
-        if (rootIsAvailable && contextUIDUpdateRequested) {
+        if (contextUIDUpdateRequested) {
             updateContextUID(dnsCryptState, torState, itpdState);
         }
 
@@ -263,7 +263,7 @@ public class ModulesStateLoop implements Runnable {
                 } else {
                     startVPNService();
                 }
-            } else if ((operationMode == ROOT_MODE || operationMode == PROXY_MODE) && vpnServiceEnabled){
+            } else if ((operationMode == ROOT_MODE || operationMode == PROXY_MODE) && vpnServiceEnabled) {
                 ServiceVPNHelper.stop("TTL stop fixing", modulesService);
             }
 
@@ -273,7 +273,7 @@ public class ModulesStateLoop implements Runnable {
                 handler.postDelayed(() -> {
                     iptablesUpdateTemporaryBlocked = false;
                     ModulesAux.makeModulesStateExtraLoop(modulesService);
-                }, 10000);
+                }, 9000);
             }
 
         } else if (useModulesWithRoot && operationMode == ROOT_MODE) {
@@ -305,11 +305,8 @@ public class ModulesStateLoop implements Runnable {
             return;
         }
 
-        if (dnsCryptState != STOPPED) {
-            return;
-        } else if (torState != STOPPED) {
-            return;
-        } else if (itpdState != STOPPED) {
+        if (dnsCryptState != STOPPED || torState != STOPPED || itpdState != STOPPED) {
+            ModulesAux.stopModulesIfRunning(modulesService);
             return;
         }
 
