@@ -48,7 +48,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
 
 import javax.crypto.Cipher;
 
@@ -57,6 +56,7 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.modules.ModulesService;
+import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -88,11 +88,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
                     }
                 }).build();
 
-        if (ModulesService.executorService == null || ModulesService.executorService.isShutdown()) {
-            ModulesService.executorService = Executors.newCachedThreadPool();
-        }
-
-        ModulesService.executorService.submit(() -> {
+        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
             mBillingClient.startConnection(AccelerateDevelop.this);
         });
     }

@@ -1,10 +1,15 @@
 package pan.alexander.tordnscrypt.utils
 
 import android.app.Activity
+import android.app.ActivityManager
+import android.app.Service
+import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Point
 import android.util.Log
 import android.view.Display
+import pan.alexander.tordnscrypt.modules.ModulesService
+import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
@@ -75,5 +80,22 @@ object Utils {
     fun getHostByIP(IP: String): String {
         val addr = InetAddress.getByName(IP)
         return addr.hostName
+    }
+
+    fun isServiceRunning(context: Context, serviceClass: Class<ModulesService>): Boolean {
+        var result = false
+
+        try {
+            val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            for (serviceFounded in manager.getRunningServices(Int.MAX_VALUE)) {
+                if (serviceClass.name == serviceFounded.service.className) {
+                    result = true
+                }
+            }
+        } catch (exception: Exception) {
+            Log.e(LOG_TAG, "Utils isServiceRunning exception " + exception.message + " " + exception.cause)
+        }
+
+        return result
     }
 }
