@@ -295,10 +295,15 @@ public class RootExecService extends Service {
 
         PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
+        int iconResource = getResources().getIdentifier("ic_service_notification", "drawable", getPackageName());
+        if (iconResource == 0) {
+            iconResource = android.R.drawable.ic_menu_view;
+        }
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ANDROID_CHANNEL_ID);
         builder.setContentIntent(contentIntent)
                 .setOngoing(true)   //Can't be swiped out
-                .setSmallIcon(getResources().getIdentifier("ic_service_notification", "drawable", getPackageName()))
+                .setSmallIcon(iconResource)
                 //.setLargeIcon(BitmapFactory.decodeResource(res, R.drawable.large))   // большая картинка
                 //.setTicker(Ticker)
                 .setContentTitle(Title) //Заголовок

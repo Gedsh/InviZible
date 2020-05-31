@@ -37,6 +37,7 @@ import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -134,6 +135,11 @@ public class ModulesService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
+        if (intent != null && Objects.equals(intent.getAction(), actionStopService)) {
+            stopModulesService();
+            return START_NOT_STICKY;
+        }
+
         boolean showNotification = true;
         if (intent != null) {
             showNotification = intent.getBooleanExtra("showNotification", true);
@@ -191,9 +197,6 @@ public class ModulesService extends Service {
                 break;
             case actionRecoverService:
                 setAllModulesStateStopped();
-                break;
-            case actionStopService:
-                stopModulesService();
                 break;
             case speedupLoop:
                 speedupTimer();
@@ -828,10 +831,7 @@ public class ModulesService extends Service {
     }
 
     private void stopModulesService() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            stopForeground(true);
-        }
-
+        stopForeground(true);
         stopSelf();
     }
 

@@ -66,10 +66,15 @@ public class ServiceNotification {
 
         PendingIntent contentIntent = PendingIntent.getActivity(modulesService.getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
+        int iconResource = modulesService.getResources().getIdentifier("ic_service_notification", "drawable", modulesService.getPackageName());
+        if (iconResource == 0) {
+            iconResource = android.R.drawable.ic_menu_view;
+        }
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(modulesService, ANDROID_CHANNEL_ID);
         builder.setContentIntent(contentIntent)
                 .setOngoing(true)   //Can't be swiped out
-                .setSmallIcon(modulesService.getResources().getIdentifier("ic_service_notification", "drawable", modulesService.getPackageName()))
+                .setSmallIcon(iconResource)
                 //.setLargeIcon(BitmapFactory.decodeResource(res, R.drawable.large))   // большая картинка
                 //.setTicker(Ticker)
                 .setContentTitle(Title) //Заголовок

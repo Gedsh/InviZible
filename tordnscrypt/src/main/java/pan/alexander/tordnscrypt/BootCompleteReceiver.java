@@ -33,6 +33,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import pan.alexander.tordnscrypt.modules.ModulesAux;
+import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
@@ -45,7 +46,9 @@ import pan.alexander.tordnscrypt.modules.ModulesRunner;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
+import static pan.alexander.tordnscrypt.modules.ModulesService.actionStopService;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
@@ -116,10 +119,18 @@ public class BootCompleteReceiver extends BroadcastReceiver {
             boolean autoStartTor = shPref.getBoolean("swAutostartTor", false);
             boolean autoStartITPD = shPref.getBoolean("swAutostartITPD", false);
 
+            boolean savedDNSCryptStateRunning = new PrefManager(context).getBoolPref("DNSCrypt Running");
+            boolean savedTorStateRunning = new PrefManager(context).getBoolPref("Tor Running");
+            boolean savedITPDStateRunning = new PrefManager(context).getBoolPref("I2PD Running");
+
             if (action.equalsIgnoreCase(MY_PACKAGE_REPLACED) || action.equalsIgnoreCase(ALWAYS_ON_VPN)) {
-                autoStartDNSCrypt = new PrefManager(context).getBoolPref("DNSCrypt Running");
-                autoStartTor = new PrefManager(context).getBoolPref("Tor Running");
-                autoStartITPD = new PrefManager(context).getBoolPref("I2PD Running");
+                autoStartDNSCrypt = savedDNSCryptStateRunning;
+                autoStartTor = savedTorStateRunning;
+                autoStartITPD = savedITPDStateRunning;
+            }
+
+            if (savedDNSCryptStateRunning || savedTorStateRunning || savedITPDStateRunning) {
+                stopServices(context, mode, fixTTL);
             }
 
             if (autoStartITPD) {
@@ -332,5 +343,17 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         if (jobScheduler != null) {
             jobScheduler.cancel(mJobId);
         }
+    }
+
+    private void stopServices(Context context, OperationMode mode, boolean fixTTL) {
+        if (mode == VPN_MODE || mode == ROOT_MODE && fixTTL) {
+            Intent closeVPNService = new Intent(context, VpnService.class);
+            closeVPNService.setAction(actionStopService);
+            context.startService(closeVPNService);
+        }
+        Intent closeModulesService = new Intent(context, ModulesService.class);
+        closeModulesService.setAction(actionStopService);
+        context.startService(closeModulesService);
+        Log.i(LOG_TAG, "BootCompleteReceiver stop running services");
     }
 }

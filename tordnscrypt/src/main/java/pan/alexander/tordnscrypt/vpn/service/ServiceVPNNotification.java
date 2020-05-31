@@ -62,10 +62,15 @@ class ServiceVPNNotification {
 
         PendingIntent contentIntent = PendingIntent.getActivity(serviceVPN.getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
+        int iconResource = serviceVPN.getResources().getIdentifier("ic_service_notification", "drawable", serviceVPN.getPackageName());
+        if (iconResource == 0) {
+            iconResource = android.R.drawable.ic_menu_view;
+        }
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(serviceVPN, ANDROID_CHANNEL_ID);
         builder.setContentIntent(contentIntent)
                 .setOngoing(true)   //Can't be swiped out
-                .setSmallIcon(serviceVPN.getResources().getIdentifier("ic_service_notification", "drawable", serviceVPN.getPackageName()))
+                .setSmallIcon(iconResource)
                 //.setLargeIcon(BitmapFactory.decodeResource(res, R.drawable.large))   // большая картинка
                 //.setTicker(Ticker)
                 .setContentTitle(Title) //Заголовок

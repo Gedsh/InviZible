@@ -57,6 +57,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import pan.alexander.tordnscrypt.BootCompleteReceiver;
@@ -79,6 +80,7 @@ import pan.alexander.tordnscrypt.vpn.Rule;
 import pan.alexander.tordnscrypt.vpn.Usage;
 import pan.alexander.tordnscrypt.vpn.Util;
 
+import static pan.alexander.tordnscrypt.modules.ModulesService.actionStopService;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -988,6 +990,13 @@ public class ServiceVPN extends VpnService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
+        if (intent != null && Objects.equals(intent.getAction(), actionStopService)) {
+            stopForeground(true);
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+
         SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
         filterUDP = prefs.getBoolean("VPN filter_udp", true);
         blockHttp = prefs.getBoolean("pref_fast_block_http", false);
