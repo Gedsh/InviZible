@@ -25,8 +25,6 @@ import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.Utils.getHostByIP
 import java.util.concurrent.*
 
-const val recordsToCheck = 5
-
 class DNSQueryLogRecordsConverter(private val blockIPv6: Boolean,
                                   private val meteredNetwork: Boolean,
                                   private val vpnDNS1: String,
@@ -35,6 +33,7 @@ class DNSQueryLogRecordsConverter(private val blockIPv6: Boolean,
     constructor(blockIPv6: Boolean, meteredNetwork: Boolean, vpnDNS1: String) : this(blockIPv6, meteredNetwork, vpnDNS1, "149.112.112.112")
 
     private val dnsQueryLogRecords = ArrayList<DNSQueryLogRecord>()
+    private val dnsQueryLogRecordsSublist = ArrayList<DNSQueryLogRecord>()
     private val reverseLookupQueue = ArrayBlockingQueue<String>(100, true)
     private val ipToHostAddressMap = HashMap<String, String>()
     private var futureTask: Future<*>? = null
@@ -52,39 +51,36 @@ class DNSQueryLogRecordsConverter(private val blockIPv6: Boolean,
 
     private fun addRecord(dnsQueryRawRecord: DNSQueryLogRecord) {
 
-        if (dnsQueryLogRecords.isNotEmpty() && dnsQueryRawRecord.uid != -1000) {
-            addUID(dnsQueryRawRecord)
-            return
-        } else if (dnsQueryLogRecords.isNotEmpty() && isIdenticalRecord(dnsQueryRawRecord)) {
-            return
+        if (dnsQueryLogRecords.isNotEmpty()) {
+            if (dnsQueryRawRecord.uid != -1000) {
+                addUID(dnsQueryRawRecord)
+                return
+            } else if (isIdenticalRecord(dnsQueryRawRecord)) {
+                return
+            }
         }
 
         setQueryBlocked(dnsQueryRawRecord)
+
+        dnsQueryLogRecords.removeAll { it == dnsQueryRawRecord }
 
         dnsQueryLogRecords.add(dnsQueryRawRecord)
     }
 
     private fun isIdenticalRecord(dnsQueryRawRecord: DNSQueryLogRecord): Boolean {
 
-        var lastRecordIndex = 0
-        if (dnsQueryLogRecords.size - recordsToCheck > 0) {
-            lastRecordIndex = dnsQueryLogRecords.size - recordsToCheck - 1
-        }
+        for (i in dnsQueryLogRecords.size - 1 downTo 0 ) {
+            val record = dnsQueryLogRecords[i]
 
-        for (i in dnsQueryLogRecords.size - 1 downTo lastRecordIndex) {
-            val lastRecord = dnsQueryLogRecords[i]
+            if (dnsQueryRawRecord.aName == record.aName
+                    && dnsQueryRawRecord.qName == record.qName
+                    && dnsQueryRawRecord.hInfo == record.hInfo
+                    && dnsQueryRawRecord.rCode == record.rCode
+                    && dnsQueryRawRecord.saddr == record.saddr) {
 
-            if (dnsQueryRawRecord.aName == lastRecord.aName
-                    && dnsQueryRawRecord.qName == lastRecord.qName
-                    && dnsQueryRawRecord.hInfo == lastRecord.hInfo
-                    && dnsQueryRawRecord.rCode == lastRecord.rCode
-                    && dnsQueryRawRecord.saddr == lastRecord.saddr) {
-
-                if (lastRecord.daddr.contains(dnsQueryRawRecord.daddr)) {
-                    return true
-                } else if (dnsQueryRawRecord.daddr.isNotEmpty() && lastRecord.daddr.isNotEmpty()) {
-                    if (!lastRecord.daddr.contains(dnsQueryRawRecord.daddr)) {
-                        dnsQueryLogRecords[i] = lastRecord.apply { daddr = daddr + ", " + dnsQueryRawRecord.daddr }
+                if (dnsQueryRawRecord.daddr.isNotEmpty() && record.daddr.isNotEmpty()) {
+                    if (!record.daddr.contains(dnsQueryRawRecord.daddr.trim())) {
+                        dnsQueryLogRecords[i] = record.apply { daddr = daddr + ", " + dnsQueryRawRecord.daddr.trim() }
                     }
                     return true
                 }
@@ -96,58 +92,48 @@ class DNSQueryLogRecordsConverter(private val blockIPv6: Boolean,
 
     private fun addUID(dnsQueryRawRecord: DNSQueryLogRecord) {
         var savedRecord: DNSQueryLogRecord? = null
-        var savedIndex: Int = -1
+        dnsQueryLogRecordsSublist.clear()
         for (index in dnsQueryLogRecords.size - 1 downTo 0) {
             val record = dnsQueryLogRecords[index]
-            if (savedIndex < 0 && record.daddr.contains(dnsQueryRawRecord.daddr)) {
+            if (savedRecord == null && record.daddr.contains(dnsQueryRawRecord.daddr) && record.uid == -1000) {
+                dnsQueryLogRecordsSublist.add(record)
                 savedRecord = record
-                savedIndex = index
             } else if (savedRecord != null && savedRecord.aName == record.cName) {
+                dnsQueryLogRecordsSublist.add(record)
                 savedRecord = record
-                savedIndex = index
             } else if (savedRecord != null && savedRecord.aName != record.cName) {
                 break
             }
         }
 
-        if (savedRecord != null && savedIndex >= 0) {
+        if (savedRecord != null) {
+
+            dnsQueryLogRecords.removeAll(dnsQueryLogRecordsSublist)
 
             val dnsQueryNewRecord = DNSQueryLogRecord(savedRecord.qName, savedRecord.aName, "",
                     "", 0, dnsQueryRawRecord.saddr, "", dnsQueryRawRecord.uid)
 
-            val previousDnsQueryLogRecord: DNSQueryLogRecord? = if (savedIndex > 0) {
-                dnsQueryLogRecords[savedIndex - 1]
-            } else {
-                null
-            }
-
-            if (previousDnsQueryLogRecord?.uid != dnsQueryRawRecord.uid) {
-                dnsQueryLogRecords.add(savedIndex, dnsQueryNewRecord)
-            }
+            dnsQueryLogRecords.removeAll { it == dnsQueryNewRecord }
+            dnsQueryLogRecordsSublist.add(dnsQueryNewRecord)
 
         } else if (dnsQueryRawRecord.daddr != vpnDNS1 && dnsQueryRawRecord.daddr != vpnDNS2) {
 
-            val previousDnsQueryLogRecord: DNSQueryLogRecord? = if (savedIndex - 1 >= 0) {
-                dnsQueryLogRecords[savedIndex - 1]
-            } else {
-                null
-            }
+            if (!meteredNetwork && dnsQueryRawRecord.daddr.isNotEmpty()) {
+                val host = ipToHostAddressMap[dnsQueryRawRecord.daddr]
 
-            if (previousDnsQueryLogRecord?.uid != dnsQueryRawRecord.uid) {
-
-                if (!meteredNetwork && dnsQueryRawRecord.daddr.isNotEmpty()) {
-                    val host = ipToHostAddressMap[dnsQueryRawRecord.daddr]
-
-                    if (host == null) {
-                        makeReverseLookup(dnsQueryRawRecord.daddr)
-                    } else {
-                        dnsQueryRawRecord.reverseDNS = host
-                    }
+                if (host == null) {
+                    makeReverseLookup(dnsQueryRawRecord.daddr)
+                } else {
+                    dnsQueryRawRecord.reverseDNS = host
                 }
-
-                dnsQueryLogRecords.add(dnsQueryRawRecord)
-
             }
+
+            dnsQueryLogRecords.removeAll { it == dnsQueryRawRecord }
+            dnsQueryLogRecords.add(dnsQueryRawRecord)
+        }
+
+        if (dnsQueryLogRecordsSublist.isNotEmpty()) {
+            dnsQueryLogRecords.addAll(dnsQueryLogRecordsSublist.reversed())
         }
     }
 
@@ -196,7 +182,7 @@ class DNSQueryLogRecordsConverter(private val blockIPv6: Boolean,
 
             dnsQueryRawRecord.blocked = true
 
-        } else if (dnsQueryRawRecord.daddr.isEmpty() && dnsQueryRawRecord.cName.isEmpty()) {
+        } else if (dnsQueryRawRecord.daddr.isEmpty() && dnsQueryRawRecord.cName.isEmpty() && !dnsQueryRawRecord.aName.contains(".in-addr.arpa")) {
             dnsQueryRawRecord.blocked = true
         }
 
