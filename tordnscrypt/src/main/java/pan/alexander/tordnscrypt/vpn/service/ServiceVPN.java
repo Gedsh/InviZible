@@ -80,6 +80,7 @@ import pan.alexander.tordnscrypt.vpn.Rule;
 import pan.alexander.tordnscrypt.vpn.Usage;
 import pan.alexander.tordnscrypt.vpn.Util;
 
+import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
 import static pan.alexander.tordnscrypt.modules.ModulesService.actionStopService;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
@@ -992,8 +993,17 @@ public class ServiceVPN extends VpnService {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         if (intent != null && Objects.equals(intent.getAction(), actionStopService)) {
-            stopForeground(true);
+
+            notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
+
+            try {
+                stopForeground(true);
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "VPNService stop Service exception " + e.getMessage() + " " + e.getCause());
+            }
+
             stopSelf();
+
             return START_NOT_STICKY;
         }
 
@@ -1207,4 +1217,6 @@ public class ServiceVPN extends VpnService {
         }
 
     }
+
+
 }

@@ -831,7 +831,12 @@ public class ModulesService extends Service {
     }
 
     private void stopModulesService() {
-        stopForeground(true);
+        try {
+            stopForeground(true);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "ModulesService stopModulesService exception " + e.getMessage() + " " + e.getCause());
+        }
+
         stopSelf();
     }
 

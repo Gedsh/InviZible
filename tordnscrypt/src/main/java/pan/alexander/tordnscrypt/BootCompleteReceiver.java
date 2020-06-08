@@ -28,6 +28,7 @@ import android.content.SharedPreferences;
 import androidx.preference.PreferenceManager;
 
 import android.net.VpnService;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -68,15 +69,15 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         final String HTC_QUICKBOOT_POWERON = "com.htc.intent.action.QUICKBOOT_POWERON";
         final String REBOOT = "android.intent.action.REBOOT";
         final String MY_PACKAGE_REPLACED = "android.intent.action.MY_PACKAGE_REPLACED";
-        this.context = context.getApplicationContext();
+        this.context = context;
 
         final PathVars pathVars = PathVars.getInstance(context.getApplicationContext());
         appDataDir = pathVars.getAppDataDir();
 
         final boolean tethering_autostart;
 
-        SharedPreferences shPref1 = PreferenceManager.getDefaultSharedPreferences(this.context);
-        String refreshPeriod = shPref1.getString("pref_fast_site_refresh_interval", "12");
+        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
+        String refreshPeriod = shPref.getString("pref_fast_site_refresh_interval", "12");
         if (!refreshPeriod.isEmpty()) {
             refreshPeriodHours = Integer.parseInt(refreshPeriod);
         }
@@ -100,7 +101,6 @@ public class BootCompleteReceiver extends BroadcastReceiver {
             new PrefManager(context).setBoolPref("APisON", false);
             new PrefManager(context).setBoolPref("ModemIsON", false);
 
-            final SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
             tethering_autostart = shPref.getBoolean("pref_common_tethering_autostart", false);
 
             boolean rootIsAvailable = new PrefManager(context).getBoolPref("rootIsAvailable");
@@ -349,11 +349,21 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         if (mode == VPN_MODE || mode == ROOT_MODE && fixTTL) {
             Intent closeVPNService = new Intent(context, VpnService.class);
             closeVPNService.setAction(actionStopService);
-            context.startService(closeVPNService);
+            if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                context.startService(closeVPNService);
+            } else {
+                context.startForegroundService(closeVPNService);
+            }
+
         }
         Intent closeModulesService = new Intent(context, ModulesService.class);
         closeModulesService.setAction(actionStopService);
-        context.startService(closeModulesService);
+        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            context.startService(closeModulesService);
+        } else {
+            context.startForegroundService(closeModulesService);
+        }
+
         Log.i(LOG_TAG, "BootCompleteReceiver stop running services");
     }
 }

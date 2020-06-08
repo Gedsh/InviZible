@@ -136,7 +136,7 @@ public class RootExecService extends Service {
         }
 
         if (intent == null) {
-            stopSelf(startId);
+            stopService(startId);
             return START_NOT_STICKY;
         }
 
@@ -144,7 +144,7 @@ public class RootExecService extends Service {
 
         if ((action == null) || (action.isEmpty())) {
 
-            stopSelf(startId);
+            stopService(startId);
             return START_NOT_STICKY;
         }
 
@@ -277,12 +277,7 @@ public class RootExecService extends Service {
             }
             sendResult(runCommands(rootCommands.getCommands()), mark);
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationManager != null) {
-                notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
-                stopForeground(true);
-            }
-
-            stopSelf(startID);
+            stopService(startID);
         }
     }
 
@@ -317,5 +312,20 @@ public class RootExecService extends Service {
         Notification notification = builder.build();
 
         startForeground(DEFAULT_NOTIFICATION_ID, notification);
+    }
+
+    private void stopService(int startID) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+            notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
+
+            try {
+                stopForeground(true);
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "RootExecService stop Service exception " + e.getMessage() + " " + e.getCause());
+            }
+        }
+
+        stopSelf(startID);
     }
 }
