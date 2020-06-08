@@ -289,3 +289,7 @@
 * Fixed "Please wait" message when starting modules.
 * Fixed service icon does not disappear.
 * Real-time Internet connections logs improvements.
+
+**InviZible Pro beta 0.9.3**
+* Updated Purple I2P to version 2.32.1.
+* Attempting to fix autorun on Android version 9-10
