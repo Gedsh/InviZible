@@ -584,7 +584,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                     }
                 }
 
-                if (!record.getCName().isEmpty()) {
+                if (!record.getCName().isEmpty() && record.getUid() == -1000) {
                     lines.append(" -> ").append(record.getCName().toLowerCase());
                 }
 

@@ -30,6 +30,7 @@ class DNSQueryLogRecord(val qName: String = "",
     var reverseDNS = ""
     var blocked = false
     var blockedByIpv6 = false
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -44,6 +45,8 @@ class DNSQueryLogRecord(val qName: String = "",
         if (saddr != other.saddr) return false
         if (daddr != other.daddr) return false
         if (uid != other.uid) return false
+        if (blocked != other.blocked) return false
+        if (blockedByIpv6 != other.blockedByIpv6) return false
 
         return true
     }
@@ -57,8 +60,8 @@ class DNSQueryLogRecord(val qName: String = "",
         result = 31 * result + saddr.hashCode()
         result = 31 * result + daddr.hashCode()
         result = 31 * result + uid
+        result = 31 * result + blocked.hashCode()
+        result = 31 * result + blockedByIpv6.hashCode()
         return result
     }
-
-
 }

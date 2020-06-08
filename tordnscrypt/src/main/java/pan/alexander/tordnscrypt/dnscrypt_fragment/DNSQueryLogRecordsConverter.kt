@@ -62,7 +62,9 @@ class DNSQueryLogRecordsConverter(private val blockIPv6: Boolean,
 
         setQueryBlocked(dnsQueryRawRecord)
 
-        dnsQueryLogRecords.removeAll { it == dnsQueryRawRecord }
+        if (dnsQueryRawRecord.blocked) {
+            dnsQueryLogRecords.removeAll { it == dnsQueryRawRecord }
+        }
 
         dnsQueryLogRecords.add(dnsQueryRawRecord)
     }
@@ -108,12 +110,9 @@ class DNSQueryLogRecordsConverter(private val blockIPv6: Boolean,
 
         if (savedRecord != null) {
 
-            dnsQueryLogRecords.removeAll(dnsQueryLogRecordsSublist)
+            val dnsQueryNewRecord = DNSQueryLogRecord(savedRecord.qName, savedRecord.aName, savedRecord.cName,
+                    savedRecord.hInfo, -1, dnsQueryRawRecord.saddr, "", dnsQueryRawRecord.uid)
 
-            val dnsQueryNewRecord = DNSQueryLogRecord(savedRecord.qName, savedRecord.aName, "",
-                    "", 0, dnsQueryRawRecord.saddr, "", dnsQueryRawRecord.uid)
-
-            dnsQueryLogRecords.removeAll { it == dnsQueryNewRecord }
             dnsQueryLogRecordsSublist.add(dnsQueryNewRecord)
 
         } else if (dnsQueryRawRecord.daddr != vpnDNS1 && dnsQueryRawRecord.daddr != vpnDNS2) {
@@ -133,6 +132,7 @@ class DNSQueryLogRecordsConverter(private val blockIPv6: Boolean,
         }
 
         if (dnsQueryLogRecordsSublist.isNotEmpty()) {
+            dnsQueryLogRecords.removeAll(dnsQueryLogRecordsSublist)
             dnsQueryLogRecords.addAll(dnsQueryLogRecordsSublist.reversed())
         }
     }
