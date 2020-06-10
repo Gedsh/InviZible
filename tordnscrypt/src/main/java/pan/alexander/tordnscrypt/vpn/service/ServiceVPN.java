@@ -992,21 +992,6 @@ public class ServiceVPN extends VpnService {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        if (intent != null && Objects.equals(intent.getAction(), actionStopService)) {
-
-            notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
-
-            try {
-                stopForeground(true);
-            } catch (Exception e) {
-                Log.e(LOG_TAG, "VPNService stop Service exception " + e.getMessage() + " " + e.getCause());
-            }
-
-            stopSelf();
-
-            return START_NOT_STICKY;
-        }
-
         SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
         filterUDP = prefs.getBoolean("VPN filter_udp", true);
         blockHttp = prefs.getBoolean("pref_fast_block_http", false);
@@ -1029,6 +1014,21 @@ public class ServiceVPN extends VpnService {
         if (showNotification) {
             ServiceVPNNotification notification = new ServiceVPNNotification(this, notificationManager);
             notification.sendNotification(getString(R.string.app_name), getText(R.string.notification_text).toString());
+        }
+
+        if (intent != null && Objects.equals(intent.getAction(), actionStopService)) {
+
+            notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
+
+            try {
+                stopForeground(true);
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "VPNService stop Service exception " + e.getMessage() + " " + e.getCause());
+            }
+
+            stopSelf();
+
+            return START_NOT_STICKY;
         }
 
         Log.i(LOG_TAG, "VPN Received " + intent);
