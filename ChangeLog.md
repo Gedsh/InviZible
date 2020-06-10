@@ -293,3 +293,7 @@
 **InviZible Pro beta 0.9.3**
 * Updated Purple I2P to version 2.32.1.
 * Attempting to fix autorun on Android version 9-10
+
+**InviZible Pro beta 0.9.4**
+* Updated DNSCrypt to version 2.0.43.
+* Attempting to fix autorun on Android version 8-10
