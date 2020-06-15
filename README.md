@@ -141,6 +141,7 @@ InviZible Pro uses:
 * [Purple I2P](https://github.com/PurpleI2P/i2pd)
 * [Chainfire/libsuperuser](https://github.com/Chainfire/libsuperuser)
 * [jaredrummler/AndroidShell](https://github.com/jaredrummler/AndroidShell)
+* [NetGuard](https://github.com/M66B/NetGuard)
 * [Angads25/android-filepicker](https://github.com/Angads25/android-filepicker)
 * [meefik/busybox](https://github.com/meefik/busybox)
 

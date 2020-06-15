@@ -7,9 +7,7 @@
     android:orientation="vertical"
     android:scrollbarStyle="insideOverlay"
     android:scrollbars="vertical"
-    app:layout_scrollFlags="scroll"
-    tools:actionBarNavMode="standard"
-    tools:context=".AboutActivity">
+    app:layout_scrollFlags="scroll">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -18,7 +16,7 @@
         <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" >
+            android:orientation="vertical">
 
             <FrameLayout
                 android:layout_width="match_parent"
@@ -46,8 +44,8 @@
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
                 android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
                 android:layout_marginEnd="8dp"
                 android:orientation="horizontal">
 
@@ -71,7 +69,6 @@
                     android:textStyle="bold"
                     android:typeface="serif" />
             </androidx.appcompat.widget.LinearLayoutCompat>
-
 
 
             <androidx.appcompat.widget.LinearLayoutCompat
@@ -205,7 +202,7 @@
                 android:typeface="serif" />
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/dnscryptLicence"
+                android:id="@+id/dnscryptLicense"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
@@ -215,7 +212,7 @@
                 android:typeface="serif" />
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/torLicence"
+                android:id="@+id/torLicense"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
@@ -225,7 +222,7 @@
                 android:typeface="serif" />
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/itpdLicence"
+                android:id="@+id/itpdLicense"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
@@ -235,7 +232,7 @@
                 android:typeface="serif" />
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/libsuperuserLicence"
+                android:id="@+id/libsuperuserLicense"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
@@ -245,7 +242,7 @@
                 android:typeface="serif" />
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/androidShellLicence"
+                android:id="@+id/androidShellLicense"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
@@ -255,12 +252,32 @@
                 android:typeface="serif" />
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/filepickerLicence"
+                android:id="@+id/netGuardLicense"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:focusable="auto"
+                android:text="@string/about_license_NetGuard"
+                android:textColor="@color/ic_launcher_background"
+                android:typeface="serif" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/filepickerLicense"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
                 android:focusable="auto"
                 android:text="@string/about_license_filepicker"
+                android:textColor="@color/ic_launcher_background"
+                android:typeface="serif" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/busyboxLicense"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:focusable="auto"
+                android:text="@string/about_license_busybox"
                 android:textColor="@color/ic_launcher_background"
                 android:typeface="serif" />
 

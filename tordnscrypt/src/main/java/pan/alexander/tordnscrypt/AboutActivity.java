@@ -70,12 +70,14 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
         Date buildDate = BuildConfig.BUILD_TIME;
         tvHelpBuildDate.setText(DateFormat.getDateInstance(DateFormat.SHORT).format(buildDate));
 
-        findViewById(R.id.dnscryptLicence).setOnClickListener(this);
-        findViewById(R.id.torLicence).setOnClickListener(this);
-        findViewById(R.id.itpdLicence).setOnClickListener(this);
-        findViewById(R.id.libsuperuserLicence).setOnClickListener(this);
-        findViewById(R.id.androidShellLicence).setOnClickListener(this);
-        findViewById(R.id.filepickerLicence).setOnClickListener(this);
+        findViewById(R.id.dnscryptLicense).setOnClickListener(this);
+        findViewById(R.id.torLicense).setOnClickListener(this);
+        findViewById(R.id.itpdLicense).setOnClickListener(this);
+        findViewById(R.id.libsuperuserLicense).setOnClickListener(this);
+        findViewById(R.id.androidShellLicense).setOnClickListener(this);
+        findViewById(R.id.netGuardLicense).setOnClickListener(this);
+        findViewById(R.id.filepickerLicense).setOnClickListener(this);
+        findViewById(R.id.busyboxLicense).setOnClickListener(this);
     }
 
     public void showLicense(int title, int resource, boolean isApache) {
@@ -143,23 +145,29 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.dnscryptLicence:
+            case R.id.dnscryptLicense:
                 showLicense(R.string.about_license_dnscrypt,R.raw.dnscrypt_license,false);
                 break;
-            case R.id.torLicence:
+            case R.id.torLicense:
                 showLicense(R.string.about_license_tor,R.raw.tor_license,false);
                 break;
-            case R.id.itpdLicence:
+            case R.id.itpdLicense:
                 showLicense(R.string.about_license_itpd,R.raw.itpd_license,false);
                 break;
-            case R.id.libsuperuserLicence:
+            case R.id.libsuperuserLicense:
                 showLicense(R.string.about_license_libsupeuser,R.raw.libsuperuser_license,true);
                 break;
-            case R.id.androidShellLicence:
+            case R.id.androidShellLicense:
                 showLicense(R.string.about_license_AndroidShell,R.raw.androidshell_license,true);
                 break;
-            case R.id.filepickerLicence:
+            case R.id.netGuardLicense:
+                showLicense(R.string.about_license_NetGuard,R.raw.netguard_license,false);
+                break;
+            case R.id.filepickerLicense:
                 showLicense(R.string.about_license_filepicker,R.raw.filepicker_license,true);
+                break;
+            case R.id.busyboxLicense:
+                showLicense(R.string.about_license_busybox,R.raw.busybox_license,false);
                 break;
         }
     }

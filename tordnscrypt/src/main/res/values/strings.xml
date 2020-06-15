@@ -598,7 +598,9 @@
     <string name="about_license_itpd" translatable="false">Purple I2P license</string>
     <string name="about_license_libsupeuser" translatable="false">Chainfire/libsuperuser license</string>
     <string name="about_license_AndroidShell" translatable="false">Jaredrummler/AndroidShell license</string>
+    <string name="about_license_NetGuard" translatable="false">NetGuard license</string>
     <string name="about_license_filepicker" translatable="false">Angads25/android-filepicker license</string>
+    <string name="about_license_busybox" translatable="false">Meefik/busybox license</string>
     <string name="about_site" translatable="false"><a href="https://invizible.net">https://invizible.net</a></string>
 
     <string name="update_notification">Downloading file</string>
