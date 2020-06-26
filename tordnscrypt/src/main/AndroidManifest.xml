@@ -8,7 +8,7 @@
 
     <uses-feature android:name="android.software.leanback" android:required="false" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
-
+    
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -39,7 +39,8 @@
         tools:ignore="ProtectedPermissions" />
 
     <application
-        android:allowBackup="true"
+        android:name=".ApplicationExt"
+        android:allowBackup="false"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -48,9 +49,8 @@
         android:theme="@style/AppTheme"
         android:banner="@drawable/banner_tv"
         android:extractNativeLibs="true"
-        android:requestLegacyExternalStorage="true"
         android:largeHeap="true"
-        tools:ignore="AllowBackup"
+        android:requestLegacyExternalStorage="true"
         tools:targetApi="q">
 
         <service
@@ -106,6 +106,7 @@
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
                 <action android:name="pan.alexander.tordnscrypt.ALWAYS_ON_VPN"/>
+                <action android:name="pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL"/>
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
                 <action android:name="android.intent.action.REBOOT"/>
             </intent-filter>

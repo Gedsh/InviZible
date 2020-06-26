@@ -36,6 +36,7 @@
     <uses-permission android:name="com.android.vending.BILLING"/>
 
     <application
+        android:name=".ApplicationExt"
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
