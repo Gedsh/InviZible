@@ -69,6 +69,7 @@ import pan.alexander.tordnscrypt.help.HelpActivity;
 import pan.alexander.tordnscrypt.iptables.IptablesRules;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.main_fragment.MainFragment;
+import pan.alexander.tordnscrypt.main_fragment.ViewPagerAdapter;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesService;

@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt;
+package pan.alexander.tordnscrypt.main_fragment;
 
 /*
     This file is part of InviZible Pro.
@@ -31,7 +31,7 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
 
     private ArrayList<ViewPagerFragment> viewPagerFragments = new ArrayList<>(4);
 
-    ViewPagerAdapter(@NonNull FragmentManager fm, int behavior) {
+    public ViewPagerAdapter(@NonNull FragmentManager fm, int behavior) {
         super(fm, behavior);
     }
 
@@ -46,7 +46,7 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
         return viewPagerFragments.size();
     }
 
-    void addFragment(ViewPagerFragment fragment) {
+    public void addFragment(ViewPagerFragment fragment) {
         viewPagerFragments.add(fragment);
     }
 
@@ -56,11 +56,11 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
         return viewPagerFragments.get(position).title;
     }
 
-    static class ViewPagerFragment {
+    public static class ViewPagerFragment {
         private String title;
         private Fragment fragment;
 
-        ViewPagerFragment(String title, Fragment fragment) {
+        public ViewPagerFragment(String title, Fragment fragment) {
             this.title = title;
             this.fragment = fragment;
         }

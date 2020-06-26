@@ -32,26 +32,26 @@ public class PrefManager {
     private SharedPreferences sPref;
 
     public PrefManager(Context context) {
-        this.sPref = context.getSharedPreferences(PREF_NAME,MODE_PRIVATE);
+        this.sPref = context.getSharedPreferences(PREF_NAME, MODE_PRIVATE);
     }
 
-    public boolean getBoolPref(String stringID){
+    public boolean getBoolPref(String stringID) {
         return sPref.getBoolean(stringID, false);
     }
 
-    public void setBoolPref(String stringID, boolean boolValue){
+    public void setBoolPref(String stringID, boolean boolValue) {
         SharedPreferences.Editor edit = sPref.edit();
-        edit.putBoolean(stringID,boolValue);
+        edit.putBoolean(stringID, boolValue);
         edit.apply();
     }
 
-    public String getStrPref(String stringID){
+    public String getStrPref(String stringID) {
         return sPref.getString(stringID, "");
     }
 
-    public void setStrPref(String stringID, String stringValue){
+    public void setStrPref(String stringID, String stringValue) {
         SharedPreferences.Editor edit = sPref.edit();
-        edit.putString(stringID,stringValue);
+        edit.putString(stringID, stringValue);
         edit.apply();
     }
 
@@ -59,13 +59,13 @@ public class PrefManager {
         SharedPreferences.Editor edit = sPref.edit();
         edit.remove(stringID);
         edit.apply();
-        edit.putStringSet(stringID,stringSet);
+        edit.putStringSet(stringID, stringSet);
         edit.apply();
     }
 
     public Set<String> getSetStrPref(String stringID) {
         Set<String> stringSetDef = new LinkedHashSet<>();
-        return sPref.getStringSet(stringID,stringSetDef);
+        return sPref.getStringSet(stringID, stringSetDef);
     }
 
     public static String getPrefName() {
