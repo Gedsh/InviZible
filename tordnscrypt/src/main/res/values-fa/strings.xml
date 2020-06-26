@@ -171,7 +171,6 @@
     <string name="pref_common_use_iptables">"انتخاب Iptables"</string>
     <string name="pref_common_log_root_commands">"دستورات Root در وقایع‌نگار ذخیره شود"</string>
     <string name="notification_text">"DNSCrypt و Tor و I2P محافظت شده‌اند. لطفاً مخفی ننمایید."</string>
-    <string name="notification_temp_text">"این اعلان می‌بایست به‌زودی ناپدید شود."</string>
     <string name="tvSettings_text">"لطفاً صبر کنید..."</string>
     <string name="toastSettings_saved">"تنظیمات ذخیره شد"</string>
     <string name="pref_dnscrypt_global_settings_categ">"تنظیمات جامع"</string>

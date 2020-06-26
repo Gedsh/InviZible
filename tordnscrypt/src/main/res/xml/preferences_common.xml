@@ -113,6 +113,11 @@
             android:key="pref_common_show_help"
             android:summary="@string/pref_common_show_help_summ"
             android:title="@string/pref_common_show_help" />
+        <SwitchPreference
+            android:id="@+id/pref_common_shell_control"
+            android:defaultValue="false"
+            android:key="pref_common_shell_control"
+            android:title="@string/pref_common_shell_control" />
         <androidx.preference.ListPreference
             android:defaultValue="1"
             android:entries="@array/pref_common_categ_use_busybox_titles"

@@ -47,7 +47,7 @@ import pan.alexander.tordnscrypt.modules.ModulesRunner;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
-import static pan.alexander.tordnscrypt.modules.ModulesService.actionStopService;
+import static pan.alexander.tordnscrypt.modules.ModulesService.actionStopServiceForeground;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
@@ -55,6 +55,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class BootCompleteReceiver extends BroadcastReceiver {
     public static final String ALWAYS_ON_VPN = "pan.alexander.tordnscrypt.ALWAYS_ON_VPN";
+    public static final String SHELL_SCRIPT_CONTROL = "pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL";
     private final int mJobId = PreferencesFastFragment.mJobId;
 
     private Context context;
@@ -96,7 +97,13 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                 || action.equalsIgnoreCase(HTC_QUICKBOOT_POWERON)
                 || action.equalsIgnoreCase(REBOOT)
                 || action.equalsIgnoreCase(MY_PACKAGE_REPLACED)
-                || action.equals(ALWAYS_ON_VPN)) {
+                || action.equals(ALWAYS_ON_VPN)
+                || action.equals(SHELL_SCRIPT_CONTROL)) {
+
+            if (action.equals(SHELL_SCRIPT_CONTROL) && !shPref.getBoolean("pref_common_shell_control", false)) {
+                Log.w(LOG_TAG, "BootCompleteReceiver received SHELL_CONTROL, but the appropriate option is disabled!");
+                return;
+            }
 
             new PrefManager(context).setBoolPref("APisON", false);
             new PrefManager(context).setBoolPref("ModemIsON", false);
@@ -127,10 +134,17 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                 autoStartDNSCrypt = savedDNSCryptStateRunning;
                 autoStartTor = savedTorStateRunning;
                 autoStartITPD = savedITPDStateRunning;
+            } else if (action.equals(SHELL_SCRIPT_CONTROL)) {
+                autoStartDNSCrypt = intent.getIntExtra("dnscrypt", 0) == 1;
+                autoStartTor = intent.getIntExtra("tor", 0) == 1;
+                autoStartITPD = intent.getIntExtra("i2p", 0) == 1;
+
+                Log.i(LOG_TAG, "SHELL_SCRIPT_CONTROL start: " +
+                        "DNSCrypt " + autoStartDNSCrypt + " Tor " + autoStartTor + " ITPD " + autoStartITPD);
             }
 
             if (savedDNSCryptStateRunning || savedTorStateRunning || savedITPDStateRunning) {
-                stopServices(context, mode, fixTTL);
+                stopServicesForeground(context, mode, fixTTL);
             }
 
             if (autoStartITPD) {
@@ -141,7 +155,8 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
                 ModulesStatus.getInstance().setFixTTL(fixTTL);
 
-                if (!action.equalsIgnoreCase(MY_PACKAGE_REPLACED) && !action.equalsIgnoreCase(ALWAYS_ON_VPN)) {
+                if (!action.equalsIgnoreCase(MY_PACKAGE_REPLACED) && !action.equalsIgnoreCase(ALWAYS_ON_VPN)
+                        && !action.equals(SHELL_SCRIPT_CONTROL)) {
                     startHOTSPOT();
                 }
 
@@ -149,7 +164,8 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
             if (autoStartDNSCrypt && !runModulesWithRoot
                     && !shPref.getBoolean("ignore_system_dns", false)
-                    && !action.equalsIgnoreCase(MY_PACKAGE_REPLACED)) {
+                    && !action.equalsIgnoreCase(MY_PACKAGE_REPLACED)
+                    && !action.equals(SHELL_SCRIPT_CONTROL)) {
                 new PrefManager(context).setBoolPref("DNSCryptSystemDNSAllowed", true);
             }
 
@@ -209,11 +225,20 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                     handler.postDelayed(() -> {
                         shPref.edit().putBoolean("VPNServiceEnabled", true).apply();
 
-                        String reason = "Boot complete";
-                        if (action.equals(MY_PACKAGE_REPLACED)) {
-                            reason = "MY_PACKAGE_REPLACED";
-                        } else if (action.equals(ALWAYS_ON_VPN)) {
-                            reason = "ALWAYS_ON_VPN";
+                        String reason;
+                        switch (action) {
+                            case MY_PACKAGE_REPLACED:
+                                reason = "MY_PACKAGE_REPLACED";
+                                break;
+                            case ALWAYS_ON_VPN:
+                                reason = "ALWAYS_ON_VPN";
+                                break;
+                            case SHELL_SCRIPT_CONTROL:
+                                reason = "SHELL_SCRIPT_CONTROL";
+                                break;
+                            default:
+                                reason = "Boot complete";
+                                break;
                         }
 
                         ServiceVPNHelper.start(reason, context);
@@ -249,31 +274,28 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
     private void startStopRestartModules(boolean autoStartDNSCrypt, boolean autoStartTor, boolean autoStartITPD) {
 
-        saveModulesStateRunning(autoStartDNSCrypt, autoStartTor, autoStartITPD);
-
         if (autoStartDNSCrypt) {
             runDNSCrypt();
-        } else {
-            if (isDnsCryptSavedStateRunning()) {
-                stopDNSCrypt();
-            }
+            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
+        } else if (isDnsCryptSavedStateRunning()) {
+            stopDNSCrypt();
         }
 
         if (autoStartTor) {
             runTor();
-        } else {
-            if (isTorSavedStateRunning()) {
-                stopTor();
-            }
+            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
+        } else if (isTorSavedStateRunning()){
+            stopTor();
         }
 
         if (autoStartITPD) {
             runITPD();
-        } else {
-            if (isITPDSavedStateRunning()) {
-                stopITPD();
-            }
+            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
+        } else if (isITPDSavedStateRunning()){
+            stopITPD();
         }
+
+        saveModulesStateRunning(autoStartDNSCrypt, autoStartTor, autoStartITPD);
 
     }
 
@@ -345,25 +367,26 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         }
     }
 
-    private void stopServices(Context context, OperationMode mode, boolean fixTTL) {
+    private void stopServicesForeground(Context context, OperationMode mode, boolean fixTTL) {
         if (mode == VPN_MODE || mode == ROOT_MODE && fixTTL) {
-            Intent closeVPNService = new Intent(context, VpnService.class);
-            closeVPNService.setAction(actionStopService);
+            Intent stopVPNServiceForeground = new Intent(context, VpnService.class);
+            stopVPNServiceForeground.setAction(actionStopServiceForeground);
             if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                context.startService(closeVPNService);
+                context.startService(stopVPNServiceForeground);
             } else {
-                context.startForegroundService(closeVPNService);
+                context.startForegroundService(stopVPNServiceForeground);
             }
 
         }
-        Intent closeModulesService = new Intent(context, ModulesService.class);
-        closeModulesService.setAction(actionStopService);
+
+        Intent stopModulesServiceForeground = new Intent(context, ModulesService.class);
+        stopModulesServiceForeground.setAction(actionStopServiceForeground);
         if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            context.startService(closeModulesService);
+            context.startService(stopModulesServiceForeground);
         } else {
-            context.startForegroundService(closeModulesService);
+            context.startForegroundService(stopModulesServiceForeground);
         }
 
-        Log.i(LOG_TAG, "BootCompleteReceiver stop running services");
+        Log.i(LOG_TAG, "BootCompleteReceiver stop running services foreground");
     }
 }

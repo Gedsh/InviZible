@@ -121,12 +121,22 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         manageLANDeviceAddressPreference();
 
+        PreferenceCategory otherSettingsCategory = findPreference("common_other");
+        Preference shellControl = findPreference("pref_common_shell_control");
+
         if (appVersion.startsWith("g")) {
             PreferenceCategory hotspotSettingsCategory = findPreference("HOTSPOT");
             Preference blockHTTP = findPreference("pref_common_block_http");
             if (hotspotSettingsCategory != null && blockHTTP != null) {
                 hotspotSettingsCategory.removePreference(blockHTTP);
             }
+
+            if (otherSettingsCategory != null && shellControl != null) {
+                otherSettingsCategory.removePreference(shellControl);
+            }
+
+        } else if (shellControl != null){
+            shellControl.setSummary(String.format(getString(R.string.pref_common_shell_control_summ), getActivity().getPackageName()));
         }
 
         return super.onCreateView(inflater, container, savedInstanceState);

@@ -191,6 +191,10 @@
     <string name="pref_common_wakelock_summ">Additional Protection with No Root Mode to prevent app being killed by android. May drain battery</string>
     <string name="pref_common_show_help">Help messages</string>
     <string name="pref_common_show_help_summ">Always Show Help messages</string>
+    <string name="pref_common_shell_control">Enable script control</string>
+    <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">Use the following command to manage application modules:
+        \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
+        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 -n %s/.BootCompleteReceiver\". Where 1 - starts, 0 - stops the module.</string>
     <string name="pref_common_notification_helper">Please exclude InviZible Pro from android battery optimisation.
         Otherwise android will kill DNSCrypt, Tor or I2P at any time. On special systems,
         like MIUI, required some additional steps, to exclude InviZible Pro from battery
@@ -245,7 +249,7 @@
 
 
     <string name="notification_text">DNSCrypt, Tor, I2P are protected. Don\'t hide.</string>
-    <string name="notification_temp_text">This notification must disappear soon.</string>
+    <string name="notification_temp_text">Executing Root commands…</string>
 
     <string name="tvSettings_text">Please wait…</string>
     <string name="toastSettings_saved">Settings saved</string>
@@ -671,5 +675,9 @@
     </string>
 
     <string name="config_changes_dialog_message">Do you want to save the changes? It can break InviZible Pro.</string>
+
+    <string name="notification_channel_services">Running services</string>
+    <string name="notification_channel_update">Update notifications</string>
+    <string name="notification_channel_root">Root commands notification</string>
 
 </resources>

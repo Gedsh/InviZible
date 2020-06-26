@@ -189,7 +189,6 @@
 
 
     <string name="notification_text">DNSCrypt, Tor, I2P sa chronione. Nie ukrywaj!</string>
-    <string name="notification_temp_text">To powiadomienie za chwile zniknie.</string>
 
     <string name="tvSettings_text">Prosze czekac…</string>
     <string name="toastSettings_saved">Zapisano ustawienia</string>
