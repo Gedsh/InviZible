@@ -26,6 +26,7 @@ import android.content.IntentFilter;
 import android.util.Log;
 
 import androidx.fragment.app.FragmentManager;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -461,7 +462,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         Intent intent = new Intent(COMMAND_RESULT);
         intent.putExtra("CommandsResult", comResult);
         intent.putExtra("Mark", InstallerMark);
-        activity.sendBroadcast(intent);
+        LocalBroadcastManager.getInstance(activity).sendBroadcast(intent);
     }
 
     protected void createLogsDir() {
@@ -481,7 +482,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         if (ModulesStatus.getInstance().isRootAvailable()
                 && ModulesStatus.getInstance().isUseModulesWithRoot()) {
             Intent intent = new Intent(TOP_BROADCAST);
-            activity.sendBroadcast(intent);
+            LocalBroadcastManager.getInstance(activity).sendBroadcast(intent);
         } else {
             ModulesVersions.getInstance().refreshVersions(activity);
         }
@@ -492,14 +493,14 @@ public class Installer implements TopFragment.OnActivityChangeListener {
     protected void registerReceiver(Activity activity) {
         br = new InstallerReceiver();
         IntentFilter intentFilter = new IntentFilter(COMMAND_RESULT);
-        activity.registerReceiver(br, intentFilter);
+        LocalBroadcastManager.getInstance(activity).registerReceiver(br, intentFilter);
 
         Log.i(LOG_TAG, "Installer: registerReceiver OK");
     }
 
     protected void unRegisterReceiver(Activity activity) {
         if (br != null) {
-            activity.unregisterReceiver(br);
+            LocalBroadcastManager.getInstance(activity).unregisterReceiver(br);
 
             Log.i(LOG_TAG, "Installer: unregisterReceiver OK");
         }

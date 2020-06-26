@@ -25,6 +25,8 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import com.jrummyapps.android.shell.CommandResult;
 import com.jrummyapps.android.shell.Shell;
 
@@ -361,13 +363,13 @@ public class ModulesStarterHelper {
         Intent intent = new Intent(COMMAND_RESULT);
         intent.putExtra("CommandsResult", comResult);
         intent.putExtra("Mark", moduleMark);
-        service.sendBroadcast(intent);
+        LocalBroadcastManager.getInstance(service).sendBroadcast(intent);
     }
 
     private void sendAskForceCloseBroadcast(Context context, String module) {
         Intent intent = new Intent(ASK_FORCE_CLOSE);
         intent.putExtra("Mark", TopFragmentMark);
         intent.putExtra(MODULE_NAME, module);
-        context.sendBroadcast(intent);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 }

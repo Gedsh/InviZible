@@ -26,6 +26,7 @@ import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.text.Spanned;
 import android.util.Log;
@@ -111,8 +112,8 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
             IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
             IntentFilter intentFilterTopFrg = new IntentFilter(TOP_BROADCAST);
 
-            getActivity().registerReceiver(receiver, intentFilterBckgIntSer);
-            getActivity().registerReceiver(receiver, intentFilterTopFrg);
+            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver, intentFilterBckgIntSer);
+            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver, intentFilterTopFrg);
 
             presenter.onStart(getActivity());
         }
@@ -129,7 +130,7 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
 
         try {
             if (receiver != null) {
-                getActivity().unregisterReceiver(receiver);
+                LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(receiver);
             }
         } catch (Exception e) {
             Log.e(LOG_TAG, "DNSCryptRunFragment onStop exception " + e.getMessage() + " " + e.getCause());

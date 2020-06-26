@@ -48,6 +48,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDFragmentPresenter;
@@ -186,15 +187,15 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
         try {
             if (dnsCryptFragmentReceiver != null) {
-                getActivity().unregisterReceiver(dnsCryptFragmentReceiver);
+                LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(dnsCryptFragmentReceiver);
             }
 
             if (torFragmentReceiver != null) {
-                getActivity().unregisterReceiver(torFragmentReceiver);
+                LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(torFragmentReceiver);
             }
 
             if (itpdFragmentReceiver != null) {
-                getActivity().unregisterReceiver(itpdFragmentReceiver);
+                LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(itpdFragmentReceiver);
             }
         } catch (Exception e) {
             Log.e(LOG_TAG, "MainFragment onStop exception " + e.getMessage() + " " + e.getCause());
@@ -390,8 +391,8 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
             IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
             IntentFilter intentFilterTopFrg = new IntentFilter(TOP_BROADCAST);
 
-            getActivity().registerReceiver(dnsCryptFragmentReceiver, intentFilterBckgIntSer);
-            getActivity().registerReceiver(dnsCryptFragmentReceiver, intentFilterTopFrg);
+            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(dnsCryptFragmentReceiver, intentFilterBckgIntSer);
+            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(dnsCryptFragmentReceiver, intentFilterTopFrg);
         }
     }
 
@@ -483,8 +484,8 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
             IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
             IntentFilter intentFilterTopFrg = new IntentFilter(TOP_BROADCAST);
 
-            getActivity().registerReceiver(torFragmentReceiver, intentFilterBckgIntSer);
-            getActivity().registerReceiver(torFragmentReceiver, intentFilterTopFrg);
+            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(torFragmentReceiver, intentFilterBckgIntSer);
+            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(torFragmentReceiver, intentFilterTopFrg);
         }
     }
 
@@ -578,8 +579,8 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
             IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
             IntentFilter intentFilterTopFrg = new IntentFilter(TOP_BROADCAST);
 
-            getActivity().registerReceiver(itpdFragmentReceiver, intentFilterBckgIntSer);
-            getActivity().registerReceiver(itpdFragmentReceiver, intentFilterTopFrg);
+            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(itpdFragmentReceiver, intentFilterBckgIntSer);
+            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(itpdFragmentReceiver, intentFilterTopFrg);
         }
     }
 

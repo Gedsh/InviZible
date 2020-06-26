@@ -27,6 +27,8 @@ import android.os.Handler;
 
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.DialogFragment;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -108,7 +110,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
         if (modulesStatus.isRootAvailable()) {
             IntentFilter intentFilter = new IntentFilter(RootExecService.COMMAND_RESULT);
-            this.registerReceiver(br, intentFilter);
+            LocalBroadcastManager.getInstance(this).registerReceiver(br, intentFilter);
         }
 
     }
@@ -270,7 +272,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
         if (modulesStatus.isRootAvailable() && br != null) {
             try {
-                this.unregisterReceiver(br);
+                LocalBroadcastManager.getInstance(this).unregisterReceiver(br);
             } catch (Exception e) {
                 Log.w(LOG_TAG, "HelpActivity uregister receiver fault " + e.getMessage() + " " + e.getCause());
             }

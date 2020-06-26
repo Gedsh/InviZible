@@ -36,6 +36,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 
 import java.lang.ref.WeakReference;
@@ -389,7 +390,7 @@ public class TopFragment extends Fragment {
 
         if (ModulesStatus.getInstance().isUseModulesWithRoot()) {
             Intent intent = new Intent(TOP_BROADCAST);
-            getActivity().sendBroadcast(intent);
+            LocalBroadcastManager.getInstance(getActivity()).sendBroadcast(intent);
             Log.i(LOG_TAG, "TopFragment Send TOP_BROADCAST");
         } else {
             ModulesVersions.getInstance().refreshVersions(getActivity());
@@ -725,14 +726,14 @@ public class TopFragment extends Fragment {
 
         IntentFilter intentFilterUpdate = new IntentFilter(UpdateService.UPDATE_RESULT);
         IntentFilter intentFilterForceClose = new IntentFilter(ModulesStarterHelper.ASK_FORCE_CLOSE);
-        getActivity().registerReceiver(br, intentFilterUpdate);
-        getActivity().registerReceiver(br, intentFilterForceClose);
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(br, intentFilterUpdate);
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(br, intentFilterForceClose);
     }
 
     private void unRegisterReceiver() {
         try {
             if (br != null && getActivity() != null) {
-                getActivity().unregisterReceiver(br);
+                LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(br);
                 br = null;
             }
         } catch (Exception ignored) {

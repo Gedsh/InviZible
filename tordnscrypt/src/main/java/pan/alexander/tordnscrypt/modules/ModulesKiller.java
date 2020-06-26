@@ -26,6 +26,7 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.util.Log;
 
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 
 import java.io.File;
@@ -115,7 +116,7 @@ public class ModulesKiller {
         Intent intent = new Intent(COMMAND_RESULT);
         intent.putExtra("CommandsResult", comResult);
         intent.putExtra("Mark", moduleMark);
-        service.sendBroadcast(intent);
+        LocalBroadcastManager.getInstance(service).sendBroadcast(intent);
     }
 
     private void makeDelay(int sec) {

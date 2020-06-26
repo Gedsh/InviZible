@@ -23,6 +23,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import com.jrummyapps.android.shell.Shell;
 import com.jrummyapps.android.shell.ShellNotFoundException;
 
@@ -105,7 +107,7 @@ public class ModulesVersions {
         Intent intent = new Intent(COMMAND_RESULT);
         intent.putExtra("CommandsResult",comResult);
         intent.putExtra("Mark",mark);
-        context.sendBroadcast(intent);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
     private void checkModulesVersions(PathVars pathVars) {

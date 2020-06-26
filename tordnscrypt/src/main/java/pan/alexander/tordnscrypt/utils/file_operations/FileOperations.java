@@ -26,6 +26,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
@@ -80,7 +82,7 @@ public class FileOperations {
                 if (action.equals(RootExecService.COMMAND_RESULT)) {
                     continueFileOperations();
                     if (br != null)
-                        context.unregisterReceiver(br);
+                        LocalBroadcastManager.getInstance(context).unregisterReceiver(br);
                     br = null;
                 }
             }
@@ -912,7 +914,7 @@ public class FileOperations {
             }
 
             IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
-            context.registerReceiver(br, intentFilterBckgIntSer);
+            LocalBroadcastManager.getInstance(context).registerReceiver(br, intentFilterBckgIntSer);
 
             String appUID = new PrefManager(context).getStrPref("appUID");
             PathVars pathVars = PathVars.getInstance(context);
