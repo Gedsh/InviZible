@@ -30,6 +30,7 @@ import android.os.Build;
 import android.os.IBinder;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.FileProvider;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 
 import android.util.Log;
@@ -70,13 +71,13 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 public class UpdateService extends Service {
     private static final String STOP_DOWNLOAD_ACTION = "pan.alexander.tordnscrypt.STOP_DOWNLOAD_ACTION";
     public static final String UPDATE_RESULT = "pan.alexander.tordnscrypt.action.UPDATE_RESULT";
-    private final String ANDROID_CHANNEL_ID = "InviZible";
+    public static final String UPDATE_CHANNEL_ID = "UPDATE_CHANNEL_INVIZIBLE";
     private NotificationManager notificationManager;
-    private static final int DEFAULT_NOTIFICATION_ID = 103;
+    private static final int UPDATE_CHANNEL_NOTIFICATION_ID = 103104;
     private static final int READTIMEOUT = 60;
     private static final int CONNECTTIMEOUT = 60;
     public static final String DOWNLOAD_ACTION = "pan.alexander.tordnscrypt.DOWNLOAD_ACTION";
-    private final AtomicInteger currentNotificationId = new AtomicInteger(DEFAULT_NOTIFICATION_ID) ;
+    private final AtomicInteger currentNotificationId = new AtomicInteger(UPDATE_CHANNEL_NOTIFICATION_ID);
     private volatile SparseArray<DownloadThread> sparseArray;
     private boolean allowSendBroadcastAfterUpdate = true;
     private WakeLocksManager wakeLocksManager;
@@ -156,8 +157,9 @@ public class UpdateService extends Service {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
                 NotificationChannel notificationChannel = new NotificationChannel
-                        (ANDROID_CHANNEL_ID, "NOTIFICATION_CHANNEL_INVIZIBLE", NotificationManager.IMPORTANCE_LOW);
-                notificationChannel.setDescription("Update InviZible Pro");
+                        (UPDATE_CHANNEL_ID, getString(R.string.notification_channel_update), NotificationManager.IMPORTANCE_LOW);
+                notificationChannel.setSound(null, Notification.AUDIO_ATTRIBUTES_DEFAULT);
+                notificationChannel.setDescription("");
                 notificationChannel.enableLights(false);
                 notificationChannel.enableVibration(false);
                 notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
@@ -315,7 +317,7 @@ public class UpdateService extends Service {
                     Log.e(LOG_TAG, "UpdateService failed to download file " + urlToDownload + " " + e.getMessage());
                 } finally {
                     sparseArray.delete(serviceStartId);
-                    if (currentNotificationId.get() - 1 == DEFAULT_NOTIFICATION_ID) {
+                    if (currentNotificationId.get() - 1 == UPDATE_CHANNEL_NOTIFICATION_ID) {
                         stopForeground(true);
                         notificationManager.cancel(notificationId);
                         sendUpdateResultBroadcast();
@@ -337,7 +339,7 @@ public class UpdateService extends Service {
 
             Intent intent = new Intent(UPDATE_RESULT);
             intent.putExtra("Mark", TopFragmentMark);
-            sendBroadcast(intent);
+            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         }
     }
 
@@ -355,7 +357,7 @@ public class UpdateService extends Service {
 
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ANDROID_CHANNEL_ID);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, UPDATE_CHANNEL_ID);
         builder.setContentIntent(contentIntent)
                 .setOngoing(true)   //Can't be swiped out
                 .setSmallIcon(R.drawable.ic_update)
@@ -386,7 +388,7 @@ public class UpdateService extends Service {
         PendingIntent stopDownloadPendingIntent = PendingIntent.getService(this, notificationId, stopDownloadIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ANDROID_CHANNEL_ID);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, UPDATE_CHANNEL_ID);
         builder.setContentIntent(contentIntent)
                 .setOngoing(true)   //Can't be swiped out
                 .setSmallIcon(R.drawable.ic_update)

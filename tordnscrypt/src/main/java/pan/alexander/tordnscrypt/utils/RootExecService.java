@@ -33,6 +33,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 
 import java.io.BufferedWriter;
@@ -53,9 +54,6 @@ import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
-import static pan.alexander.tordnscrypt.modules.ServiceNotification.ANDROID_CHANNEL_ID;
-import static pan.alexander.tordnscrypt.modules.ServiceNotification.ANDROID_CHANNEL_NAME;
-
 public class RootExecService extends Service {
     public RootExecService() {
     }
@@ -73,6 +71,7 @@ public class RootExecService extends Service {
     public static final String RUN_COMMAND = "pan.alexander.tordnscrypt.action.RUN_COMMAND";
     public static final String COMMAND_RESULT = "pan.alexander.tordnscrypt.action.COMMANDS_RESULT";
     public static final String LOG_TAG = "pan.alexander.TPDCLogs";
+    public static final String ROOT_CHANNEL_ID = "ROOT_COMMANDS_INVIZIBLE";
 
     private static boolean saveRootLogs = false;
     private static String autoStartDelay = "0";
@@ -124,8 +123,9 @@ public class RootExecService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationManager != null) {
 
             NotificationChannel notificationChannel = new NotificationChannel
-                    (ANDROID_CHANNEL_ID, ANDROID_CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW);
-            notificationChannel.setDescription("Temp notification");
+                    (ROOT_CHANNEL_ID, getString(R.string.notification_channel_root), NotificationManager.IMPORTANCE_LOW);
+            notificationChannel.setDescription("");
+            notificationChannel.setSound(null, Notification.AUDIO_ATTRIBUTES_DEFAULT);
             notificationChannel.enableLights(false);
             notificationChannel.enableVibration(false);
             notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
@@ -245,7 +245,7 @@ public class RootExecService extends Service {
         Intent intent = new Intent(COMMAND_RESULT);
         intent.putExtra("CommandsResult", comResult);
         intent.putExtra("Mark", mark);
-        sendBroadcast(intent);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
     @Override
@@ -295,7 +295,7 @@ public class RootExecService extends Service {
             iconResource = android.R.drawable.ic_menu_view;
         }
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ANDROID_CHANNEL_ID);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ROOT_CHANNEL_ID);
         builder.setContentIntent(contentIntent)
                 .setOngoing(true)   //Can't be swiped out
                 .setSmallIcon(iconResource)

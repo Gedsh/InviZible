@@ -69,6 +69,7 @@ public class ModulesService extends Service {
     public static final int DEFAULT_NOTIFICATION_ID = 101;
 
     public static final String actionStopService = "pan.alexander.tordnscrypt.action.STOP_SERVICE";
+    public static final String actionStopServiceForeground = "pan.alexander.tordnscrypt.action.STOP_SERVICE_FOREGROUND";
 
     private final static int TIMER_HIGH_SPEED = 1000;
     private final static int TIMER_LOW_SPEED = 30000;
@@ -135,6 +136,10 @@ public class ModulesService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
+        if (intent != null && Objects.equals(intent.getAction(), actionStopServiceForeground)) {
+            stopModulesServiceForeground();
+        }
+
         boolean showNotification = true;
         if (intent != null) {
             showNotification = intent.getBooleanExtra("showNotification", true);
@@ -145,8 +150,8 @@ public class ModulesService extends Service {
             notification.sendNotification(getString(R.string.app_name), getText(R.string.notification_text).toString());
         }
 
-        if (intent != null && Objects.equals(intent.getAction(), actionStopService)) {
-            stopModulesService();
+        if (intent != null && Objects.equals(intent.getAction(), actionStopServiceForeground)) {
+            stopModulesServiceForeground(startId);
             return START_NOT_STICKY;
         }
 
@@ -207,6 +212,9 @@ public class ModulesService extends Service {
             case extraLoop:
                 makeExtraLoop();
                 break;
+            case actionStopService:
+                stopModulesService();
+                return START_NOT_STICKY;
         }
 
         setBroadcastReceiver();
@@ -838,6 +846,30 @@ public class ModulesService extends Service {
         }
 
         stopSelf();
+    }
+
+    private void stopModulesServiceForeground() {
+
+        notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
+
+        try {
+            stopForeground(true);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "ModulesService stopModulesServiceForeground1 exception " + e.getMessage() + " " + e.getCause());
+        }
+    }
+
+    private void stopModulesServiceForeground(int startId) {
+
+        notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
+
+        try {
+            stopForeground(true);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "ModulesService stopModulesServiceForeground2 exception " + e.getMessage() + " " + e.getCause());
+        }
+
+        stopSelf(startId);
     }
 
     private void setBroadcastReceiver() {

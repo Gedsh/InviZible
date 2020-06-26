@@ -82,6 +82,7 @@ import pan.alexander.tordnscrypt.vpn.Util;
 
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
 import static pan.alexander.tordnscrypt.modules.ModulesService.actionStopService;
+import static pan.alexander.tordnscrypt.modules.ModulesService.actionStopServiceForeground;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -911,6 +912,7 @@ public class ServiceVPN extends VpnService {
         }
     }
 
+    @SuppressLint("MissingPermission")
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void listenNetworkChanges() {
         // Listen for network changes
@@ -1006,6 +1008,17 @@ public class ServiceVPN extends VpnService {
 
         torVirtualAddressNetwork = pathVars.getTorVirtAdrNet();
 
+        if ( intent != null && Objects.equals(intent.getAction(), actionStopServiceForeground)) {
+
+            notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
+
+            try {
+                stopForeground(true);
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "VPNService stop Service foreground1 exception " + e.getMessage() + " " + e.getCause());
+            }
+        }
+
         boolean showNotification = true;
         if (intent != null) {
             showNotification = intent.getBooleanExtra("showNotification", true);
@@ -1016,29 +1029,30 @@ public class ServiceVPN extends VpnService {
             notification.sendNotification(getString(R.string.app_name), getText(R.string.notification_text).toString());
         }
 
-        if (intent != null && Objects.equals(intent.getAction(), actionStopService)) {
+        Log.i(LOG_TAG, "VPN Received " + intent);
+
+        if ( intent != null && Objects.equals(intent.getAction(), actionStopServiceForeground)) {
 
             notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
 
             try {
                 stopForeground(true);
             } catch (Exception e) {
-                Log.e(LOG_TAG, "VPNService stop Service exception " + e.getMessage() + " " + e.getCause());
+                Log.e(LOG_TAG, "VPNService stop Service foreground2 exception " + e.getMessage() + " " + e.getCause());
             }
 
-            stopSelf();
+            stopSelf(startId);
 
             return START_NOT_STICKY;
         }
-
-        Log.i(LOG_TAG, "VPN Received " + intent);
 
         // Handle service restart
         if (intent == null) {
             Log.i(LOG_TAG, "VPN OnStart Restart");
 
             if (vpnEnabled) {
-                Intent starterIntent = new Intent(BootCompleteReceiver.ALWAYS_ON_VPN);
+                Intent starterIntent = new Intent(this, BootCompleteReceiver.class);
+                starterIntent.setAction(BootCompleteReceiver.ALWAYS_ON_VPN);
                 sendBroadcast(starterIntent);
                 stopSelf(startId);
                 return START_NOT_STICKY;
@@ -1055,7 +1069,8 @@ public class ServiceVPN extends VpnService {
             Log.i(LOG_TAG, "VPN OnStart ALWAYS_ON_VPN");
 
             if (vpnEnabled) {
-                Intent starterIntent = new Intent(BootCompleteReceiver.ALWAYS_ON_VPN);
+                Intent starterIntent = new Intent(this, BootCompleteReceiver.class);
+                starterIntent.setAction(BootCompleteReceiver.ALWAYS_ON_VPN);
                 sendBroadcast(starterIntent);
                 stopSelf(startId);
                 return START_NOT_STICKY;

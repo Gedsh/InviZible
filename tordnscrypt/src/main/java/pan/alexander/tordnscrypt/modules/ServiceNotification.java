@@ -20,21 +20,20 @@ package pan.alexander.tordnscrypt.modules;
 */
 
 import android.app.Notification;
-import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
-import android.os.Build;
 import androidx.core.app.NotificationCompat;
 
 import pan.alexander.tordnscrypt.MainActivity;
 
+import static pan.alexander.tordnscrypt.ApplicationExtKt.ANDROID_CHANNEL_ID;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
 
 public class ServiceNotification {
-    public static final String ANDROID_CHANNEL_ID = "InviZible";
-    public static final String ANDROID_CHANNEL_NAME = "NOTIFICATION_CHANNEL_INVIZIBLE";
+    //public static final String ANDROID_CHANNEL_ID = "InviZible";
+    //public static final String ANDROID_CHANNEL_NAME = "NOTIFICATION_CHANNEL_INVIZIBLE";
     private final Service modulesService;
     private final NotificationManager notificationManager;
 
@@ -49,7 +48,7 @@ public class ServiceNotification {
             return;
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationManager != null) {
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationManager != null) {
             NotificationChannel notificationChannel = new NotificationChannel
                     (ANDROID_CHANNEL_ID, ANDROID_CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW);
             notificationChannel.setDescription("Protect InviZible Pro");
@@ -57,7 +56,7 @@ public class ServiceNotification {
             notificationChannel.enableVibration(false);
             notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
             notificationManager.createNotificationChannel(notificationChannel);
-        }
+        }*/
 
         //These three lines makes Notification to open main activity after clicking on it
         Intent notificationIntent = new Intent(modulesService, MainActivity.class);

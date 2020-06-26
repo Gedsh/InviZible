@@ -30,9 +30,8 @@ import androidx.core.app.NotificationCompat;
 
 import pan.alexander.tordnscrypt.MainActivity;
 
+import static pan.alexander.tordnscrypt.ApplicationExtKt.ANDROID_CHANNEL_ID;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
-import static pan.alexander.tordnscrypt.modules.ServiceNotification.ANDROID_CHANNEL_ID;
-import static pan.alexander.tordnscrypt.modules.ServiceNotification.ANDROID_CHANNEL_NAME;
 
 class ServiceVPNNotification {
     private final Service serviceVPN;
@@ -45,7 +44,7 @@ class ServiceVPNNotification {
 
     void sendNotification(String Title, String Text) {
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationManager != null) {
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationManager != null) {
             NotificationChannel notificationChannel = new NotificationChannel
                     (ANDROID_CHANNEL_ID, ANDROID_CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW);
             notificationChannel.setDescription("Protect VPN");
@@ -53,7 +52,7 @@ class ServiceVPNNotification {
             notificationChannel.enableVibration(false);
             notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
             notificationManager.createNotificationChannel(notificationChannel);
-        }
+        }*/
 
         //These three lines makes Notification to open main activity after clicking on it
         Intent notificationIntent = new Intent(serviceVPN, MainActivity.class);
