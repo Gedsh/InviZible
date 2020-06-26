@@ -73,7 +73,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
-    private boolean bound;
+    private volatile boolean bound;
 
     private int displayLogPeriod = -1;
 
@@ -82,7 +82,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     private volatile OwnFileReader logFile;
     private ModulesStatus modulesStatus;
     private ModuleState fixedModuleState;
-    private ServiceConnection serviceConnection;
+    private volatile ServiceConnection serviceConnection;
     private ServiceVPN serviceVPN;
     private volatile ArrayList<DNSQueryLogRecord> savedDNSQueryRawRecords;
     private volatile DNSQueryLogRecordsConverter dnsQueryLogRecordsConverter;
@@ -677,9 +677,9 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
             displayLog(5);
 
-            if (modulesStatus.getMode() == VPN_MODE && !bound) {
+            /*if (modulesStatus.getMode() == VPN_MODE && !bound) {
                 bindToVPNService(context);
-            }
+            }*/
 
         } else if (currentModuleState == STOPPED) {
 
@@ -763,7 +763,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         ModulesKiller.stopDNSCrypt(context);
     }
 
-    private void bindToVPNService(Context context) {
+    private synchronized void bindToVPNService(Context context) {
         serviceConnection = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
@@ -785,7 +785,13 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
     private void unbindVPNService(Context context) {
         if (bound && serviceConnection != null && context != null) {
-            context.unbindService(serviceConnection);
+
+            try {
+                context.unbindService(serviceConnection);
+            } catch (Exception e) {
+                Log.w(LOG_TAG, "DNSCryptFragmentPresenter unbindVPNService exception " + e.getMessage() + " " + e.getCause());
+            }
+
             bound = false;
         }
     }
