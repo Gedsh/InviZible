@@ -50,6 +50,9 @@
         android:banner="@drawable/banner_tv"
         android:extractNativeLibs="true"
         android:largeHeap="true"
+        android:appCategory="productivity"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:logo="@drawable/ic_help_title"
         android:requestLegacyExternalStorage="true"
         tools:targetApi="q">
 
