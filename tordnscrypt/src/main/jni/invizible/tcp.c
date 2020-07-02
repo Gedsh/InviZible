@@ -1048,7 +1048,7 @@ int open_tcp_socket(const struct arguments *args,
     int version;
     if (redirect == NULL) {
         //bypass dns addresses and own uid from socks proxy
-        if (*socks5_addr && socks5_port)
+        if (*socks5_addr && socks5_port && cur->uid != own_uid)
             version = (strstr(socks5_addr, ":") == NULL ? 4 : 6);
         else
             version = cur->version;
@@ -1062,10 +1062,8 @@ int open_tcp_socket(const struct arguments *args,
     }
 
     // Protect
-    if (cur->uid == own_uid) {
-        if (protect_socket(args, sock) < 0)
-            return -1;
-    }
+    if (protect_socket(args, sock) < 0)
+        return -1;
 
 
     int on = 1;

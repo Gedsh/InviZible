@@ -113,6 +113,14 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             }
         }
 
+
+        Preference swCompatibilityMode = findPreference("swCompatibilityMode");
+        if (ModulesStatus.getInstance().getMode() != VPN_MODE && others != null && swCompatibilityMode != null) {
+            others.removePreference(swCompatibilityMode);
+        } else if (swCompatibilityMode != null) {
+            swCompatibilityMode.setOnPreferenceChangeListener(this);
+        }
+
         if (ModulesStatus.getInstance().getMode() == ROOT_MODE) {
             registerPreferences();
         } else {
@@ -273,6 +281,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 new PrefManager(getActivity()).setBoolPref("refresh_main_activity", true);
                 break;
             case "pref_common_local_eth_device_addr":
+            case "swCompatibilityMode":
                 ModulesStatus.getInstance().setIptablesRulesUpdateRequested(getActivity(), true);
                 break;
             case "swWakelock":

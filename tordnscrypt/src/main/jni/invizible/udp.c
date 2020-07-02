@@ -396,10 +396,9 @@ int open_udp_socket(const struct arguments *args,
     }
 
     // Protect socket
-    if (cur->uid == own_uid) {
-        if (protect_socket(args, sock) < 0)
-            return -1;
-    }
+    if (protect_socket(args, sock) < 0)
+        return -1;
+
 
 
     // Check for broadcast/multicast

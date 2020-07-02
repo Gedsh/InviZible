@@ -33,6 +33,7 @@ char socks5_username[127 + 1];
 char socks5_password[127 + 1];
 int own_uid = 0;
 int loglevel = ANDROID_LOG_WARN;
+bool compatibility_mode = false;
 
 extern int max_tun_msg;
 
@@ -154,10 +155,13 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1start(
 
 JNIEXPORT void JNICALL
 Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1run(
-        JNIEnv *env, jobject instance, jlong context, jint tun, jboolean fwd53, jint rcode) {
+        JNIEnv *env, jobject instance, jlong context, jint tun, jboolean fwd53, jint rcode,
+        jboolean compatibility) {
     struct context *ctx = (struct context *) context;
 
     log_android(ANDROID_LOG_WARN, "Running tun %d fwd53 %d level %d", tun, fwd53, loglevel);
+
+    compatibility_mode = compatibility;
 
     // Set blocking
     int flags = fcntl(tun, F_GETFL, 0);
@@ -200,9 +204,10 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1get_1mtu(JNIEnv *env,
 }
 
 JNIEXPORT void JNICALL
-Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1socks5(JNIEnv *env, jobject instance, jstring addr_,
-                                                      jint port, jstring username_,
-                                                      jstring password_) {
+Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1socks5(JNIEnv *env, jobject instance,
+                                                                  jstring addr_,
+                                                                  jint port, jstring username_,
+                                                                  jstring password_) {
     const char *addr = (*env)->GetStringUTFChars(env, addr_, 0);
     const char *username = (*env)->GetStringUTFChars(env, username_, 0);
     const char *password = (*env)->GetStringUTFChars(env, password_, 0);
@@ -320,34 +325,27 @@ void report_exit(const struct arguments *args, const char *fmt, ...) {
 static jmethodID midProtect = NULL;
 
 int protect_socket(const struct arguments *args, int socket) {
-    if (args->ctx->sdk >= 21)
+
+    if (args->ctx->sdk >= 21 && !compatibility_mode)
         return 0;
 
-    jclass cls = (*args->env)->GetObjectClass(args->env, args->instance);
-    ng_add_alloc(cls, "cls");
-    if (cls == NULL) {
-        log_android(ANDROID_LOG_ERROR, "protect socket failed to get class");
-        return -1;
-    }
+    jclass clsService = (*args->env)->GetObjectClass(args->env, args->instance);
+    ng_add_alloc(clsService, "clsService");
 
     if (midProtect == NULL)
-        midProtect = jniGetMethodID(args->env, cls, "protectSocket", "(I)Z");
-    if (midProtect == NULL) {
-        log_android(ANDROID_LOG_ERROR, "protect socket failed to get method");
-        return -1;
-    }
+        midProtect = jniGetMethodID(args->env, clsService, "protectSocket", "(I)Z");
 
     jboolean isProtected = (*args->env)->CallBooleanMethod(
             args->env, args->instance, midProtect, socket);
     jniCheckException(args->env);
 
+    (*args->env)->DeleteLocalRef(args->env, clsService);
+    ng_delete_alloc(clsService, __FILE__, __LINE__);
+
     if (!isProtected) {
         log_android(ANDROID_LOG_ERROR, "protect socket failed");
         return -1;
     }
-
-    (*args->env)->DeleteLocalRef(args->env, cls);
-    ng_delete_alloc(cls, __FILE__, __LINE__);
 
     return 0;
 }
@@ -452,7 +450,7 @@ jfieldID fidResource = NULL;
 jfieldID fidRcode = NULL;
 
 void dns_resolved(const struct arguments *args, const char *qname, const char *aname,
-        const char *cname, const char * hinfo, const char *resource, int rcode) {
+                  const char *cname, const char *hinfo, const char *resource, int rcode) {
 #ifdef PROFILE_JNI
     float mselapsed;
     struct timeval start, end;

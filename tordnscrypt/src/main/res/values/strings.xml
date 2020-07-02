@@ -189,6 +189,8 @@
     <string name="pref_common_show_notification">Show notification</string>
     <string name="pref_common_wakelock">Prevent device sleep</string>
     <string name="pref_common_wakelock_summ">Additional Protection with No Root Mode to prevent app being killed by android. May drain battery</string>
+    <string name="pref_common_compatibility_mode">Compatibility mode</string>
+    <string name="pref_common_compatibility_mode_summ">Enable if your device with a custom ROM and the connection is lost when you press the START button</string>
     <string name="pref_common_show_help">Help messages</string>
     <string name="pref_common_show_help_summ">Always Show Help messages</string>
     <string name="pref_common_shell_control">Enable script control</string>

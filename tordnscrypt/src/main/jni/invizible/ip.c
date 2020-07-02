@@ -26,6 +26,7 @@
 int max_tun_msg = 0;
 extern int loglevel;
 extern int own_uid;
+extern bool compatibility_mode;
 
 uint16_t get_mtu() {
     return 10000;
@@ -287,7 +288,7 @@ void handle_ip(const struct arguments *args,
     if (protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6 ||
         (protocol == IPPROTO_UDP && !has_udp_session(args, pkt, payload)) ||
         (protocol == IPPROTO_TCP && syn)) {
-        if (args->ctx->sdk <= 28) { // Android 9 Pie
+        if (args->ctx->sdk <= 28 || compatibility_mode) { // Android 9 Pie
             uid = get_uid(version, protocol, saddr, sport, daddr, dport);
 
             if (uid < 0 && args->ctx->sdk < 21) {

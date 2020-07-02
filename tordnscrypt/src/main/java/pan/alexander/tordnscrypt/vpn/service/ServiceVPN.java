@@ -46,6 +46,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -81,7 +82,6 @@ import pan.alexander.tordnscrypt.vpn.Usage;
 import pan.alexander.tordnscrypt.vpn.Util;
 
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
-import static pan.alexander.tordnscrypt.modules.ModulesService.actionStopService;
 import static pan.alexander.tordnscrypt.modules.ModulesService.actionStopServiceForeground;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
@@ -143,6 +143,7 @@ public class ServiceVPN extends VpnService {
     private final String itpdRedirectAddress = "10.191.0.1";
     private boolean blockIPv6 = false;
     volatile boolean reloading;
+    private boolean compatibilityMode;
 
     @SuppressLint("UseSparseArrays")
     private final Map<Integer, Boolean> mapUidAllowed = new HashMap<>();
@@ -158,7 +159,7 @@ public class ServiceVPN extends VpnService {
 
     private native void jni_start(long context, int loglevel);
 
-    private native void jni_run(long context, int tun, boolean fwd53, int rcode);
+    private native void jni_run(long context, int tun, boolean fwd53, int rcode, boolean compatibilityMode);
 
     private native void jni_stop(long context);
 
@@ -439,8 +440,18 @@ public class ServiceVPN extends VpnService {
         prepareUidAllowed(listAllowed, listRule);
         prepareForwarding();
 
-        int prio = Integer.parseInt(prefs.getString("loglevel", Integer.toString(Log.WARN)));
-        final int rcode = Integer.parseInt(prefs.getString("rcode", "3"));
+        int prio = 5;
+                String prioStr= prefs.getString("loglevel", Integer.toString(Log.WARN));
+        if (prioStr != null) {
+            prio = Integer.parseInt(prioStr);
+        }
+
+        int rcode = 3;
+        String rcodeStr = prefs.getString("rcode", "3");
+        if (rcodeStr != null) {
+            rcode = Integer.parseInt(rcodeStr);
+        }
+        int finalRcode = rcode;
 
         int torSOCKSPort = 9050;
 
@@ -465,7 +476,7 @@ public class ServiceVPN extends VpnService {
 
             tunnelThread = new Thread(() -> {
                 Log.i(LOG_TAG, "VPN Running tunnel context=" + jni_context);
-                jni_run(jni_context, vpn.getFd(), mapForwardPort.containsKey(53), rcode);
+                jni_run(jni_context, vpn.getFd(), mapForwardPort.containsKey(53), finalRcode, compatibilityMode);
                 Log.i(LOG_TAG, "VPN Tunnel exited");
                 tunnelThread = null;
             });
@@ -552,18 +563,20 @@ public class ServiceVPN extends VpnService {
         boolean bridgesSnowflakeOwn = new PrefManager(this).getStrPref("ownBridgesObfs").equals(snowFlakeBridgesOwn);
         boolean dnsCryptSystemDNSAllowed = new PrefManager(this).getBoolPref("DNSCryptSystemDNSAllowed");
 
+        ownUID = Process.myUid();
+
         if (dnsCryptState == RUNNING && !dnsCryptSystemDNSAllowed) {
-            addForwardPortRule(17, 53, "127.0.0.1", dnsCryptPort, Process.myUid());
-            addForwardPortRule(6, 53, "127.0.0.1", dnsCryptPort, Process.myUid());
+            addForwardPortRule(17, 53, "127.0.0.1", dnsCryptPort, ownUID);
+            addForwardPortRule(6, 53, "127.0.0.1", dnsCryptPort, ownUID);
 
             if (itpdState == RUNNING) {
-                addForwardAddressRule(17, "10.191.0.1", "127.0.0.1", itpdHttpPort, Process.myUid());
-                addForwardAddressRule(6, "10.191.0.1", "127.0.0.1", itpdHttpPort, Process.myUid());
+                addForwardAddressRule(17, "10.191.0.1", "127.0.0.1", itpdHttpPort, ownUID);
+                addForwardAddressRule(6, "10.191.0.1", "127.0.0.1", itpdHttpPort, ownUID);
             }
         } else if (torState == RUNNING
                 && (torReady || !(useDefaultBridges && bridgesSnowflakeDefault || useOwnBridges && bridgesSnowflakeOwn))) {
-            addForwardPortRule(17, 53, "127.0.0.1", torDNSPort, Process.myUid());
-            addForwardPortRule(6, 53, "127.0.0.1", torDNSPort, Process.myUid());
+            addForwardPortRule(17, 53, "127.0.0.1", torDNSPort, ownUID);
+            addForwardPortRule(6, 53, "127.0.0.1", torDNSPort, ownUID);
         }
 
         lock.writeLock().unlock();
@@ -650,7 +663,8 @@ public class ServiceVPN extends VpnService {
         boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
                 && !modulesStatus.isUseModulesWithRoot();
 
-        if (uid == ownUID || destAddress.equals(itpdRedirectAddress) || fixTTL) {
+        if (uid == ownUID || destAddress.equals(itpdRedirectAddress)
+                || fixTTL || (compatibilityMode && uid == -1)) {
             return false;
         }
 
@@ -684,10 +698,9 @@ public class ServiceVPN extends VpnService {
         InetSocketAddress local = new InetSocketAddress(saddr, sport);
         InetSocketAddress remote = new InetSocketAddress(daddr, dport);
 
-        Log.i(LOG_TAG, "VPN Get uid local=" + local + " remote=" + remote);
-        int uid = cm.getConnectionOwnerUid(protocol, local, remote);
-        Log.i(LOG_TAG, "VPN Get uid=" + uid);
-        return uid;
+        //Log.i(LOG_TAG, "VPN Get uid local=" + local + " remote=" + remote);
+        //Log.i(LOG_TAG, "VPN Get uid=" + uid);
+        return cm.getConnectionOwnerUid(protocol, local, remote);
     }
 
     // Called from native code
@@ -712,7 +725,9 @@ public class ServiceVPN extends VpnService {
                 && (packet.saddr.matches("^192\\.168\\.(42|43)\\.\\d+")
                 || Tethering.ethernetOn && packet.saddr.contains(Tethering.addressLocalPC));
 
-        addUIDtoDNSQueryRawRecords(packet.uid, packet.daddr, packet.dport, packet.saddr);
+        if (packet.uid != ownUID) {
+            addUIDtoDNSQueryRawRecords(packet.uid, packet.daddr, packet.dport, packet.saddr);
+        }
 
         lock.readLock().lock();
 
@@ -743,12 +758,12 @@ public class ServiceVPN extends VpnService {
             packet.allowed = true;
             Log.w(LOG_TAG, "Allowing disconnected system " + packet);
         } else if (packet.uid <= 2000 &&
-                (!routeAllThroughTor || torTethering || fixTTL) &&
+                (!routeAllThroughTor || torTethering || fixTTL || compatibilityMode) &&
                 !mapUidKnown.containsKey(packet.uid)
                 && isSupported(packet.protocol)) {
             // Allow unknown system traffic
             packet.allowed = true;
-            if (!fixTTL) {
+            if (!fixTTL && !compatibilityMode) {
                 Log.w(LOG_TAG, "Allowing unknown system " + packet);
             }
         } else if (routeAllThroughTor && torIsRunning
@@ -912,7 +927,7 @@ public class ServiceVPN extends VpnService {
         }
     }
 
-    @SuppressLint("MissingPermission")
+
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void listenNetworkChanges() {
         // Listen for network changes
@@ -991,6 +1006,7 @@ public class ServiceVPN extends VpnService {
         registeredConnectivityChanged = true;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
@@ -1000,6 +1016,7 @@ public class ServiceVPN extends VpnService {
         routeAllThroughTor = prefs.getBoolean("pref_fast_all_through_tor", true);
         torTethering = prefs.getBoolean("pref_common_tor_tethering", false);
         blockIPv6 = prefs.getBoolean("block_ipv6", true);
+        compatibilityMode = prefs.getBoolean("swCompatibilityMode", false);
         boolean vpnEnabled = prefs.getBoolean("VPNServiceEnabled", false);
 
 

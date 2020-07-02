@@ -293,10 +293,9 @@ int open_icmp_socket(const struct arguments *args, const struct icmp_session *cu
     }
 
     // Protect socket
-    if (cur->uid == own_uid) {
-        if (protect_socket(args, sock) < 0)
-            return -1;
-    }
+    if (protect_socket(args, sock) < 0)
+        return -1;
+
 
     return sock;
 }
