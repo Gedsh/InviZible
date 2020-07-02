@@ -79,8 +79,12 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
         String refreshPeriod = shPref.getString("pref_fast_site_refresh_interval", "12");
-        if (!refreshPeriod.isEmpty()) {
-            refreshPeriodHours = Integer.parseInt(refreshPeriod);
+        if (refreshPeriod != null && !refreshPeriod.isEmpty()) {
+            try {
+                refreshPeriodHours = Integer.parseInt(refreshPeriod.replaceAll("\\D+", ""));
+            } catch (Exception e) {
+                Log.w(LOG_TAG, "BootCompleteReceiver parse refreshPeriodHours exception " + e.getMessage() + " " + e.getCause());
+            }
         }
 
 
