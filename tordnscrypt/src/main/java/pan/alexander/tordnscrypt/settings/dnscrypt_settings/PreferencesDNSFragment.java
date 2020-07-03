@@ -195,28 +195,35 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         }
 
         try {
-            if (Objects.equals(preference.getKey(), "listen_port")) {
+            if (Objects.equals(preference.getKey(), "listen_port") && !newValue.toString().isEmpty()) {
                 String val = "['127.0.0.1:" + newValue.toString() + "']";
                 val_toml.set(key_toml.indexOf("listen_addresses"), val);
                 return true;
             } else if (Objects.equals(preference.getKey(), "fallback_resolver")) {
+
+                if (!newValue.toString().matches("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
+                        || newValue.toString().equals("127.0.0.1") || newValue.toString().equals("0.0.0.0"))
+                {
+                    return false;
+                }
+
                 String val = "'" + newValue.toString() + ":53'";
                 val_toml.set(key_toml.indexOf("fallback_resolver"), val);
                 if (key_toml.indexOf("netprobe_address") > 0) {
                     val_toml.set(key_toml.indexOf("netprobe_address"), val);
                 }
                 return true;
-            } else if (Objects.equals(preference.getKey(), "proxy_port")) {
+            } else if (Objects.equals(preference.getKey(), "proxy_port") && !newValue.toString().isEmpty()) {
                 String val = "'socks5://127.0.0.1:" + newValue.toString() + "'";
                 val_toml.set(key_toml.indexOf("proxy"), val);
                 return true;
-            } else if (Objects.equals(preference.getKey(), "Sources")) {
+            } else if (Objects.equals(preference.getKey(), "Sources") && !newValue.toString().isEmpty()) {
                 val_toml.set(key_toml.indexOf("urls"), newValue.toString());
                 return true;
-            } else if (Objects.equals(preference.getKey(), "Relays")) {
+            } else if (Objects.equals(preference.getKey(), "Relays") && !newValue.toString().isEmpty()) {
                 val_toml.set(key_toml.lastIndexOf("urls"), newValue.toString());
                 return true;
-            } else if (Objects.equals(preference.getKey(), "refresh_delay_relays")) {
+            } else if (Objects.equals(preference.getKey(), "refresh_delay_relays") && !newValue.toString().isEmpty()) {
                 val_toml.set(key_toml.lastIndexOf("refresh_delay"), newValue.toString());
                 return true;
             } else if (Objects.equals(preference.getKey(), "Enable proxy")) {
@@ -279,7 +286,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                 return true;
             }
 
-            if (key_toml.contains(preference.getKey().trim())) {
+            if (key_toml.contains(preference.getKey().trim()) && !newValue.toString().isEmpty()) {
                 val_toml.set(key_toml.indexOf(preference.getKey()), newValue.toString());
                 return true;
             } else {

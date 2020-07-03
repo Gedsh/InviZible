@@ -742,7 +742,7 @@ public class TopFragment extends Fragment {
     }
 
     private void checkAgreement() {
-        if (getActivity() == null) {
+        if (getActivity() == null || getActivity().isFinishing()) {
             return;
         }
 
@@ -760,6 +760,7 @@ public class TopFragment extends Fragment {
         }
     }
 
+    @Nullable
     public static ScheduledExecutorService getModulesLogsTimer() {
         return modulesLogsTimer;
     }

@@ -295,11 +295,11 @@ void handle_ip(const struct arguments *args,
                 usleep(100000);
                 uid = get_uid(version, protocol, saddr, sport, daddr, dport);
 
-                //Allow unrecognised uid!!!
+                /*//Allow unrecognised uid!!!
                 if (uid < 0) {
                     log_android(ANDROID_LOG_WARN, "Allow unrecognised uid!!!");
                     uid = own_uid;
-                }
+                }*/
             }
 
         } else {

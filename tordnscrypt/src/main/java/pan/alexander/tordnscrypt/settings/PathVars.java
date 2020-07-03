@@ -174,7 +174,7 @@ public class PathVars {
             Log.e(LOG_TAG, "saveAppUID function fault " + e.getMessage() + " " + e.getCause());
         }
 
-        new PrefManager(Objects.requireNonNull(context)).setStrPref("appUID", appUID);
+        new PrefManager(context).setStrPref("appUID", appUID);
 
         Log.i(LOG_TAG, "PathVars AppDataDir " + appDataDir + " AppUID " + appUID);
     }

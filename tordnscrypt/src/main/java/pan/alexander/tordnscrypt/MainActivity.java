@@ -367,8 +367,8 @@ public class MainActivity extends LangAppCompatActivity
         MenuItem rootIcon = menu.findItem(R.id.item_root);
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            menuVPNMode.setEnabled(false);
-            menuVPNMode.setVisible(false);
+            //menuVPNMode.setEnabled(false);
+            //menuVPNMode.setVisible(false);
         }
 
         if (rootIsAvailable) {
@@ -527,13 +527,13 @@ public class MainActivity extends LangAppCompatActivity
             ApManager apManager = new ApManager(this);
             if (apManager.configApState()) {
                 checkHotspotState();
-            } else {
+            } else if (!isFinishing()) {
                 Intent intent = new Intent(Intent.ACTION_MAIN, null);
                 intent.addCategory(Intent.CATEGORY_LAUNCHER);
                 ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.TetherSettings");
                 intent.setComponent(cn);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                this.startActivityForResult(intent, CODE_IS_AP_ON);
+                startActivityForResult(intent, CODE_IS_AP_ON);
             }
         } catch (Exception e) {
             Log.e(LOG_TAG, "MainActivity onOptionsItemSelected exception " + e.getMessage() + " " + e.getCause());
@@ -873,8 +873,17 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     private void startAppExitDetectService() {
-        Intent intent = new Intent(this, AppExitDetectService.class);
-        startService(intent);
+
+        if (isFinishing()) {
+            return;
+        }
+
+        new Handler().postDelayed(() -> {
+            if (!isFinishing()) {
+                Intent intent = new Intent(this, AppExitDetectService.class);
+                startService(intent);
+            }
+        }, 1000);
     }
 
     private void showInfoAboutRoot() {
@@ -908,7 +917,7 @@ public class MainActivity extends LangAppCompatActivity
 
         if (prepareIntent == null) {
             startVPNService(RESULT_OK);
-        } else if (!vpnRequested){
+        } else if (!vpnRequested && !isFinishing()){
             vpnRequested = true;
             startActivityForResult(prepareIntent, CODE_IS_VPN_ALLOWED);
         }

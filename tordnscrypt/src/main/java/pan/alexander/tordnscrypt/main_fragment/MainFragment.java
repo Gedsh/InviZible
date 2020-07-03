@@ -265,7 +265,8 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 
-        if (getActivity() == null || orientationLandscape) {
+        if (getActivity() == null || getActivity().isFinishing()
+                || modulesStatus == null || buttonView == null || orientationLandscape) {
             return;
         }
 

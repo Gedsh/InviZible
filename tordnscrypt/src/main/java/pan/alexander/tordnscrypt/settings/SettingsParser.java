@@ -83,22 +83,22 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
 
                 if (key.equals("listen_addresses")) {
                     key = "listen_port";
-                    if (val.contains("\"")) {
+                    if (val.contains("\"") && val.contains(":")) {
                         val = val.substring(val.indexOf(":") + 1, val.indexOf("\"", 3)).trim();
-                    } else if (val.contains("'")) {
+                    } else if (val.contains("'") && val.contains(":")) {
                         val = val.substring(val.indexOf(":") + 1, val.indexOf("'", 3)).trim();
                     }
                 } else if (key.equals("fallback_resolver")) {
-                    if (val.contains("\"")) {
+                    if (val.contains("\"") && val.contains(":")) {
                         val = val.substring(val.indexOf("\"") + 1, val.indexOf(":")).trim();
-                    } else if (val.contains("'")) {
+                    } else if (val.contains("'") && val.contains(":")) {
                         val = val.substring(val.indexOf("'") + 1, val.indexOf(":")).trim();
                     }
                 } else if (key.equals("proxy")) {
                     key = "proxy_port";
-                    if (val.contains("\"")) {
+                    if (val.contains("\"") && val.contains(":")) {
                         val = val.substring(val.indexOf(":", 10) + 1, val.indexOf("\"", 10)).trim();
-                    } else if (val.contains("'")) {
+                    } else if (val.contains("'") && val.contains(":")) {
                         val = val.substring(val.indexOf(":", 10) + 1, val.indexOf("'", 10)).trim();
                     }
                 } else if (header.equals("[sources.public-resolvers]") && key.equals("urls")) {
@@ -341,8 +341,9 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
 
                 try {
                     val_saved_str = sp.getString(key, "");
-
-                    val_saved_str = val_saved_str.trim();
+                    if (val_saved_str != null) {
+                        val_saved_str = val_saved_str.trim();
+                    }
 
                 } catch (ClassCastException e) {
                     isbool = true;
