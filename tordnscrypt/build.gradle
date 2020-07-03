@@ -3,7 +3,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
 
 
     flavorDimensions "version", "processor"
@@ -41,7 +41,7 @@ android {
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 29
+        targetSdkVersion 30
         versionCode 94
 
         resConfigs "en", "ru-rRU", "ru-rUA", "pl", "de", "fa", "in"
