@@ -297,3 +297,12 @@
 **InviZible Pro beta 0.9.4**
 * Updated DNSCrypt to version 2.0.43.
 * Attempting to fix autorun on Android version 8-10
+
+**InviZible Pro beta 0.9.5**
+* Updated DNSCrypt to version 2.0.44.
+* Implemented measurement of Internet speed and traffic in the notification.
+* Updated notifications view.
+* Fixed language selection.
+* Improved application security.
+* Implemented compatibility mode for the custom ROMs.
+* Add shell script control.
