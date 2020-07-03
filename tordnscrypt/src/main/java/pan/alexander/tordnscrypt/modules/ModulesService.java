@@ -28,6 +28,7 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.preference.PreferenceManager;
 
 import java.io.File;
@@ -66,7 +67,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class ModulesService extends Service {
     public static final String actionDismissNotification = "pan.alexander.tordnscrypt.action.DISMISS_NOTIFICATION";
-    public static final int DEFAULT_NOTIFICATION_ID = 101;
+    public static final int DEFAULT_NOTIFICATION_ID = 101102;
 
     public static final String actionStopService = "pan.alexander.tordnscrypt.action.STOP_SERVICE";
     public static final String actionStopServiceForeground = "pan.alexander.tordnscrypt.action.STOP_SERVICE_FOREGROUND";
@@ -107,6 +108,7 @@ public class ModulesService extends Service {
     private int timerPeriod = TIMER_HIGH_SPEED;
     private ModulesStateLoop checkModulesStateTask;
     private ModulesKiller modulesKiller;
+    private UsageStatistic usageStatistic;
 
     public ModulesService() {
     }
@@ -123,6 +125,8 @@ public class ModulesService extends Service {
 
         startModulesThreadsTimer();
 
+        usageStatistic = new UsageStatistic(this);
+
         if (new PrefManager(this).getBoolPref("DNSCryptSystemDNSAllowed")) {
             new Handler().postDelayed(() -> {
                 if (new PrefManager(this).getBoolPref("DNSCryptSystemDNSAllowed")) {
@@ -133,6 +137,7 @@ public class ModulesService extends Service {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
@@ -146,8 +151,20 @@ public class ModulesService extends Service {
         }
 
         if (showNotification) {
+
+            String title = getString(R.string.app_name);
+            String message = getString(R.string.notification_text);
+            if (usageStatistic.isStatisticAllowed()) {
+                title = usageStatistic.getTitle();
+                message = usageStatistic.getMessage(System.currentTimeMillis());
+            }
+
             ServiceNotification notification = new ServiceNotification(this, notificationManager);
-            notification.sendNotification(getString(R.string.app_name), getText(R.string.notification_text).toString());
+            notification.sendNotification(title, message);
+
+            if (usageStatistic.isStatisticAllowed()) {
+                usageStatistic.startUpdate();
+            }
         }
 
         if (intent != null && Objects.equals(intent.getAction(), actionStopServiceForeground)) {
@@ -809,6 +826,10 @@ public class ModulesService extends Service {
 
     @Override
     public void onDestroy() {
+
+        if (usageStatistic != null) {
+            usageStatistic.stopUpdate();
+        }
 
         releaseWakelocks();
 

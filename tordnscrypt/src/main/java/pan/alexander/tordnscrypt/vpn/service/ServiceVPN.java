@@ -68,6 +68,8 @@ import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSQueryLogRecord;
 import pan.alexander.tordnscrypt.iptables.Tethering;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.modules.ServiceNotification;
+import pan.alexander.tordnscrypt.modules.UsageStatisticKt;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
@@ -280,7 +282,7 @@ public class ServiceVPN extends VpnService {
                 && !modulesStatus.isUseModulesWithRoot();
 
         // Subnet routing
-        if (subnet && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (subnet /*&& Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP*/) {
             // Exclude IP ranges
             List<IPUtil.CIDR> listExclude = new ArrayList<>();
             listExclude.add(new IPUtil.CIDR("127.0.0.0", 8)); // localhost
@@ -1016,8 +1018,11 @@ public class ServiceVPN extends VpnService {
         routeAllThroughTor = prefs.getBoolean("pref_fast_all_through_tor", true);
         torTethering = prefs.getBoolean("pref_common_tor_tethering", false);
         blockIPv6 = prefs.getBoolean("block_ipv6", true);
-        compatibilityMode = prefs.getBoolean("swCompatibilityMode", false);
         boolean vpnEnabled = prefs.getBoolean("VPNServiceEnabled", false);
+        compatibilityMode = prefs.getBoolean("swCompatibilityMode", false);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            compatibilityMode = true;
+        }
 
 
         pathVars = PathVars.getInstance(this);
@@ -1042,8 +1047,17 @@ public class ServiceVPN extends VpnService {
         }
 
         if (showNotification) {
-            ServiceVPNNotification notification = new ServiceVPNNotification(this, notificationManager);
-            notification.sendNotification(getString(R.string.app_name), getText(R.string.notification_text).toString());
+            //ServiceVPNNotification notification = new ServiceVPNNotification(this, notificationManager);
+
+            String title = getString(R.string.app_name);
+            String message = getString(R.string.notification_text);
+            if (!UsageStatisticKt.getSavedTitle().isEmpty() && !UsageStatisticKt.getSavedMessage().isEmpty()) {
+                title = UsageStatisticKt.getSavedTitle();
+                message = UsageStatisticKt.getSavedMessage();
+            }
+
+            ServiceNotification notification = new ServiceNotification(this, notificationManager);
+            notification.sendNotification(title, message);
         }
 
         Log.i(LOG_TAG, "VPN Received " + intent);
