@@ -23,7 +23,11 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
 import pan.alexander.tordnscrypt.MainActivity;
@@ -34,19 +38,22 @@ import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICAT
 public class ServiceNotification {
     //public static final String ANDROID_CHANNEL_ID = "InviZible";
     //public static final String ANDROID_CHANNEL_NAME = "NOTIFICATION_CHANNEL_INVIZIBLE";
-    private final Service modulesService;
+    private final Service service;
     private final NotificationManager notificationManager;
 
-    ServiceNotification(Service modulesService, NotificationManager notificationManager) {
-        this.modulesService = modulesService;
+    public ServiceNotification(Service service, NotificationManager notificationManager) {
+        this.service = service;
         this.notificationManager = notificationManager;
     }
 
-    void sendNotification(String Title, String Text) {
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    public synchronized void sendNotification(String Title, String Text) {
 
-        if (modulesService == null) {
+        if (service == null || notificationManager == null) {
             return;
         }
+
+        notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
 
         /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationManager != null) {
             NotificationChannel notificationChannel = new NotificationChannel
@@ -59,34 +66,65 @@ public class ServiceNotification {
         }*/
 
         //These three lines makes Notification to open main activity after clicking on it
-        Intent notificationIntent = new Intent(modulesService, MainActivity.class);
+        Intent notificationIntent = new Intent(service, MainActivity.class);
         notificationIntent.setAction(Intent.ACTION_MAIN);
         notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
 
-        PendingIntent contentIntent = PendingIntent.getActivity(modulesService.getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent contentIntent = PendingIntent.getActivity(service.getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        int iconResource = modulesService.getResources().getIdentifier("ic_service_notification", "drawable", modulesService.getPackageName());
+        int iconResource = service.getResources().getIdentifier("ic_service_notification", "drawable", service.getPackageName());
         if (iconResource == 0) {
             iconResource = android.R.drawable.ic_menu_view;
         }
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(modulesService, ANDROID_CHANNEL_ID);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(service, ANDROID_CHANNEL_ID);
         builder.setContentIntent(contentIntent)
                 .setOngoing(true)   //Can't be swiped out
                 .setSmallIcon(iconResource)
-                //.setLargeIcon(BitmapFactory.decodeResource(res, R.drawable.large))   // большая картинка
-                //.setTicker(Ticker)
                 .setContentTitle(Title) //Заголовок
                 .setContentText(Text) // Текст уведомления
-                //.setStyle(new NotificationCompat.BigTextStyle().bigText(Text))
-                //.setWhen(System.currentTimeMillis())
-                //new experiment
                 .setPriority(Notification.PRIORITY_MIN)
                 .setOnlyAlertOnce(true)
+                .setChannelId(ANDROID_CHANNEL_ID)
+                .setCategory(Notification.CATEGORY_SERVICE)
                 .setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
 
         Notification notification = builder.build();
 
-        modulesService.startForeground(DEFAULT_NOTIFICATION_ID, notification);
+        service.startForeground(DEFAULT_NOTIFICATION_ID, notification);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    public static void updateNotification(Context context, NotificationManager notificationManager, String Title, String Text) {
+        if (context == null || notificationManager == null) {
+            return;
+        }
+
+        Intent notificationIntent = new Intent(context, MainActivity.class);
+        notificationIntent.setAction(Intent.ACTION_MAIN);
+        notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+
+        PendingIntent contentIntent = PendingIntent.getActivity(context.getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        int iconResource = context.getResources().getIdentifier("ic_service_notification", "drawable", context.getPackageName());
+        if (iconResource == 0) {
+            iconResource = android.R.drawable.ic_menu_view;
+        }
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, ANDROID_CHANNEL_ID);
+        builder.setContentIntent(contentIntent)
+                .setOngoing(true)   //Can't be swiped out
+                .setSmallIcon(iconResource)
+                .setContentTitle(Title) //Заголовок
+                .setContentText(Text) // Текст уведомления
+                .setPriority(Notification.PRIORITY_MIN)
+                .setOnlyAlertOnce(true)
+                .setChannelId(ANDROID_CHANNEL_ID)
+                .setCategory(Notification.CATEGORY_SERVICE)
+                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
+
+        Notification notification = builder.build();
+
+        notificationManager.notify(DEFAULT_NOTIFICATION_ID, notification);
     }
 }

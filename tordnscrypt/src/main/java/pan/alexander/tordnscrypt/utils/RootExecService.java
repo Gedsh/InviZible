@@ -32,6 +32,7 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
@@ -88,6 +89,10 @@ public class RootExecService extends Service {
 
         executorService = Executors.newSingleThreadExecutor();
         notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationManager != null) {
+            createNotificationChannel();
+        }
     }
 
     @Override
@@ -119,21 +124,6 @@ public class RootExecService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationManager != null) {
-
-            NotificationChannel notificationChannel = new NotificationChannel
-                    (ROOT_CHANNEL_ID, getString(R.string.notification_channel_root), NotificationManager.IMPORTANCE_LOW);
-            notificationChannel.setDescription("");
-            notificationChannel.setSound(null, Notification.AUDIO_ATTRIBUTES_DEFAULT);
-            notificationChannel.enableLights(false);
-            notificationChannel.enableVibration(false);
-            notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-            notificationManager.createNotificationChannel(notificationChannel);
-
-            sendNotification(getString(R.string.app_name), getText(R.string.notification_temp_text).toString());
-
-        }
 
         if (intent == null) {
             stopService(startId);
@@ -281,6 +271,21 @@ public class RootExecService extends Service {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void createNotificationChannel() {
+        NotificationChannel notificationChannel = new NotificationChannel
+                (ROOT_CHANNEL_ID, getString(R.string.notification_channel_root), NotificationManager.IMPORTANCE_LOW);
+        notificationChannel.setDescription("");
+        notificationChannel.setSound(null, Notification.AUDIO_ATTRIBUTES_DEFAULT);
+        notificationChannel.enableLights(false);
+        notificationChannel.enableVibration(false);
+        notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+        notificationManager.createNotificationChannel(notificationChannel);
+
+        sendNotification(getText(R.string.notification_temp_text).toString(), "");
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public void sendNotification(String Title, String Text) {
 
         //These three lines makes Notification to open main activity after clicking on it
@@ -297,7 +302,7 @@ public class RootExecService extends Service {
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ROOT_CHANNEL_ID);
         builder.setContentIntent(contentIntent)
-                .setOngoing(true)   //Can't be swiped out
+                .setOngoing(false)   //Can be swiped out
                 .setSmallIcon(iconResource)
                 //.setLargeIcon(BitmapFactory.decodeResource(res, R.drawable.large))   // большая картинка
                 //.setTicker(Ticker)
@@ -307,7 +312,10 @@ public class RootExecService extends Service {
                 //new experiment
                 .setPriority(Notification.PRIORITY_MIN)
                 .setOnlyAlertOnce(true)
-                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
+                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+                .setCategory(Notification.CATEGORY_PROGRESS)
+                .setChannelId(ROOT_CHANNEL_ID)
+                .setProgress(100, 100, true);
 
         Notification notification = builder.build();
 

@@ -28,6 +28,8 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
+
+import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.FileProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -106,8 +108,13 @@ public class UpdateService extends Service {
         } else {
             wakeLocksManager = null;
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationManager != null) {
+            createNotificationChannel();
+        }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getAction();
@@ -121,7 +128,7 @@ public class UpdateService extends Service {
             int serviceId = intent.getIntExtra("ServiceStartId", 0);
             DownloadThread downloadThread = sparseArray.get(serviceId);
             if (downloadThread != null) {
-                sendNotification(downloadThread.serviceStartId, downloadThread.notificationId, downloadThread.startTime, getText(R.string.update_interrupt_notification).toString(), getString(R.string.app_name), getText(R.string.update_interrupt_notification).toString());
+                sendNotification(downloadThread.serviceStartId, downloadThread.notificationId, downloadThread.startTime, getString(R.string.update_interrupt_notification), "", getString(R.string.update_interrupt_notification));
                 downloadThread.thread.interrupt();
                 sparseArray.delete(serviceId);
             }
@@ -152,23 +159,10 @@ public class UpdateService extends Service {
             this.notificationId = notificationId;
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
         void startDownloadThread() {
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
-                NotificationChannel notificationChannel = new NotificationChannel
-                        (UPDATE_CHANNEL_ID, getString(R.string.notification_channel_update), NotificationManager.IMPORTANCE_LOW);
-                notificationChannel.setSound(null, Notification.AUDIO_ATTRIBUTES_DEFAULT);
-                notificationChannel.setDescription("");
-                notificationChannel.enableLights(false);
-                notificationChannel.enableVibration(false);
-                notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-
-                if (notificationManager != null) {
-                    notificationManager.createNotificationChannel(notificationChannel);
-                }
-            }
-            sendNotification(serviceStartId, notificationId, startTime, getText(R.string.update_notification).toString(), getString(R.string.app_name), getText(R.string.update_notification).toString());
+            sendNotification(serviceStartId, notificationId, startTime, getString(R.string.update_notification), "", getString(R.string.update_notification));
 
             Thread downloadThread = new Thread(downloadUpdateWork);
             downloadThread.setDaemon(false);
@@ -179,6 +173,7 @@ public class UpdateService extends Service {
 
         Runnable downloadUpdateWork = new Runnable() {
 
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void run() {
                 thread = Thread.currentThread();
@@ -263,7 +258,7 @@ public class UpdateService extends Service {
                             String notification = getText(R.string.update_notification).toString() +
                                     " " + fileToDownload;
 
-                            updateNotification(serviceStartId, notificationId, startTime, getText(R.string.update_notification).toString(), getString(R.string.app_name), notification, percent);
+                            updateNotification(serviceStartId, notificationId, startTime, getText(R.string.update_notification).toString(), "", notification, percent);
                         }
 
                         output.write(data, 0, count);
@@ -343,6 +338,20 @@ public class UpdateService extends Service {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void createNotificationChannel() {
+        NotificationChannel notificationChannel = new NotificationChannel
+                (UPDATE_CHANNEL_ID, getString(R.string.notification_channel_update), NotificationManager.IMPORTANCE_DEFAULT);
+        notificationChannel.setSound(null, Notification.AUDIO_ATTRIBUTES_DEFAULT);
+        notificationChannel.setDescription("");
+        notificationChannel.enableLights(false);
+        notificationChannel.enableVibration(false);
+        notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+
+        notificationManager.createNotificationChannel(notificationChannel);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     void sendNotification(int serviceStartId, int notificationId, long startTime, String Ticker, String Title, String Text) {
 
         //These three lines makes Notification to open main activity after clicking on it
@@ -367,6 +376,9 @@ public class UpdateService extends Service {
                 .setOnlyAlertOnce(true)
                 .setWhen(startTime)
                 .setUsesChronometer(true)
+                .setChannelId(UPDATE_CHANNEL_ID)
+                .setCategory(Notification.CATEGORY_PROGRESS)
+                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
                 .addAction(R.drawable.ic_stop, getText(R.string.cancel_download), stopDownloadPendingIntent);
 
         Notification notification = builder.build();
@@ -374,6 +386,7 @@ public class UpdateService extends Service {
         startForeground(notificationId, notification);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void updateNotification(int serviceStartId, int notificationId, long startTime, String Ticker, String Title, String Text, int percent) {
 
         //These three lines makes Notification to open main activity after clicking on it
@@ -398,6 +411,9 @@ public class UpdateService extends Service {
                 .setOnlyAlertOnce(true)
                 .setWhen(startTime - (System.currentTimeMillis() - startTime))
                 .setUsesChronometer(true)
+                .setChannelId(UPDATE_CHANNEL_ID)
+                .setCategory(Notification.CATEGORY_PROGRESS)
+                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
                 .addAction(R.drawable.ic_stop, getText(R.string.cancel_download), stopDownloadPendingIntent);
 
         int PROGRESS_MAX = 100;
