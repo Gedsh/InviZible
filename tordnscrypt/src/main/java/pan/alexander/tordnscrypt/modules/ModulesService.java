@@ -119,13 +119,26 @@ public class ModulesService extends Service {
 
         notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
 
+        usageStatistic = new UsageStatistic(this);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+            String title = getString(R.string.app_name);
+            String message = getString(R.string.notification_text);
+            if (usageStatistic.isStatisticAllowed()) {
+                title = usageStatistic.getTitle();
+                message = usageStatistic.getMessage(System.currentTimeMillis());
+            }
+
+            ServiceNotification notification = new ServiceNotification(this, notificationManager, UsageStatisticKt.getStartTime());
+            notification.sendNotification(title, message);
+        }
+
         pathVars = PathVars.getInstance(this);
 
         modulesKiller = new ModulesKiller(this, pathVars);
 
         startModulesThreadsTimer();
-
-        usageStatistic = new UsageStatistic(this);
 
         if (new PrefManager(this).getBoolPref("DNSCryptSystemDNSAllowed")) {
             new Handler().postDelayed(() -> {
@@ -159,8 +172,9 @@ public class ModulesService extends Service {
                 message = usageStatistic.getMessage(System.currentTimeMillis());
             }
 
-            ServiceNotification notification = new ServiceNotification(this, notificationManager);
+            ServiceNotification notification = new ServiceNotification(this, notificationManager, UsageStatisticKt.getStartTime());
             notification.sendNotification(title, message);
+            usageStatistic.setServiceNotification(notification);
 
             if (usageStatistic.isStatisticAllowed()) {
                 usageStatistic.startUpdate();
@@ -337,7 +351,7 @@ public class ModulesService extends Service {
     }
 
     private boolean stopDNSCryptIfPortIsBusy() {
-        if (!isAvailable(pathVars.getDNSCryptPort())) {
+        if (isNotAvailable(pathVars.getDNSCryptPort())) {
             try {
                 modulesStatus.setDnsCryptState(RESTARTING);
 
@@ -460,10 +474,10 @@ public class ModulesService extends Service {
     }
 
     private boolean stopTorIfPortsIsBusy() {
-        boolean stopRequired = !isAvailable(pathVars.getTorDNSPort())
-                || !isAvailable(pathVars.getTorSOCKSPort())
-                || !isAvailable(pathVars.getTorTransPort())
-                || !isAvailable(pathVars.getTorHTTPTunnelPort());
+        boolean stopRequired = isNotAvailable(pathVars.getTorDNSPort())
+                || isNotAvailable(pathVars.getTorSOCKSPort())
+                || isNotAvailable(pathVars.getTorTransPort())
+                || isNotAvailable(pathVars.getTorHTTPTunnelPort());
 
         if (stopRequired) {
             try {
@@ -605,14 +619,14 @@ public class ModulesService extends Service {
         boolean stopRequired = false;
 
         for (String port : itpdTunnelsPorts) {
-            if (!isAvailable(port)) {
+            if (isNotAvailable(port)) {
                 stopRequired = true;
             }
         }
 
         stopRequired = stopRequired ||
-                !isAvailable(pathVars.getITPDSOCKSPort())
-                || !isAvailable(pathVars.getITPDHttpProxyPort());
+                isNotAvailable(pathVars.getITPDSOCKSPort())
+                || isNotAvailable(pathVars.getITPDHttpProxyPort());
 
         if (stopRequired) {
             try {
@@ -738,8 +752,13 @@ public class ModulesService extends Service {
     }
 
     private void dismissNotification(int startId) {
-        notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
-        stopForeground(true);
+        try {
+            notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
+            stopForeground(true);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "ModulesService dismissNotification exception " + e.getMessage() + " " + e.getCause());
+        }
+
         stopSelf(startId);
     }
 
@@ -846,8 +865,13 @@ public class ModulesService extends Service {
 
     private void stopService(int startID) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
-            stopForeground(true);
+            try {
+                notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
+                stopForeground(true);
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "ModulesService stopService exception " + e.getMessage() + " " + e.getCause());
+            }
+
         }
 
         stopSelf(startID);
@@ -861,6 +885,7 @@ public class ModulesService extends Service {
 
     private void stopModulesService() {
         try {
+            notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
             stopForeground(true);
         } catch (Exception e) {
             Log.e(LOG_TAG, "ModulesService stopModulesService exception " + e.getMessage() + " " + e.getCause());
@@ -871,9 +896,8 @@ public class ModulesService extends Service {
 
     private void stopModulesServiceForeground() {
 
-        notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
-
         try {
+            notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
             stopForeground(true);
         } catch (Exception e) {
             Log.e(LOG_TAG, "ModulesService stopModulesServiceForeground1 exception " + e.getMessage() + " " + e.getCause());
@@ -882,9 +906,8 @@ public class ModulesService extends Service {
 
     private void stopModulesServiceForeground(int startId) {
 
-        notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
-
         try {
+            notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
             stopForeground(true);
         } catch (Exception e) {
             Log.e(LOG_TAG, "ModulesService stopModulesServiceForeground2 exception " + e.getMessage() + " " + e.getCause());
@@ -956,7 +979,7 @@ public class ModulesService extends Service {
         return rootGroup;
     }
 
-    private boolean isAvailable(String portStr) {
+    private boolean isNotAvailable(String portStr) {
 
         int port = Integer.parseInt(portStr);
 
@@ -967,7 +990,7 @@ public class ModulesService extends Service {
             ss.setReuseAddress(true);
             ds = new DatagramSocket(port);
             ds.setReuseAddress(true);
-            return true;
+            return false;
         } catch (IOException ignored) {
         } finally {
             if (ds != null) {
@@ -982,7 +1005,7 @@ public class ModulesService extends Service {
             }
         }
 
-        return false;
+        return true;
     }
 
     private void cleanLogFileNoRootMethod(String logFilePath, String text) {

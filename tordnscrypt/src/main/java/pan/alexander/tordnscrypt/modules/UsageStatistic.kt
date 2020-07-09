@@ -19,13 +19,11 @@ package pan.alexander.tordnscrypt.modules
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.app.NotificationManager
 import android.content.Context
 import android.net.TrafficStats
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.core.content.ContextCompat.getSystemService
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.utils.PrefManager
 import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
@@ -41,11 +39,15 @@ import kotlin.math.roundToInt
 
 var savedTitle = ""
 var savedMessage = ""
+var startTime = 0L
 
 class UsageStatistic(private val context: Context) {
+
+    var serviceNotification: ServiceNotification? = null
+
     private var timer: ScheduledExecutorService? = null
-    private var notificationManager: NotificationManager? = getSystemService<NotificationManager>(context, NotificationManager::class.java)
     private val modulesStatus = ModulesStatus.getInstance()
+
     private var uid = PrefManager(context).getStrPref("appUID").toInt()
 
     private var scheduledFuture: ScheduledFuture<*>? = null
@@ -60,6 +62,7 @@ class UsageStatistic(private val context: Context) {
 
     init {
         initModulesLogsTimer()
+        startTime = System.currentTimeMillis()
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -91,7 +94,7 @@ class UsageStatistic(private val context: Context) {
                 val message = getMessage(currentTime)
 
                 if (title != savedTitle || message != savedMessage) {
-                    ServiceNotification.updateNotification(context, notificationManager, title, message)
+                    serviceNotification?.updateNotification(title, message)
                     savedTitle = title
                     savedMessage = message
                 }

@@ -23,7 +23,6 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 
@@ -36,14 +35,14 @@ import static pan.alexander.tordnscrypt.ApplicationExtKt.ANDROID_CHANNEL_ID;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
 
 public class ServiceNotification {
-    //public static final String ANDROID_CHANNEL_ID = "InviZible";
-    //public static final String ANDROID_CHANNEL_NAME = "NOTIFICATION_CHANNEL_INVIZIBLE";
     private final Service service;
     private final NotificationManager notificationManager;
+    private Long startTime;
 
-    public ServiceNotification(Service service, NotificationManager notificationManager) {
+    public ServiceNotification(Service service, NotificationManager notificationManager, Long startTime) {
         this.service = service;
         this.notificationManager = notificationManager;
+        this.startTime = startTime;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -89,29 +88,34 @@ public class ServiceNotification {
                 .setCategory(Notification.CATEGORY_SERVICE)
                 .setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
 
+        if (startTime != 0) {
+            builder.setWhen(startTime)
+                    .setUsesChronometer(true);
+        }
+
         Notification notification = builder.build();
 
         service.startForeground(DEFAULT_NOTIFICATION_ID, notification);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public static void updateNotification(Context context, NotificationManager notificationManager, String Title, String Text) {
-        if (context == null || notificationManager == null) {
+    public void updateNotification(String Title, String Text) {
+        if (service == null || notificationManager == null) {
             return;
         }
 
-        Intent notificationIntent = new Intent(context, MainActivity.class);
+        Intent notificationIntent = new Intent(service, MainActivity.class);
         notificationIntent.setAction(Intent.ACTION_MAIN);
         notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
 
-        PendingIntent contentIntent = PendingIntent.getActivity(context.getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent contentIntent = PendingIntent.getActivity(service.getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        int iconResource = context.getResources().getIdentifier("ic_service_notification", "drawable", context.getPackageName());
+        int iconResource = service.getResources().getIdentifier("ic_service_notification", "drawable", service.getPackageName());
         if (iconResource == 0) {
             iconResource = android.R.drawable.ic_menu_view;
         }
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, ANDROID_CHANNEL_ID);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(service, ANDROID_CHANNEL_ID);
         builder.setContentIntent(contentIntent)
                 .setOngoing(true)   //Can't be swiped out
                 .setSmallIcon(iconResource)
@@ -122,6 +126,11 @@ public class ServiceNotification {
                 .setChannelId(ANDROID_CHANNEL_ID)
                 .setCategory(Notification.CATEGORY_SERVICE)
                 .setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
+
+        if (startTime != 0) {
+            builder.setWhen(startTime)
+                    .setUsesChronometer(true);
+        }
 
         Notification notification = builder.build();
 
