@@ -367,8 +367,8 @@ public class MainActivity extends LangAppCompatActivity
         MenuItem rootIcon = menu.findItem(R.id.item_root);
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            //menuVPNMode.setEnabled(false);
-            //menuVPNMode.setVisible(false);
+            menuVPNMode.setEnabled(false);
+            menuVPNMode.setVisible(false);
         }
 
         if (rootIsAvailable) {
