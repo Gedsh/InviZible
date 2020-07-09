@@ -25,6 +25,7 @@ import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.LinkProperties;
 import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.provider.Settings;
@@ -67,9 +68,27 @@ public class Util {
     }
 
     public static boolean isConnected(Context context) {
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo ni = (cm == null ? null : cm.getActiveNetworkInfo());
-        return (ni != null && ni.isConnected());
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork());
+
+            if (capabilities != null
+                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) {
+
+                if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                    return true;
+                } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                    return true;
+                }  else return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET);
+            }
+
+            return false;
+        } else {
+            NetworkInfo ni = (connectivityManager == null ? null : connectivityManager.getActiveNetworkInfo());
+            return (ni != null && ni.isConnected());
+        }
     }
 
     public static List<String> getDefaultDNS(Context context) {
@@ -167,10 +186,7 @@ public class Util {
         });
     }
 
-    public static boolean canFilter(Context context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-            return true;
-
+    public static boolean canFilter() {
         // https://android-review.googlesource.com/#/c/206710/1/untrusted_app.te
         File tcp = new File("/proc/net/tcp");
         File tcp6 = new File("/proc/net/tcp6");
