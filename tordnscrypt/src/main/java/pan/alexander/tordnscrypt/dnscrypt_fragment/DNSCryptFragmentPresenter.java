@@ -85,6 +85,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     private volatile ServiceConnection serviceConnection;
     private ServiceVPN serviceVPN;
     private volatile ArrayList<DNSQueryLogRecord> savedDNSQueryRawRecords;
+    private int savedDNSQueryRecordsLenght = 0;
     private volatile DNSQueryLogRecordsConverter dnsQueryLogRecordsConverter;
     private boolean torTethering;
     private boolean apIsOn;
@@ -218,7 +219,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         scheduledFuture = timer.scheduleAtFixedRate(new Runnable() {
 
             int loop = 0;
-            String previousLastLines = "";
+            int previousLastLinesLength = 0;
 
             @Override
             public void run() {
@@ -252,7 +253,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                             return;
                         }
 
-                        if (!previousLastLines.contentEquals(lastLines) && dnsCryptLogAutoScroll) {
+                        if (previousLastLinesLength != lastLines.length() && dnsCryptLogAutoScroll) {
 
                             dnsCryptStartedSuccessfully(lastLines);
 
@@ -263,7 +264,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                                 view.scrollDNSCryptLogViewToBottom();
                             }
 
-                            previousLastLines = lastLines;
+                            previousLastLinesLength = lastLines.length();
                         }
 
                         refreshDNSCryptState(view.getFragmentActivity());
@@ -609,11 +610,16 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             }
         }
 
-        if (view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isFinishing()) {
+        String dnsQueryRecords = lines.toString();
+        int dnsQueryRecordsLength = dnsQueryRecords.length();
+
+        if (view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isFinishing()
+                && savedDNSQueryRecordsLenght != dnsQueryRecordsLength) {
             view.getFragmentActivity().runOnUiThread(() -> {
                 if (view != null && view.getFragmentActivity() != null && dnsCryptLogAutoScroll) {
-                    view.setDNSCryptLogViewText(Html.fromHtml(lines.toString()));
+                    view.setDNSCryptLogViewText(Html.fromHtml(dnsQueryRecords));
                     view.scrollDNSCryptLogViewToBottom();
+                    savedDNSQueryRecordsLenght = dnsQueryRecordsLength;
                 } else {
                     savedDNSQueryRawRecords.clear();
                 }

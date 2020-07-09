@@ -118,7 +118,9 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
         String refreshPeriod = shPref.getString("pref_fast_site_refresh_interval", "12");
-        refreshPeriodHours = Integer.parseInt(refreshPeriod);
+        if (refreshPeriod != null) {
+            refreshPeriodHours = Integer.parseInt(refreshPeriod);
+        }
 
         logFile = new OwnFileReader(context, appDataDir + "/logs/Tor.log");
 
@@ -345,7 +347,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
         scheduledFuture = timer.scheduleAtFixedRate(new Runnable() {
             int loop = 0;
-            String previousLastLines = "";
+            int previousLastLinesLength = 0;
 
             @Override
             public void run() {
@@ -372,7 +374,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
                             return;
                         }
 
-                        if (!previousLastLines.contentEquals(lastLines) && torLogAutoScroll) {
+                        if (previousLastLinesLength != lastLines.length() && torLogAutoScroll) {
 
                             if (!new PrefManager(view.getFragmentActivity()).getBoolPref("Tor Ready")) {
                                 torStartedSuccessfully(view.getFragmentActivity(), lastLines);
@@ -383,7 +385,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
                             view.setTorLogViewText(Html.fromHtml(lastLines));
                             view.scrollTorLogViewToBottom();
 
-                            previousLastLines = lastLines;
+                            previousLastLinesLength = lastLines.length();
                         }
 
                         refreshTorState(view.getFragmentActivity());

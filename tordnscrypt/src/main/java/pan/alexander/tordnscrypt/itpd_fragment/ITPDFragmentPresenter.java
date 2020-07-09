@@ -344,7 +344,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
         scheduledFuture = timer.scheduleAtFixedRate(new Runnable() {
             int loop = 0;
-            String previousLastLines = "";
+            int previousLastLinesLength = 0;
 
             @Override
             public void run() {
@@ -373,10 +373,10 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
                             return;
                         }
 
-                        if (!previousLastLines.equals(lastLines) && itpdLogAutoScroll) {
+                        if (previousLastLinesLength != lastLines.length() && itpdLogAutoScroll) {
                             view.setITPDInfoLogText(Html.fromHtml(lastLines));
                             view.scrollITPDLogViewToBottom();
-                            previousLastLines = lastLines;
+                            previousLastLinesLength = lastLines.length();
                         }
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
