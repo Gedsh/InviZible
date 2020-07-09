@@ -23,7 +23,7 @@ import android.graphics.drawable.Drawable;
 
 import java.util.Objects;
 
-public class AppUnlock {
+public class AppUnlock implements Comparable<AppUnlock> {
     String name;
     String pack;
     String uid;
@@ -56,5 +56,16 @@ public class AppUnlock {
     @Override
     public int hashCode() {
         return Objects.hash(name, pack, uid, icon, system, active);
+    }
+
+    @Override
+    public int compareTo(AppUnlock appUnlock) {
+        if (!this.active && appUnlock.active) {
+            return 1;
+        } else if (this.active && !appUnlock.active) {
+            return -1;
+        } else {
+            return this.name.toLowerCase().compareTo(appUnlock.name.toLowerCase());
+        }
     }
 }

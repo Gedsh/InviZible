@@ -75,7 +75,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class UnlockTorAppsFragment extends Fragment implements CompoundButton.OnCheckedChangeListener, SearchView.OnQueryTextListener {
     private boolean isChanged;
-    private RecyclerView.Adapter mAdapter;
+    private RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHolder> mAdapter;
     private ProgressBar pbTorApp;
     private String unlockAppsStr;
     private ArrayList<AppUnlock> appsUnlock;
@@ -402,7 +402,8 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
     }
 
 
-    private void getDeviceApps(final Context context, final RecyclerView.Adapter adapter, final ArrayList<String> unlockAppsArrListSaved) {
+    private void getDeviceApps(final Context context, final RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHolder> adapter,
+                               final ArrayList<String> unlockAppsArrListSaved) {
 
         pbTorApp.setIndeterminate(true);
         pbTorApp.setVisibility(View.VISIBLE);
@@ -467,7 +468,7 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
 
                     getActivity().runOnUiThread(() -> {
                         appsUnlock.add(app);
-                        Collections.sort(appsUnlock, (appUnlock, t1) -> appUnlock.name.toLowerCase().compareTo(t1.name.toLowerCase()));
+                        Collections.sort(appsUnlock);
                         adapter.notifyDataSetChanged();
                     });
 
