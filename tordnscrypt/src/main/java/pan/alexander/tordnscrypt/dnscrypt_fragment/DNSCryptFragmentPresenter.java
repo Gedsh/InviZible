@@ -466,7 +466,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                 savedDNSQueryRawRecords.clear();
                 view.getFragmentActivity().runOnUiThread(() -> {
                     if (view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isFinishing() && logFile != null) {
-                        view.setDNSCryptLogViewText(Html.fromHtml(logFile.readLastLines()));
+                        view.setDNSCryptLogViewText(Html.fromHtml(savedLines));
                         view.scrollDNSCryptLogViewToBottom();
                     }
                 });
