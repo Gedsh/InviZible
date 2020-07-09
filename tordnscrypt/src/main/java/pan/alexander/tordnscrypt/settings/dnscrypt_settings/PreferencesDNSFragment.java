@@ -45,6 +45,7 @@ import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 public class PreferencesDNSFragment extends PreferenceFragmentCompat
         implements Preference.OnPreferenceChangeListener,
@@ -195,7 +196,13 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         }
 
         try {
-            if (Objects.equals(preference.getKey(), "listen_port") && !newValue.toString().isEmpty()) {
+            if (Objects.equals(preference.getKey(), "listen_port")) {
+                boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
+                        && ModulesStatus.getInstance().isUseModulesWithRoot();
+                if (!newValue.toString().matches("\\d+")
+                        || (!useModulesWithRoot && Integer.parseInt(newValue.toString()) < 1024)) {
+                    return false;
+                }
                 String val = "['127.0.0.1:" + newValue.toString() + "']";
                 val_toml.set(key_toml.indexOf("listen_addresses"), val);
                 return true;
@@ -213,17 +220,36 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                     val_toml.set(key_toml.indexOf("netprobe_address"), val);
                 }
                 return true;
-            } else if (Objects.equals(preference.getKey(), "proxy_port") && !newValue.toString().isEmpty()) {
+            } else if (Objects.equals(preference.getKey(), "proxy_port")) {
+                boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
+                        && ModulesStatus.getInstance().isUseModulesWithRoot();
+                if (!newValue.toString().matches("\\d+")
+                        || (!useModulesWithRoot && Integer.parseInt(newValue.toString()) < 1024)) {
+                    return false;
+                }
                 String val = "'socks5://127.0.0.1:" + newValue.toString() + "'";
                 val_toml.set(key_toml.indexOf("proxy"), val);
                 return true;
-            } else if (Objects.equals(preference.getKey(), "Sources") && !newValue.toString().isEmpty()) {
+            } else if (Objects.equals(preference.getKey(), "Sources")) {
+                if (newValue.toString().trim().isEmpty()) {
+                    return false;
+                }
                 val_toml.set(key_toml.indexOf("urls"), newValue.toString());
                 return true;
-            } else if (Objects.equals(preference.getKey(), "Relays") && !newValue.toString().isEmpty()) {
+            } else if (Objects.equals(preference.getKey(), "Relays")) {
+                if (newValue.toString().trim().isEmpty()) {
+                    return false;
+                }
                 val_toml.set(key_toml.lastIndexOf("urls"), newValue.toString());
                 return true;
-            } else if (Objects.equals(preference.getKey(), "refresh_delay_relays") && !newValue.toString().isEmpty()) {
+            } else if (Objects.equals(preference.getKey(), "refresh_delay")) {
+                if (!newValue.toString().matches("\\d+")) {
+                    return false;
+                }
+            } else if (Objects.equals(preference.getKey(), "refresh_delay_relays")) {
+                if (!newValue.toString().matches("\\d+")) {
+                    return false;
+                }
                 val_toml.set(key_toml.lastIndexOf("refresh_delay"), newValue.toString());
                 return true;
             } else if (Objects.equals(preference.getKey(), "Enable proxy")) {

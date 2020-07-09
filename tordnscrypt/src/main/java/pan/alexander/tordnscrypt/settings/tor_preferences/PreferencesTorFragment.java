@@ -49,6 +49,7 @@ import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 
 public class PreferencesTorFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener {
@@ -183,7 +184,6 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         if (torRunning) {
             ModulesRestarter.restartTor(getActivity());
             ModulesStatus.getInstance().setIptablesRulesUpdateRequested(getActivity(), true);
-            //ModulesAux.requestModulesStatusUpdate(getActivity());
         }
 
     }
@@ -262,10 +262,22 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             return true;
         } else if (Objects.equals(preference.getKey(), "DNSPort")) {
 
+            boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
+                    && ModulesStatus.getInstance().isUseModulesWithRoot();
+            if (!newValue.toString().matches("\\d+")
+                    || (!useModulesWithRoot && Integer.parseInt(newValue.toString()) < 1024)) {
+                return false;
+            }
+
             ModifyForwardingRules modifyForwardingRules = new ModifyForwardingRules(getActivity(),
                     "onion 127.0.0.1:" + newValue.toString().trim());
             CachedExecutor.INSTANCE.getExecutorService().execute(modifyForwardingRules.getRunnable());
         } else if (Objects.equals(preference.getKey(), "pref_tor_snowflake_stun")) {
+
+            if (newValue.toString().trim().isEmpty()) {
+                return false;
+            }
+
             if (key_tor.contains("ClientTransportPlugin") && getActivity() != null) {
                 boolean saveExtendedLogs = new PrefManager(getActivity()).getBoolPref("swRootCommandsLog");
                 String saveLogsString = "";
@@ -280,6 +292,14 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         } else if (Objects.equals(preference.getKey(), "SOCKSPort")
                 || Objects.equals(preference.getKey(), "HTTPTunnelPort")
                 || Objects.equals(preference.getKey(), "TransPort")) {
+
+            boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
+                    && ModulesStatus.getInstance().isUseModulesWithRoot();
+            if (!newValue.toString().matches("\\d+")
+                    || (!useModulesWithRoot && Integer.parseInt(newValue.toString()) < 1024)) {
+                return false;
+            }
+
             newValue = addIsolateFlags(newValue, allowTorTethering, isolateDestAddress, isolateDestPort);
         } else if (Objects.equals(preference.getKey(), "pref_tor_isolate_dest_address")) {
             if (key_tor.contains("SOCKSPort")) {
@@ -321,6 +341,12 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 val_tor.set(index, val);
             }
             return true;
+        } else if (Objects.equals(preference.getKey(), "VirtualAddrNetwork")
+                && !newValue.toString().matches("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/\\d+$")) {
+            return false;
+        } else if ((Objects.equals(preference.getKey(), "NewCircuitPeriod") || Objects.equals(preference.getKey(), "MaxCircuitDirtiness"))
+                && !newValue.toString().matches("\\d+")) {
+            return false;
         }
 
         if (key_tor.contains(preference.getKey().trim())) {

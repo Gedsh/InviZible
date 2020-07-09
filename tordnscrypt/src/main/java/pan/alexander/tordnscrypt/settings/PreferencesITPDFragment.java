@@ -45,6 +45,7 @@ import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 public class PreferencesITPDFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener {
 
@@ -254,6 +255,31 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
             } else if (Objects.equals(preference.getKey(), "HTTP outproxy")) {
                 isChanged = true;
                 return true;
+            } else if (Objects.equals(preference.getKey(), "incoming port")
+                    || Objects.equals(preference.getKey(), "HTTP proxy port")
+                    || Objects.equals(preference.getKey(), "Socks proxy port")
+                    || Objects.equals(preference.getKey(), "Socks outproxy port")
+                    || Objects.equals(preference.getKey(), "SAM interface port")) {
+                boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
+                        && ModulesStatus.getInstance().isUseModulesWithRoot();
+                if (!newValue.toString().matches("\\d+")
+                        || (!useModulesWithRoot && Integer.parseInt(newValue.toString()) < 1024)) {
+                    return false;
+                }
+            } else if ((Objects.equals(preference.getKey(), "share")
+                    || Objects.equals(preference.getKey(), "transittunnels")
+                    || Objects.equals(preference.getKey(), "openfiles")
+                    || Objects.equals(preference.getKey(), "coresize")
+                    || Objects.equals(preference.getKey(), "ntcpsoft")
+                    || Objects.equals(preference.getKey(), "ntcphard"))
+                    && !newValue.toString().matches("\\d+")) {
+                return false;
+            } else if ((Objects.equals(preference.getKey(), "incoming host")
+                    || Objects.equals(preference.getKey(), "HTTP outproxy address")
+                    || Objects.equals(preference.getKey(), "Socks outproxy address")
+                    || Objects.equals(preference.getKey(), "defaulturl"))
+                    && newValue.toString().trim().isEmpty()) {
+                return false;
             }
 
             if (key_itpd.contains(preference.getKey().trim())) {
