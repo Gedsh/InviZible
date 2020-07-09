@@ -31,7 +31,7 @@ import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 
-public class DNSServerItem {
+public class DNSServerItem implements Comparable<DNSServerItem> {
     private boolean checked = false;
     private boolean dnssec = false;
     private boolean nolog = false;
@@ -208,5 +208,16 @@ public class DNSServerItem {
                 ", description='" + description + '\'' +
                 ", routes=" + routes +
                 '}';
+    }
+
+    @Override
+    public int compareTo(DNSServerItem dnsServerItem) {
+        if (!this.checked && dnsServerItem.checked) {
+            return 1;
+        } else if (this.checked && !dnsServerItem.checked) {
+            return -1;
+        } else {
+            return 0;
+        }
     }
 }

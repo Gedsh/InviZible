@@ -43,6 +43,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
@@ -68,7 +69,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         PreferencesDNSCryptRelays.OnRoutesChangeListener, OnTextFileOperationsCompleteListener,
         AddDNSCryptServerDialogFragment.OnServerAddedListener, SearchView.OnQueryTextListener {
 
-    private RecyclerView.Adapter dNSServersAdapter;
+    private RecyclerView.Adapter<DNSServersAdapter.DNSServersViewHolder> dNSServersAdapter;
     private ArrayList<String> dnsServerNames;
     private ArrayList<String> dnsServerDescr;
     private ArrayList<String> dnsServerSDNS;
@@ -288,6 +289,8 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
             }
 
         }
+
+        Collections.sort(list_dns_servers);
 
         list_dns_servers_saved = new ArrayList<>(list_dns_servers);
     }
