@@ -49,6 +49,7 @@ import pan.alexander.tordnscrypt.vpn.Rule;
 import pan.alexander.tordnscrypt.vpn.Util;
 
 import static android.content.Context.CONNECTIVITY_SERVICE;
+import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -277,8 +278,9 @@ public class ServiceVPNHandler extends Handler {
         // Update connected state
         serviceVPN.last_connected = Util.isConnected(serviceVPN);
 
-        if (serviceVPN.last_connected)
+        if (serviceVPN.last_connected || serviceVPN.last_connected_override) {
             listAllowed.addAll(listRule);
+        }
 
         Log.i(LOG_TAG, "VPN Handler Allowed " + listAllowed.size() + " of " + listRule.size());
         return listAllowed;
@@ -317,8 +319,18 @@ public class ServiceVPNHandler extends Handler {
     }
 
     private void stopServiceVPN() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            serviceVPN.stopForeground(true);
+
+        if (serviceVPN == null) {
+            return;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && serviceVPN.notificationManager != null) {
+            try {
+                serviceVPN.notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
+                serviceVPN.stopForeground(true);
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "ServiceVPNHandler stopServiceVPN exception " + e.getMessage() + " " +e.getCause());
+            }
         }
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(serviceVPN);
