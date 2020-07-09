@@ -229,7 +229,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                     "APP_VERSION_CODE " + BuildConfig.VERSION_CODE + (char) 10 +
                     "APP_VERSION_NAME " + BuildConfig.VERSION_NAME + (char) 10 +
                     "APP_PROC_VERSION " + TopFragment.appProcVersion + (char) 10 +
-                    "CAN_FILTER " + Util.canFilter(this) + (char) 10 +
+                    "CAN_FILTER " + Util.canFilter() + (char) 10 +
                     "APP_VERSION " + TopFragment.appVersion + (char) 10 +
                     "DNSCRYPT_INTERNAL_VERSION " + TopFragment.DNSCryptVersion + (char) 10 +
                     "TOR_INTERNAL_VERSION " + TopFragment.TorVersion + (char) 10 +
@@ -247,7 +247,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                     "APP_VERSION_CODE " + BuildConfig.VERSION_CODE + (char) 10 +
                     "APP_VERSION_NAME " + BuildConfig.VERSION_NAME + (char) 10 +
                     "APP_PROC_VERSION " + TopFragment.appProcVersion + (char) 10 +
-                    "CAN_FILTER " + Util.canFilter(this) + (char) 10 +
+                    "CAN_FILTER " + Util.canFilter() + (char) 10 +
                     "APP_VERSION " + TopFragment.appVersion + (char) 10 +
                     "DNSCRYPT_INTERNAL_VERSION " + TopFragment.DNSCryptVersion + (char) 10 +
                     "TOR_INTERNAL_VERSION " + TopFragment.TorVersion + (char) 10 +

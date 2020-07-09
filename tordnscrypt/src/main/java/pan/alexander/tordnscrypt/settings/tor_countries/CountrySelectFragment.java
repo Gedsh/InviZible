@@ -37,7 +37,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.key_tor;
@@ -51,7 +50,7 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
     public static final int excludeExitNodes = 400;
     private int current_nodes_type = 0;
     private String countries = "";
-    private RecyclerView.Adapter rvAdapter;
+    private RecyclerView.Adapter<CountriesAdapter.CountriesViewHolder> rvAdapter;
     private ArrayList<Countries> countriesListCurrent;
     private ArrayList<Countries> countriesListSaved;
 
@@ -125,11 +124,10 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
         if (compoundButton.getId() == R.id.chbTorCountriesSelectorAll) {
             if (active) {
                 ((CountriesAdapter) rvAdapter).checkAllCountries();
-                rvAdapter.notifyDataSetChanged();
             } else {
                 ((CountriesAdapter) rvAdapter).cleanAllCountries();
-                rvAdapter.notifyDataSetChanged();
             }
+            rvAdapter.notifyDataSetChanged();
         }
     }
 
@@ -200,7 +198,7 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
 
 
         SelectedCountries selectedCountries = new SelectedCountries(countries, current_nodes_type, countriesListCurrent);
-        LayoutInflater lInflater = (LayoutInflater) Objects.requireNonNull(getActivity()).getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        LayoutInflater lInflater = (LayoutInflater) requireActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         @NonNull
         @Override

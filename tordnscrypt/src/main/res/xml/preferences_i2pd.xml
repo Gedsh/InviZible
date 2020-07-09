@@ -16,7 +16,6 @@
         <EditTextPreference
             android:id="@+id/pref_itpd_com_host"
             android:defaultValue="1.2.3.4"
-            android:dependency="Allow incoming connections"
             android:key="incoming host"
             android:selectAllOnFocus="false"
             android:singleLine="true"
@@ -25,7 +24,6 @@
         <EditTextPreference
             android:id="@+id/pref_itpd_com_port"
             android:defaultValue="4567"
-            android:dependency="Allow incoming connections"
             android:key="incoming port"
             android:selectAllOnFocus="false"
             android:singleLine="true"
