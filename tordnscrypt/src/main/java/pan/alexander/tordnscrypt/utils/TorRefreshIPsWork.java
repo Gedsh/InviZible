@@ -29,6 +29,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -120,8 +121,10 @@ public class TorRefreshIPsWork {
 
                 if (!routeAllThroughTorDevice) {
                     FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/unlock", unlockIPsReadyDevice, "ignored");
+                    new PrefManager(context).setSetStrPref("ipsToUnlock", new HashSet<>(unlockIPsReadyDevice));
                 } else {
                     FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/clearnet", unlockIPsReadyDevice, "ignored");
+                    new PrefManager(context).setSetStrPref("ipsForClearNet", new HashSet<>(unlockIPsReadyDevice));
                 }
 
                 if (torTethering) {

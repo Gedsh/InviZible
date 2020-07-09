@@ -60,11 +60,11 @@
     <string name="pref_fast_tor">Настройки Tor</string>
     <string name="pref_fast_all_through_tor">Весь интернет через Tor</string>
     <string name="pref_fast_unlock_with_tor">Выбрать сайты</string>
-    <string name="pref_fast_unlock_with_tor_summ">Сайты, открывающиеся через Tor</string>
+    <string name="pref_fast_unlock_with_tor_summ">Сайты, открывающиеся через Tor. Эта функция не работает для сайтов за CDN</string>
     <string name="pref_fast_unlock_apps_with_tor">Выбрать приложения</string>
     <string name="pref_fast_unlock_apps_with_tor_summ">Приложения, открывающиеся через Tor</string>
     <string name="pref_fast_exclude_from_tor">Исключить сайты</string>
-    <string name="pref_fast_exclude_from_tor_summ">Сайты, открывающиеся в обход Tor</string>
+    <string name="pref_fast_exclude_from_tor_summ">Сайты, открывающиеся в обход Tor. Эта функция не работает для сайтов за CDN</string>
     <string name="pref_fast_exclude_apps_from_tor">Исключить приложения</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">Приложения, открывающиеся в обход Tor</string>
     <string name="pref_fast_site_refresh_interval">Интервал обновления</string>

@@ -59,6 +59,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import pan.alexander.tordnscrypt.BootCompleteReceiver;
@@ -107,11 +108,12 @@ public class ServiceVPN extends VpnService {
     static final String EXTRA_COMMAND = "Command";
     static final String EXTRA_REASON = "Reason";
 
-    private static NotificationManager notificationManager;
+    NotificationManager notificationManager;
     private static final Object jni_lock = new Object();
     private static long jni_context = 0;
 
     boolean last_connected = false;
+    boolean last_connected_override = false;
 
     ParcelFileDescriptor vpn = null;
 
@@ -161,7 +163,7 @@ public class ServiceVPN extends VpnService {
 
     private native void jni_start(long context, int loglevel);
 
-    private native void jni_run(long context, int tun, boolean fwd53, int rcode, boolean compatibilityMode);
+    private native void jni_run(long context, int tun, boolean fwd53, int rcode, boolean compatibilityMode, boolean canFilterSynchronous);
 
     private native void jni_stop(long context);
 
@@ -478,7 +480,11 @@ public class ServiceVPN extends VpnService {
 
             tunnelThread = new Thread(() -> {
                 Log.i(LOG_TAG, "VPN Running tunnel context=" + jni_context);
-                jni_run(jni_context, vpn.getFd(), mapForwardPort.containsKey(53), finalRcode, compatibilityMode);
+                boolean canFilterSynchronous = true;
+                if (compatibilityMode && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    canFilterSynchronous = Util.canFilter();
+                }
+                jni_run(jni_context, vpn.getFd(), mapForwardPort.containsKey(53), finalRcode, compatibilityMode, canFilterSynchronous);
                 Log.i(LOG_TAG, "VPN Tunnel exited");
                 tunnelThread = null;
             });
@@ -674,6 +680,18 @@ public class ServiceVPN extends VpnService {
             return true;
         }
 
+        if (routeAllThroughTor) {
+            Set<String> ips = new PrefManager(this).getSetStrPref("ipsForClearNet");
+            if (ips != null && ips.contains(destAddress)) {
+                return false;
+            }
+        } else {
+            Set<String> ips = new PrefManager(this).getSetStrPref("ipsToUnlock");
+            if (ips != null && ips.contains(destAddress)) {
+                return true;
+            }
+        }
+
         List<Rule> listRule = ServiceVPNHandler.getAppsList();
 
         if (listRule != null) {
@@ -755,7 +773,7 @@ public class ServiceVPN extends VpnService {
             packet.allowed = true;
             //Log.i(LOG_TAG, "Allowing UDP " + packet);
         } else if (packet.uid < 2000 &&
-                !last_connected && isSupported(packet.protocol)) {
+                !last_connected && !last_connected_override && isSupported(packet.protocol)) {
             // Allow system applications in disconnected state
             packet.allowed = true;
             Log.w(LOG_TAG, "Allowing disconnected system " + packet);
@@ -894,6 +912,20 @@ public class ServiceVPN extends VpnService {
 
         super.onCreate();
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            //ServiceVPNNotification notification = new ServiceVPNNotification(this, notificationManager);
+
+            String title = getString(R.string.app_name);
+            String message = getString(R.string.notification_text);
+            if (!UsageStatisticKt.getSavedTitle().isEmpty() && !UsageStatisticKt.getSavedMessage().isEmpty()) {
+                title = UsageStatisticKt.getSavedTitle();
+                message = UsageStatisticKt.getSavedMessage();
+            }
+
+            ServiceNotification notification = new ServiceNotification(this, notificationManager, UsageStatisticKt.getStartTime());
+            notification.sendNotification(title, message);
+        }
+
         HandlerThread commandThread = new HandlerThread(getString(R.string.app_name) + " command", Process.THREAD_PRIORITY_FOREGROUND);
         commandThread.start();
 
@@ -942,6 +974,7 @@ public class ServiceVPN extends VpnService {
         }
 
         ConnectivityManager.NetworkCallback nc = new ConnectivityManager.NetworkCallback() {
+            private Boolean last_connected = null;
             private Boolean last_unmetered = null;
             private String last_generation = null;
             private List<InetAddress> last_dns = null;
@@ -949,6 +982,13 @@ public class ServiceVPN extends VpnService {
             @Override
             public void onAvailable(@NonNull Network network) {
                 Log.i(LOG_TAG, "VPN Available network=" + network);
+                last_connected = Util.isConnected(ServiceVPN.this);
+
+                if (!last_connected) {
+                    last_connected = true;
+                    last_connected_override = true;
+                }
+
                 reload("Network available", ServiceVPN.this);
             }
 
@@ -971,12 +1011,23 @@ public class ServiceVPN extends VpnService {
 
             @Override
             public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities networkCapabilities) {
+                boolean connected = Util.isConnected(ServiceVPN.this);
+                if (connected && (last_connected == null || !last_connected)) {
+                    last_connected = true;
+                    reload("VPN Connected state changed", ServiceVPN.this);
+                }
                 Log.i(LOG_TAG, "VPN Changed capabilities=" + network);
             }
 
             @Override
             public void onLost(@NonNull Network network) {
                 Log.i(LOG_TAG, "VPN Lost network=" + network);
+                last_connected = Util.isConnected(ServiceVPN.this);
+
+                if (last_connected_override) {
+                    last_connected_override = false;
+                }
+
                 reload("Network lost", ServiceVPN.this);
             }
 
@@ -1032,9 +1083,8 @@ public class ServiceVPN extends VpnService {
 
         if ( intent != null && Objects.equals(intent.getAction(), actionStopServiceForeground)) {
 
-            notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
-
             try {
+                notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
                 stopForeground(true);
             } catch (Exception e) {
                 Log.e(LOG_TAG, "VPNService stop Service foreground1 exception " + e.getMessage() + " " + e.getCause());
@@ -1056,7 +1106,7 @@ public class ServiceVPN extends VpnService {
                 message = UsageStatisticKt.getSavedMessage();
             }
 
-            ServiceNotification notification = new ServiceNotification(this, notificationManager);
+            ServiceNotification notification = new ServiceNotification(this, notificationManager, UsageStatisticKt.getStartTime());
             notification.sendNotification(title, message);
         }
 
@@ -1064,9 +1114,8 @@ public class ServiceVPN extends VpnService {
 
         if ( intent != null && Objects.equals(intent.getAction(), actionStopServiceForeground)) {
 
-            notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
-
             try {
+                notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
                 stopForeground(true);
             } catch (Exception e) {
                 Log.e(LOG_TAG, "VPNService stop Service foreground2 exception " + e.getMessage() + " " + e.getCause());

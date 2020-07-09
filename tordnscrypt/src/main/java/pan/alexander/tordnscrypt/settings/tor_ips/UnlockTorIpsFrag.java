@@ -23,7 +23,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
+
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import androidx.appcompat.widget.LinearLayoutCompat;
@@ -33,6 +35,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -44,12 +47,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -71,7 +76,7 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 public class UnlockTorIpsFrag extends Fragment {
 
     private RecyclerView rvListHostip;
-    private RecyclerView.Adapter rvAdapter;
+    private RecyclerView.Adapter<UnlockTorIpsFrag.HostIPAdapter.HostIPViewHolder> rvAdapter;
     private ArrayList<HostIP> unlockHostIP;
     private FloatingActionButton floatingBtnAddTorIPs;
     private String appDataDir;
@@ -163,7 +168,7 @@ public class UnlockTorIpsFrag extends Fragment {
         rvListHostip.setLayoutManager(mLayoutManager);
 
 
-        GetHostIP getHostIP = new GetHostIP(unlockHosts, unlockIPs);
+        GetHostIP getHostIP = new GetHostIP(new WeakReference<>(this), unlockHosts, unlockIPs);
         getHostIP.execute();
 
         CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
@@ -189,7 +194,7 @@ public class UnlockTorIpsFrag extends Fragment {
             }
         });
 
-        if (getActivity() == null) {
+        if (getActivity() == null || getActivity().isFinishing()) {
             return;
         }
 
@@ -204,11 +209,9 @@ public class UnlockTorIpsFrag extends Fragment {
     public void onStop() {
         super.onStop();
 
-        if (getActivity() == null) {
+        if (getActivity() == null || unlockHostIP == null || !isChanged) {
             return;
         }
-
-        if (unlockHostIP == null || !isChanged) return;
 
         List<String> ipsToUnlock = new LinkedList<>();
         for (int i = 0; i < unlockHostIP.size(); i++) {
@@ -221,22 +224,22 @@ public class UnlockTorIpsFrag extends Fragment {
             }
         }
 
-        if (!isChanged) return;
-
         //////////////////////////////////////////////////////////////////////////////////////
         //////////////When open this fragment to add sites for internal applications/////////
         /////////////////////////////////////////////////////////////////////////////////////
-        if (deviceOrTether.equals("device")) {
+        if ("device".equals(deviceOrTether)) {
             if (!routeAllThroughTorDevice) {
                 FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/unlock", ipsToUnlock, "ignored");
+                new PrefManager(getActivity()).setSetStrPref("ipsToUnlock", new HashSet<>(ipsToUnlock));
             } else {
                 FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/clearnet", ipsToUnlock, "ignored");
+                new PrefManager(getActivity()).setSetStrPref("ipsForClearNet", new HashSet<>(ipsToUnlock));
             }
 
             //////////////////////////////////////////////////////////////////////////////////////
             //////////////When open this fragment to add sites for external tether devices/////////
             /////////////////////////////////////////////////////////////////////////////////////
-        } else if (deviceOrTether.equals("tether")) {
+        } else if ("tether".equals(deviceOrTether)) {
             if (!routeAllThroughTorTether) {
                 FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/unlock_tether", ipsToUnlock, "ignored");
             } else {
@@ -246,16 +249,9 @@ public class UnlockTorIpsFrag extends Fragment {
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
         modulesStatus.setIptablesRulesUpdateRequested(getActivity(), true);
-        //ModulesAux.requestModulesStatusUpdate(getActivity());
 
         Toast.makeText(getActivity(), getText(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
     }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-    }
-
 
 
     public class HostIPAdapter extends RecyclerView.Adapter<UnlockTorIpsFrag.HostIPAdapter.HostIPViewHolder> {
@@ -290,7 +286,8 @@ public class UnlockTorIpsFrag extends Fragment {
 
         void delItem(int position) {
 
-            if (getActivity() == null) {
+            if (getActivity() == null || getActivity().isFinishing()
+                    || unlockHostsStr == null || unlockIPsStr == null || unlockHostIP == null) {
                 return;
             }
 
@@ -467,7 +464,7 @@ public class UnlockTorIpsFrag extends Fragment {
 
             void editHostIPDialog(final int position) {
 
-                if (getActivity() == null) {
+                if (getActivity() == null || getActivity().isFinishing() || unlockHostIP == null) {
                     return;
                 }
 
@@ -493,6 +490,12 @@ public class UnlockTorIpsFrag extends Fragment {
                 final String finalOldIP = oldIP;
                 final String finalOldHost = oldHost;
                 builder.setPositiveButton("OK", (dialog, which) -> {
+
+                    if (getActivity() == null || getActivity().isFinishing() || rvAdapter == null
+                            || unlockHostIP == null || unlockHostsStr == null || unlockIPsStr == null) {
+                        return;
+                    }
+
                     isChanged = true;
                     if (input.getText().toString().matches("[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}")) {
                         String host = getText(R.string.please_wait).toString();
@@ -528,7 +531,7 @@ public class UnlockTorIpsFrag extends Fragment {
 
     private void addHostIPDialog() {
 
-        if (getActivity() == null) {
+        if (getActivity() == null || getActivity().isFinishing()) {
             return;
         }
 
@@ -559,7 +562,8 @@ public class UnlockTorIpsFrag extends Fragment {
 
         builder.setPositiveButton("OK", (dialog, which) -> {
 
-            if (getActivity() == null) {
+            if (getActivity() == null || getActivity().isFinishing() || rvAdapter == null
+                    || unlockHostIP == null || unlockHostsStr == null || unlockIPsStr == null) {
                 return;
             }
 
@@ -580,6 +584,10 @@ public class UnlockTorIpsFrag extends Fragment {
                 new PrefManager(getActivity()).setSetStrPref(unlockHostsStr, hostsSet);
             }
 
+            if (unlockHostIP.size() == 0) {
+                return;
+            }
+
             CachedExecutor.INSTANCE.getExecutorService().submit(() -> getHostOrIp(unlockHostIP.size() - 1, true, false));
             rvAdapter.notifyDataSetChanged();
         });
@@ -588,13 +596,15 @@ public class UnlockTorIpsFrag extends Fragment {
         builder.show();
     }
 
-    @SuppressLint("StaticFieldLeak")
-    class GetHostIP extends AsyncTask<Void, Integer, Void> {
+    static class GetHostIP extends AsyncTask<Void, Integer, Void> {
 
+        UnlockTorIpsFrag unlockTorIpsFrag;
         ArrayList<String> unlockHosts;
         ArrayList<String> unlockIPs;
 
-        GetHostIP(ArrayList<String> unlockHosts, ArrayList<String> unlockIPs) {
+        GetHostIP(WeakReference<UnlockTorIpsFrag> unlockTorIpsFragWeakReference,
+                  ArrayList<String> unlockHosts, ArrayList<String> unlockIPs) {
+            this.unlockTorIpsFrag = unlockTorIpsFragWeakReference.get();
             this.unlockHosts = unlockHosts;
             this.unlockIPs = unlockIPs;
         }
@@ -603,29 +613,38 @@ public class UnlockTorIpsFrag extends Fragment {
         protected void onPreExecute() {
             super.onPreExecute();
 
+            if (unlockTorIpsFrag == null) {
+                return;
+            }
+
             if (!unlockHosts.isEmpty()) {
                 for (String host : unlockHosts) {
                     String hostClear = host.replace("#", "");
-                    unlockHostIP.add(new HostIP(hostClear, getText(R.string.please_wait).toString(), true, false, !host.trim().startsWith("#")));
+                    unlockTorIpsFrag.unlockHostIP.add(new HostIP(hostClear, unlockTorIpsFrag.getString(R.string.please_wait), true, false, !host.trim().startsWith("#")));
                 }
             }
             if (!unlockIPs.isEmpty()) {
                 for (String IPs : unlockIPs) {
                     String IPsClear = IPs.replace("#", "");
-                    unlockHostIP.add(new HostIP(getText(R.string.please_wait).toString(), IPsClear, false, true, !IPs.trim().startsWith("#")));
+                    unlockTorIpsFrag.unlockHostIP.add(new HostIP(unlockTorIpsFrag.getString(R.string.please_wait), IPsClear, false, true, !IPs.trim().startsWith("#")));
                 }
             }
 
-            rvAdapter = new HostIPAdapter(unlockHostIP);
-            rvListHostip.setAdapter(rvAdapter);
+            unlockTorIpsFrag.rvAdapter = unlockTorIpsFrag.new HostIPAdapter(unlockTorIpsFrag.unlockHostIP);
+            unlockTorIpsFrag.rvListHostip.setAdapter(unlockTorIpsFrag.rvAdapter);
         }
 
         @Override
         protected Void doInBackground(Void... voids) {
-            for (int i = 0; i < unlockHostIP.size(); i++) {
-                getHostOrIp(i, false, false);
+            if (unlockTorIpsFrag == null) {
+                return null;
+            }
+
+            for (int i = 0; i < unlockTorIpsFrag.unlockHostIP.size(); i++) {
+                unlockTorIpsFrag.getHostOrIp(i, false, false);
                 publishProgress(i);
             }
+
             return null;
         }
 
@@ -633,11 +652,11 @@ public class UnlockTorIpsFrag extends Fragment {
         protected void onProgressUpdate(Integer... values) {
             super.onProgressUpdate(values);
 
-            if (rvAdapter == null) {
+            if (unlockTorIpsFrag == null || unlockTorIpsFrag.rvAdapter == null) {
                 return;
             }
 
-            rvAdapter.notifyDataSetChanged();
+            unlockTorIpsFrag.rvAdapter.notifyDataSetChanged();
         }
 
         @Override
@@ -649,12 +668,13 @@ public class UnlockTorIpsFrag extends Fragment {
     }
 
     private void getHostOrIp(final int position, final boolean addHostIP, final boolean editHostIP) {
-        if (unlockHostIP == null || rvAdapter == null || rvListHostip == null) {
+        if (getActivity() == null || getActivity().isFinishing() || position < 0
+                || unlockHostIP == null || rvAdapter == null || rvListHostip == null) {
             return;
         }
 
         boolean active = unlockHostIP.get(position).active;
-        if (unlockHostIP.get(position).inputHost && getActivity() != null) {
+        if (unlockHostIP.get(position).inputHost) {
             String host = unlockHostIP.get(position).host;
             try {
                 InetAddress[] addresses = InetAddress.getAllByName(new URL(host).getHost());
@@ -663,12 +683,20 @@ public class UnlockTorIpsFrag extends Fragment {
                     sb.append(address.getHostAddress()).append(", ");
                 }
 
+                if (getActivity() == null || getActivity().isFinishing()) {
+                    return;
+                }
+
                 String ip = sb.substring(0, sb.length() - 2);
                 if (unlockHostIP != null && position < unlockHostIP.size()) {
                     unlockHostIP.set(position, new HostIP(host, ip, true, false, active));
                 }
 
                 getActivity().runOnUiThread(() -> {
+                    if (getActivity() == null || getActivity().isFinishing() || rvAdapter == null || rvListHostip == null) {
+                        return;
+                    }
+
                     if (addHostIP) {
                         rvAdapter.notifyItemChanged(position);
                         rvListHostip.scrollToPosition(position);
@@ -687,8 +715,13 @@ public class UnlockTorIpsFrag extends Fragment {
                 unlockHostIP.set(position, new HostIP(host, ip, true, false, active));
                 Log.e(LOG_TAG, "UnlockTorIpsFrag getHostOrIp exception " + e.getMessage() + " " + e.getCause());
 
-                if (getActivity() != null && rvAdapter != null && rvListHostip != null) {
+                if (getActivity() != null && !getActivity().isFinishing() && rvAdapter != null && rvListHostip != null) {
                     getActivity().runOnUiThread(() -> {
+
+                        if (getActivity() == null || getActivity().isFinishing() || rvAdapter == null || rvListHostip == null) {
+                            return;
+                        }
+
                         if (addHostIP) {
                             rvAdapter.notifyItemChanged(position);
                             rvListHostip.scrollToPosition(position);
@@ -698,32 +731,40 @@ public class UnlockTorIpsFrag extends Fragment {
                     });
                 }
             }
-        } else if (unlockHostIP.get(position).inputIP && getActivity() != null) {
+        } else if (unlockHostIP.get(position).inputIP && getActivity() != null && !getActivity().isFinishing()) {
             String IP = unlockHostIP.get(position).IP;
             String host;
             try {
                 InetAddress addr = InetAddress.getByName(IP);
                 host = addr.getCanonicalHostName();
 
-                if (unlockHostIP != null && position < unlockHostIP.size()) {
+                if (getActivity() == null || getActivity().isFinishing() || unlockHostIP == null
+                        || rvAdapter == null || rvListHostip == null) {
+                    return;
+                }
+
+                if (position < unlockHostIP.size()) {
                     unlockHostIP.set(position, new HostIP(host, IP, false, true, active));
                 }
 
-                if (getActivity() != null && rvAdapter != null && rvListHostip != null) {
-                    getActivity().runOnUiThread(() -> {
-                        if (addHostIP) {
-                            rvAdapter.notifyDataSetChanged();
-                            rvListHostip.scrollToPosition(position);
-                        } else if (editHostIP) {
-                            rvAdapter.notifyItemChanged(position);
-                        }
+                getActivity().runOnUiThread(() -> {
+                    if (getActivity() == null || getActivity().isFinishing()
+                            || rvAdapter == null || rvListHostip == null) {
+                        return;
+                    }
 
-                    });
-                }
+                    if (addHostIP) {
+                        rvAdapter.notifyDataSetChanged();
+                        rvListHostip.scrollToPosition(position);
+                    } else if (editHostIP) {
+                        rvAdapter.notifyItemChanged(position);
+                    }
+
+                });
 
             } catch (IOException e) {
 
-                if (unlockHostIP == null || rvAdapter == null || rvListHostip == null || getActivity() == null) {
+                if (getActivity() == null || requireActivity().isFinishing() || unlockHostIP == null || rvAdapter == null || rvListHostip == null) {
                     return;
                 }
 
@@ -734,7 +775,13 @@ public class UnlockTorIpsFrag extends Fragment {
 
                 Log.e(LOG_TAG, "UnlockTorIpsFrag getHostOrIp exception " + e.getMessage() + " " + e.getCause());
 
-                getActivity().runOnUiThread(() -> {
+                requireActivity().runOnUiThread(() -> {
+
+                    if (getActivity() == null || getActivity().isFinishing()
+                            || rvAdapter == null || rvListHostip == null) {
+                        return;
+                    }
+
                     if (addHostIP) {
                         rvAdapter.notifyDataSetChanged();
                         rvListHostip.scrollToPosition(position);

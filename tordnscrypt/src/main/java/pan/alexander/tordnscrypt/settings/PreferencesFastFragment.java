@@ -90,6 +90,12 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         if (swAutostartTor != null) {
             swAutostartTor.setOnPreferenceChangeListener(this);
         }
+
+        Preference pref_fast_autostart_delay = findPreference("pref_fast_autostart_delay");
+        if (pref_fast_autostart_delay != null) {
+            pref_fast_autostart_delay.setOnPreferenceChangeListener(this);
+        }
+
         Preference pref_fast_theme = findPreference("pref_fast_theme");
         if (pref_fast_theme != null) {
             pref_fast_theme.setOnPreferenceChangeListener(this);
@@ -100,10 +106,9 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
             pref_fast_language.setOnPreferenceChangeListener(this);
         }
 
-        if (ModulesStatus.getInstance().getMode() == ROOT_MODE) {
-           changePreferencesWithRootMode(getActivity());
-        } else if (ModulesStatus.getInstance().getMode() == VPN_MODE) {
-            changePreferencesWithVPNMode(getActivity());
+        if (ModulesStatus.getInstance().getMode() == ROOT_MODE
+                || ModulesStatus.getInstance().getMode() == VPN_MODE) {
+           changePreferencesWithRootOrVPNMode(getActivity());
         } else {
             changePreferencesWithProxyMode();
         }
@@ -213,7 +218,11 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
             SharedPreferences defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
             try {
+
                 String theme = defaultSharedPreferences.getString("pref_fast_theme", "4");
+                if (theme == null) {
+                    theme = "4";
+                }
 
                 switch (theme) {
                     case "1":
@@ -298,20 +307,15 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
                 ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
-                if (modulesStatus.getMode() == ROOT_MODE
-                        && modulesStatus.getTorState() == RUNNING ) {
-                    modulesStatus.setIptablesRulesUpdateRequested(getActivity(), true);
-                    //ModulesAux.requestModulesStatusUpdate(getActivity());
-                } else if (modulesStatus.getMode() == VPN_MODE
-                        && (modulesStatus.getDnsCryptState() == RUNNING
-                        || modulesStatus.getTorState() == RUNNING )) {
-                    modulesStatus.setIptablesRulesUpdateRequested(getActivity(), true);
-                }
+                if (modulesStatus.getMode() == ROOT_MODE || modulesStatus.getMode() == VPN_MODE) {
 
-                Preference prefTorAppUnlock = findPreference("prefTorAppUnlock");
+                    if (modulesStatus.getTorState() == RUNNING) {
+                        modulesStatus.setIptablesRulesUpdateRequested(getActivity(), true);
+                    }
 
-                if (modulesStatus.getMode() == ROOT_MODE) {
+                    Preference prefTorAppUnlock = findPreference("prefTorAppUnlock");
                     Preference prefTorSiteUnlock = findPreference("prefTorSiteUnlock");
+
                     if (prefTorSiteUnlock != null && prefTorAppUnlock != null) {
                         if (Boolean.parseBoolean(newValue.toString())) {
                             prefTorSiteUnlock.setEnabled(false);
@@ -321,23 +325,13 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                             prefTorAppUnlock.setEnabled(true);
                         }
                     }
-                } else if (modulesStatus.getMode() == VPN_MODE) {
-                    if (prefTorAppUnlock != null) {
-                        if (Boolean.parseBoolean(newValue.toString())) {
-                            prefTorAppUnlock.setEnabled(false);
-                        } else {
-                            prefTorAppUnlock.setEnabled(true);
-                        }
-                    }
                 }
-
 
                 return true;
             case "pref_fast_block_http":
                 if (new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")
                         || new PrefManager(getActivity()).getBoolPref("Tor Running")) {
                     ModulesStatus.getInstance().setIptablesRulesUpdateRequested(getActivity(), true);
-                    //ModulesAux.requestModulesStatusUpdate(getActivity());
                 }
                 return true;
             case "pref_fast_theme":
@@ -353,12 +347,15 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
             case "pref_fast_language":
                 new Handler().post(this::activityCurrentRecreate);
                 return true;
+            case "pref_fast_site_refresh_interval":
+            case "pref_fast_autostart_delay":
+                return newValue.toString().matches("\\d+");
         }
 
         return false;
     }
 
-    private void changePreferencesWithRootMode(Context context) {
+    private void changePreferencesWithRootOrVPNMode(Context context) {
         Preference pref_fast_all_through_tor = findPreference("pref_fast_all_through_tor");
         if (pref_fast_all_through_tor != null) {
             pref_fast_all_through_tor.setOnPreferenceChangeListener(this);
@@ -369,9 +366,16 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
             pref_fast_block_http.setOnPreferenceChangeListener(this);
         }
 
+        Preference pref_fast_site_refresh_interval = findPreference("pref_fast_site_refresh_interval");
+        if (pref_fast_site_refresh_interval != null) {
+            pref_fast_site_refresh_interval.setOnPreferenceChangeListener(this);
+        }
+
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
         String refreshPeriod = shPref.getString("pref_fast_site_refresh_interval", "12");
-        refreshPeriodHours = Integer.parseInt(refreshPeriod);
+        if (refreshPeriod != null) {
+            refreshPeriodHours = Integer.parseInt(refreshPeriod);
+        }
 
         Preference prefTorSiteUnlock = findPreference("prefTorSiteUnlock");
         Preference prefTorAppUnlock = findPreference("prefTorAppUnlock");

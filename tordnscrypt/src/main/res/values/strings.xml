@@ -111,12 +111,12 @@
     <string name="pref_fast_all_through_tor">Route All traffic through Tor</string>
     <string name="pref_fast_all_through_ipro">Route All traffic through InviZible</string>
     <string name="pref_fast_unlock_with_tor">Select WebSites</string>
-    <string name="pref_fast_unlock_with_tor_summ">WebSites list to open with Tor</string>
+    <string name="pref_fast_unlock_with_tor_summ">WebSites list to open with Tor. This feature does not work for sites behind CDN</string>
     <string name="pref_fast_unlock_apps_with_tor">Select Applications</string>
     <string name="pref_fast_unlock_apps_with_tor_summ">Applications list to use with Tor</string>
     <string name="pref_fast_unlock_apps_with_ipro_summ">Applications list to use with InviZible</string>
     <string name="pref_fast_exclude_from_tor">Exclude WebSites</string>
-    <string name="pref_fast_exclude_from_tor_summ">WebSites list to open directly</string>
+    <string name="pref_fast_exclude_from_tor_summ">WebSites list to open directly. This feature does not work for sites behind CDN</string>
     <string name="pref_fast_exclude_apps_from_tor">Exclude Applications</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">Applications list to open directly</string>
     <string name="pref_fast_exclude_apps_from_ipro_summ">Applications list to open directly</string>
