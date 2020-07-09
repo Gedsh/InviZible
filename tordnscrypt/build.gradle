@@ -108,6 +108,7 @@ android {
     }
 
     viewBinding.enabled = true
+    ndkVersion '21.3.6528147'
 
 }
 
