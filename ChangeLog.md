@@ -306,3 +306,12 @@
 * Improved application security.
 * Implemented compatibility mode for the custom ROMs.
 * Add shell script control.
+
+**InviZible Pro beta 0.9.6**
+* Implemented allowed and excluded sites for Tor in VPN mode.
+* Selected DNSCrypt servers and Tor applications are displayed at the top of the list.
+* Added chronometer to notification.
+* Fixes related to Always-On VPN.
+* Improved compatibility mode.
+* Performance improvements.
+* Minor bug fixes.
