@@ -53,6 +53,7 @@ import pan.alexander.tordnscrypt.dialogs.AskAccelerateDevelop;
 import pan.alexander.tordnscrypt.dialogs.AskForceClose;
 import pan.alexander.tordnscrypt.dialogs.NewUpdateDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
+import pan.alexander.tordnscrypt.dialogs.SendCrashReport;
 import pan.alexander.tordnscrypt.dialogs.UpdateModulesDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.RootCheckingProgressDialog;
 import pan.alexander.tordnscrypt.installer.Installer;
@@ -338,6 +339,10 @@ public class TopFragment extends Fragment {
 
                     topFragment.stopInstallationTimer();
 
+                    if (topFragment.checkCrashReport()) {
+                        return;
+                    }
+
                     ////////////////////////////CHECK UPDATES///////////////////////////////////////////
                     topFragment.checkUpdates();
 
@@ -352,14 +357,14 @@ public class TopFragment extends Fragment {
     }
 
     private void showDonDialog() {
-        if (getActivity() == null) {
+        if (getActivity() == null || getActivity().isFinishing()) {
             return;
         }
 
         if (appVersion.endsWith("e")) {
             Handler handler = new Handler();
             Runnable performRegistration = () -> {
-                if (getActivity() != null) {
+                if (getActivity() != null && isAdded()) {
                     Registration registration = new Registration(getActivity());
                     registration.showDonateDialog();
                 }
@@ -539,6 +544,27 @@ public class TopFragment extends Fragment {
         if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
             scheduledFuture.cancel(false);
         }
+    }
+
+    private boolean checkCrashReport() {
+        if (getActivity() == null || getActivity().isFinishing()) {
+            return true;
+        }
+
+        if (appVersion.endsWith("p")) {
+            return false;
+        }
+
+        String crash = new PrefManager(getActivity()).getStrPref("CrashReport");
+        if (!crash.isEmpty()) {
+            SendCrashReport crashReport = SendCrashReport.Companion.getCrashReportDialog(getActivity());
+            if (crashReport != null && isAdded()) {
+                crashReport.show(getParentFragmentManager(), "SendCrashReport");
+            }
+            return true;
+        }
+
+        return false;
     }
 
     public void checkUpdates() {

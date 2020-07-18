@@ -27,6 +27,7 @@ import android.app.NotificationManager
 import android.content.res.Configuration
 import android.os.Build
 import androidx.core.content.ContextCompat.getSystemService
+import pan.alexander.tordnscrypt.crash_handling.TopExceptionHandler
 import pan.alexander.tordnscrypt.language.Language
 
 const val ANDROID_CHANNEL_ID = "InviZible"
@@ -47,6 +48,8 @@ class ApplicationExt: Application() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createNotificationChannel()
         }
+
+        setExceptionHandler()
     }
 
     @TargetApi(Build.VERSION_CODES.O)
@@ -60,6 +63,10 @@ class ApplicationExt: Application() {
         channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
         channel.setShowBadge(false)
         notificationManager?.createNotificationChannel(channel)
+    }
+
+    private fun setExceptionHandler() {
+        Thread.setDefaultUncaughtExceptionHandler(TopExceptionHandler(this))
     }
 
 }

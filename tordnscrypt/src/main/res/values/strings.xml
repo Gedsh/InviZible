@@ -682,4 +682,6 @@
     <string name="notification_channel_update">Update notifications</string>
     <string name="notification_channel_root">Root commands notification</string>
 
+    <string name="dialog_send_crash_report">A crash report has been discovered. Want to send it to the developer to make InviZible better?</string>
+
 </resources>
