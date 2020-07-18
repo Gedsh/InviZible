@@ -23,6 +23,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -181,6 +182,7 @@ public class UpdateService extends Service {
             @Override
             public void run() {
                 thread = Thread.currentThread();
+                Context context = UpdateService.this;
 
                 String urlToDownload = intent.getStringExtra("url");
                 String fileToDownload = intent.getStringExtra("file");
@@ -190,7 +192,7 @@ public class UpdateService extends Service {
 
                     Proxy proxy = null;
                     if (ModulesStatus.getInstance().getTorState() == RUNNING) {
-                        PathVars pathVars = PathVars.getInstance(UpdateService.this);
+                        PathVars pathVars = PathVars.getInstance(context);
                         proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", Integer.parseInt(pathVars.getTorHTTPTunnelPort())));
                     }
 
@@ -226,15 +228,15 @@ public class UpdateService extends Service {
                     }
                     if (!cacheDir.isDirectory()) {
                         if (cacheDir.mkdirs()) {
-                            Log.i(LOG_TAG,"downloadUpdateWork create cache dir success");
+                            Log.i(LOG_TAG, "downloadUpdateWork create cache dir success");
                             if (cacheDir.setReadable(true)
                                     && cacheDir.setWritable(true)) {
-                                Log.i(LOG_TAG,"downloadUpdateWork chmod cache dir success");
+                                Log.i(LOG_TAG, "downloadUpdateWork chmod cache dir success");
                             } else {
-                                Log.e(LOG_TAG,"downloadUpdateWork chmod cache dir failed");
+                                Log.e(LOG_TAG, "downloadUpdateWork chmod cache dir failed");
                             }
                         } else {
-                            Log.e(LOG_TAG,"downloadUpdateWork create cache dir failed");
+                            Log.e(LOG_TAG, "downloadUpdateWork create cache dir failed");
                         }
                     }
 
@@ -274,12 +276,12 @@ public class UpdateService extends Service {
                     input.close();
 
                     if (Objects.requireNonNull(crc32(new File(path))).equalsIgnoreCase(hash)
-                            && !new PrefManager(UpdateService.this).getStrPref("UpdateResultMessage").equals(getString(R.string.update_fault))) {
-                        new PrefManager(UpdateService.this).setStrPref("LastUpdateResult",
-                                UpdateService.this.getText(R.string.update_installed).toString());
+                            && !new PrefManager(context).getStrPref("UpdateResultMessage").equals(getString(R.string.update_fault))) {
+                        new PrefManager(context).setStrPref("LastUpdateResult",
+                                context.getString(R.string.update_installed));
 
                         if (fileToDownload != null) {
-                            stopRunningModules(fileToDownload);
+                            //stopRunningModules(fileToDownload);
                         }
 
                         if (fileToDownload != null && fileToDownload.contains("InviZible")) {
@@ -287,32 +289,34 @@ public class UpdateService extends Service {
 
                             File file = new File(path);
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                Uri apkUri = FileProvider.getUriForFile(UpdateService.this, UpdateService.this.getPackageName() + ".fileprovider", file);
+                                Uri apkUri = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", file);
                                 Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                 intent.setData(apkUri);
                                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                UpdateService.this.startActivity(intent);
+                                context.startActivity(intent);
                             } else {
                                 Uri apkUri = Uri.fromFile(file);
                                 Intent intent = new Intent(Intent.ACTION_VIEW);
                                 intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
                                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                UpdateService.this.startActivity(intent);
+                                context.startActivity(intent);
                             }
+
+                            makeDelay(3);
                         }
 
                     } else {
-                        FileOperations.deleteFile(UpdateService.this, cacheDir.getPath(), fileToDownload, "ignored");
-                        new PrefManager(UpdateService.this).setStrPref("LastUpdateResult", getString(R.string.update_fault));
-                        new PrefManager(UpdateService.this).setStrPref("UpdateResultMessage", getString(R.string.update_fault));
+                        FileOperations.deleteFile(context, cacheDir.getPath(), fileToDownload, "ignored");
+                        new PrefManager(context).setStrPref("LastUpdateResult", getString(R.string.update_fault));
+                        new PrefManager(context).setStrPref("UpdateResultMessage", getString(R.string.update_fault));
                         Log.w(LOG_TAG, "UpdateService file hashes mismatch " + fileToDownload);
                     }
 
                 } catch (Exception e) {
-                    new PrefManager(UpdateService.this).setStrPref("LastUpdateResult", getString(R.string.update_fault));
-                    new PrefManager(UpdateService.this).setStrPref("UpdateResultMessage", getString(R.string.update_fault));
+                    new PrefManager(context).setStrPref("LastUpdateResult", getString(R.string.update_fault));
+                    new PrefManager(context).setStrPref("UpdateResultMessage", getString(R.string.update_fault));
                     Log.e(LOG_TAG, "UpdateService failed to download file " + urlToDownload + " " + e.getMessage());
                 } finally {
                     sparseArray.delete(serviceStartId);
@@ -413,7 +417,7 @@ public class UpdateService extends Service {
                 .setContentTitle(Title) //Заголовок
                 .setContentText(Text) // Текст уведомления
                 .setOnlyAlertOnce(true)
-                .setWhen(startTime - (System.currentTimeMillis() - startTime))
+                .setWhen(startTime)
                 .setUsesChronometer(true)
                 .setChannelId(UPDATE_CHANNEL_ID)
                 .setCategory(Notification.CATEGORY_PROGRESS)
@@ -467,7 +471,7 @@ public class UpdateService extends Service {
     }
 
     private void stopRunningModules(String fileName) {
-      if (fileName.contains("InviZible")) {
+        if (fileName.contains("InviZible")) {
 
             boolean dnsCryptRunning = new PrefManager(this).getBoolPref("DNSCrypt Running");
             boolean torRunning = new PrefManager(this).getBoolPref("Tor Running");
@@ -500,7 +504,7 @@ public class UpdateService extends Service {
                 return;
             }
 
-            for (File file: Objects.requireNonNull(dir.listFiles())) {
+            for (File file : Objects.requireNonNull(dir.listFiles())) {
                 if (file.getName().contains("InviZible")) {
                     boolean result = file.delete();
                 }
@@ -513,7 +517,8 @@ public class UpdateService extends Service {
     private void makeDelay(int sec) {
         try {
             TimeUnit.SECONDS.sleep(sec);
-        } catch (InterruptedException ignored) {}
+        } catch (InterruptedException ignored) {
+        }
     }
 
 }
