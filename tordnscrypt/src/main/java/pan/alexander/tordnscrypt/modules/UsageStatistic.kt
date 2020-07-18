@@ -28,6 +28,7 @@ import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.utils.PrefManager
 import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
+import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import java.text.CharacterIterator
 import java.text.StringCharacterIterator
 import java.util.concurrent.Executors
@@ -54,6 +55,7 @@ class UsageStatistic(private val context: Context) {
     private var updatePeriod = 0
     private var counter = 0
 
+    private var savedMode = OperationMode.UNDEFINED
     private var startRX = 0L
     private var startTX = 0L
     private var savedTime = 0L
@@ -128,6 +130,10 @@ class UsageStatistic(private val context: Context) {
     fun getTitle(): String {
         var title = ""
 
+        if (modulesStatus == null) {
+            return context.getString(R.string.app_name)
+        }
+
         if (modulesStatus.torState == ModuleState.RUNNING) {
             title += "TOR"
         }
@@ -150,13 +156,20 @@ class UsageStatistic(private val context: Context) {
     @Synchronized
     fun getMessage(currentTime: Long): String {
 
-        if (startRX == 0L || startTX == 0L) {
+        if (modulesStatus == null) {
+            return context.getString(R.string.notification_text)
+        }
+
+        val mode = modulesStatus.mode ?: return context.getString(R.string.notification_text)
+
+        if (savedMode != mode) {
+            savedMode = mode
+
             startRX = TrafficStats.getTotalRxBytes() - TrafficStats.getUidRxBytes(uid)
             startTX = TrafficStats.getTotalTxBytes() - TrafficStats.getUidTxBytes(uid)
         }
 
         val timePeriod = (currentTime - savedTime) / 1000L
-
         val currentRX = TrafficStats.getTotalRxBytes() - TrafficStats.getUidRxBytes(uid) - startRX
         val currentTX = TrafficStats.getTotalTxBytes() - TrafficStats.getUidTxBytes(uid) - startTX
 
