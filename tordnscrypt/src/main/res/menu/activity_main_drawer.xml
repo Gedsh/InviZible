@@ -32,7 +32,8 @@
         <item
             android:id="@+id/nav_Donate"
             android:icon="@drawable/ic_attach_money_black_24dp"
-            android:title="@string/drawer_menu_donate" />
+            android:title="@string/drawer_menu_donate"
+            android:visible="false"/>
         <item
             android:id="@+id/nav_Code"
             android:icon="@drawable/ic_enter_black_24dp"

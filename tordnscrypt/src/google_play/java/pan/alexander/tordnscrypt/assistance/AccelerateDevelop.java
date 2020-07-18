@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.crypto.Cipher;
 
@@ -55,7 +56,6 @@ import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
-import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 
@@ -64,7 +64,7 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 public class AccelerateDevelop implements BillingClientStateListener {
     public final static String mSkuId = "invizible_premium_version";
 
-    public static boolean accelerated = false;
+    public static boolean accelerated = true;
 
     private MainActivity activity;
     private BillingClient mBillingClient;
@@ -80,7 +80,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
                 .enablePendingPurchases()
                 .setListener(new PurchasesUpdatedListener() {
                     @Override
-                    public void onPurchasesUpdated(BillingResult billingResult, @Nullable List<Purchase> purchasesList) {
+                    public void onPurchasesUpdated(@NonNull BillingResult billingResult, @Nullable List<Purchase> purchasesList) {
                         if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && purchasesList != null) {
                             Log.i(LOG_TAG, "Purchases are updated");
                             handlePurchases(purchasesList);
@@ -96,14 +96,14 @@ public class AccelerateDevelop implements BillingClientStateListener {
     public void launchBilling(String skuId) {
         if (billingServiceConnected) {
 
-            if (!mSkuDetailsMap.isEmpty()) {
+            if (!mSkuDetailsMap.isEmpty() && mSkuDetailsMap.get(skuId) != null) {
 
                 Log.i(LOG_TAG, "Launch billing");
 
                 new PrefManager(activity).setBoolPref("helper_no_show_pending_purchase", false);
 
                 BillingFlowParams billingFlowParams = BillingFlowParams.newBuilder()
-                        .setSkuDetails(mSkuDetailsMap.get(skuId))
+                        .setSkuDetails(Objects.requireNonNull(mSkuDetailsMap.get(skuId)))
                         .build();
                 mBillingClient.launchBillingFlow(activity, billingFlowParams);
             } else {
@@ -147,6 +147,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
             payComplete();
         } else {
             Log.w(LOG_TAG, "BillingServiceDisconnected. Skipping...");
+            noPayment();
         }
     }
 
@@ -164,7 +165,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
 
         mBillingClient.querySkuDetailsAsync(skuDetailsParamsBuilder.build(), new SkuDetailsResponseListener() {
             @Override
-            public void onSkuDetailsResponse(BillingResult billingResult, List<SkuDetails> skuDetailsList) {
+            public void onSkuDetailsResponse(@NonNull BillingResult billingResult, List<SkuDetails> skuDetailsList) {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                     if (!skuDetailsList.isEmpty()) {
                         for (SkuDetails skuDetails : skuDetailsList) {
@@ -203,6 +204,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
                 payComplete();
             } else {
                 Log.w(LOG_TAG, "Purchases list is empty. Skipping...");
+                noPayment();
             }
 
             return;
@@ -235,6 +237,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
                         }
 
                         Log.w(LOG_TAG, "Got a purchase: " + purchase + "; but signature is bad. Skipping...");
+                        noPayment();
                         return;
                     }
 
@@ -245,7 +248,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
                                         .build();
                         mBillingClient.acknowledgePurchase(acknowledgePurchaseParams, new AcknowledgePurchaseResponseListener() {
                             @Override
-                            public void onAcknowledgePurchaseResponse(BillingResult billingResult) {
+                            public void onAcknowledgePurchaseResponse(@NonNull BillingResult billingResult) {
                                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                                     Log.i(LOG_TAG, "Purchase is acknowledged " + purchase.getSku());
 
@@ -277,7 +280,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
 
                     payComplete();
                     return;
-                } else if (purchaseState == Purchase.PurchaseState.PENDING) {
+                } else if (TextUtils.equals(mSkuId, purchaseId) && purchaseState == Purchase.PurchaseState.PENDING) {
                     Log.i(LOG_TAG, "Purchase is pending " + purchase.getSku());
 
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
@@ -287,11 +290,16 @@ public class AccelerateDevelop implements BillingClientStateListener {
                     if (notificationHelper != null) {
                         notificationHelper.show(activity.getSupportFragmentManager(), NotificationHelper.TAG_HELPER);
                     }
+
+                    noPayment();
+                    return;
                 }
             } catch (Exception e) {
                 Log.e(LOG_TAG, "AccelerateDevelop handlePurchase Exception " + e.getMessage() + " " + e.getCause());
             }
         }
+
+        noPayment();
     }
 
     private boolean verifyValidSignature(String signedData, String signature) {
@@ -339,5 +347,10 @@ public class AccelerateDevelop implements BillingClientStateListener {
     private void payComplete() {
         accelerated = true;
         Log.i(LOG_TAG, "Payment completed");
+    }
+
+    private void noPayment() {
+        accelerated = false;
+        Log.i(LOG_TAG, "No acceleration");
     }
 }

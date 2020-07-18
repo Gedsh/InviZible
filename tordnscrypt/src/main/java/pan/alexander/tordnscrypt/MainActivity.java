@@ -222,12 +222,14 @@ public class MainActivity extends LangAppCompatActivity
 
     @SuppressWarnings("deprecation")
     private void setDayNightTheme() {
-        SharedPreferences defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         try {
-            String theme = defaultSharedPreferences.getString("pref_fast_theme", "4");
 
+            String theme;
             if (appVersion.startsWith("g") && !accelerated) {
-                theme = defaultSharedPreferences.getString("pref_fast_theme", "1");
+                theme = "1";
+            } else {
+                SharedPreferences defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+                theme = defaultSharedPreferences.getString("pref_fast_theme", "4");
             }
 
             switch (Objects.requireNonNull(theme)) {
@@ -808,7 +810,7 @@ public class MainActivity extends LangAppCompatActivity
             startActivity(intent);
         } else if (id == R.id.nav_Donate) {
             if (appVersion.startsWith("g")) {
-                if (accelerateDevelop != null) {
+                if (accelerateDevelop != null && !accelerated) {
                     accelerateDevelop.launchBilling(AccelerateDevelop.mSkuId);
                 }
             } else {
@@ -936,7 +938,7 @@ public class MainActivity extends LangAppCompatActivity
         }
     }
 
-    private void changeDrawerWithVersionAndDestination(NavigationView navigationView) {
+    public void changeDrawerWithVersionAndDestination(NavigationView navigationView) {
         if (navigationView == null) {
             return;
         }
