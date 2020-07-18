@@ -119,6 +119,7 @@ public class UpdateService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getAction();
         if (action == null) {
+            sendNotification(startId, currentNotificationId.get(), System.currentTimeMillis(), getString(R.string.app_name), getString(R.string.app_name), "");
             stopSelf();
         } else if (action.equals(DOWNLOAD_ACTION)) {
             DownloadThread downloadThread = new DownloadThread(intent, startId, currentNotificationId.getAndIncrement());
@@ -132,6 +133,9 @@ public class UpdateService extends Service {
                 downloadThread.thread.interrupt();
                 sparseArray.delete(serviceId);
             }
+        } else {
+            sendNotification(startId, currentNotificationId.get(), System.currentTimeMillis(), getString(R.string.app_name), getString(R.string.app_name), "");
+            stopSelf();
         }
         return START_NOT_STICKY;
     }

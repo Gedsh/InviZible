@@ -125,6 +125,10 @@ public class RootExecService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationManager != null) {
+            sendNotification(getString(R.string.notification_temp_text), "");
+        }
+
         if (intent == null) {
             stopService(startId);
             return START_NOT_STICKY;
@@ -282,11 +286,11 @@ public class RootExecService extends Service {
         notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
         notificationManager.createNotificationChannel(notificationChannel);
 
-        sendNotification(getText(R.string.notification_temp_text).toString(), "");
+        sendNotification(getString(R.string.notification_temp_text), "");
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public void sendNotification(String Title, String Text) {
+    private void sendNotification(String Title, String Text) {
 
         //These three lines makes Notification to open main activity after clicking on it
         Intent notificationIntent = new Intent(this, MainActivity.class);
