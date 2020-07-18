@@ -47,13 +47,15 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 public class HelpActivityReceiver extends BroadcastReceiver {
     private Handler mHandler;
     private String appDataDir;
+    private String cacheDir;
     private String info;
     private String pathToSaveLogs;
     private DialogFragment progressDialog;
 
-    public HelpActivityReceiver(Handler mHandler, String appDataDir, String pathToSaveLogs) {
+    public HelpActivityReceiver(Handler mHandler, String appDataDir, String cacheDir, String pathToSaveLogs) {
         this.mHandler = mHandler;
         this.appDataDir = appDataDir;
+        this.cacheDir = cacheDir;
         this.pathToSaveLogs = pathToSaveLogs;
     }
 
@@ -88,7 +90,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
             }
 
             if (isLogsExist()) {
-                FileOperations.moveBinaryFile(context, appDataDir
+                FileOperations.moveBinaryFile(context, cacheDir
                         + "/logs", "InvizibleLogs.txt", pathToSaveLogs, "InvizibleLogs.txt");
             } else {
                 closeProgressDialog();
@@ -100,18 +102,17 @@ public class HelpActivityReceiver extends BroadcastReceiver {
 
     private void saveLogsMethodOne(Context context) {
         try {
-            ZipFileManager zipFileManager = new ZipFileManager(appDataDir + "/logs/InvizibleLogs.txt");
-            zipFileManager.createZip(context, appDataDir + "/logs_dir");
-            FileOperations.deleteDirSynchronous(context,appDataDir + "/logs_dir");
+            ZipFileManager zipFileManager = new ZipFileManager(cacheDir + "/logs/InvizibleLogs.txt");
+            zipFileManager.createZip(context, cacheDir + "/logs_dir");
+            FileOperations.deleteDirSynchronous(context,cacheDir + "/logs_dir");
         } catch (Exception e) {
             Log.e(LOG_TAG, "Create zip file for first method failed  " + e.getMessage() + " " + e.getCause());
         }
     }
 
     private void saveLogsMethodTwo(Context context) {
-        Log.e(LOG_TAG, "Collect logs first method fault");
 
-        String logsDirPath = appDataDir + "/logs_dir";
+        String logsDirPath = cacheDir + "/logs_dir";
         File logsDir = new File(logsDirPath);
 
         if (!logsDir.isDirectory()) {
@@ -198,7 +199,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
             return false;
         }
 
-        File invizibleLogs = new File(appDataDir + "/logs_dir");
+        File invizibleLogs = new File(cacheDir + "/logs_dir");
 
         return Arrays.toString(comResult.getCommands()).contains("Logs Saved")
                 && invizibleLogs.exists()
@@ -207,7 +208,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
     }
 
     private boolean isLogsExist() {
-        File invizibleLogs = new File(appDataDir + "/logs/InvizibleLogs.txt");
+        File invizibleLogs = new File(cacheDir + "/logs/InvizibleLogs.txt");
         return invizibleLogs.exists();
     }
 
