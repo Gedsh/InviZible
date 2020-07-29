@@ -51,7 +51,10 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -72,6 +75,7 @@ import pan.alexander.tordnscrypt.main_fragment.MainFragment;
 import pan.alexander.tordnscrypt.main_fragment.ViewPagerAdapter;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
+import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
@@ -88,6 +92,7 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -114,7 +119,11 @@ public class MainActivity extends LangAppCompatActivity
     private ModulesStatus modulesStatus;
     private ViewPager viewPager;
     private static int viewPagerPosition = 0;
+    private MenuItem newIdentityMenuItem;
+    private ImageView animatingImage;
+    private RotateAnimation rotateAnimation;
 
+    @SuppressLint("NewApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -340,6 +349,8 @@ public class MainActivity extends LangAppCompatActivity
             switchApIcon(menu);
         }
 
+        showNewTorIdentityIcon(menu);
+
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -488,6 +499,31 @@ public class MainActivity extends LangAppCompatActivity
         }
     }
 
+    private void showNewTorIdentityIcon(Menu menu) {
+        newIdentityMenuItem = menu.findItem(R.id.item_new_identity);
+
+        if (newIdentityMenuItem == null || modulesStatus == null) {
+            return;
+        }
+
+        if (modulesStatus.getTorState() == RUNNING) {
+            newIdentityMenuItem.setVisible(true);
+        } else {
+            newIdentityMenuItem.setVisible(false);
+        }
+    }
+
+    public void showNewTorIdentityIcon(boolean show) {
+
+        if (newIdentityMenuItem == null || modulesStatus == null) {
+            return;
+        }
+
+        newIdentityMenuItem.setVisible(show);
+
+        invalidateOptionsMenu();
+    }
+
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
@@ -510,6 +546,9 @@ public class MainActivity extends LangAppCompatActivity
                 break;
             case R.id.item_root:
                 showInfoAboutRoot();
+                break;
+            case R.id.item_new_identity:
+                newTorIdentity();
                 break;
             case R.id.menu_root_mode:
                 switchToRootMode(item);
@@ -539,6 +578,36 @@ public class MainActivity extends LangAppCompatActivity
             }
         } catch (Exception e) {
             Log.e(LOG_TAG, "MainActivity onOptionsItemSelected exception " + e.getMessage() + " " + e.getCause());
+        }
+    }
+
+    @SuppressLint("InflateParams")
+    private void newTorIdentity() {
+        if (modulesStatus != null && newIdentityMenuItem != null && modulesStatus.getTorState() == RUNNING) {
+
+            if (rotateAnimation == null || animatingImage == null) {
+                rotateAnimation = new RotateAnimation(0, 360, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                rotateAnimation.setDuration((long) 1000);
+                rotateAnimation.setRepeatCount(3);
+
+                LayoutInflater inflater = getLayoutInflater();
+                animatingImage = (ImageView) inflater.inflate(R.layout.icon_image_new_tor_identity, null);
+            }
+
+            if (rotateAnimation != null && animatingImage != null) {
+                animatingImage.startAnimation(rotateAnimation);
+                newIdentityMenuItem.setActionView(animatingImage);
+            }
+
+            ModulesRestarter.restartTor(this);
+
+            new Handler().postDelayed(() -> {
+                if (!isFinishing() && newIdentityMenuItem != null) {
+                    Toast.makeText(this, this.getText(R.string.toast_new_tor_identity), Toast.LENGTH_SHORT).show();
+                    newIdentityMenuItem.getActionView().clearAnimation();
+                    newIdentityMenuItem.setActionView(null);
+                }
+            }, 3000);
         }
     }
 

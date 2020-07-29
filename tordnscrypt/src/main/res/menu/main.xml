@@ -19,23 +19,29 @@
         android:orderInCategory="3"
         android:title="@string/action_mode_child_lock"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/item_new_identity"
+        android:icon="@drawable/ic_baseline_refresh_24"
+        android:orderInCategory="4"
+        android:title="@string/btn_new_tor_identity"
+        app:showAsAction="always" />
     <group
         android:checkableBehavior="single"
         android:menuCategory="container"
-        android:orderInCategory="4">
+        android:orderInCategory="5">
         <item
             android:id="@+id/menu_root_mode"
-            android:orderInCategory="5"
+            android:orderInCategory="6"
             android:title="@string/menu_use_root"
             app:showAsAction="never" />
         <item
             android:id="@+id/menu_vpn_mode"
-            android:orderInCategory="6"
+            android:orderInCategory="7"
             android:title="@string/menu_use_vpn"
             app:showAsAction="never" />
         <item
             android:id="@+id/menu_proxies_mode"
-            android:orderInCategory="7"
+            android:orderInCategory="8"
             android:title="@string/menu_use_proxies"
             app:showAsAction="never" />
     </group>

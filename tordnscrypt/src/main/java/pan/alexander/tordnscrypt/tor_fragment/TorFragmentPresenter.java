@@ -224,6 +224,8 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
         if (context != null) {
             new PrefManager(context).setBoolPref("Tor Ready", false);
         }
+
+        showNewTorIdentityIcon(false);
     }
 
     @Override
@@ -455,6 +457,8 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
             displayLog(5);
 
             view.setTorProgressBarProgress(0);
+
+            showNewTorIdentityIcon(true);
 
             boolean torReady = new PrefManager(context).getBoolPref("Tor Ready");
 
@@ -789,5 +793,12 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     public void torLogAutoScrollingAllowed(boolean allowed) {
         torLogAutoScroll = allowed;
+    }
+
+    private void showNewTorIdentityIcon(boolean show) {
+        if (view != null && view.getFragmentActivity() != null && view.getFragmentActivity() instanceof MainActivity) {
+            MainActivity mainActivity = (MainActivity) view.getFragmentActivity();
+            mainActivity.showNewTorIdentityIcon(show);
+        }
     }
 }

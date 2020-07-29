@@ -441,4 +441,6 @@
     <string name="pref_common_compatibility_mode">Режим совместимости</string>
     <string name="pref_common_compatibility_mode_summ">Включите если у Вас кастомная прошивка, и интернет пропадает при нажатии кнопки START</string>
     <string name="dialog_send_crash_report">Обнаружен отчет аварийного завершения приложения. Хотите его отправить разработчику, чтобы сделать InviZible лучше?</string>
+    <string name="btn_new_tor_identity">Новый идентификатор Tor</string>
+    <string name="toast_new_tor_identity">Идентификатор Tor изменился</string>
 </resources>
