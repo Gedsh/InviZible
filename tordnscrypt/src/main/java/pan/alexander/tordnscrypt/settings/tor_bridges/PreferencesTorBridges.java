@@ -311,7 +311,11 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         }
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        String stunServer = sharedPreferences.getString("pref_tor_snowflake_stun", "stun.l.google.com:19302");
+        String stunServer;
+        stunServer = sharedPreferences.getString("pref_tor_snowflake_stun", "stun.l.google.com:19302");
+        if (stunServer == null) {
+            stunServer = "stun.l.google.com:19302";
+        }
 
         if (!currentBridges.isEmpty() && !currentBridgesType.equals(undefined)) {
 

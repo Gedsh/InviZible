@@ -328,7 +328,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
                 && modulesStatus.getTorState() == STOPPED
                 && modulesStatus.getItpdState() == STOPPED) {
 
-            if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP){
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                 mainStartButtonDrawable = getActivity().getResources().getDrawable(R.drawable.button_main_selector, getActivity().getTheme());
             } else {
                 mainStartButtonDrawable = getActivity().getResources().getDrawable(R.drawable.button_main_selector);
@@ -340,7 +340,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
         } else {
 
-            if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP){
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                 mainStartButtonDrawable = getActivity().getResources().getDrawable(R.drawable.button_main_selector_active, getActivity().getTheme());
             } else {
                 mainStartButtonDrawable = getActivity().getResources().getDrawable(R.drawable.button_main_selector_active);
@@ -661,14 +661,14 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
             }
         }
 
-        if (tvITPDInfoLog!= null && svITPDLog != null) {
+        if (tvITPDInfoLog != null && svITPDLog != null) {
             tvITPDInfoLog.setText("");
         }
     }
 
     @Override
     public void setITPDInfoLogText(Spanned text) {
-        if (getActivity() != null && tvITPDInfoLog== null && svITPDLog == null && !orientationLandscape) {
+        if (getActivity() != null && tvITPDInfoLog == null && svITPDLog == null && !orientationLandscape) {
             tvITPDInfoLog = getActivity().findViewById(R.id.tvITPDinfoLog);
             svITPDLog = getActivity().findViewById(R.id.svITPDLog);
 

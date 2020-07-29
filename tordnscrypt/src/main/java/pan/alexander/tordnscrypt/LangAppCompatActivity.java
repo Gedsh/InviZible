@@ -19,11 +19,13 @@ package pan.alexander.tordnscrypt;
 */
 
 import android.content.res.Configuration;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import pan.alexander.tordnscrypt.language.Language;
@@ -33,6 +35,7 @@ public abstract class LangAppCompatActivity extends AppCompatActivity {
 
     private final boolean DEVELOPER_MODE = false;
 
+    @RequiresApi(api = Build.VERSION_CODES.P)
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         if (DEVELOPER_MODE) {
@@ -47,8 +50,9 @@ public abstract class LangAppCompatActivity extends AppCompatActivity {
             StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
                     .detectLeakedSqlLiteObjects()
                     .detectLeakedClosableObjects()
+                    .detectNonSdkApiUsage()
                     .penaltyLog()
-                    .penaltyDeath()
+                    //.penaltyDeath()
                     .build());
         }
         super.onCreate(savedInstanceState);
