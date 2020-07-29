@@ -315,3 +315,10 @@
 * Improved compatibility mode.
 * Performance improvements.
 * Minor bug fixes.
+
+**InviZible Pro beta 0.9.7**
+* Added New Tor identity button.
+* Added extended crash handling.
+* Request to send logs if file cannot be saved.
+* Updated logic for Root mode when only Tor is running.
+* Disabled stopping modules when updating.
