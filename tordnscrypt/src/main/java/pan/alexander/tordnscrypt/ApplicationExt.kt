@@ -20,19 +20,20 @@ package pan.alexander.tordnscrypt
 */
 
 import android.annotation.TargetApi
-import android.app.Application
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
+import android.app.*
 import android.content.res.Configuration
 import android.os.Build
 import androidx.core.content.ContextCompat.getSystemService
 import pan.alexander.tordnscrypt.crash_handling.TopExceptionHandler
 import pan.alexander.tordnscrypt.language.Language
+import java.lang.ref.WeakReference
 
 const val ANDROID_CHANNEL_ID = "InviZible"
 
-class ApplicationExt: Application() {
+class ApplicationExt : Application() {
+
+    //Required for an app update on AndroidQ
+    var langAppCompatActivity: WeakReference<LangAppCompatActivity>? = null
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)

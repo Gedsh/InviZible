@@ -48,6 +48,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.ref.WeakReference;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
@@ -58,6 +59,8 @@ import java.util.zip.CRC32;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import pan.alexander.tordnscrypt.ApplicationExt;
+import pan.alexander.tordnscrypt.LangAppCompatActivity;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
@@ -72,6 +75,8 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.TopFragmentMark;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 
 public class UpdateService extends Service {
+    public static final String DOWNLOAD_ACTION = "pan.alexander.tordnscrypt.DOWNLOAD_ACTION";
+    public static final String INSTALLATION_REQUEST_ACTION = "pan.alexander.tordnscrypt.INSTALLATION_REQUEST_ACTION";
     private static final String STOP_DOWNLOAD_ACTION = "pan.alexander.tordnscrypt.STOP_DOWNLOAD_ACTION";
     public static final String UPDATE_RESULT = "pan.alexander.tordnscrypt.action.UPDATE_RESULT";
     public static final String UPDATE_CHANNEL_ID = "UPDATE_CHANNEL_INVIZIBLE";
@@ -79,7 +84,6 @@ public class UpdateService extends Service {
     private static final int UPDATE_CHANNEL_NOTIFICATION_ID = 103104;
     private static final int READTIMEOUT = 60;
     private static final int CONNECTTIMEOUT = 60;
-    public static final String DOWNLOAD_ACTION = "pan.alexander.tordnscrypt.DOWNLOAD_ACTION";
     private final AtomicInteger currentNotificationId = new AtomicInteger(UPDATE_CHANNEL_NOTIFICATION_ID);
     private volatile SparseArray<DownloadThread> sparseArray;
     private boolean allowSendBroadcastAfterUpdate = true;
@@ -112,6 +116,7 @@ public class UpdateService extends Service {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationManager != null) {
             createNotificationChannel();
+            sendNotification(0, currentNotificationId.get(), System.currentTimeMillis(), getString(R.string.app_name), getString(R.string.app_name), "");
         }
     }
 
@@ -121,6 +126,7 @@ public class UpdateService extends Service {
         String action = intent.getAction();
         if (action == null) {
             sendNotification(startId, currentNotificationId.get(), System.currentTimeMillis(), getString(R.string.app_name), getString(R.string.app_name), "");
+            stopForeground(true);
             stopSelf();
         } else if (action.equals(DOWNLOAD_ACTION)) {
             DownloadThread downloadThread = new DownloadThread(intent, startId, currentNotificationId.getAndIncrement());
@@ -134,8 +140,34 @@ public class UpdateService extends Service {
                 downloadThread.thread.interrupt();
                 sparseArray.delete(serviceId);
             }
+        } else if (action.equals(INSTALLATION_REQUEST_ACTION)) {
+            sendNotification(0, currentNotificationId.get(), System.currentTimeMillis(), getString(R.string.app_name), getString(R.string.app_name), "");
+
+            String path = new PrefManager(this).getStrPref("RequiredAppUpdateForQ");
+
+            if (!path.isEmpty()) {
+
+                new PrefManager(this).setStrPref("RequiredAppUpdateForQ", "");
+
+                File file = new File(path);
+
+                if (file.isFile()) {
+                    Uri apkUri = FileProvider.getUriForFile(this, this.getPackageName() + ".fileprovider", file);
+                    intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.setData(apkUri);
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    this.startActivity(intent);
+                }
+            }
+
+            stopForeground(true);
+            stopSelf();
+
         } else {
             sendNotification(startId, currentNotificationId.get(), System.currentTimeMillis(), getString(R.string.app_name), getString(R.string.app_name), "");
+            stopForeground(true);
             stopSelf();
         }
         return START_NOT_STICKY;
@@ -277,6 +309,7 @@ public class UpdateService extends Service {
 
                     if (Objects.requireNonNull(crc32(new File(path))).equalsIgnoreCase(hash)
                             && !new PrefManager(context).getStrPref("UpdateResultMessage").equals(getString(R.string.update_fault))) {
+
                         new PrefManager(context).setStrPref("LastUpdateResult",
                                 context.getString(R.string.update_installed));
 
@@ -288,7 +321,22 @@ public class UpdateService extends Service {
                             allowSendBroadcastAfterUpdate = false;
 
                             File file = new File(path);
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+
+                            boolean isActivityFinishing = true;
+                            if (context.getApplicationContext() instanceof ApplicationExt) {
+
+                                ApplicationExt applicationExt = (ApplicationExt) context.getApplicationContext();
+                                WeakReference<LangAppCompatActivity> langAppCompatActivity = applicationExt.getLangAppCompatActivity();
+
+                                if (langAppCompatActivity != null && langAppCompatActivity.get() != null) {
+                                    isActivityFinishing = langAppCompatActivity.get().isFinishing();
+                                }
+                            }
+
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && isActivityFinishing) {
+                                //Required for androidQ because even if the service is in the foreground we cannot start an activity if no activity is visible
+                                new PrefManager(context).setStrPref("RequiredAppUpdateForQ", path);
+                            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                                 Uri apkUri = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", file);
                                 Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -386,8 +434,11 @@ public class UpdateService extends Service {
                 .setUsesChronometer(true)
                 .setChannelId(UPDATE_CHANNEL_ID)
                 .setCategory(Notification.CATEGORY_PROGRESS)
-                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
-                .addAction(R.drawable.ic_stop, getText(R.string.cancel_download), stopDownloadPendingIntent);
+                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
+
+        if (serviceStartId != 0) {
+            builder.addAction(R.drawable.ic_stop, getText(R.string.cancel_download), stopDownloadPendingIntent);
+        }
 
         Notification notification = builder.build();
 

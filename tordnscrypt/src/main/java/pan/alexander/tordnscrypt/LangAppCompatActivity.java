@@ -28,6 +28,8 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.lang.ref.WeakReference;
+
 import pan.alexander.tordnscrypt.language.Language;
 
 
@@ -58,6 +60,12 @@ public abstract class LangAppCompatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         Language.setFromPreference(this, "pref_fast_language");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && getApplicationContext() instanceof  ApplicationExt) {
+            //Required for an app update
+            ApplicationExt applicationExt = (ApplicationExt) getApplicationContext();
+            applicationExt.setLangAppCompatActivity(new WeakReference<>(this));
+        }
     }
 
     @Override

@@ -586,7 +586,16 @@ public class TopFragment extends Fragment {
         SharedPreferences spref = PreferenceManager.getDefaultSharedPreferences(getActivity());
         boolean autoUpdate = spref.getBoolean("pref_fast_auto_update", true)
                 && !appVersion.startsWith("l") && !appVersion.endsWith("p") && !appVersion.startsWith("f");
+
         if (autoUpdate) {
+
+            if (!new PrefManager(getActivity()).getStrPref("RequiredAppUpdateForQ").isEmpty()) {
+                Intent intent = new Intent(getActivity(), UpdateService.class);
+                intent.setAction(UpdateService.INSTALLATION_REQUEST_ACTION);
+                getActivity().startService(intent);
+                return;
+            }
+
             boolean throughTorUpdate = spref.getBoolean("pref_fast through_tor_update", false);
             boolean torRunning = new PrefManager(getActivity()).getBoolPref("Tor Running");
             boolean torReady = new PrefManager(getActivity()).getBoolPref("Tor Ready");
