@@ -31,6 +31,8 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.text.Spanned;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -41,14 +43,17 @@ import android.widget.TextView;
 
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 
+import static android.util.TypedValue.COMPLEX_UNIT_PX;
 import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 
-public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentView, View.OnClickListener, ViewTreeObserver.OnScrollChangedListener {
+public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentView, View.OnClickListener,
+        ViewTreeObserver.OnScrollChangedListener, View.OnTouchListener {
 
 
     private Button btnDNSCryptStart;
@@ -65,7 +70,7 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
     }
 
 
-    @SuppressLint("SetTextI18n")
+    @SuppressLint({"SetTextI18n", "ClickableViewAccessibility"})
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -85,7 +90,9 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
         pbDNSCrypt = view.findViewById(R.id.pbDNSCrypt);
 
         tvDNSCryptLog = view.findViewById(R.id.tvDNSCryptLog);
+
         svDNSCryptLog = view.findViewById(R.id.svDNSCryptLog);
+        svDNSCryptLog.setOnTouchListener(this);
         svDNSCryptLog.getViewTreeObserver().addOnScrollChangedListener(this);
 
         tvDNSStatus = view.findViewById(R.id.tvDNSStatus);
@@ -118,6 +125,15 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
             presenter.onStart(getActivity());
         }
 
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if (TopFragment.logsTextSize != 0f) {
+            setLogsTextSize(TopFragment.logsTextSize);
+        }
     }
 
     @Override
@@ -228,5 +244,25 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
 
             svDNSCryptLog.smoothScrollBy(0, delta);
         });
+    }
+
+    @Override
+    public void setLogsTextSize(float size) {
+        if (tvDNSCryptLog != null) {
+            tvDNSCryptLog.setTextSize(COMPLEX_UNIT_PX, size);
+        }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    @Override
+    public boolean onTouch(View view, MotionEvent motionEvent) {
+        if (presenter != null && motionEvent.getPointerCount() == 2) {
+            ScaleGestureDetector detector = presenter.getScaleGestureDetector();
+            if (detector != null) {
+                detector.onTouchEvent(motionEvent);
+                return true;
+            }
+        }
+        return false;
     }
 }

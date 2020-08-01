@@ -30,6 +30,8 @@ import android.text.Spanned;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -51,6 +53,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import pan.alexander.tordnscrypt.MainActivity;
+import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDFragmentPresenter;
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDFragmentReceiver;
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDFragmentView;
@@ -66,6 +69,7 @@ import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 
+import static android.util.TypedValue.COMPLEX_UNIT_PX;
 import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
 import static pan.alexander.tordnscrypt.TopFragment.ITPDVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
@@ -75,7 +79,8 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 
 public class MainFragment extends Fragment implements DNSCryptFragmentView, TorFragmentView, ITPDFragmentView,
-        View.OnClickListener, CompoundButton.OnCheckedChangeListener, ViewTreeObserver.OnScrollChangedListener {
+        View.OnClickListener, CompoundButton.OnCheckedChangeListener, ViewTreeObserver.OnScrollChangedListener,
+        View.OnTouchListener {
     private Button btnStartMainFragment;
     private CheckBox chbHideIpMainFragment;
     private CheckBox chbProtectDnsMainFragment;
@@ -421,7 +426,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
         }
     }
 
-    @SuppressLint("SetTextI18n")
+    @SuppressLint({"SetTextI18n", "ClickableViewAccessibility"})
     @Override
     public void setDNSCryptLogViewText() {
         if (getActivity() != null && tvDNSCryptLog == null && svDNSCryptLog == null && !orientationLandscape) {
@@ -429,12 +434,16 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
             svDNSCryptLog = getActivity().findViewById(R.id.svDNSCryptLog);
 
             if (svDNSCryptLog != null) {
+                svDNSCryptLog.setOnTouchListener(this);
                 svDNSCryptLog.getViewTreeObserver().addOnScrollChangedListener(this);
             }
         }
 
         if (tvDNSCryptLog != null && svDNSCryptLog != null) {
             tvDNSCryptLog.setText(getText(R.string.tvDNSDefaultLog) + " " + DNSCryptVersion);
+            if (TopFragment.logsTextSize != 0f) {
+                tvDNSCryptLog.setTextSize(COMPLEX_UNIT_PX, TopFragment.logsTextSize);
+            }
             tvDNSCryptLog.setGravity(Gravity.CENTER);
             FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             params.gravity = Gravity.CENTER;
@@ -442,6 +451,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void setDNSCryptLogViewText(Spanned text) {
         if (getActivity() != null && tvDNSCryptLog == null && svDNSCryptLog == null && !orientationLandscape) {
@@ -449,12 +459,16 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
             svDNSCryptLog = getActivity().findViewById(R.id.svDNSCryptLog);
 
             if (svDNSCryptLog != null) {
+                svDNSCryptLog.setOnTouchListener(this);
                 svDNSCryptLog.getViewTreeObserver().addOnScrollChangedListener(this);
             }
         }
 
         if (tvDNSCryptLog != null && svDNSCryptLog != null) {
             tvDNSCryptLog.setText(text);
+            if (TopFragment.logsTextSize != 0f) {
+                tvDNSCryptLog.setTextSize(COMPLEX_UNIT_PX, TopFragment.logsTextSize);
+            }
             tvDNSCryptLog.setGravity(Gravity.NO_GRAVITY);
             FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             params.gravity = Gravity.BOTTOM;
@@ -525,7 +539,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
         pbTorMainFragment.setProgress(progress);
     }
 
-    @SuppressLint("SetTextI18n")
+    @SuppressLint({"SetTextI18n", "ClickableViewAccessibility"})
     @Override
     public void setTorLogViewText() {
         if (getActivity() != null && tvTorLog == null && svTorLog == null && !orientationLandscape) {
@@ -533,12 +547,16 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
             svTorLog = getActivity().findViewById(R.id.svTorLog);
 
             if (svTorLog != null) {
+                svTorLog.setOnTouchListener(this);
                 svTorLog.getViewTreeObserver().addOnScrollChangedListener(this);
             }
         }
 
         if (tvTorLog != null && svTorLog != null) {
             tvTorLog.setText(getText(R.string.tvTorDefaultLog) + " " + TorVersion);
+            if (TopFragment.logsTextSize != 0f) {
+                tvTorLog.setTextSize(COMPLEX_UNIT_PX, TopFragment.logsTextSize);
+            }
             tvTorLog.setGravity(Gravity.CENTER);
             FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             params.gravity = Gravity.CENTER;
@@ -546,6 +564,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void setTorLogViewText(Spanned text) {
         if (getActivity() != null && tvTorLog == null && svTorLog == null && !orientationLandscape) {
@@ -553,12 +572,16 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
             svTorLog = getActivity().findViewById(R.id.svTorLog);
 
             if (svTorLog != null) {
+                svTorLog.setOnTouchListener(this);
                 svTorLog.getViewTreeObserver().addOnScrollChangedListener(this);
             }
         }
 
         if (tvTorLog != null && svTorLog != null) {
             tvTorLog.setText(text);
+            if (TopFragment.logsTextSize != 0f) {
+                tvTorLog.setTextSize(COMPLEX_UNIT_PX, TopFragment.logsTextSize);
+            }
             tvTorLog.setGravity(Gravity.NO_GRAVITY);
             FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             params.gravity = Gravity.BOTTOM;
@@ -619,6 +642,9 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
         if (tvITPDLog != null) {
             tvITPDLog.setText(getText(R.string.tvITPDDefaultLog) + " " + ITPDVersion);
+            if (TopFragment.logsTextSize != 0f) {
+                tvITPDLog.setTextSize(COMPLEX_UNIT_PX, TopFragment.logsTextSize);
+            }
             tvITPDLog.setGravity(Gravity.CENTER);
 
             if (clITPDLog != null) {
@@ -639,6 +665,9 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
         if (tvITPDLog != null) {
             tvITPDLog.setText(text);
+            if (TopFragment.logsTextSize != 0f) {
+                tvITPDLog.setTextSize(COMPLEX_UNIT_PX, TopFragment.logsTextSize);
+            }
             tvITPDLog.setGravity(Gravity.NO_GRAVITY);
 
             if (clITPDLog != null) {
@@ -650,6 +679,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void setITPDInfoLogText() {
         if (getActivity() != null && tvITPDInfoLog == null && svITPDLog == null && !orientationLandscape) {
@@ -657,15 +687,20 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
             svITPDLog = getActivity().findViewById(R.id.svITPDLog);
 
             if (svITPDLog != null) {
+                svITPDLog.setOnTouchListener(this);
                 svITPDLog.getViewTreeObserver().addOnScrollChangedListener(this);
             }
         }
 
         if (tvITPDInfoLog != null && svITPDLog != null) {
             tvITPDInfoLog.setText("");
+            if (TopFragment.logsTextSize != 0f) {
+                tvITPDInfoLog.setTextSize(COMPLEX_UNIT_PX, TopFragment.logsTextSize);
+            }
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void setITPDInfoLogText(Spanned text) {
         if (getActivity() != null && tvITPDInfoLog == null && svITPDLog == null && !orientationLandscape) {
@@ -673,12 +708,16 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
             svITPDLog = getActivity().findViewById(R.id.svITPDLog);
 
             if (svITPDLog != null) {
+                svITPDLog.setOnTouchListener(this);
                 svITPDLog.getViewTreeObserver().addOnScrollChangedListener(this);
             }
         }
 
         if (tvITPDInfoLog != null && svITPDLog != null) {
             tvITPDInfoLog.setText(text);
+            if (TopFragment.logsTextSize != 0f) {
+                tvITPDInfoLog.setTextSize(COMPLEX_UNIT_PX, TopFragment.logsTextSize);
+            }
         }
     }
 
@@ -782,5 +821,56 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
                 itpdFragmentPresenter.itpdLogAutoScrollingAllowed(true);
             }
         }
+    }
+
+    @Override
+    public void setLogsTextSize(float size) {
+        if (tvDNSCryptLog != null) {
+            tvDNSCryptLog.setTextSize(COMPLEX_UNIT_PX, size);
+        }
+
+        if (tvTorLog != null) {
+            tvTorLog.setTextSize(COMPLEX_UNIT_PX, size);
+        }
+
+        if (tvITPDLog != null) {
+            tvITPDLog.setTextSize(COMPLEX_UNIT_PX, size);
+        }
+
+        if (tvITPDInfoLog != null) {
+            tvITPDInfoLog.setTextSize(COMPLEX_UNIT_PX, size);
+        }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    @Override
+    public boolean onTouch(View view, MotionEvent motionEvent) {
+
+        if (motionEvent.getPointerCount() != 2) {
+            return false;
+        }
+
+        if (view.getId() == R.id.svDNSCryptLog && dnsCryptFragmentPresenter != null) {
+            ScaleGestureDetector detector = dnsCryptFragmentPresenter.getScaleGestureDetector();
+            if (detector != null) {
+                detector.onTouchEvent(motionEvent);
+                return true;
+            }
+        } else if (view.getId() == R.id.svTorLog && torFragmentPresenter != null) {
+            ScaleGestureDetector detector = torFragmentPresenter.getScaleGestureDetector();
+            if (detector != null) {
+                detector.onTouchEvent(motionEvent);
+                return true;
+            }
+        } else if (view.getId() == R.id.svITPDLog && itpdFragmentPresenter != null) {
+            ScaleGestureDetector detector = itpdFragmentPresenter.getScaleGestureDetector();
+            if (detector != null) {
+                detector.onTouchEvent(motionEvent);
+                return true;
+            }
+        }
+
+
+        return false;
     }
 }

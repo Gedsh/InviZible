@@ -31,6 +31,8 @@ import android.text.Spanned;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -41,8 +43,10 @@ import android.widget.TextView;
 
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 
+import static android.util.TypedValue.COMPLEX_UNIT_PX;
 import static pan.alexander.tordnscrypt.TopFragment.ITPDVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -51,7 +55,8 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.OnClickListener, ViewTreeObserver.OnScrollChangedListener {
+public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.OnClickListener,
+        ViewTreeObserver.OnScrollChangedListener, View.OnTouchListener {
 
     private Button btnITPDStart;
     private TextView tvITPDStatus;
@@ -122,6 +127,15 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
             presenter.onStart(getActivity());
         }
 
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if (TopFragment.logsTextSize != 0f) {
+            setLogsTextSize(TopFragment.logsTextSize);
+        }
     }
 
     @Override
@@ -198,6 +212,30 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
     @Override
     public void setITPDInfoLogText(Spanned text) {
         tvITPDinfoLog.setText(text);
+    }
+
+    @Override
+    public void setLogsTextSize(float size) {
+        if (tvITPDLog != null) {
+            tvITPDLog.setTextSize(COMPLEX_UNIT_PX, size);
+        }
+
+        if (tvITPDinfoLog != null) {
+            tvITPDinfoLog.setTextSize(COMPLEX_UNIT_PX, size);
+        }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    @Override
+    public boolean onTouch(View view, MotionEvent motionEvent) {
+        if (presenter != null && motionEvent.getPointerCount() == 2) {
+            ScaleGestureDetector detector = presenter.getScaleGestureDetector();
+            if (detector != null) {
+                detector.onTouchEvent(motionEvent);
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

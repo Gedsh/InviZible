@@ -68,6 +68,16 @@ public class PrefManager {
         return sPref.getStringSet(stringID, stringSetDef);
     }
 
+    public float getFloatPref(String floatID) {
+        return sPref.getFloat(floatID, 0f);
+    }
+
+    public void setFloatPref(String intID, float floatValue) {
+        SharedPreferences.Editor edit = sPref.edit();
+        edit.putFloat(intID, floatValue);
+        edit.apply();
+    }
+
     public static String getPrefName() {
         return PREF_NAME;
     }

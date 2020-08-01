@@ -28,6 +28,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.text.Html;
 import android.util.Log;
+import android.view.ScaleGestureDetector;
 import android.widget.Toast;
 
 import androidx.fragment.app.DialogFragment;
@@ -92,6 +93,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     private String localEthernetDeviceAddress = "192.168.0.100";
     private boolean dnsCryptLogAutoScroll = true;
 
+    private ScaleGestureDetector scaleGestureDetector;
+
     public DNSCryptFragmentPresenter(DNSCryptFragmentView view) {
         this.view = view;
     }
@@ -142,6 +145,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         }
 
         dnsQueryLogRecordsConverter = new DNSQueryLogRecordsConverter(blockIPv6, Util.isMeteredNetwork(context), pathVars.getDNSCryptFallbackRes());
+
+        registerZoomGestureDetector(context);
     }
 
     public void onStop(Context context) {
@@ -860,6 +865,40 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
     public void dnsCryptLogAutoScrollingAllowed(boolean allowed) {
         dnsCryptLogAutoScroll = allowed;
+    }
+
+    private void registerZoomGestureDetector(Context context) {
+
+        scaleGestureDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.OnScaleGestureListener() {
+            @Override
+            public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
+                setLogsTextSize(context, scaleGestureDetector.getScaleFactor());
+                return true;
+            }
+
+            @Override
+            public boolean onScaleBegin(ScaleGestureDetector scaleGestureDetector) {
+                return true;
+            }
+
+            @Override
+            public void onScaleEnd(ScaleGestureDetector scaleGestureDetector) {
+            }
+        });
+    }
+
+    private void setLogsTextSize(Context context, float scale) {
+        float logsTextSizeMin = context.getResources().getDimension(R.dimen.fragment_log_text_size);
+        float logsTextSize = (float) Math.max(logsTextSizeMin, Math.min(TopFragment.logsTextSize * scale, logsTextSizeMin * 1.5));
+        TopFragment.logsTextSize = logsTextSize;
+
+        if (view != null) {
+            view.setLogsTextSize(logsTextSize);
+        }
+    }
+
+    public ScaleGestureDetector getScaleGestureDetector() {
+        return scaleGestureDetector;
     }
 
 }

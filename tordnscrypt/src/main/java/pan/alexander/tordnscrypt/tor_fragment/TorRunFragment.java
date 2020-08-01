@@ -32,6 +32,8 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.text.Spanned;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -45,11 +47,13 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 
+import static android.util.TypedValue.COMPLEX_UNIT_PX;
 import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 
-public class TorRunFragment extends Fragment implements TorFragmentView, View.OnClickListener, ViewTreeObserver.OnScrollChangedListener {
+public class TorRunFragment extends Fragment implements TorFragmentView, View.OnClickListener,
+        ViewTreeObserver.OnScrollChangedListener, View.OnTouchListener {
 
 
     private Button btnTorStart;
@@ -65,7 +69,7 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
     public TorRunFragment() {
     }
 
-    @SuppressLint("SetTextI18n")
+    @SuppressLint({"SetTextI18n", "ClickableViewAccessibility"})
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -85,6 +89,7 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
         tvTorLog = view.findViewById(R.id.tvTorLog);
 
         svTorLog = view.findViewById(R.id.svTorLog);
+        svTorLog.setOnTouchListener(this);
         svTorLog.getViewTreeObserver().addOnScrollChangedListener(this);
 
         tvTorStatus = view.findViewById(R.id.tvTorStatus);
@@ -117,6 +122,15 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
             presenter.onStart(getActivity());
         }
 
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if (TopFragment.logsTextSize != 0f) {
+            setLogsTextSize(TopFragment.logsTextSize);
+        }
     }
 
     @Override
@@ -192,6 +206,26 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
     @Override
     public void setTorLogViewText(Spanned text) {
         tvTorLog.setText(text);
+    }
+
+    @Override
+    public void setLogsTextSize(float size) {
+        if (tvTorLog != null) {
+            tvTorLog.setTextSize(COMPLEX_UNIT_PX, size);
+        }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    @Override
+    public boolean onTouch(View view, MotionEvent motionEvent) {
+        if (presenter != null && motionEvent.getPointerCount() == 2) {
+            ScaleGestureDetector detector = presenter.getScaleGestureDetector();
+            if (detector != null) {
+                detector.onTouchEvent(motionEvent);
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

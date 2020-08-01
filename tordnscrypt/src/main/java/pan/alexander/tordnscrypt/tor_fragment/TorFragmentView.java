@@ -32,6 +32,7 @@ public interface TorFragmentView {
     void setTorProgressBarProgress(int progress);
     void setTorLogViewText();
     void setTorLogViewText(Spanned text);
+    void setLogsTextSize(float size);
     void setStartButtonText(int textId);
     void scrollTorLogViewToBottom();
     Activity getFragmentActivity();

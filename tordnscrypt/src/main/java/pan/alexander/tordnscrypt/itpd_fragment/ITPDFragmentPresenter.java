@@ -21,10 +21,12 @@ package pan.alexander.tordnscrypt.itpd_fragment;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Handler;
 import android.text.Html;
 import android.util.Log;
+import android.view.ScaleGestureDetector;
 import android.widget.Toast;
 
 import androidx.fragment.app.DialogFragment;
@@ -76,6 +78,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
     private ModulesStatus modulesStatus;
     private ModuleState fixedModuleState;
     private boolean itpdLogAutoScroll = true;
+    private ScaleGestureDetector scaleGestureDetector;
 
 
     public ITPDFragmentPresenter(ITPDFragmentView view) {
@@ -119,6 +122,8 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
         } else {
             setITPDInstalled(false);
         }
+
+        registerZoomGestureDetector(context);
     }
 
     public void onStop() {
@@ -594,4 +599,39 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
     public void itpdLogAutoScrollingAllowed(boolean allowed) {
         itpdLogAutoScroll = allowed;
     }
+
+    private void registerZoomGestureDetector(Context context) {
+
+        scaleGestureDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.OnScaleGestureListener() {
+            @Override
+            public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
+                setLogsTextSize(context, scaleGestureDetector.getScaleFactor());
+                return true;
+            }
+
+            @Override
+            public boolean onScaleBegin(ScaleGestureDetector scaleGestureDetector) {
+                return true;
+            }
+
+            @Override
+            public void onScaleEnd(ScaleGestureDetector scaleGestureDetector) {
+            }
+        });
+    }
+
+    private void setLogsTextSize(Context context, float scale) {
+        float logsTextSizeMin = context.getResources().getDimension(R.dimen.fragment_log_text_size);
+        float logsTextSize = (float) Math.max(logsTextSizeMin, Math.min(TopFragment.logsTextSize * scale, logsTextSizeMin * 1.5));
+        TopFragment.logsTextSize = logsTextSize;
+
+        if (view != null) {
+            view.setLogsTextSize(logsTextSize);
+        }
+    }
+
+    public ScaleGestureDetector getScaleGestureDetector() {
+        return scaleGestureDetector;
+    }
+
 }

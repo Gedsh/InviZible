@@ -115,6 +115,8 @@ public class TopFragment extends Fragment {
 
     private static volatile ScheduledExecutorService modulesLogsTimer;
 
+    public static float logsTextSize = 0f;
+
     public interface OnActivityChangeListener {
         void onActivityChange(MainActivity mainActivity);
     }
@@ -139,6 +141,10 @@ public class TopFragment extends Fragment {
 
         appVersion = getString(R.string.appVersion);
         appProcVersion = getString(R.string.appProcVersion);
+
+        if (getActivity() != null) {
+            logsTextSize = new PrefManager(getActivity()).getFloatPref("LogsTextSize");
+        }
 
         RootChecker rootChecker = new RootChecker(new WeakReference<>(this));
         rootChecker.execute();
@@ -197,6 +203,10 @@ public class TopFragment extends Fragment {
     @Override
     public void onStop() {
         super.onStop();
+
+        if (getActivity() != null) {
+            new PrefManager(getActivity()).setFloatPref("LogsTextSize", logsTextSize);
+        }
 
         unRegisterReceiver();
 
