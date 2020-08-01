@@ -322,3 +322,7 @@
 * Request to send logs if file cannot be saved.
 * Updated logic for Root mode when only Tor is running.
 * Disabled stopping modules when updating.
+
+**InviZible Pro beta 0.9.8**
+* Implemented logs scaling.
+* Fixed app update on Android Q.

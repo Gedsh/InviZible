@@ -1,0 +1,3 @@
+**InviZible Pro beta 0.9.8**
+* Implemented logs scaling.
+* Fixed app update on Android Q.
