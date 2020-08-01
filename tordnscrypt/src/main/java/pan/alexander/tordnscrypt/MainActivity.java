@@ -587,7 +587,7 @@ public class MainActivity extends LangAppCompatActivity
 
             if (rotateAnimation == null || animatingImage == null) {
                 rotateAnimation = new RotateAnimation(0, 360, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-                rotateAnimation.setDuration((long) 1000);
+                rotateAnimation.setDuration(1000);
                 rotateAnimation.setRepeatCount(3);
 
                 LayoutInflater inflater = getLayoutInflater();
