@@ -24,7 +24,6 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.os.Handler;
 import android.text.Html;
 import android.util.Log;
