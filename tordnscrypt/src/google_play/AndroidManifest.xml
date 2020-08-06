@@ -47,7 +47,6 @@
         android:theme="@style/AppTheme"
         android:banner="@drawable/banner_tv"
         android:extractNativeLibs="true"
-        android:largeHeap="true"
         android:appCategory="productivity"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:requestLegacyExternalStorage="true"
