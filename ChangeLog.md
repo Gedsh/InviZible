@@ -324,5 +324,9 @@
 * Disabled stopping modules when updating.
 
 **InviZible Pro beta 0.9.8**
-* Implemented logs scaling.
+* Implemented real-time logs scaling.
 * Fixed app update on Android Q.
+
+**InviZible Pro beta 0.9.9**
+* Fixed import of DNSCrypt filter files on Android Q.
+* Fixes and UI updates for Backup and Logs on Android Q.
