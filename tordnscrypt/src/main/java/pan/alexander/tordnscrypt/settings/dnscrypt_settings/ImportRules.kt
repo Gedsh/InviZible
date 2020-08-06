@@ -20,6 +20,7 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_settings
 */
 
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import pan.alexander.tordnscrypt.modules.ModulesRestarter
 import pan.alexander.tordnscrypt.modules.ModulesStatus
@@ -28,7 +29,9 @@ import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.WakeLocksManager
 import pan.alexander.tordnscrypt.utils.enums.DNSCryptRulesVariant
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
+import java.io.BufferedReader
 import java.io.File
+import java.io.InputStreamReader
 import java.io.PrintWriter
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
@@ -48,7 +51,7 @@ private val wakeLocksManager = WakeLocksManager.getInstance()
 class ImportRules(private val context: Context,
                   private var rulesVariant: DNSCryptRulesVariant,
                   private val localRules: Boolean,
-                  private val filePathToImport: String) : Thread() {
+                  private val filePathToImport: Array<*>) : Thread() {
 
     private val pathVars: PathVars = PathVars.getInstance(context)
 
@@ -77,6 +80,13 @@ class ImportRules(private val context: Context,
     private var powerLocked = false
 
     private var blackListFileIsHost = false
+
+    private val contentResolver = context.applicationContext.contentResolver
+
+    private var linesCount = 0
+    private var hash = 0
+    private var hashes = IntArray(0)
+    private var savedTime = System.currentTimeMillis()
 
     interface OnDNSCryptRuleAddLineListener {
         fun onDNSCryptRuleLinesAddingStarted(importThread: Thread)
@@ -115,10 +125,8 @@ class ImportRules(private val context: Context,
                          localRulesFilePath: String,
                          remoteRulesFilePath: String,
                          rulesRegex: Regex,
-                         filesToImport: String) {
+                         filesToImport: Array<*>) {
 
-
-        val files = filesToImport.split(":").toMutableList()
 
         reentrantLock.lock()
 
@@ -130,10 +138,10 @@ class ImportRules(private val context: Context,
         onDNSCryptRuleAddLineListener?.onDNSCryptRuleLinesAddingStarted(currentThread())
 
         try {
-            if (files.isNotEmpty()) {
+            if (filesToImport.isNotEmpty()) {
                 File(rulesFilePath).printWriter().use {
                     addDefaultLinesIfRequired(it)
-                    mixFiles(it, localRulesFilePath, remoteRulesFilePath, rulesRegex, files)
+                    mixFiles(it, localRulesFilePath, remoteRulesFilePath, rulesRegex, filesToImport.toMutableList())
                 }
             }
 
@@ -163,11 +171,7 @@ class ImportRules(private val context: Context,
                          localRulesFilePath: String,
                          remoteRulesFilePath: String,
                          rulesRegex: Regex,
-                         filesToImport: MutableList<String>) {
-        var linesCount = 0
-        var hash = 0
-        var hashes = IntArray(0)
-        var savedTime = System.currentTimeMillis()
+                         filesToImport: MutableList<Any?>) {
 
         val fileToAdd: String = if (localRules) {
             remoteRulesFilePath
@@ -177,64 +181,17 @@ class ImportRules(private val context: Context,
 
         val addFile = File(fileToAdd)
         if (addFile.isFile) {
-            filesToImport += fileToAdd
+            filesToImport.add(addFile)
         }
 
         val hashIsRequired = filesToImport.size > 1
 
         filesToImport.forEachIndexed { index, file ->
-            if (file.isNotEmpty()) {
-                val inputFile = File(file)
 
-                if (inputFile.isFile) {
-                    try {
-                        if (DNSCryptRulesVariant.BLACKLIST_HOSTS == rulesVariant) {
-                            blackListFileIsHost = isInputFileFormatCorrect(inputFile, hostFileRegex)
-                        }
-
-                        val hashesNew = ArrayList<Int>()
-
-                        if (blackListFileIsHost || isInputFileFormatCorrect(inputFile, rulesRegex)) {
-                            inputFile.bufferedReader().use {
-                                var line = it.readLine()?.trim()
-                                while (line != null && !currentThread().isInterrupted) {
-                                    val lineReady = if (blackListFileIsHost) {
-                                        hostToBlackList(line)
-                                    } else {
-                                        cleanRule(line, rulesRegex)
-                                    }
-
-                                    if (hashIsRequired) {
-                                        hash = lineReady.hashCode()
-                                    }
-
-                                    if (lineReady.isNotEmpty() && (!hashIsRequired || index < 1 || Arrays.binarySearch(hashes, hash) < 0)) {
-
-                                        if (hashIsRequired) {
-                                            hashesNew += hash
-                                        }
-
-                                        printWriter.println(lineReady)
-                                        linesCount++
-                                        if (System.currentTimeMillis() - savedTime > 500) {
-                                            onDNSCryptRuleAddLineListener?.onDNSCryptRuleLineAdded(linesCount)
-                                            savedTime = System.currentTimeMillis()
-                                        }
-                                    }
-                                    line = it.readLine()?.trim()
-                                }
-
-                                val arrNew = IntArray(hashes.size + hashesNew.size)
-                                System.arraycopy(hashes, 0, arrNew, 0, hashes.size)
-                                System.arraycopy(hashesNew.toIntArray(), 0, arrNew, hashes.size, hashesNew.size)
-                                hashes = arrNew
-                                hashes.sort()
-                            }
-                        }
-                    } catch (e: Exception) {
-                        Log.e(LOG_TAG, "ImportRules Exception " + e.message + " " + e.cause)
-                    }
-                }
+            if (file is String) {
+                mixFilesWithPass(index, file, rulesRegex, hashIsRequired, printWriter)
+            } else if (file is Uri) {
+                mixFilesWithUri(index, file, rulesRegex, hashIsRequired, printWriter)
             }
         }
 
@@ -243,6 +200,91 @@ class ImportRules(private val context: Context,
         if (linesCount > 0) {
             restartDNSCryptIfRequired()
         }
+    }
+
+    private fun mixFilesWithPass(index: Int, file: String,
+                                 rulesRegex: Regex, hashIsRequired: Boolean, printWriter: PrintWriter) {
+
+        if (file.isNotEmpty()) {
+            val inputFile = File(file)
+
+            if (inputFile.isFile) {
+                try {
+                    if (DNSCryptRulesVariant.BLACKLIST_HOSTS == rulesVariant) {
+                        blackListFileIsHost = isInputFileFormatCorrect(inputFile, hostFileRegex)
+                    }
+
+                    val hashesNew = ArrayList<Int>()
+
+                    if (blackListFileIsHost || isInputFileFormatCorrect(inputFile, rulesRegex)) {
+                        inputFile.bufferedReader().use {reader ->
+                            mixFilesCommonPart(printWriter, reader, rulesRegex, hashIsRequired, index, hashesNew)
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(LOG_TAG, "ImportRules Exception " + e.message + " " + e.cause)
+                }
+            }
+        }
+    }
+
+    private fun mixFilesWithUri(index: Int, uri: Uri,
+                                 rulesRegex: Regex, hashIsRequired: Boolean, printWriter: PrintWriter) {
+        try {
+            if (DNSCryptRulesVariant.BLACKLIST_HOSTS == rulesVariant) {
+                blackListFileIsHost = isInputFileFormatCorrect(uri, hostFileRegex)
+            }
+
+            val hashesNew = ArrayList<Int>()
+
+            if (blackListFileIsHost || isInputFileFormatCorrect(uri, rulesRegex)) {
+                contentResolver.openInputStream(uri)?.use { inputStream ->
+                    BufferedReader(InputStreamReader(inputStream)).use { reader ->
+                        mixFilesCommonPart(printWriter, reader, rulesRegex, hashIsRequired, index, hashesNew)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(LOG_TAG, "ImportRules Exception " + e.message + " " + e.cause)
+        }
+    }
+
+    private fun mixFilesCommonPart(printWriter: PrintWriter, reader: BufferedReader,
+                                   rulesRegex: Regex, hashIsRequired: Boolean,
+                                   index: Int, hashesNew: ArrayList<Int>) {
+        var line = reader.readLine()?.trim()
+        while (line != null && !currentThread().isInterrupted) {
+            val lineReady = if (blackListFileIsHost) {
+                hostToBlackList(line)
+            } else {
+                cleanRule(line, rulesRegex)
+            }
+
+            if (hashIsRequired) {
+                hash = lineReady.hashCode()
+            }
+
+            if (lineReady.isNotEmpty() && (!hashIsRequired || index < 1 || Arrays.binarySearch(hashes, hash) < 0)) {
+
+                if (hashIsRequired) {
+                    hashesNew += hash
+                }
+
+                printWriter.println(lineReady)
+                linesCount++
+                if (System.currentTimeMillis() - savedTime > 500) {
+                    onDNSCryptRuleAddLineListener?.onDNSCryptRuleLineAdded(linesCount)
+                    savedTime = System.currentTimeMillis()
+                }
+            }
+            line = reader.readLine()?.trim()
+        }
+
+        val arrNew = IntArray(hashes.size + hashesNew.size)
+        System.arraycopy(hashes, 0, arrNew, 0, hashes.size)
+        System.arraycopy(hashesNew.toIntArray(), 0, arrNew, hashes.size, hashesNew.size)
+        hashes = arrNew
+        hashes.sort()
     }
 
     private fun cleanRule(line: String, regExp: Regex): String {
@@ -297,6 +339,28 @@ class ImportRules(private val context: Context,
                 line = it.readLine()?.trim()
             }
         }
+        return false
+    }
+
+    private fun isInputFileFormatCorrect(uri: Uri, regExp: Regex): Boolean {
+        contentResolver.openInputStream(uri)?.use { inputStream ->
+            BufferedReader(InputStreamReader(inputStream)).use { reader ->
+                var line: String? = reader.readLine().trim()
+                while (line != null) {
+
+                    if (currentThread().isInterrupted) {
+                        return false
+                    }
+
+                    if (line.isNotEmpty() && !line.contains("#")) {
+                        return line.matches(regExp)
+                    }
+
+                    line = reader.readLine().trim()
+                }
+            }
+        }
+
         return false
     }
 

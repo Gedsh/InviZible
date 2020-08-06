@@ -19,13 +19,20 @@ package pan.alexander.tordnscrypt;
 */
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.fragment.app.Fragment;
+
+import android.annotation.SuppressLint;
+import android.content.ClipData;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
+
 import androidx.preference.PreferenceManager;
+
 import android.util.Log;
 import android.view.MenuItem;
 
@@ -35,34 +42,35 @@ import java.util.Objects;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.PreferencesCommonFragment;
-import pan.alexander.tordnscrypt.settings.dnscrypt_servers.PreferencesDNSCryptServers;
 import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
+import pan.alexander.tordnscrypt.settings.dnscrypt_settings.PreferencesDNSFragment;
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges;
 import pan.alexander.tordnscrypt.settings.SettingsParser;
 import pan.alexander.tordnscrypt.settings.ShowLogFragment;
 import pan.alexander.tordnscrypt.settings.show_rules.ShowRulesRecycleFrag;
 import pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment;
 import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag;
+import pan.alexander.tordnscrypt.utils.enums.DNSCryptRulesVariant;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 
-public class SettingsActivity extends LangAppCompatActivity
-        implements PreferencesDNSCryptServers.OnServersChangeListener {
+public class SettingsActivity extends LangAppCompatActivity {
 
-    SettingsParser settingsParser;
     public static final String dnscrypt_proxy_toml_tag = "pan.alexander.tordnscrypt/app_data/dnscrypt-proxy/dnscrypt-proxy.toml";
     public static final String tor_conf_tag = "pan.alexander.tordnscrypt/app_data/tor/tor.conf";
     public static final String itpd_conf_tag = "pan.alexander.tordnscrypt/app_data/itpd/itpd.conf";
     public static final String itpd_tunnels_tag = "pan.alexander.tordnscrypt/app_data/itpd/tunnels.conf";
     public static final String public_resolvers_md_tag = "pan.alexander.tordnscrypt/app_data/dnscrypt-proxy/public-resolvers.md";
     public static final String rules_tag = "pan.alexander.tordnscrypt/app_data/abstract_rules";
-    public static DialogFragment dialogFragment;
 
-    private static PreferencesFastFragment preferencesFastFragment;
+    public DialogFragment dialogFragment;
+    private SettingsParser settingsParser;
+    private PreferencesDNSFragment preferencesDNSFragment;
 
 
+    @SuppressLint("NewApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -96,7 +104,7 @@ public class SettingsActivity extends LangAppCompatActivity
             dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
             FileOperations.readTextFile(this, appDataDir + "/app_data/i2pd/i2pd.conf", itpd_conf_tag);
         } else if (Objects.equals(intent.getAction(), "fast_Pref")) {
-            preferencesFastFragment = new PreferencesFastFragment();
+            PreferencesFastFragment preferencesFastFragment = new PreferencesFastFragment();
             fSupportTrans.replace(android.R.id.content, preferencesFastFragment, "fastSettingsFragment");
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "common_Pref")) {
@@ -150,7 +158,7 @@ public class SettingsActivity extends LangAppCompatActivity
             String subscriptionsSaved = sp.getString("subscriptions", "");
 
             String[] arr = {""};
-            if (subscriptionsSaved.contains(",")) {
+            if (subscriptionsSaved != null && subscriptionsSaved.contains(",")) {
                 arr = subscriptionsSaved.split(",");
             }
 
@@ -199,23 +207,63 @@ public class SettingsActivity extends LangAppCompatActivity
     public void onAttachFragment(@NonNull Fragment fragment) {
         super.onAttachFragment(fragment);
 
-        if (fragment instanceof PreferencesDNSCryptServers) {
-            PreferencesDNSCryptServers preferencesDNSCryptServers = (PreferencesDNSCryptServers) fragment;
-            preferencesDNSCryptServers.setOnServersChangeListener(this);
+        if (fragment instanceof PreferencesDNSFragment) {
+            preferencesDNSFragment = (PreferencesDNSFragment) fragment;
         }
     }
 
     @Override
-    public void onServersChange(String servers) {
-        try {
-            if (preferencesFastFragment != null && servers != null) {
-                preferencesFastFragment.setDnsCryptServersSumm(servers);
-            }
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "SettindsActivity onServersChange exception " + e.getMessage() + " " + e.getCause());
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode != RESULT_OK) {
+            return;
         }
 
+        if (preferencesDNSFragment != null && data != null) {
+            Uri[] filesUri = getFilesUri(data);
 
+            if (filesUri.length > 0) {
+
+                switch (requestCode) {
+                    case PreferencesDNSFragment.PICK_BLACKLIST_HOSTS:
+                        preferencesDNSFragment.importRules(DNSCryptRulesVariant.BLACKLIST_HOSTS, filesUri);
+                        break;
+                    case PreferencesDNSFragment.PICK_WHITELIST_HOSTS:
+                        preferencesDNSFragment.importRules(DNSCryptRulesVariant.WHITELIST_HOSTS, filesUri);
+                        break;
+                    case PreferencesDNSFragment.PICK_BLACKLIST_IPS:
+                        preferencesDNSFragment.importRules(DNSCryptRulesVariant.BLACKLIST_IPS, filesUri);
+                        break;
+                    case PreferencesDNSFragment.PICK_FORWARDING:
+                        preferencesDNSFragment.importRules(DNSCryptRulesVariant.FORWARDING, filesUri);
+                        break;
+                    case PreferencesDNSFragment.PICK_CLOAKING:
+                        preferencesDNSFragment.importRules(DNSCryptRulesVariant.CLOAKING, filesUri);
+                        break;
+                    default:
+                        Log.e(LOG_TAG, "SettingsActivity wrong onActivityRequestCode " + requestCode);
+                }
+
+            }
+        }
+    }
+
+    private Uri[] getFilesUri(Intent data) {
+        Uri[] uris = new Uri[0];
+        ClipData clipData = data.getClipData();
+
+        if (clipData == null && data.getData() != null) {
+            uris = new Uri[]{data.getData()};
+        } else if (clipData != null) {
+            uris = new Uri[clipData.getItemCount()];
+            for (int i = 0; i < clipData.getItemCount(); i++) {
+                Uri uri = clipData.getItemAt(i).getUri();
+                uris[i] = uri;
+            }
+        }
+
+        return uris;
     }
 
     @Override

@@ -93,6 +93,9 @@ public class PathVars {
 
     public String getIptablesPath() {
         String iptablesSelector = preferences.getString("pref_common_use_iptables", "1");
+        if (iptablesSelector == null) {
+            iptablesSelector = "1";
+        }
 
         String path;
         switch (iptablesSelector) {
@@ -111,6 +114,9 @@ public class PathVars {
 
     public String getIp6tablesPath() {
         String iptablesSelector = preferences.getString("pref_common_use_iptables", "1");
+        if (iptablesSelector == null) {
+            iptablesSelector = "1";
+        }
 
         String path;
         switch (iptablesSelector) {
@@ -134,6 +140,9 @@ public class PathVars {
     public String getBusyboxPath() {
 
         String busyBoxSelector = preferences.getString("pref_common_use_busybox", "1");
+        if (busyBoxSelector == null) {
+            busyBoxSelector = "1";
+        }
 
         String path;
         switch (busyBoxSelector) {
@@ -217,16 +226,25 @@ public class PathVars {
 
     public String getITPDHttpProxyPort() {
         String itpdHttpProxyPort = preferences.getString("HTTP proxy port", "4444");
+        if (itpdHttpProxyPort == null) {
+            itpdHttpProxyPort = "4444";
+        }
         return itpdHttpProxyPort.replaceAll(".+:", "");
     }
 
     public String getTorTransPort() {
         String torTransPort = preferences.getString("TransPort", "9040");
+        if (torTransPort == null) {
+            torTransPort = "9040";
+        }
         return torTransPort.split(" ")[0].replaceAll(".+:", "").replaceAll("\\D+", "");
     }
 
     public String getDNSCryptFallbackRes() {
         String dnsCryptFallbackResolver = preferences.getString("fallback_resolver", "9.9.9.9");
+        if (dnsCryptFallbackResolver == null) {
+            dnsCryptFallbackResolver = "9.9.9.9";
+        }
         if (dnsCryptFallbackResolver.contains(":")) {
             dnsCryptFallbackResolver = dnsCryptFallbackResolver.substring(0, dnsCryptFallbackResolver.indexOf(":"));
         }
@@ -239,16 +257,25 @@ public class PathVars {
 
     public String getTorSOCKSPort() {
         String torSocksPort = preferences.getString("SOCKSPort", "9050");
+        if (torSocksPort == null) {
+            torSocksPort = "9050";
+        }
         return torSocksPort.split(" ")[0].replaceAll(".+:", "").replaceAll("\\D+", "");
     }
 
     public String getTorHTTPTunnelPort() {
         String torHttpTunnelPort = preferences.getString("HTTPTunnelPort", "8118");
+        if (torHttpTunnelPort == null) {
+            torHttpTunnelPort = "8118";
+        }
         return torHttpTunnelPort.split(" ")[0].replaceAll(".+:", "").replaceAll("\\D+", "");
     }
 
     public String getITPDSOCKSPort() {
         String itpdSocksPort = preferences.getString("Socks proxy port", "4447");
+        if (itpdSocksPort == null) {
+            itpdSocksPort = "4447";
+        }
         return itpdSocksPort.replaceAll(".+:", "");
     }
 
@@ -310,5 +337,36 @@ public class PathVars {
 
     public String getDNSCryptRemoteForwardingRulesPath() {
         return appDataDir + "/app_data/dnscrypt-proxy/forwarding-rules-remote.txt";
+    }
+
+    public String getCacheDirPath(Context context) {
+        String cacheDirPath = "/storage/emulated/0/Android/data/" + context.getPackageName() + "/cache";
+
+        try {
+            File cacheDir = context.getExternalCacheDir();
+            if (cacheDir == null) {
+                cacheDir = context.getCacheDir();
+            }
+
+            if (!cacheDir.isDirectory()) {
+                if (cacheDir.mkdirs()) {
+                    Log.i(LOG_TAG, "PathVars getCacheDirPath create cache dir success");
+                    if (cacheDir.setReadable(true) && cacheDir.setWritable(true)) {
+                        Log.i(LOG_TAG, "PathVars getCacheDirPath chmod cache dir success");
+                    } else {
+                        Log.e(LOG_TAG, "PathVars getCacheDirPath chmod cache dir failed");
+                    }
+                } else {
+                    Log.e(LOG_TAG, "PathVars getCacheDirPath create cache dir failed");
+                }
+            }
+
+            cacheDirPath = cacheDir.getCanonicalPath();
+
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "PathVars getCacheDirPath exception " + e.getMessage() + " " + e.getCause());
+        }
+
+        return cacheDirPath;
     }
 }

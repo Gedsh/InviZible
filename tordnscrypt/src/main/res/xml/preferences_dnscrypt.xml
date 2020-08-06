@@ -141,17 +141,11 @@
                 android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
-        <com.github.angads25.filepicker.view.FilePickerPreference
-            xmlns:app="http://schemas.android.com/apk/res-auto"
+        <Preference
             android:key="local_blacklist"
             android:title="@string/pref_dnscrypt_import_blacklist"
-            android:summary="@string/pref_dnscrypt_import_blacklist_summ"
-            android:defaultValue="/storage/emulated/0/Download:"
-            app:error_dir="/storage/emulated/0/Downloads"
-            app:root_dir="/storage/emulated/0/Download"
-            app:selection_mode="multi_mode"
-            app:selection_type="file_select"
-            app:extensions="txt:"/>
+            android:summary="@string/pref_dnscrypt_import_blacklist_summ">
+        </Preference>
         <Preference
             android:key="erase_blacklist"
             android:title="@string/pref_dnscrypt_erase_blacklist">
@@ -168,17 +162,11 @@
                 android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
-        <com.github.angads25.filepicker.view.FilePickerPreference
-            xmlns:app="http://schemas.android.com/apk/res-auto"
+        <Preference
             android:key="local_whitelist"
             android:title="@string/pref_dnscrypt_import_whitelist"
-            android:summary="@string/pref_dnscrypt_import_whitelist_summ"
-            android:defaultValue="/storage/emulated/0/Download:"
-            app:error_dir="/storage/emulated/0/Downloads"
-            app:root_dir="/storage/emulated/0/Download"
-            app:selection_mode="multi_mode"
-            app:selection_type="file_select"
-            app:extensions="txt:"/>
+            android:summary="@string/pref_dnscrypt_import_whitelist_summ">
+        </Preference>
         <Preference
             android:key="erase_whitelist"
             android:title="@string/pref_dnscrypt_erase_whitelist">
@@ -195,17 +183,11 @@
                 android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
-        <com.github.angads25.filepicker.view.FilePickerPreference
-            xmlns:app="http://schemas.android.com/apk/res-auto"
+        <Preference
             android:key="local_ipblacklist"
             android:title="@string/pref_dnscrypt_import_ipblacklist"
-            android:summary="@string/pref_dnscrypt_import_ipblacklist_summ"
-            android:defaultValue="/storage/emulated/0/Download:"
-            app:error_dir="/storage/emulated/0/Downloads"
-            app:root_dir="/storage/emulated/0/Download"
-            app:selection_mode="multi_mode"
-            app:selection_type="file_select"
-            app:extensions="txt:"/>
+            android:summary="@string/pref_dnscrypt_import_ipblacklist_summ">
+        </Preference>
         <Preference
             android:key="erase_ipblacklist"
             android:title="@string/pref_dnscrypt_erase_ipblacklist">
@@ -222,17 +204,11 @@
                 android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
-        <com.github.angads25.filepicker.view.FilePickerPreference
-            xmlns:app="http://schemas.android.com/apk/res-auto"
+        <Preference
             android:key="local_forwarding_rules"
             android:title="@string/pref_dnscrypt_import_forwarding_rules"
-            android:summary="@string/pref_dnscrypt_import_forwarding_rules_summ"
-            android:defaultValue="/storage/emulated/0/Download:"
-            app:error_dir="/storage/emulated/0/Downloads"
-            app:root_dir="/storage/emulated/0/Download"
-            app:selection_mode="multi_mode"
-            app:selection_type="file_select"
-            app:extensions="txt:"/>
+            android:summary="@string/pref_dnscrypt_import_forwarding_rules_summ">
+        </Preference>
         <Preference
             android:key="erase_forwarding_rules"
             android:title="@string/pref_dnscrypt_erase_forwarding_rules">
@@ -249,17 +225,11 @@
                 android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
-        <com.github.angads25.filepicker.view.FilePickerPreference
-            xmlns:app="http://schemas.android.com/apk/res-auto"
+        <Preference
             android:key="local_cloaking_rules"
             android:title="@string/pref_dnscrypt_import_cloaking_rules"
-            android:summary="@string/pref_dnscrypt_import_cloaking_rules_summ"
-            android:defaultValue="/storage/emulated/0/Download:"
-            app:error_dir="/storage/emulated/0/Downloads"
-            app:root_dir="/storage/emulated/0/Download"
-            app:selection_mode="multi_mode"
-            app:selection_type="file_select"
-            app:extensions="txt:"/>
+            android:summary="@string/pref_dnscrypt_import_cloaking_rules_summ">
+        </Preference>
         <Preference
             android:key="erase_cloaking_rules"
             android:title="@string/pref_dnscrypt_erase_cloaking_rules">
