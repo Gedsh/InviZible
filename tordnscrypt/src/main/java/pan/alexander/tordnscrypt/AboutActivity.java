@@ -32,21 +32,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.util.Date;
-import java.util.Objects;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class AboutActivity extends LangAppCompatActivity implements View.OnClickListener {
 
 
-    @SuppressLint("RestrictedApi")
+    @SuppressLint({"NewApi"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_about);
 
-        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
     }
 
     @Override

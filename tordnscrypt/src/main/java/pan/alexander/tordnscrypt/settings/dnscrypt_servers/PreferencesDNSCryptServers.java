@@ -79,7 +79,6 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
     private ArrayList<DNSServerItem> list_dns_servers;
     private ArrayList<DNSServerItem> list_dns_servers_saved;
     private String appDataDir;
-    private OnServersChangeListener callback;
     private ArrayList<DNSServerItem> savedOwnDNSCryptServers;
     private String ownServersFilePath;
     private RecyclerView rvDNSServers;
@@ -91,14 +90,6 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
     public PreferencesDNSCryptServers() {
         // Required empty public constructor
-    }
-
-    public interface OnServersChangeListener {
-        void onServersChange(String servers);
-    }
-
-    public void setOnServersChangeListener(OnServersChangeListener callback) {
-        this.callback = callback;
     }
 
     @Override
@@ -226,9 +217,6 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         }
 
         saveDNSServersToPrefs(dnscrypt_servers);
-
-        if (callback != null)
-            callback.onServersChange(dnscrypt_servers);
 
         boolean isChanges = saveDNSServersToTomlList(dnscrypt_servers);
 

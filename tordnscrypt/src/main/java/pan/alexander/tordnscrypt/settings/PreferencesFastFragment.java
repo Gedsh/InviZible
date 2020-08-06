@@ -81,10 +81,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
         getActivity().setTitle(R.string.drawer_menu_fastSettings);
 
-        Preference prefDNSCryptServer = findPreference("prefDNSCryptServer");
-        if (prefDNSCryptServer != null) {
-            prefDNSCryptServer.setSummary(new PrefManager(requireActivity()).getStrPref("DNSCrypt Servers"));
-        }
+        setDnsCryptServersSumm(new PrefManager(requireActivity()).getStrPref("DNSCrypt Servers"));
 
         Preference swAutostartTor = findPreference("swAutostartTor");
         if (swAutostartTor != null) {
@@ -136,6 +133,12 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
     public void onResume() {
         super.onResume();
 
+        new Handler().postDelayed( () -> {
+            if (getActivity() != null && !getActivity().isFinishing()) {
+                setDnsCryptServersSumm(new PrefManager(requireActivity()).getStrPref("DNSCrypt Servers"));
+            }
+        }, 1000);
+
         setUpdateTimeLast();
     }
 
@@ -143,7 +146,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         final Preference prefDNSCryptServer = findPreference("prefDNSCryptServer");
 
         if (prefDNSCryptServer != null) {
-            prefDNSCryptServer.setSummary(servers);
+            prefDNSCryptServer.setSummary(servers.replaceAll("[\\[\\]'\"]",  ""));
         }
     }
 
@@ -390,66 +393,6 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 prefTorSiteUnlock.setEnabled(true);
                 prefTorAppUnlock.setEnabled(true);
             }
-        }
-    }
-
-    private void changePreferencesWithVPNMode(Context context) {
-        Preference pref_fast_all_through_tor = findPreference("pref_fast_all_through_tor");
-        if (pref_fast_all_through_tor != null) {
-            //pref_fast_all_through_tor.setTitle(R.string.pref_fast_all_through_ipro);
-            pref_fast_all_through_tor.setOnPreferenceChangeListener(this);
-        }
-
-        Preference pref_fast_block_http = findPreference("pref_fast_block_http");
-        if (pref_fast_block_http != null) {
-            pref_fast_block_http.setOnPreferenceChangeListener(this);
-        }
-
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        Preference prefTorAppUnlock = findPreference("prefTorAppUnlock");
-
-        /*if (prefTorAppUnlock != null) {
-            prefTorAppUnlock.setSummary(R.string.pref_fast_unlock_apps_with_ipro_summ);
-        }*/
-
-        if (shPref.getBoolean("pref_fast_all_through_tor", true)) {
-            if (prefTorAppUnlock != null) {
-                prefTorAppUnlock.setEnabled(false);
-            }
-        } else {
-            if (prefTorAppUnlock != null) {
-                prefTorAppUnlock.setEnabled(true);
-            }
-        }
-
-        /*Preference prefTorAppExclude = findPreference("prefTorAppExclude");
-        if (prefTorAppExclude != null) {
-            prefTorAppExclude.setSummary(R.string.pref_fast_exclude_apps_from_ipro_summ);
-        }*/
-
-        PreferenceCategory torSettingsCategory = findPreference("Tor Settings");
-        /*if (torSettingsCategory != null) {
-            torSettingsCategory.setTitle(R.string.pref_fast_routing);
-        }*/
-
-        List<Preference> preferencesList = new ArrayList<>();
-
-        preferencesList.add(findPreference("prefTorSiteUnlock"));
-        preferencesList.add(findPreference("prefTorSiteExclude"));
-        preferencesList.add(findPreference("pref_fast_site_refresh_interval"));
-
-        for (Preference preference : preferencesList) {
-            if (preference != null) {
-                if (torSettingsCategory != null) {
-                    torSettingsCategory.removePreference(preference);
-                }
-            }
-        }
-
-        PreferenceCategory fastUpdateCategory = findPreference("fast_update");
-        Preference updateThroughTor = findPreference("pref_fast through_tor_update");
-        if (fastUpdateCategory != null && updateThroughTor != null) {
-            fastUpdateCategory.removePreference(updateThroughTor);
         }
     }
 

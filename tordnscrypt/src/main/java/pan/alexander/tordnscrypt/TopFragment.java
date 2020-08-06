@@ -97,6 +97,7 @@ public class TopFragment extends Fragment {
     public static String wrongSign;
     public static String appSign;
 
+    private RootChecker rootChecker;
     private AlertDialog rootCheckingDialog;
     private boolean rootIsAvailable = false;
     private boolean rootIsAvailableSaved = false;
@@ -146,8 +147,8 @@ public class TopFragment extends Fragment {
             logsTextSize = new PrefManager(getActivity()).getFloatPref("LogsTextSize");
         }
 
-        RootChecker rootChecker = new RootChecker(new WeakReference<>(this));
-        rootChecker.execute();
+        rootChecker = new RootChecker(this);
+        rootChecker.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     @Override
@@ -237,22 +238,28 @@ public class TopFragment extends Fragment {
         removeOnActivityChangeListener();
 
         stopModulesLogsTimer();
+
+        if (rootChecker != null && !rootChecker.isCancelled()) {
+            rootChecker.cancel(true);
+        }
     }
 
     //Check if root available
     private static class RootChecker extends AsyncTask<Void, Void, Void> {
 
-        private TopFragment topFragment;
+        private WeakReference<TopFragment> topFragmentWeakReference;
         private boolean suAvailable = false;
 
-        RootChecker(WeakReference<TopFragment> topFragmentWeakReference) {
-            this.topFragment = topFragmentWeakReference.get();
+        RootChecker(TopFragment topFragment) {
+            this.topFragmentWeakReference = new WeakReference<>(topFragment);
         }
 
         @Override
         protected void onPreExecute() {
-            if (topFragment != null) {
-                topFragment.openPleaseWaitDialog();
+            if (topFragmentWeakReference != null && topFragmentWeakReference.get() != null
+                    && topFragmentWeakReference.get().getActivity() != null
+                    && !topFragmentWeakReference.get().requireActivity().isFinishing()) {
+                topFragmentWeakReference.get().openPleaseWaitDialog();
             }
         }
 
@@ -280,7 +287,13 @@ public class TopFragment extends Fragment {
                 }
             }
 
-            if (topFragment == null) {
+            if (topFragmentWeakReference == null || topFragmentWeakReference.get() == null) {
+                return null;
+            }
+
+            TopFragment topFragment = topFragmentWeakReference.get();
+
+            if (topFragment.getActivity() == null || topFragment.getActivity().isFinishing()) {
                 return null;
             }
 
@@ -293,7 +306,7 @@ public class TopFragment extends Fragment {
                 if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                     if (topFragment.isAdded()) {
                         NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                topFragment.getActivity(), topFragment.getText(R.string.verifier_error).toString(), "1112");
+                                topFragmentWeakReference.get().getActivity(), topFragmentWeakReference.get().getText(R.string.verifier_error).toString(), "1112");
                         if (notificationHelper != null) {
                             notificationHelper.show(topFragment.getParentFragmentManager(), NotificationHelper.TAG_HELPER);
                         }
@@ -303,7 +316,7 @@ public class TopFragment extends Fragment {
             } catch (Exception e) {
                 if (topFragment.isAdded()) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                            topFragment.getActivity(), topFragment.getText(R.string.verifier_error).toString(), "2235");
+                            topFragment.getActivity(), topFragment.getString(R.string.verifier_error), "2235");
                     if (notificationHelper != null) {
                         notificationHelper.show(topFragment.getParentFragmentManager(), NotificationHelper.TAG_HELPER);
                     }
@@ -318,7 +331,13 @@ public class TopFragment extends Fragment {
         @Override
         protected void onPostExecute(Void result) {
 
-            if (topFragment == null) {
+            if (topFragmentWeakReference == null || topFragmentWeakReference.get() == null) {
+                return;
+            }
+
+            TopFragment topFragment = topFragmentWeakReference.get();
+
+            if (topFragment.getActivity() == null || topFragment.getActivity().isFinishing()) {
                 return;
             }
 

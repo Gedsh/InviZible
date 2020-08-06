@@ -18,6 +18,7 @@ package pan.alexander.tordnscrypt.backup;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 import android.view.MenuItem;
@@ -30,6 +31,7 @@ import pan.alexander.tordnscrypt.R;
 public class BackupActivity extends LangAppCompatActivity {
 
 
+    @SuppressLint("NewApi")
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

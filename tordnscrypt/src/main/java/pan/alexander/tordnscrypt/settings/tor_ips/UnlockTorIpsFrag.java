@@ -75,6 +75,7 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class UnlockTorIpsFrag extends Fragment {
 
+    private GetHostIP getHostIP;
     private RecyclerView rvListHostip;
     private RecyclerView.Adapter<UnlockTorIpsFrag.HostIPAdapter.HostIPViewHolder> rvAdapter;
     private ArrayList<HostIP> unlockHostIP;
@@ -168,8 +169,8 @@ public class UnlockTorIpsFrag extends Fragment {
         rvListHostip.setLayoutManager(mLayoutManager);
 
 
-        GetHostIP getHostIP = new GetHostIP(new WeakReference<>(this), unlockHosts, unlockIPs);
-        getHostIP.execute();
+        getHostIP = new GetHostIP(this, unlockHosts, unlockIPs);
+        getHostIP.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
         CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
             try {
@@ -203,6 +204,15 @@ public class UnlockTorIpsFrag extends Fragment {
         floatingBtnAddTorIPs.setOnClickListener(v -> addHostIPDialog());
         floatingBtnAddTorIPs.requestFocus();
 
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        if (getHostIP != null && !getHostIP.isCancelled()) {
+            getHostIP.cancel(true);
+        }
     }
 
     @Override
@@ -598,13 +608,13 @@ public class UnlockTorIpsFrag extends Fragment {
 
     static class GetHostIP extends AsyncTask<Void, Integer, Void> {
 
-        UnlockTorIpsFrag unlockTorIpsFrag;
+        WeakReference<UnlockTorIpsFrag> unlockTorIpsFragWeakReference;
         ArrayList<String> unlockHosts;
         ArrayList<String> unlockIPs;
 
-        GetHostIP(WeakReference<UnlockTorIpsFrag> unlockTorIpsFragWeakReference,
+        GetHostIP(UnlockTorIpsFrag unlockTorIpsFrag,
                   ArrayList<String> unlockHosts, ArrayList<String> unlockIPs) {
-            this.unlockTorIpsFrag = unlockTorIpsFragWeakReference.get();
+            this.unlockTorIpsFragWeakReference = new WeakReference<>(unlockTorIpsFrag);
             this.unlockHosts = unlockHosts;
             this.unlockIPs = unlockIPs;
         }
@@ -613,9 +623,11 @@ public class UnlockTorIpsFrag extends Fragment {
         protected void onPreExecute() {
             super.onPreExecute();
 
-            if (unlockTorIpsFrag == null) {
+            if (unlockTorIpsFragWeakReference == null || unlockTorIpsFragWeakReference.get() == null) {
                 return;
             }
+
+            UnlockTorIpsFrag unlockTorIpsFrag = unlockTorIpsFragWeakReference.get();
 
             if (!unlockHosts.isEmpty()) {
                 for (String host : unlockHosts) {
@@ -636,11 +648,18 @@ public class UnlockTorIpsFrag extends Fragment {
 
         @Override
         protected Void doInBackground(Void... voids) {
-            if (unlockTorIpsFrag == null) {
+            if (unlockTorIpsFragWeakReference == null || unlockTorIpsFragWeakReference.get() == null) {
                 return null;
             }
 
+            UnlockTorIpsFrag unlockTorIpsFrag = unlockTorIpsFragWeakReference.get();
+
             for (int i = 0; i < unlockTorIpsFrag.unlockHostIP.size(); i++) {
+
+                if (isCancelled()) {
+                    return null;
+                }
+
                 unlockTorIpsFrag.getHostOrIp(i, false, false);
                 publishProgress(i);
             }
@@ -652,11 +671,11 @@ public class UnlockTorIpsFrag extends Fragment {
         protected void onProgressUpdate(Integer... values) {
             super.onProgressUpdate(values);
 
-            if (unlockTorIpsFrag == null || unlockTorIpsFrag.rvAdapter == null) {
+            if (unlockTorIpsFragWeakReference == null || unlockTorIpsFragWeakReference.get().rvAdapter == null) {
                 return;
             }
 
-            unlockTorIpsFrag.rvAdapter.notifyDataSetChanged();
+            unlockTorIpsFragWeakReference.get().rvAdapter.notifyDataSetChanged();
         }
 
         @Override
@@ -730,6 +749,8 @@ public class UnlockTorIpsFrag extends Fragment {
                         }
                     });
                 }
+            } catch (Exception ex) {
+                Log.e(LOG_TAG, "UnlockTorIpsFrag getHostOrIp exception " + ex.getMessage() + " " + ex.getCause());
             }
         } else if (unlockHostIP.get(position).inputIP && getActivity() != null && !getActivity().isFinishing()) {
             String IP = unlockHostIP.get(position).IP;
@@ -789,6 +810,8 @@ public class UnlockTorIpsFrag extends Fragment {
                         rvAdapter.notifyItemChanged(position);
                     }
                 });
+            } catch (Exception ex) {
+                Log.e(LOG_TAG, "UnlockTorIpsFrag getHostOrIp exception " + ex.getMessage() + " " + ex.getCause());
             }
         }
     }

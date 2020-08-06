@@ -23,6 +23,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.PreferenceManager;
 
@@ -576,9 +577,14 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
 
     @Override
     public void OnFileOperationComplete(FileOperationsVariants currentFileOperation, boolean fileOperationResult, final String path, final String tag, final List<String> lines) {
-        if (SettingsActivity.dialogFragment != null) {
-            SettingsActivity.dialogFragment.dismiss();
-            SettingsActivity.dialogFragment = null;
+
+        if (settingsActivity == null) {
+            return;
+        }
+
+        DialogFragment dialogFragment = settingsActivity.dialogFragment;
+        if (dialogFragment != null) {
+            dialogFragment.dismiss();
         }
 
         if (fileOperationResult && currentFileOperation == readTextFile) {
