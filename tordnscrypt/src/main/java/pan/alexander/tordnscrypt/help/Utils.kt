@@ -24,9 +24,14 @@ import android.content.Intent
 import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
+import android.util.Log
 import pan.alexander.tordnscrypt.BuildConfig
 import pan.alexander.tordnscrypt.TopFragment
+import pan.alexander.tordnscrypt.utils.RootExecService
 import pan.alexander.tordnscrypt.vpn.Util
+import java.io.File
+import java.io.PrintWriter
 import java.util.*
 
 object Utils {
@@ -113,5 +118,42 @@ object Utils {
                     "I2PD_INTERNAL_VERSION " + TopFragment.ITPDVersion + 10.toChar() +
                     "SIGN_VERSION " + TopFragment.appSign
         }
+    }
+
+    fun isLogsDirAccessible(): Boolean {
+        var result = false
+        try {
+            val dir = Environment.getExternalStorageDirectory()
+            if (dir != null && dir.isDirectory) {
+                result = dir.list()?.isNotEmpty() ?: false
+            } else {
+                Log.w(RootExecService.LOG_TAG, "Root Dir is not read accessible!")
+            }
+
+            var rootDirPath = "/storage/emulated/0"
+            if (dir != null && result) {
+                rootDirPath = dir.canonicalPath
+            }
+            val saveDirPath = "$rootDirPath/TorDNSCrypt"
+            val saveDir = File(saveDirPath)
+            if (result && !saveDir.isDirectory && !saveDir.mkdir()) {
+                result = false
+                Log.w(RootExecService.LOG_TAG, "Root Dir is not write accessible!")
+            }
+
+            if (result) {
+                val testFilePath = "$saveDirPath/testFile"
+                val testFile = File(testFilePath)
+                PrintWriter(testFile).print("")
+                if (!testFile.isFile || !testFile.delete()) {
+                    result = false
+                    Log.w(RootExecService.LOG_TAG, "Root Dir is not write accessible!")
+                }
+            }
+
+        } catch (e: Exception) {
+            Log.w(RootExecService.LOG_TAG, "Download Dir is not accessible " + e.message + e.cause)
+        }
+        return result
     }
 }

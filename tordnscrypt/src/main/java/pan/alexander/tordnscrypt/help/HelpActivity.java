@@ -18,6 +18,7 @@ package pan.alexander.tordnscrypt.help;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
@@ -36,13 +37,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.github.angads25.filepicker.model.DialogConfigs;
 import com.github.angads25.filepicker.model.DialogProperties;
 import com.github.angads25.filepicker.view.FilePickerDialog;
 
 import java.io.File;
-import java.util.Objects;
 
 import pan.alexander.tordnscrypt.LangAppCompatActivity;
 import pan.alexander.tordnscrypt.R;
@@ -66,6 +67,7 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 public class HelpActivity extends LangAppCompatActivity implements View.OnClickListener,
         CompoundButton.OnCheckedChangeListener, OnBinaryFileOperationsCompleteListener {
 
+    private TextView tvLogsPath;
     private EditText etLogsPath;
     private HelpActivityReceiver br;
     private String appDataDir;
@@ -78,18 +80,27 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     private ModulesStatus modulesStatus;
     private String info;
 
+    @SuppressLint("NewApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_help);
 
-        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+
+        tvLogsPath = findViewById(R.id.tvLogsPath);
 
         etLogsPath = findViewById(R.id.etLogsPath);
         etLogsPath.setOnClickListener(this);
+
+        hideSelectionEditTextIfRequired();
+
         Button btnSaveLogs = findViewById(R.id.btnSaveLogs);
         btnSaveLogs.setOnClickListener(this);
         btnSaveLogs.requestFocus();
+
         SwitchCompat swRootCommandsLog = findViewById(R.id.swRootCommandsLog);
         swRootCommandsLog.setChecked(new PrefManager(this).getBoolPref("swRootCommandsLog"));
         swRootCommandsLog.setOnCheckedChangeListener(this);
@@ -103,16 +114,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         iptables = pathVars.getIptablesPath();
         appUID = new PrefManager(this).getStrPref("appUID");
 
-        cacheDir = appDataDir + "/cache";
-        try {
-            cacheDir = getCacheDir().getCanonicalPath();
-        } catch (Exception e) {
-            Log.w(LOG_TAG, "HelpActivity cannot get cache dir" + e.getMessage() + " " + e.getCause());
-        }
-        File dir = new File(cacheDir + "/logs");
-        if (!dir.isDirectory() && !dir.mkdirs()) {
-            Log.e(LOG_TAG, "HelpActivity cannot create logs dir");
-        }
+        cacheDir = pathVars.getCacheDirPath(this);
 
         br = new HelpActivityReceiver(mHandler, appDataDir, cacheDir, pathToSaveLogs);
 
@@ -121,6 +123,8 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         if (modulesStatus.isRootAvailable()) {
             IntentFilter intentFilter = new IntentFilter(RootExecService.COMMAND_RESULT);
             LocalBroadcastManager.getInstance(this).registerReceiver(br, intentFilter);
+        } else {
+            swRootCommandsLog.setVisibility(View.GONE);
         }
 
     }
@@ -132,6 +136,8 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         setTitle(R.string.drawer_menu_help);
 
         etLogsPath.setText(pathToSaveLogs);
+
+        CachedExecutor.INSTANCE.getExecutorService().submit(() -> new File(cacheDir + "/logs").mkdirs());
 
         FileOperations.setOnFileOperationCompleteListener(this);
     }
@@ -170,9 +176,11 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         DialogProperties properties = new DialogProperties();
         properties.selection_mode = DialogConfigs.SINGLE_MODE;
         properties.selection_type = DialogConfigs.DIR_SELECT;
-        properties.root = new File(Environment.getExternalStorageDirectory().toURI());
-        properties.error_dir = new File(Environment.getExternalStorageDirectory().toURI());
-        properties.offset = new File(Environment.getExternalStorageDirectory().toURI());
+        properties.root = new File(Environment.getExternalStorageDirectory().getPath());
+        properties.error_dir = new File(PathVars.getInstance(this).getCacheDirPath(this));
+        properties.offset = new File(Environment.getExternalStorageDirectory().getPath());
+        properties.extensions = null;
+
         FilePickerDialog dial = new FilePickerDialog(this, properties);
         dial.setTitle(R.string.backupFolder);
         dial.setDialogSelectionListener(files -> {
@@ -283,10 +291,6 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                                 + " " + pathToSaveLogs);
                 commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
             } else {
-                /*DialogFragment commandResult =
-                        NotificationDialogFragment.newInstance(getText(R.string.help_activity_logs_saved).toString()
-                                + " " + appDataDir + "/logs/InvizibleLogs.txt");
-                commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");*/
                 File logs = new File(cacheDir + "/logs/InvizibleLogs.txt");
                 if (logs.isFile()) {
                     Uri uri = FileProvider.getUriForFile(this, this.getPackageName() + ".fileprovider", logs);
@@ -294,5 +298,20 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                 }
             }
         }
+    }
+
+    private void hideSelectionEditTextIfRequired() {
+        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+            boolean logsDirAccessible = Utils.INSTANCE.isLogsDirAccessible();
+            if (!isFinishing() && !logsDirAccessible && etLogsPath != null && tvLogsPath != null) {
+                runOnUiThread(() ->{
+                    if (!isFinishing() && etLogsPath != null && tvLogsPath != null) {
+                        tvLogsPath.setVisibility(View.GONE);
+                        etLogsPath.setVisibility(View.GONE);
+                    }
+
+                });
+            }
+        });
     }
 }

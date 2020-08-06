@@ -2,7 +2,6 @@ package pan.alexander.tordnscrypt.utils
 
 import android.app.Activity
 import android.app.ActivityManager
-import android.app.Service
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Point
@@ -14,6 +13,7 @@ import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
+import kotlin.math.roundToInt
 
 object Utils {
     fun getScreenOrientation(activity: Activity): Int {
@@ -31,6 +31,10 @@ object Utils {
         }
     }
 
+    fun dips2pixels(dips: Int, context: Context): Int {
+        return (dips * context.resources.displayMetrics.density + 0.5f).roundToInt()
+    }
+
     fun getDeviceIP(): String {
         try {
             val en = NetworkInterface.getNetworkInterfaces()
@@ -45,7 +49,7 @@ object Utils {
                 }
             }
         } catch (e: SocketException) {
-            Log.e(RootExecService.LOG_TAG, "Utils SocketException " + e.message + " " + e.cause)
+            Log.e(LOG_TAG, "Utils SocketException " + e.message + " " + e.cause)
         }
 
         return ""
@@ -71,7 +75,7 @@ object Utils {
 
             }
         } catch (e: SocketException) {
-            Log.e(RootExecService.LOG_TAG, "Util SocketException " + e.message + " " + e.cause)
+            Log.e(LOG_TAG, "Util SocketException " + e.message + " " + e.cause)
         }
 
         return result

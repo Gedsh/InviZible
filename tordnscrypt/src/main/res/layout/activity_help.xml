@@ -24,7 +24,7 @@
             android:orientation="vertical">
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/textView5"
+                android:id="@+id/tvLogsPath"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/help_activity_path" />
@@ -49,25 +49,15 @@
                 android:textColor="@color/buttonTextColor"
                 android:typeface="serif" />
 
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/swRootCommandsLog"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:text="@string/pref_common_log_root_commands" />
+
         </androidx.appcompat.widget.LinearLayoutCompat>
 
-    </androidx.cardview.widget.CardView>
-
-    <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:focusable="false"
-        app:cardBackgroundColor="@color/cardsColor"
-        app:cardCornerRadius="5dp"
-        app:cardUseCompatPadding="true"
-        app:contentPadding="4dp">
-
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/swRootCommandsLog"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:text="@string/pref_common_log_root_commands" />
     </androidx.cardview.widget.CardView>
 
 </androidx.appcompat.widget.LinearLayoutCompat>

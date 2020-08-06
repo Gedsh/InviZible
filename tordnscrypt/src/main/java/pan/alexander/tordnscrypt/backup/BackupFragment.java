@@ -19,11 +19,15 @@ package pan.alexander.tordnscrypt.backup;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.os.Bundle;
 import android.os.Environment;
+
+import androidx.appcompat.widget.LinearLayoutCompat;
+import androidx.cardview.widget.CardView;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -40,7 +44,9 @@ import java.io.File;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
+import pan.alexander.tordnscrypt.help.Utils;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.file_operations.ExternalStoragePermissions;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
@@ -53,8 +59,11 @@ import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveB
 
 public class BackupFragment extends Fragment implements View.OnClickListener, OnBinaryFileOperationsCompleteListener {
 
-    private EditText etFilePath = null;
-    private String pathBackup = null;
+    private LinearLayoutCompat llFragmentBackup;
+    private CardView cardRules;
+    private EditText etFilePath;
+    private String pathBackup;
+    private String cacheDir;
     private String appDataDir;
     private DialogFragment progress;
 
@@ -65,32 +74,44 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_backup, container, false);
-
-        view.findViewById(R.id.btnRestoreBackup).setOnClickListener(this);
-        Button btnSaveBackup = view.findViewById(R.id.btnSaveBackup);
-        btnSaveBackup.setOnClickListener(this);
-        btnSaveBackup.requestFocus();
-        etFilePath = view.findViewById(R.id.etPathBackup);
-        PathVars pathVars = PathVars.getInstance(view.getContext());
-        pathBackup = pathVars.getDefaultBackupPath();
-        etFilePath.setText(pathBackup);
-        etFilePath.setOnClickListener(this);
-        appDataDir = pathVars.getAppDataDir();
-
-        return view;
-    }
-
-    @SuppressLint("SetTextI18n")
-    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setRetainInstance(true);
 
         FileOperations.setOnFileOperationCompleteListener(this);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_backup, container, false);
+
+        Button btnRestoreBackup = view.findViewById(R.id.btnRestoreBackup);
+        btnRestoreBackup.setOnClickListener(this);
+
+        Button btnSaveBackup = view.findViewById(R.id.btnSaveBackup);
+        btnSaveBackup.setOnClickListener(this);
+        btnSaveBackup.requestFocus();
+
+        llFragmentBackup = view.findViewById(R.id.llFragmentBackup);
+
+        cardRules = view.findViewById(R.id.cardRules);
+
+        hideSelectionEditTextIfRequired(getActivity());
+
+        etFilePath = view.findViewById(R.id.etPathBackup);
+
+        PathVars pathVars = PathVars.getInstance(view.getContext());
+        pathBackup = pathVars.getDefaultBackupPath();
+        cacheDir = pathVars.getCacheDirPath(view.getContext());
+
+        etFilePath.setText(pathBackup);
+        etFilePath.setOnClickListener(this);
+
+        appDataDir = pathVars.getAppDataDir();
+
+        return view;
     }
 
     @Override
@@ -149,13 +170,19 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
     }
 
     private void selectBackupPath() {
+
+        if (getActivity() == null || getActivity().isFinishing()) {
+            return;
+        }
+
         DialogProperties properties = new DialogProperties();
         properties.selection_mode = DialogConfigs.SINGLE_MODE;
         properties.selection_type = DialogConfigs.DIR_SELECT;
-        properties.root = new File(Environment.getExternalStorageDirectory().toURI());
-        properties.error_dir = new File(Environment.getExternalStorageDirectory().toURI());
-        properties.offset = new File(Environment.getExternalStorageDirectory().toURI());
-        properties.extensions = new String[]{"arch:"};
+        properties.root = new File(Environment.getExternalStorageDirectory().getPath());
+        properties.error_dir = new File(PathVars.getInstance(getActivity()).getCacheDirPath(getActivity()));
+        properties.offset = new File(Environment.getExternalStorageDirectory().getPath());
+        properties.extensions = null;
+
         FilePickerDialog dial = new FilePickerDialog(getActivity(), properties);
         dial.setTitle(R.string.backupFolder);
         dial.setDialogSelectionListener(files -> {
@@ -174,12 +201,12 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
     }
 
     private void openPleaseWaitDialog() {
-        if (getActivity() != null && getFragmentManager() != null) {
+        if (getActivity() != null && isAdded()) {
             try {
                 progress = PleaseWaitProgressDialog.getInstance();
-                progress.show(getFragmentManager(), "PleaseWaitProgressDialog");
+                progress.show(getParentFragmentManager(), "PleaseWaitProgressDialog");
             } catch (Exception ex) {
-                Log.e(LOG_TAG, "BackupFragment open progress fault " + ex.getMessage() + " " +ex.getCause());
+                Log.e(LOG_TAG, "BackupFragment open progress fault " + ex.getMessage() + " " + ex.getCause());
             }
         }
     }
@@ -189,7 +216,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
             try {
                 progress.dismiss();
             } catch (Exception ex) {
-                Log.e(LOG_TAG, "BackupFragment close progress fault " + ex.getMessage() + " " +ex.getCause());
+                Log.e(LOG_TAG, "BackupFragment close progress fault " + ex.getMessage() + " " + ex.getCause());
             }
         }
     }
@@ -225,5 +252,20 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
                 showToast(getString(R.string.wrong));
             }
         }
+    }
+
+    private void hideSelectionEditTextIfRequired(Activity activity) {
+        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+            boolean logsDirAccessible = Utils.INSTANCE.isLogsDirAccessible();
+            if (activity != null && !activity.isFinishing() && !logsDirAccessible && cardRules != null) {
+                activity.runOnUiThread(() -> {
+                    if (!activity.isFinishing() && cardRules != null && llFragmentBackup != null) {
+                        cardRules.setVisibility(View.GONE);
+                        llFragmentBackup.setPadding(0, pan.alexander.tordnscrypt.utils.Utils.INSTANCE.dips2pixels(10, activity), 0, 0);
+                        pathBackup = cacheDir;
+                    }
+                });
+            }
+        });
     }
 }
