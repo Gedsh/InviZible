@@ -927,7 +927,7 @@ public class MainActivity extends LangAppCompatActivity
 
                 //////////////To STOP UPDATES CHECK/////////////////////////////////////////////////////
                 TopFragment topFragment = (TopFragment) getSupportFragmentManager().findFragmentByTag("topFragmentTAG");
-                if (topFragment != null) {
+                if (topFragment != null && topFragment.updateCheck != null && topFragment.updateCheck.context != null) {
                     topFragment.updateCheck.context = null;
                 }
 
