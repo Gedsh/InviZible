@@ -25,6 +25,7 @@ import android.content.Intent;
 import android.net.Uri;
 import androidx.appcompat.app.AlertDialog;
 import android.text.InputType;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -34,6 +35,8 @@ import java.util.Locale;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
+
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class Registration {
     private Context context;
@@ -69,12 +72,16 @@ public class Registration {
                 builder.show();
             }
         } catch (Exception e) {
-            e.getStackTrace();
+            Log.e(LOG_TAG, "Reg exception " + e.getMessage() + " " + e.getCause());
         }
 
     }
 
     public void showEnterCodeDialog() {
+
+        if (context == null || !(context instanceof MainActivity) || ((MainActivity) context).isFinishing()) {
+            return;
+        }
 
         LayoutInflater inflater = ((Activity)context).getLayoutInflater();
         @SuppressLint("InflateParams") final View inputView = inflater.inflate(R.layout.edit_text_for_dialog, null, false);
@@ -84,6 +91,11 @@ public class Registration {
         AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomAlertDialogTheme);
         builder .setTitle(R.string.enter_code)
                 .setPositiveButton(R.string.ok, (dialog, which) -> {
+                    if (context == null || !(context instanceof MainActivity) || ((MainActivity) context).isFinishing()) {
+                        dialog.dismiss();
+                        return;
+                    }
+
                     new PrefManager(context).setStrPref("registrationCode",editText.getText().toString().trim());
 
                     wrongRegistrationCode = false;

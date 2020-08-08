@@ -84,11 +84,7 @@ public class UpdateCheck {
             byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
             return new String(decryptedBytes, StandardCharsets.UTF_8);
         } catch (Exception e) {
-            if (context != null) {
-                if (MainActivity.modernDialog != null)
-                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
-                new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
-            }
+            showFaultUpdateMessage();
             Log.e(LOG_TAG, "RSADecrypt function fault " + e.getMessage());
         }
         return "";
@@ -128,11 +124,7 @@ public class UpdateCheck {
             byte[] encryptedBytes = cipher.doFinal(hexBytes.getBytes(StandardCharsets.UTF_8));
             return Base64.encodeToString(encryptedBytes, Base64.DEFAULT);
         } catch (Exception e) {
-            if (context != null) {
-                if (MainActivity.modernDialog != null)
-                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
-                new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
-            }
+            showFaultUpdateMessage();
             Log.e(LOG_TAG, "RSASign function fault " + e.getMessage());
         }
         return null;
@@ -145,23 +137,15 @@ public class UpdateCheck {
 
     private void compareVersions(String serverAnswer) {
         if (!serverAnswer.toLowerCase().contains(appProcVersion.toLowerCase())) {
-            if (context != null) {
-                if (MainActivity.modernDialog != null)
-                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
-                new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
-                Log.e(LOG_TAG, "compareVersions function fault " + serverAnswer);
-            }
+            showFaultUpdateMessage();
+            Log.e(LOG_TAG, "compareVersions function fault " + serverAnswer);
             return;
         }
 
         serverAnswer = serverAnswer.toLowerCase().replace(appProcVersion.toLowerCase(), "").trim();
         String[] modulesArr = serverAnswer.split(";");
         if (modulesArr.length <1) {
-            if (context != null) {
-                if (MainActivity.modernDialog != null)
-                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
-                new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
-            }
+            showFaultUpdateMessage();
             Log.w(LOG_TAG, "compareVersions function fault modulesArr length < 1");
             return;
         }
@@ -169,41 +153,25 @@ public class UpdateCheck {
         String[] iproArr = modulesArr[0].split(":");
 
         if (iproArr.length < 4) {
-            if (context != null) {
-                if (MainActivity.modernDialog != null)
-                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
-                new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
-            }
+            showFaultUpdateMessage();
             Log.w(LOG_TAG, "compareVersions function fault iproArr length < 4");
             return;
         }
 
         if (!iproArr[1].matches("\\d+\\.+\\d+\\.\\d+")) {
-            if (context != null) {
-                if (MainActivity.modernDialog != null)
-                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
-                new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
-            }
+            showFaultUpdateMessage();
             Log.w(LOG_TAG, "compareVersions function fault iproArr version regexp mismatch");
             return;
         }
 
         if (!iproArr[2].matches("\\d{3}")) {
-            if (context != null) {
-                if (MainActivity.modernDialog != null)
-                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
-                new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
-            }
+            showFaultUpdateMessage();
             Log.w(LOG_TAG, "compareVersions function fault iproArr pass regexp mismatch");
             return;
         }
 
         if (!iproArr[3].matches("\\w{8}")) {
-            if (context != null) {
-                if (MainActivity.modernDialog != null)
-                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
-                new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
-            }
+            showFaultUpdateMessage();
             Log.w(LOG_TAG, "compareVersions function fault iproArr hash regexp mismatch");
             return;
         }
@@ -217,11 +185,7 @@ public class UpdateCheck {
         try {
             fm = ((MainActivity) context).getSupportFragmentManager();
         } catch (Exception e) {
-            if (context != null) {
-                if (MainActivity.modernDialog != null)
-                    ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
-                new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
-            }
+            showFaultUpdateMessage();
             Log.e(LOG_TAG, "UpdateCheck compareVersions getFragmentManager exception " + e.getMessage());
         }
 
@@ -261,7 +225,7 @@ public class UpdateCheck {
             wrongRegistrationCode = true;
         }
 
-        if (context != null && MainActivity.modernDialog != null) {
+        if (context != null && MainActivity.modernDialog != null && context instanceof MainActivity && !((MainActivity)context).isFinishing()) {
             ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_check_no_update).toString());
         }
     }
@@ -280,11 +244,7 @@ public class UpdateCheck {
                 String rsaSign = RSASign(appSign);
 
                 if (rsaSign == null) {
-                    if (context != null) {
-                        if (MainActivity.modernDialog != null)
-                            ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
-                        new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
-                    }
+                    showFaultUpdateMessage();
                     Log.e(LOG_TAG, "RSASign(appSign) returns null");
                     return;
                 }
@@ -308,7 +268,7 @@ public class UpdateCheck {
 
                 if (serverAnswerEncoded.isEmpty()) {
                     if (context != null) {
-                        if (MainActivity.modernDialog != null)
+                        if (MainActivity.modernDialog != null && context instanceof MainActivity && !((MainActivity)context).isFinishing())
                             ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_check_warning).toString());
                         new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_check_warning_menu).toString());
                     }
@@ -317,7 +277,8 @@ public class UpdateCheck {
                 } else if (serverAnswerEncoded.contains("fault")) {
                     if (serverAnswerEncoded.contains("wrong code")) {
                         if (context != null) {
-                            ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_wrong_code).toString());
+                            if (MainActivity.modernDialog != null && context instanceof MainActivity && !((MainActivity)context).isFinishing())
+                                ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_wrong_code).toString());
                             new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
                             new PrefManager(context).setStrPref("updateTimeLast", "");
                         }
@@ -325,20 +286,22 @@ public class UpdateCheck {
                         Log.e(LOG_TAG, "requestUpdateData function fault - server returns wrong code");
                     } else if (serverAnswerEncoded.contains("over 3 activations")) {
                         if (context != null) {
-                            ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_over_three_activations).toString());
+                            if (MainActivity.modernDialog != null && context instanceof MainActivity && !((MainActivity)context).isFinishing())
+                                ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_over_three_activations).toString());
                             new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
                         }
                         wrongRegistrationCode = true;
                         Log.e(LOG_TAG, "requestUpdateData function fault - server returns over 3 activations");
                     } else if (serverAnswerEncoded.contains("over 5 times")) {
                         if (context != null) {
-                            ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_over_five_times).toString());
+                            if (MainActivity.modernDialog != null && context instanceof MainActivity && !((MainActivity)context).isFinishing())
+                                ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_over_five_times).toString());
                             new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
                         }
                         Log.e(LOG_TAG, "requestUpdateData function fault - server returns over 5 times");
                     } else {
                         if (context != null) {
-                            if (MainActivity.modernDialog != null)
+                            if (MainActivity.modernDialog != null && context instanceof MainActivity && !((MainActivity)context).isFinishing())
                                 ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_check_warning).toString());
                             new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_check_warning_menu).toString());
                         }
@@ -355,12 +318,20 @@ public class UpdateCheck {
 
             } catch (Exception e) {
                 if (context != null) {
-                    if (MainActivity.modernDialog != null)
+                    if (MainActivity.modernDialog != null && context instanceof MainActivity && !((MainActivity)context).isFinishing())
                         ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_check_warning).toString());
                     new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_check_warning_menu).toString());
                 }
                 Log.e(LOG_TAG, "requestUpdateData function fault " + e.getMessage());
             }
         });
+    }
+
+    private void showFaultUpdateMessage() {
+        if (context != null) {
+            if (MainActivity.modernDialog != null && context instanceof MainActivity && !((MainActivity)context).isFinishing())
+                ((MainActivity) context).showUpdateMessage(context.getText(R.string.update_fault).toString());
+            new PrefManager(context).setStrPref("LastUpdateResult", context.getText(R.string.update_fault).toString());
+        }
     }
 }
