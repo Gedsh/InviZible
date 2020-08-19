@@ -1,0 +1,2 @@
+**InviZible Pro beta 1.0.0**
+* Attempt to fix Always On VPN when Block connections without vpn is enabled.

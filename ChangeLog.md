@@ -330,3 +330,6 @@
 **InviZible Pro beta 0.9.9**
 * Fixed import of DNSCrypt filter files on Android Q.
 * Fixes and UI updates for Backup and Logs on Android Q.
+
+**InviZible Pro beta 1.0.0**
+* Attempt to fix Always On VPN when Block connections without vpn is enabled.
