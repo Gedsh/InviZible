@@ -278,6 +278,11 @@ public class ServiceVPNHandler extends Handler {
         // Update connected state
         serviceVPN.last_connected = Util.isConnected(serviceVPN);
 
+        //Request disconnected state confirmation in case of Always on VPN is enabled
+        if (!serviceVPN.last_connected) {
+            Util.isConnectedAsynchronousConfirmation(serviceVPN);
+        }
+
         if (serviceVPN.last_connected || serviceVPN.last_connected_override) {
             listAllowed.addAll(listRule);
         }

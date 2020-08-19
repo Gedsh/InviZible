@@ -35,13 +35,18 @@ import androidx.core.net.ConnectivityManagerCompat;
 
 import java.io.File;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 
+import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPN;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper.reload;
 
 public class Util {
 
@@ -89,6 +94,34 @@ public class Util {
             NetworkInfo ni = (connectivityManager == null ? null : connectivityManager.getActiveNetworkInfo());
             return (ni != null && ni.isConnected());
         }
+    }
+
+    public static void isConnectedAsynchronousConfirmation(ServiceVPN serviceVPN) {
+        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+            try (Socket socket = new Socket()) {
+
+                String dnsCryptFallbackRes = PathVars.getInstance(serviceVPN).getDNSCryptFallbackRes();
+
+                SocketAddress sockaddr = new InetSocketAddress(InetAddress.getByName(dnsCryptFallbackRes), 53);
+                socket.connect(sockaddr, 5000);
+
+                if (socket.isConnected()) {
+
+                    if (!serviceVPN.last_connected_override) {
+                        serviceVPN.last_connected_override = true;
+
+                        reload("Network is available due to confirmation.", serviceVPN);
+                    }
+
+                } else {
+                    serviceVPN.last_connected_override = false;
+                    Log.i(LOG_TAG, "Network is not available due to confirmation.");
+                }
+            } catch (Exception e) {
+                Log.i(LOG_TAG, "Network is not available due to confirmation " + e.getMessage() + " " + e.getCause());
+                serviceVPN.last_connected_override = false;
+            }
+        });
     }
 
     public static List<String> getDefaultDNS(Context context) {

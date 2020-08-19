@@ -93,7 +93,6 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper.reload;
 
-@SuppressWarnings("unused")
 public class ServiceVPN extends VpnService {
     static {
         try {
@@ -112,8 +111,8 @@ public class ServiceVPN extends VpnService {
     private static final Object jni_lock = new Object();
     private static long jni_context = 0;
 
-    boolean last_connected = false;
-    boolean last_connected_override = false;
+    volatile boolean last_connected = false;
+    public volatile boolean last_connected_override = false;
 
     ParcelFileDescriptor vpn = null;
 
@@ -264,6 +263,9 @@ public class ServiceVPN extends VpnService {
 
         // VPN address
         String vpn4 = prefs.getString("vpn4", "10.1.10.1");
+        if (vpn4 == null) {
+            vpn4 = "10.1.10.1";
+        }
         Log.i(LOG_TAG, "VPN Using VPN4=" + vpn4);
         builder.addAddress(vpn4, 32);
         if (ip6) {
@@ -758,7 +760,10 @@ public class ServiceVPN extends VpnService {
         } else if (packet.uid == ownUID && isSupported(packet.protocol)) {
             // Allow self
             packet.allowed = true;
-            Log.w(LOG_TAG, "Allowing self " + packet);
+
+            if (!compatibilityMode) {
+                Log.w(LOG_TAG, "Allowing self " + packet);
+            }
         } else if (reloading) {
             // Reload service
             Log.i(LOG_TAG, "Block due to reloading " + packet);
@@ -975,8 +980,6 @@ public class ServiceVPN extends VpnService {
 
         ConnectivityManager.NetworkCallback nc = new ConnectivityManager.NetworkCallback() {
             private Boolean last_connected = null;
-            private Boolean last_unmetered = null;
-            private String last_generation = null;
             private List<InetAddress> last_dns = null;
 
             @Override
