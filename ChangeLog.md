@@ -333,3 +333,9 @@
 
 **InviZible Pro beta 1.0.0**
 * Attempt to fix Always On VPN when Block connections without vpn is enabled.
+
+**InviZible Pro beta 1.0.1**
+* Updated Tor to version 4.4.4-rc.
+* Updated obfs4proxy.
+* Updated snowflake.
+* Updated Tor geoip.
