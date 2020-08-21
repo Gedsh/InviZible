@@ -372,7 +372,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         boolean torRunning = new PrefManager(getActivity()).getBoolPref("Tor Running");
 
         if (torRunning) {
-            ModulesRestarter.restartTor(getActivity());
+            ModulesRestarter.restartTorFull(getActivity());
             Toast.makeText(getActivity(), getText(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
         }
 

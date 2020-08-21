@@ -45,6 +45,10 @@ public class ModulesRestarter {
         sendIntent(context, ModulesService.actionRestartTor);
     }
 
+    public static void restartTorFull(Context context) {
+        sendIntent(context, ModulesService.actionRestartTorFull);
+    }
+
     public static void restartITPD(Context context) {
         sendIntent(context, ModulesService.actionRestartITPD);
     }

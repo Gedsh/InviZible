@@ -83,6 +83,7 @@ public class ModulesService extends Service {
     static final String actionStopITPD = "pan.alexander.tordnscrypt.action.STOP_ITPD";
     static final String actionRestartDnsCrypt = "pan.alexander.tordnscrypt.action.RESTART_DNSCRYPT";
     static final String actionRestartTor = "pan.alexander.tordnscrypt.action.RESTART_TOR";
+    static final String actionRestartTorFull = "pan.alexander.tordnscrypt.action.RESTART_TOR_FULL";
     static final String actionRestartITPD = "pan.alexander.tordnscrypt.action.RESTART_ITPD";
     static final String actionUpdateModulesStatus = "pan.alexander.tordnscrypt.action.UPDATE_MODULES_STATUS";
     static final String actionRecoverService = "pan.alexander.tordnscrypt.action.RECOVER_SERVICE";
@@ -224,6 +225,9 @@ public class ModulesService extends Service {
                 break;
             case actionRestartTor:
                 restartTor();
+                break;
+            case actionRestartTorFull:
+                restartTorFull();
                 break;
             case actionRestartITPD:
                 restartITPD();
@@ -716,6 +720,35 @@ public class ModulesService extends Service {
 
             } catch (Exception e) {
                 Log.e(LOG_TAG, "ModulesService restartTor exception " + e.getMessage() + " " + e.getCause());
+            }
+
+        }).start();
+    }
+
+    private void restartTorFull() {
+        if (modulesStatus.getTorState() != RUNNING) {
+            return;
+        }
+
+        new Thread(() -> {
+            try {
+                modulesStatus.setTorState(RESTARTING);
+
+                Thread killerThread = new Thread(modulesKiller.getTorKillerRunnable());
+                killerThread.start();
+
+                while (killerThread.isAlive()) {
+                    killerThread.join();
+                }
+
+                makeDelay(5);
+
+                if (modulesStatus.getTorState() != RUNNING) {
+                    startTor();
+                }
+
+            } catch (InterruptedException e) {
+                Log.e(LOG_TAG, "ModulesService restartTorFull join interrupted!");
             }
 
         }).start();
