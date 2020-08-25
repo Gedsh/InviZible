@@ -339,3 +339,8 @@
 * Updated obfs4proxy.
 * Updated snowflake.
 * Updated Tor geoip.
+
+**InviZible Pro beta 1.0.2**
+* Updated Purple I2P to version 2.33.0.
+* Optimized memory usage.
+* Added Finnish language.
