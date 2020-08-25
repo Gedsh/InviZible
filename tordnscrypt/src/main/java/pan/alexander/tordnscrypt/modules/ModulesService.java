@@ -25,6 +25,7 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -99,7 +100,7 @@ public class ModulesService extends Service {
 
     ModulesBroadcastReceiver modulesBroadcastReceiver;
 
-    private final Handler mHandler = new Handler();
+    private final Handler mHandler = new Handler(Objects.requireNonNull(Looper.getMainLooper()));
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
     private PathVars pathVars;
@@ -142,7 +143,7 @@ public class ModulesService extends Service {
         startModulesThreadsTimer();
 
         if (new PrefManager(this).getBoolPref("DNSCryptSystemDNSAllowed")) {
-            new Handler().postDelayed(() -> {
+            mHandler.postDelayed(() -> {
                 if (new PrefManager(this).getBoolPref("DNSCryptSystemDNSAllowed")) {
                     new PrefManager(this).setBoolPref("DNSCryptSystemDNSAllowed", false);
                     ModulesStatus.getInstance().setIptablesRulesUpdateRequested(this, true);

@@ -160,6 +160,7 @@ public class ApManager {
         return result;
     }
 
+    @SuppressLint("MissingPermission")
     @RequiresApi(api = Build.VERSION_CODES.O)
     private boolean configureHotspotOreoAndHigher() {
         boolean result = false;

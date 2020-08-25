@@ -26,6 +26,7 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -114,6 +115,8 @@ public class TopFragment extends Fragment {
     private BroadcastReceiver br;
     private OnActivityChangeListener onActivityChangeListener;
 
+    private Handler handler;
+
     private static volatile ScheduledExecutorService modulesLogsTimer;
 
     public static float logsTextSize = 0f;
@@ -145,6 +148,11 @@ public class TopFragment extends Fragment {
 
         if (getActivity() != null) {
             logsTextSize = new PrefManager(getActivity()).getFloatPref("LogsTextSize");
+        }
+
+        Looper looper = Looper.getMainLooper();
+        if (looper != null) {
+            handler = new Handler(looper);
         }
 
         rootChecker = new RootChecker(this);
@@ -239,8 +247,20 @@ public class TopFragment extends Fragment {
 
         stopModulesLogsTimer();
 
-        if (rootChecker != null && !rootChecker.isCancelled()) {
-            rootChecker.cancel(true);
+        if (rootChecker != null) {
+
+            if (!rootChecker.isCancelled()) {
+                rootChecker.cancel(true);
+            }
+
+            rootChecker.topFragmentWeakReference.clear();
+            rootChecker.topFragmentWeakReference = null;
+            rootChecker = null;
+        }
+
+        if (handler != null) {
+            handler.removeCallbacksAndMessages(null);
+            handler = null;
         }
     }
 
@@ -391,27 +411,31 @@ public class TopFragment extends Fragment {
         }
 
         if (appVersion.endsWith("e")) {
-            Handler handler = new Handler();
+
             Runnable performRegistration = () -> {
                 if (getActivity() != null && isAdded()) {
                     Registration registration = new Registration(getActivity());
                     registration.showDonateDialog();
                 }
             };
-            handler.postDelayed(performRegistration, 5000);
+
+            if (handler != null) {
+                handler.postDelayed(performRegistration, 5000);
+            }
         } else if (appVersion.endsWith("p") && isAdded() && !accelerated) {
 
             if (!new PrefManager(getActivity()).getBoolPref("Agreement")) {
                 return;
             }
 
-            Handler handler = new Handler();
-            handler.postDelayed(() -> {
-                DialogFragment accelerateDevelop = AskAccelerateDevelop.getInstance();
-                if (getActivity() != null && isAdded() && !accelerated) {
-                    accelerateDevelop.show(getParentFragmentManager(), "accelerateDevelop");
-                }
-            }, 5000);
+            if (handler != null) {
+                handler.postDelayed(() -> {
+                    DialogFragment accelerateDevelop = AskAccelerateDevelop.getInstance();
+                    if (getActivity() != null && isAdded() && !accelerated) {
+                        accelerateDevelop.show(getParentFragmentManager(), "accelerateDevelop");
+                    }
+                }, 5000);
+            }
 
         }
     }
@@ -643,8 +667,6 @@ public class TopFragment extends Fragment {
             return;
         }
 
-        Handler handler = new Handler();
-
         Runnable runnable = () -> {
             if (getActivity() == null || updateCheck != null) {
                 return;
@@ -666,8 +688,9 @@ public class TopFragment extends Fragment {
             }
         };
 
-
-        handler.postDelayed(runnable, 1000);
+        if (handler != null) {
+            handler.postDelayed(runnable, 1000);
+        }
 
     }
 

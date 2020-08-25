@@ -26,7 +26,9 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.text.Html;
+import android.text.Spanned;
 import android.util.Log;
 import android.view.ScaleGestureDetector;
 import android.widget.Toast;
@@ -92,6 +94,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     private boolean apIsOn;
     private String localEthernetDeviceAddress = "192.168.0.100";
     private boolean dnsCryptLogAutoScroll = true;
+    private Handler handler;
 
     private ScaleGestureDetector scaleGestureDetector;
 
@@ -102,6 +105,11 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     public void onStart(Context context) {
         if (context == null || view == null) {
             return;
+        }
+
+        Looper looper = Looper.getMainLooper();
+        if (looper != null) {
+            handler = new Handler(looper);
         }
 
         PathVars pathVars = PathVars.getInstance(context);
@@ -173,6 +181,11 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         stopDisplayLog();
         unbindVPNService(context);
         view = null;
+
+        if (handler != null) {
+            handler.removeCallbacksAndMessages(null);
+            handler = null;
+        }
     }
 
     @Override
@@ -199,8 +212,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
         ScheduledExecutorService timer = TopFragment.getModulesLogsTimer();
 
-        if (timer == null || timer.isShutdown()) {
-            new Handler().postDelayed(() -> {
+        if ((timer == null || timer.isShutdown()) && handler != null) {
+            handler.postDelayed(() -> {
 
                 if (view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isDestroyed()) {
                     displayLog(period);
@@ -211,7 +224,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             return;
         }
 
-        if (period == displayLogPeriod) {
+        if (period == displayLogPeriod || timer == null) {
             return;
         }
 
@@ -248,13 +261,16 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
                     final boolean displayed = displayDnsResponses(lastLines);
 
-                    if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || logFile == null) {
+                    if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()
+                            || handler == null || logFile == null || lastLines == null || lastLines.isEmpty()) {
                         return;
                     }
 
-                    view.getFragmentActivity().runOnUiThread(() -> {
+                    Spanned htmlLines = Html.fromHtml(lastLines);
 
-                        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || lastLines == null || lastLines.isEmpty()) {
+                    handler.post(() -> {
+
+                        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || htmlLines == null) {
                             return;
                         }
 
@@ -265,7 +281,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                             dnsCryptStartedWithError(view.getFragmentActivity(), lastLines);
 
                             if (!displayed) {
-                                view.setDNSCryptLogViewText(Html.fromHtml(lastLines));
+                                view.setDNSCryptLogViewText(htmlLines);
                                 view.scrollDNSCryptLogViewToBottom();
                             }
 
@@ -468,11 +484,15 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                 && !modulesStatus.isUseModulesWithRoot();
 
         if (modulesStatus.getMode() != VPN_MODE && !fixTTL) {
-            if (!savedDNSQueryRawRecords.isEmpty() && view != null && view.getFragmentActivity() != null) {
+            if (!savedDNSQueryRawRecords.isEmpty() && view != null && view.getFragmentActivity() != null && handler != null) {
                 savedDNSQueryRawRecords.clear();
-                view.getFragmentActivity().runOnUiThread(() -> {
-                    if (view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isFinishing() && logFile != null) {
-                        view.setDNSCryptLogViewText(Html.fromHtml(savedLines));
+
+                Spanned htmlLines = Html.fromHtml(savedLines);
+
+                handler.post(() -> {
+                    if (view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isFinishing()
+                            && logFile != null && htmlLines != null) {
+                        view.setDNSCryptLogViewText(htmlLines);
                         view.scrollDNSCryptLogViewToBottom();
                     }
                 });
@@ -619,10 +639,13 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         int dnsQueryRecordsLength = dnsQueryRecords.length();
 
         if (view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isFinishing()
-                && savedDNSQueryRecordsLenght != dnsQueryRecordsLength) {
-            view.getFragmentActivity().runOnUiThread(() -> {
-                if (view != null && view.getFragmentActivity() != null && dnsCryptLogAutoScroll) {
-                    view.setDNSCryptLogViewText(Html.fromHtml(dnsQueryRecords));
+                && handler != null && savedDNSQueryRecordsLenght != dnsQueryRecordsLength) {
+
+            Spanned htmlLines = Html.fromHtml(dnsQueryRecords);
+
+            handler.post(() -> {
+                if (view != null && view.getFragmentActivity() != null && htmlLines != null && dnsCryptLogAutoScroll) {
+                    view.setDNSCryptLogViewText(htmlLines);
                     view.scrollDNSCryptLogViewToBottom();
                     savedDNSQueryRecordsLenght = dnsQueryRecordsLength;
                 } else {
@@ -804,6 +827,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             }
 
             bound = false;
+            serviceVPN = null;
+            serviceConnection = null;
         }
     }
 

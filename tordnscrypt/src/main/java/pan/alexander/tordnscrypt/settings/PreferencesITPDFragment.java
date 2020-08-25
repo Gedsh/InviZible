@@ -316,7 +316,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                     successfully = FileOperations.deleteDirSynchronous(getActivity(), appDataDir + "/i2pd_data");
                 }
 
-                if (getActivity() != null) {
+                if (getActivity() != null && !getActivity().isFinishing()) {
                     if (successfully) {
                         getActivity().runOnUiThread(() -> Toast.makeText(getActivity(), R.string.done, Toast.LENGTH_SHORT).show());
                     } else {

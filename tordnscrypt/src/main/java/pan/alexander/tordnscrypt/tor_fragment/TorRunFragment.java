@@ -151,6 +151,21 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
     }
 
     @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+
+        btnTorStart = null;
+        tvTorStatus = null;
+        pbTor = null;
+        tvTorLog = null;
+        svTorLog = null;
+
+        receiver = null;
+
+        presenter = null;
+    }
+
+    @Override
     public void onClick(View v) {
         if (v.getId() == R.id.btnTorStart) {
             presenter.startButtonOnClick(getActivity());

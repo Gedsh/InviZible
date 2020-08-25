@@ -157,6 +157,22 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
     }
 
     @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+
+        btnITPDStart = null;
+        tvITPDStatus = null;
+        pbITPD = null;
+        tvITPDLog = null;
+        tvITPDinfoLog = null;
+        svITPDLog = null;
+
+        receiver = null;
+
+        presenter = null;
+    }
+
+    @Override
     public void onClick(View v) {
         if (v.getId() == R.id.btnITPDStart) {
             presenter.startButtonOnClick(getActivity());

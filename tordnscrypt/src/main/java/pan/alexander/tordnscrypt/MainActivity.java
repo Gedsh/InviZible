@@ -28,7 +28,9 @@ import android.net.VpnService;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+
 import androidx.annotation.NonNull;
+
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.tabs.TabLayout;
 
@@ -43,6 +45,7 @@ import androidx.preference.PreferenceManager;
 import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.ViewPager;
 
+import android.os.Looper;
 import android.text.InputType;
 import android.util.Base64;
 import android.util.Log;
@@ -179,6 +182,11 @@ public class MainActivity extends LangAppCompatActivity
 
         modulesStatus = ModulesStatus.getInstance();
 
+        Looper looper = Looper.getMainLooper();
+        if (looper != null) {
+            handler = new Handler(looper);
+        }
+
         startAppExitDetectService();
     }
 
@@ -187,8 +195,6 @@ public class MainActivity extends LangAppCompatActivity
         super.onResume();
 
         vpnRequested = false;
-
-        handler = new Handler();
 
         childLockActive = isInterfaceLocked();
 
@@ -601,8 +607,12 @@ public class MainActivity extends LangAppCompatActivity
 
             ModulesRestarter.restartTor(this);
 
-            new Handler().postDelayed(() -> {
-                if (!isFinishing() && newIdentityMenuItem != null) {
+            if (isFinishing() || handler == null) {
+                return;
+            }
+
+            handler.postDelayed(() -> {
+                if (!isFinishing() && newIdentityMenuItem != null && newIdentityMenuItem.getActionView() != null) {
                     Toast.makeText(this, this.getText(R.string.toast_new_tor_identity), Toast.LENGTH_SHORT).show();
                     newIdentityMenuItem.getActionView().clearAnimation();
                     newIdentityMenuItem.setActionView(null);
@@ -696,7 +706,7 @@ public class MainActivity extends LangAppCompatActivity
 
         if (dnsCryptState == STOPPED && torState == STOPPED && itpdState == STOPPED
                 && modulesStatus.isUseModulesWithRoot()) {
-           disableUseModulesWithRoot();
+            disableUseModulesWithRoot();
         }
 
         invalidateOptionsMenu();
@@ -748,7 +758,8 @@ public class MainActivity extends LangAppCompatActivity
 
         if (requestCode == CODE_IS_AP_ON) {
             checkHotspotState();
-        } if (requestCode == CODE_IS_VPN_ALLOWED) {
+        }
+        if (requestCode == CODE_IS_VPN_ALLOWED) {
             vpnRequested = false;
             startVPNService(resultCode);
         }
@@ -890,7 +901,12 @@ public class MainActivity extends LangAppCompatActivity
                     link = "https://invizible.net/en/donate/";
                 }
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
-                startActivity(intent);
+                try {
+                    startActivity(intent);
+                } catch (Exception e) {
+                    Log.e(LOG_TAG, "MainActivity ACTION_VIEW exception " + e.getMessage() + " " + e.getCause());
+                }
+
             }
         } else if (id == R.id.nav_Code) {
             Registration registration = new Registration(this);
@@ -908,9 +924,15 @@ public class MainActivity extends LangAppCompatActivity
             modernDialog.dismiss();
         modernDialog = null;
 
+        if (isFinishing() || handler == null) {
+            return;
+        }
+
         handler.postDelayed(() -> {
-            DialogFragment commandResult = NotificationDialogFragment.newInstance(message);
-            commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
+            if (!isFinishing()) {
+                DialogFragment commandResult = NotificationDialogFragment.newInstance(message);
+                commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
+            }
         }, 500);
 
     }
@@ -945,14 +967,15 @@ public class MainActivity extends LangAppCompatActivity
 
     private void startAppExitDetectService() {
 
-        if (isFinishing()) {
+        if (isFinishing() || handler == null) {
             return;
         }
 
-        new Handler().postDelayed(() -> {
+        handler.postDelayed(() -> {
             if (!isFinishing()) {
                 Intent intent = new Intent(this, AppExitDetectService.class);
                 startService(intent);
+                Log.i(LOG_TAG, "Start app exit detect service");
             }
         }, 1000);
     }
@@ -988,9 +1011,17 @@ public class MainActivity extends LangAppCompatActivity
 
         if (prepareIntent == null) {
             startVPNService(RESULT_OK);
-        } else if (!vpnRequested && !isFinishing()){
+        } else if (!vpnRequested && !isFinishing()) {
             vpnRequested = true;
-            startActivityForResult(prepareIntent, CODE_IS_VPN_ALLOWED);
+            try {
+                startActivityForResult(prepareIntent, CODE_IS_VPN_ALLOWED);
+            } catch (Exception e) {
+                if (!isFinishing()) {
+                    Toast.makeText(this, getString(R.string.wrong), Toast.LENGTH_SHORT).show();
+                }
+                Log.e(LOG_TAG, "Main Activity prepareVPNService exception " + e.getMessage() + " " + e.getCause());
+            }
+
         }
 
     }
@@ -1045,34 +1076,56 @@ public class MainActivity extends LangAppCompatActivity
 
         if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
             scheduledFuture.cancel(false);
+            scheduledFuture = null;
         }
 
         if (modernDialog != null) {
             modernDialog.dismiss();
+            modernDialog = null;
         }
 
         if (viewPager != null) {
             viewPagerPosition = viewPager.getCurrentItem();
+            viewPager = null;
         }
+
+        if (handler != null) {
+            handler.removeCallbacksAndMessages(null);
+            handler = null;
+        }
+
+        if (accelerateDevelop != null) {
+            accelerateDevelop = null;
+        }
+
+        topFragment = null;
+        dNSCryptRunFragment = null;
+        torRunFragment = null;
+        iTPDRunFragment = null;
+        mainFragment = null;
+
+        newIdentityMenuItem = null;
+        animatingImage = null;
+        rotateAnimation = null;
     }
 
     @Override
     public boolean onKeyLongPress(int keyCode, KeyEvent event) {
 
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
+        if (keyCode == KeyEvent.KEYCODE_BACK && handler != null) {
             Log.e(LOG_TAG, "FORCE CLOSE ALL");
 
             Toast.makeText(this, "Force Close ...", Toast.LENGTH_LONG).show();
 
             ModulesKiller.forceCloseApp(PathVars.getInstance(this));
 
-            new Handler().postDelayed(() -> {
+            handler.postDelayed(() -> {
                 Intent intent = new Intent(MainActivity.this, ModulesService.class);
                 intent.setAction(ModulesService.actionStopService);
                 startService(intent);
             }, 3000);
 
-            new Handler().postDelayed(() -> System.exit(0), 5000);
+            handler.postDelayed(() -> System.exit(0), 5000);
 
 
             return true;

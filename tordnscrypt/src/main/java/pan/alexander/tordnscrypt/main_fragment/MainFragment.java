@@ -48,6 +48,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -218,6 +219,42 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     }
 
     @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+
+        btnStartMainFragment = null;
+        chbHideIpMainFragment = null;
+        chbProtectDnsMainFragment = null;
+        chbAccessITPMainFragment = null;
+        tvDNSMainFragment = null;
+        tvTorMainFragment = null;
+        tvITPDMainFragment = null;
+        pbDNSMainFragment = null;
+        pbTorMainFragment = null;
+        pbITPDMainFragment = null;
+
+        tvDNSCryptLog = null;
+        svDNSCryptLog = null;
+
+        tvTorLog = null;
+        svTorLog = null;
+
+        tvITPDLog = null;
+        tvITPDInfoLog = null;
+        svITPDLog = null;
+        clITPDLog = null;
+
+        dnsCryptFragmentPresenter = null;
+        dnsCryptFragmentReceiver = null;
+
+        torFragmentPresenter = null;
+        torFragmentReceiver = null;
+
+        itpdFragmentPresenter = null;
+        itpdFragmentReceiver = null;
+    }
+
+    @Override
     public void onClick(View v) {
 
         if (getActivity() == null || orientationLandscape) {
@@ -333,11 +370,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
                 && modulesStatus.getTorState() == STOPPED
                 && modulesStatus.getItpdState() == STOPPED) {
 
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                mainStartButtonDrawable = getActivity().getResources().getDrawable(R.drawable.button_main_selector, getActivity().getTheme());
-            } else {
-                mainStartButtonDrawable = getActivity().getResources().getDrawable(R.drawable.button_main_selector);
-            }
+            mainStartButtonDrawable = ResourcesCompat.getDrawable(getActivity().getResources(), R.drawable.button_main_selector, getActivity().getTheme());
 
             btnStartMainFragment.setText(getText(R.string.main_fragment_button_start));
 
@@ -345,11 +378,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
         } else {
 
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                mainStartButtonDrawable = getActivity().getResources().getDrawable(R.drawable.button_main_selector_active, getActivity().getTheme());
-            } else {
-                mainStartButtonDrawable = getActivity().getResources().getDrawable(R.drawable.button_main_selector_active);
-            }
+            mainStartButtonDrawable = ResourcesCompat.getDrawable(getActivity().getResources(), R.drawable.button_main_selector_active, getActivity().getTheme());
 
             btnStartMainFragment.setText(getText(R.string.main_fragment_button_stop));
 

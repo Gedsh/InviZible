@@ -28,7 +28,7 @@ import android.os.Environment
 import android.util.Log
 import pan.alexander.tordnscrypt.BuildConfig
 import pan.alexander.tordnscrypt.TopFragment
-import pan.alexander.tordnscrypt.utils.RootExecService
+import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.vpn.Util
 import java.io.File
 import java.io.PrintWriter
@@ -52,7 +52,12 @@ object Utils {
         val isIntentSafe: Boolean = activities.isNotEmpty()
 
         if (isIntentSafe) {
-            context.startActivity(sendEmailIntent)
+            try {
+                context.startActivity(sendEmailIntent)
+            } catch (e: java.lang.Exception) {
+                Log.e(LOG_TAG, "sendMail exception ${e.message} ${e.cause}")
+            }
+
         }
     }
 
@@ -127,7 +132,7 @@ object Utils {
             if (dir != null && dir.isDirectory) {
                 result = dir.list()?.isNotEmpty() ?: false
             } else {
-                Log.w(RootExecService.LOG_TAG, "Root Dir is not read accessible!")
+                Log.w(LOG_TAG, "Root Dir is not read accessible!")
             }
 
             var rootDirPath = "/storage/emulated/0"
@@ -138,7 +143,7 @@ object Utils {
             val saveDir = File(saveDirPath)
             if (result && !saveDir.isDirectory && !saveDir.mkdir()) {
                 result = false
-                Log.w(RootExecService.LOG_TAG, "Root Dir is not write accessible!")
+                Log.w(LOG_TAG, "Root Dir is not write accessible!")
             }
 
             if (result) {
@@ -147,12 +152,12 @@ object Utils {
                 PrintWriter(testFile).print("")
                 if (!testFile.isFile || !testFile.delete()) {
                     result = false
-                    Log.w(RootExecService.LOG_TAG, "Root Dir is not write accessible!")
+                    Log.w(LOG_TAG, "Root Dir is not write accessible!")
                 }
             }
 
         } catch (e: Exception) {
-            Log.w(RootExecService.LOG_TAG, "Download Dir is not accessible " + e.message + e.cause)
+            Log.w(LOG_TAG, "Download Dir is not accessible " + e.message + e.cause)
         }
         return result
     }

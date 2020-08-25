@@ -25,7 +25,9 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Handler;
+import android.os.Looper;
 import android.text.Html;
+import android.text.Spanned;
 import android.util.Log;
 import android.view.ScaleGestureDetector;
 import android.widget.Toast;
@@ -105,6 +107,8 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     private final ReentrantLock reentrantLock = new ReentrantLock();
 
+    private Handler handler;
+
     public TorFragmentPresenter(TorFragmentView view) {
         this.view = view;
     }
@@ -112,6 +116,11 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
     public void onStart(Context context) {
         if (context == null || view == null) {
             return;
+        }
+
+        Looper looper = Looper.getMainLooper();
+        if (looper != null) {
+            handler = new Handler(looper);
         }
 
         PathVars pathVars = PathVars.getInstance(context);
@@ -154,10 +163,17 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
     public void onStop() {
         stopDisplayLog();
+
         if (checkInetAvailableFutureTask != null) {
             checkInetAvailableFutureTask.cancel(true);
         }
+
         view = null;
+
+        if (handler != null) {
+            handler.removeCallbacksAndMessages(null);
+            handler = null;
+        }
     }
 
     @Override
@@ -330,8 +346,8 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
         ScheduledExecutorService timer = TopFragment.getModulesLogsTimer();
 
-        if (timer == null || timer.isShutdown()) {
-            new Handler().postDelayed(() -> {
+        if ((timer == null || timer.isShutdown()) && handler != null) {
+            handler.postDelayed(() -> {
 
                 if (view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isDestroyed()) {
                     displayLog(period);
@@ -342,7 +358,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
             return;
         }
 
-        if (period == displayLogPeriod) {
+        if (period == displayLogPeriod || timer == null) {
             return;
         }
 
@@ -371,13 +387,16 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
                         displayLog(10);
                     }
 
-                    if (view == null || view.getFragmentActivity() == null) {
+                    if (view == null || view.getFragmentActivity() == null || handler == null
+                            || lastLines == null || lastLines.isEmpty()) {
                         return;
                     }
 
-                    view.getFragmentActivity().runOnUiThread(() -> {
+                    Spanned htmlText = Html.fromHtml(lastLines);
 
-                        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || lastLines == null || lastLines.isEmpty()) {
+                    handler.post(() -> {
+
+                        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || htmlText == null) {
                             return;
                         }
 
@@ -389,7 +408,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
                             torStartedWithError(view.getFragmentActivity(), lastLines);
 
-                            view.setTorLogViewText(Html.fromHtml(lastLines));
+                            view.setTorLogViewText(htmlText);
                             view.scrollTorLogViewToBottom();
 
                             previousLastLinesLength = lastLines.length();

@@ -33,7 +33,7 @@ const val ANDROID_CHANNEL_ID = "InviZible"
 class ApplicationExt : Application() {
 
     //Required for an app update on AndroidQ
-    var langAppCompatActivity: WeakReference<LangAppCompatActivity>? = null
+    var langAppCompatActivityActive: Boolean = false
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
@@ -55,7 +55,7 @@ class ApplicationExt : Application() {
 
     @TargetApi(Build.VERSION_CODES.O)
     private fun createNotificationChannel() {
-        val notificationManager = getSystemService<NotificationManager>(this, NotificationManager::class.java)
+        val notificationManager = getSystemService(this, NotificationManager::class.java)
         val channel = NotificationChannel(ANDROID_CHANNEL_ID, getString(R.string.notification_channel_services), NotificationManager.IMPORTANCE_MIN)
         channel.setSound(null, Notification.AUDIO_ATTRIBUTES_DEFAULT)
         channel.description = ""

@@ -36,7 +36,7 @@ object CachedExecutor {
     }
 
     fun stopExecutorService() {
-        Thread(Runnable {
+        Thread {
             if (instance != null && instance?.isShutdown == false) {
                 instance?.shutdown()
                 try {
@@ -47,6 +47,6 @@ object CachedExecutor {
                 }
                 Log.i(LOG_TAG, "CachedExecutor is stopped")
             }
-        }).start()
+        }.start()
     }
 }

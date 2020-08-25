@@ -313,27 +313,19 @@ public class UpdateService extends Service {
                         new PrefManager(context).setStrPref("LastUpdateResult",
                                 context.getString(R.string.update_installed));
 
-                        if (fileToDownload != null) {
-                            //stopRunningModules(fileToDownload);
-                        }
-
                         if (fileToDownload != null && fileToDownload.contains("InviZible")) {
                             allowSendBroadcastAfterUpdate = false;
 
                             File file = new File(path);
 
-                            boolean isActivityFinishing = true;
+                            boolean isActivityActive = false;
                             if (context.getApplicationContext() instanceof ApplicationExt) {
 
                                 ApplicationExt applicationExt = (ApplicationExt) context.getApplicationContext();
-                                WeakReference<LangAppCompatActivity> langAppCompatActivity = applicationExt.getLangAppCompatActivity();
-
-                                if (langAppCompatActivity != null && langAppCompatActivity.get() != null) {
-                                    isActivityFinishing = langAppCompatActivity.get().isFinishing();
-                                }
+                                isActivityActive = applicationExt.getLangAppCompatActivityActive();
                             }
 
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && isActivityFinishing) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !isActivityActive) {
                                 //Required for androidQ because even if the service is in the foreground we cannot start an activity if no activity is visible
                                 new PrefManager(context).setStrPref("RequiredAppUpdateForQ", path);
                             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -519,32 +511,6 @@ public class UpdateService extends Service {
             Log.e(LOG_TAG, "crc32() IOException " + e.getMessage());
         }
         return null;
-    }
-
-    private void stopRunningModules(String fileName) {
-        if (fileName.contains("InviZible")) {
-
-            boolean dnsCryptRunning = new PrefManager(this).getBoolPref("DNSCrypt Running");
-            boolean torRunning = new PrefManager(this).getBoolPref("Tor Running");
-            boolean itpdRunning = new PrefManager(this).getBoolPref("I2PD Running");
-
-            if (dnsCryptRunning) {
-                new PrefManager(this).setBoolPref("DNSCrypt Running", false);
-                ModulesKiller.stopDNSCrypt(this);
-            }
-
-            if (torRunning) {
-                new PrefManager(this).setBoolPref("Tor Running", false);
-                ModulesKiller.stopTor(this);
-            }
-
-            if (itpdRunning) {
-                new PrefManager(this).setBoolPref("I2PD Running", false);
-                ModulesKiller.stopITPD(this);
-            }
-        }
-
-        makeDelay(3);
     }
 
     @SuppressWarnings("unused")

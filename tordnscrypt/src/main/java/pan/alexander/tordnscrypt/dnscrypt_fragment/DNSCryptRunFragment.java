@@ -158,6 +158,21 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
     }
 
     @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+
+        btnDNSCryptStart = null;
+        tvDNSStatus = null;
+        pbDNSCrypt = null;
+        tvDNSCryptLog = null;
+        svDNSCryptLog = null;
+
+        receiver = null;
+
+        presenter = null;
+    }
+
+    @Override
     public void onClick(View v) {
         if (v.getId() == R.id.btnDNSCryptStart) {
             presenter.startButtonOnClick(getActivity());

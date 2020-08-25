@@ -64,7 +64,7 @@ public abstract class LangAppCompatActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && getApplicationContext() instanceof  ApplicationExt) {
             //Required for an app update
             ApplicationExt applicationExt = (ApplicationExt) getApplicationContext();
-            applicationExt.setLangAppCompatActivity(new WeakReference<>(this));
+            applicationExt.setLangAppCompatActivityActive(true);
         }
     }
 
@@ -83,5 +83,16 @@ public abstract class LangAppCompatActivity extends AppCompatActivity {
             overrideConfiguration.uiMode = uiMode;
         }
         super.applyOverrideConfiguration(overrideConfiguration);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && getApplicationContext() instanceof  ApplicationExt) {
+            //Required for an app update
+            ApplicationExt applicationExt = (ApplicationExt) getApplicationContext();
+            applicationExt.setLangAppCompatActivityActive(false);
+        }
     }
 }

@@ -21,10 +21,11 @@ package pan.alexander.tordnscrypt.itpd_fragment;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Looper;
 import android.text.Html;
+import android.text.Spanned;
 import android.util.Log;
 import android.view.ScaleGestureDetector;
 import android.widget.Toast;
@@ -79,6 +80,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
     private ModuleState fixedModuleState;
     private boolean itpdLogAutoScroll = true;
     private ScaleGestureDetector scaleGestureDetector;
+    private Handler handler;
 
 
     public ITPDFragmentPresenter(ITPDFragmentView view) {
@@ -88,6 +90,11 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
     public void onStart(Context context) {
         if (context == null || view == null) {
             return;
+        }
+
+        Looper looper = Looper.getMainLooper();
+        if (looper != null) {
+            handler = new Handler(looper);
         }
 
         PathVars pathVars = PathVars.getInstance(context);
@@ -127,8 +134,15 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
     }
 
     public void onStop() {
+
         stopDisplayLog();
+
         view = null;
+
+        if (handler != null) {
+            handler.removeCallbacksAndMessages(null);
+            handler = null;
+        }
     }
 
     private void setITPDStarting() {
@@ -325,8 +339,8 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
         ScheduledExecutorService timer = TopFragment.getModulesLogsTimer();
 
-        if (timer == null || timer.isShutdown()) {
-            new Handler().postDelayed(() -> {
+        if ((timer == null || timer.isShutdown()) && handler != null) {
+            handler.postDelayed(() -> {
 
                 if (view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isDestroyed()) {
                     displayLog(period);
@@ -337,7 +351,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
             return;
         }
 
-        if (period == displayLogPeriod) {
+        if (period == displayLogPeriod || timer == null) {
             return;
         }
 
@@ -368,26 +382,34 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
                         displayLog(10);
                     }
 
-                    if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
+                    if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()
+                            || handler == null || lastLines == null || lastLines.isEmpty()) {
                         return;
                     }
 
-                    view.getFragmentActivity().runOnUiThread(() -> {
+                    Spanned htmlLastLines = Html.fromHtml(lastLines);
 
-                        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || lastLines == null || lastLines.isEmpty()) {
+                    Spanned htmlDataLines;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        htmlDataLines = Html.fromHtml(htmlData, Html.FROM_HTML_MODE_LEGACY);
+                    } else {
+                        htmlDataLines = Html.fromHtml(htmlData);
+                    }
+
+                    handler.post(() -> {
+
+                        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
                             return;
                         }
 
-                        if (previousLastLinesLength != lastLines.length() && itpdLogAutoScroll) {
-                            view.setITPDInfoLogText(Html.fromHtml(lastLines));
+                        if (previousLastLinesLength != lastLines.length() && htmlLastLines != null && itpdLogAutoScroll) {
+                            view.setITPDInfoLogText(htmlLastLines);
                             view.scrollITPDLogViewToBottom();
                             previousLastLinesLength = lastLines.length();
                         }
 
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            view.setITPDLogViewText(Html.fromHtml(htmlData, Html.FROM_HTML_MODE_LEGACY));
-                        } else {
-                            view.setITPDLogViewText(Html.fromHtml(htmlData));
+                        if (htmlDataLines != null) {
+                            view.setITPDLogViewText(htmlDataLines);
                         }
 
                         refreshITPDState(view.getFragmentActivity());
@@ -438,7 +460,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
                 if (inputLine.contains("<b>Network status:</b>") || inputLine.contains("<b>Tunnel creation success rate:</b>") ||
                         inputLine.contains("<b>Received:</b> ") || inputLine.contains("<b>Sent:</b>") || inputLine.contains("<b>Transit:</b>") ||
                         inputLine.contains("<b>Routers:</b>") || inputLine.contains("<b>Client Tunnels:</b>") || inputLine.contains("<b>Uptime:</b>")) {
-                    inputLine = inputLine.replace("<div class=right>", "");
+                    inputLine = inputLine.replace("<div class=\"content\">", "");
                     inputLine = inputLine.replace("<br>", "<br />");
                     sb.append(inputLine);
                 }

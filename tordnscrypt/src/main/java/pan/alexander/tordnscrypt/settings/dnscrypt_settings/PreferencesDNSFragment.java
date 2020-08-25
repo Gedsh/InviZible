@@ -456,7 +456,12 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             intent.putExtra(EXTRA_INITIAL_URI, uri);
         }
 
-        getActivity().startActivityForResult(intent, fileType);
+        try {
+            getActivity().startActivityForResult(intent, fileType);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "PreferencesDNSFragment openFileWithSAF exception " + e.getMessage() + " " + e.getCause());
+        }
+
     }
 
     private void removePreferencesWithGPVersion() {
