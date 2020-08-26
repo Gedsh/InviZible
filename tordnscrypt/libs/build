@@ -1,0 +1,25 @@
+#!/bin/bash
+
+## Config ##
+
+obfs4proxy_url=https://github.com/Yawning/obfs4
+obfs4proxy_version=obfs4proxy-0.0.11
+
+############
+
+# Clean
+rm -r -f arm64-v8a armeabi-v7a obfs4proxy
+mkdir arm64-v8a armeabi-v7a
+
+#################
+# libobfs4proxy #
+#################
+
+git clone $obfs4proxy_url -b $obfs4proxy_version obfs4proxy
+cd obfs4proxy
+
+#compile arm64-v8a things...
+#mv libobfs4proxy.so arm64-v8a/libobfs4proxy.so
+
+#compile armeabi-v7a things...
+#mv libobfs4proxy.so armeabi-v7a/libobfs4proxy.so
