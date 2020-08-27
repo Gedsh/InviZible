@@ -8,6 +8,8 @@ obfs4proxy_url=https://github.com/Yawning/obfs4
 obfs4proxy_version=obfs4proxy-0.0.11
 dnscryptproxy_url=https://github.com/DNSCrypt/dnscrypt-proxy
 dnscryptproxy_version=2.0.44
+snowflake_url=https://github.com/keroserene/snowflake
+snowflake_version=7043a055f9fb0680281ecffd7d458a43f2ce65b5
 
 NDK="$ANDROID_NDK"
 export PATH="$PATH:$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin"
@@ -24,7 +26,7 @@ export GOOS="android"
 ##############
 
 # Clean
-rm -r -f arm64-v8a armeabi-v7a obfs4proxy dnscrypt
+rm -r -f arm64-v8a armeabi-v7a obfs4proxy dnscrypt snowflake
 mkdir arm64-v8a armeabi-v7a
 
 #################
@@ -39,7 +41,6 @@ export CC=$CC_aarch64
 export CCX=$CCX_aarch64
 export GOARCH=arm64
 go build -ldflags="-s -w" -o libobfs4proxy.so
-#go build -o libimgutil.so -buildmode=c-shared imgutil.go
 mv libobfs4proxy.so ../../arm64-v8a/libobfs4proxy.so
 
 #compile armeabi-v7a things...
@@ -64,8 +65,7 @@ export CC=$CC_aarch64
 export CCX=$CCX_aarch64
 export GOARCH=arm64
 go build -ldflags="-s -w" -o libdnscrypt-proxy.so
-#go build -o libimgutil.so -buildmode=c-shared imgutil.go
-mv libobfs4proxy.so ../../arm64-v8a/libdnscrypt-proxy.so
+mv libdnscrypt-proxy.so ../../arm64-v8a/libdnscrypt-proxy.so
 
 #compile armeabi-v7a things...
 export CC=$CC_armv7a
@@ -73,6 +73,32 @@ export CCX=$CCX_armv7a
 export GOARCH=arm
 go clean
 go build -ldflags="-s -w" -o libdnscrypt-proxy.so
-mv libobfs4proxy.so ../../armeabi-v7a/libdnscrypt-proxy.so
+mv libdnscrypt-proxy.so ../../armeabi-v7a/libdnscrypt-proxy.so
+
+cd ../..
+
+################
+# libsnowflake #
+################
+
+git clone $snowflake_url snowflake
+cd snowflake/
+git checkout -f $snowflake_version -b $snowflake_version
+cd proxy/
+
+#compile arm64-v8a things...
+export CC=$CC_aarch64
+export CCX=$CCX_aarch64
+export GOARCH=arm64
+go build -ldflags="-s -w" -o libsnowflake.so
+mv libsnowflake.so ../../arm64-v8a/libsnowflake.so
+
+#compile armeabi-v7a things...
+export CC=$CC_armv7a
+export CCX=$CCX_armv7a
+export GOARCH=arm
+go clean
+go build -ldflags="-s -w" -o libsnowflake.so
+mv libsnowflake.so ../../armeabi-v7a/libsnowflake.so
 
 cd ../..
