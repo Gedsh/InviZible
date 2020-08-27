@@ -1,14 +1,30 @@
 #!/bin/bash
 
+############
 ## Config ##
+############
 
 obfs4proxy_url=https://github.com/Yawning/obfs4
 obfs4proxy_version=obfs4proxy-0.0.11
+dnscryptproxy_url=https://github.com/DNSCrypt/dnscrypt-proxy
+dnscryptproxy_version=2.0.44
 
-############
+NDK="$ANDROID_NDK"
+export PATH="$PATH:$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin"
+
+CCX_armv7a="armv7a-linux-androideabi16-clang++"
+CC_armv7a="armv7a-linux-androideabi16-clang"
+CCX_aarch64="aarch64-linux-android29-clang++"
+CC_aarch64="aarch64-linux-android29-clang"
+
+export CGO_ENABLED=1
+export GOOS="android"
+
+##############
+##############
 
 # Clean
-rm -r -f arm64-v8a armeabi-v7a obfs4proxy
+rm -r -f arm64-v8a armeabi-v7a obfs4proxy dnscrypt
 mkdir arm64-v8a armeabi-v7a
 
 #################
@@ -16,10 +32,47 @@ mkdir arm64-v8a armeabi-v7a
 #################
 
 git clone $obfs4proxy_url -b $obfs4proxy_version obfs4proxy
-cd obfs4proxy
+cd obfs4proxy/obfs4proxy/
 
 #compile arm64-v8a things...
-#mv libobfs4proxy.so arm64-v8a/libobfs4proxy.so
+export CC=$CC_aarch64
+export CCX=$CCX_aarch64
+export GOARCH=arm64
+go build -ldflags="-s -w" -o libobfs4proxy.so
+#go build -o libimgutil.so -buildmode=c-shared imgutil.go
+mv libobfs4proxy.so ../../arm64-v8a/libobfs4proxy.so
 
 #compile armeabi-v7a things...
-#mv libobfs4proxy.so armeabi-v7a/libobfs4proxy.so
+export CC=$CC_armv7a
+export CCX=$CCX_armv7a
+export GOARCH=arm
+go clean
+go build -ldflags="-s -w" -o libobfs4proxy.so
+mv libobfs4proxy.so ../../armeabi-v7a/libobfs4proxy.so
+
+cd ../..
+
+#####################
+# libdnscrypt-proxy #
+#####################
+
+git clone $dnscryptproxy_url -b $dnscryptproxy_version dnscrypt
+cd dnscrypt/dnscrypt-proxy/
+
+#compile arm64-v8a things...
+export CC=$CC_aarch64
+export CCX=$CCX_aarch64
+export GOARCH=arm64
+go build -ldflags="-s -w" -o libdnscrypt-proxy.so
+#go build -o libimgutil.so -buildmode=c-shared imgutil.go
+mv libobfs4proxy.so ../../arm64-v8a/libdnscrypt-proxy.so
+
+#compile armeabi-v7a things...
+export CC=$CC_armv7a
+export CCX=$CCX_armv7a
+export GOARCH=arm
+go clean
+go build -ldflags="-s -w" -o libdnscrypt-proxy.so
+mv libobfs4proxy.so ../../armeabi-v7a/libdnscrypt-proxy.so
+
+cd ../..
