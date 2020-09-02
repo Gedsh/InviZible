@@ -32,6 +32,7 @@ import java.util.List;
 
 import eu.chainfire.libsuperuser.Shell;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -42,7 +43,15 @@ public class ModulesRestarter {
     }
 
     public static void restartTor(Context context) {
-        sendIntent(context, ModulesService.actionRestartTor);
+        boolean useDefaultBridges = new PrefManager(context).getBoolPref("useDefaultBridges");
+        boolean useOwnBridges = new PrefManager(context).getBoolPref("useOwnBridges");
+
+        if (useDefaultBridges || useOwnBridges) {
+            restartTorFull(context);
+        } else {
+            sendIntent(context, ModulesService.actionRestartTor);
+        }
+
     }
 
     public static void restartTorFull(Context context) {
