@@ -95,6 +95,11 @@
             android:singleLine="true"
             android:summary="@string/pref_itpd_com_ntcpproxy_summ"
             android:title="@string/pref_itpd_com_ntcpproxy" />
+        <CheckBoxPreference
+            android:id="@+id/pref_itpd_ntcp2_enabled"
+            android:defaultValue="true"
+            android:key="ntcp2 enabled"
+            android:title="@string/pref_itpd_ntcp2_enabled" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_itpd_HTTP_proxy"
         android:key="itpd_category_http_proxy">
@@ -198,14 +203,6 @@
             android:key="UPNP"
             android:summary="@string/pref_itpd_UPNP_summ"
             android:title="@string/pref_itpd_UPNP_enabled" />
-    </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_itpd_ntcp2">
-
-        <CheckBoxPreference
-            android:id="@+id/pref_itpd_ntcp2_enabled"
-            android:defaultValue="true"
-            android:key="ntcp2 enabled"
-            android:title="@string/pref_itpd_ntcp2_enabled" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_itpd_reseeding"
         android:key="category_itpd_reseeding">

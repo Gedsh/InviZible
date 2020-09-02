@@ -30,7 +30,6 @@ import androidx.preference.PreferenceManager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
@@ -116,14 +115,17 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                 boolean isbool = false;
 
                 try {
-                    val_saved_str = Objects.requireNonNull(sp.getString(key, "")).trim();
+                    val_saved_str = sp.getString(key, "");
+                    if (val_saved_str != null) {
+                        val_saved_str = val_saved_str.trim();
+                    }
                 } catch (ClassCastException e) {
                     isbool = true;
                     val_saved_bool = sp.getBoolean(key, false);
                 }
 
 
-                if (!val_saved_str.isEmpty() && !val_saved_str.equals(val)) {
+                if (val_saved_str != null && !val_saved_str.isEmpty() && !val_saved_str.equals(val)) {
                     editor.putString(key, val);
                 }
                 if (isbool && val_saved_bool != Boolean.parseBoolean(val)) {
@@ -196,14 +198,17 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                 boolean isbool = false;
 
                 try {
-                    val_saved_str = Objects.requireNonNull(sp.getString(key, "")).trim();
+                    val_saved_str = sp.getString(key, "");
+                    if (val_saved_str != null) {
+                        val_saved_str = val_saved_str.trim();
+                    }
                 } catch (ClassCastException e) {
                     isbool = true;
                     val_saved_bool = sp.getBoolean(key, false);
                 }
 
 
-                if (!val_saved_str.isEmpty() && !val_saved_str.equals(val)) {
+                if (val_saved_str != null && !val_saved_str.isEmpty() && !val_saved_str.equals(val)) {
                     editor.putString(key, val);
                 } else if (isbool && val_saved_bool != Boolean.parseBoolean(val)) {
                     editor.putBoolean(key, Boolean.parseBoolean(val));
@@ -258,6 +263,12 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                         break;
                     case "#HTTPTunnelPort":
                         editor.putBoolean("Enable HTTPTunnel", false);
+                        break;
+                    case "Socks5Proxy":
+                        editor.putBoolean("Enable output Socks5Proxy", true);
+                        break;
+                    case "#Socks5Proxy":
+                        editor.putBoolean("Enable output Socks5Proxy", false);
                         break;
                 }
             }
@@ -570,8 +581,10 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
     }
 
     public void deactivateSettingsParser() {
-        if (bundleForReadPublicResolversMdFunction != null)
+        if (bundleForReadPublicResolversMdFunction != null) {
             bundleForReadPublicResolversMdFunction.clear();
+        }
+
         FileOperations.deleteOnFileOperationCompleteListener();
     }
 

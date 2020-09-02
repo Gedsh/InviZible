@@ -146,13 +146,6 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                 Log.e(LOG_TAG, "PreferencesDNSFragment preference is null exception");
             }
         }
-
-        if (getArguments() != null) {
-            key_toml = getArguments().getStringArrayList("key_toml");
-            val_toml = getArguments().getStringArrayList("val_toml");
-            key_toml_orig = new ArrayList<>(key_toml);
-            val_toml_orig = new ArrayList<>(val_toml);
-        }
     }
 
     @Override
@@ -172,19 +165,29 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
         PathVars pathVars = PathVars.getInstance(getActivity());
         appDataDir = pathVars.getAppDataDir();
+
+        isChanged = false;
+
+        if (getArguments() != null) {
+            key_toml = getArguments().getStringArrayList("key_toml");
+            val_toml = getArguments().getStringArrayList("val_toml");
+            key_toml_orig = new ArrayList<>(key_toml);
+            val_toml_orig = new ArrayList<>(val_toml);
+        }
     }
 
     @Override
     public void onStop() {
         super.onStop();
 
-        if (getActivity() == null) {
+        if (getActivity() == null || key_toml == null || val_toml == null || key_toml_orig == null || val_toml_orig == null) {
             return;
         }
 
         List<String> dnscrypt_proxy_toml = new LinkedList<>();
         for (int i = 0; i < key_toml.size(); i++) {
-            if (!(key_toml_orig.get(i).equals(key_toml.get(i)) && val_toml_orig.get(i).equals(val_toml.get(i))) && !isChanged) {
+            if (!isChanged
+                    && (key_toml_orig.size() != key_toml.size() || !key_toml_orig.get(i).equals(key_toml.get(i)) || !val_toml_orig.get(i).equals(val_toml.get(i)))) {
                 isChanged = true;
             }
 
@@ -205,7 +208,6 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         if (dnsCryptRunning) {
             ModulesRestarter.restartDNSCrypt(getActivity());
             ModulesStatus.getInstance().setIptablesRulesUpdateRequested(getActivity(), true);
-            //ModulesAux.requestModulesStatusUpdate(getActivity());
         }
     }
 
@@ -213,7 +215,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
 
-        if (getActivity() == null) {
+        if (getActivity() == null || val_toml == null || key_toml == null) {
             return false;
         }
 
@@ -276,6 +278,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             } else if (Objects.equals(preference.getKey(), "Enable proxy")) {
                 if (Boolean.parseBoolean(newValue.toString())) {
                     key_toml.set(key_toml.indexOf("#proxy"), "proxy");
+                    val_toml.set(key_toml.indexOf("force_tcp"), "true");
                 } else {
                     key_toml.set(key_toml.indexOf("proxy"), "#proxy");
                 }

@@ -173,6 +173,21 @@
             android:singleLine="true"
             android:title="@string/pref_tor_snowflake_stun" />
     </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_dnscrypt_HTTP_SOCKS_proxy_categ"
+        android:key="pref_tor_output_socks_proxy_categ">
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="Enable output Socks5Proxy"
+            android:title="@string/pref_tor_enable_SOCKS_output_proxy" />
+        <EditTextPreference
+            android:defaultValue="127.0.0.1:1080"
+            android:key="Socks5Proxy"
+            android:selectAllOnFocus="true"
+            android:dependency="Enable output Socks5Proxy"
+            android:title="@string/pref_tor_SOCKS_output_address"
+            android:summary="@string/pref_tor_SOCKS_output_address_summ"/>
+    </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_common_categ_other"
         android:key="pref_tor_other">
         <Preference
