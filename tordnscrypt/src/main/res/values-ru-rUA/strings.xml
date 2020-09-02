@@ -138,7 +138,7 @@
     <string name="pref_dnscrypt_force_tcp_categ">Всегда использовать TCP протокол, для соединения с серверами.</string>
     <string name="pref_dnscrypt_force_tcp_summ">Это может быть полезным, когда вы перенаправляете весь трафик через Tor.
         Иначе не активируйте, так как это не улучшит безопасность. DNSCrypt и так шифрует все запросы, даже через UDP. А задержки могут увеличиться.</string>
-    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">HTTP / SOCKS прокси.</string>
+    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS прокси.</string>
     <string name="pref_dnscrypt_use_proxy">Включить прокси</string>
     <string name="pref_dnscrypt_proxy_summ">Перенаправить все TCP соединения на Tor. Tor не поддерживает UDP, поэтому обязательно активируйте force_tcp.</string>
     <string name="pref_dnscrypt_proxy">Прокси порт</string>
@@ -444,4 +444,23 @@
     <string name="dialog_send_crash_report">Обнаружен отчет аварийного завершения приложения. Хотите его отправить разработчику, чтобы сделать InviZible лучше?</string>
     <string name="btn_new_tor_identity">Новая цепочка Tor</string>
     <string name="toast_new_tor_identity">Сервер Tor изменился</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">Включить выходной SOCKS прокси</string>
+    <string name="pref_tor_SOCKS_output_address_summ">Tor будет выполнять все соединения через SOCKS5 прокси.</string>
+    <string name="pref_common_proxy_categ">Прокси</string>
+    <string name="pref_common_proxy">Использовать socks5 прокси</string>
+    <string name="pref_common_proxy_summ">InviZible Pro будет выполнять все подключения через SOCKS5 proxy</string>
+    <string name="proxy_server_ip">Прокси сервер:</string>
+    <string name="proxy_server_port">Прокси порт:</string>
+    <string name="proxy_server_user_name">Пользователь:</string>
+    <string name="proxy_server_user_pass">Пароль:</string>
+    <string name="proxy_server_empty_field_hint">Это поле можно оставить пустым</string>
+    <string name="proxy_exclude_apps_from_proxy">Исключить приложения</string>
+    <string name="proxy_exclude_apps_from_proxy_summ">Список приложений для использования напрямую. Эти приложения не будут использовать Tor или прокси, чтобы подключиться к интернету!</string>
+    <string name="proxy_select_proxy_app"> Пожалуйста, выберите как минимум приложение - владелец прокси, если вы используете локальный прокси.</string>
+    <string name="proxy_use_for_dnscrypt">Использовать прокси для DNSCrypt</string>
+    <string name="proxy_use_for_tor">Использовать прокси для Tor</string>
+    <string name="proxy_use_for_itpd">Использовать прокси для Purple I2P</string>
+    <string name="proxy_save">Сохранить и активировать</string>
+    <string name="proxy_no_connection">Не удается подключиться к прокси: %s</string>
+    <string name="proxy_successful_connection">Успешное соединение. Ping %s ms.</string>
 </resources>

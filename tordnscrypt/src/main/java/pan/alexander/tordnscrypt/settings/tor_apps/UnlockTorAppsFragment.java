@@ -119,25 +119,16 @@ public class UnlockTorAppsFragment extends Fragment implements CompoundButton.On
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
         boolean routeAllThroughTorDevice = shPref.getBoolean("pref_fast_all_through_tor", true);
+        boolean bypassAppsProxy = getArguments() != null && getArguments().getBoolean("proxy");
 
-        if (!routeAllThroughTorDevice) {
+        if (bypassAppsProxy) {
+            requireActivity().setTitle(R.string.proxy_exclude_apps_from_proxy);
+            unlockAppsStr = "clearnetAppsForProxy";
+        } else if (!routeAllThroughTorDevice) {
             requireActivity().setTitle(R.string.pref_tor_unlock_app);
-
-            /*if (ModulesStatus.getInstance().getMode() == ROOT_MODE) {
-                requireActivity().setTitle(R.string.pref_tor_unlock_app);
-            } else {
-                requireActivity().setTitle(R.string.pref_routing_unlock_app);
-            }*/
-
             unlockAppsStr = "unlockApps";
         } else {
             requireActivity().setTitle(R.string.pref_tor_clearnet_app);
-
-            /*if (ModulesStatus.getInstance().getMode() == ROOT_MODE) {
-                requireActivity().setTitle(R.string.pref_tor_clearnet_app);
-            } else {
-                requireActivity().setTitle(R.string.pref_routing_clearnet_app);
-            }*/
             unlockAppsStr = "clearnetApps";
         }
 

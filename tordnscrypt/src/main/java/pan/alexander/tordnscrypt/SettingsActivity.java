@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
+import pan.alexander.tordnscrypt.proxy.ProxyFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.PreferencesCommonFragment;
 import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
@@ -50,6 +51,7 @@ import pan.alexander.tordnscrypt.settings.ShowLogFragment;
 import pan.alexander.tordnscrypt.settings.show_rules.ShowRulesRecycleFrag;
 import pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment;
 import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag;
+import pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment;
 import pan.alexander.tordnscrypt.utils.enums.DNSCryptRulesVariant;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
@@ -66,6 +68,7 @@ public class SettingsActivity extends LangAppCompatActivity {
     public static final String rules_tag = "pan.alexander.tordnscrypt/app_data/abstract_rules";
 
     public DialogFragment dialogFragment;
+    public PreferencesTorFragment preferencesTorFragment;
     private SettingsParser settingsParser;
     private PreferencesDNSFragment preferencesDNSFragment;
 
@@ -98,7 +101,6 @@ public class SettingsActivity extends LangAppCompatActivity {
             dialogFragment = PleaseWaitProgressDialog.getInstance();
             dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
             FileOperations.readTextFile(this, appDataDir + "/app_data/tor/tor.conf", tor_conf_tag);
-
         } else if (Objects.equals(intent.getAction(), "I2PD_Pref")) {
             dialogFragment = PleaseWaitProgressDialog.getInstance();
             dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
@@ -194,6 +196,16 @@ public class SettingsActivity extends LangAppCompatActivity {
         } else if (Objects.equals(intent.getAction(), "tor_bridges")) {
             fSupportTrans.replace(android.R.id.content, new PreferencesTorBridges(), "PreferencesTorBridges");
             fSupportTrans.commit();
+        } else if (Objects.equals(intent.getAction(), "use_proxy")) {
+            fSupportTrans.replace(android.R.id.content, new ProxyFragment(), "ProxyFragment");
+            fSupportTrans.commit();
+        } else if (Objects.equals(intent.getAction(), "proxy_apps_exclude")) {
+            Bundle bundle = new Bundle();
+            bundle.putBoolean("proxy", true);
+            UnlockTorAppsFragment unlockTorAppsFragment = new UnlockTorAppsFragment();
+            unlockTorAppsFragment.setArguments(bundle);
+            fSupportTrans.replace(android.R.id.content, unlockTorAppsFragment);
+            fSupportTrans.commit();
         }
 
     }
@@ -209,6 +221,8 @@ public class SettingsActivity extends LangAppCompatActivity {
 
         if (fragment instanceof PreferencesDNSFragment) {
             preferencesDNSFragment = (PreferencesDNSFragment) fragment;
+        } else if (fragment instanceof PreferencesTorFragment) {
+            preferencesTorFragment = (PreferencesTorFragment) fragment;
         }
     }
 
@@ -272,6 +286,11 @@ public class SettingsActivity extends LangAppCompatActivity {
 
         if (settingsParser != null)
             settingsParser.deactivateSettingsParser();
+
+        dialogFragment = null;
+        preferencesTorFragment = null;
+        settingsParser = null;
+        preferencesDNSFragment = null;
     }
 
     @Override

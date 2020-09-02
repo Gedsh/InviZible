@@ -148,6 +148,11 @@ public class ServiceVPN extends VpnService {
     volatile boolean reloading;
     private boolean compatibilityMode;
 
+    private boolean useProxy = false;
+    private String proxyAddress = "";
+    private int proxyPort = 0;
+    private Set<String> setBypassProxy;
+
     @SuppressLint("UseSparseArrays")
     private final Map<Integer, Boolean> mapUidAllowed = new HashMap<>();
     @SuppressLint("UseSparseArrays")
@@ -170,7 +175,9 @@ public class ServiceVPN extends VpnService {
 
     private native int jni_get_mtu();
 
-    private native void jni_socks5(String addr, int port, String username, String password);
+    private native void jni_socks5_for_tor(String addr, int port, String username, String password);
+
+    private native void jni_socks5_for_proxy(String addr, int port, String username, String password);
 
     private native void jni_done(long context);
 
@@ -471,9 +478,16 @@ public class ServiceVPN extends VpnService {
                 && !modulesStatus.isUseModulesWithRoot();
 
         if (modulesStatus.getTorState() == RUNNING && !fixTTL) {
-            jni_socks5("127.0.0.1", torSOCKSPort, "", "");
+            jni_socks5_for_tor("127.0.0.1", torSOCKSPort, "", "");
         } else {
-            jni_socks5("", 0, "", "");
+            jni_socks5_for_tor("", 0, "", "");
+        }
+
+        if (useProxy && !proxyAddress.isEmpty() && proxyPort != 0) {
+            jni_socks5_for_proxy(proxyAddress, proxyPort, "", "");
+        } else {
+            jni_socks5_for_proxy("", 0, "", "");
+            useProxy = false;
         }
 
         if (tunnelThread == null) {
@@ -673,7 +687,7 @@ public class ServiceVPN extends VpnService {
         boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
                 && !modulesStatus.isUseModulesWithRoot();
 
-        if (uid == ownUID || destAddress.equals(itpdRedirectAddress)
+        if (uid == ownUID || destAddress.equals(itpdRedirectAddress) || destAddress.equals("127.0.0.1")
                 || fixTTL || (compatibilityMode && uid == -1)) {
             return false;
         }
@@ -705,6 +719,14 @@ public class ServiceVPN extends VpnService {
         }
 
         return routeAllThroughTor;
+    }
+
+    // Called from native code
+    public boolean isRedirectToProxy(int uid, String destAddress) {
+        //Log.i(LOG_TAG, "Redirect to proxy " + uid + " " + destAddress + " " + redirect);
+        return uid != ownUID && !destAddress.equals(itpdRedirectAddress)
+                && (!compatibilityMode || uid != -1) && !destAddress.equals("127.0.0.1")
+                && !setBypassProxy.contains(String.valueOf(uid));
     }
 
     // Called from native code
@@ -776,7 +798,7 @@ public class ServiceVPN extends VpnService {
         } else if (packet.protocol == 17 /* UDP */ && !filterUDP) {
             // Allow unfiltered UDP
             packet.allowed = true;
-            //Log.i(LOG_TAG, "Allowing UDP " + packet);
+            Log.i(LOG_TAG, "Allowing UDP " + packet);
         } else if (packet.uid < 2000 &&
                 !last_connected && !last_connected_override && isSupported(packet.protocol)) {
             // Allow system applications in disconnected state
@@ -791,9 +813,10 @@ public class ServiceVPN extends VpnService {
             if (!fixTTL && !compatibilityMode) {
                 Log.w(LOG_TAG, "Allowing unknown system " + packet);
             }
-        } else if (routeAllThroughTor && torIsRunning
-                && packet.protocol != 6 && packet.dport != 53 && isRedirectToTor(packet.uid, packet.daddr)) {
-            Log.w(LOG_TAG, "Disallowing non tcp traffic when Tor is running " + packet);
+        } else if (torIsRunning && packet.protocol != 6 && packet.dport != 53 && isRedirectToTor(packet.uid, packet.daddr)) {
+            Log.w(LOG_TAG, "Disallowing non tcp traffic to Tor " + packet);
+        } else if (useProxy && packet.protocol != 6 && packet.dport != 53 && isRedirectToProxy(packet.uid, packet.daddr)) {
+            Log.w(LOG_TAG, "Disallowing non tcp traffic to proxy " + packet);
         } else {
 
             if (mapUidAllowed.containsKey(packet.uid)) {
@@ -1074,6 +1097,16 @@ public class ServiceVPN extends VpnService {
         blockIPv6 = prefs.getBoolean("block_ipv6", true);
         boolean vpnEnabled = prefs.getBoolean("VPNServiceEnabled", false);
         compatibilityMode = prefs.getBoolean("swCompatibilityMode", false);
+
+        useProxy = prefs.getBoolean("swUseProxy", false);
+        proxyAddress = prefs.getString("ProxyServer", "");
+        String proxyPortStr = prefs.getString("ProxyPort", "");
+        if (proxyPortStr != null && proxyPortStr.matches("\\d+")) {
+            proxyPort = Integer.parseInt(proxyPortStr);
+        }
+        setBypassProxy = new PrefManager(this).getSetStrPref("clearnetAppsForProxy");
+
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             compatibilityMode = true;
         }
@@ -1179,7 +1212,7 @@ public class ServiceVPN extends VpnService {
         SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
         prefs.edit().putBoolean("VPNServiceEnabled", false).apply();
 
-        ModulesAux.stopModulesIfRunning(this);
+        ModulesAux.stopModulesIfRunning(this.getApplicationContext());
 
         super.onRevoke();
     }
@@ -1243,8 +1276,18 @@ public class ServiceVPN extends VpnService {
     }
 
     @Override
-    public IBinder onBind(Intent arg0) {
+    public IBinder onBind(Intent intent) {
         Log.i(LOG_TAG, "ServiceVPN onBind");
+
+        String action = null;
+        if (intent != null) {
+            action = intent.getAction();
+        }
+
+        if (VpnService.SERVICE_INTERFACE.equals(action)) {
+            return super.onBind(intent);
+        }
+
         return binder;
     }
 

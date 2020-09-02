@@ -515,6 +515,8 @@ jboolean is_domain_blocked(const struct arguments *args, const char *name);
 
 jboolean is_redirect_to_tor(const struct arguments *args, const int uid, const char *daddr);
 
+jboolean is_redirect_to_proxy(const struct arguments *args, const int uid, const char *daddr);
+
 jint get_uid_q(const struct arguments *args,
                jint version,
                jint protocol,

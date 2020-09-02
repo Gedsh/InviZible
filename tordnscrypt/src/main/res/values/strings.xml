@@ -1,4 +1,4 @@
-<resources tools:ignore="MissingTranslation" xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <string name="app_name" translatable="false">InviZible Pro</string>
     <string name="navigation_drawer_open" translatable="false">Open navigation drawer</string>
     <string name="navigation_drawer_close" translatable="false">Close navigation drawer</string>
@@ -184,6 +184,9 @@
     <string name="pref_common_block_http">Block HOTSPOT http</string>
     <string name="pref_common_block_http_summ">Deny connection to http port 80 for HOTSPOT</string>
     <string name="pref_common_notification_summ">Protect application with No Root Mode to prevent app being killed by android</string>
+    <string name="pref_common_proxy_categ">Proxy</string>
+    <string name="pref_common_proxy">Use socks5 proxy</string>
+    <string name="pref_common_proxy_summ">InviZible Pro will make all connections through the SOCKS5 proxy</string>
     <string name="pref_common_refresh_rules">Refresh rules</string>
     <string name="pref_common_refresh_rules_summ">Update rules on every connectivity change</string>
     <string name="pref_common_show_notification">Show notification</string>
@@ -288,7 +291,7 @@
         Otherwise, leave this to false, as it doesn\'t improve security (dnscrypt-proxy will always encrypt everything even using UDP), and can only increase latency.</string>
     <string name="pref_dnscrypt_force_tcp" translatable="false">force_tcp</string>
 
-    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">HTTP / SOCKS proxy.</string>
+    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS proxy.</string>
     <string name="pref_dnscrypt_use_proxy">Enable proxy</string>
     <string name="pref_dnscrypt_proxy_summ">Route all TCP connections to a local Tor node.
         Tor doesn\'t support UDP, so set force_tcp to true as well.</string>
@@ -449,6 +452,9 @@
     <string name="pref_tor_unlock_app">Apps to Torify</string>
     <string name="pref_tor_clearnet_app">Apps to bypass Tor</string>
     <string name="pref_tor_snowflake_stun">STUN server for SnowFlake bridges</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">Enable SOCKS output proxy</string>
+    <string name="pref_tor_SOCKS_output_address" translatable="false">Socks5Proxy</string>
+    <string name="pref_tor_SOCKS_output_address_summ">Tor will make all OR connections through the SOCKS 5 proxy.</string>
     <string name="pref_tor_edit_conf">Edit tor.conf directly</string>
     <string name="pref_tor_clean_module_folder">Clean module folder</string>
     <string name="pref_tor_isolate_dest_address" translatable="false">IsolateDestAddr</string>
@@ -685,5 +691,22 @@
     <string name="dialog_send_crash_report">A crash report has been discovered. Want to send it to the developer to make InviZible better?</string>
     <string name="btn_new_tor_identity">New Tor identity</string>
     <string name="toast_new_tor_identity">Tor identity has changed</string>
+
+    <string name="proxy_server_ip">Proxy server:</string>
+    <string name="proxy_server_ip_hint" translatable="false">127.0.0.1</string>
+    <string name="proxy_server_port">Proxy port:</string>
+    <string name="proxy_server_port_hint" translatable="false">1080</string>
+    <string name="proxy_server_user_name">Username:</string>
+    <string name="proxy_server_user_pass">Password:</string>
+    <string name="proxy_server_empty_field_hint">This field can be left blank</string>
+    <string name="proxy_exclude_apps_from_proxy">Exclude Applications</string>
+    <string name="proxy_exclude_apps_from_proxy_summ">Applications list to open directly. These applications will not use Tor or Proxy to connect to the Internet!</string>
+    <string name="proxy_select_proxy_app"> Please select proxy owner application at least, if you are using a local proxy.</string>
+    <string name="proxy_use_for_dnscrypt">Use proxy for DNSCrypt</string>
+    <string name="proxy_use_for_tor">Use proxy for Tor</string>
+    <string name="proxy_use_for_itpd">Use proxy for Purple I2P</string>
+    <string name="proxy_save">Save and enable</string>
+    <string name="proxy_no_connection">Cannot connect to proxy: %s</string>
+    <string name="proxy_successful_connection">Successful connection. Ping %s ms.</string>
 
 </resources>

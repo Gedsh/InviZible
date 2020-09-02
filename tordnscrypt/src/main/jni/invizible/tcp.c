@@ -23,10 +23,15 @@
 
 #include "invizible.h"
 
-extern char socks5_addr[INET6_ADDRSTRLEN + 1];
-extern int socks5_port;
-extern char socks5_username[127 + 1];
-extern char socks5_password[127 + 1];
+extern char tor_socks5_addr[INET6_ADDRSTRLEN + 1];
+extern int tor_socks5_port;
+extern char tor_socks5_username[127 + 1];
+extern char tor_socks5_password[127 + 1];
+
+extern char proxy_socks5_addr[INET6_ADDRSTRLEN + 1];
+extern int proxy_socks5_port;
+extern char proxy_socks5_username[127 + 1];
+extern char proxy_socks5_password[127 + 1];
 
 extern int own_uid;
 
@@ -317,8 +322,17 @@ void check_tcp_socket(const struct arguments *args,
                     // https://tools.ietf.org/html/rfc1929
                     // https://en.wikipedia.org/wiki/SOCKS#SOCKS5
 
-                    if (*socks5_addr && socks5_port
-                        && is_redirect_to_tor(args, s->tcp.uid, dest)) {
+                    bool redirect_to_tor = false;
+                    if (*tor_socks5_addr && tor_socks5_port) {
+                        redirect_to_tor = is_redirect_to_tor(args, s->tcp.uid, dest);
+                    }
+
+                    bool redirect_to_proxy = false;
+                    if (*proxy_socks5_addr && proxy_socks5_port) {
+                        redirect_to_proxy = is_redirect_to_proxy(args, s->tcp.uid, dest);
+                    }
+
+                    if (redirect_to_tor || redirect_to_proxy) {
                         s->tcp.socks5 = SOCKS5_HELLO;
                     } else {
                         s->tcp.socks5 = SOCKS5_CONNECTED;
@@ -411,6 +425,23 @@ void check_tcp_socket(const struct arguments *args,
                 }
 
             } else if (s->tcp.socks5 == SOCKS5_AUTH) {
+                char socks5_username[127 + 1];
+                char socks5_password[127 + 1];
+
+                bool redirect_to_tor = false;
+
+                if (*tor_socks5_addr && tor_socks5_port) {
+                    redirect_to_tor = is_redirect_to_tor(args, s->tcp.uid, dest);
+                }
+
+                if (*proxy_socks5_addr && proxy_socks5_port && !redirect_to_tor) {
+                   *socks5_username = *proxy_socks5_username;
+                   *socks5_password = *proxy_socks5_password;
+                } else {
+                    *socks5_username = *tor_socks5_username;
+                    *socks5_password = *tor_socks5_password;
+                }
+
                 uint8_t ulen = strlen(socks5_username);
                 uint8_t plen = strlen(socks5_password);
                 uint8_t buffer[512];
@@ -1048,8 +1079,8 @@ int open_tcp_socket(const struct arguments *args,
     int version;
     if (redirect == NULL) {
         //bypass dns addresses and own uid from socks proxy
-        if (*socks5_addr && socks5_port && cur->uid != own_uid)
-            version = (strstr(socks5_addr, ":") == NULL ? 4 : 6);
+        if (*tor_socks5_addr && tor_socks5_port && cur->uid != own_uid)
+            version = (strstr(tor_socks5_addr, ":") == NULL ? 4 : 6);
         else
             version = cur->version;
     } else
@@ -1091,19 +1122,41 @@ int open_tcp_socket(const struct arguments *args,
     struct sockaddr_in6 addr6;
     if (redirect == NULL) {
 
-        if (*socks5_addr && socks5_port
-            && is_redirect_to_tor(args, cur->uid, dest)) {
+        bool redirect_to_tor = false;
+        if (*tor_socks5_addr && tor_socks5_port) {
+            redirect_to_tor = is_redirect_to_tor(args, cur->uid, dest);
+        }
+
+        bool redirect_to_proxy = false;
+        if (*proxy_socks5_addr && proxy_socks5_port) {
+            redirect_to_proxy = is_redirect_to_proxy(args,  cur->uid, dest);
+        }
+
+        if (redirect_to_tor) {
             log_android(ANDROID_LOG_INFO, "TCP%d SOCKS5 to %s/%u",
-                        version, socks5_addr, socks5_port);
+                        version, tor_socks5_addr, tor_socks5_port);
 
             if (version == 4) {
                 addr4.sin_family = AF_INET;
-                inet_pton(AF_INET, socks5_addr, &addr4.sin_addr);
-                addr4.sin_port = htons(socks5_port);
+                inet_pton(AF_INET, tor_socks5_addr, &addr4.sin_addr);
+                addr4.sin_port = htons(tor_socks5_port);
             } else {
                 addr6.sin6_family = AF_INET6;
-                inet_pton(AF_INET6, socks5_addr, &addr6.sin6_addr);
-                addr6.sin6_port = htons(socks5_port);
+                inet_pton(AF_INET6, tor_socks5_addr, &addr6.sin6_addr);
+                addr6.sin6_port = htons(tor_socks5_port);
+            }
+        } else if (redirect_to_proxy) {
+            log_android(ANDROID_LOG_INFO, "TCP%d SOCKS5 to %s/%u",
+                        version, proxy_socks5_addr, proxy_socks5_port);
+
+            if (version == 4) {
+                addr4.sin_family = AF_INET;
+                inet_pton(AF_INET, proxy_socks5_addr, &addr4.sin_addr);
+                addr4.sin_port = htons(proxy_socks5_port);
+            } else {
+                addr6.sin6_family = AF_INET6;
+                inet_pton(AF_INET6, proxy_socks5_addr, &addr6.sin6_addr);
+                addr6.sin6_port = htons(proxy_socks5_port);
             }
         } else {
             if (version == 4) {

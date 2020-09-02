@@ -105,6 +105,8 @@ public class Rule {
 
             Set<String> setUnlockApps = new PrefManager(context).getSetStrPref(unlockAppsStr);
 
+            Set<String> setBypassProxy = new PrefManager(context).getSetStrPref("clearnetAppsForProxy");
+
             // Build rule list
             List<Rule> listRules = new CopyOnWriteArrayList<>();
             List<PackageInfo> listPI = getPackages(context);
@@ -179,10 +181,11 @@ public class Rule {
 
                     Rule rule = new Rule(info);
 
+                    String UID = String.valueOf(info.applicationInfo.uid);
                     if (routeAllThroughIniZible) {
-                        rule.apply = !setUnlockApps.contains(String.valueOf(info.applicationInfo.uid));
+                        rule.apply = !setUnlockApps.contains(UID) && !setBypassProxy.contains(UID);
                     } else {
-                        rule.apply = setUnlockApps.contains(String.valueOf(info.applicationInfo.uid));
+                        rule.apply = setUnlockApps.contains(UID) && !setBypassProxy.contains(UID);
                     }
 
                     listRules.add(rule);
