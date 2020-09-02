@@ -257,17 +257,26 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     @Override
     public void onClick(View v) {
 
-        if (getActivity() == null || orientationLandscape) {
+        Context context = null;
+        Activity activity = getActivity();
+        if (activity != null) {
+            context = activity.getApplicationContext();
+        }
+
+        if (context == null || activity.isFinishing()
+                || modulesStatus == null
+                || dnsCryptFragmentPresenter == null || torFragmentPresenter == null || itpdFragmentPresenter == null
+                || orientationLandscape) {
             return;
         }
 
-        if (!isDNSCryptInstalled(getActivity())
-                || !isTorInstalled(getActivity())
-                || !isITPDInstalled(getActivity())) {
+        if (!isDNSCryptInstalled(context)
+                || !isTorInstalled(context)
+                || !isITPDInstalled(context)) {
             return;
         }
 
-        if (isControlLocked(getActivity())) {
+        if (isControlLocked(activity)) {
             return;
         }
 
@@ -278,27 +287,27 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
                     && modulesStatus.getItpdState() == STOPPED) {
 
                 if (chbProtectDnsMainFragment.isChecked()) {
-                    dnsCryptFragmentPresenter.startButtonOnClick(getActivity());
+                    dnsCryptFragmentPresenter.startButtonOnClick(activity);
                 }
 
                 if (chbHideIpMainFragment.isChecked()) {
-                    torFragmentPresenter.startButtonOnClick(getActivity());
+                    torFragmentPresenter.startButtonOnClick(activity);
                 }
 
                 if (chbAccessITPMainFragment.isChecked()) {
-                    itpdFragmentPresenter.startButtonOnClick(getActivity());
+                    itpdFragmentPresenter.startButtonOnClick(activity);
                 }
             } else {
                 if (modulesStatus.getDnsCryptState() != STOPPED) {
-                    dnsCryptFragmentPresenter.startButtonOnClick(getActivity());
+                    dnsCryptFragmentPresenter.startButtonOnClick(activity);
                 }
 
                 if (modulesStatus.getTorState() != STOPPED) {
-                    torFragmentPresenter.startButtonOnClick(getActivity());
+                    torFragmentPresenter.startButtonOnClick(activity);
                 }
 
                 if (modulesStatus.getItpdState() != STOPPED) {
-                    itpdFragmentPresenter.startButtonOnClick(getActivity());
+                    itpdFragmentPresenter.startButtonOnClick(activity);
                 }
             }
         }
@@ -306,13 +315,20 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        Context context = null;
+        Activity activity = getActivity();
+        if (activity != null) {
+            context = activity.getApplicationContext();
+        }
 
-        if (getActivity() == null || getActivity().isFinishing()
-                || modulesStatus == null || buttonView == null || orientationLandscape) {
+        if (context == null || activity.isFinishing()
+                || modulesStatus == null || buttonView == null
+                || dnsCryptFragmentPresenter == null || torFragmentPresenter == null || itpdFragmentPresenter == null
+                || orientationLandscape) {
             return;
         }
 
-        if (isControlLocked(getActivity())) {
+        if (isControlLocked(activity)) {
             return;
         }
 
@@ -323,23 +339,23 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
             switch (buttonView.getId()) {
                 case R.id.chbProtectDnsMainFragment:
                     if (modulesStatus.getDnsCryptState() != STOPPED && !isChecked) {
-                        dnsCryptFragmentPresenter.startButtonOnClick(getActivity());
+                        dnsCryptFragmentPresenter.startButtonOnClick(activity);
                     } else if (modulesStatus.getDnsCryptState() == STOPPED && isChecked) {
-                        dnsCryptFragmentPresenter.startButtonOnClick(getActivity());
+                        dnsCryptFragmentPresenter.startButtonOnClick(activity);
                     }
                     break;
                 case R.id.chbHideIpMainFragment:
                     if (modulesStatus.getTorState() != STOPPED && !isChecked) {
-                        torFragmentPresenter.startButtonOnClick(getActivity());
+                        torFragmentPresenter.startButtonOnClick(activity);
                     } else if (modulesStatus.getTorState() == STOPPED && isChecked) {
-                        torFragmentPresenter.startButtonOnClick(getActivity());
+                        torFragmentPresenter.startButtonOnClick(activity);
                     }
                     break;
                 case R.id.chbAccessITPMainFragment:
                     if (modulesStatus.getItpdState() != STOPPED && !isChecked) {
-                        itpdFragmentPresenter.startButtonOnClick(getActivity());
+                        itpdFragmentPresenter.startButtonOnClick(activity);
                     } else if (modulesStatus.getItpdState() == STOPPED && isChecked) {
-                        itpdFragmentPresenter.startButtonOnClick(getActivity());
+                        itpdFragmentPresenter.startButtonOnClick(activity);
                     }
                     break;
             }
@@ -347,13 +363,13 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
         switch (buttonView.getId()) {
             case R.id.chbProtectDnsMainFragment:
-                new PrefManager(getActivity()).setBoolPref("ProtectDns", isChecked);
+                new PrefManager(context).setBoolPref("ProtectDns", isChecked);
                 break;
             case R.id.chbHideIpMainFragment:
-                new PrefManager(getActivity()).setBoolPref("HideIp", isChecked);
+                new PrefManager(context).setBoolPref("HideIp", isChecked);
                 break;
             case R.id.chbAccessITPMainFragment:
-                new PrefManager(getActivity()).setBoolPref("AccessITP", isChecked);
+                new PrefManager(context).setBoolPref("AccessITP", isChecked);
                 break;
         }
     }

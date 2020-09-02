@@ -39,8 +39,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 
 import pan.alexander.tordnscrypt.R;
-import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.key_tor;
-import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.val_tor;
+import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment;
 
 public class CountrySelectFragment extends Fragment implements CompoundButton.OnCheckedChangeListener, SearchView.OnQueryTextListener {
 
@@ -53,6 +53,7 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
     private RecyclerView.Adapter<CountriesAdapter.CountriesViewHolder> rvAdapter;
     private ArrayList<Countries> countriesListCurrent;
     private ArrayList<Countries> countriesListSaved;
+    private PreferencesTorFragment preferencesTorFragment;
 
     public CountrySelectFragment() {
 
@@ -78,6 +79,11 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
         if (getArguments() != null) {
             current_nodes_type = getArguments().getInt("nodes_type");
             countries = getArguments().getString("countries");
+        }
+
+        if (getActivity() != null && getActivity() instanceof SettingsActivity) {
+            SettingsActivity settingsActivity = (SettingsActivity) getActivity();
+            preferencesTorFragment = settingsActivity.preferencesTorFragment;
         }
     }
 
@@ -177,21 +183,29 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
     public void onStop() {
         super.onStop();
 
-        if (getActivity() == null || key_tor == null || val_tor == null) {
+        if (getActivity() == null || preferencesTorFragment == null) {
             return;
         }
 
         countries = ((CountriesAdapter) rvAdapter).getCheckedCountries();
 
-        if (current_nodes_type == entryNodes && key_tor.contains("EntryNodes")) {
-            val_tor.set(key_tor.indexOf("EntryNodes"), countries);
-        } else if (current_nodes_type == excludeNodes && key_tor.contains("ExcludeNodes")) {
-            val_tor.set(key_tor.indexOf("ExcludeNodes"), countries);
-        } else if (current_nodes_type == excludeExitNodes && key_tor.contains("ExcludeExitNodes")) {
-            val_tor.set(key_tor.indexOf("ExcludeExitNodes"), countries);
-        } else if (current_nodes_type == exitNodes && key_tor.contains("ExitNodes")) {
-            val_tor.set(key_tor.indexOf("ExitNodes"), countries);
+        if (current_nodes_type == entryNodes) {
+            preferencesTorFragment.entryNodes = countries;
+        } else if (current_nodes_type == excludeNodes) {
+            preferencesTorFragment.excludeNodes = countries;
+        } else if (current_nodes_type == excludeExitNodes) {
+            preferencesTorFragment.excludeExitNodes = countries;
+        } else if (current_nodes_type == exitNodes) {
+            preferencesTorFragment.exitNodes = countries;
         }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+
+        preferencesTorFragment = null;
+        rvAdapter = null;
     }
 
     private class CountriesAdapter extends RecyclerView.Adapter<CountriesAdapter.CountriesViewHolder> {

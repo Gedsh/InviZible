@@ -132,7 +132,7 @@ public class ConfigEditorFragment extends Fragment implements OnTextFileOperatio
             final StringBuilder stringBuilder = new StringBuilder();
 
             for (String line : lines) {
-                stringBuilder.append(line).append(System.lineSeparator());
+                stringBuilder.append(line).append("\n");
             }
 
             savedText = stringBuilder.toString();
@@ -140,7 +140,7 @@ public class ConfigEditorFragment extends Fragment implements OnTextFileOperatio
             if (getActivity() != null && etConfigEditor != null) {
                 getActivity().runOnUiThread(() -> {
                     if (getActivity() != null) {
-                        etConfigEditor.setText(stringBuilder, TextView.BufferType.EDITABLE);
+                        etConfigEditor.setText(savedText, TextView.BufferType.EDITABLE);
                     }
                 });
             }

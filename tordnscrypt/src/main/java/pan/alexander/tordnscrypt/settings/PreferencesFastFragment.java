@@ -26,6 +26,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -62,6 +63,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class PreferencesFastFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
 
+    private Handler handler;
     public static final int mJobId = 1;
     private int refreshPeriodHours = 12;
 
@@ -70,6 +72,11 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         super.onCreate(savedInstanceState);
 
         addPreferencesFromResource(R.xml.preferences_fast);
+
+        Looper looper = Looper.getMainLooper();
+        if (looper != null) {
+            handler = new Handler(looper);
+        }
     }
 
     @Override
@@ -133,11 +140,13 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
     public void onResume() {
         super.onResume();
 
-        new Handler().postDelayed( () -> {
-            if (getActivity() != null && !getActivity().isFinishing()) {
-                setDnsCryptServersSumm(new PrefManager(requireActivity()).getStrPref("DNSCrypt Servers"));
-            }
-        }, 1000);
+        if (handler != null) {
+            handler.postDelayed(() -> {
+                if (getActivity() != null && !getActivity().isFinishing()) {
+                    setDnsCryptServersSumm(new PrefManager(requireActivity()).getStrPref("DNSCrypt Servers"));
+                }
+            }, 1000);
+        }
 
         setUpdateTimeLast();
     }
@@ -186,8 +195,8 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
             return;
 
         prefLastUpdate.setOnPreferenceClickListener(preference -> {
-            if (prefLastUpdate.isEnabled()) {
-                new Handler().post(() -> {
+            if (prefLastUpdate.isEnabled() && handler != null) {
+                handler.post(() -> {
 
                     if (getActivity() == null) {
                         return;
@@ -213,7 +222,12 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
     @SuppressWarnings("deprecation")
     private void changeTheme() {
-        new Handler().post(() -> {
+
+        if (handler == null) {
+            return;
+        }
+
+        handler.post(() -> {
 
             if (getActivity() == null) {
                 return;
@@ -273,6 +287,16 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         Language.setFromPreference(getActivity(), "pref_fast_language", true);
 
         super.onPause();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+
+        if (handler != null) {
+            handler.removeCallbacksAndMessages(null);
+            handler = null;
+        }
     }
 
     @Override
@@ -348,8 +372,10 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 changeTheme();
                 return true;
             case "pref_fast_language":
-                new Handler().post(this::activityCurrentRecreate);
-                return true;
+                if (handler != null) {
+                    handler.post(this::activityCurrentRecreate);
+                    return true;
+                }
             case "pref_fast_site_refresh_interval":
             case "pref_fast_autostart_delay":
                 return newValue.toString().matches("\\d+");

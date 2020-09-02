@@ -609,7 +609,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
             return;
         }
 
-        if (((MainActivity) context).childLockActive) {
+        if (context instanceof MainActivity && ((MainActivity) context).childLockActive) {
             Toast.makeText(context, context.getText(R.string.action_mode_dialog_locked), Toast.LENGTH_LONG).show();
             return;
         }

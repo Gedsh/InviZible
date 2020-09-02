@@ -369,4 +369,20 @@ public class PathVars {
 
         return cacheDirPath;
     }
+
+    public String getDnscryptConfPath () {
+        return appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml";
+    }
+
+    public String getTorConfPath() {
+        return appDataDir + "/app_data/tor/tor.conf";
+    }
+
+    public String getItpdConfPath() {
+        return appDataDir + "/app_data/i2pd/i2pd.conf";
+    }
+
+    public String getItpdTunnelsPath () {
+        return appDataDir + "/app_data/i2pd/tunnels.conf";
+    }
 }
