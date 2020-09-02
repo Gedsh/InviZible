@@ -344,3 +344,9 @@
 * Updated Purple I2P to version 2.33.0.
 * Optimized memory usage.
 * Added Finnish language.
+
+**InviZible Pro beta 1.0.3**
+* Implemented system-wide socks5 proxy.
+* Implemented and fixed modules proxy settings.
+* Fixed saving files with direct configuration editor.
+* Performs a full Tor restart in case of using bridges.
