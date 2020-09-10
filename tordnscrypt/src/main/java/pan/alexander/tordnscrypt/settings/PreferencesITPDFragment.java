@@ -18,6 +18,8 @@ package pan.alexander.tordnscrypt.settings;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import androidx.preference.Preference;
@@ -30,7 +32,6 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
@@ -138,11 +139,13 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
     public void onResume() {
         super.onResume();
 
-        if (getActivity() == null) {
+        Activity activity = getActivity();
+
+        if (activity == null) {
             return;
         }
 
-        getActivity().setTitle(R.string.drawer_menu_I2PDSettings);
+        activity.setTitle(R.string.drawer_menu_I2PDSettings);
 
         PathVars pathVars = PathVars.getInstance(getActivity());
         appDataDir = pathVars.getAppDataDir();
@@ -160,50 +163,55 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
     public void onStop() {
         super.onStop();
 
-        if (getActivity() == null || key_itpd == null || val_itpd == null || key_itpd_orig == null || val_itpd_orig == null) {
+        Context context = getActivity();
+
+        if (context == null || key_itpd == null || val_itpd == null || key_itpd_orig == null || val_itpd_orig == null) {
             return;
         }
 
-        List<String> itpd_conf = new LinkedList<>();
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        List<String> itpd_conf = new ArrayList<>();
+        List<String> key_itpd_to_save = new ArrayList<>(key_itpd);
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
 
-        if (key_itpd.indexOf("subscriptions") >= 0) {
-            val_itpd.set(key_itpd.indexOf("subscriptions"), sp.getString("subscriptions", ""));
+
+
+        if (key_itpd_to_save.indexOf("subscriptions") >= 0) {
+            val_itpd.set(key_itpd_to_save.indexOf("subscriptions"), sp.getString("subscriptions", ""));
         }
 
 
-        for (int i = 0; i < key_itpd.size(); i++) {
+        for (int i = 0; i < key_itpd_to_save.size(); i++) {
 
             if (!isChanged
-                    && (key_itpd_orig.size() != key_itpd.size() || !key_itpd_orig.get(i).equals(key_itpd.get(i)) || !val_itpd_orig.get(i).equals(val_itpd.get(i)))) {
+                    && (key_itpd_orig.size() != key_itpd_to_save.size() || !key_itpd_orig.get(i).equals(key_itpd_to_save.get(i)) || !val_itpd_orig.get(i).equals(val_itpd.get(i)))) {
                 isChanged = true;
             }
 
-            switch (key_itpd.get(i)) {
+            switch (key_itpd_to_save.get(i)) {
                 case "incoming host":
-                    key_itpd.set(i, "host");
+                    key_itpd_to_save.set(i, "host");
                     break;
                 case "HTTP outproxy address":
                     if (sp.getBoolean("HTTP outproxy", false)) {
-                        key_itpd.set(i, "outproxy");
+                        key_itpd_to_save.set(i, "outproxy");
                     } else {
-                        key_itpd.set(i, "#outproxy");
+                        key_itpd_to_save.set(i, "#outproxy");
                     }
                     break;
                 case "incoming port":
                 case "Socks proxy port":
                 case "HTTP proxy port":
                 case "SAM interface port":
-                    key_itpd.set(i, "port");
+                    key_itpd_to_save.set(i, "port");
                     break;
                 case "Socks outproxy":
-                    key_itpd.set(i, "outproxy.enabled");
+                    key_itpd_to_save.set(i, "outproxy.enabled");
                     break;
                 case "Socks outproxy port":
-                    key_itpd.set(i, "outproxyport");
+                    key_itpd_to_save.set(i, "outproxyport");
                     break;
                 case "Socks outproxy address":
-                    key_itpd.set(i, "outproxy");
+                    key_itpd_to_save.set(i, "outproxy");
                     break;
                 case "ntcp2 enabled":
                 case "SAM interface":
@@ -211,27 +219,27 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                 case "http enabled":
                 case "HTTP proxy":
                 case "UPNP":
-                    key_itpd.set(i, "enabled");
+                    key_itpd_to_save.set(i, "enabled");
                     break;
             }
 
             if (val_itpd.get(i).isEmpty()) {
-                itpd_conf.add(key_itpd.get(i));
+                itpd_conf.add(key_itpd_to_save.get(i));
             } else {
-                itpd_conf.add(key_itpd.get(i) + " = " + val_itpd.get(i));
+                itpd_conf.add(key_itpd_to_save.get(i) + " = " + val_itpd.get(i));
             }
 
         }
 
-        if (!isChanged || getActivity() == null) return;
+        if (!isChanged) return;
 
-        FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/i2pd/i2pd.conf", itpd_conf, SettingsActivity.itpd_conf_tag);
+        FileOperations.writeToTextFile(context, appDataDir + "/app_data/i2pd/i2pd.conf", itpd_conf, SettingsActivity.itpd_conf_tag);
 
-        boolean itpdRunning = new PrefManager(getActivity()).getBoolPref("I2PD Running");
+        boolean itpdRunning = new PrefManager(context).getBoolPref("I2PD Running");
 
         if (itpdRunning) {
-            ModulesRestarter.restartITPD(getActivity());
-            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(getActivity(), true);
+            ModulesRestarter.restartITPD(context);
+            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
         }
 
 
@@ -240,7 +248,9 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
 
-        if (getActivity() == null || key_itpd == null || val_itpd == null) {
+        Context context = getActivity();
+
+        if (context == null || key_itpd == null || val_itpd == null) {
             return false;
         }
 
@@ -298,11 +308,11 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                 val_itpd.set(key_itpd.indexOf(preference.getKey()), newValue.toString());
                 return true;
             } else {
-                Toast.makeText(getActivity(), R.string.pref_itpd_not_exist, Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, R.string.pref_itpd_not_exist, Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
             Log.e(LOG_TAG, "PreferencesITPDFragment onPreferenceChange exception " + e.getMessage() + " " + e.getCause());
-            Toast.makeText(getActivity(), R.string.wrong, Toast.LENGTH_LONG).show();
+            Toast.makeText(context, R.string.wrong, Toast.LENGTH_LONG).show();
         }
 
 
