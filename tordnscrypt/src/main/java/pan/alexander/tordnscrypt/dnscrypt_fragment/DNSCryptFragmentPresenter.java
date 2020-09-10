@@ -90,7 +90,6 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     private volatile ArrayList<DNSQueryLogRecord> savedDNSQueryRawRecords;
     private int savedDNSQueryRecordsLenght = 0;
     private volatile DNSQueryLogRecordsConverter dnsQueryLogRecordsConverter;
-    private boolean torTethering;
     private boolean apIsOn;
     private String localEthernetDeviceAddress = "192.168.0.100";
     private boolean dnsCryptLogAutoScroll = true;
@@ -120,7 +119,6 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         savedDNSQueryRawRecords = new ArrayList<>();
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        torTethering = sharedPreferences.getBoolean("pref_common_tor_tethering", false);
         localEthernetDeviceAddress = sharedPreferences.getString("pref_common_local_eth_device_addr", "192.168.0.100");
         apIsOn = new PrefManager(context).getBoolPref("APisON");
         boolean blockIPv6 = sharedPreferences.getBoolean("block_ipv6", true);
@@ -588,16 +586,16 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                             appName = view.getFragmentActivity().getPackageManager().getNameForUid(record.getUid());
                         }
 
-                        if (appName != null && !appName.isEmpty()) {
-                            lines.append("<b>").append(appName).append("</b>").append(" -> ");
-                        } else if (!torTethering && !apIsOn && !Tethering.usbTetherOn && !Tethering.ethernetOn && !fixTTL) {
-                            lines.append("<b>").append("Unknown system traffic").append("</b>").append(" -> ");
-                        } else if (apIsOn && fixTTL && record.getSaddr().contains("192.168.43.")) {
+                        if (apIsOn && fixTTL && record.getSaddr().contains("192.168.43.")) {
                             lines.append("<b>").append("WiFi").append("</b>").append(" -> ");
                         } else if (Tethering.usbTetherOn && fixTTL && record.getSaddr().contains("192.168.42.")) {
                             lines.append("<b>").append("USB").append("</b>").append(" -> ");
                         } else if (Tethering.ethernetOn && fixTTL && record.getSaddr().contains(localEthernetDeviceAddress)) {
                             lines.append("<b>").append("LAN").append("</b>").append(" -> ");
+                        } else if (appName != null && !appName.isEmpty()) {
+                            lines.append("<b>").append(appName).append("</b>").append(" -> ");
+                        } else {
+                            lines.append("<b>").append("Unknown UID").append(record.getUid()).append("</b>").append(" -> ");
                         }
                     }
                 }
