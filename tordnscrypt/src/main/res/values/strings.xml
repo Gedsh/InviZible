@@ -239,6 +239,8 @@
     <string name="pref_common_restart_dnscrypt">Please restart DNSCrypt</string>
     <string name="pref_common_restart_tor">Please restart Tor</string>
     <string name="pref_common_restart_itpd">Please restart I2P</string>
+    <string name="pref_common_multi_user">Multi-user support</string>
+    <string name="pref_common_multi_user_summ">Support for Dual Apps, MIUI, Island, Shelter and Work profile applications</string>
 
     <string name="pref_common_use_iptables">Select Iptables</string>
     <string-array name="pref_common_categ_use_iptables_titles">
