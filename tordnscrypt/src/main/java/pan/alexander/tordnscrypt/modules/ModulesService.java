@@ -880,6 +880,8 @@ public class ModulesService extends Service {
     @Override
     public void onDestroy() {
 
+        unregisterModulesBroadcastReceiver();
+
         if (usageStatistic != null) {
             usageStatistic.stopUpdate();
         }
@@ -889,8 +891,6 @@ public class ModulesService extends Service {
         stopModulesThreadsTimer();
 
         stopVPNServiceIfRunning();
-
-        unregisterModulesBroadcastReceiver();
 
         CachedExecutor.INSTANCE.stopExecutorService();
 
@@ -990,7 +990,10 @@ public class ModulesService extends Service {
         threadGroup.enumerate(allThreads);
 
         for (Thread thread : allThreads) {
-            String name = thread.getName();
+            String name = "";
+            if (thread != null) {
+                name = thread.getName();
+            }
             //Log.i(LOG_TAG, "Current threads " + name);
             if (name.equals(threadName)) {
                 Log.i(LOG_TAG, "Found old module thread " + name);
