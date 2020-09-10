@@ -30,6 +30,8 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.jrummyapps.android.shell.CommandResult;
 import com.jrummyapps.android.shell.Shell;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import pan.alexander.tordnscrypt.settings.PathVars;
@@ -359,7 +361,7 @@ public class ModulesStarterHelper {
     }
 
     private void sendResultIntent(int moduleMark, String moduleKeyWord, String binaryPath) {
-        RootCommands comResult = new RootCommands(new String[]{moduleKeyWord, binaryPath});
+        RootCommands comResult = new RootCommands(new ArrayList<>(Arrays.asList(moduleKeyWord, binaryPath)));
         Intent intent = new Intent(COMMAND_RESULT);
         intent.putExtra("CommandsResult", comResult);
         intent.putExtra("Mark", moduleMark);

@@ -137,6 +137,7 @@ public class TopFragment extends Fragment {
     public TopFragment() {
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -237,6 +238,7 @@ public class TopFragment extends Fragment {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -265,6 +267,7 @@ public class TopFragment extends Fragment {
     }
 
     //Check if root available
+    @SuppressWarnings("deprecation")
     private static class RootChecker extends AsyncTask<Void, Void, Void> {
 
         private WeakReference<TopFragment> topFragmentWeakReference;

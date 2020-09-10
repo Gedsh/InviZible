@@ -24,6 +24,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
@@ -77,7 +81,7 @@ public class TorFragmentReceiver extends BroadcastReceiver {
 
                 RootCommands comResult = (RootCommands) intent.getSerializableExtra("CommandsResult");
 
-                if (comResult != null && comResult.getCommands().length == 0) {
+                if (comResult != null && comResult.getCommands().size() == 0) {
                     presenter.setTorSomethingWrong();
                     return;
                 }
@@ -149,12 +153,12 @@ public class TorFragmentReceiver extends BroadcastReceiver {
     private void checkTorVersionWithRoot(Context context) {
         if (context != null && presenter.isTorInstalled(context)) {
 
-            String[] commandsCheck = {
+            List<String> commandsCheck = new ArrayList<>(Arrays.asList(
                     busyboxPath + "pgrep -l /libtor.so 2> /dev/null",
                     busyboxPath + "echo 'checkTrRunning' 2> /dev/null",
                     busyboxPath + "echo 'Tor_version' 2> /dev/null",
                     torPath + " --version 2> /dev/null"
-            };
+            ));
             RootCommands rootCommands = new RootCommands(commandsCheck);
             Intent intent = new Intent(context, RootExecService.class);
             intent.setAction(RootExecService.RUN_COMMAND);

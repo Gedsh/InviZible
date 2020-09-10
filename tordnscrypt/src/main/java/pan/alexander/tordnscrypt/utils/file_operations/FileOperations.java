@@ -39,6 +39,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -918,11 +919,11 @@ public class FileOperations {
 
             String appUID = new PrefManager(context).getStrPref("appUID");
             PathVars pathVars = PathVars.getInstance(context);
-            String[] commands = {
+            List<String> commands = new ArrayList<>(Arrays.asList(
                     pathVars.getBusyboxPath()+ "chown -R " + appUID + "." + appUID + " " + filePath + " 2> /dev/null",
                     "restorecon " + filePath + " 2> /dev/null",
                     pathVars.getBusyboxPath() + "sleep 1 2> /dev/null"
-            };
+            ));
             RootCommands rootCommands = new RootCommands(commands);
             Intent intent = new Intent(context, RootExecService.class);
             intent.setAction(RootExecService.RUN_COMMAND);

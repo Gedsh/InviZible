@@ -26,7 +26,9 @@ import android.util.Log;
 
 import androidx.fragment.app.FragmentManager;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
@@ -88,7 +90,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
                 RootCommands comResult = (RootCommands) intent.getSerializableExtra("CommandsResult");
 
-                if (comResult != null && comResult.getCommands().length == 0) {
+                if (comResult != null && comResult.getCommands().size() == 0) {
                     presenter.setDnsCryptSomethingWrong();
                     modulesStatus.setDnsCryptState(FAULT);
                     return;
@@ -186,12 +188,12 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
         if (presenter.isDNSCryptInstalled(context)) {
 
-            String[] commandsCheck = {
+            List<String> commandsCheck = new ArrayList<>(Arrays.asList(
                     busyboxPath + "pgrep -l /libdnscrypt-proxy.so 2> /dev/null",
                     busyboxPath + "echo 'checkDNSRunning' 2> /dev/null",
                     busyboxPath + "echo 'DNSCrypt_version' 2> /dev/null",
                     dnscryptPath + " --version 2> /dev/null"
-            };
+            ));
             RootCommands rootCommands = new RootCommands(commandsCheck);
             Intent intent = new Intent(context, RootExecService.class);
             intent.setAction(RootExecService.RUN_COMMAND);

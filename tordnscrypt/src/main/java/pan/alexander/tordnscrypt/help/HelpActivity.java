@@ -31,6 +31,7 @@ import androidx.core.content.FileProvider;
 import androidx.fragment.app.DialogFragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import android.os.Looper;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -44,6 +45,9 @@ import com.github.angads25.filepicker.model.DialogProperties;
 import com.github.angads25.filepicker.view.FilePickerDialog;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import pan.alexander.tordnscrypt.LangAppCompatActivity;
 import pan.alexander.tordnscrypt.R;
@@ -105,7 +109,11 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         swRootCommandsLog.setChecked(new PrefManager(this).getBoolPref("swRootCommandsLog"));
         swRootCommandsLog.setOnCheckedChangeListener(this);
 
-        Handler mHandler = new Handler();
+        Handler mHandler = null;
+        Looper looper = Looper.getMainLooper();
+        if (looper != null) {
+            mHandler = new Handler(looper);
+        }
 
         PathVars pathVars = PathVars.getInstance(this);
         appDataDir = pathVars.getAppDataDir();
@@ -204,7 +212,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     private void collectLogsMethodOne (String info) {
         int pid = android.os.Process.myPid();
 
-        String[] logcatCommands = {
+        List<String> logcatCommands = new ArrayList<>(Arrays.asList(
                 "cd " + cacheDir,
                 busyboxPath + "rm -rf logs_dir 2> /dev/null",
                 busyboxPath + "mkdir -m 655 -p logs_dir 2> /dev/null",
@@ -221,7 +229,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                 busyboxPath + "chown -R " + appUID + "." + appUID + " logs_dir 2> /dev/null",
                 busyboxPath + "chmod -R 755 logs_dir 2> /dev/null",
                 busyboxPath + "echo 'Logs Saved' 2> /dev/null"
-        };
+        ));
         RootCommands rootCommands = new RootCommands(logcatCommands);
         Intent intent = new Intent(this, RootExecService.class);
         intent.setAction(RootExecService.RUN_COMMAND);

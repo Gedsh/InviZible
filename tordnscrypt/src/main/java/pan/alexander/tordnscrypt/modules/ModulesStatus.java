@@ -118,7 +118,7 @@ public final class ModulesStatus {
     }
 
     public void setFixTTLRulesUpdateRequested(Context context, final boolean requestFixTTLRulesUpdate) {
-        this.requestFixTTLRulesUpdate = requestFixTTLRulesUpdate;
+        setFixTTLRulesUpdateRequested(requestFixTTLRulesUpdate);
         ModulesAux.makeModulesStateExtraLoop(context);
     }
 

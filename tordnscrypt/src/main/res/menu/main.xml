@@ -14,16 +14,16 @@
         android:title="@string/action_mode_hotspot"
         app:showAsAction="always" />
     <item
-        android:id="@+id/item_unlock"
-        android:icon="@drawable/ic_lock_open_white_24dp"
-        android:orderInCategory="3"
-        android:title="@string/action_mode_child_lock"
-        app:showAsAction="always" />
-    <item
         android:id="@+id/item_new_identity"
         android:icon="@drawable/ic_baseline_refresh_24"
-        android:orderInCategory="4"
+        android:orderInCategory="3"
         android:title="@string/btn_new_tor_identity"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/item_unlock"
+        android:icon="@drawable/ic_lock_open_white_24dp"
+        android:orderInCategory="4"
+        android:title="@string/action_mode_child_lock"
         app:showAsAction="always" />
     <group
         android:checkableBehavior="single"

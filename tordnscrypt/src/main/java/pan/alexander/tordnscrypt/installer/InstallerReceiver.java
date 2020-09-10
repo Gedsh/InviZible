@@ -74,7 +74,7 @@ public class InstallerReceiver extends BroadcastReceiver {
     }
 
     private boolean isRootCommandResultEmpty(RootCommands comResult) {
-        return comResult.getCommands().length == 0;
+        return comResult.getCommands().size() == 0;
     }
 
     private boolean isBroadcastMatch(Intent intent) {

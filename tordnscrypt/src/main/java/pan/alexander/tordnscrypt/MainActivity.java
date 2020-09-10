@@ -23,6 +23,7 @@ import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.net.VpnService;
 import android.os.Build;
@@ -61,6 +62,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
@@ -580,7 +582,10 @@ public class MainActivity extends LangAppCompatActivity
                 ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.TetherSettings");
                 intent.setComponent(cn);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivityForResult(intent, CODE_IS_AP_ON);
+                PackageManager packageManager = getPackageManager();
+                if (packageManager != null && intent.resolveActivity(packageManager) != null) {
+                    startActivityForResult(intent, CODE_IS_AP_ON);
+                }
             }
         } catch (Exception e) {
             Log.e(LOG_TAG, "MainActivity onOptionsItemSelected exception " + e.getMessage() + " " + e.getCause());
@@ -661,7 +666,7 @@ public class MainActivity extends LangAppCompatActivity
 
         if (modulesStatus.isRootAvailable() && operationMode == ROOT_MODE) {
             IptablesRules iptablesRules = new ModulesIptablesRules(this);
-            String[] commands = iptablesRules.clearAll();
+            List<String> commands = iptablesRules.clearAll();
             iptablesRules.sendToRootExecService(commands);
             Log.i(LOG_TAG, "Iptables rules removed");
         } else if (operationMode == VPN_MODE) {
@@ -686,7 +691,7 @@ public class MainActivity extends LangAppCompatActivity
 
         if (modulesStatus.isRootAvailable() && operationMode == ROOT_MODE) {
             IptablesRules iptablesRules = new ModulesIptablesRules(this);
-            String[] commands = iptablesRules.clearAll();
+            List<String> commands = iptablesRules.clearAll();
             iptablesRules.sendToRootExecService(commands);
             Log.i(LOG_TAG, "Iptables rules removed");
         }
@@ -1014,7 +1019,12 @@ public class MainActivity extends LangAppCompatActivity
         } else if (!vpnRequested && !isFinishing()) {
             vpnRequested = true;
             try {
-                startActivityForResult(prepareIntent, CODE_IS_VPN_ALLOWED);
+                PackageManager packageManager = getPackageManager();
+                if (packageManager != null && prepareIntent.resolveActivity(packageManager) != null) {
+                    startActivityForResult(prepareIntent, CODE_IS_VPN_ALLOWED);
+                } else if (!isFinishing()) {
+                    Toast.makeText(this, getString(R.string.wrong), Toast.LENGTH_SHORT).show();
+                }
             } catch (Exception e) {
                 if (!isFinishing()) {
                     Toast.makeText(this, getString(R.string.wrong), Toast.LENGTH_SHORT).show();

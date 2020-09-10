@@ -29,6 +29,7 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -43,7 +44,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -80,18 +80,24 @@ public class RootExecService extends Service {
 
     private ExecutorService executorService;
     private NotificationManager notificationManager;
-    private Handler handler = new Handler();
+    private Handler handler;
 
 
     @Override
     public void onCreate() {
         super.onCreate();
 
-        executorService = Executors.newSingleThreadExecutor();
         notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationManager != null) {
             createNotificationChannel();
+        }
+
+        executorService = Executors.newSingleThreadExecutor();
+
+        Looper looper = Looper.getMainLooper();
+        if (looper != null) {
+            handler = new Handler(looper);
         }
     }
 
@@ -99,6 +105,10 @@ public class RootExecService extends Service {
     public void onDestroy() {
         super.onDestroy();
         executorService.shutdown();
+        if (handler != null) {
+            handler.removeCallbacksAndMessages(null);
+            handler = null;
+        }
     }
 
     public static void performAction(Context context, Intent intent) {
@@ -153,7 +163,7 @@ public class RootExecService extends Service {
     }
 
 
-    private List<String> runCommands(String[] runCommands) {
+    private List<String> runCommands(List<String> runCommands) {
         List<String> result = new ArrayList<>();
         List<String> error = new ArrayList<>();
 
@@ -170,12 +180,14 @@ public class RootExecService extends Service {
             String errorMessageFinal = "Warning executing root commands.\n"
                     + exitCodeStr + errorStr + resultStr;
 
-            Log.e(LOG_TAG, errorMessageFinal + " Commands:" + Arrays.toString(runCommands));
+            Log.e(LOG_TAG, errorMessageFinal + " Commands:" + runCommands);
 
-            if (errorStr.contains(" -w ") || exitCode == 4) {
-                handler.postDelayed(() -> ModulesStatus.getInstance().setIptablesRulesUpdateRequested(this, true), 5000);
-            } else if (showToastWithCommandsResultError) {
-                handler.post(() -> Toast.makeText(this, errorMessageFinal, Toast.LENGTH_LONG).show());
+            if (handler != null) {
+                if (errorStr.contains(" -w ") || exitCode == 4) {
+                    handler.postDelayed(() -> ModulesStatus.getInstance().setIptablesRulesUpdateRequested(this, true), 5000);
+                } else if (showToastWithCommandsResultError) {
+                    handler.post(() -> Toast.makeText(RootExecService.this, errorMessageFinal, Toast.LENGTH_LONG).show());
+                }
             }
         }
 
@@ -216,7 +228,7 @@ public class RootExecService extends Service {
 
     }
 
-    private int execWithSU(String[] runCommands, List<String> result, List<String> error) {
+    private int execWithSU(List<String> runCommands, List<String> result, List<String> error) {
 
         int exitCode = -1;
 
@@ -235,7 +247,7 @@ public class RootExecService extends Service {
             return;
         }
 
-        RootCommands comResult = new RootCommands(commandsResult.toArray(new String[0]));
+        RootCommands comResult = new RootCommands(commandsResult);
         Intent intent = new Intent(COMMAND_RESULT);
         intent.putExtra("CommandsResult", comResult);
         intent.putExtra("Mark", mark);

@@ -22,6 +22,10 @@ package pan.alexander.tordnscrypt.modules;
 import android.content.Context;
 import android.content.Intent;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
@@ -42,18 +46,18 @@ class ContextUIDUpdater {
     void updateModulesContextAndUID() {
 
         String appUID = new PrefManager(context).getStrPref("appUID");
-        String[] commands;
+        List<String> commands;
         if (ModulesStatus.getInstance().isUseModulesWithRoot()) {
-            commands = new String[]{
+            commands = new ArrayList<>(Arrays.asList(
                     busyboxPath + "chown -R 0.0 " + appDataDir + "/app_data/dnscrypt-proxy 2> /dev/null",
                     busyboxPath + "chown -R 0.0 " + appDataDir + "/dnscrypt-proxy.pid 2> /dev/null",
                     busyboxPath + "chown -R 0.0 " + appDataDir + "/tor_data 2> /dev/null",
                     busyboxPath + "chown -R 0.0 " + appDataDir + "/tor.pid 2> /dev/null",
                     busyboxPath + "chown -R 0.0 " + appDataDir + "/i2pd_data 2> /dev/null",
                     busyboxPath + "chown -R 0.0 " + appDataDir + "/i2pd.pid 2> /dev/null"
-            };
+            ));
         } else {
-            commands = new String[]{
+            commands = new ArrayList<>(Arrays.asList(
                     busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/app_data/dnscrypt-proxy 2> /dev/null",
                     busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/dnscrypt-proxy.pid 2> /dev/null",
                     "restorecon -R " + appDataDir + "/app_data/dnscrypt-proxy 2> /dev/null",
@@ -71,7 +75,7 @@ class ContextUIDUpdater {
 
                     busyboxPath + "chown -R " + appUID + "." + appUID + " " + appDataDir + "/logs 2> /dev/null",
                     "restorecon -R " + appDataDir + "/logs 2> /dev/null"
-            };
+            ));
         }
 
         RootCommands rootCommands = new RootCommands(commands);

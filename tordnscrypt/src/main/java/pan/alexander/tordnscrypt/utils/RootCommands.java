@@ -21,17 +21,18 @@ package pan.alexander.tordnscrypt.utils;
 
 
 import java.io.Serializable;
+import java.util.List;
 
 public class RootCommands implements Serializable {
 
-    private String[] commands;
+    private List<String> commands;
 
-    public RootCommands(String[] commands){
+    public RootCommands(List<String> commands){
 
         this.commands = commands;
     }
 
-    public String[] getCommands() {
+    public List<String> getCommands() {
         return this.commands;
     }
 }

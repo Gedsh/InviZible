@@ -20,6 +20,7 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_settings;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -459,10 +460,9 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             intent.putExtra(EXTRA_INITIAL_URI, uri);
         }
 
-        try {
+        PackageManager packageManager = getActivity().getPackageManager();
+        if (packageManager != null && intent.resolveActivity(packageManager) != null) {
             getActivity().startActivityForResult(intent, fileType);
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "PreferencesDNSFragment openFileWithSAF exception " + e.getMessage() + " " + e.getCause());
         }
 
     }

@@ -71,12 +71,9 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        addPreferencesFromResource(R.xml.preferences_fast);
+        setRetainInstance(true);
 
-        Looper looper = Looper.getMainLooper();
-        if (looper != null) {
-            handler = new Handler(looper);
-        }
+        addPreferencesFromResource(R.xml.preferences_fast);
     }
 
     @Override
@@ -84,6 +81,11 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
         if (getActivity() == null) {
             return super.onCreateView(inflater, container, savedInstanceState);
+        }
+
+        Looper looper = Looper.getMainLooper();
+        if (looper != null) {
+            handler = new Handler(looper);
         }
 
         getActivity().setTitle(R.string.drawer_menu_fastSettings);

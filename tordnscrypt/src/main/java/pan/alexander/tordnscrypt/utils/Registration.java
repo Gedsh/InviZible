@@ -22,6 +22,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import androidx.appcompat.app.AlertDialog;
 import android.text.InputType;
@@ -64,7 +65,10 @@ public class Registration {
                             link = "https://invizible.net/en/donate/";
                         }
                         Intent donatePage = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
-                        context.startActivity(donatePage);
+                        PackageManager packageManager = context.getPackageManager();
+                        if (packageManager != null && donatePage.resolveActivity(packageManager) != null) {
+                            context.startActivity(donatePage);
+                        }
                         dialogInterface.dismiss();
                     })
                     .setCancelable(false);

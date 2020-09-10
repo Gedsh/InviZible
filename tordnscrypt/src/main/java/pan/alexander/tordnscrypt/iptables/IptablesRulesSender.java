@@ -22,6 +22,8 @@ package pan.alexander.tordnscrypt.iptables;
 import android.content.Context;
 import android.content.Intent;
 
+import java.util.List;
+
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
@@ -56,7 +58,7 @@ abstract class IptablesRulesSender implements IptablesRules {
     }
 
     @Override
-    public void sendToRootExecService(String[] commands) {
+    public void sendToRootExecService(List<String> commands) {
         RootCommands rootCommands = new RootCommands(commands);
         Intent intent = new Intent(context, RootExecService.class);
         intent.setAction(RootExecService.RUN_COMMAND);

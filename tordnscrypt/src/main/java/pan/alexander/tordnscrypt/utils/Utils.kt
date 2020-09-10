@@ -86,6 +86,8 @@ object Utils {
         return addr.hostName
     }
 
+    //For backwards compatibility, it will still return the caller's own services.
+    @Suppress("deprecation")
     fun isServiceRunning(context: Context, serviceClass: Class<ModulesService>): Boolean {
         var result = false
 

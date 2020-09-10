@@ -26,9 +26,13 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.preference.PreferenceManager;
 
+import java.util.List;
+
+import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.iptables.IptablesRules;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -95,41 +99,48 @@ public class ModulesStateLoop implements Runnable {
     @Override
     public synchronized void run() {
 
-        if (modulesStatus == null) {
-            return;
+        try {
+
+            if (modulesStatus == null) {
+                return;
+            }
+
+            ModuleState dnsCryptState = modulesStatus.getDnsCryptState();
+            ModuleState torState = modulesStatus.getTorState();
+            ModuleState itpdState = modulesStatus.getItpdState();
+
+            OperationMode operationMode = modulesStatus.getMode();
+
+            boolean rootIsAvailable = modulesStatus.isRootAvailable();
+            boolean useModulesWithRoot = modulesStatus.isUseModulesWithRoot();
+            boolean contextUIDUpdateRequested = modulesStatus.isContextUIDUpdateRequested();
+
+
+            if (!useModulesWithRoot) {
+                updateModulesState(dnsCryptState, torState, itpdState);
+            }
+
+            updateFixTTLRules();
+
+            updateIptablesRules(dnsCryptState, torState, itpdState, operationMode, rootIsAvailable, useModulesWithRoot);
+
+            if (contextUIDUpdateRequested) {
+                updateContextUID(dnsCryptState, torState, itpdState);
+            }
+
+            if (stopCounter <= 0) {
+
+                denySystemDNS(operationMode, dnsCryptState, torState, useModulesWithRoot);
+
+                Log.i(LOG_TAG, "ModulesStateLoop stopCounter is zero. Stop service.");
+                modulesStatus.setContextUIDUpdateRequested(false);
+                safeStopModulesService();
+            }
+        } catch (Exception e) {
+            Toast.makeText(modulesService, R.string.wrong, Toast.LENGTH_SHORT).show();
+            Log.e(LOG_TAG, "ModulesStateLoop exception " + e.getMessage() + " " + e.getCause());
         }
 
-        ModuleState dnsCryptState = modulesStatus.getDnsCryptState();
-        ModuleState torState = modulesStatus.getTorState();
-        ModuleState itpdState = modulesStatus.getItpdState();
-
-        OperationMode operationMode = modulesStatus.getMode();
-
-        boolean rootIsAvailable = modulesStatus.isRootAvailable();
-        boolean useModulesWithRoot = modulesStatus.isUseModulesWithRoot();
-        boolean contextUIDUpdateRequested = modulesStatus.isContextUIDUpdateRequested();
-
-
-        if (!useModulesWithRoot) {
-            updateModulesState(dnsCryptState, torState, itpdState);
-        }
-
-        updateFixTTLRules();
-
-        updateIptablesRules(dnsCryptState, torState, itpdState, operationMode, rootIsAvailable, useModulesWithRoot);
-
-        if (contextUIDUpdateRequested) {
-            updateContextUID(dnsCryptState, torState, itpdState);
-        }
-
-        if (stopCounter <= 0) {
-
-            denySystemDNS(operationMode, dnsCryptState, torState, useModulesWithRoot);
-
-            Log.i(LOG_TAG, "ModulesStateLoop stopCounter is zero. Stop service.");
-            modulesStatus.setContextUIDUpdateRequested(false);
-            safeStopModulesService();
-        }
     }
 
     private void denySystemDNS(OperationMode operationMode, ModuleState dnsCryptState,
@@ -236,7 +247,7 @@ public class ModulesStateLoop implements Runnable {
             boolean vpnServiceEnabled = sharedPreferences.getBoolean("VPNServiceEnabled", false);
 
             if (iptablesRules != null && rootIsAvailable && operationMode == ROOT_MODE) {
-                String[] commands = iptablesRules.configureIptables(dnsCryptState, torState, itpdState);
+                List<String> commands = iptablesRules.configureIptables(dnsCryptState, torState, itpdState);
                 iptablesRules.sendToRootExecService(commands);
 
                 Log.i(LOG_TAG, "Iptables rules updated");

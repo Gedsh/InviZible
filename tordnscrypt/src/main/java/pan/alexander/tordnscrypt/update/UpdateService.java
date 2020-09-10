@@ -26,6 +26,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
@@ -335,13 +336,19 @@ public class UpdateService extends Service {
                                 intent.setData(apkUri);
                                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                context.startActivity(intent);
+                                PackageManager packageManager = context.getPackageManager();
+                                if (packageManager != null && intent.resolveActivity(packageManager) != null) {
+                                    context.startActivity(intent);
+                                }
                             } else {
                                 Uri apkUri = Uri.fromFile(file);
                                 Intent intent = new Intent(Intent.ACTION_VIEW);
                                 intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
                                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                context.startActivity(intent);
+                                PackageManager packageManager = context.getPackageManager();
+                                if (packageManager != null && intent.resolveActivity(packageManager) != null) {
+                                    context.startActivity(intent);
+                                }
                             }
 
                             makeDelay(3);

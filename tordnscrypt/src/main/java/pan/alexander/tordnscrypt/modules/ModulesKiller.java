@@ -30,13 +30,14 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import eu.chainfire.libsuperuser.Shell;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.Arr;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
@@ -112,7 +113,7 @@ public class ModulesKiller {
     }
 
     private void sendResultIntent(int moduleMark, String moduleKeyWord, String binaryPath) {
-        RootCommands comResult = new RootCommands(new String[]{moduleKeyWord, binaryPath});
+        RootCommands comResult = new RootCommands(new ArrayList<>(Arrays.asList(moduleKeyWord, binaryPath)));
         Intent intent = new Intent(COMMAND_RESULT);
         intent.putExtra("CommandsResult", comResult);
         intent.putExtra("Mark", moduleMark);
@@ -387,7 +388,7 @@ public class ModulesKiller {
             module = module.substring(module.lastIndexOf("/"));
         }
 
-        String[] preparedCommands = prepareKillCommands(module, pid, signal, killWithRoot);
+        List<String> preparedCommands = prepareKillCommands(module, pid, signal, killWithRoot);
 
         if ((thread == null || !thread.isAlive()) && modulesStatus.isRootAvailable()
                 || killWithRoot) {
@@ -395,7 +396,9 @@ public class ModulesKiller {
             String sleep = busyboxPath + "sleep " + delaySec;
             String checkString = busyboxPath + "pgrep -l " + module;
 
-            String[] commands = Arr.ADD2(preparedCommands, new String[]{sleep, checkString});
+            List<String> commands = new ArrayList<>(preparedCommands);
+            commands.add(sleep);
+            commands.add(checkString);
 
             List<String> shellResult = killWithSU(module, commands);
 
@@ -451,7 +454,7 @@ public class ModulesKiller {
     }
 
     @SuppressWarnings("deprecation")
-    private List<String> killWithSH(String module, String[] commands, int delay) {
+    private List<String> killWithSH(String module, List<String> commands, int delay) {
         List<String> shellResult = null;
         try {
             shellResult = Shell.SH.run(commands);
@@ -463,7 +466,7 @@ public class ModulesKiller {
     }
 
     @SuppressWarnings("deprecation")
-    private List<String> killWithSU(String module, String[] commands) {
+    private List<String> killWithSU(String module, List<String> commands) {
         List<String> shellResult = null;
         try {
             shellResult = Shell.SU.run(commands);
@@ -473,8 +476,8 @@ public class ModulesKiller {
         return shellResult;
     }
 
-    private String[] prepareKillCommands(String module, String pid, String signal, boolean killWithRoot) {
-        String[] result;
+    private List<String> prepareKillCommands(String module, String pid, String signal, boolean killWithRoot) {
+        List<String> result;
 
         if (pid.isEmpty() || killWithRoot) {
             String killStringToyBox = "toybox pkill " + module;
@@ -488,12 +491,12 @@ public class ModulesKiller {
                 killAllStringBusybox = busyboxPath + "kill -s " + signal + " $(pgrep " + module + ")";
             }
 
-            result = new String[]{
+            result = new ArrayList<>(Arrays.asList(
                     killStringBusybox,
                     killAllStringBusybox,
                     killStringToyBox,
                     killString
-            };
+            ));
         } else {
             String killAllStringToolBox = "toolbox kill " + pid;
             String killStringToyBox = "toybox kill " + pid;
@@ -506,12 +509,12 @@ public class ModulesKiller {
                 killStringBusyBox = busyboxPath + "kill -s " + signal + " " + pid;
             }
 
-            result = new String[]{
+            result = new ArrayList<>(Arrays.asList(
                     killStringBusyBox,
                     killAllStringToolBox,
                     killStringToyBox,
                     killString
-            };
+            ));
         }
 
         return result;

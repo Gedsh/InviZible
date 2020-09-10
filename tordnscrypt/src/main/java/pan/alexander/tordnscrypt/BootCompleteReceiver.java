@@ -27,6 +27,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import androidx.preference.PreferenceManager;
 
+import android.content.pm.PackageManager;
 import android.net.VpnService;
 import android.os.Build;
 import android.os.Handler;
@@ -261,18 +262,17 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
         new PrefManager(context).setBoolPref("APisON", true);
 
-        try {
-            ApManager apManager = new ApManager(context);
-            if (!apManager.configApState()) {
-                Intent intent_tether = new Intent(Intent.ACTION_MAIN, null);
-                intent_tether.addCategory(Intent.CATEGORY_LAUNCHER);
-                ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.TetherSettings");
-                intent_tether.setComponent(cn);
-                intent_tether.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        ApManager apManager = new ApManager(context);
+        if (!apManager.configApState()) {
+            Intent intent_tether = new Intent(Intent.ACTION_MAIN, null);
+            intent_tether.addCategory(Intent.CATEGORY_LAUNCHER);
+            ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.TetherSettings");
+            intent_tether.setComponent(cn);
+            intent_tether.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            PackageManager packageManager = context.getPackageManager();
+            if (packageManager != null && intent_tether.resolveActivity(packageManager) != null) {
                 context.startActivity(intent_tether);
             }
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "BootCompleteReceiver ApManager exception " + e.getMessage() + " " + e.getCause());
         }
     }
 
