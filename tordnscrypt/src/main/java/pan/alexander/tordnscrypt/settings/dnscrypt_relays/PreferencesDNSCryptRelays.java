@@ -95,7 +95,9 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
 
         PathVars pathVars = PathVars.getInstance(getActivity());
 
-        FileOperations.readTextFile(getActivity(), pathVars.getAppDataDir() + "/app_data/dnscrypt-proxy/relays.md", "relays.md");
+        if (dnsRelayItems.isEmpty()) {
+            FileOperations.readTextFile(getActivity(), pathVars.getAppDataDir() + "/app_data/dnscrypt-proxy/relays.md", "relays.md");
+        }
 
         getActivity().setTitle(R.string.pref_dnscrypt_relays_title);
 
@@ -153,7 +155,7 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
         if (args != null) {
             dnsServerName = args.getString("dnsServerName");
 
-            ArrayList routesCurrentTmp = (ArrayList) args.getSerializable("routesCurrent");
+            ArrayList<DNSServerRelays> routesCurrentTmp = (ArrayList<DNSServerRelays>) args.getSerializable("routesCurrent");
 
             if (routesCurrentTmp != null) {
                 routesCurrent = (ArrayList<DNSServerRelays>) routesCurrentTmp;
