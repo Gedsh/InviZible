@@ -183,7 +183,9 @@ public class RootExecService extends Service {
             Log.e(LOG_TAG, errorMessageFinal + " Commands:" + runCommands);
 
             if (handler != null) {
-                if (errorStr.contains(" -w ") || exitCode == 4) {
+                if (errorStr.contains("unknown option")) {
+                    handler.post(() -> Toast.makeText(RootExecService.this, errorMessageFinal, Toast.LENGTH_LONG).show());
+                } else if (errorStr.contains(" -w ") || exitCode == 4) {
                     handler.postDelayed(() -> ModulesStatus.getInstance().setIptablesRulesUpdateRequested(this, true), 5000);
                 } else if (showToastWithCommandsResultError) {
                     handler.post(() -> Toast.makeText(RootExecService.this, errorMessageFinal, Toast.LENGTH_LONG).show());

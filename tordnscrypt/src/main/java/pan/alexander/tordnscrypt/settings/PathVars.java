@@ -105,7 +105,7 @@ public class PathVars {
             case "1":
 
             default:
-                path = appDataDir + "/app_bin/iptables ";
+                path = appDataDir + "/app_bin/iptables -w ";
                 break;
         }
 
@@ -127,9 +127,9 @@ public class PathVars {
 
             default:
                 if (new File(appDataDir + "/app_bin/ip6tables").isFile()) {
-                    path = appDataDir + "/app_bin/ip6tables ";
+                    path = appDataDir + "/app_bin/ip6tables -w ";
                 } else {
-                    path = "ip6tables ";
+                    path = "ip6tables -w ";
                 }
                 break;
         }
