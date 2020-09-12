@@ -59,19 +59,15 @@ public class Tethering {
     private static String ethernetInterfaceName = "eth0";
 
     private PathVars pathVars;
-    private String iptables;
-    private String ip6tables;
+    private String iptables = "iptables ";
     private String appDataDir;
-    private String busybox;
     private boolean apIsOn = false;
 
     Tethering(Context context) {
         this.context = context;
         pathVars = PathVars.getInstance(context);
-        iptables = pathVars.getIptablesPath();
-        ip6tables = pathVars.getIp6tablesPath();
         appDataDir = pathVars.getAppDataDir();
-        busybox = pathVars.getBusyboxPath();
+
     }
 
     @NonNull
@@ -80,6 +76,10 @@ public class Tethering {
         if (context == null) {
             return new ArrayList<>();
         }
+
+        iptables = pathVars.getIptablesPath();
+        String ip6tables = pathVars.getIp6tablesPath();
+        String busybox = pathVars.getBusyboxPath();
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
         boolean dnsCryptRunning = modulesStatus.getDnsCryptState() == RUNNING;

@@ -183,11 +183,17 @@ public class RootExecService extends Service {
             Log.e(LOG_TAG, errorMessageFinal + " Commands:" + runCommands);
 
             if (handler != null) {
-                if (errorStr.contains("unknown option")) {
-                    handler.post(() -> Toast.makeText(RootExecService.this, errorMessageFinal, Toast.LENGTH_LONG).show());
+                if (errorStr.contains("unknown option \"-w\"")) {
+                    handler.post(() -> {
+                        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RootExecService.this);
+                        sharedPreferences.edit().putString("pref_common_use_iptables", "2").apply();
+                        handler.postDelayed(() -> ModulesStatus.getInstance().setIptablesRulesUpdateRequested(this, true), 1000);
+                    });
                 } else if (errorStr.contains(" -w ") || exitCode == 4) {
                     handler.postDelayed(() -> ModulesStatus.getInstance().setIptablesRulesUpdateRequested(this, true), 5000);
-                } else if (showToastWithCommandsResultError) {
+                }
+
+                if (showToastWithCommandsResultError) {
                     handler.post(() -> Toast.makeText(RootExecService.this, errorMessageFinal, Toast.LENGTH_LONG).show());
                 }
             }

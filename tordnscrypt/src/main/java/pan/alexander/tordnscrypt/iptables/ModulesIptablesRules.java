@@ -53,12 +53,20 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 public class ModulesIptablesRules extends IptablesRulesSender {
 
+    String iptables = "iptables ";
+    String ip6tables = "ip6tables ";
+    String busybox = "busybox ";
+
     public ModulesIptablesRules(Context context) {
         super(context);
     }
 
     @Override
     public List<String> configureIptables(ModuleState dnsCryptState, ModuleState torState, ModuleState itpdState) {
+
+        iptables = pathVars.getIptablesPath();
+        ip6tables = pathVars.getIp6tablesPath();
+        busybox = pathVars.getBusyboxPath();
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
         runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
