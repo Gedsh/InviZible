@@ -487,7 +487,7 @@ public class ServiceVPN extends VpnService {
         prepareForwarding();
 
         int prio = 5;
-        String prioStr = prefs.getString("loglevel", Integer.toString(Log.WARN));
+        String prioStr = prefs.getString("loglevel", Integer.toString(Log.ERROR));
         if (prioStr != null) {
             prio = Integer.parseInt(prioStr);
         }
