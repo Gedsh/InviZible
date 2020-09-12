@@ -220,7 +220,7 @@
     <string name="pref_tor_unlock_disabled">Выключено</string>
     <string name="pref_tor_unlock_app">Приложения для Tor</string>
     <string name="pref_tor_clearnet_app">"Приложения без Tor "</string>
-    <string name="pref_tor_snowflake_stun">STUN сервер для мостов SnowFlake</string>
+    <string name="pref_tor_snowflake_stun">STUN сервера для мостов SnowFlake</string>
     <string name="pref_tor_isolate_dest_address_summ">Разделить трафик приложений на основе удаленного адреса.</string>
     <string name="pref_tor_isolate_dest_port_summ">Разделить трафик приложений на основе удаленного порта.</string>
     <string name="country_select_select_all">Активировать все</string>
@@ -465,4 +465,5 @@
     <string name="proxy_successful_connection">Успешное соединение. Ping %s ms.</string>
     <string name="pref_common_multi_user">Многопользовательская поддержка</string>
     <string name="pref_common_multi_user_summ">Поддержка двойных приложений, MIUI, Island, Shelter и приложений рабочего профиля</string>
+    <string name="dialog_new_tor_default_bridges_available">Доступны новые мосты Tor по-умолчанию. Вы хотите их обновить?</string>
 </resources>
