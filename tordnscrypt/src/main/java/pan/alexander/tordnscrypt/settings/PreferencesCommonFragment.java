@@ -23,7 +23,6 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
@@ -544,9 +543,10 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (pm != null && !pm.isIgnoringBatteryOptimizations(packageName))) {
                             Intent intent = new Intent();
                             intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
-                            PackageManager packageManager = context.getPackageManager();
-                            if (packageManager != null && intent.resolveActivity(packageManager) != null) {
+                            try {
                                 context.startActivity(intent);
+                            } catch (Exception e) {
+                                Log.e(LOG_TAG, "PreferencesCommonFragment InfoNotificationProtectService exception " + e.getMessage() + " " + e.getCause());
                             }
                         }
                     });
@@ -708,7 +708,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             handler = null;
         }
 
-        FileOperations.deleteOnFileOperationCompleteListener();
+        FileOperations.deleteOnFileOperationCompleteListener(this);
     }
 
     @Override

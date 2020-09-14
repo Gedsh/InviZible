@@ -23,7 +23,6 @@ import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.net.VpnService;
 import android.os.Build;
@@ -582,9 +581,10 @@ public class MainActivity extends LangAppCompatActivity
                 ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.TetherSettings");
                 intent.setComponent(cn);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                PackageManager packageManager = getPackageManager();
-                if (packageManager != null && intent.resolveActivity(packageManager) != null) {
+                try {
                     startActivityForResult(intent, CODE_IS_AP_ON);
+                } catch (Exception e) {
+                    Log.e(LOG_TAG, "MainActivity switchHotspot exception " + e.getMessage() + " " + e.getCause());
                 }
             }
         } catch (Exception e) {
@@ -1019,12 +1019,7 @@ public class MainActivity extends LangAppCompatActivity
         } else if (!vpnRequested && !isFinishing()) {
             vpnRequested = true;
             try {
-                PackageManager packageManager = getPackageManager();
-                if (packageManager != null && prepareIntent.resolveActivity(packageManager) != null) {
-                    startActivityForResult(prepareIntent, CODE_IS_VPN_ALLOWED);
-                } else if (!isFinishing()) {
-                    Toast.makeText(this, getString(R.string.wrong), Toast.LENGTH_SHORT).show();
-                }
+                startActivityForResult(prepareIntent, CODE_IS_VPN_ALLOWED);
             } catch (Exception e) {
                 if (!isFinishing()) {
                     Toast.makeText(this, getString(R.string.wrong), Toast.LENGTH_SHORT).show();

@@ -27,7 +27,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import androidx.preference.PreferenceManager;
 
-import android.content.pm.PackageManager;
 import android.net.VpnService;
 import android.os.Build;
 import android.os.Handler;
@@ -269,9 +268,10 @@ public class BootCompleteReceiver extends BroadcastReceiver {
             ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.TetherSettings");
             intent_tether.setComponent(cn);
             intent_tether.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            PackageManager packageManager = context.getPackageManager();
-            if (packageManager != null && intent_tether.resolveActivity(packageManager) != null) {
+            try {
                 context.startActivity(intent_tether);
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "BootCompleteReceiver startHOTSPOT exception " + e.getMessage() + " " + e.getCause());
             }
         }
     }
