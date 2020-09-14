@@ -197,7 +197,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
             rvViewState = rvDNSServers.getLayoutManager().onSaveInstanceState();
         }
 
-        FileOperations.deleteOnFileOperationCompleteListener();
+        FileOperations.deleteOnFileOperationCompleteListener(this);
 
         if (getActivity() == null)
             return;

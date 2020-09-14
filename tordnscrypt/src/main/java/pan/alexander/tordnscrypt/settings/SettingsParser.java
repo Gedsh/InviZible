@@ -585,7 +585,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
             bundleForReadPublicResolversMdFunction.clear();
         }
 
-        FileOperations.deleteOnFileOperationCompleteListener();
+        FileOperations.deleteOnFileOperationCompleteListener(this);
     }
 
     @Override

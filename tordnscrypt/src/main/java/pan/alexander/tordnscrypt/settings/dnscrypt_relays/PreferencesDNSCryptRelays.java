@@ -128,7 +128,7 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
     public void onPause() {
         super.onPause();
 
-        FileOperations.deleteOnFileOperationCompleteListener();
+        FileOperations.deleteOnFileOperationCompleteListener(this);
     }
 
     @Override

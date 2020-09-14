@@ -231,7 +231,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
     public void onDestroy() {
         super.onDestroy();
 
-        FileOperations.deleteOnFileOperationCompleteListener();
+        FileOperations.deleteOnFileOperationCompleteListener(this);
     }
 
     @Override

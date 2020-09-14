@@ -20,9 +20,11 @@ package pan.alexander.tordnscrypt.dialogs
 */
 
 import android.app.Activity
+import android.content.Intent
 import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import pan.alexander.tordnscrypt.R
+import pan.alexander.tordnscrypt.SettingsActivity
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.CachedExecutor.getExecutorService
 import pan.alexander.tordnscrypt.utils.PrefManager
@@ -37,7 +39,7 @@ import java.util.zip.ZipInputStream
 class UpdateDefaultBridgesDialog private constructor() {
 
     companion object DIALOG {
-        fun getDialog(activity: Activity?,  useDefaultBridges: Boolean): AlertDialog? {
+        fun getDialog(activity: Activity?, useDefaultBridges: Boolean): AlertDialog? {
 
             if (activity == null || activity.isFinishing) {
                 return null
@@ -81,7 +83,15 @@ class UpdateDefaultBridgesDialog private constructor() {
                                     if (!activity.isFinishing && useDefaultBridges) {
                                         activity.runOnUiThread {
                                             if (!activity.isFinishing) {
-                                                activity.recreate()
+                                                val intent = Intent(activity, SettingsActivity::class.java)
+                                                intent.action = "tor_bridges"
+                                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                                                        or Intent.FLAG_ACTIVITY_NO_ANIMATION or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
+                                                activity.overridePendingTransition(0, 0)
+                                                activity.finish()
+
+                                                activity.overridePendingTransition(0, 0)
+                                                activity.startActivity(intent)
                                             }
                                         }
                                     }

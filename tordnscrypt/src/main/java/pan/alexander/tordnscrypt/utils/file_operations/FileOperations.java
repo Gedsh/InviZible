@@ -44,7 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Stack;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -68,7 +68,7 @@ public class FileOperations {
     private static final Map<String, List<String>> linesListMap = new HashMap<>();
     private static final ReentrantLock reentrantLock = new ReentrantLock();
     private static OnFileOperationsCompleteListener callback;
-    private static Stack<OnFileOperationsCompleteListener> stackCallbacks;
+    private static CopyOnWriteArrayList<OnFileOperationsCompleteListener> stackCallbacks;
     private static ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     private BroadcastReceiver br = new BroadcastReceiver() {
@@ -937,21 +937,25 @@ public class FileOperations {
 
     public static void setOnFileOperationCompleteListener(OnFileOperationsCompleteListener callback) {
         if (stackCallbacks == null)
-            stackCallbacks = new Stack<>();
+            stackCallbacks = new CopyOnWriteArrayList<>();
 
         if (FileOperations.callback != null)
-            stackCallbacks.push(FileOperations.callback);
+            stackCallbacks.add(FileOperations.callback);
 
         if (callback != null)
             FileOperations.callback = callback;
     }
 
-    public static void deleteOnFileOperationCompleteListener() {
+    public static void deleteOnFileOperationCompleteListener(OnFileOperationsCompleteListener callback) {
         if (stackCallbacks != null) {
-            if (stackCallbacks.empty()) {
-                callback = null;
-            } else {
-                callback = stackCallbacks.pop();
+            int lastIndexOfCallback = stackCallbacks.lastIndexOf(callback);
+
+            if (stackCallbacks.isEmpty()) {
+                FileOperations.callback = null;
+            } else if (callback == FileOperations.callback) {
+                FileOperations.callback = stackCallbacks.remove(stackCallbacks.size() - 1);
+            } else if (lastIndexOfCallback >= 0) {
+                stackCallbacks.remove(lastIndexOfCallback);
             }
         }
     }
@@ -959,8 +963,8 @@ public class FileOperations {
     public static void removeAllOnFileOperationsListeners() {
         if (callback != null)
             callback = null;
-        if (stackCallbacks != null && !stackCallbacks.empty())
-            FileOperations.stackCallbacks.removeAllElements();
+        if (stackCallbacks != null && !stackCallbacks.isEmpty())
+            FileOperations.stackCallbacks.clear();
 
         new Thread(() -> {
             if (executorService != null && !executorService.isShutdown()) {

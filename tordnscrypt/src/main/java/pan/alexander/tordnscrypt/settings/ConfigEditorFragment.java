@@ -118,7 +118,7 @@ public class ConfigEditorFragment extends Fragment implements OnTextFileOperatio
     public void onDestroy() {
         super.onDestroy();
 
-        FileOperations.deleteOnFileOperationCompleteListener();
+        FileOperations.deleteOnFileOperationCompleteListener(this);
     }
 
     @Override

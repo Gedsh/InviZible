@@ -41,7 +41,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
@@ -62,7 +61,7 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
         this.activity = activity;
         this.fragmentManager = fragmentManager;
         this.preferencesBridges = preferencesBridges;
-        this.lInflater = (LayoutInflater) Objects.requireNonNull(activity).getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        this.lInflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
     @NonNull
@@ -238,7 +237,9 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
         builder.setView(inputView);
 
         builder.setPositiveButton(activity.getText(R.string.ok), (dialog, i) -> {
-            if (preferencesBridges == null || position >= bridgeList.size()) {
+            if (preferencesBridges == null
+                    || preferencesBridges.getBridgeAdapter() == null
+                    || position >= bridgeList.size()) {
                 return;
             }
 
@@ -262,7 +263,7 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
     }
 
     private void deleteBridge(int position) {
-        if (preferencesBridges == null) {
+        if (preferencesBridges == null || preferencesBridges.getBridgeAdapter() == null) {
             return;
         }
 
