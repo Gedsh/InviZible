@@ -18,6 +18,7 @@ package pan.alexander.tordnscrypt.settings;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.app.Activity;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
@@ -79,7 +80,9 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        if (getActivity() == null) {
+        Context context = getActivity();
+
+        if (context == null) {
             return super.onCreateView(inflater, container, savedInstanceState);
         }
 
@@ -114,7 +117,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
         if (ModulesStatus.getInstance().getMode() == ROOT_MODE
                 || ModulesStatus.getInstance().getMode() == VPN_MODE) {
-           changePreferencesWithRootOrVPNMode(getActivity());
+           changePreferencesWithRootOrVPNMode(context);
         } else {
             changePreferencesWithProxyMode();
         }
@@ -130,8 +133,10 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
     @Override
     public void onCreatePreferences(Bundle bundle, String s) {
-        if (appVersion.startsWith("g") && !accelerated && getActivity() != null) {
-            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        Context context = getActivity();
+
+        if (appVersion.startsWith("g") && !accelerated && context != null) {
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
             if (preferences != null) {
                 preferences.edit().putString("pref_fast_theme", "1").apply();
             }
@@ -142,15 +147,17 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
     public void onResume() {
         super.onResume();
 
-        if (handler != null) {
+        Context context = getActivity();
+
+        if (handler != null && context != null) {
             handler.postDelayed(() -> {
                 if (getActivity() != null && !getActivity().isFinishing()) {
-                    setDnsCryptServersSumm(new PrefManager(requireActivity()).getStrPref("DNSCrypt Servers"));
+                    setDnsCryptServersSumm(new PrefManager(context).getStrPref("DNSCrypt Servers"));
                 }
             }, 1000);
         }
 
-        setUpdateTimeLast();
+        setUpdateTimeLast(context);
     }
 
     public void setDnsCryptServersSumm(final String servers) {
@@ -161,14 +168,16 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         }
     }
 
-    private void setUpdateTimeLast() {
+    private void setUpdateTimeLast(Context context) {
 
-        if (getActivity() == null) {
+        if (context == null) {
             return;
         }
 
-        String updateTimeLastStr = new PrefManager(getActivity()).getStrPref("updateTimeLast");
-        String lastUpdateResult = new PrefManager(getActivity()).getStrPref("LastUpdateResult");
+        Activity activity = getActivity();
+
+        String updateTimeLastStr = new PrefManager(context).getStrPref("updateTimeLast");
+        String lastUpdateResult = new PrefManager(context).getStrPref("LastUpdateResult");
         final Preference prefLastUpdate = findPreference("pref_fast_chek_update");
         if (prefLastUpdate == null)
             return;
@@ -177,13 +186,13 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
             long updateTimeLast = Long.parseLong(updateTimeLastStr);
             Date date = new Date(updateTimeLast);
 
-            String dateString = android.text.format.DateFormat.getDateFormat(getActivity()).format(date);
-            String timeString = android.text.format.DateFormat.getTimeFormat(getActivity()).format(date);
+            String dateString = android.text.format.DateFormat.getDateFormat(context).format(date);
+            String timeString = android.text.format.DateFormat.getTimeFormat(context).format(date);
 
             prefLastUpdate.setSummary(getString(R.string.update_last_check) + " "
                     + dateString + " " + timeString + System.lineSeparator() + lastUpdateResult);
         } else if (lastUpdateResult.equals(getString(R.string.update_fault))
-                && new PrefManager(getActivity()).getStrPref("updateTimeLast").isEmpty()
+                && new PrefManager(context).getStrPref("updateTimeLast").isEmpty()
                 && appVersion.startsWith("p")) {
             Preference pref_fast_auto_update = findPreference("pref_fast_auto_update");
             if (pref_fast_auto_update != null) {
@@ -193,23 +202,23 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         } else {
             prefLastUpdate.setSummary(lastUpdateResult);
         }
-        if (getActivity() == null)
+        if (activity == null || activity.isFinishing())
             return;
 
         prefLastUpdate.setOnPreferenceClickListener(preference -> {
             if (prefLastUpdate.isEnabled() && handler != null) {
                 handler.post(() -> {
 
-                    if (getActivity() == null) {
+                    if (activity.isFinishing()) {
                         return;
                     }
 
-                    Intent intent = new Intent(getActivity(), MainActivity.class);
+                    Intent intent = new Intent(context, MainActivity.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK
                             | Intent.FLAG_ACTIVITY_NO_ANIMATION);
                     intent.setAction("check_update");
-                    getActivity().overridePendingTransition(0, 0);
-                    getActivity().finish();
+                    activity.overridePendingTransition(0, 0);
+                    activity.finish();
 
                     startActivity(intent);
                 });
@@ -225,17 +234,15 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
     @SuppressWarnings("deprecation")
     private void changeTheme() {
 
-        if (handler == null) {
+        Context context = getActivity();
+
+        if (context == null || handler == null) {
             return;
         }
 
         handler.post(() -> {
 
-            if (getActivity() == null) {
-                return;
-            }
-
-            SharedPreferences defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            SharedPreferences defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
             try {
 
                 String theme = defaultSharedPreferences.getString("pref_fast_theme", "4");
@@ -268,25 +275,31 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
     private void activityCurrentRecreate() {
 
-        if (getActivity() == null) {
+        Activity activity = getActivity();
+
+        if (activity == null || activity.isFinishing()) {
             return;
         }
 
-        Intent intent = getActivity().getIntent();
+        Intent intent = activity.getIntent();
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK
                 | Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-        getActivity().overridePendingTransition(0, 0);
-        getActivity().finish();
+        activity.overridePendingTransition(0, 0);
+        activity.finish();
 
-        getActivity().overridePendingTransition(0, 0);
+        activity.overridePendingTransition(0, 0);
         startActivity(intent);
 
-        new PrefManager(getActivity()).setBoolPref("refresh_main_activity", true);
+        new PrefManager(activity).setBoolPref("refresh_main_activity", true);
     }
 
     @Override
     public void onPause() {
-        Language.setFromPreference(getActivity(), "pref_fast_language", true);
+
+        Activity activity = getActivity();
+        if (activity != null) {
+            Language.setFromPreference(activity, "pref_fast_language", true);
+        }
 
         super.onPause();
     }
@@ -304,7 +317,9 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
 
-        if (getActivity() == null) {
+        Context context = getActivity();
+
+        if (context == null) {
             return false;
         }
 
@@ -315,18 +330,18 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 }
                 if (Boolean.parseBoolean(newValue.toString())) {
 
-                    ComponentName jobService = new ComponentName(getActivity(), GetIPsJobService.class);
+                    ComponentName jobService = new ComponentName(context, GetIPsJobService.class);
                     JobInfo.Builder getIPsJobBuilder = new JobInfo.Builder(mJobId, jobService);
                     getIPsJobBuilder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
                     getIPsJobBuilder.setPeriodic(refreshPeriodHours * 60 * 60 * 1000);
 
-                    JobScheduler jobScheduler = (JobScheduler) getActivity().getSystemService(Context.JOB_SCHEDULER_SERVICE);
+                    JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
 
                     if (jobScheduler != null) {
                         jobScheduler.schedule(getIPsJobBuilder.build());
                     }
-                } else if (!new PrefManager(getActivity()).getBoolPref("Tor Running")) {
-                    JobScheduler jobScheduler = (JobScheduler) getActivity().getSystemService(Context.JOB_SCHEDULER_SERVICE);
+                } else if (!new PrefManager(context).getBoolPref("Tor Running")) {
+                    JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
                     if (jobScheduler != null) {
                         jobScheduler.cancel(mJobId);
                     }
@@ -339,7 +354,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 if (modulesStatus.getMode() == ROOT_MODE || modulesStatus.getMode() == VPN_MODE) {
 
                     if (modulesStatus.getTorState() == RUNNING) {
-                        modulesStatus.setIptablesRulesUpdateRequested(getActivity(), true);
+                        modulesStatus.setIptablesRulesUpdateRequested(context, true);
                     }
 
                     Preference prefTorAppUnlock = findPreference("prefTorAppUnlock");
@@ -358,9 +373,9 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
                 return true;
             case "pref_fast_block_http":
-                if (new PrefManager(getActivity()).getBoolPref("DNSCrypt Running")
-                        || new PrefManager(getActivity()).getBoolPref("Tor Running")) {
-                    ModulesStatus.getInstance().setIptablesRulesUpdateRequested(getActivity(), true);
+                if (new PrefManager(context).getBoolPref("DNSCrypt Running")
+                        || new PrefManager(context).getBoolPref("Tor Running")) {
+                    ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
                 }
                 return true;
             case "pref_fast_theme":
