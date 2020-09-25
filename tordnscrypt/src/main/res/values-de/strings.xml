@@ -148,6 +148,7 @@ Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="pref_common_use_iptables">"Iptables auswählen"</string>
     <string name="pref_common_log_root_commands">"Speichere Root Kommandos im Log"</string>
     <string name="notification_text">"DNSCrypt, Tor, I2P sind geschützt. Nicht verstecken."</string>
+    <string name="notification_temp_text">"Diese Benachrichtigung verschwindet gleich"</string>
     <string name="tvSettings_text">"Bitte warten…"</string>
     <string name="toastSettings_saved">"Einstellungen gespeichert"</string>
     <string name="pref_dnscrypt_global_settings_categ">"GLOBALE EINSTELLUNGEN"</string>
@@ -398,4 +399,36 @@ Falls das nicht helfen sollte, starte dein Gerät bitte neu."</string>
     <string name="pref_itpd_edit_conf">"Bearbeite i2pd.conf direkt"</string>
     <string name="pref_itpd_edit_tunnels">"Bearbeite tunnels.conf direkt"</string>
     <string name="config_changes_dialog_message">"Möchtest du die Änderungen speichern ? Dies kann die Funktionalität von InviZible Pro beeinträchtigen."</string>
+    <string name="pref_dnscrypt_ipv4_servers_summ">"Benutze Server die über IPv4 erreichbar sind"</string>
+    <string name="pref_dnscrypt_ipv6_servers_summ">"Benutze Server die über IPv6 erreichbar sind"</string>
+    <string name="pref_dnscrypt_import_forwarding_rules">"Importiere Forwarding Regeln"</string>
+    <string name="pref_dnscrypt_import_forwarding_rules_summ">"Importiere eine Forwarding Regeldatei. Du kannst mehrere Dateien auswählen, doppelte Einträge werden entfernt."</string>
+    <string name="pref_dnscrypt_erase_forwarding_rules">"Lösche Forwarding Regeln"</string>
+    <string name="pref_dnscrypt_import_cloaking_rules">"Importiere Cloaking Regeln"</string>
+    <string name="pref_dnscrypt_import_cloaking_rules_summ">"Importiere eine Cloaking Regeldatei. Du kannst mehrere Dateien auswählen, doppelte Einträge werden entfernt. 
+"</string>
+    <string name="pref_dnscrypt_erase_cloaking_rules">"Lösche Cloaking Regeln"</string>
+    <string name="pref_dnscrypt_import_blacklist">"Importiere Blacklist"</string>
+    <string name="pref_dnscrypt_import_blacklist_summ">"Importiere eine Liste von Domains oder eine Hosts Datei. Du kannst mehrere Dateien auswählen, doppelte Einträge werden entfernt. 
+"</string>
+    <string name="pref_dnscrypt_erase_blacklist">"Lösche Blacklist"</string>
+    <string name="pref_dnscrypt_import_ipblacklist">"Importiere IP Blacklist"</string>
+    <string name="pref_dnscrypt_import_ipblacklist_summ">"Importiere eine IP Blacklist. Du kannst mehrere Dateien auswählen, doppelte Einträge werden entfernt. 
+"</string>
+    <string name="pref_dnscrypt_erase_ipblacklist">"Lösche IP Blacklist"</string>
+    <string name="pref_dnscrypt_import_whitelist">"Importiere Whitelist"</string>
+    <string name="pref_dnscrypt_import_whitelist_summ">"Importiere eine Liste von Domains. Du kannst mehrere Dateien auswählen, doppelte Einträge werden entfernt. 
+"</string>
+    <string name="pref_dnscrypt_erase_whitelist">"Lösche Whitelist"</string>
+    <string name="pref_dnscrypt_block_ipv6_summ">"Beantworte IPv6 bezogene Anfragen umgehend leer.
+Dies beschleunigt Abläufe, wenn keine IPv6 Konnektivität vorhanden ist, kann aber gleichzeitig zu Störungen bei manchen Stub Resolvern führen."</string>
+    <string name="helper_dnscrypt_private_dns">"Bitte schalte \"Privater DNS\" in den Android Netzwerkeinstellungen aus. Diese Option beeinträchtigt DNSCrypt."</string>
+    <string name="import_dnscrypt_rules_dialog_title">"Importiere Regeln"</string>
+    <string name="import_dnscrypt_rules_dialog_message">"Bitte warten... %d Regeln importiert."</string>
+    <string name="import_dnscrypt_rules_complete_dialog_message">"Erledigt! %d Regeln wurden importiert."</string>
+    <string name="erase_dnscrypt_rules_dialog_message">"Erledigt! Die Regeln wurden gelöscht."</string>
+    <string name="dnscrypt_many_rules_dialog_message">"Zuviele Regeln. Nur die ersten 1000 werden angezeigt."</string>
+    <string name="pref_tor_snowflake_stun">"STUN Server für SnowFlake Bridges"</string>
+    <string name="pref_tor_isolate_dest_address_summ">"Teile keine Circuits mit Daten, die an einen anderen Zielport gerichtet sind."</string>
+    <string name="pref_tor_isolate_dest_port_summ">"Teile keine Circuits mit Daten die an einen anderen Zielport gerichtet sind."</string>
 </resources>
