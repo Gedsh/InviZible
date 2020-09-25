@@ -367,3 +367,12 @@
 * Fixed language selection for android Q.
 * Removed Quad9 servers from anonimized relays broken implementation.
 * Optimized the speed of Internet responses in VPN mode.
+
+**InviZible Pro beta 1.0.5**
+* Added script for building Tor for Android from source using Gitlab CI / CD.
+* Updated Tor to version 4.4.5.
+* Changed default I2P outproxy address.
+* Updated German language.
+* Fixed real-time connections log when default DNS servers are unavailable.
+* Fixed bridges selection after activity recreate.
+* Fixed activity not found exception.
