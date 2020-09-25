@@ -27,10 +27,7 @@ import java.util.concurrent.*
 
 class DNSQueryLogRecordsConverter(private val blockIPv6: Boolean,
                                   private val meteredNetwork: Boolean,
-                                  private val vpnDNS1: String,
-                                  private val vpnDNS2: String) {
-
-    constructor(blockIPv6: Boolean, meteredNetwork: Boolean, vpnDNS1: String) : this(blockIPv6, meteredNetwork, vpnDNS1, "149.112.112.112")
+                                  private val vpnDNS: CopyOnWriteArrayList<String>?) {
 
     private val dnsQueryLogRecords = ArrayList<DNSQueryLogRecord>()
     private val dnsQueryLogRecordsSublist = ArrayList<DNSQueryLogRecord>()
@@ -115,7 +112,7 @@ class DNSQueryLogRecordsConverter(private val blockIPv6: Boolean,
 
             dnsQueryLogRecordsSublist.add(dnsQueryNewRecord)
 
-        } else if (dnsQueryRawRecord.daddr != vpnDNS1 && dnsQueryRawRecord.daddr != vpnDNS2) {
+        } else if (vpnDNS != null && !vpnDNS.contains(dnsQueryRawRecord.daddr)) {
 
             if (!meteredNetwork && dnsQueryRawRecord.daddr.isNotEmpty()) {
                 val host = ipToHostAddressMap[dnsQueryRawRecord.daddr]

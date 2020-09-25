@@ -60,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import pan.alexander.tordnscrypt.BootCompleteReceiver;
@@ -138,7 +139,6 @@ public class ServiceVPN extends VpnService {
 
     public volatile boolean canFilter = true;
 
-    private boolean filterUDP = true;
     private boolean blockHttp = false;
     private boolean routeAllThroughTor = true;
     private boolean torTethering = false;
@@ -147,6 +147,7 @@ public class ServiceVPN extends VpnService {
     private boolean blockIPv6 = false;
     volatile boolean reloading;
     private boolean compatibilityMode;
+    public static CopyOnWriteArrayList<String> vpnDNS;
 
     private boolean useProxy = false;
     private Set<String> setBypassProxy;
@@ -181,6 +182,7 @@ public class ServiceVPN extends VpnService {
     private native void jni_done(long context);
 
     private static List<InetAddress> getDns(Context context) {
+        vpnDNS = new CopyOnWriteArrayList<>();
         List<InetAddress> listDns = new ArrayList<>();
         List<String> sysDns = Util.getDefaultDNS(context);
 
@@ -188,15 +190,17 @@ public class ServiceVPN extends VpnService {
         SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
         boolean ip6 = prefs.getBoolean("ipv6", false);
         String vpnDns1 = PathVars.getInstance(context).getDNSCryptFallbackRes();
-        String vpnDns2 = prefs.getString("dns2", "149.112.112.112");
+        String vpnDns2 = prefs.getString("dns2", "116.202.176.26");
         Log.i(LOG_TAG, "VPN DNS system=" + TextUtils.join(",", sysDns) + " config=" + vpnDns1 + "," + vpnDns2);
 
         if (vpnDns1 != null)
             try {
                 InetAddress dns = InetAddress.getByName(vpnDns1);
                 if (!(dns.isLoopbackAddress() || dns.isAnyLocalAddress()) &&
-                        (ip6 || dns instanceof Inet4Address))
+                        (ip6 || dns instanceof Inet4Address)) {
                     listDns.add(dns);
+                    vpnDNS.add(vpnDns1);
+                }
             } catch (Throwable ignored) {
             }
 
@@ -204,8 +208,10 @@ public class ServiceVPN extends VpnService {
             try {
                 InetAddress dns = InetAddress.getByName(vpnDns2);
                 if (!(dns.isLoopbackAddress() || dns.isAnyLocalAddress()) &&
-                        (ip6 || dns instanceof Inet4Address))
+                        (ip6 || dns instanceof Inet4Address)) {
                     listDns.add(dns);
+                    vpnDNS.add(vpnDns2);
+                }
             } catch (Throwable ex) {
                 Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
             }
@@ -218,8 +224,10 @@ public class ServiceVPN extends VpnService {
                 InetAddress ddns = InetAddress.getByName(def_dns);
                 if (!listDns.contains(ddns) &&
                         !(ddns.isLoopbackAddress() || ddns.isAnyLocalAddress()) &&
-                        (ip6 || ddns instanceof Inet4Address))
+                        (ip6 || ddns instanceof Inet4Address)) {
                     listDns.add(ddns);
+                    vpnDNS.add(def_dns);
+                }
             } catch (Throwable ex) {
                 Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
             }
@@ -233,6 +241,8 @@ public class ServiceVPN extends VpnService {
             try {
                 listDns.add(InetAddress.getByName("8.8.8.8"));
                 listDns.add(InetAddress.getByName("8.8.4.4"));
+                vpnDNS.add("8.8.8.8");
+                vpnDNS.add("8.8.4.4");
                 if (ip6) {
                     listDns.add(InetAddress.getByName("2001:4860:4860::8888"));
                     listDns.add(InetAddress.getByName("2001:4860:4860::8844"));
@@ -458,7 +468,6 @@ public class ServiceVPN extends VpnService {
     void startNative(final ParcelFileDescriptor vpn, List<Rule> listAllowed, List<Rule> listRule) {
         SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
 
-        filterUDP = prefs.getBoolean("VPN filter_udp", true);
         blockHttp = prefs.getBoolean("pref_fast_block_http", false);
         routeAllThroughTor = prefs.getBoolean("pref_fast_all_through_tor", true);
         torTethering = prefs.getBoolean("pref_common_tor_tethering", false);
@@ -829,10 +838,6 @@ public class ServiceVPN extends VpnService {
                 && !Util.isIpInSubnet(packet.daddr, torVirtualAddressNetwork)
                 && !packet.daddr.equals(itpdRedirectAddress)) {
             Log.w(LOG_TAG, "Block http " + packet);
-        } else if (packet.protocol == 17 /* UDP */ && !filterUDP) {
-            // Allow unfiltered UDP
-            packet.allowed = true;
-            Log.i(LOG_TAG, "Allowing UDP " + packet);
         } /*else if (packet.uid < 2000 &&
                 !last_connected && !last_connected_override && isSupported(packet.protocol)) {
             // Allow system applications in disconnected state
@@ -868,7 +873,7 @@ public class ServiceVPN extends VpnService {
 
         Allowed allowed = null;
         if (packet.allowed) {
-            if (packet.daddr.equals("127.0.0.1") || packet.uid == ownUID) {
+            if (/*packet.daddr.equals("127.0.0.1") || */packet.uid == ownUID) {
                 allowed = new Allowed();
             } else if (mapForwardPort.containsKey(packet.dport)) {
                 Forward fwd = mapForwardPort.get(packet.dport);

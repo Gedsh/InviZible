@@ -150,7 +150,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             setDNSCryptInstalled(false);
         }
 
-        dnsQueryLogRecordsConverter = new DNSQueryLogRecordsConverter(blockIPv6, Util.isMeteredNetwork(context), pathVars.getDNSCryptFallbackRes());
+        dnsQueryLogRecordsConverter = new DNSQueryLogRecordsConverter(blockIPv6, Util.isMeteredNetwork(context), ServiceVPN.vpnDNS);
 
         registerZoomGestureDetector(context);
     }
