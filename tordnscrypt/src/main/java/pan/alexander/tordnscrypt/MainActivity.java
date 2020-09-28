@@ -513,10 +513,10 @@ public class MainActivity extends LangAppCompatActivity
             return;
         }
 
-        if (modulesStatus.getTorState() == RUNNING) {
-            newIdentityMenuItem.setVisible(true);
-        } else {
+        if (modulesStatus.getTorState() == STOPPED) {
             newIdentityMenuItem.setVisible(false);
+        } else {
+            newIdentityMenuItem.setVisible(true);
         }
     }
 
