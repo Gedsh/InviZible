@@ -3,4 +3,4 @@
 	url = https://github.com/Gedsh/android-filepicker
 [submodule "TorBuildScript"]
 	path = TorBuildScript
-	url = https://gitlab.com/Gedsh/tor-android-build-script
+	url = https://github.com/Gedsh/Tor-Android-build-script
