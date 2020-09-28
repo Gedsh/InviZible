@@ -285,14 +285,31 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
 
     @Override
     public void scrollITPDLogViewToBottom() {
-        svITPDLog.post(() -> {
-            View lastChild = svITPDLog.getChildAt(svITPDLog.getChildCount() - 1);
-            int bottom = lastChild.getBottom() + svITPDLog.getPaddingBottom();
-            int sy = svITPDLog.getScrollY();
-            int sh = svITPDLog.getHeight();
-            int delta = bottom - (sy + sh);
+        if (svITPDLog == null) {
+            return;
+        }
 
-            svITPDLog.smoothScrollBy(0, delta);
+        svITPDLog.post(() -> {
+            int delta = 0;
+
+            int childIndex= svITPDLog.getChildCount() - 1;
+
+            if (childIndex < 0) {
+                return;
+            }
+
+            View lastChild = svITPDLog.getChildAt(childIndex);
+
+            if (lastChild != null) {
+                int bottom = lastChild.getBottom() + svITPDLog.getPaddingBottom();
+                int sy = svITPDLog.getScrollY();
+                int sh = svITPDLog.getHeight();
+                delta = bottom - (sy + sh);
+            }
+
+            if (delta > 0) {
+                svITPDLog.smoothScrollBy(0, delta);
+            }
         });
     }
 }

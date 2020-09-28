@@ -274,14 +274,31 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
 
     @Override
     public void scrollTorLogViewToBottom() {
-        svTorLog.post(() -> {
-            View lastChild = svTorLog.getChildAt(svTorLog.getChildCount() - 1);
-            int bottom = lastChild.getBottom() + svTorLog.getPaddingBottom();
-            int sy = svTorLog.getScrollY();
-            int sh = svTorLog.getHeight();
-            int delta = bottom - (sy + sh);
+        if (svTorLog == null) {
+            return;
+        }
 
-            svTorLog.smoothScrollBy(0, delta);
+        svTorLog.post(() -> {
+            int delta = 0;
+
+            int childIndex= svTorLog.getChildCount() - 1;
+
+            if (childIndex < 0) {
+                return;
+            }
+
+            View lastChild = svTorLog.getChildAt(childIndex);
+
+            if (lastChild != null) {
+                int bottom = lastChild.getBottom() + svTorLog.getPaddingBottom();
+                int sy = svTorLog.getScrollY();
+                int sh = svTorLog.getHeight();
+                delta = bottom - (sy + sh);
+            }
+
+            if (delta > 0) {
+                svTorLog.smoothScrollBy(0, delta);
+            }
         });
     }
 }

@@ -250,14 +250,31 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
 
     @Override
     public void scrollDNSCryptLogViewToBottom() {
-        svDNSCryptLog.post(() -> {
-            View lastChild = svDNSCryptLog.getChildAt(svDNSCryptLog.getChildCount() - 1);
-            int bottom = lastChild.getBottom() + svDNSCryptLog.getPaddingBottom();
-            int sy = svDNSCryptLog.getScrollY();
-            int sh = svDNSCryptLog.getHeight();
-            int delta = bottom - (sy + sh);
+        if (svDNSCryptLog == null) {
+            return;
+        }
 
-            svDNSCryptLog.smoothScrollBy(0, delta);
+        svDNSCryptLog.post(() -> {
+            int delta = 0;
+
+            int childIndex= svDNSCryptLog.getChildCount() - 1;
+
+            if (childIndex < 0) {
+                return;
+            }
+
+            View lastChild = svDNSCryptLog.getChildAt(childIndex);
+
+            if (lastChild != null) {
+                int bottom = lastChild.getBottom() + svDNSCryptLog.getPaddingBottom();
+                int sy = svDNSCryptLog.getScrollY();
+                int sh = svDNSCryptLog.getHeight();
+                delta = bottom - (sy + sh);
+            }
+
+            if (delta > 0) {
+                svDNSCryptLog.smoothScrollBy(0, delta);
+            }
         });
     }
 

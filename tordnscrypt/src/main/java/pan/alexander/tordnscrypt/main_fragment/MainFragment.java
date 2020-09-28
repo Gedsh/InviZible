@@ -795,12 +795,28 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     }
 
     private synchronized void scrollToBottom(ScrollView scrollView) {
+
+        if (scrollView == null) {
+            return;
+        }
+
         scrollView.post(() -> {
-            View lastChild = scrollView.getChildAt(scrollView.getChildCount() - 1);
-            int bottom = lastChild.getBottom() + scrollView.getPaddingBottom();
-            int sy = scrollView.getScrollY();
-            int sh = scrollView.getHeight();
-            int delta = bottom - (sy + sh);
+            int delta = 0;
+
+            int childIndex= scrollView.getChildCount() - 1;
+
+            if (childIndex < 0) {
+              return;
+            }
+
+            View lastChild = scrollView.getChildAt(childIndex);
+
+            if (lastChild != null) {
+                int bottom = lastChild.getBottom() + scrollView.getPaddingBottom();
+                int sy = scrollView.getScrollY();
+                int sh = scrollView.getHeight();
+                delta = bottom - (sy + sh);
+            }
 
             if (delta > 0) {
                 scrollView.smoothScrollBy(0, delta);
