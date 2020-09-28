@@ -64,6 +64,7 @@ public class ModulesStarterHelper {
     private String busyboxPath;
     private String dnscryptPath;
     private String torPath;
+    private String torConfPath;
     private String obfsPath;
     private String itpdPath;
 
@@ -76,6 +77,7 @@ public class ModulesStarterHelper {
         busyboxPath = pathVars.getBusyboxPath();
         dnscryptPath = pathVars.getDNSCryptPath();
         torPath = pathVars.getTorPath();
+        torConfPath = pathVars.getTorConfPath();
         obfsPath = pathVars.getObfsPath();
         itpdPath = pathVars.getITPDPath();
         this.modulesStatus = ModulesStatus.getInstance();
@@ -92,7 +94,7 @@ public class ModulesStarterHelper {
 
                 dnsCmdString = busyboxPath + "nohup " + dnscryptPath
                         + " -config " + appDataDir
-                        + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml -pidfile "+ appDataDir
+                        + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml -pidfile " + appDataDir
                         + "/dnscrypt-proxy.pid >/dev/null 2>&1 &";
                 String waitString = busyboxPath + "sleep 3";
                 String checkIfModuleRunning = busyboxPath + "pgrep -l /libdnscrypt-proxy.so";
@@ -154,7 +156,7 @@ public class ModulesStarterHelper {
             final CommandResult shellResult;
             if (modulesStatus.isUseModulesWithRoot()) {
 
-                List<String> lines = correctTorConfRunAsDaemon(service, appDataDir, true);
+                List<String> lines = correctTorConfRunAsDaemon(service, true);
 
                 correctObfsModulePath(lines);
 
@@ -175,7 +177,9 @@ public class ModulesStarterHelper {
 
             } else {
 
-                List<String> lines = correctTorConfRunAsDaemon(service, appDataDir, false);
+                List<String> lines = correctTorConfRunAsDaemon(service, false);
+
+                useTorSchedulerVanilla(lines);
 
                 correctObfsModulePath(lines);
 
@@ -289,24 +293,42 @@ public class ModulesStarterHelper {
         };
     }
 
-    private List<String> correctTorConfRunAsDaemon(Context context, String appDataDir, boolean runAsDaemon) {
-        String path = appDataDir + "/app_data/tor/tor.conf";
-        List<String> lines = FileOperations.readTextFileSynchronous(context, path);
+    private List<String> correctTorConfRunAsDaemon(Context context, boolean runAsDaemon) {
+
+        List<String> lines = FileOperations.readTextFileSynchronous(context, torConfPath);
 
         for (int i = 0; i < lines.size(); i++) {
             if (lines.get(i).contains("RunAsDaemon")) {
                 if (runAsDaemon && lines.get(i).contains("0")) {
                     lines.set(i, "RunAsDaemon 1");
-                    FileOperations.writeTextFileSynchronous(context, path, lines);
+                    FileOperations.writeTextFileSynchronous(context, torConfPath, lines);
                 } else if (!runAsDaemon && lines.get(i).contains("1")) {
                     lines.set(i, "RunAsDaemon 0");
-                    FileOperations.writeTextFileSynchronous(context, path, lines);
+                    FileOperations.writeTextFileSynchronous(context, torConfPath, lines);
                 }
                 return lines;
             }
         }
 
         return lines;
+    }
+
+    //Disable Tor Kernel-Informed Socket Transport because ioctl() with request SIOCOUTQNSD is denied by android SELINUX policy
+    private void useTorSchedulerVanilla(List<String> lines) {
+        int indexOfClientOnly = -1;
+
+        for (int i = 0; i < lines.size(); i++) {
+            if (lines.get(i).contains("Schedulers")) {
+               return;
+            } else if (lines.get(i).contains("ClientOnly")) {
+                indexOfClientOnly = i;
+            }
+        }
+
+        if (indexOfClientOnly > 0) {
+            lines.add(indexOfClientOnly, "Schedulers Vanilla");
+            FileOperations.writeTextFileSynchronous(service, torConfPath, lines);
+        }
     }
 
     private void correctObfsModulePath(List<String> lines) {
@@ -321,21 +343,20 @@ public class ModulesStarterHelper {
             boolean useOwnBridges = new PrefManager(service).getBoolPref("useOwnBridges");
 
             if (useDefaultBridges || useOwnBridges) {
-                String filePath = appDataDir + "/app_data/tor/tor.conf";
 
                 String line;
                 for (int i = 0; i < lines.size(); i++) {
                     line = lines.get(i);
                     if (line.contains("ClientTransportPlugin ") && line.contains("/libobfs4proxy.so")) {
-                        line = line.replaceAll("/.+?/libobfs4proxy.so", service.getApplicationInfo().nativeLibraryDir+ "/libobfs4proxy.so");
+                        line = line.replaceAll("/.+?/libobfs4proxy.so", service.getApplicationInfo().nativeLibraryDir + "/libobfs4proxy.so");
                         lines.set(i, line);
                     } else if (line.contains("ClientTransportPlugin ") && line.contains("/libsnowflake.so")) {
-                        line = line.replaceAll("/.+?/libsnowflake.so", service.getApplicationInfo().nativeLibraryDir+ "/libsnowflake.so");
+                        line = line.replaceAll("/.+?/libsnowflake.so", service.getApplicationInfo().nativeLibraryDir + "/libsnowflake.so");
                         lines.set(i, line);
                     }
                 }
 
-                FileOperations.writeTextFileSynchronous(service, filePath, lines);
+                FileOperations.writeTextFileSynchronous(service, torConfPath, lines);
 
                 Log.i(LOG_TAG, "ModulesService Tor Obfs module path is corrected");
             }
