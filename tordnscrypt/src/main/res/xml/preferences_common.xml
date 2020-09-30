@@ -65,10 +65,6 @@
         <Preference
             android:key="pref_common_tethering_settings"
             android:title="@string/pref_common_tethering_settings">
-            <intent
-                android:action="ACTION_MAIN"
-                android:targetClass="com.android.settings.Settings$TetherSettingsActivity"
-                android:targetPackage="com.android.settings" />
         </Preference>
         <SwitchPreference
             android:defaultValue="false"

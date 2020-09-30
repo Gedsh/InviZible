@@ -20,6 +20,7 @@ package pan.alexander.tordnscrypt.settings;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -81,7 +82,8 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 
 public class PreferencesCommonFragment extends PreferenceFragmentCompat
-        implements Preference.OnPreferenceChangeListener, OnTextFileOperationsCompleteListener {
+        implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener,
+        OnTextFileOperationsCompleteListener {
     private String torTransPort;
     private String torSocksPort;
     private String torHTTPTunnelPort;
@@ -111,10 +113,12 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         FileOperations.setOnFileOperationCompleteListener(this);
 
-        Context context = getActivity();
+        Activity activity = getActivity();
 
-        if (context == null) {
-            super.onCreateView(inflater, container, savedInstanceState);
+        ModulesStatus modulesStatus = ModulesStatus.getInstance();
+
+        if (activity == null || modulesStatus == null) {
+            return super.onCreateView(inflater, container, savedInstanceState);
         }
 
         Looper looper = Looper.getMainLooper();
@@ -122,7 +126,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             handler = new Handler(looper);
         }
 
-        getActivity().setTitle(R.string.drawer_menu_commonSettings);
+        activity.setTitle(R.string.drawer_menu_commonSettings);
 
         PreferenceCategory others = findPreference("common_other");
         Preference swShowNotification = findPreference("swShowNotification");
@@ -138,37 +142,44 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
 
         Preference swCompatibilityMode = findPreference("swCompatibilityMode");
-        if (ModulesStatus.getInstance().getMode() != VPN_MODE && others != null && swCompatibilityMode != null) {
+        if (modulesStatus.getMode() != VPN_MODE && others != null && swCompatibilityMode != null) {
             others.removePreference(swCompatibilityMode);
         } else if (swCompatibilityMode != null) {
             swCompatibilityMode.setOnPreferenceChangeListener(this);
         }
 
-        ModulesStatus modulesStatus = ModulesStatus.getInstance();
+
         boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
                 && !modulesStatus.isUseModulesWithRoot();
         PreferenceScreen preferenceScreen = findPreference("pref_common");
         PreferenceCategory proxySettingsCategory = findPreference("categoryCommonProxy");
         Preference swUseProxy = findPreference("swUseProxy");
         if (preferenceScreen != null && proxySettingsCategory != null) {
-            if ((ModulesStatus.getInstance().getMode() == VPN_MODE || fixTTL) && swUseProxy != null) {
+            if ((modulesStatus.getMode() == VPN_MODE || fixTTL) && swUseProxy != null) {
                 swUseProxy.setOnPreferenceChangeListener(this);
             } else {
                 preferenceScreen.removePreference(proxySettingsCategory);
             }
         }
 
+        Preference tetheringSettings = findPreference("pref_common_tethering_settings");
+        if (tetheringSettings != null) {
+            if (modulesStatus.getMode() == VPN_MODE || modulesStatus.getMode() == ROOT_MODE) {
+                tetheringSettings.setOnPreferenceClickListener(this);
+            }
+        }
+
         PreferenceCategory otherCategory = findPreference("common_other");
         Preference multiUser = findPreference("pref_common_multi_user");
         if (otherCategory != null && multiUser != null) {
-            if (ModulesStatus.getInstance().getMode() == PROXY_MODE) {
+            if (modulesStatus.getMode() == PROXY_MODE) {
                 otherCategory.removePreference(multiUser);
             } else {
                 multiUser.setOnPreferenceChangeListener(this);
             }
         }
 
-        if (ModulesStatus.getInstance().getMode() == ROOT_MODE) {
+        if (modulesStatus.getMode() == ROOT_MODE) {
             registerPreferences();
         } else {
             removePreferences();
@@ -190,8 +201,8 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 otherSettingsCategory.removePreference(shellControl);
             }
 
-        } else if (shellControl != null && context != null) {
-            shellControl.setSummary(String.format(getString(R.string.pref_common_shell_control_summ), context.getPackageName()));
+        } else if (shellControl != null) {
+            shellControl.setSummary(String.format(getString(R.string.pref_common_shell_control_summ), activity.getPackageName()));
         }
 
         return super.onCreateView(inflater, container, savedInstanceState);
@@ -366,6 +377,29 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 break;
         }
         return true;
+    }
+
+    @Override
+    public boolean onPreferenceClick(Preference preference) {
+        Context context = getActivity();
+
+        if (context == null) {
+            return false;
+        }
+
+        if ("pref_common_tethering_settings".equals(preference.getKey())) {
+            Intent intent_tether = new Intent(Intent.ACTION_MAIN, null);
+            intent_tether.addCategory(Intent.CATEGORY_LAUNCHER);
+            ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.TetherSettings");
+            intent_tether.setComponent(cn);
+            intent_tether.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            try {
+                context.startActivity(intent_tether);
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "PreferencesCommonFragment startHOTSPOT exception " + e.getMessage() + " " + e.getCause());
+            }
+        }
+        return false;
     }
 
     private void disableProxy(Context context) {
