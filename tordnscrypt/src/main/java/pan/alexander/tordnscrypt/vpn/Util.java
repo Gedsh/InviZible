@@ -96,6 +96,48 @@ public class Util {
         }
     }
 
+    public static boolean isWifiActive(Context context) {
+
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork());
+
+            if (capabilities != null
+                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) {
+
+                return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
+            }
+
+            return false;
+        } else {
+            NetworkInfo ni = (connectivityManager == null ? null : connectivityManager.getActiveNetworkInfo());
+            return (ni != null && ni.getType() == ConnectivityManager.TYPE_WIFI);
+        }
+    }
+
+    public static boolean isEthernetActive(Context context) {
+
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork());
+
+            if (capabilities != null
+                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) {
+
+                return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET);
+            }
+
+            return false;
+        } else {
+            NetworkInfo ni = (connectivityManager == null ? null : connectivityManager.getActiveNetworkInfo());
+            return (ni != null && ni.getType() == ConnectivityManager.TYPE_ETHERNET);
+        }
+    }
+
     public static void isConnectedAsynchronousConfirmation(ServiceVPN serviceVPN) {
         CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
             try (Socket socket = new Socket()) {

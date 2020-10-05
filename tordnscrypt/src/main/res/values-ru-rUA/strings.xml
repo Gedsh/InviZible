@@ -466,4 +466,15 @@
     <string name="pref_common_multi_user">Многопользовательская поддержка</string>
     <string name="pref_common_multi_user_summ">Поддержка двойных приложений, MIUI, Island, Shelter и приложений рабочего профиля</string>
     <string name="dialog_new_tor_default_bridges_available">Доступны новые мосты Tor по-умолчанию. Вы хотите их обновить?</string>
+
+    <string name="pref_common_mitm_categ">Обнаружение MITM атак</string>
+    <string name="pref_common_arp_spoofing_detection">Обнаружение ARP-спуфинга</string>
+    <string name="pref_common_arp_spoofing_detection_summ">Обнаружение ARP-спуфинга и мошеннических DHCP в Wi-Fi сетях.</string>
+    <string name="pref_common_arp_block_internet">Заблокировать интернет при обнаружении атаки</string>
+    <string name="pref_common_arp_block_internet_summ">Интернет соединение будет заблокировано во время атаки</string>
+    <string name="notification_arp_spoofing">Обнаружена атака ARP-спуфинг!</string>
+    <string name="notification_rogue_dhcp">Обнаружен мошеннический DHCP!</string>
+    <string name="notification_mitm">Обнаружена атака «человек посередине»! Ваши данные могут быть перехвачены другим устройством в локальной сети.
+        Выключите, подождите несколько секунд и включите Wi-Fi. Использование текущей Wi-Fi точки доступа может быть небезопасным!</string>
+    <string name="toast_arp_detection_not_supported">Обнаружение ARP-спуфинг атак не поддерживается на вашем устройстве!</string>
 </resources>

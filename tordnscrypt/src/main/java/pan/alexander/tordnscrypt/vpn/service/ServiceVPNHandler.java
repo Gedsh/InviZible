@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
@@ -62,6 +63,7 @@ public class ServiceVPNHandler extends Handler {
     private static List<Rule> listRule;
     private final ServiceVPN serviceVPN;
     private ServiceVPN.Builder last_builder = null;
+    private ArpScanner arpScanner;
 
     private ServiceVPNHandler(Looper looper, ServiceVPN serviceVPN) {
         super(looper);
@@ -154,6 +156,9 @@ public class ServiceVPNHandler extends Handler {
     }
 
     private void start() {
+
+        arpScanner = ArpScanner.INSTANCE.getInstance(serviceVPN, null);
+
         if (serviceVPN.vpn == null) {
 
             listRule = Rule.getRules(serviceVPN);
@@ -259,6 +264,8 @@ public class ServiceVPNHandler extends Handler {
         }
 
         serviceVPN.reloading = false;
+
+        arpScanner.reset(serviceVPN.last_connected || serviceVPN.last_connected_override);
     }
 
     private void stop() {

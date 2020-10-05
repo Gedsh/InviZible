@@ -95,6 +95,14 @@ public class ModulesAux {
         sendIntent(context, ModulesService.extraLoop);
     }
 
+    public static void startArpDetection(Context context) {
+        sendIntent(context, ModulesService.startArpScanner);
+    }
+
+    public static void stopArpDetection(Context context) {
+        sendIntent(context, ModulesService.stopArpScanner);
+    }
+
     private static void sendIntent(Context context, String action) {
         Intent intent = new Intent(context, ModulesService.class);
         intent.setAction(action);

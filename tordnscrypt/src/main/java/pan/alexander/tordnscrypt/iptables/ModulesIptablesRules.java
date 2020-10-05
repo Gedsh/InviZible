@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -82,6 +83,10 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         boolean ttlFix = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE) && !modulesStatus.isUseModulesWithRoot();
         boolean useProxy = shPref.getBoolean("swUseProxy", false);
 
+        boolean arpSpoofingDetection = shPref.getBoolean("pref_common_arp_spoofing_detection", false);
+        boolean blockInternetWhenArpAttackDetected = shPref.getBoolean("pref_common_arp_block_internet", false);
+        boolean mitmDetected = ArpScanner.INSTANCE.getArpAttackDetected() || ArpScanner.INSTANCE.getDhcpGatewayAttackDetected();
+
         List<String> commands = new ArrayList<>();
 
         String appUID = new PrefManager(context).getStrPref("appUID");
@@ -93,7 +98,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         String kernelBypassFilter = "";
         String kernelRedirectNatTCP = "";
         String kernelRejectNonTCP = "";
-        if (routeAllThroughTor && (clearnetApps.contains("-1") || (ttlFix  && useProxy && clearnetAppsForProxy.contains("-1")))) {
+        if (routeAllThroughTor && (clearnetApps.contains("-1") || (ttlFix && useProxy && clearnetAppsForProxy.contains("-1")))) {
             kernelBypassNat = iptables + "-t nat -A tordnscrypt_nat_output -p all -m owner ! --uid-owner 0:999999999 -j RETURN || true";
             kernelBypassFilter = iptables + "-A tordnscrypt -p all -m owner ! --uid-owner 0:999999999 -j RETURN || true";
         } else if (!routeAllThroughTor && unlockApps.contains("-1") && (!clearnetAppsForProxy.contains("-1") || !useProxy || !ttlFix)) {
@@ -168,8 +173,27 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             proxyAppsBypassFilter = busybox + "cat " + appDataDir + "/app_data/tor/clearnetAppsForProxy 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt -p all -m owner --uid-owner $var1 -j RETURN; done";
         }
 
-
-        if (dnsCryptState == RUNNING && torState == RUNNING) {
+        if (arpSpoofingDetection && blockInternetWhenArpAttackDetected && mitmDetected) {
+            commands = new ArrayList<>(Arrays.asList(
+                    "TOR_UID=" + appUID,
+                    iptables + "-I OUTPUT -j DROP",
+                    ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
+                    ip6tables + "-D OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT 2> /dev/null || true",
+                    ip6tables + "-I OUTPUT -j DROP",
+                    ip6tables + "-I OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT",
+                    iptables + "-t nat -F tordnscrypt_nat_output 2> /dev/null",
+                    iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output 2> /dev/null || true",
+                    iptables + "-F tordnscrypt 2> /dev/null",
+                    iptables + "-D OUTPUT -j tordnscrypt 2> /dev/null || true",
+                    busybox + "sleep 1",
+                    iptables + "-N tordnscrypt 2> /dev/null",
+                    iptables + "-A tordnscrypt -m owner ! --uid-owner $TOR_UID -j REJECT",
+                    iptables + "-I OUTPUT -j tordnscrypt",
+                    unblockHOTSPOT,
+                    blockHOTSPOT,
+                    iptables + "-D OUTPUT -j DROP 2> /dev/null || true"
+            ));
+        } else if (dnsCryptState == RUNNING && torState == RUNNING) {
 
             if (!routeAllThroughTor) {
 

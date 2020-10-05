@@ -45,10 +45,12 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.iptables.Tethering;
 import pan.alexander.tordnscrypt.utils.ApManager;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.vpn.Util;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -60,14 +62,15 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
     private Object networkCallback;
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
     private volatile boolean lock = false;
-    private int currentNetworkHash = 0;
     private static final String apStateFilterAction = "android.net.wifi.WIFI_AP_STATE_CHANGED";
     private static final String tetherStateFilterAction = "android.net.conn.TETHER_STATE_CHANGED";
     private static final String shutdownFilterAction = "android.intent.action.ACTION_SHUTDOWN";
     private static final String powerOFFFilterAction = "android.intent.action.QUICKBOOT_POWEROFF";
+    private ArpScanner arpScanner;
 
-    public ModulesBroadcastReceiver(Context context) {
+    public ModulesBroadcastReceiver(Context context, ArpScanner arpScanner) {
         this.context = context;
+        this.arpScanner = arpScanner;
     }
 
     @Override
@@ -190,11 +193,14 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
 
         ConnectivityManager.NetworkCallback nc = new ConnectivityManager.NetworkCallback() {
             private List<InetAddress> last_dns = null;
+            private int last_network = 0;
 
             @Override
             public void onAvailable(@NonNull Network network) {
                 Log.i(LOG_TAG, "ModulesBroadcastReceiver Available network=" + network);
                 updateIptablesRules(false);
+                resetArpScanner(true);
+                last_network = network.hashCode();
             }
 
             @Override
@@ -210,13 +216,19 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
                     Log.i(LOG_TAG, "ModulesBroadcastReceiver Changed link properties=" + linkProperties);
                     updateIptablesRules(false);
                 }
+
+                if (network.hashCode() != last_network) {
+                    last_network = network.hashCode();
+                    resetArpScanner();
+                }
             }
 
             @Override
             public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities networkCapabilities) {
-                if (ModulesBroadcastReceiver.this.currentNetworkHash != network.hashCode()) {
-                    ModulesBroadcastReceiver.this.currentNetworkHash = network.hashCode();
+                if (last_network != network.hashCode()) {
                     updateIptablesRules(false);
+                    resetArpScanner();
+                    last_network = network.hashCode();
 
                     Log.i(LOG_TAG, "ModulesBroadcastReceiver Changed capabilities=" + network);
                 }
@@ -226,6 +238,8 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
             public void onLost(@NonNull Network network) {
                 Log.i(LOG_TAG, "ModulesBroadcastReceiver Lost network=" + network);
                 updateIptablesRules(false);
+                resetArpScanner(false);
+                last_network = 0;
             }
 
             boolean same(List<InetAddress> last, List<InetAddress> current) {
@@ -266,13 +280,16 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
         // Reload rules when coming from idle mode
         if (pm != null && !pm.isDeviceIdleMode()) {
             updateIptablesRules(false);
+            resetArpScanner();
         }
     }
 
     private void connectivityStateChanged(Intent intent) {
         // Reload rules
-        Log.i(LOG_TAG, "ModulesBroadcastReceiver Received " + intent);
+        Log.i(LOG_TAG, "ModulesBroadcastReceiver connectivityStateChanged Received " + intent);
         updateIptablesRules(false);
+
+        resetArpScanner();
     }
 
     private void apStateChanged() {
@@ -420,5 +437,17 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
             }
         });
 
+    }
+
+    private void resetArpScanner(boolean connectionAvailable) {
+        if (arpScanner != null) {
+            arpScanner.reset(connectionAvailable);
+        }
+    }
+
+    private void resetArpScanner() {
+        if (arpScanner != null && context != null) {
+            arpScanner.reset(Util.isConnected(context));
+        }
     }
 }

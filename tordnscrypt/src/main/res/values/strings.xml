@@ -185,6 +185,11 @@
     <string name="pref_common_block_http">Block HOTSPOT http</string>
     <string name="pref_common_block_http_summ">Deny connection to http port 80 for HOTSPOT</string>
     <string name="pref_common_notification_summ">Protect application with No Root Mode to prevent app being killed by android</string>
+    <string name="pref_common_mitm_categ">MITM attack detection</string>
+    <string name="pref_common_arp_spoofing_detection">ARP spoofing detection</string>
+    <string name="pref_common_arp_spoofing_detection_summ">Detect Man-in-the-middle ARP spoofing and rogue DHCP attacks in Wi-Fi networks.</string>
+    <string name="pref_common_arp_block_internet">Block internet when an attack is detected</string>
+    <string name="pref_common_arp_block_internet_summ">Internet connection will be blocked during attack</string>
     <string name="pref_common_proxy_categ">Proxy</string>
     <string name="pref_common_proxy">Use socks5 proxy</string>
     <string name="pref_common_proxy_summ">InviZible Pro will make all connections through the SOCKS5 proxy</string>
@@ -711,5 +716,10 @@
     <string name="proxy_save">Save and enable</string>
     <string name="proxy_no_connection">Cannot connect to proxy: %s</string>
     <string name="proxy_successful_connection">Successful connection. Ping %s ms.</string>
+    <string name="notification_arp_spoofing">ARP spoofing detected!</string>
+    <string name="notification_rogue_dhcp">Rogue DHCP detected!</string>
+    <string name="notification_mitm">Man-in-the-middle attack detected! Your data can be intercepted by another device on the local network.
+        Turn off, wait a few seconds, and turn on Wi-Fi. Using current Wi-Fi hotspot may be unsafe!</string>
+    <string name="toast_arp_detection_not_supported">ARP spoofing detection is not supported for your device!</string>
 
 </resources>

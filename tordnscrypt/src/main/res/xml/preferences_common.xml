@@ -81,6 +81,22 @@
             android:summary="@string/pref_common_run_with_root_summ"
             android:title="@string/pref_common_run_with_root" />
     </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_common_mitm_categ"
+        android:key="pref_common_mitm_categ">
+        <SwitchPreference
+            android:id="@+id/pref_common_arp_spoofing_detection"
+            android:defaultValue="false"
+            android:key="pref_common_arp_spoofing_detection"
+            android:summary="@string/pref_common_arp_spoofing_detection_summ"
+            android:title="@string/pref_common_arp_spoofing_detection" />
+        <SwitchPreference
+            android:id="@+id/pref_common_arp_block_internet"
+            android:defaultValue="false"
+            android:dependency="pref_common_arp_spoofing_detection"
+            android:key="pref_common_arp_block_internet"
+            android:summary="@string/pref_common_arp_block_internet_summ"
+            android:title="@string/pref_common_arp_block_internet" />
+    </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_common_proxy_categ"
         android:key="categoryCommonProxy">
         <SwitchPreference

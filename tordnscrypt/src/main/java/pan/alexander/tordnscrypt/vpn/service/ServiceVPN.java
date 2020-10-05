@@ -66,6 +66,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import pan.alexander.tordnscrypt.BootCompleteReceiver;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.arp.ArpScanner;
+import pan.alexander.tordnscrypt.arp.ArpScannerKt;
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSQueryLogRecord;
 import pan.alexander.tordnscrypt.iptables.Tethering;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
@@ -147,6 +149,8 @@ public class ServiceVPN extends VpnService {
     private boolean blockIPv6 = false;
     volatile boolean reloading;
     private boolean compatibilityMode;
+    private boolean arpSpoofingDetection;
+    private boolean blockInternetWhenArpAttackDetected;
     public static CopyOnWriteArrayList<String> vpnDNS;
 
     private boolean useProxy = false;
@@ -472,6 +476,8 @@ public class ServiceVPN extends VpnService {
         routeAllThroughTor = prefs.getBoolean("pref_fast_all_through_tor", true);
         torTethering = prefs.getBoolean("pref_common_tor_tethering", false);
         blockIPv6 = prefs.getBoolean("block_ipv6", true);
+        arpSpoofingDetection = prefs.getBoolean("pref_common_arp_spoofing_detection", false);
+        blockInternetWhenArpAttackDetected = prefs.getBoolean("pref_common_arp_block_internet", false);
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             compatibilityMode = true;
@@ -825,6 +831,10 @@ public class ServiceVPN extends VpnService {
             if (!compatibilityMode) {
                 Log.w(LOG_TAG, "Allowing self " + packet);
             }
+        } else if (arpSpoofingDetection && blockInternetWhenArpAttackDetected
+                && (ArpScanner.INSTANCE.getArpAttackDetected() || ArpScanner.INSTANCE.getDhcpGatewayAttackDetected())) {
+            // MITM attack detected
+            Log.w(LOG_TAG, "Block due to mitm attack " + packet);
         } else if (reloading) {
             // Reload service
             Log.i(LOG_TAG, "Block due to reloading " + packet);
@@ -1045,6 +1055,7 @@ public class ServiceVPN extends VpnService {
         ConnectivityManager.NetworkCallback nc = new ConnectivityManager.NetworkCallback() {
             private Boolean last_connected = null;
             private List<InetAddress> last_dns = null;
+            private int last_network = 0;
 
             @Override
             public void onAvailable(@NonNull Network network) {
@@ -1057,6 +1068,8 @@ public class ServiceVPN extends VpnService {
                 }
 
                 reload("Network available", ServiceVPN.this);
+
+                last_network = network.hashCode();
             }
 
             @Override
@@ -1072,7 +1085,11 @@ public class ServiceVPN extends VpnService {
                             "DNS prv=" + (last_dns == null ? null : TextUtils.join(",", last_dns)));
                     last_dns = dns;
                     Log.i(LOG_TAG, "VPN Changed link properties=" + linkProperties);
-                    reload("VPN Link properties changed", ServiceVPN.this);
+
+                    if (network.hashCode() != last_network) {
+                        last_network = network.hashCode();
+                        reload("VPN Link properties changed", ServiceVPN.this);
+                    }
                 }
             }
 
@@ -1083,6 +1100,9 @@ public class ServiceVPN extends VpnService {
                     last_connected = true;
                     reload("VPN Connected state changed", ServiceVPN.this);
                 }
+
+                last_network = network.hashCode();
+
                 Log.i(LOG_TAG, "VPN Changed capabilities=" + network);
             }
 
@@ -1096,6 +1116,8 @@ public class ServiceVPN extends VpnService {
                 }
 
                 reload("Network lost", ServiceVPN.this);
+
+                last_network = 0;
             }
 
             boolean same(List<InetAddress> last, List<InetAddress> current) {

@@ -33,6 +33,7 @@ import androidx.preference.PreferenceManager;
 import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.iptables.IptablesRules;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -269,7 +270,10 @@ public class ModulesStateLoop implements Runnable {
             if (modulesStatus.isFixTTL() && !modulesStatus.isUseModulesWithRoot() && (operationMode == ROOT_MODE)) {
                 if (((dnsCryptState == STOPPED && torState == STOPPED) || useModulesWithRoot) && vpnServiceEnabled) {
                     ServiceVPNHelper.stop("All modules stopped", modulesService);
-                } else if (vpnServiceEnabled) {
+                } else if (vpnServiceEnabled
+                        /*Do not reload service during ARP attack to prevent loop*/
+                        && !ArpScanner.INSTANCE.getDhcpGatewayAttackDetected()
+                        && !ArpScanner.INSTANCE.getArpAttackDetected()) {
                     ServiceVPNHelper.reload("TTL is fixed", modulesService);
                 } else {
                     startVPNService();

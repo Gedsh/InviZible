@@ -68,6 +68,7 @@ import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import pan.alexander.tordnscrypt.utils.file_operations.OnTextFileOperationsCompleteListener;
+import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
@@ -176,6 +177,18 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 otherCategory.removePreference(multiUser);
             } else {
                 multiUser.setOnPreferenceChangeListener(this);
+            }
+        }
+
+        PreferenceCategory mitmCategory = findPreference("pref_common_mitm_categ");
+        Preference mitmDetection = findPreference("pref_common_arp_spoofing_detection");
+        Preference mitmBlockInternet = findPreference("pref_common_arp_block_internet");
+        if (mitmCategory != null && mitmDetection != null && mitmBlockInternet != null) {
+            mitmDetection.setOnPreferenceChangeListener(this);
+            if (modulesStatus.getMode() == PROXY_MODE) {
+                mitmCategory.removePreference(mitmBlockInternet);
+            } else {
+                mitmBlockInternet.setOnPreferenceChangeListener(this);
             }
         }
 
@@ -363,6 +376,23 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 break;
             case "swWakelock":
                 ModulesAux.requestModulesStatusUpdate(context);
+                break;
+            case "pref_common_arp_spoofing_detection":
+                if (Boolean.parseBoolean(newValue.toString())) {
+                    ModulesAux.startArpDetection(context);
+                } else {
+                    ModulesAux.stopArpDetection(context);
+                }
+                break;
+            case "pref_common_arp_block_internet":
+                modulesStatus = ModulesStatus.getInstance();
+                boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
+                        && !modulesStatus.isUseModulesWithRoot();
+                if (fixTTL) {
+                    //Manually reload the VPN service because setIptablesRulesUpdateRequested does not do this in case of an ARP attack detected
+                    ServiceVPNHelper.reload("Internet blocking settings for ARP attacks changed", context);
+                }
+                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
                 break;
             case "swUseProxy":
                 if (Boolean.parseBoolean(newValue.toString())) {
