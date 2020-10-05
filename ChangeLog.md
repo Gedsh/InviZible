@@ -376,3 +376,7 @@
 * Fixed real-time connections log when default DNS servers are unavailable.
 * Fixed bridges selection after activity recreate.
 * Fixed activity not found exception.
+
+**InviZible Pro beta 1.0.6**
+* Implemented ARP spoofing and rogue DHCP attacks detection.
+* Bug fixes.
