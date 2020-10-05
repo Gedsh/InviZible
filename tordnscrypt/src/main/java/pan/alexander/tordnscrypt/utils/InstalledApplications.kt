@@ -94,6 +94,7 @@ class InstalledApplications(private val context: Context, private val activeApps
                 pkgManagerFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     pkgManagerFlags or PackageManager.MATCH_UNINSTALLED_PACKAGES
                 } else {
+                    @Suppress("DEPRECATION")
                     pkgManagerFlags or PackageManager.GET_UNINSTALLED_PACKAGES
                 }
             }
