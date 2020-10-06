@@ -19,9 +19,9 @@ They are used to achieve maximum security, privacy and comfortable use of the In
 ### DNSCrypt
 * Encrypts DNS requests
 * Protects against DNS spoofing
-* Can blocks ads *
-* Can protects against dangerous and malicious sites *
-* Can blocks "adult" sites *
+* Can block ads *
+* Can protect against dangerous and malicious sites *
+* Can block "adult" sites *
 * Hides visited sites from your provider
 * Prevents some types of resource blocks
 * Open-source
