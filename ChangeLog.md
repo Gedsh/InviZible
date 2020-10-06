@@ -380,3 +380,8 @@
 **InviZible Pro beta 1.0.6**
 * Implemented ARP spoofing and rogue DHCP attacks detection.
 * Bug fixes.
+
+**InviZible Pro beta 1.0.7**
+* Improved ARP spoofing and rogue DHCP attacks detection when always-on VPN is active.
+* Updated Persian language.
+* Minor fixes.
