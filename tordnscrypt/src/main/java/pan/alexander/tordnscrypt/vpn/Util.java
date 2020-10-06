@@ -96,6 +96,27 @@ public class Util {
         }
     }
 
+    public static boolean isCellularActive(Context context) {
+
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork());
+
+            if (capabilities != null
+                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) {
+
+                return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
+            }
+
+            return false;
+        } else {
+            NetworkInfo ni = (connectivityManager == null ? null : connectivityManager.getActiveNetworkInfo());
+            return (ni != null && ni.getType() == ConnectivityManager.TYPE_MOBILE);
+        }
+    }
+
     public static boolean isWifiActive(Context context) {
 
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);

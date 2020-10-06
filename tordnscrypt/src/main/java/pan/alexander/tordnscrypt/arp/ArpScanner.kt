@@ -87,6 +87,10 @@ class ArpScanner private constructor(val context: Context,
     private var sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
     private val reentrantLock = ReentrantLock()
     @Volatile
+    private var connectionAvailable = false
+    @Volatile
+    private var cellularActive = false
+    @Volatile
     private var wifiActive = false
     @Volatile
     private var ethernetActive = false
@@ -136,10 +140,11 @@ class ArpScanner private constructor(val context: Context,
             return
         }
 
+        cellularActive = Util.isCellularActive(context)
         wifiActive = Util.isWifiActive(context)
         ethernetActive = Util.isEthernetActive(context)
 
-        if (!wifiActive && !ethernetActive) {
+        if (!wifiActive && !ethernetActive && (cellularActive || !connectionAvailable)) {
             return
         }
 
@@ -191,8 +196,10 @@ class ArpScanner private constructor(val context: Context,
 
                     if (wifiActive) {
                         setDefaultWiFiGateway()
-                    } else if (ethernetActive && defaultGateway.isEmpty()) {
+                    } else if (ethernetActive) {
                         requestRuleTable()
+                    } else if (!cellularActive && connectionAvailable) {
+                        setDefaultWiFiGateway()
                     }
 
                     if (savedDefaultGateway.isNotEmpty() && defaultGateway.isNotEmpty()) {
@@ -268,7 +275,7 @@ class ArpScanner private constructor(val context: Context,
 
         }, 1, 10, TimeUnit.SECONDS)
 
-        if (!Util.isConnected(context)) {
+        if (!Util.isConnected(context) && !connectionAvailable) {
             pause(true, resetInternalValues = true)
         }
     }
@@ -277,14 +284,17 @@ class ArpScanner private constructor(val context: Context,
 
         val attackDetected = arpAttackDetected || dhcpGatewayAttackDetected
 
+        this.connectionAvailable = connectionAvailable
+
         if (!sharedPreferences.getBoolean("pref_common_arp_spoofing_detection", false) && !attackDetected) {
             return
         }
 
+        cellularActive = Util.isCellularActive(context)
         wifiActive = Util.isWifiActive(context)
         ethernetActive = Util.isEthernetActive(context)
 
-        if (connectionAvailable && (wifiActive || ethernetActive)) {
+        if (connectionAvailable && (wifiActive || ethernetActive || !cellularActive)) {
             if (scheduledExecutorService?.isShutdown == false) {
                 pause(false, resetInternalValues = false)
 
@@ -361,6 +371,10 @@ class ArpScanner private constructor(val context: Context,
 
             stopping = true
 
+            cellularActive = false
+            wifiActive = false
+            ethernetActive = false
+
             val updateIcons = arpAttackDetected || dhcpGatewayAttackDetected
 
             resetInternalValues()
@@ -396,11 +410,17 @@ class ArpScanner private constructor(val context: Context,
                 savedDefaultGateway = defaultGateway
             }
         } catch (e: Exception) {
-            if (defaultGateway.isNotEmpty()) {
-                resetInternalValues()
-            }
 
-            Log.e(LOG_TAG, "ArpScanner error getting default gateway ${e.message} ${e.cause}")
+            if (connectionAvailable && !cellularActive && !wifiActive && !ethernetActive) {
+                pause(true, resetInternalValues = true)
+            } else {
+
+                if (defaultGateway.isNotEmpty()) {
+                    resetInternalValues()
+                }
+
+                Log.e(LOG_TAG, "ArpScanner error getting default gateway ${e.message} ${e.cause}")
+            }
         }
     }
 
@@ -520,22 +540,22 @@ class ArpScanner private constructor(val context: Context,
 
     private fun requestRuleTable() {
 
-        if (ethernetTable.isNotEmpty()) {
-            requestDefaultEthernetGateway()
-        }
+        if (ethernetTable.isEmpty()) {
+            try {
 
-        try {
+                if (session?.isRunning != true) {
+                    session = openSession()
+                }
 
-            if (session?.isRunning != true) {
-                session = openSession()
+                Log.i(LOG_TAG, "ArpScanner requestRuleTable")
+
+                session?.addCommand(commandRuleShow, RULE_COMMAND, this)
+
+            } catch (e: Exception) {
+                Log.e(LOG_TAG, "ArpScanner requestRuleTable exception ${e.message} ${e.cause}")
             }
-
-            Log.i(LOG_TAG, "ArpScanner requestRuleTable")
-
-            session?.addCommand(commandRuleShow, RULE_COMMAND, this)
-
-        } catch (e: Exception) {
-            Log.e(LOG_TAG, "ArpScanner requestRuleTable exception ${e.message} ${e.cause}")
+        } else {
+            requestDefaultEthernetGateway()
         }
     }
 
