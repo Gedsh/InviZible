@@ -6,8 +6,21 @@
     android:targetSandboxVersion="1"
     tools:targetApi="o">
 
-    <uses-feature android:name="android.software.leanback" android:required="false" />
-    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.front"
+        android:required="false" />
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -21,43 +34,45 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
     <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"
-        tools:node="remove"/>
+    <uses-permission
+        android:name="android.permission.REQUEST_INSTALL_PACKAGES"
+        tools:node="remove" />
     <uses-permission
         android:name="android.permission.WRITE_SETTINGS"
-        tools:node="remove"
-        tools:ignore="ProtectedPermissions" />
+        tools:ignore="ProtectedPermissions"
+        tools:node="remove" />
     <uses-permission
         android:name="android.permission.MANAGE_USERS"
-        tools:node="remove"
-        tools:ignore="ProtectedPermissions" />
+        tools:ignore="ProtectedPermissions"
+        tools:node="remove" />
     <uses-permission
         android:name="android.permission.INTERACT_ACROSS_USERS"
-        tools:node="remove"
-        tools:ignore="ProtectedPermissions" />
-    <uses-permission android:name="com.android.vending.BILLING"/>
+        tools:ignore="ProtectedPermissions"
+        tools:node="remove" />
+    <uses-permission android:name="com.android.vending.BILLING" />
 
     <application
         android:name=".ApplicationExt"
         android:allowBackup="false"
+        android:appCategory="productivity"
+        android:banner="@drawable/banner_tv"
+        android:extractNativeLibs="true"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:networkSecurityConfig="@xml/network_security_config"
+        android:requestLegacyExternalStorage="true"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        android:banner="@drawable/banner_tv"
-        android:extractNativeLibs="true"
-        android:appCategory="productivity"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:requestLegacyExternalStorage="true"
+        android:usesCleartextTraffic="true"
         tools:targetApi="q">
 
         <service
             android:name=".utils.AppExitDetectService"
             android:enabled="true"
             android:exported="false"
-            android:stopWithTask = "true"/>
+            android:stopWithTask="true" />
         <service
             android:name=".update.UpdateService"
             android:enabled="true"
@@ -72,7 +87,7 @@
         <service
             android:name=".modules.ModulesService"
             android:enabled="true"
-            android:exported="false"/>
+            android:exported="false" />
 
         <activity
             android:name=".MainActivity"
@@ -80,6 +95,7 @@
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
@@ -104,10 +120,10 @@
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
-                <action android:name="pan.alexander.tordnscrypt.ALWAYS_ON_VPN"/>
-                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
-                <action android:name="android.intent.action.REBOOT"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="pan.alexander.tordnscrypt.ALWAYS_ON_VPN" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="android.intent.action.REBOOT" />
             </intent-filter>
         </receiver>
 
