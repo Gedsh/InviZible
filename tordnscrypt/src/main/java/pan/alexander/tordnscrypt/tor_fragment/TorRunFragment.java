@@ -281,6 +281,10 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
         svTorLog.post(() -> {
             int delta = 0;
 
+            if (svTorLog == null) {
+                return;
+            }
+
             int childIndex= svTorLog.getChildCount() - 1;
 
             if (childIndex < 0) {

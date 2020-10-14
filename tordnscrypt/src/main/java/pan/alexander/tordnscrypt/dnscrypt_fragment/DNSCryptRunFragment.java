@@ -257,6 +257,10 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
         svDNSCryptLog.post(() -> {
             int delta = 0;
 
+            if (svDNSCryptLog == null) {
+                return;
+            }
+
             int childIndex= svDNSCryptLog.getChildCount() - 1;
 
             if (childIndex < 0) {

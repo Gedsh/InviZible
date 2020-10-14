@@ -292,6 +292,10 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
         svITPDLog.post(() -> {
             int delta = 0;
 
+            if (svITPDLog == null) {
+                return;
+            }
+
             int childIndex= svITPDLog.getChildCount() - 1;
 
             if (childIndex < 0) {
