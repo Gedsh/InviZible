@@ -57,11 +57,11 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 
 public class ModulesKiller {
     private final Service service;
-    private String appDataDir;
-    private String busyboxPath;
-    private String dnscryptPath;
-    private String torPath;
-    private String itpdPath;
+    private final String appDataDir;
+    private final String busyboxPath;
+    private final String dnscryptPath;
+    private final String torPath;
+    private final String itpdPath;
 
     private final ModulesStatus modulesStatus;
 
@@ -161,69 +161,73 @@ public class ModulesKiller {
 
             reentrantLock.lock();
 
-            String dnsCryptPid = readPidFile(appDataDir + "/dnscrypt-proxy.pid");
+            try {
+                String dnsCryptPid = readPidFile(appDataDir + "/dnscrypt-proxy.pid");
 
-            boolean moduleStartedWithRoot = new PrefManager(service).getBoolPref("DNSCryptStartedWithRoot");
-            boolean rootIsAvailable = modulesStatus.isRootAvailable();
+                boolean moduleStartedWithRoot = new PrefManager(service).getBoolPref("DNSCryptStartedWithRoot");
+                boolean rootIsAvailable = modulesStatus.isRootAvailable();
 
-            boolean result = doThreeAttemptsToStopModule(dnscryptPath, dnsCryptPid, dnsCryptThread, moduleStartedWithRoot);
+                boolean result = doThreeAttemptsToStopModule(dnscryptPath, dnsCryptPid, dnsCryptThread, moduleStartedWithRoot);
 
-            if (!result) {
-
-                if (rootIsAvailable) {
-                    Log.w(LOG_TAG, "ModulesKiller cannot stop DNSCrypt. Stop with root method!");
-                    result = killModule(dnscryptPath, dnsCryptPid, dnsCryptThread, true, "SIGKILL", 10);
-                }
-
-                if (!moduleStartedWithRoot && !result) {
-                    Log.w(LOG_TAG, "ModulesKiller cannot stop DNSCrypt. Stop with interrupt thread!");
-
-                    makeDelay(5);
-
-                    result = stopModuleWithInterruptThread(dnsCryptThread);
-                }
-            }
-
-            if (moduleStartedWithRoot) {
                 if (!result) {
-                    if (modulesStatus.getDnsCryptState() != RESTARTING) {
-                        new PrefManager(service).setBoolPref("DNSCrypt Running", true);
-                        sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, dnscryptPath);
+
+                    if (rootIsAvailable) {
+                        Log.w(LOG_TAG, "ModulesKiller cannot stop DNSCrypt. Stop with root method!");
+                        result = killModule(dnscryptPath, dnsCryptPid, dnsCryptThread, true, "SIGKILL", 10);
                     }
 
-                    modulesStatus.setDnsCryptState(RUNNING);
+                    if (!moduleStartedWithRoot && !result) {
+                        Log.w(LOG_TAG, "ModulesKiller cannot stop DNSCrypt. Stop with interrupt thread!");
 
-                    Log.e(LOG_TAG, "ModulesKiller cannot stop DNSCrypt!");
+                        makeDelay(5);
 
-                } else {
-                    if (modulesStatus.getDnsCryptState() != RESTARTING) {
-                        new PrefManager(service).setBoolPref("DNSCrypt Running", false);
-                        modulesStatus.setDnsCryptState(STOPPED);
-                        sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
+                        result = stopModuleWithInterruptThread(dnsCryptThread);
                     }
                 }
-            } else {
-                if (dnsCryptThread != null && dnsCryptThread.isAlive()) {
 
-                    if (modulesStatus.getDnsCryptState() != RESTARTING) {
-                        new PrefManager(service).setBoolPref("DNSCrypt Running", true);
-                        sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, dnscryptPath);
+                if (moduleStartedWithRoot) {
+                    if (!result) {
+                        if (modulesStatus.getDnsCryptState() != RESTARTING) {
+                            new PrefManager(service).setBoolPref("DNSCrypt Running", true);
+                            sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, dnscryptPath);
+                        }
+
+                        modulesStatus.setDnsCryptState(RUNNING);
+
+                        Log.e(LOG_TAG, "ModulesKiller cannot stop DNSCrypt!");
+
+                    } else {
+                        if (modulesStatus.getDnsCryptState() != RESTARTING) {
+                            new PrefManager(service).setBoolPref("DNSCrypt Running", false);
+                            modulesStatus.setDnsCryptState(STOPPED);
+                            sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
+                        }
                     }
-
-                    modulesStatus.setDnsCryptState(RUNNING);
-
-                    Log.e(LOG_TAG, "ModulesKiller cannot stop DNSCrypt!");
                 } else {
+                    if (dnsCryptThread != null && dnsCryptThread.isAlive()) {
 
-                    if (modulesStatus.getDnsCryptState() != RESTARTING) {
-                        new PrefManager(service).setBoolPref("DNSCrypt Running", false);
-                        modulesStatus.setDnsCryptState(STOPPED);
-                        sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
+                        if (modulesStatus.getDnsCryptState() != RESTARTING) {
+                            new PrefManager(service).setBoolPref("DNSCrypt Running", true);
+                            sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, dnscryptPath);
+                        }
+
+                        modulesStatus.setDnsCryptState(RUNNING);
+
+                        Log.e(LOG_TAG, "ModulesKiller cannot stop DNSCrypt!");
+                    } else {
+
+                        if (modulesStatus.getDnsCryptState() != RESTARTING) {
+                            new PrefManager(service).setBoolPref("DNSCrypt Running", false);
+                            modulesStatus.setDnsCryptState(STOPPED);
+                            sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
+                        }
                     }
                 }
+            } catch (Exception e){
+                Log.e(LOG_TAG, "ModulesKiller getDNSCryptKillerRunnable exception " + e.getMessage() + " " + e.getCause());
+            } finally {
+                reentrantLock.unlock();
             }
-
-            reentrantLock.unlock();
 
         };
     }
@@ -238,70 +242,75 @@ public class ModulesKiller {
 
             reentrantLock.lock();
 
-            String torPid = readPidFile(appDataDir + "/tor.pid");
+            try {
+                String torPid = readPidFile(appDataDir + "/tor.pid");
 
-            boolean moduleStartedWithRoot = new PrefManager(service).getBoolPref("TorStartedWithRoot");
-            boolean rootIsAvailable = modulesStatus.isRootAvailable();
+                boolean moduleStartedWithRoot = new PrefManager(service).getBoolPref("TorStartedWithRoot");
+                boolean rootIsAvailable = modulesStatus.isRootAvailable();
 
-            boolean result = doThreeAttemptsToStopModule(torPath, torPid, torThread, moduleStartedWithRoot);
+                boolean result = doThreeAttemptsToStopModule(torPath, torPid, torThread, moduleStartedWithRoot);
 
-            if (!result) {
-
-                if (rootIsAvailable) {
-                    Log.w(LOG_TAG, "ModulesKiller cannot stop Tor. Stop with root method!");
-                    result = killModule(torPath, torPid, torThread, true, "SIGKILL", 10);
-                }
-
-                if (!moduleStartedWithRoot && !result) {
-                    Log.w(LOG_TAG, "ModulesKiller cannot stop Tor. Stop with interrupt thread!");
-
-                    makeDelay(5);
-
-                    result = stopModuleWithInterruptThread(torThread);
-                }
-
-            }
-
-            if (moduleStartedWithRoot) {
                 if (!result) {
-                    if (modulesStatus.getTorState() != RESTARTING) {
-                        sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, torPath);
-                        new PrefManager(service).setBoolPref("Tor Running", true);
+
+                    if (rootIsAvailable) {
+                        Log.w(LOG_TAG, "ModulesKiller cannot stop Tor. Stop with root method!");
+                        result = killModule(torPath, torPid, torThread, true, "SIGKILL", 10);
                     }
 
-                    modulesStatus.setTorState(RUNNING);
+                    if (!moduleStartedWithRoot && !result) {
+                        Log.w(LOG_TAG, "ModulesKiller cannot stop Tor. Stop with interrupt thread!");
 
-                    Log.e(LOG_TAG, "ModulesKiller cannot stop Tor!");
+                        makeDelay(5);
 
+                        result = stopModuleWithInterruptThread(torThread);
+                    }
+
+                }
+
+                if (moduleStartedWithRoot) {
+                    if (!result) {
+                        if (modulesStatus.getTorState() != RESTARTING) {
+                            sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, torPath);
+                            new PrefManager(service).setBoolPref("Tor Running", true);
+                        }
+
+                        modulesStatus.setTorState(RUNNING);
+
+                        Log.e(LOG_TAG, "ModulesKiller cannot stop Tor!");
+
+                    } else {
+                        if (modulesStatus.getTorState() != RESTARTING) {
+                            new PrefManager(service).setBoolPref("Tor Running", false);
+                            modulesStatus.setTorState(STOPPED);
+                            sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
+                        }
+                    }
                 } else {
-                    if (modulesStatus.getTorState() != RESTARTING) {
-                        new PrefManager(service).setBoolPref("Tor Running", false);
-                        modulesStatus.setTorState(STOPPED);
-                        sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
+                    if (torThread != null && torThread.isAlive()) {
+
+                        if (modulesStatus.getTorState() != RESTARTING) {
+                            new PrefManager(service).setBoolPref("Tor Running", true);
+                            sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, torPath);
+                        }
+
+                        modulesStatus.setTorState(RUNNING);
+
+                        Log.e(LOG_TAG, "ModulesKiller cannot stop Tor!");
+                    } else {
+
+                        if (modulesStatus.getTorState() != RESTARTING) {
+                            new PrefManager(service).setBoolPref("Tor Running", false);
+                            modulesStatus.setTorState(STOPPED);
+                            sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
+                        }
                     }
                 }
-            } else {
-                if (torThread != null && torThread.isAlive()) {
-
-                    if (modulesStatus.getTorState() != RESTARTING) {
-                        new PrefManager(service).setBoolPref("Tor Running", true);
-                        sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, torPath);
-                    }
-
-                    modulesStatus.setTorState(RUNNING);
-
-                    Log.e(LOG_TAG, "ModulesKiller cannot stop Tor!");
-                } else {
-
-                    if (modulesStatus.getTorState() != RESTARTING) {
-                        new PrefManager(service).setBoolPref("Tor Running", false);
-                        modulesStatus.setTorState(STOPPED);
-                        sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
-                    }
-                }
+            } catch (Exception e){
+                Log.e(LOG_TAG, "ModulesKiller getTorKillerRunnable exception " + e.getMessage() + " " + e.getCause());
+            } finally {
+                reentrantLock.unlock();
             }
 
-            reentrantLock.unlock();
         };
     }
 
@@ -314,31 +323,53 @@ public class ModulesKiller {
 
             reentrantLock.lock();
 
-            String itpdPid = readPidFile(appDataDir + "/i2pd.pid");
+            try {
+                String itpdPid = readPidFile(appDataDir + "/i2pd.pid");
 
-            boolean moduleStartedWithRoot = new PrefManager(service).getBoolPref("ITPDStartedWithRoot");
-            boolean rootIsAvailable = modulesStatus.isRootAvailable();
+                boolean moduleStartedWithRoot = new PrefManager(service).getBoolPref("ITPDStartedWithRoot");
+                boolean rootIsAvailable = modulesStatus.isRootAvailable();
 
-            boolean result = doThreeAttemptsToStopModule(itpdPath, itpdPid, itpdThread, moduleStartedWithRoot);
+                boolean result = doThreeAttemptsToStopModule(itpdPath, itpdPid, itpdThread, moduleStartedWithRoot);
 
-            if (!result) {
-
-                if (rootIsAvailable) {
-                    Log.w(LOG_TAG, "ModulesKiller cannot stop I2P. Stop with root method!");
-                    result = killModule(itpdPath, itpdPid, itpdThread, true, "SIGKILL", 10);
-                }
-
-                if (!moduleStartedWithRoot && !result) {
-                    Log.w(LOG_TAG, "ModulesKiller cannot stop I2P. Stop with interrupt thread!");
-
-                    makeDelay(5);
-
-                    result = stopModuleWithInterruptThread(itpdThread);
-                }
-            }
-
-            if (moduleStartedWithRoot) {
                 if (!result) {
+
+                    if (rootIsAvailable) {
+                        Log.w(LOG_TAG, "ModulesKiller cannot stop I2P. Stop with root method!");
+                        result = killModule(itpdPath, itpdPid, itpdThread, true, "SIGKILL", 10);
+                    }
+
+                    if (!moduleStartedWithRoot && !result) {
+                        Log.w(LOG_TAG, "ModulesKiller cannot stop I2P. Stop with interrupt thread!");
+
+                        makeDelay(5);
+
+                        result = stopModuleWithInterruptThread(itpdThread);
+                    }
+                }
+
+                if (moduleStartedWithRoot) {
+                    if (!result) {
+                        if (modulesStatus.getItpdState() != RESTARTING) {
+                            new PrefManager(service).setBoolPref("I2PD Running", true);
+                            sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, itpdPath);
+                        }
+
+                        modulesStatus.setItpdState(RUNNING);
+
+                        Log.e(LOG_TAG, "ModulesKiller cannot stop I2P!");
+
+                    } else {
+                        if (modulesStatus.getItpdState() != RESTARTING) {
+                            new PrefManager(service).setBoolPref("I2PD Running", false);
+                            modulesStatus.setItpdState(STOPPED);
+                            sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
+                        }
+
+                    }
+                }
+
+                if (itpdThread != null && itpdThread.isAlive()) {
+
                     if (modulesStatus.getItpdState() != RESTARTING) {
                         new PrefManager(service).setBoolPref("I2PD Running", true);
                         sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, itpdPath);
@@ -347,37 +378,20 @@ public class ModulesKiller {
                     modulesStatus.setItpdState(RUNNING);
 
                     Log.e(LOG_TAG, "ModulesKiller cannot stop I2P!");
-
                 } else {
+
                     if (modulesStatus.getItpdState() != RESTARTING) {
                         new PrefManager(service).setBoolPref("I2PD Running", false);
                         modulesStatus.setItpdState(STOPPED);
                         sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
                     }
-
                 }
+            } catch (Exception e){
+                Log.e(LOG_TAG, "ModulesKiller getITPDKillerRunnable exception " + e.getMessage() + " " + e.getCause());
+            } finally {
+                reentrantLock.unlock();
             }
 
-            if (itpdThread != null && itpdThread.isAlive()) {
-
-                if (modulesStatus.getItpdState() != RESTARTING) {
-                    new PrefManager(service).setBoolPref("I2PD Running", true);
-                    sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, itpdPath);
-                }
-
-                modulesStatus.setItpdState(RUNNING);
-
-                Log.e(LOG_TAG, "ModulesKiller cannot stop I2P!");
-            } else {
-
-                if (modulesStatus.getItpdState() != RESTARTING) {
-                    new PrefManager(service).setBoolPref("I2PD Running", false);
-                    modulesStatus.setItpdState(STOPPED);
-                    sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
-                }
-            }
-
-            reentrantLock.unlock();
         };
     }
 

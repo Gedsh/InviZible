@@ -63,9 +63,10 @@ class InstalledApplications(private val context: Context, private val activeApps
 
         this.showSpecials = showSpecials
 
-        reentrantLock.lock()
-
         try {
+
+            reentrantLock.lockInterruptibly()
+
             val uids = arrayListOf<Int>()
             val packageManager: PackageManager = context.packageManager
 
@@ -179,7 +180,7 @@ class InstalledApplications(private val context: Context, private val activeApps
         } catch (e: Exception) {
             Log.e(LOG_TAG, "InstalledApplications getInstalledApps exception ${e.message}\n${e.cause}\n${e.stackTrace}")
         } finally {
-            if (reentrantLock.isLocked) {
+            if (reentrantLock.isLocked && reentrantLock.isHeldByCurrentThread) {
                 reentrantLock.unlock()
             }
         }

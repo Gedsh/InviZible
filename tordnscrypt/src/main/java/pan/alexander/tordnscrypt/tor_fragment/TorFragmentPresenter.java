@@ -90,7 +90,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
     public TorFragmentView view;
 
     private ScheduledFuture<?> scheduledFuture;
-    private int mJobId = PreferencesFastFragment.mJobId;
+    private final int mJobId = PreferencesFastFragment.mJobId;
     private int refreshPeriodHours = 12;
 
     private ModulesStatus modulesStatus;
@@ -739,13 +739,13 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
     private void checkInternetAvailable() {
         checkInetAvailableFutureTask = new FutureTask<>(() -> {
 
+            reentrantLock.lock();
+
             try {
 
                 if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
                     return null;
                 }
-
-                reentrantLock.lock();
 
                 Context context = view.getFragmentActivity();
 

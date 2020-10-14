@@ -95,10 +95,9 @@ public class FileOperations {
 
         @SuppressLint("SetWorldReadable") Runnable runnable = () -> {
 
+            reentrantLock.lock();
+
             try {
-
-                reentrantLock.lock();
-
                 File dir = new File(outputPath);
                 if (!dir.isDirectory()) {
                     if (!dir.mkdirs()) {
@@ -203,11 +202,9 @@ public class FileOperations {
 
         Runnable runnable = () -> {
 
+            reentrantLock.lock();
 
             try {
-
-                reentrantLock.lock();
-
                 File dir = new File(outputPath);
                 if (!dir.isDirectory()) {
                     if (!dir.mkdirs()) {
@@ -303,10 +300,9 @@ public class FileOperations {
     private static void copyBinaryFileSynchronous(final Context context, final String inputPath,
                                                   final String inputFile, final String outputPath) {
 
+        reentrantLock.lock();
+
         try {
-
-            reentrantLock.lock();
-
             File dir = new File(outputPath);
             if (!dir.isDirectory()) {
                 if (!dir.mkdirs()) {
@@ -375,10 +371,10 @@ public class FileOperations {
     }
 
     public static void copyFolderSynchronous(final Context context, final String inputPath, final String outputPath) {
+
+        reentrantLock.lock();
+
         try {
-
-            reentrantLock.lock();
-
             File inDir = null;
 
             try {
@@ -435,9 +431,10 @@ public class FileOperations {
     }
 
     public static boolean deleteFileSynchronous(final Context context, final String inputPath, final String inputFile) {
-        try {
-            reentrantLock.lock();
 
+        reentrantLock.lock();
+
+        try {
             File usedFile = null;
 
             try {
@@ -459,7 +456,6 @@ public class FileOperations {
                         FileOperations fileOperations = new FileOperations();
                         fileOperations.restoreAccess(context, inputPath + "/" + inputFile);
                     } else if (!usedFile.setReadable(true) || !usedFile.setWritable(true)) {
-                        reentrantLock.unlock();
                         Log.e(LOG_TAG, "Unable to chmod file " + inputPath + "/" + inputFile);
                         return true;
                     }
@@ -474,28 +470,27 @@ public class FileOperations {
                         Log.e(LOG_TAG, "Unable to delete file " + usedFile.toString());
                     }
 
-                    reentrantLock.unlock();
                     return true;
                 }
             } else {
-                reentrantLock.unlock();
                 Log.w(LOG_TAG, "Unable to delete file internal function. No file " + usedFile.toString());
                 return false;
             }
         } catch (Exception e) {
-            reentrantLock.unlock();
             Log.e(LOG_TAG, "deleteFileSynchronous function fault " + e.getMessage());
             return true;
+        } finally {
+            reentrantLock.unlock();
         }
-        reentrantLock.unlock();
+
         return false;
     }
 
     public static void deleteFile(final Context context, final String inputPath, final String inputFile, final String tag) {
         Runnable runnable = () -> {
-            try {
-                reentrantLock.lock();
+            reentrantLock.lock();
 
+            try {
                 File usedFile = null;
 
                 try {
@@ -627,9 +622,9 @@ public class FileOperations {
             result = true;
         } catch (Exception e) {
             Log.e(LOG_TAG, "delete Dir function fault " + e.getMessage() + " " + e.getCause());
+        } finally {
+            reentrantLock.unlock();
         }
-
-        reentrantLock.unlock();
 
         return result;
     }
@@ -638,9 +633,9 @@ public class FileOperations {
     public static void readTextFile(final Context context, final String filePath, final String tag) {
         Runnable runnable = () -> {
 
-            try {
+            reentrantLock.lock();
 
-                reentrantLock.lock();
+            try {
 
                 linesListMap.remove(filePath);
 
@@ -722,9 +717,9 @@ public class FileOperations {
     public static void writeToTextFile(final Context context, final String filePath, final List<String> lines, final String tag) {
         Runnable runnable = () -> {
 
-            try {
+            reentrantLock.lock();
 
-                reentrantLock.lock();
+            try {
 
                 File f = null;
 
@@ -845,9 +840,9 @@ public class FileOperations {
 
         } catch (Exception e) {
             Log.e(LOG_TAG, "readTextFileSynchronous Exception " + e.getMessage() + " " + e.getCause());
+        } finally {
+            reentrantLock.unlock();
         }
-
-        reentrantLock.unlock();
 
         return lines;
     }
@@ -899,9 +894,9 @@ public class FileOperations {
         } catch (Exception e) {
             Log.e(LOG_TAG, "writeTextFileSynchronous Exception " + e.getMessage() + " " + e.getCause());
             result = false;
+        } finally {
+            reentrantLock.unlock();
         }
-
-        reentrantLock.unlock();
 
         return result;
     }

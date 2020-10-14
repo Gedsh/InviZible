@@ -40,8 +40,8 @@ public class OwnFileReader {
 
     private static final ReentrantLock reentrantLock = new ReentrantLock();
 
-    private Context context;
-    private String filePath;
+    private final Context context;
+    private final String filePath;
     private BufferedReader br = null;
     private FileInputStream fstream = null;
     private List<String> lines;
@@ -53,36 +53,39 @@ public class OwnFileReader {
 
     public String readLastLines() {
 
-        reentrantLock.lock();
-
-        File file = new File(filePath);
-
-        if (!file.exists()) {
-            reentrantLock.unlock();
-            return "";
-        }
-
-        if (!file.canRead()) {
-            if (!file.setReadable(true)) {
-                Log.w(LOG_TAG, "Impossible to read file " + filePath + " Try restore access");
-
-                FileOperations fileOperations = new FileOperations();
-                fileOperations.restoreAccess(context, filePath);
-            }
-
-            if (file.canRead()) {
-                Log.i(LOG_TAG, "Access to " + filePath + " restored");
-            } else {
-                Log.e(LOG_TAG, "Impossible to read file " + filePath);
-            }
-        }
-
-        lines = new LinkedList<>();
-        StringBuilder sb = new StringBuilder();
-
-        shortenToToLongFile();
+        String result = "";
 
         try {
+
+            reentrantLock.lockInterruptibly();
+
+            File file = new File(filePath);
+
+            if (!file.exists()) {
+                return "";
+            }
+
+            if (!file.canRead()) {
+                if (!file.setReadable(true)) {
+                    Log.w(LOG_TAG, "Impossible to read file " + filePath + " Try restore access");
+
+                    FileOperations fileOperations = new FileOperations();
+                    fileOperations.restoreAccess(context, filePath);
+                }
+
+                if (file.canRead()) {
+                    Log.i(LOG_TAG, "Access to " + filePath + " restored");
+                } else {
+                    Log.e(LOG_TAG, "Impossible to read file " + filePath);
+                }
+            }
+
+            lines = new LinkedList<>();
+            StringBuilder sb = new StringBuilder();
+
+            shortenToToLongFile();
+
+
             fstream = new FileInputStream(filePath);
             br = new BufferedReader(new InputStreamReader(fstream));
 
@@ -116,8 +119,16 @@ public class OwnFileReader {
 
             }
 
-        } catch (IOException e) {
-            Log.e(LOG_TAG, "Impossible to read file " + filePath + " " + e.getMessage());
+            shortenToLongFile();
+
+            result = sb.toString();
+            int lastBrIndex = result.lastIndexOf("<br />");
+            if (lastBrIndex > 0) {
+                result = result.substring(0, lastBrIndex);
+            }
+
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "Impossible to read file " + filePath + " " + e.getMessage() + " " + e.getCause());
         } finally {
             try {
                 if (fstream != null) fstream.close();
@@ -125,17 +136,9 @@ public class OwnFileReader {
             } catch (IOException ex) {
                 Log.e(LOG_TAG, "Error when close file " + filePath + " " + ex.getMessage());
             }
+
+            reentrantLock.unlock();
         }
-
-        shortenToLongFile();
-
-        String result = sb.toString();
-        int lastBrIndex = result.lastIndexOf("<br />");
-        if (lastBrIndex > 0) {
-            result = result.substring(0, lastBrIndex);
-        }
-
-        reentrantLock.unlock();
 
         return result;
     }

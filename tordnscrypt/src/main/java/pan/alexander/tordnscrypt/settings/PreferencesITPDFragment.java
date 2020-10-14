@@ -175,7 +175,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
 
 
 
-        if (key_itpd_to_save.indexOf("subscriptions") >= 0) {
+        if (key_itpd_to_save.contains("subscriptions")) {
             val_itpd.set(key_itpd_to_save.indexOf("subscriptions"), sp.getString("subscriptions", ""));
         }
 

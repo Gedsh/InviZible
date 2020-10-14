@@ -314,6 +314,7 @@ class ArpScanner private constructor(val context: Context,
     private fun resetInternalValues() {
 
         CachedExecutor.getExecutorService().submit {
+
             try {
 
                 reentrantLock.lockInterruptibly()
@@ -331,9 +332,10 @@ class ArpScanner private constructor(val context: Context,
 
             } catch (e: Exception) {
                 Log.w(LOG_TAG, "ArpScanner resetInternalValues exception ${e.message}\n${e.cause}\n${e.stackTrace}")
-            }
-            if (reentrantLock.isLocked && reentrantLock.isHeldByCurrentThread) {
-                reentrantLock.unlock()
+            } finally {
+                if (reentrantLock.isLocked && reentrantLock.isHeldByCurrentThread) {
+                    reentrantLock.unlock()
+                }
             }
         }
 

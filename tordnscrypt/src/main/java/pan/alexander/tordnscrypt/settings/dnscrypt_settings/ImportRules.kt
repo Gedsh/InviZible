@@ -155,16 +155,16 @@ class ImportRules(private val context: Context,
 
         } catch (e: Exception) {
             Log.e(LOG_TAG, "ImportRules Exception " + e.message + " " + e.cause)
+        } finally {
+            onDNSCryptRuleAddLineListener?.onDNSCryptRuleLinesAddingFinished()
+
+            if (powerLocked) {
+                wakeLocksManager.stopPowerWakelock()
+            }
+
+            reentrantLock.unlock()
         }
 
-
-        onDNSCryptRuleAddLineListener?.onDNSCryptRuleLinesAddingFinished()
-
-        if (powerLocked) {
-            wakeLocksManager.stopPowerWakelock()
-        }
-
-        reentrantLock.unlock()
     }
 
     private fun mixFiles(printWriter: PrintWriter,
