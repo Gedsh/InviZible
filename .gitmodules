@@ -4,3 +4,6 @@
 [submodule "TorBuildScript"]
 	path = TorBuildScript
 	url = https://github.com/Gedsh/Tor-Android-build-script
+[submodule "PurpleI2PBuildScript"]
+	path = PurpleI2PBuildScript
+	url = https://github.com/Gedsh/Purple-I2P-Android-build-script
