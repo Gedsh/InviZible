@@ -70,7 +70,7 @@ public class ServiceVPNHandler extends Handler {
         this.serviceVPN = serviceVPN;
     }
 
-    static ServiceVPNHandler getInstance (Looper looper, ServiceVPN serviceVPN) {
+    static ServiceVPNHandler getInstance(Looper looper, ServiceVPN serviceVPN) {
         return serviceVPNHandler = new ServiceVPNHandler(looper, serviceVPN);
     }
 
@@ -87,9 +87,9 @@ public class ServiceVPNHandler extends Handler {
     @Override
     public void handleMessage(@NonNull Message msg) {
         try {
-            synchronized (serviceVPN) {
-                handleIntent((Intent) msg.obj);
-            }
+            //synchronized (serviceVPN) {
+            handleIntent((Intent) msg.obj);
+            //}
         } catch (Throwable ex) {
             Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
         }
@@ -341,7 +341,7 @@ public class ServiceVPNHandler extends Handler {
                 serviceVPN.notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
                 serviceVPN.stopForeground(true);
             } catch (Exception e) {
-                Log.e(LOG_TAG, "ServiceVPNHandler stopServiceVPN exception " + e.getMessage() + " " +e.getCause());
+                Log.e(LOG_TAG, "ServiceVPNHandler stopServiceVPN exception " + e.getMessage() + " " + e.getCause());
             }
         }
 

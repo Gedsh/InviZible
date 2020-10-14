@@ -67,7 +67,6 @@ import pan.alexander.tordnscrypt.BootCompleteReceiver;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
-import pan.alexander.tordnscrypt.arp.ArpScannerKt;
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSQueryLogRecord;
 import pan.alexander.tordnscrypt.iptables.Tethering;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
@@ -1263,50 +1262,50 @@ public class ServiceVPN extends VpnService {
 
     @Override
     public void onDestroy() {
-        synchronized (this) {
+        //synchronized (this) {
 
-            Log.i(LOG_TAG, "VPN Destroy");
-            commandLooper.quit();
+        Log.i(LOG_TAG, "VPN Destroy");
+        commandLooper.quit();
 
-            for (VPNCommand command : VPNCommand.values())
-                commandHandler.removeMessages(command.ordinal());
+        for (VPNCommand command : VPNCommand.values())
+            commandHandler.removeMessages(command.ordinal());
 
-            if (registeredIdleState) {
-                unregisterReceiver(idleStateReceiver);
-                registeredIdleState = false;
-            }
-
-            if (registeredPackageChanged) {
-                unregisterReceiver(packageChangedReceiver);
-                registeredPackageChanged = false;
-            }
-
-            if (networkCallback != null) {
-                unlistenNetworkChanges();
-                networkCallback = null;
-            }
-            if (registeredConnectivityChanged) {
-                unregisterReceiver(connectivityChangedReceiver);
-                registeredConnectivityChanged = false;
-            }
-
-            try {
-                if (vpn != null) {
-                    stopNative();
-                    commandHandler.stopVPN(vpn);
-                    vpn = null;
-                    unPrepare();
-                }
-            } catch (Throwable ex) {
-                Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
-            }
-
-            Log.i(LOG_TAG, "VPN Destroy context=" + jni_context);
-            synchronized (jni_lock) {
-                jni_done(jni_context);
-                jni_context = 0;
-            }
+        if (registeredIdleState) {
+            unregisterReceiver(idleStateReceiver);
+            registeredIdleState = false;
         }
+
+        if (registeredPackageChanged) {
+            unregisterReceiver(packageChangedReceiver);
+            registeredPackageChanged = false;
+        }
+
+        if (networkCallback != null) {
+            unlistenNetworkChanges();
+            networkCallback = null;
+        }
+        if (registeredConnectivityChanged) {
+            unregisterReceiver(connectivityChangedReceiver);
+            registeredConnectivityChanged = false;
+        }
+
+        try {
+            if (vpn != null) {
+                stopNative();
+                commandHandler.stopVPN(vpn);
+                vpn = null;
+                unPrepare();
+            }
+        } catch (Throwable ex) {
+            Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+        }
+
+        Log.i(LOG_TAG, "VPN Destroy context=" + jni_context);
+        synchronized (jni_lock) {
+            jni_done(jni_context);
+            jni_context = 0;
+        }
+        //}
 
         super.onDestroy();
     }
