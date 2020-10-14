@@ -137,7 +137,6 @@ android {
 
     packagingOptions{
         doNotStrip '*/*/libdnscrypt-proxy.so'
-        doNotStrip '*/*/libi2pd.so'
         doNotStrip '*/*/libobfs4proxy.so'
         doNotStrip '*/*/libsnowflake.so'
     }
@@ -168,10 +167,10 @@ repositories {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'androidx.preference:preference:1.1.1'
+    implementation 'androidx.preference:preference-ktx:1.1.1'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.google.android.material:material:1.3.0-alpha03'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.2'
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
     google_playImplementation 'com.android.billingclient:billing:3.0.1'
     testImplementation 'junit:junit:4.13'
