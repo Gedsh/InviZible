@@ -49,7 +49,7 @@ class UsageStatistic(private val context: Context) {
     private var timer: ScheduledExecutorService? = null
     private val modulesStatus = ModulesStatus.getInstance()
 
-    private var uid = PrefManager(context).getStrPref("appUID").toInt()
+    private var uid = -1
 
     private var scheduledFuture: ScheduledFuture<*>? = null
     private var updatePeriod = 0
@@ -65,6 +65,11 @@ class UsageStatistic(private val context: Context) {
     init {
         initModulesLogsTimer()
         startTime = System.currentTimeMillis()
+
+        val uidStr = PrefManager(context).getStrPref("appUID")
+        if (uidStr?.trim()?.matches(Regex("\\d+")) == true) {
+            uid = uidStr.trim().toInt()
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -156,7 +161,7 @@ class UsageStatistic(private val context: Context) {
     @Synchronized
     fun getMessage(currentTime: Long): String {
 
-        if (modulesStatus == null) {
+        if (modulesStatus == null || uid == -1) {
             return context.getString(R.string.notification_text)
         }
 
