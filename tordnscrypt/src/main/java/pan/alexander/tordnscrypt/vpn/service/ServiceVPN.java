@@ -47,6 +47,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.preference.PreferenceManager;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -919,7 +920,7 @@ public class ServiceVPN extends VpnService {
         //Log.i(LOG_TAG, usage.toString());
     }
 
-    private BroadcastReceiver idleStateReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver idleStateReceiver = new BroadcastReceiver() {
         @Override
         @TargetApi(Build.VERSION_CODES.M)
         public void onReceive(Context context, Intent intent) {
@@ -936,7 +937,7 @@ public class ServiceVPN extends VpnService {
         }
     };
 
-    private BroadcastReceiver connectivityChangedReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver connectivityChangedReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             // Filter VPN connectivity changes
@@ -950,7 +951,7 @@ public class ServiceVPN extends VpnService {
         }
     };
 
-    private BroadcastReceiver packageChangedReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver packageChangedReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.i(LOG_TAG, "VPN Received " + intent);
@@ -1170,9 +1171,11 @@ public class ServiceVPN extends VpnService {
             }
         }
 
-        boolean showNotification = true;
+        boolean showNotification;
         if (intent != null) {
             showNotification = intent.getBooleanExtra("showNotification", true);
+        } else {
+            showNotification = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("swShowNotification", true);
         }
 
         if (showNotification) {

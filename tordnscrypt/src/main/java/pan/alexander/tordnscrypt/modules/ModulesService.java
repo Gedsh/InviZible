@@ -166,9 +166,11 @@ public class ModulesService extends Service {
             stopModulesServiceForeground();
         }
 
-        boolean showNotification = true;
+        boolean showNotification;
         if (intent != null) {
             showNotification = intent.getBooleanExtra("showNotification", true);
+        } else {
+            showNotification = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("swShowNotification", true);
         }
 
         if (showNotification) {
