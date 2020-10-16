@@ -328,11 +328,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             case "pref_common_tor_route_all":
                 Preference prefTorSiteUnlockTether = findPreference("prefTorSiteUnlockTether");
                 if (prefTorSiteUnlockTether != null) {
-                    if (Boolean.parseBoolean(newValue.toString())) {
-                        prefTorSiteUnlockTether.setEnabled(false);
-                    } else {
-                        prefTorSiteUnlockTether.setEnabled(true);
-                    }
+                    prefTorSiteUnlockTether.setEnabled(!Boolean.parseBoolean(newValue.toString()));
                 }
 
                 if (new PrefManager(context).getBoolPref("Tor Running")) {
@@ -367,7 +363,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 modulesStatus.setFixTTL(fixed);
                 modulesStatus.setIptablesRulesUpdateRequested(context, true);
 
-                new PrefManager(context).setBoolPref("refresh_main_activity", true);
+                activityCurrentRecreate();
                 break;
             case "pref_common_local_eth_device_addr":
             case "swCompatibilityMode":
@@ -443,7 +439,25 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         }
     }
 
+    private void activityCurrentRecreate() {
 
+        Activity activity = getActivity();
+
+        if (activity == null || activity.isFinishing()) {
+            return;
+        }
+
+        Intent intent = activity.getIntent();
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+        activity.overridePendingTransition(0, 0);
+        activity.finish();
+
+        activity.overridePendingTransition(0, 0);
+        startActivity(intent);
+
+        new PrefManager(activity).setBoolPref("refresh_main_activity", true);
+    }
 
     private void readTorConf(Context context) {
         FileOperations.readTextFile(context, torConfPath, SettingsActivity.tor_conf_tag);
@@ -643,11 +657,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         Preference prefTorSiteUnlockTether = findPreference("prefTorSiteUnlockTether");
         if (prefTorSiteUnlockTether != null) {
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-            if (shPref.getBoolean("pref_common_tor_route_all", false)) {
-                prefTorSiteUnlockTether.setEnabled(false);
-            } else {
-                prefTorSiteUnlockTether.setEnabled(true);
-            }
+            prefTorSiteUnlockTether.setEnabled(!shPref.getBoolean("pref_common_tor_route_all", false));
         }
 
         ArrayList<Preference> preferences = new ArrayList<>();
