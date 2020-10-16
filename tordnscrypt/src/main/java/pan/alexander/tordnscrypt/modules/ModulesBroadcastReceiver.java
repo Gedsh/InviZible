@@ -40,7 +40,6 @@ import androidx.preference.PreferenceManager;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -57,7 +56,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 public class ModulesBroadcastReceiver extends BroadcastReceiver {
 
-    private Context context;
+    private final Context context;
     private boolean receiverRegistered = false;
     private Object networkCallback;
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
@@ -66,7 +65,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
     private static final String tetherStateFilterAction = "android.net.conn.TETHER_STATE_CHANGED";
     private static final String shutdownFilterAction = "android.intent.action.ACTION_SHUTDOWN";
     private static final String powerOFFFilterAction = "android.intent.action.QUICKBOOT_POWEROFF";
-    private ArpScanner arpScanner;
+    private final ArpScanner arpScanner;
 
     public ModulesBroadcastReceiver(Context context, ArpScanner arpScanner) {
         this.context = context;
@@ -293,37 +292,49 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
     }
 
     private void apStateChanged() {
-        ApManager apManager = new ApManager(context);
-        int apState = apManager.isApOn();
+        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
 
-        if (apState == ApManager.apStateON) {
+            try {
+                TimeUnit.SECONDS.sleep(3);
 
-            if (!new PrefManager(context).getBoolPref("APisON")) {
+                ApManager apManager = new ApManager(context);
+                int apState = apManager.isApOn();
 
-                new PrefManager(context).setBoolPref("APisON", true);
+                //Try to check once again if reflection is not working
+                if (apState == ApManager.apStateUnknown) {
+                    apState = apManager.confirmApState();
+                }
 
-                modulesStatus.setIptablesRulesUpdateRequested(context, true);
+                if (apState == ApManager.apStateON) {
 
-                Log.i(LOG_TAG, "ModulesBroadcastReceiver AP is ON");
+                    if (!new PrefManager(context).getBoolPref("APisON")) {
 
+                        new PrefManager(context).setBoolPref("APisON", true);
+
+                        modulesStatus.setIptablesRulesUpdateRequested(context, true);
+
+                        Log.i(LOG_TAG, "ModulesBroadcastReceiver AP is ON");
+
+                    }
+
+                } else if (apState == ApManager.apStateOFF) {
+                    if (new PrefManager(context).getBoolPref("APisON")) {
+                        new PrefManager(context).setBoolPref("APisON", false);
+
+                        modulesStatus.setIptablesRulesUpdateRequested(context, true);
+
+                        Log.i(LOG_TAG, "ModulesBroadcastReceiver AP is OFF");
+                    }
+                }
+            } catch (Exception e) {
+                Log.i(LOG_TAG, "ModulesBroadcastReceiver apStateChanged exception " + e.getMessage() + " " + e.getCause());
             }
 
-        } else if (apState == ApManager.apStateOFF) {
-            if (new PrefManager(context).getBoolPref("APisON")) {
-                new PrefManager(context).setBoolPref("APisON", false);
-
-                modulesStatus.setIptablesRulesUpdateRequested(context, true);
-
-                Log.i(LOG_TAG, "ModulesBroadcastReceiver AP is OFF");
-            }
-        }
+        });
     }
 
     private void tetherStateChanged() {
-
         checkUSBModemState();
-
-        Log.i(LOG_TAG, "ModulesBroadcastReceiver USB modem state is " + (Tethering.usbTetherOn ? "ON" : "OFF"));
     }
 
     private void powerOFFDetected() {
@@ -371,8 +382,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
                         Log.w(LOG_TAG, "ModulesBroadcastReceiver sleep interruptedException " + e.getMessage());
                     }
 
-                    if (context != null && modulesStatus.getMode() == ROOT_MODE
-                            && !modulesStatus.isUseModulesWithRoot()) {
+                    if (modulesStatus.getMode() == ROOT_MODE && !modulesStatus.isUseModulesWithRoot()) {
                         modulesStatus.setIptablesRulesUpdateRequested(context, true);
                     }
 
@@ -390,6 +400,8 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
             Tethering.usbTetherOn = false;
 
             try {
+                TimeUnit.SECONDS.sleep(3);
+
                 for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
                      en.hasMoreElements(); ) {
 
@@ -424,8 +436,8 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
                         }
                     }
                 }
-            } catch (SocketException e) {
-                Log.e(LOG_TAG, "Tethering SocketException " + e.getMessage() + " " + e.getCause());
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "Tethering Exception " + e.getMessage() + " " + e.getCause());
             }
 
             if (Tethering.usbTetherOn && !new PrefManager(context).getBoolPref("ModemIsON")) {
@@ -435,6 +447,8 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
                 new PrefManager(context).setBoolPref("ModemIsON", false);
                 ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
             }
+
+            Log.i(LOG_TAG, "ModulesBroadcastReceiver USB modem state is " + (Tethering.usbTetherOn ? "ON" : "OFF"));
         });
 
     }
