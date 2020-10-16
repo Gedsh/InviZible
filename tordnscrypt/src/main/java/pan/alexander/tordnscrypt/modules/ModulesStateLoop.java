@@ -74,9 +74,9 @@ public class ModulesStateLoop implements Runnable {
     private ModuleState savedTorState;
     private ModuleState savedItpdState;
 
-    private SharedPreferences sharedPreferences;
+    private final SharedPreferences sharedPreferences;
 
-    private Handler handler;
+    private final Handler handler;
 
     ModulesStateLoop(ModulesService modulesService) {
         //Delay in sec before service can stop

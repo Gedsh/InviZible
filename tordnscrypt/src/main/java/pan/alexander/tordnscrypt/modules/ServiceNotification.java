@@ -37,7 +37,7 @@ import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICAT
 public class ServiceNotification {
     private final Service service;
     private final NotificationManager notificationManager;
-    private Long startTime;
+    private final Long startTime;
 
     public ServiceNotification(Service service, NotificationManager notificationManager, Long startTime) {
         this.service = service;
@@ -53,16 +53,6 @@ public class ServiceNotification {
         }
 
         notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
-
-        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationManager != null) {
-            NotificationChannel notificationChannel = new NotificationChannel
-                    (ANDROID_CHANNEL_ID, ANDROID_CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW);
-            notificationChannel.setDescription("Protect InviZible Pro");
-            notificationChannel.enableLights(false);
-            notificationChannel.enableVibration(false);
-            notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-            notificationManager.createNotificationChannel(notificationChannel);
-        }*/
 
         //These three lines makes Notification to open main activity after clicking on it
         Intent notificationIntent = new Intent(service, MainActivity.class);

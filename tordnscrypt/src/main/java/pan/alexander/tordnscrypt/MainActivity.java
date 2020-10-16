@@ -543,11 +543,7 @@ public class MainActivity extends LangAppCompatActivity
             return;
         }
 
-        if (modulesStatus.getTorState() == STOPPED) {
-            newIdentityMenuItem.setVisible(false);
-        } else {
-            newIdentityMenuItem.setVisible(true);
-        }
+        newIdentityMenuItem.setVisible(modulesStatus.getTorState() != STOPPED);
     }
 
     public void showNewTorIdentityIcon(boolean show) {
