@@ -155,9 +155,9 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                 shortenTooLongITPDLog();
             }
 
-            if (tethering_autostart) {
+            ModulesStatus.getInstance().setFixTTL(fixTTL);
 
-                ModulesStatus.getInstance().setFixTTL(fixTTL);
+            if (tethering_autostart) {
 
                 if (!action.equalsIgnoreCase(MY_PACKAGE_REPLACED) && !action.equalsIgnoreCase(ALWAYS_ON_VPN)
                         && !action.equals(SHELL_SCRIPT_CONTROL)) {
