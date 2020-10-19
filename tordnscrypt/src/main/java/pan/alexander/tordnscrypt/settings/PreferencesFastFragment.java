@@ -100,6 +100,13 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
             swAutostartTor.setOnPreferenceChangeListener(this);
         }
 
+        Preference useBridges = findPreference("prefTorBridges");
+        boolean entryNodes = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("EntryNodes", false);
+        if (useBridges != null && entryNodes) {
+            useBridges.setEnabled(false);
+            useBridges.setSummary(R.string.pref_fast_use_tor_bridges_alt_summ);
+        }
+
         Preference pref_fast_autostart_delay = findPreference("pref_fast_autostart_delay");
         if (pref_fast_autostart_delay != null) {
             pref_fast_autostart_delay.setOnPreferenceChangeListener(this);
@@ -117,7 +124,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
         if (ModulesStatus.getInstance().getMode() == ROOT_MODE
                 || ModulesStatus.getInstance().getMode() == VPN_MODE) {
-           changePreferencesWithRootOrVPNMode(context);
+            changePreferencesWithRootOrVPNMode(context);
         } else {
             changePreferencesWithProxyMode();
         }
@@ -164,7 +171,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         final Preference prefDNSCryptServer = findPreference("prefDNSCryptServer");
 
         if (prefDNSCryptServer != null) {
-            prefDNSCryptServer.setSummary(servers.replaceAll("[\\[\\]'\"]",  ""));
+            prefDNSCryptServer.setSummary(servers.replaceAll("[\\[\\]'\"]", ""));
         }
     }
 
@@ -378,6 +385,12 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                     ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
                 }
                 return true;
+            case "Allow LAN":
+                modulesStatus = ModulesStatus.getInstance();
+                if (modulesStatus.getTorState() == RUNNING) {
+                    modulesStatus.setIptablesRulesUpdateRequested(context, true);
+                }
+                return true;
             case "pref_fast_theme":
                 if (appVersion.startsWith("g") && !accelerated) {
                     if (isAdded()) {
@@ -405,6 +418,11 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         Preference pref_fast_all_through_tor = findPreference("pref_fast_all_through_tor");
         if (pref_fast_all_through_tor != null) {
             pref_fast_all_through_tor.setOnPreferenceChangeListener(this);
+        }
+
+        Preference bypassLan = findPreference("Allow LAN");
+        if (bypassLan != null) {
+            bypassLan.setOnPreferenceChangeListener(this);
         }
 
         Preference pref_fast_block_http = findPreference("pref_fast_block_http");
@@ -450,13 +468,12 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         preferencesList.add(findPreference("prefTorAppUnlock"));
         preferencesList.add(findPreference("prefTorSiteExclude"));
         preferencesList.add(findPreference("prefTorAppExclude"));
+        preferencesList.add(findPreference("Allow LAN"));
         preferencesList.add(findPreference("pref_fast_site_refresh_interval"));
 
         for (Preference preference : preferencesList) {
-            if (preference != null) {
-                if (torSettingsCategory != null) {
-                    torSettingsCategory.removePreference(preference);
-                }
+            if (preference != null && torSettingsCategory != null) {
+                torSettingsCategory.removePreference(preference);
             }
         }
 
