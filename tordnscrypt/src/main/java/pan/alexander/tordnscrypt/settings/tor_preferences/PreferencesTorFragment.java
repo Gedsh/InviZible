@@ -18,6 +18,7 @@ package pan.alexander.tordnscrypt.settings.tor_preferences;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
@@ -76,6 +77,11 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
         addPreferencesFromResource(R.xml.preferences_tor);
 
+        Context context = getActivity();
+        if (context == null) {
+            return;
+        }
+
         if (appVersion.endsWith("p")) {
             changePreferencesForGPVersion();
         }
@@ -89,7 +95,6 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         preferences.add(findPreference("ExcludeExitNodes"));
         preferences.add(findPreference("ExitNodes"));
         preferences.add(findPreference("ExcludeNodes"));
-        preferences.add(findPreference("EntryNodes"));
         preferences.add(findPreference("StrictNodes"));
         preferences.add(findPreference("FascistFirewall"));
         preferences.add(findPreference("NewCircuitPeriod"));
@@ -116,6 +121,19 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 preference.setOnPreferenceChangeListener(this);
             } else if (!appVersion.startsWith("g")) {
                 Log.e(LOG_TAG, "PreferencesTorFragment preference is null exception");
+            }
+        }
+
+
+        Preference entryNodes = findPreference("EntryNodes");
+        boolean useDefaultBridges = new PrefManager(context).getBoolPref("useDefaultBridges");
+        boolean useOwnBridges = new PrefManager(context).getBoolPref("useOwnBridges");
+        if (entryNodes != null) {
+            if (useDefaultBridges || useOwnBridges) {
+                entryNodes.setEnabled(false);
+                entryNodes.setSummary(R.string.pref_tor_entry_nodes_alt_summ);
+            } else {
+                entryNodes.setOnPreferenceChangeListener(this);
             }
         }
 
