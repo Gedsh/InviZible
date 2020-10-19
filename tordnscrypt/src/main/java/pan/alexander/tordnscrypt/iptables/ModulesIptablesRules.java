@@ -41,6 +41,7 @@ import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
+import pan.alexander.tordnscrypt.vpn.Util;
 
 import static pan.alexander.tordnscrypt.iptables.Tethering.usbModemAddressesRange;
 import static pan.alexander.tordnscrypt.iptables.Tethering.vpnInterfaceName;
@@ -72,6 +73,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
         runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
         routeAllThroughTor = shPref.getBoolean("pref_fast_all_through_tor", true);
+        lan = shPref.getBoolean("Allow LAN", false);
         blockHttp = shPref.getBoolean("pref_fast_block_http", false);
         apIsOn = new PrefManager(context).getBoolPref("APisON");
         modemIsOn = new PrefManager(context).getBoolPref("ModemIsON");
@@ -92,6 +94,25 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         String appUID = new PrefManager(context).getStrPref("appUID");
         if (runModulesWithRoot) {
             appUID = "0";
+        }
+
+        String bypassLanNat = "";
+        String bypassLanFilter = "";
+        if (lan) {
+            StringBuilder nonTorRanges = new StringBuilder();
+            for (String address: Util.nonTorList) {
+                nonTorRanges.append(address).append(" ");
+            }
+            nonTorRanges.deleteCharAt(nonTorRanges.lastIndexOf(" "));
+
+            bypassLanNat = "non_tor=\"" + nonTorRanges + "\"; " +
+                    "for _lan in $non_tor; do " +
+                    iptables + "-t nat -A tordnscrypt_nat_output -d $_lan -j RETURN; " +
+                    "done";
+            bypassLanFilter = "non_tor=\"" + nonTorRanges + "\"; " +
+                    "for _lan in $non_tor; do " +
+                    iptables + "-A tordnscrypt -d $_lan -j RETURN; " +
+                    "done";
         }
 
         String kernelBypassNat = "";
@@ -134,6 +155,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
         boolean dnsCryptSystemDNSAllowed = new PrefManager(context).getBoolPref("DNSCryptSystemDNSAllowed");
 
+        //These rules will be removed after DNSCrypt and Tor are bootstrapped
         String dnsCryptSystemDNSAllowedNat = "";
         String dnsCryptSystemDNSAllowedFilter = "";
         String dnsCryptRootDNSAllowedNat = "";
@@ -231,12 +253,14 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-A tordnscrypt -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                         blockHttpRuleFilterAll,
                         proxyAppsBypassNat,
+                        bypassLanNat,
                         //Redirect TCP sites to Tor
                         busybox + "cat " + appDataDir + "/app_data/tor/unlock 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
                         //Redirect TCP apps to Tor
                         busybox + "cat " + appDataDir + "/app_data/tor/unlockApps 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
                         kernelRedirectNatTCP,
                         proxyAppsBypassFilter,
+                        bypassLanFilter,
                         //Block all except TCP for Tor sites
                         busybox + "cat " + appDataDir + "/app_data/tor/unlock 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt ! -p tcp -d $var1 -j REJECT; done",
                         //Block all except TCP for Tor apps
@@ -280,21 +304,23 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         torAppsBypassNat,
                         kernelBypassNat,
                         proxyAppsBypassNat,
+                        bypassLanNat,
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
                         iptables + "-N tordnscrypt 2> /dev/null",
-                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p all -j RETURN",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
+                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p all -j RETURN",
+                        iptables + "-A tordnscrypt -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                         iptables + "-A tordnscrypt -m owner --uid-owner $TOR_UID -j RETURN",
                         dnsCryptSystemDNSAllowedFilter,
                         dnsCryptRootDNSAllowedFilter,
-                        iptables + "-A tordnscrypt -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                         blockHttpRuleFilterAll,
                         iptables + "-A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
                         torSitesBypassFilter,
                         torAppsBypassFilter,
                         kernelBypassFilter,
                         proxyAppsBypassFilter,
+                        bypassLanFilter,
                         iptables + "-A tordnscrypt -j REJECT",
                         iptables + "-I OUTPUT -j tordnscrypt",
                         unblockHOTSPOT,
@@ -398,6 +424,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         torRootDNSAllowedFilter,
                         blockHttpRuleFilterAll,
                         proxyAppsBypassNat,
+                        bypassLanNat,
                         //Redirect TCP sites to Tor
                         busybox + "cat " + appDataDir + "/app_data/tor/unlock 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
                         //Redirect TCP apps to Tor
@@ -405,6 +432,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         kernelRedirectNatTCP,
                         //Bypass proxy apps
                         proxyAppsBypassFilter,
+                        bypassLanFilter,
                         //Block all except TCP for Tor sites
                         busybox + "cat " + appDataDir + "/app_data/tor/unlock 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt ! -p tcp -d $var1 -j REJECT; done",
                         //Block all except TCP for Tor apps
@@ -444,13 +472,14 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         torAppsBypassNat,
                         kernelBypassNat,
                         proxyAppsBypassNat,
+                        bypassLanNat,
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
                         iptables + "-N tordnscrypt 2> /dev/null",
-                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p all -j RETURN",
                         torSystemDNSAllowedFilter,
                         torRootDNSAllowedFilter,
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
+                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p all -j RETURN",
                         iptables + "-A tordnscrypt -m owner --uid-owner $TOR_UID -j RETURN",
                         blockHttpRuleFilterAll,
                         iptables + "-A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
@@ -458,6 +487,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         torAppsBypassFilter,
                         kernelBypassFilter,
                         proxyAppsBypassFilter,
+                        bypassLanFilter,
                         iptables + "-A tordnscrypt -j REJECT",
                         iptables + "-I OUTPUT -j tordnscrypt",
                         unblockHOTSPOT,
