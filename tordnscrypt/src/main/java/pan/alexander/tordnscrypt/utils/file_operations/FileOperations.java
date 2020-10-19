@@ -477,6 +477,11 @@ public class FileOperations {
                 return false;
             }
         } catch (Exception e) {
+            if (e.getMessage() != null && e.getMessage().contains("Permission denied")) {
+                FileOperations fileOperations = new FileOperations();
+                fileOperations.restoreAccess(context, inputPath + "/" + inputFile);
+            }
+
             Log.e(LOG_TAG, "deleteFileSynchronous function fault " + e.getMessage());
             return true;
         } finally {
@@ -547,6 +552,11 @@ public class FileOperations {
                         throw new ClassCastException("Wrong File operations type. Choose binary type.");
                     }
                 }
+
+                if (e.getMessage() != null && e.getMessage().contains("Permission denied")) {
+                    FileOperations fileOperations = new FileOperations();
+                    fileOperations.restoreAccess(context, inputPath + "/" + inputFile);
+                }
             } finally {
                 reentrantLock.unlock();
             }
@@ -562,9 +572,9 @@ public class FileOperations {
         reentrantLock.lock();
 
         boolean result = false;
-        try{
+        File usedDir = null;
 
-            File usedDir = null;
+        try{
 
             try {
                 usedDir = new File(inputPath);
@@ -622,6 +632,11 @@ public class FileOperations {
             result = true;
         } catch (Exception e) {
             Log.e(LOG_TAG, "delete Dir function fault " + e.getMessage() + " " + e.getCause());
+
+            if (e.getMessage() != null && e.getMessage().contains("Permission denied")) {
+                FileOperations fileOperations = new FileOperations();
+                fileOperations.restoreAccess(context, inputPath);
+            }
         } finally {
             reentrantLock.unlock();
         }
@@ -678,6 +693,22 @@ public class FileOperations {
                     for (String tmp; (tmp = br.readLine()) != null; ) {
                         linesList.add(tmp.trim());
                     }
+                } catch (Exception ex) {
+                    if (ex.getMessage() != null && ex.getMessage().contains("Permission denied")) {
+                        FileOperations fileOperations = new FileOperations();
+                        fileOperations.restoreAccess(context, filePath);
+
+                        try (FileInputStream fstream = new FileInputStream(filePath);
+                             BufferedReader br = new BufferedReader(new InputStreamReader(fstream))) {
+
+                            for (String tmp; (tmp = br.readLine()) != null; ) {
+                                linesList.add(tmp.trim());
+                            }
+                        }
+
+                    } else {
+                        throw new IllegalStateException("readTextFile input stream exception " + ex.getMessage() + " " + ex.getCause());
+                    }
                 }
 
 
@@ -701,6 +732,11 @@ public class FileOperations {
                     } else {
                         throw new ClassCastException("Wrong File operations type. Choose text type.");
                     }
+                }
+
+                if (e.getMessage() != null && e.getMessage().contains("Permission denied")) {
+                    FileOperations fileOperations = new FileOperations();
+                    fileOperations.restoreAccess(context, filePath);
                 }
             } finally {
                 reentrantLock.unlock();
@@ -778,6 +814,11 @@ public class FileOperations {
                         throw new ClassCastException("Wrong File operations type. Choose text type.");
                     }
                 }
+
+                if (e.getMessage() != null && e.getMessage().contains("Permission denied")) {
+                    FileOperations fileOperations = new FileOperations();
+                    fileOperations.restoreAccess(context, filePath);
+                }
             } finally {
                 reentrantLock.unlock();
             }
@@ -836,10 +877,31 @@ public class FileOperations {
                 for (String tmp; (tmp = br.readLine()) != null; ) {
                     lines.add(tmp.trim());
                 }
+            } catch (Exception ex) {
+                if (ex.getMessage() != null && ex.getMessage().contains("Permission denied")) {
+                    FileOperations fileOperations = new FileOperations();
+                    fileOperations.restoreAccess(context, filePath);
+
+                    try (FileInputStream fstream = new FileInputStream(filePath);
+                         BufferedReader br = new BufferedReader(new InputStreamReader(fstream))) {
+
+                        for (String tmp; (tmp = br.readLine()) != null; ) {
+                            lines.add(tmp.trim());
+                        }
+                    }
+
+                } else {
+                    throw new IllegalStateException("readTextFile synchronous input stream exception " + ex.getMessage() + " " + ex.getCause());
+                }
             }
 
         } catch (Exception e) {
             Log.e(LOG_TAG, "readTextFileSynchronous Exception " + e.getMessage() + " " + e.getCause());
+
+            if (e.getMessage() != null && e.getMessage().contains("Permission denied")) {
+                FileOperations fileOperations = new FileOperations();
+                fileOperations.restoreAccess(context, filePath);
+            }
         } finally {
             reentrantLock.unlock();
         }
@@ -894,6 +956,11 @@ public class FileOperations {
         } catch (Exception e) {
             Log.e(LOG_TAG, "writeTextFileSynchronous Exception " + e.getMessage() + " " + e.getCause());
             result = false;
+
+            if (e.getMessage() != null && e.getMessage().contains("Permission denied")) {
+                FileOperations fileOperations = new FileOperations();
+                fileOperations.restoreAccess(context, filePath);
+            }
         } finally {
             reentrantLock.unlock();
         }
