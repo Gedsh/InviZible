@@ -151,6 +151,7 @@ public class ServiceVPN extends VpnService {
     private boolean compatibilityMode;
     private boolean arpSpoofingDetection;
     private boolean blockInternetWhenArpAttackDetected;
+    private boolean lan = false;
     public static CopyOnWriteArrayList<String> vpnDNS;
 
     private boolean useProxy = false;
@@ -238,10 +239,9 @@ public class ServiceVPN extends VpnService {
 
         // Remove local DNS servers when not routing LAN
         int count = listDns.size();
-        boolean lan = prefs.getBoolean("lan", false);
 
         // Always set DNS servers
-        if (listDns.size() == 0 || listDns.size() < count)
+        if (listDns.size() == 0)
             try {
                 listDns.add(InetAddress.getByName("8.8.8.8"));
                 listDns.add(InetAddress.getByName("8.8.4.4"));
@@ -265,8 +265,7 @@ public class ServiceVPN extends VpnService {
         //boolean ip6 = prefs.getBoolean("ipv6", true);
         boolean ip6 = true;
         boolean subnet = prefs.getBoolean("VPN subnet", true);
-        boolean tethering = prefs.getBoolean("VPN tethering", true);
-        boolean lan = prefs.getBoolean("VPN lan", false);
+        lan = prefs.getBoolean("Allow LAN", false);
         boolean apIsOn = new PrefManager(this).getBoolPref("APisON");
         boolean modemIsOn = new PrefManager(this).getBoolPref("ModemIsON");
         useProxy = prefs.getBoolean("swUseProxy", false);
@@ -312,7 +311,7 @@ public class ServiceVPN extends VpnService {
             List<IPUtil.CIDR> listExclude = new ArrayList<>();
             listExclude.add(new IPUtil.CIDR("127.0.0.0", 8)); // localhost
 
-            if (tethering && !lan && !torIsRunning && (apIsOn || modemIsOn) && !fixTTL) {
+            if (!torIsRunning && (apIsOn || modemIsOn) && !fixTTL) {
                 // USB tethering 192.168.42.x
                 // Wi-Fi tethering 192.168.43.x
                 listExclude.add(new IPUtil.CIDR("192.168.42.0", 23));
@@ -322,15 +321,8 @@ public class ServiceVPN extends VpnService {
                 listExclude.add(new IPUtil.CIDR("192.168.49.0", 24));
             }
 
-            if (lan) {
-                // https://tools.ietf.org/html/rfc1918
-                listExclude.add(new IPUtil.CIDR("10.0.0.0", 8));
-                listExclude.add(new IPUtil.CIDR("172.16.0.0", 12));
-                listExclude.add(new IPUtil.CIDR("192.168.0.0", 16));
-            }
-
             // Broadcast
-            listExclude.add(new IPUtil.CIDR("224.0.0.0", 3));
+            listExclude.add(new IPUtil.CIDR("224.0.0.0", 4));
 
             Collections.sort(listExclude);
 
@@ -376,59 +368,6 @@ public class ServiceVPN extends VpnService {
 
         // Add list of allowed applications
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-
-            /*if (routeAllThroughInviZible && !fixTTL) {
-                try {
-                    builder.addDisallowedApplication(getPackageName());
-                } catch (PackageManager.NameNotFoundException ex) {
-                    Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
-                }
-
-                for (Rule rule : listRule) {
-                    if (!rule.apply) {
-                        try {
-                            Log.i(LOG_TAG, "VPN Not routing " + rule.packageName);
-                            builder.addDisallowedApplication(rule.packageName);
-                        } catch (PackageManager.NameNotFoundException ex) {
-                            Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
-                        }
-                    }
-                }
-            } else {
-
-                boolean applied = false;
-
-                for (Rule rule : listRule) {
-                    if (rule.apply && !fixTTL) {
-                        try {
-                            if (rule.uid != ownUID) {
-                                Log.i(LOG_TAG, "VPN routing " + rule.packageName);
-                                applied = true;
-                                builder.addAllowedApplication(rule.packageName);
-                            }
-                        } catch (PackageManager.NameNotFoundException ex) {
-                            Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
-                        }
-                    }
-                }
-
-                if (!applied) {
-                    try {
-                        builder.addDisallowedApplication(getPackageName());
-                    } catch (PackageManager.NameNotFoundException ex) {
-                        Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
-                    }
-
-                    for (Rule rule : listRule) {
-                        try {
-                            Log.i(LOG_TAG, "VPN Not routing " + rule.packageName);
-                            builder.addDisallowedApplication(rule.packageName);
-                        } catch (PackageManager.NameNotFoundException ex) {
-                            Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
-                        }
-                    }
-                }
-            }*/
 
             try {
                 builder.addDisallowedApplication(getPackageName());
@@ -741,6 +680,14 @@ public class ServiceVPN extends VpnService {
             return true;
         }
 
+        if (lan) {
+            for (String address: Util.nonTorList) {
+                if (Util.isIpInSubnet(destAddress, address)) {
+                    return false;
+                }
+            }
+        }
+
         if (routeAllThroughTor) {
             Set<String> ips = new PrefManager(this).getSetStrPref("ipsForClearNet");
             if (ips != null && ips.contains(destAddress)) {
@@ -769,9 +716,20 @@ public class ServiceVPN extends VpnService {
     // Called from native code
     public boolean isRedirectToProxy(int uid, String destAddress) {
         //Log.i(LOG_TAG, "Redirect to proxy " + uid + " " + destAddress + " " + redirect);
-        return uid != ownUID && !destAddress.equals(itpdRedirectAddress)
-                && (!compatibilityMode || uid != -1 || fixTTL) && !destAddress.equals("127.0.0.1")
-                && !setBypassProxy.contains(String.valueOf(uid));
+        if (uid == ownUID || destAddress.equals(itpdRedirectAddress) || destAddress.equals("127.0.0.1")
+                || fixTTL || (compatibilityMode && uid == -1)) {
+            return false;
+        }
+
+        if (lan) {
+            for (String address: Util.nonTorList) {
+                if (Util.isIpInSubnet(destAddress, address)) {
+                    return false;
+                }
+            }
+        }
+
+        return !setBypassProxy.contains(String.valueOf(uid));
     }
 
     // Called from native code

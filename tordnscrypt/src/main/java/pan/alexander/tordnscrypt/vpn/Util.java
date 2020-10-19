@@ -39,6 +39,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import pan.alexander.tordnscrypt.settings.PathVars;
@@ -49,6 +50,26 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper.reload;
 
 public class Util {
+
+    public static final ArrayList<String> nonTorList = new ArrayList<>(Arrays.asList(
+            /*LAN destinations that shouldn't be routed through Tor*/
+            "127.0.0.0/8",
+            "10.0.0.0/8",
+            "172.16.0.0/12",
+            "192.168.0.0/16",
+            /*Other IANA reserved blocks (These are not processed by tor)*/
+            "0.0.0.0/8",
+            "100.64.0.0/10",
+            "169.254.0.0/16",
+            "192.0.0.0/24",
+            "192.0.2.0/24",
+            "192.88.99.0/24",
+            "198.18.0.0/15",
+            "198.51.100.0/24",
+            "203.0.113.0/24",
+            "224.0.0.0/4",
+            "240.0.0.0/4",
+            "255.255.255.255/32"));
 
     private static native String jni_getprop(String name);
 

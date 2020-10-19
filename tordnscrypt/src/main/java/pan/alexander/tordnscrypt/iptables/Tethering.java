@@ -37,6 +37,7 @@ import java.util.Set;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.vpn.Util;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -93,10 +94,30 @@ public class Tethering {
         boolean routeAllThroughTorTether = shPref.getBoolean("pref_common_tor_route_all", false);
         boolean blockHotspotHttp = shPref.getBoolean("pref_common_block_http", false);
         addressLocalPC = shPref.getString("pref_common_local_eth_device_addr", "192.168.0.100");
+        boolean lan = shPref.getBoolean("Allow LAN", false);
         boolean ttlFix = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE) && !modulesStatus.isUseModulesWithRoot();
         apIsOn = new PrefManager(context).getBoolPref("APisON");
 
         setInterfaceNames();
+
+        String bypassLanPrerouting = "";
+        String bypassLanForward = "";
+        if (lan) {
+            StringBuilder nonTorRanges = new StringBuilder();
+            for (String address: Util.nonTorList) {
+                nonTorRanges.append(address).append(" ");
+            }
+            nonTorRanges.deleteCharAt(nonTorRanges.lastIndexOf(" "));
+
+            bypassLanPrerouting = "non_tor=\"" + nonTorRanges + "\"; " +
+                    "for _lan in $non_tor; do " +
+                    iptables + "-t nat -A tordnscrypt_prerouting -d $_lan -j ACCEPT; " +
+                    "done";
+            bypassLanForward = "non_tor=\"" + nonTorRanges + "\"; " +
+                    "for _lan in $non_tor; do " +
+                    iptables + "-A tordnscrypt_forward -d $_lan -j ACCEPT; " +
+                    "done";
+        }
 
         String torSitesBypassPrerouting = "";
         String torSitesBypassForward = "";
@@ -256,6 +277,7 @@ public class Tethering {
                         blockHttpRulePreroutingTCPeth,
                         blockHttpRulePreroutingUDPeth,
                         torSitesBypassPrerouting,
+                        bypassLanPrerouting,
                         iptables + "-t nat -A tordnscrypt_prerouting -p tcp -m tcp --dport " + pathVars.getTorSOCKSPort() + " -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_prerouting -p udp -m udp --dport " + pathVars.getTorSOCKSPort() + " -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_prerouting -p tcp -m tcp --dport " + pathVars.getITPDSOCKSPort() + " -j ACCEPT",
@@ -271,6 +293,7 @@ public class Tethering {
                         blockHttpRuleForwardTCP,
                         blockHttpRuleForwardUDP,
                         torSitesBypassForward,
+                        bypassLanForward,
                         iptables + "-A tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j RETURN",
                         iptables + "-A tordnscrypt_forward -j REJECT",
                         iptables + "-D FORWARD -j DROP 2> /dev/null || true"
@@ -433,6 +456,7 @@ public class Tethering {
                         blockHttpRulePreroutingTCPeth,
                         blockHttpRulePreroutingUDPeth,
                         torSitesBypassPrerouting,
+                        bypassLanPrerouting,
                         iptables + "-t nat -A tordnscrypt_prerouting -p tcp -m tcp --dport " + pathVars.getTorSOCKSPort() + " -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_prerouting -p udp -m udp --dport " + pathVars.getTorSOCKSPort() + " -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -j REDIRECT --to-ports " + pathVars.getTorTransPort() + " || true",
@@ -443,6 +467,7 @@ public class Tethering {
                         blockHttpRuleForwardTCP,
                         blockHttpRuleForwardUDP,
                         torSitesBypassForward,
+                        bypassLanForward,
                         iptables + "-A tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j RETURN",
                         iptables + "-A tordnscrypt_forward -j REJECT",
                         iptables + "-D FORWARD -j DROP 2> /dev/null || true"
@@ -552,6 +577,7 @@ public class Tethering {
                         blockHttpRulePreroutingTCPeth,
                         blockHttpRulePreroutingUDPeth,
                         torSitesBypassPrerouting,
+                        bypassLanPrerouting,
                         iptables + "-t nat -A tordnscrypt_prerouting -p tcp -m tcp --dport " + pathVars.getTorSOCKSPort() + " -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_prerouting -p udp -m udp --dport " + pathVars.getTorSOCKSPort() + " -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -j REDIRECT --to-ports " + pathVars.getTorTransPort() + " || true",
@@ -562,6 +588,7 @@ public class Tethering {
                         blockHttpRuleForwardTCP,
                         blockHttpRuleForwardUDP,
                         torSitesBypassForward,
+                        bypassLanForward,
                         iptables + "-A tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j RETURN",
                         iptables + "-A tordnscrypt_forward -j REJECT",
                         iptables + "-D FORWARD -j DROP 2> /dev/null || true"

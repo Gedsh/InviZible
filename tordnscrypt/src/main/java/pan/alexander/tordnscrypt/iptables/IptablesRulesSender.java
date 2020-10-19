@@ -40,6 +40,7 @@ abstract class IptablesRulesSender implements IptablesRules {
     boolean blockHttp;
     boolean apIsOn;
     boolean modemIsOn;
+    boolean lan;
 
     IptablesRulesSender(Context context) {
         this.context = context;

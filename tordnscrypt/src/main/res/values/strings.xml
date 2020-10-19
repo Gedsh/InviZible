@@ -124,6 +124,7 @@
     <string name="pref_fast_site_refresh_interval_summ">Period in hours to refresh WebSites IPs. For Android 5.1 and higher. Put 0 to stop refresh.</string>
     <string name="pref_fast_use_tor_bridges">Bridges</string>
     <string name="pref_fast_use_tor_bridges_summ">Use it if you can not connect to Tor network</string>
+    <string name="pref_fast_use_tor_bridges_alt_summ">Please disable Entry Nodes in Tor Settings, otherwise you cannot use Bridges.</string>
     <string name="pref_fast_use_tor_bridges_no">Do Not Use Bridges</string>
     <string name="pref_fast_use_tor_bridges_default">Use Bridges Default List</string>
     <string name="pref_fast_use_tor_bridges_own">Use Bridges Own List</string>
@@ -167,6 +168,8 @@
         <item>3</item>
         <item>4</item>
     </string-array>
+    <string name="pref_fast_tor_bypass_lan">Bypass LAN addresses</string>
+    <string name="pref_fast_tor_bypass_lan_summ">Do not use Tor for LAN destinations and IANA reserved IP blocks</string>
     <string name="pref_fast_language">Select Language</string>
     <string name="pref_fast_block_http">Block http</string>
     <string name="pref_fast_block_http_summ">Deny connection to http port 80</string>
@@ -296,7 +299,8 @@
 
     <string name="pref_dnscrypt_force_tcp_categ">Always use TCP to connect to upstream servers.</string>
     <string name="pref_dnscrypt_force_tcp_summ"> This can be can be useful if you need to route everything through Tor.\n
-        Otherwise, leave this to false, as it doesn\'t improve security (dnscrypt-proxy will always encrypt everything even using UDP), and can only increase latency.</string>
+        Otherwise, leave this to false, as it doesn\'t improve security (dnscrypt-proxy will always encrypt everything even using UDP), and can only increase latency.
+        Do not enable if you want to use Tor onion sites!</string>
     <string name="pref_dnscrypt_force_tcp" translatable="false">force_tcp</string>
 
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS proxy.</string>
@@ -426,6 +430,7 @@
     <string name="pref_tor_exclude_nodes_summ">A list of country codes to avoid when building a circuit.</string>
     <string name="pref_tor_entry_nodes" translatable="false">EntryNodes</string>
     <string name="pref_tor_entry_nodes_summ">A list of country codes of nodes to use for the first hop in your normal circuits.</string>
+    <string name="pref_tor_entry_nodes_alt_summ">Disable Tor bridges if you want to select entry nodes.</string>
     <string name="pref_tor_strict_nodes" translatable="false">StrictNodes</string>
     <string name="pref_tor_strict_nodes_summ">If StrictNodes enabled, Tor will treat solely the ExcludeNodes option as a requirement to follow for all the circuits you generate, even if doing so will break functionality for you.</string>
     <string name="pref_tor_fascist_firewall" translatable="false">FascistFirewall</string>

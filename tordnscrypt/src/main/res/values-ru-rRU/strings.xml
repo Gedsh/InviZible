@@ -138,7 +138,8 @@
     <string name="pref_dnscrypt_require_nofilter_summ">Сервера не должны использовать черный список (для родительского контроля, блокировки рекламы…).</string>
     <string name="pref_dnscrypt_force_tcp_categ">Всегда использовать TCP протокол, для соединения с серверами.</string>
     <string name="pref_dnscrypt_force_tcp_summ">Это может быть полезным, когда вы перенаправляете весь трафик через Tor.
-        Иначе не активируйте, так как это не улучшит безопасность. DNSCrypt и так шифрует все запросы, даже через UDP. А задержки могут увеличиться.</string>
+        Иначе не активируйте, так как это не улучшит безопасность. DNSCrypt и так шифрует все запросы, даже через UDP. А задержки могут увеличиться.
+        Не включайте если хотите пользоваться onion сайтами Tor!</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS прокси.</string>
     <string name="pref_dnscrypt_use_proxy">Включить прокси</string>
     <string name="pref_dnscrypt_proxy_summ">Перенаправить все TCP соединения на Tor. Tor не поддерживает UDP, поэтому обязательно активируйте force_tcp.</string>
@@ -476,4 +477,8 @@
     <string name="notification_mitm">Обнаружена атака «человек посередине»! Ваши данные могут быть перехвачены другим устройством в локальной сети.
         Выключите, подождите несколько секунд и включите Wi-Fi. Использование текущей Wi-Fi точки доступа может быть небезопасным!</string>
     <string name="toast_arp_detection_not_supported">Обнаружение ARP-спуфинг атак не поддерживается на вашем устройстве!</string>
+    <string name="pref_fast_use_tor_bridges_alt_summ">Пожалуйста, выключите Entry Nodes в настройках Tor, иначе Вы не сможете использовать мосты.</string>
+    <string name="pref_tor_entry_nodes_alt_summ">Выключите мосты Tor, если хотите выбрать Entry Nodes.</string>
+    <string name="pref_fast_tor_bypass_lan">Исключить LAN адреса</string>
+    <string name="pref_fast_tor_bypass_lan_summ">Не использовать Tor для LAN адресов и зарезервированных блоков IP IANA</string>
 </resources>
