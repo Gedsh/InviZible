@@ -385,3 +385,17 @@
 * Improved ARP spoofing and rogue DHCP attacks detection when always-on VPN is active.
 * Updated Persian language.
 * Minor fixes.
+
+**InviZible Pro beta 1.0.8**
+* Added bypass Tor option for LAN and IANA addresses.
+* Added Purple I2P build script.
+* Updated Purple I2P.
+* Updated Tor.
+* Updated snowflake.
+* Updated Persian language.
+* Removed unnecessary lines from the manifest.
+* Fixed usb modem and wifi hotspot detection.
+* Implemented auxiliary detection of enabling hotspot.
+* Fixed application usage when uid0 is blocked by firewall.
+* Fixed reading files content when using Run modules with Root.
+* Other fixes.
