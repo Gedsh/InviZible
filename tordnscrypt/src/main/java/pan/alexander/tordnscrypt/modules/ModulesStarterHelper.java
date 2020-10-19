@@ -60,15 +60,15 @@ public class ModulesStarterHelper {
 
     private final ModulesService service;
     private final Handler handler;
-    private String appDataDir;
-    private String busyboxPath;
-    private String dnscryptPath;
-    private String torPath;
-    private String torConfPath;
-    private String obfsPath;
-    private String itpdPath;
+    private final String appDataDir;
+    private final String busyboxPath;
+    private final String dnscryptPath;
+    private final String torPath;
+    private final String torConfPath;
+    private final String obfsPath;
+    private final String itpdPath;
 
-    private ModulesStatus modulesStatus;
+    private final ModulesStatus modulesStatus;
 
     ModulesStarterHelper(ModulesService service, Handler handler, PathVars pathVars) {
         this.service = service;

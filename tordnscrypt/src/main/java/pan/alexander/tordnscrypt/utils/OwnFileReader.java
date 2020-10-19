@@ -176,7 +176,7 @@ public class OwnFileReader {
                 writer.println("");
                 writer.close();
             } catch (IOException e) {
-                Log.e(LOG_TAG, "Unable to rewrite i2pd log file " + e.getMessage());
+                Log.e(LOG_TAG, "Unable to rewrite +" + filePath + " log file " + e.getMessage());
             }
         }
     }

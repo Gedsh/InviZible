@@ -40,12 +40,12 @@ public class PathVars {
     private final SharedPreferences preferences;
 
     private String appDataDir;
-    private String dnscryptPath;
-    private String torPath;
-    private String itpdPath;
-    private String obfsPath;
-    private String snowflakePath;
-    private boolean bbOK;
+    private final String dnscryptPath;
+    private final String torPath;
+    private final String itpdPath;
+    private final String obfsPath;
+    private final String snowflakePath;
+    private final boolean bbOK;
 
 
     @SuppressLint("SdCardPath")
