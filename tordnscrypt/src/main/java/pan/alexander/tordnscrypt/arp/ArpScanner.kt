@@ -76,8 +76,10 @@ class ArpScanner private constructor(val context: Context,
         }
 
     private var arpTableAccessible: Boolean? = null
+
     @Volatile
     private var session: Shell.Interactive? = null
+
     @Volatile
     private var scheduledExecutorService: ScheduledExecutorService? = null
     private val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
@@ -86,24 +88,34 @@ class ArpScanner private constructor(val context: Context,
     private var notSupportedCounterFreeze = false
     private var sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
     private val reentrantLock = ReentrantLock()
+
     @Volatile
     private var connectionAvailable = false
+
     @Volatile
     private var cellularActive = false
+
     @Volatile
     private var wifiActive = false
+
     @Volatile
     private var ethernetActive = false
+
     @Volatile
     private var ethernetTable = ""
+
     @Volatile
     private var defaultGateway = ""
+
     @Volatile
     private var savedDefaultGateway = ""
+
     @Volatile
     private var gatewayMac = ""
+
     @Volatile
     private var savedGatewayMac = ""
+
     @Volatile
     private var stopping = false
 
@@ -452,8 +464,11 @@ class ArpScanner private constructor(val context: Context,
 
                         gatewayMac = getMacFromLine(line)
 
-                        if (savedGatewayMac.isEmpty()) {
-                            Log.i(LOG_TAG, "ArpScanner gatewayMac is $gatewayMac")
+                        if (savedGatewayMac.isEmpty() && gatewayMac.isNotBlank()) {
+                            val macStared = gatewayMac.substring(0..gatewayMac.length - 7)
+                                    .replace(Regex("\\w+?"), "*")
+                                    .plus(gatewayMac.substring(gatewayMac.length -6))
+                            Log.i(LOG_TAG, "ArpScanner gatewayMac is $macStared")
                             savedGatewayMac = gatewayMac
                         }
                         break
@@ -522,8 +537,11 @@ class ArpScanner private constructor(val context: Context,
 
                 gatewayMac = getMacFromLine(line)
 
-                if (savedGatewayMac.isEmpty()) {
-                    Log.i(LOG_TAG, "ArpScanner gatewayMac is $gatewayMac")
+                if (savedGatewayMac.isEmpty() && gatewayMac.isNotBlank()) {
+                    val macStared = gatewayMac.substring(0..gatewayMac.length - 7)
+                            .replace(Regex("\\w+?"), "*")
+                            .plus(gatewayMac.substring(gatewayMac.length -6))
+                    Log.i(LOG_TAG, "ArpScanner gatewayMac is $macStared")
                     savedGatewayMac = gatewayMac
                 }
 
