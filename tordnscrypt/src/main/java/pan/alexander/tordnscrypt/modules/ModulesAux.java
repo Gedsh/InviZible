@@ -21,12 +21,11 @@ package pan.alexander.tordnscrypt.modules;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Build;
-import androidx.preference.PreferenceManager;
 
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
@@ -111,13 +110,8 @@ public class ModulesAux {
             intent.putExtra("showNotification", true);
             context.startForegroundService(intent);
         } else {
-            intent.putExtra("showNotification", isShowNotification(context));
+            intent.putExtra("showNotification", Utils.INSTANCE.isShowNotification(context));
             context.startService(intent);
         }
-    }
-
-    private static boolean isShowNotification(Context context) {
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        return shPref.getBoolean("swShowNotification", true);
     }
 }

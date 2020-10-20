@@ -372,25 +372,21 @@ public class BootCompleteReceiver extends BroadcastReceiver {
     }
 
     private void stopServicesForeground(Context context, OperationMode mode, boolean fixTTL) {
-        if (mode == VPN_MODE || mode == ROOT_MODE && fixTTL) {
-            Intent stopVPNServiceForeground = new Intent(context, VpnService.class);
-            stopVPNServiceForeground.setAction(actionStopServiceForeground);
-            if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                context.startService(stopVPNServiceForeground);
-            } else {
+
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (mode == VPN_MODE || mode == ROOT_MODE && fixTTL) {
+                Intent stopVPNServiceForeground = new Intent(context, VpnService.class);
+                stopVPNServiceForeground.setAction(actionStopServiceForeground);
+                stopVPNServiceForeground.putExtra("showNotification", true);
                 context.startForegroundService(stopVPNServiceForeground);
             }
 
-        }
-
-        Intent stopModulesServiceForeground = new Intent(context, ModulesService.class);
-        stopModulesServiceForeground.setAction(actionStopServiceForeground);
-        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            context.startService(stopModulesServiceForeground);
-        } else {
+            Intent stopModulesServiceForeground = new Intent(context, ModulesService.class);
+            stopModulesServiceForeground.setAction(actionStopServiceForeground);
             context.startForegroundService(stopModulesServiceForeground);
-        }
+            stopModulesServiceForeground.putExtra("showNotification", true);
 
-        Log.i(LOG_TAG, "BootCompleteReceiver stop running services foreground");
+            Log.i(LOG_TAG, "BootCompleteReceiver stop running services foreground");
+        }
     }
 }

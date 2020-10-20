@@ -7,6 +7,7 @@ import android.content.res.Configuration
 import android.graphics.Point
 import android.util.Log
 import android.view.Display
+import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.modules.ModulesService
 import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
 import java.net.Inet4Address
@@ -103,5 +104,10 @@ object Utils {
         }
 
         return result
+    }
+
+    fun isShowNotification(context: Context): Boolean {
+        val shPref = PreferenceManager.getDefaultSharedPreferences(context)
+        return shPref.getBoolean("swShowNotification", true)
     }
 }

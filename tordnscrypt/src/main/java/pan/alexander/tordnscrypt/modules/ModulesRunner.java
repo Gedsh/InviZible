@@ -21,9 +21,9 @@ package pan.alexander.tordnscrypt.modules;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Build;
-import androidx.preference.PreferenceManager;
+
+import pan.alexander.tordnscrypt.utils.Utils;
 
 public class ModulesRunner {
 
@@ -50,13 +50,8 @@ public class ModulesRunner {
             intent.putExtra("showNotification", true);
             context.startForegroundService(intent);
         } else {
-            intent.putExtra("showNotification", isShowNotification(context));
+            intent.putExtra("showNotification", Utils.INSTANCE.isShowNotification(context));
             context.startService(intent);
         }
-    }
-
-    private static boolean isShowNotification(Context context) {
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        return shPref.getBoolean("swShowNotification", true);
     }
 }

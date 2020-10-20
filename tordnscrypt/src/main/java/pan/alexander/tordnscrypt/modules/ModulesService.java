@@ -52,6 +52,7 @@ import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.WakeLocksManager;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
@@ -170,7 +171,7 @@ public class ModulesService extends Service {
         if (intent != null) {
             showNotification = intent.getBooleanExtra("showNotification", true);
         } else {
-            showNotification = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("swShowNotification", true);
+            showNotification = Utils.INSTANCE.isShowNotification(this);
         }
 
         if (showNotification) {
@@ -909,6 +910,8 @@ public class ModulesService extends Service {
         stopVPNServiceIfRunning();
 
         CachedExecutor.INSTANCE.stopExecutorService();
+
+        mHandler.removeCallbacksAndMessages(null);
 
         super.onDestroy();
     }

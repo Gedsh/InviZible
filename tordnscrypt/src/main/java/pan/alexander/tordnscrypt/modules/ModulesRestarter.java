@@ -21,11 +21,8 @@ package pan.alexander.tordnscrypt.modules;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Build;
 import android.util.Log;
-
-import androidx.preference.PreferenceManager;
 
 import java.io.File;
 import java.util.List;
@@ -33,6 +30,7 @@ import java.util.List;
 import eu.chainfire.libsuperuser.Shell;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -70,14 +68,9 @@ public class ModulesRestarter {
             intent.putExtra("showNotification", true);
             context.startForegroundService(intent);
         } else {
-            intent.putExtra("showNotification", isShowNotification(context));
+            intent.putExtra("showNotification", Utils.INSTANCE.isShowNotification(context));
             context.startService(intent);
         }
-    }
-
-    private static boolean isShowNotification(Context context) {
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        return shPref.getBoolean("swShowNotification", true);
     }
 
     Runnable getTorRestarterRunnable(Context context) {

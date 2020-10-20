@@ -76,6 +76,7 @@ import pan.alexander.tordnscrypt.modules.ServiceNotification;
 import pan.alexander.tordnscrypt.modules.UsageStatisticKt;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.VPNCommand;
 import pan.alexander.tordnscrypt.vpn.Allowed;
@@ -1133,7 +1134,7 @@ public class ServiceVPN extends VpnService {
         if (intent != null) {
             showNotification = intent.getBooleanExtra("showNotification", true);
         } else {
-            showNotification = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("swShowNotification", true);
+            showNotification = Utils.INSTANCE.isShowNotification(this);
         }
 
         if (showNotification) {

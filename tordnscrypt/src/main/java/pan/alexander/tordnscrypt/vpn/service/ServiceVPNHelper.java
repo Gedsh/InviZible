@@ -30,6 +30,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.utils.enums.VPNCommand;
@@ -115,13 +116,8 @@ public class ServiceVPNHelper {
             intent.putExtra("showNotification", true);
             context.startForegroundService(intent);
         } else {
-            intent.putExtra("showNotification", isShowNotification(context));
+            intent.putExtra("showNotification", Utils.INSTANCE.isShowNotification(context));
             context.startService(intent);
         }
-    }
-
-    private static boolean isShowNotification(Context context) {
-        SharedPreferences shPref = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
-        return shPref.getBoolean("swShowNotification", true);
     }
 }
