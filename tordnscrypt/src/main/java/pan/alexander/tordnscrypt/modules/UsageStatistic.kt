@@ -22,10 +22,10 @@ package pan.alexander.tordnscrypt.modules
 import android.content.Context
 import android.net.TrafficStats
 import android.os.Build
+import android.os.Process
 import android.util.Log
 import androidx.annotation.RequiresApi
 import pan.alexander.tordnscrypt.R
-import pan.alexander.tordnscrypt.utils.PrefManager
 import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
@@ -49,7 +49,7 @@ class UsageStatistic(private val context: Context) {
     private var timer: ScheduledExecutorService? = null
     private val modulesStatus = ModulesStatus.getInstance()
 
-    private var uid = -1
+    private val uid = Process.myUid()
 
     private var scheduledFuture: ScheduledFuture<*>? = null
     private var updatePeriod = 0
@@ -65,11 +65,6 @@ class UsageStatistic(private val context: Context) {
     init {
         initModulesLogsTimer()
         startTime = System.currentTimeMillis()
-
-        val uidStr = PrefManager(context).getStrPref("appUID")
-        if (uidStr?.trim()?.matches(Regex("\\d+")) == true) {
-            uid = uidStr.trim().toInt()
-        }
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)

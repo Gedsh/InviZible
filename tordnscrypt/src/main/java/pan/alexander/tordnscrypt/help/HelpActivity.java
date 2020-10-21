@@ -32,6 +32,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.os.Looper;
+import android.os.Process;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -120,7 +121,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         busyboxPath = pathVars.getBusyboxPath();
         pathToSaveLogs = pathVars.getDefaultBackupPath();
         iptables = pathVars.getIptablesPath();
-        appUID = new PrefManager(this).getStrPref("appUID");
+        appUID = String.valueOf(Process.myUid());
 
         cacheDir = pathVars.getCacheDirPath(this);
 

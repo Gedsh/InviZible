@@ -21,20 +21,20 @@ package pan.alexander.tordnscrypt.modules;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Process;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 
 class ContextUIDUpdater {
-    private Context context;
-    private String appDataDir;
-    private String busyboxPath;
+    private final Context context;
+    private final String appDataDir;
+    private final String busyboxPath;
 
     ContextUIDUpdater(Context context) {
         this.context = context;
@@ -45,7 +45,7 @@ class ContextUIDUpdater {
 
     void updateModulesContextAndUID() {
 
-        String appUID = new PrefManager(context).getStrPref("appUID");
+        String appUID = String.valueOf(Process.myUid());
         List<String> commands;
         if (ModulesStatus.getInstance().isUseModulesWithRoot()) {
             commands = new ArrayList<>(Arrays.asList(

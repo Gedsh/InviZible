@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.Set;
 
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
@@ -44,7 +43,7 @@ import pan.alexander.tordnscrypt.installer.Installer;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 class RestoreHelper extends Installer {
-    private String appDataDir;
+    private final String appDataDir;
     private String pathBackup;
     private Activity activity;
 
@@ -147,8 +146,8 @@ class RestoreHelper extends Installer {
     }
 
     private void refreshInstallationParameters() {
-        PathVars pathVars = PathVars.getInstance(activity);
-        pathVars.saveAppUID(activity);
+        /*PathVars pathVars = PathVars.getInstance(activity);
+        pathVars.saveAppUID(activity);*/
 
         new PrefManager(activity).setBoolPref("DNSCrypt Running", false);
         new PrefManager(activity).setBoolPref("Tor Running", false);

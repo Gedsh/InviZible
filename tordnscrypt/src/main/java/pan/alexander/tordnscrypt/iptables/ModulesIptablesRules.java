@@ -24,6 +24,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Process;
 import android.util.Log;
 
 import androidx.preference.PreferenceManager;
@@ -91,7 +92,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
         List<String> commands = new ArrayList<>();
 
-        String appUID = new PrefManager(context).getStrPref("appUID");
+        String appUID = String.valueOf(Process.myUid());
         if (runModulesWithRoot) {
             appUID = "0";
         }
@@ -517,7 +518,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
         runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
-        String appUID = new PrefManager(context).getStrPref("appUID");
+        String appUID = String.valueOf(Process.myUid());
         if (runModulesWithRoot) {
             appUID = "0";
         }
@@ -569,7 +570,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
         boolean runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
-        String appUID = new PrefManager(context).getStrPref("appUID");
+        String appUID = String.valueOf(Process.myUid());
         if (runModulesWithRoot) {
             appUID = "0";
         }

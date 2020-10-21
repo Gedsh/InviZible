@@ -21,7 +21,6 @@ package pan.alexander.tordnscrypt.settings;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.pm.ApplicationInfo;
 import android.os.Environment;
 import android.util.Log;
 
@@ -61,9 +60,9 @@ public class PathVars {
 
         String nativeLibPath = context.getApplicationInfo().nativeLibraryDir;
 
-        if (!isModulesInstalled(context) || new PrefManager(context).getStrPref("appUID").isEmpty()) {
+        /*if (!isModulesInstalled(context) || new PrefManager(context).getStrPref("appUID").isEmpty()) {
             saveAppUID(context);
-        }
+        }*/
 
         bbOK = new PrefManager(context).getBoolPref("bbOK");
 
@@ -174,7 +173,7 @@ public class PathVars {
                 && new PrefManager(Objects.requireNonNull(context)).getBoolPref("I2PD Installed");
     }
 
-    public void saveAppUID(Context context) {
+    /*public void saveAppUID(Context context) {
         String appUID = "";
         try {
             ApplicationInfo applicationInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), 0);
@@ -186,7 +185,7 @@ public class PathVars {
         new PrefManager(context).setStrPref("appUID", appUID);
 
         Log.i(LOG_TAG, "PathVars AppDataDir " + appDataDir + " AppUID " + appUID);
-    }
+    }*/
 
     public String getRejectAddress() {
         return "10.191.0.2";

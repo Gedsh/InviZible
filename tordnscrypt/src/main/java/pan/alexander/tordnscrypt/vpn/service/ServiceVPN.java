@@ -47,7 +47,6 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
-import androidx.preference.PreferenceManager;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -125,7 +124,7 @@ public class ServiceVPN extends VpnService {
     private boolean registeredConnectivityChanged = false;
 
     private PathVars pathVars;
-    private static int ownUID = Process.myUid();
+    private static final int ownUID = Process.myUid();
 
     private Object networkCallback = null;
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
@@ -237,9 +236,6 @@ public class ServiceVPN extends VpnService {
             } catch (Throwable ex) {
                 Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
             }
-
-        // Remove local DNS servers when not routing LAN
-        int count = listDns.size();
 
         // Always set DNS servers
         if (listDns.size() == 0)
@@ -574,8 +570,6 @@ public class ServiceVPN extends VpnService {
         boolean bridgesSnowflakeDefault = new PrefManager(this).getStrPref("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
         boolean bridgesSnowflakeOwn = new PrefManager(this).getStrPref("ownBridgesObfs").equals(snowFlakeBridgesOwn);
         boolean dnsCryptSystemDNSAllowed = new PrefManager(this).getBoolPref("DNSCryptSystemDNSAllowed");
-
-        ownUID = Process.myUid();
 
         if (dnsCryptState == RUNNING && !dnsCryptSystemDNSAllowed) {
             addForwardPortRule(17, 53, "127.0.0.1", dnsCryptPort, ownUID);
