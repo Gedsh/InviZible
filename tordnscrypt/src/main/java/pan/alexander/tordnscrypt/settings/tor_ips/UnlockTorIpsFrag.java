@@ -107,7 +107,6 @@ public class UnlockTorIpsFrag extends Fragment {
         return inflater.inflate(R.layout.fragment_preferences_tor_ips, container, false);
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public void onResume() {
         super.onResume();
@@ -209,7 +208,6 @@ public class UnlockTorIpsFrag extends Fragment {
 
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public void onPause() {
         super.onPause();

@@ -712,7 +712,7 @@ public class ServiceVPN extends VpnService {
     public boolean isRedirectToProxy(int uid, String destAddress) {
         //Log.i(LOG_TAG, "Redirect to proxy " + uid + " " + destAddress + " " + redirect);
         if (uid == ownUID || destAddress.equals(itpdRedirectAddress) || destAddress.equals("127.0.0.1")
-                || fixTTL || (compatibilityMode && uid == -1)) {
+                || (fixTTL && !useProxy) || (compatibilityMode && uid == -1)) {
             return false;
         }
 

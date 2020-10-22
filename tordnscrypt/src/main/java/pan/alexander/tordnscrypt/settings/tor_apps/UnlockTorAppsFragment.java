@@ -63,7 +63,6 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.InstalledApplications;
 import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.TorRefreshIPsWork;
 import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
@@ -226,11 +225,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
         Toast.makeText(context, getString(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
-        if (modulesStatus.getMode() == ROOT_MODE) {
-            /////////////Refresh iptables rules/////////////////////////
-            TorRefreshIPsWork torRefreshIPsWork = new TorRefreshIPsWork(context, null);
-            torRefreshIPsWork.refreshIPs();
-        } else if (modulesStatus.getMode() == VPN_MODE) {
+        if (modulesStatus.getMode() == ROOT_MODE || modulesStatus.getMode() == VPN_MODE) {
             modulesStatus.setIptablesRulesUpdateRequested(context, true);
         }
     }
@@ -341,13 +336,13 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
         }
 
         private class TorAppsViewHolder extends RecyclerView.ViewHolder {
-            private Activity activity;
-            private ImageView imgTorApp;
-            private TextView tvTorAppName;
-            private ColorStateList tvTorAppNameColors;
-            private TextView tvTorAppPackage;
-            private SwitchCompat swTorApp;
-            private LinearLayoutCompat lLayoutTorApps;
+            private final Activity activity;
+            private final ImageView imgTorApp;
+            private final TextView tvTorAppName;
+            private final ColorStateList tvTorAppNameColors;
+            private final TextView tvTorAppPackage;
+            private final SwitchCompat swTorApp;
+            private final LinearLayoutCompat lLayoutTorApps;
             private CardView cardTorAppFragment;
 
             private TorAppsViewHolder(View itemView) {
