@@ -566,32 +566,24 @@ public class MainActivity extends LangAppCompatActivity
             return false;
         }
 
-        switch (id) {
-            case R.id.item_unlock:
-                if (isInterfaceLocked()) {
-                    childUnlock(item);
-                } else {
-                    childLock(item);
-                }
-                break;
-            case R.id.item_hotspot:
-                switchHotspot();
-                break;
-            case R.id.item_root:
-                showInfoAboutRoot();
-                break;
-            case R.id.item_new_identity:
-                newTorIdentity();
-                break;
-            case R.id.menu_root_mode:
-                switchToRootMode(item);
-                break;
-            case R.id.menu_vpn_mode:
-                switchToVPNMode(item);
-                break;
-            case R.id.menu_proxies_mode:
-                switchToProxyMode(item);
-                break;
+        if (id == R.id.item_unlock) {
+            if (isInterfaceLocked()) {
+                childUnlock(item);
+            } else {
+                childLock(item);
+            }
+        } else if (id == R.id.item_hotspot) {
+            switchHotspot();
+        } else if (id == R.id.item_root) {
+            showInfoAboutRoot();
+        } else if (id == R.id.item_new_identity) {
+            newTorIdentity();
+        } else if (id == R.id.menu_root_mode) {
+            switchToRootMode(item);
+        } else if (id == R.id.menu_vpn_mode) {
+            switchToVPNMode(item);
+        } else if (id == R.id.menu_proxies_mode) {
+            switchToProxyMode(item);
         }
         return super.onOptionsItemSelected(item);
     }
