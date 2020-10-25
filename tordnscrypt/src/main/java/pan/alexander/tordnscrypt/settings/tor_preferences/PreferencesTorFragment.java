@@ -125,15 +125,20 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         }
 
 
-        Preference entryNodes = findPreference("EntryNodes");
+        Preference entryNodesPref = findPreference("EntryNodes");
         boolean useDefaultBridges = new PrefManager(context).getBoolPref("useDefaultBridges");
         boolean useOwnBridges = new PrefManager(context).getBoolPref("useOwnBridges");
-        if (entryNodes != null) {
+        boolean entryNodesActive = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("EntryNodes", false);
+        if (entryNodesPref != null) {
             if (useDefaultBridges || useOwnBridges) {
-                entryNodes.setEnabled(false);
-                entryNodes.setSummary(R.string.pref_tor_entry_nodes_alt_summ);
+                if (entryNodesActive) {
+                    entryNodesPref.setOnPreferenceChangeListener(this);
+                } else {
+                    entryNodesPref.setEnabled(false);
+                }
+                entryNodesPref.setSummary(R.string.pref_tor_entry_nodes_alt_summ);
             } else {
-                entryNodes.setOnPreferenceChangeListener(this);
+                entryNodesPref.setOnPreferenceChangeListener(this);
             }
         }
 
