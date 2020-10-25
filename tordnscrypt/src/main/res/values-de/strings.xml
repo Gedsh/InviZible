@@ -429,6 +429,59 @@ Dies beschleunigt Abläufe, wenn keine IPv6 Konnektivität vorhanden ist, kann a
     <string name="erase_dnscrypt_rules_dialog_message">"Erledigt! Die Regeln wurden gelöscht."</string>
     <string name="dnscrypt_many_rules_dialog_message">"Zuviele Regeln. Nur die ersten 1000 werden angezeigt."</string>
     <string name="pref_tor_snowflake_stun">"STUN Server für SnowFlake Bridges"</string>
-    <string name="pref_tor_isolate_dest_address_summ">"Teile keine Circuits mit Daten, die an einen anderen Zielport gerichtet sind."</string>
-    <string name="pref_tor_isolate_dest_port_summ">"Teile keine Circuits mit Daten die an einen anderen Zielport gerichtet sind."</string>
+    <string name="pref_tor_isolate_dest_address_summ">"Teile keine Circuits mit Daten, die an eine andere Zieladresse gerichtet sind."</string>
+    <string name="pref_tor_isolate_dest_port_summ">"Teile keine Circuits mit Daten, die an einen anderen Zielport gerichtet sind."</string>
+    <string name="dialog_new_tor_default_bridges_available">"Neue Tor Bridges sind verfügbar. Möchtest du diese aktualisieren?"</string>
+    <string name="pref_common_mitm_categ">"MITM Angriffserkennung"</string>
+    <string name="pref_common_arp_spoofing_detection">"ARP Spoofing Erkennung"</string>
+    <string name="pref_common_arp_spoofing_detection_summ">"Erkenne Man-in-the-middle ARP Spoofing sowie bösartige DHCP Angriffe in WLAN Netzen."</string>
+    <string name="pref_common_arp_block_internet">"Blockiere die Internetverbindung wenn ein Angriff erkannt wird"</string>
+    <string name="pref_common_arp_block_internet_summ">"Die Internetverbindung wird während eines Angriffs blockiert"</string>
+    <string name="pref_common_proxy_categ">"Proxy"</string>
+    <string name="pref_common_proxy">"Benutze SOCKS5 Proxy"</string>
+    <string name="pref_common_proxy_summ">"InviZible Pro wird alle Verbindungen durch den SOCKS5 Proxy leiten"</string>
+    <string name="pref_common_compatibility_mode">"Kompatibilitätsmodus"</string>
+    <string name="pref_common_compatibility_mode_summ">"Aktivieren falls du ein Gerät mit Custom-ROM nutzt, bei dem die Verbindung abbricht sobald du den START Knopf drückst"</string>
+    <string name="pref_common_shell_control">"Aktivere Script Kontrolle"</string>
+    <string name="pref_common_shell_control_summ">"Nutze den folgenden Befehl um Module zu verwalten:
+\"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
+        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 -n %s/.BootCompleteReceiver\"
+1 = Modulstart, 0 = Modulstopp"</string>
+    <string name="pref_common_local_eth_device_addr">"Lokale IP Adresse"</string>
+    <string name="pref_common_local_eth_device_addr_summ">"Aktiviere Fix TTL und konfiguriere das LAN Gerät InviZible zu nutzen. Benutze den Standard Gateway: %s, DNS Server: %s."</string>
+    <string name="pref_common_multi_user">"Unterstützung für Multi-User"</string>
+    <string name="pref_common_multi_user_summ">"Unterstützung für Dual Apps, MIUI, Island, Shelter und Apps mit Arbeitsprofilen"</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">"Aktiviere SOCKS Ausgabe Proxy"</string>
+    <string name="pref_tor_SOCKS_output_address_summ">"Tor wird alle OR Verbindungen durch den SOCKS5 Proxy leiten"</string>
+    <string name="notification_channel_services">"Laufende Dienste"</string>
+    <string name="notification_channel_update">"Update Benachrichtigungen"</string>
+    <string name="notification_channel_root">"Root Kommandos Benachrichtigung"</string>
+    <string name="dialog_send_crash_report">"Ein Absturzbericht wurde vorbereitet.
+Möchtest du diesen zum Verbessern von InviZible an den Entwickler senden?"</string>
+    <string name="btn_new_tor_identity">"Neue Tor Identität"</string>
+    <string name="toast_new_tor_identity">"Tor Identität gewechselt"</string>
+    <string name="proxy_server_ip">"Proxy Server:"</string>
+    <string name="proxy_server_port">"Proxy Port:"</string>
+    <string name="proxy_server_user_name">"Benutzername:"</string>
+    <string name="proxy_server_user_pass">"Passwort:"</string>
+    <string name="proxy_server_empty_field_hint">"Dieses Feld kann leer gelassen werden"</string>
+    <string name="proxy_exclude_apps_from_proxy">"Ausschluss von Programmen"</string>
+    <string name="proxy_exclude_apps_from_proxy_summ">"Liste von Applikationen zur Direktverbindung. Diese Programme werden weder Tor benutzen, noch sich über den Proxy ins Internet verbinden!"</string>
+    <string name="proxy_select_proxy_app">" Please select proxy owner application at least, if you are using a local proxy."</string>
+    <string name="proxy_use_for_dnscrypt">"Benutze Proxy für DNSCrypt"</string>
+    <string name="proxy_use_for_tor">"Benutze Proxy für Tor"</string>
+    <string name="proxy_use_for_itpd">"Benutze Proxy für Purple I2P"</string>
+    <string name="proxy_save">"Speichern und aktivieren"</string>
+    <string name="proxy_no_connection">"Verbindungsfehler zum Proxy: %s"</string>
+    <string name="proxy_successful_connection">"Erfolgreiche Verbindung. Ping %s ms."</string>
+    <string name="notification_arp_spoofing">"ARP Spoofing erkannt!"</string>
+    <string name="notification_rogue_dhcp">"Bösartiges DHCP erkannt!"</string>
+    <string name="notification_mitm">"Man-in-the-middle Angriff erkannt! Deine Daten können von einem anderen Gerät im lokalen Netzwerk abgefangen werden.
+WLAN aus- und kurz darauf wieder anschalten. Die Verwendung des derzeitigen Hotspots kann ebenfalls betroffen sein.
+"</string>
+    <string name="toast_arp_detection_not_supported">"Erkennung von ARP Spoofing auf deinem Gerät wird leider nicht unterstützt!"</string>
+    <string name="pref_fast_use_tor_bridges_alt_summ">"Please disable Entry Nodes in Tor Settings, otherwise you cannot use Bridges."</string>
+    <string name="pref_fast_tor_bypass_lan">"Bypass LAN addresses"</string>
+    <string name="pref_fast_tor_bypass_lan_summ">"Do not use Tor for LAN destinations and IANA reserved IP blocks"</string>
+    <string name="pref_tor_entry_nodes_alt_summ">"Disable Tor bridges if you want to select entry nodes."</string>
 </resources>
