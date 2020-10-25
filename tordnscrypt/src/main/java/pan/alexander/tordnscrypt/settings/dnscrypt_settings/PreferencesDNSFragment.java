@@ -112,11 +112,6 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         preferences.add(findPreference("block_unqualified"));
         preferences.add(findPreference("block_undelegated"));
         preferences.add(findPreference("block_ipv6"));
-        preferences.add(findPreference("local_blacklist"));
-        preferences.add(findPreference("local_whitelist"));
-        preferences.add(findPreference("local_ipblacklist"));
-        preferences.add(findPreference("local_forwarding_rules"));
-        preferences.add(findPreference("local_cloaking_rules"));
 
         for (Preference preference : preferences) {
             if (preference != null) {
@@ -126,7 +121,22 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             }
         }
 
-        preferences = new ArrayList<>();
+        Preference editDNSTomlDirectly = findPreference("editDNSTomlDirectly");
+        if (editDNSTomlDirectly != null) {
+            editDNSTomlDirectly.setOnPreferenceClickListener(this);
+        } else if (!appVersion.startsWith("g")) {
+            Log.e(LOG_TAG, "PreferencesDNSFragment preference is null exception");
+        }
+
+        if (ModulesStatus.getInstance().isUseModulesWithRoot()) {
+            removeImportErasePrefs();
+        } else {
+            registerImportErasePrefs();
+        }
+    }
+
+    private void registerImportErasePrefs() {
+        ArrayList<Preference> preferences = new ArrayList<>();
 
         preferences.add(findPreference("local_blacklist"));
         preferences.add(findPreference("local_whitelist"));
@@ -138,7 +148,6 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         preferences.add(findPreference("erase_ipblacklist"));
         preferences.add(findPreference("erase_forwarding_rules"));
         preferences.add(findPreference("erase_cloaking_rules"));
-        preferences.add(findPreference("editDNSTomlDirectly"));
 
         for (Preference preference : preferences) {
             if (preference != null) {
@@ -146,6 +155,48 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             } else if (!appVersion.startsWith("g")) {
                 Log.e(LOG_TAG, "PreferencesDNSFragment preference is null exception");
             }
+        }
+    }
+
+    private void removeImportErasePrefs() {
+        PreferenceCategory forwarding = findPreference("pref_dnscrypt_forwarding_rules");
+        Preference local_forwarding_rules = findPreference("local_forwarding_rules");
+        Preference erase_forwarding_rules = findPreference("erase_forwarding_rules");
+        if (forwarding != null && local_forwarding_rules != null && erase_forwarding_rules != null) {
+            forwarding.removePreference(local_forwarding_rules);
+            forwarding.removePreference(erase_forwarding_rules);
+        }
+
+        PreferenceCategory cloaking = findPreference("pref_dnscrypt_cloaking_rules");
+        Preference local_cloaking_rules = findPreference("local_cloaking_rules");
+        Preference erase_cloaking_rules = findPreference("erase_cloaking_rules");
+        if (cloaking != null && local_cloaking_rules != null && erase_cloaking_rules != null) {
+            cloaking.removePreference(local_cloaking_rules);
+            cloaking.removePreference(erase_cloaking_rules);
+        }
+
+        PreferenceCategory blacklist = findPreference("pref_dnscrypt_blacklist");
+        Preference local_blacklist = findPreference("local_blacklist");
+        Preference erase_blacklist = findPreference("erase_blacklist");
+        if (blacklist != null && local_blacklist != null && erase_blacklist != null) {
+            blacklist.removePreference(local_blacklist);
+            blacklist.removePreference(erase_blacklist);
+        }
+
+        PreferenceCategory ipblacklist = findPreference("pref_dnscrypt_ipblacklist");
+        Preference local_ipblacklist = findPreference("local_ipblacklist");
+        Preference erase_ipblacklist = findPreference("erase_ipblacklist");
+        if (ipblacklist != null && local_ipblacklist != null && erase_ipblacklist != null) {
+            ipblacklist.removePreference(local_ipblacklist);
+            ipblacklist.removePreference(erase_ipblacklist);
+        }
+
+        PreferenceCategory whitelist = findPreference("pref_dnscrypt_whitelist");
+        Preference local_whitelist = findPreference("local_whitelist");
+        Preference erase_whitelist = findPreference("erase_whitelist");
+        if (whitelist != null && local_whitelist != null && erase_whitelist != null) {
+            whitelist.removePreference(local_whitelist);
+            whitelist.removePreference(erase_whitelist);
         }
     }
 
