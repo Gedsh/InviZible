@@ -399,3 +399,10 @@
 * Fixed application usage when uid0 is blocked by firewall.
 * Fixed reading files content when using Run modules with Root.
 * Other fixes.
+
+**InviZible Pro beta 1.0.9**
+* Updated snowflake.
+* Updated German language
+* Changed method of defining own uid to fix backup and restore using third party applications.
+* Fixed using a proxy with the FixTTL option enabled.
+* Other minor fixes.
