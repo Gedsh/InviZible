@@ -81,7 +81,6 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
         preferences.add(findPreference("bandwidth"));
         preferences.add(findPreference("share"));
         preferences.add(findPreference("ssu"));
-        preferences.add(findPreference("ntcp"));
         preferences.add(findPreference("Enable ntcpproxy"));
         preferences.add(findPreference("ntcpproxy"));
         preferences.add(findPreference("HTTP proxy"));
@@ -102,8 +101,6 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
         preferences.add(findPreference("transittunnels"));
         preferences.add(findPreference("openfiles"));
         preferences.add(findPreference("coresize"));
-        preferences.add(findPreference("ntcpsoft"));
-        preferences.add(findPreference("ntcphard"));
         preferences.add(findPreference("defaulturl"));
 
         for (Preference preference : preferences) {
@@ -291,9 +288,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
             } else if ((Objects.equals(preference.getKey(), "share")
                     || Objects.equals(preference.getKey(), "transittunnels")
                     || Objects.equals(preference.getKey(), "openfiles")
-                    || Objects.equals(preference.getKey(), "coresize")
-                    || Objects.equals(preference.getKey(), "ntcpsoft")
-                    || Objects.equals(preference.getKey(), "ntcphard"))
+                    || Objects.equals(preference.getKey(), "coresize"))
                     && !newValue.toString().matches("\\d+")) {
                 return false;
             } else if ((Objects.equals(preference.getKey(), "incoming host")
@@ -462,8 +457,6 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
             ArrayList<Preference> preferences = new ArrayList<>();
             preferences.add(findPreference("openfiles"));
             preferences.add(findPreference("coresize"));
-            preferences.add(findPreference("ntcpsoft"));
-            preferences.add(findPreference("ntcphard"));
 
             for (Preference preference : preferences) {
                 if (preference != null) {

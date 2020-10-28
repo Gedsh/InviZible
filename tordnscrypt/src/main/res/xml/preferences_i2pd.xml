@@ -76,11 +76,11 @@
             android:summary="@string/pref_itpd_com_ssu_summ"
             android:title="@string/pref_itpd_com_ssu" />
         <CheckBoxPreference
-            android:id="@+id/pref_itpd_com_ntcp"
+            android:id="@+id/pref_itpd_ntcp2_enabled"
             android:defaultValue="true"
-            android:key="ntcp"
-            android:summary="@string/pref_itpd_com_ntcp_summ"
-            android:title="@string/pref_itpd_com_ntcp" />
+            android:key="ntcp2 enabled"
+            android:title="@string/pref_itpd_ntcp2"
+            android:summary="@string/pref_itpd_com_ntcp_summ"/>
         <SwitchPreference
             android:id="@+id/pref_itpd_com_use_ntcpproxy"
             android:defaultValue="false"
@@ -95,11 +95,6 @@
             android:singleLine="true"
             android:summary="@string/pref_itpd_com_ntcpproxy_summ"
             android:title="@string/pref_itpd_com_ntcpproxy" />
-        <CheckBoxPreference
-            android:id="@+id/pref_itpd_ntcp2_enabled"
-            android:defaultValue="true"
-            android:key="ntcp2 enabled"
-            android:title="@string/pref_itpd_ntcp2_enabled" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_itpd_HTTP_proxy"
         android:key="itpd_category_http_proxy">
@@ -241,22 +236,6 @@
             android:singleLine="true"
             android:summary="@string/pref_itpd_limits_coresize_summ"
             android:title="@string/pref_itpd_limits_coresize" />
-        <EditTextPreference
-            android:id="@+id/pref_itpd_limits_ntcpsoft"
-            android:defaultValue="0"
-            android:key="ntcpsoft"
-            android:selectAllOnFocus="false"
-            android:singleLine="true"
-            android:summary="@string/pref_itpd_limits_ntcpsoft_summ"
-            android:title="@string/pref_itpd_limits_ntcpsoft" />
-        <EditTextPreference
-            android:id="@+id/pref_itpd_limits_ntcphard"
-            android:defaultValue="0"
-            android:key="ntcphard"
-            android:selectAllOnFocus="false"
-            android:singleLine="true"
-            android:summary="@string/pref_itpd_limits_ntcphard_summ"
-            android:title="@string/pref_itpd_limits_ntcphard" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_itpd_addressbook">
 

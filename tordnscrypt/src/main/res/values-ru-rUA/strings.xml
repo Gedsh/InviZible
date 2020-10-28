@@ -237,7 +237,7 @@
     <string name="pref_itpd_com_bandwidth_summ">Ограничение полосы пропускания в KBps.</string>
     <string name="pref_itpd_com_share_summ">Максимальная полоса пропускания для транзита 0–100%.</string>
     <string name="pref_itpd_com_ssu_summ">Включить SSU протокол (использовать UDP).</string>
-    <string name="pref_itpd_com_ntcp_summ">Включить NTCP протокол (использовать TCP).</string>
+    <string name="pref_itpd_com_ntcp_summ">Включить NTCP2 протокол (использовать TCP).</string>
     <string name="pref_itpd_com_use_ntcpproxy">Включить ntcpproxy</string>
     <string name="pref_itpd_com_ntcpproxy_summ">Выбрать прокси сервер для NTCP. Должно быть http://address:port или socks://address:port.</string>
     <string name="pref_itpd_HTTP_proxy_port">HTTP proxy порт</string>
@@ -261,8 +261,6 @@
     <string name="pref_itpd_limits_transittunnels_summ">Максимальное количество транзитных тунелей. 2500 по умолчанию.</string>
     <string name="pref_itpd_limits_openfiles_summ">Ограничить количество открытых файловых дескрипторов (0 - использовать системное ограничение).</string>
     <string name="pref_itpd_limits_coresize_summ">Максимальный размер файла ядра в Kb (0 - использовать системное ограничение).</string>
-    <string name="pref_itpd_limits_ntcpsoft_summ">Порог для запуска вероятностного завершения ntcp сессии. (0 - использовать системное ограничение).</string>
-    <string name="pref_itpd_limits_ntcphard_summ">Максимальное количество ntcp сессий. (0 - использовать системное ограничение).</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">Каталог адресов для начальной настройки.</string>
     <string name="pref_itpd_addressbook_subscriptions_summ">Каталог адресов.</string>
     <string name="pref_itpd_not_exist">Настройка не существует в i2pd.conf!</string>

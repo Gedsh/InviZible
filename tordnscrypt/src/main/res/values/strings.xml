@@ -514,7 +514,7 @@
     <string name="pref_itpd_com_ssu" translatable="false">ssu</string>
     <string name="pref_itpd_com_ssu_summ">Enable SSU transport protocol (use UDP).</string>
     <string name="pref_itpd_com_ntcp" translatable="false">ntcp</string>
-    <string name="pref_itpd_com_ntcp_summ">Enable NTCP transport protocol (use TCP).</string>
+    <string name="pref_itpd_com_ntcp_summ">Enable NTCP2 transport protocol (use TCP).</string>
     <string name="pref_itpd_com_use_ntcpproxy">Enable ntcpproxy</string>
     <string name="pref_itpd_com_ntcpproxy" translatable="false">ntcpproxy</string>
     <string name="pref_itpd_com_ntcpproxy_summ">Specify proxy server for NTCP. Should be http://address:port or socks://address:port.</string>
@@ -553,10 +553,6 @@
     <string name="pref_itpd_limits_openfiles_summ">Limit number of open file descriptors (0 - use system limit).</string>
     <string name="pref_itpd_limits_coresize" translatable="false">coresize</string>
     <string name="pref_itpd_limits_coresize_summ">Maximum size of corefile in Kb (0 - use system limit).</string>
-    <string name="pref_itpd_limits_ntcpsoft" translatable="false">ntcpsoft</string>
-    <string name="pref_itpd_limits_ntcpsoft_summ">Threshold to start probabalistic backoff with ntcp sessions (0 - use system limit).</string>
-    <string name="pref_itpd_limits_ntcphard" translatable="false">ntcphard</string>
-    <string name="pref_itpd_limits_ntcphard_summ">Maximum number of ntcp sessions (0 - use system limit).</string>
     <string name="pref_itpd_addressbook" translatable="false">Addressbook</string>
     <string name="pref_itpd_addressbook_defaulturl" translatable="false">defaulturl</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">AddressBook subscription URL for initial setup.</string>

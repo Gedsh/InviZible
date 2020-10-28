@@ -263,7 +263,7 @@ Die Anfragen können das Vorhandensein von Malware, kaputten Applikationen oder 
     <string name="pref_itpd_com_bandwidth_summ">"Bandbreitenbegrenzung in KBps."</string>
     <string name="pref_itpd_com_share_summ">"Max % der Bandbreitenbegrenzung für Transit. 0–100."</string>
     <string name="pref_itpd_com_ssu_summ">"Aktiviere SSU Transport Protokoll (verwende UDP)."</string>
-    <string name="pref_itpd_com_ntcp_summ">"Aktiviere NTCP Transport Protokoll (verwende TCP)."</string>
+    <string name="pref_itpd_com_ntcp_summ">"Aktiviere NTCP2 Transport Protokoll (verwende TCP)."</string>
     <string name="pref_itpd_com_use_ntcpproxy">"Aktiviere ntcpproxy"</string>
     <string name="pref_itpd_com_ntcpproxy_summ">"Spezifiziere Proxy Server für NTCP. Benutze folgende Syntax: http://address:port oder socks://address:port."</string>
     <string name="pref_itpd_HTTP_proxy">"HTTP Proxy"</string>
@@ -287,8 +287,6 @@ Die Anfragen können das Vorhandensein von Malware, kaputten Applikationen oder 
     <string name="pref_itpd_limits_transittunnels_summ">"Setze maximale Anzahl von Transit Tunnels ausser Kraft. 2500 Standard."</string>
     <string name="pref_itpd_limits_openfiles_summ">"Begrenze die Anzahl an offenen Dateien (0 - Benutze Systemgrenze)."</string>
     <string name="pref_itpd_limits_coresize_summ">"Maximale Grösse der Kerndatei in Kb (0 - Benutze Systemgrenze)."</string>
-    <string name="pref_itpd_limits_ntcpsoft_summ">"Grenzwert um mit ntcp Sessions zu beginnen (0 - Benutze Systemgrenze)."</string>
-    <string name="pref_itpd_limits_ntcphard_summ">"Maximale Anzahl von ntcp Sessions (0 - Benutze Systemgrenze)."</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">"Addressbuch Bereitstellungs URL für die Ersteinrichtung."</string>
     <string name="pref_itpd_addressbook_subscriptions_summ">"Addressbuch Bereitstellungs URLs."</string>
     <string name="pref_itpd_not_exist">"Voreinstellung existiert nicht in i2pd.conf!"</string>

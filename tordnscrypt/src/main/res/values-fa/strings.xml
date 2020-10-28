@@ -286,7 +286,7 @@
     <string name="pref_itpd_com_bandwidth_summ">"محدودیت پهنای باند در واحد KBps."</string>
     <string name="pref_itpd_com_share_summ">"حداکثر ٪ از پهنای باند برای انتقال. 0-100."</string>
     <string name="pref_itpd_com_ssu_summ">"فعال کردن پروتکل انتقال SSU (استفاده از UDP)."</string>
-    <string name="pref_itpd_com_ntcp_summ">"فعال کردن پروتکل NTCP (استفاده از TCP)."</string>
+    <string name="pref_itpd_com_ntcp_summ">"فعال کردن پروتکل NTCP2 (استفاده از TCP)."</string>
     <string name="pref_itpd_com_use_ntcpproxy">"فعال کردن ntcpproxy"</string>
     <string name="pref_itpd_com_ntcpproxy_summ">"سرور پروکسی را برای NTCP مشخص کنید. باید http://address:port یا socks://address:port باشد."</string>
     <string name="pref_itpd_HTTP_proxy">"پروکسی HTTP"</string>
@@ -310,8 +310,6 @@
     <string name="pref_itpd_limits_transittunnels_summ">"حداکثر تعداد تونل‌های ترانزیت را نادیده بگیرید. 2500 به‌صورت پیش‌فرض."</string>
     <string name="pref_itpd_limits_openfiles_summ">"تعداد توصیف‌کننده‌های فایل باز (صفر - استفاده از محدودیت سیستم) محدود کنید."</string>
     <string name="pref_itpd_limits_coresize_summ">"حداکثر اندازه فایل اصلی در واحد Kb (صفر - استفاده از محدودیت سیستم)."</string>
-    <string name="pref_itpd_limits_ntcpsoft_summ">"آستانه شروع مجدد احتمالی با جلسات ntcp (صفر - استفاده از محدودیت سیستم)."</string>
-    <string name="pref_itpd_limits_ntcphard_summ">"حداکثر تعداد جلسات ntcp (صفر - استفاده از محدودیت سیستم)."</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">"URL اشتراک کتابچه آدرس برای تنظیم اولیه."</string>
 
     <!-- های مشترک url دفترچه آدرس -->

@@ -266,7 +266,7 @@
     <string name="pref_itpd_com_bandwidth_summ">"Batas bandwidth dalam KBps."</string>
     <string name="pref_itpd_com_share_summ">"Maks % batas bandwidth untuk transit. 0–100."</string>
     <string name="pref_itpd_com_ssu_summ">"Aktifkan protokol transport SSU (gunakan UDP)."</string>
-    <string name="pref_itpd_com_ntcp_summ">"Aktifkan protokol transport NTCP (gunakan TCP)."</string>
+    <string name="pref_itpd_com_ntcp_summ">"Aktifkan protokol transport NTCP2 (gunakan TCP)."</string>
     <string name="pref_itpd_com_use_ntcpproxy">"Aktifkan ntcpproxy"</string>
     <string name="pref_itpd_com_ntcpproxy_summ">"Tentukan server proxy untuk NTCP. Seharusnya http://address:port atau socks://address:port."</string>
     <string name="pref_itpd_HTTP_proxy">"Proxy HTTP"</string>
@@ -290,8 +290,6 @@
     <string name="pref_itpd_limits_transittunnels_summ">"Timpa jumlah maksimum terowongan transit. 2500 secara default."</string>
     <string name="pref_itpd_limits_openfiles_summ">"Batasi jumlah deskriptor file terbuka (0 - gunakan batas sistem)."</string>
     <string name="pref_itpd_limits_coresize_summ">"Ukuran maksimum corefile dalam Kb (0 - gunakan batas sistem)."</string>
-    <string name="pref_itpd_limits_ntcpsoft_summ">"Ambang untuk memulai backoff probabalistic dengan sesi ntcp (0 - gunakan batas sistem)."</string>
-    <string name="pref_itpd_limits_ntcphard_summ">"Jumlah maksimum sesi ntcp (0 - gunakan batas sistem)."</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">"URL berlangganan AddressBook untuk pengaturan awal."</string>
     <string name="pref_itpd_addressbook_subscriptions_summ">"URL langganan AddressBook."</string>
     <string name="pref_itpd_not_exist">"Prererensi tidak ada di i2pd.conf!"</string>
