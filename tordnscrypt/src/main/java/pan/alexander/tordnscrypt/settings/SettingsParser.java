@@ -47,7 +47,7 @@ import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readT
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.writeToTextFile;
 
 public class SettingsParser implements OnTextFileOperationsCompleteListener {
-    private SettingsActivity settingsActivity;
+    private final SettingsActivity settingsActivity;
     private String appDataDir;
     private Bundle bundleForReadPublicResolversMdFunction;
 
