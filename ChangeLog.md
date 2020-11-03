@@ -406,3 +406,9 @@
 * Changed method of defining own uid to fix backup and restore using third party applications.
 * Fixed using a proxy with the FixTTL option enabled.
 * Other minor fixes.
+
+**InviZible Pro beta 1.1.0**
+* Updated Purple I2P to version 2.34.0
+* Updated Purple I2P default configuration as ntcp is no longer supported.
+* Build Purple I2P from source including all dependencies.
+* Updated Tor with new dependencies.
