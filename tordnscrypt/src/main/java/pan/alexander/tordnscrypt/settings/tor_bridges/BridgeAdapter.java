@@ -51,10 +51,10 @@ import pan.alexander.tordnscrypt.utils.enums.BridgesSelector;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder> {
-    private SettingsActivity activity;
-    private FragmentManager fragmentManager;
-    private LayoutInflater lInflater;
-    private PreferencesBridges preferencesBridges;
+    private final SettingsActivity activity;
+    private final FragmentManager fragmentManager;
+    private final LayoutInflater lInflater;
+    private final PreferencesBridges preferencesBridges;
     private BridgesSelector currentBridgesSelector;
 
     BridgeAdapter(SettingsActivity activity, FragmentManager fragmentManager, PreferencesBridges preferencesBridges) {
@@ -94,8 +94,8 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
 
    class BridgeViewHolder extends RecyclerView.ViewHolder {
 
-        private TextView tvBridge;
-        private SwitchCompat swBridge;
+        private final TextView tvBridge;
+        private final SwitchCompat swBridge;
 
         BridgeViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -157,13 +157,11 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
             swBridge.setOnCheckedChangeListener(onCheckedChangeListener);
             ImageButton ibtnBridgeDel = itemView.findViewById(R.id.ibtnBridgeDel);
             View.OnClickListener onClickListener = view -> {
-                switch (view.getId()) {
-                    case R.id.cardBridge:
-                        editBridge(getAdapterPosition());
-                        break;
-                    case R.id.ibtnBridgeDel:
-                        deleteBridge(getAdapterPosition());
-                        break;
+                int id = view.getId();
+                if (id == R.id.cardBridge) {
+                    editBridge(getAdapterPosition());
+                } else if (id == R.id.ibtnBridgeDel) {
+                    deleteBridge(getAdapterPosition());
                 }
             };
             ibtnBridgeDel.setOnClickListener(onClickListener);
@@ -195,11 +193,7 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
             }
 
             tvBridge.setText(tvBridgeText);
-            if (bridgeList.get(position).active) {
-                swBridge.setChecked(true);
-            } else {
-                swBridge.setChecked(false);
-            }
+            swBridge.setChecked(bridgeList.get(position).active);
         }
 
     }
@@ -237,9 +231,7 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
         builder.setView(inputView);
 
         builder.setPositiveButton(activity.getText(R.string.ok), (dialog, i) -> {
-            if (preferencesBridges == null
-                    || preferencesBridges.getBridgeAdapter() == null
-                    || position >= bridgeList.size()) {
+            if (preferencesBridges.getBridgeAdapter() == null || position >= bridgeList.size()) {
                 return;
             }
 

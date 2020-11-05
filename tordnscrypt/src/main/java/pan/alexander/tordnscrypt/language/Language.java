@@ -30,7 +30,7 @@ import java.util.Locale;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class Language {
-    private static Locale mOriginalLocale;
+    private static final Locale mOriginalLocale;
 
     static {
         // save the original default locale so that we can reference it later

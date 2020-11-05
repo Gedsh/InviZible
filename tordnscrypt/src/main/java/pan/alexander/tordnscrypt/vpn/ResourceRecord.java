@@ -41,7 +41,7 @@ public class ResourceRecord implements Serializable {
     public int Rcode;
     private static final long serialVersionUID = 1L;
 
-    private static DateFormat formatter = SimpleDateFormat.getDateTimeInstance();
+    private static final DateFormat formatter = SimpleDateFormat.getDateTimeInstance();
 
     public ResourceRecord() {
     }

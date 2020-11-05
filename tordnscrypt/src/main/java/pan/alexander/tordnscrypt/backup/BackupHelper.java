@@ -40,7 +40,7 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 class BackupHelper {
     private Context context;
     private String pathBackup;
-    private String appDataDir;
+    private final String appDataDir;
 
     BackupHelper(Context context, String appDataDir, String pathBackup) {
         this.context = context;

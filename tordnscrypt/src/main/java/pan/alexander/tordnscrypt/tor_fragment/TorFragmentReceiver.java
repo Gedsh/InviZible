@@ -42,8 +42,8 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
 public class TorFragmentReceiver extends BroadcastReceiver {
-    private TorFragmentView view;
-    private TorFragmentPresenterCallbacks presenter;
+    private final TorFragmentView view;
+    private final TorFragmentPresenterCallbacks presenter;
 
     private String torPath;
     private String busyboxPath;

@@ -447,8 +447,8 @@ invizible.net/en/privacy
         این امر درصورتی که اتصال IPv6 وجود نداشته باشد، کار را سریعتر می کند، اما همچنین می‌تواند باعث ایجاد قابلیت اطمینان در برخی از راه حل‌های خرد شود."</string>
     <string name="helper_dnscrypt_private_dns">"لطفاً \"Private DNS\" را در تنظیمات شبکه Android خاموش کنید. این گزینه با DNSCrypt تداخل می کند."</string>
     <string name="import_dnscrypt_rules_dialog_title">"وارد کردن قوانین"</string>
-    <string name="import_dnscrypt_rules_dialog_message">"لطفا صبرکنید... ٪d قانون وارد شد."</string>
-    <string name="import_dnscrypt_rules_complete_dialog_message">"انجام شده! ٪d قانون وارد شد."</string>
+    <string name="import_dnscrypt_rules_dialog_message">"لطفا صبرکنید... %d قانون وارد شد."</string>
+    <string name="import_dnscrypt_rules_complete_dialog_message">"انجام شده! %d قانون وارد شد."</string>
     <string name="erase_dnscrypt_rules_dialog_message">"انجام شد! قوانین پاک شدند."</string>
     <string name="dnscrypt_many_rules_dialog_message">"قوانین زیادی برای نمایش وجود دارد. فقط 1000 قانون اول نشان داده میشود."</string>
     <string name="pref_tor_snowflake_stun">"سرورهای STUN برای پل های SnowFlake"</string>

@@ -268,10 +268,10 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
 
         private class CountriesViewHolder extends RecyclerView.ViewHolder {
 
-            private TextView tvCountry;
-            private CheckBox chbCountry;
-            private CardView cardCountry;
-            private LinearLayoutCompat llTorCountry;
+            private final TextView tvCountry;
+            private final CheckBox chbCountry;
+            private final CardView cardCountry;
+            private final LinearLayoutCompat llTorCountry;
             private CardView cardTorCountryFragment;
 
             private CountriesViewHolder(View itemView) {

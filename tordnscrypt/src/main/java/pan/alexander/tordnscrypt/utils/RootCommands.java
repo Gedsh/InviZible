@@ -25,7 +25,7 @@ import java.util.List;
 
 public class RootCommands implements Serializable {
 
-    private List<String> commands;
+    private final List<String> commands;
 
     public RootCommands(List<String> commands){
 

@@ -389,13 +389,11 @@ public class UnlockTorIpsFrag extends Fragment {
             }
 
             View.OnClickListener onClickListener = v -> {
-                switch (v.getId()) {
-                    case R.id.imbtnTorItem:
-                        delItem(getAdapterPosition());
-                        break;
-                    case R.id.llHostIP:
-                        editHostIPDialog(getAdapterPosition());
-                        break;
+                int id = v.getId();
+                if (id == R.id.imbtnTorItem) {
+                    delItem(getAdapterPosition());
+                } else if (id == R.id.llHostIP) {
+                    editHostIPDialog(getAdapterPosition());
                 }
 
             };

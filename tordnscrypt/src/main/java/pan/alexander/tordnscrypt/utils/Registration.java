@@ -40,7 +40,7 @@ import pan.alexander.tordnscrypt.TopFragment;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class Registration {
-    private Context context;
+    private final Context context;
     public static boolean wrongRegistrationCode = true;
 
     public Registration(Context context) {
@@ -95,7 +95,7 @@ public class Registration {
         AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomAlertDialogTheme);
         builder .setTitle(R.string.enter_code)
                 .setPositiveButton(R.string.ok, (dialog, which) -> {
-                    if (context == null || !(context instanceof MainActivity) || ((MainActivity) context).isFinishing()) {
+                    if (((MainActivity) context).isFinishing()) {
                         dialog.dismiss();
                         return;
                     }

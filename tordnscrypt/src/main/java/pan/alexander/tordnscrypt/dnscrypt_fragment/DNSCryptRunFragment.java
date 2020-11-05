@@ -240,11 +240,8 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
     @Override
     public void onScrollChanged() {
         if (presenter != null && svDNSCryptLog != null) {
-            if (svDNSCryptLog.canScrollVertically(1) && svDNSCryptLog.canScrollVertically(-1)) {
-                presenter.dnsCryptLogAutoScrollingAllowed(false);
-            } else {
-                presenter.dnsCryptLogAutoScrollingAllowed(true);
-            }
+            presenter.dnsCryptLogAutoScrollingAllowed(!svDNSCryptLog.canScrollVertically(1)
+                    || !svDNSCryptLog.canScrollVertically(-1));
         }
     }
 

@@ -26,7 +26,6 @@ import android.os.Build
 import androidx.core.content.ContextCompat.getSystemService
 import pan.alexander.tordnscrypt.crash_handling.TopExceptionHandler
 import pan.alexander.tordnscrypt.language.Language
-import java.lang.ref.WeakReference
 
 const val ANDROID_CHANNEL_ID = "InviZible"
 

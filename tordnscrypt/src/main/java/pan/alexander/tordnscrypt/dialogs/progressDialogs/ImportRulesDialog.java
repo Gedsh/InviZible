@@ -94,6 +94,7 @@ public class ImportRulesDialog extends ExtendedDialogFragment implements ImportR
             int count = 0;
             while (count < 15 && (tvDialogImportRules == null || pbDialogImportRules == null)) {
                 count++;
+                //noinspection BusyWait
                 Thread.sleep(100);
             }
         } catch (InterruptedException ignored){}

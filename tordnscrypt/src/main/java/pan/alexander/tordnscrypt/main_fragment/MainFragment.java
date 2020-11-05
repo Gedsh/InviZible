@@ -113,7 +113,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     private ScrollView svITPDLog;
     private ConstraintLayout clITPDLog;
 
-    private ModulesStatus modulesStatus = ModulesStatus.getInstance();
+    private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
     private boolean orientationLandscape;
 
@@ -336,41 +336,35 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
                 || modulesStatus.getTorState() != STOPPED
                 || modulesStatus.getItpdState() != STOPPED) {
 
-            switch (buttonView.getId()) {
-                case R.id.chbProtectDnsMainFragment:
-                    if (modulesStatus.getDnsCryptState() != STOPPED && !isChecked) {
-                        dnsCryptFragmentPresenter.startButtonOnClick(activity);
-                    } else if (modulesStatus.getDnsCryptState() == STOPPED && isChecked) {
-                        dnsCryptFragmentPresenter.startButtonOnClick(activity);
-                    }
-                    break;
-                case R.id.chbHideIpMainFragment:
-                    if (modulesStatus.getTorState() != STOPPED && !isChecked) {
-                        torFragmentPresenter.startButtonOnClick(activity);
-                    } else if (modulesStatus.getTorState() == STOPPED && isChecked) {
-                        torFragmentPresenter.startButtonOnClick(activity);
-                    }
-                    break;
-                case R.id.chbAccessITPMainFragment:
-                    if (modulesStatus.getItpdState() != STOPPED && !isChecked) {
-                        itpdFragmentPresenter.startButtonOnClick(activity);
-                    } else if (modulesStatus.getItpdState() == STOPPED && isChecked) {
-                        itpdFragmentPresenter.startButtonOnClick(activity);
-                    }
-                    break;
+            int id = buttonView.getId();
+            if (id == R.id.chbProtectDnsMainFragment) {
+                if (modulesStatus.getDnsCryptState() != STOPPED && !isChecked) {
+                    dnsCryptFragmentPresenter.startButtonOnClick(activity);
+                } else if (modulesStatus.getDnsCryptState() == STOPPED && isChecked) {
+                    dnsCryptFragmentPresenter.startButtonOnClick(activity);
+                }
+            } else if (id == R.id.chbHideIpMainFragment) {
+                if (modulesStatus.getTorState() != STOPPED && !isChecked) {
+                    torFragmentPresenter.startButtonOnClick(activity);
+                } else if (modulesStatus.getTorState() == STOPPED && isChecked) {
+                    torFragmentPresenter.startButtonOnClick(activity);
+                }
+            } else if (id == R.id.chbAccessITPMainFragment) {
+                if (modulesStatus.getItpdState() != STOPPED && !isChecked) {
+                    itpdFragmentPresenter.startButtonOnClick(activity);
+                } else if (modulesStatus.getItpdState() == STOPPED && isChecked) {
+                    itpdFragmentPresenter.startButtonOnClick(activity);
+                }
             }
         }
 
-        switch (buttonView.getId()) {
-            case R.id.chbProtectDnsMainFragment:
-                new PrefManager(context).setBoolPref("ProtectDns", isChecked);
-                break;
-            case R.id.chbHideIpMainFragment:
-                new PrefManager(context).setBoolPref("HideIp", isChecked);
-                break;
-            case R.id.chbAccessITPMainFragment:
-                new PrefManager(context).setBoolPref("AccessITP", isChecked);
-                break;
+        int id = buttonView.getId();
+        if (id == R.id.chbProtectDnsMainFragment) {
+            new PrefManager(context).setBoolPref("ProtectDns", isChecked);
+        } else if (id == R.id.chbHideIpMainFragment) {
+            new PrefManager(context).setBoolPref("HideIp", isChecked);
+        } else if (id == R.id.chbAccessITPMainFragment) {
+            new PrefManager(context).setBoolPref("AccessITP", isChecked);
         }
     }
 
@@ -404,23 +398,11 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
                     && modulesStatus.getTorState() != STOPPING
                     && modulesStatus.getItpdState() != STOPPING) {
 
-                if (modulesStatus.getDnsCryptState() == STOPPED) {
-                    setChbProtectDnsMainFragment(false);
-                } else {
-                    setChbProtectDnsMainFragment(true);
-                }
+                setChbProtectDnsMainFragment(modulesStatus.getDnsCryptState() != STOPPED);
 
-                if (modulesStatus.getTorState() == STOPPED) {
-                    setChbHideIpMainFragment(false);
-                } else {
-                    setChbHideIpMainFragment(true);
-                }
+                setChbHideIpMainFragment(modulesStatus.getTorState() != STOPPED);
 
-                if (modulesStatus.getItpdState() == STOPPED) {
-                    setChbAccessITPMainFragment(false);
-                } else {
-                    setChbAccessITPMainFragment(true);
-                }
+                setChbAccessITPMainFragment(modulesStatus.getItpdState() != STOPPED);
             }
         }
     }
@@ -870,27 +852,18 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     public void onScrollChanged() {
 
         if (dnsCryptFragmentPresenter != null && svDNSCryptLog != null) {
-            if (svDNSCryptLog.canScrollVertically(1) && svDNSCryptLog.canScrollVertically(-1)) {
-                dnsCryptFragmentPresenter.dnsCryptLogAutoScrollingAllowed(false);
-            } else {
-                dnsCryptFragmentPresenter.dnsCryptLogAutoScrollingAllowed(true);
-            }
+            dnsCryptFragmentPresenter.dnsCryptLogAutoScrollingAllowed(!svDNSCryptLog.canScrollVertically(1)
+                    || !svDNSCryptLog.canScrollVertically(-1));
         }
 
         if (torFragmentPresenter != null && svTorLog != null) {
-            if (svTorLog.canScrollVertically(1) && svTorLog.canScrollVertically(-1)) {
-                torFragmentPresenter.torLogAutoScrollingAllowed(false);
-            } else {
-                torFragmentPresenter.torLogAutoScrollingAllowed(true);
-            }
+            torFragmentPresenter.torLogAutoScrollingAllowed(!svTorLog.canScrollVertically(1)
+                    || !svTorLog.canScrollVertically(-1));
         }
 
         if (itpdFragmentPresenter != null && svITPDLog != null) {
-            if (svITPDLog.canScrollVertically(1) && svITPDLog.canScrollVertically(-1)) {
-                itpdFragmentPresenter.itpdLogAutoScrollingAllowed(false);
-            } else {
-                itpdFragmentPresenter.itpdLogAutoScrollingAllowed(true);
-            }
+            itpdFragmentPresenter.itpdLogAutoScrollingAllowed(!svITPDLog.canScrollVertically(1)
+                    || !svITPDLog.canScrollVertically(-1));
         }
     }
 

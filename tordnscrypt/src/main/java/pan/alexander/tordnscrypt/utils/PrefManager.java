@@ -29,7 +29,7 @@ import static android.content.Context.MODE_PRIVATE;
 public class PrefManager {
 
     private static final String PREF_NAME = "TorPlusDNSCryptPref";
-    private SharedPreferences sPref;
+    private final SharedPreferences sPref;
 
     public PrefManager(Context context) {
         this.sPref = context.getSharedPreferences(PREF_NAME, MODE_PRIVATE);

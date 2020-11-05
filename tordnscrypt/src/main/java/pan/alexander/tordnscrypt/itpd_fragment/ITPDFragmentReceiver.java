@@ -42,8 +42,8 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
 public class ITPDFragmentReceiver extends BroadcastReceiver {
-    private ITPDFragmentView view;
-    private ITPDFragmentPresenterCallbacks presenter;
+    private final ITPDFragmentView view;
+    private final ITPDFragmentPresenterCallbacks presenter;
 
     private String itpdPath;
     private String busyboxPath;

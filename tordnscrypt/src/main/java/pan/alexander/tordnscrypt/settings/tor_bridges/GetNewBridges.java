@@ -57,6 +57,7 @@ import pan.alexander.tordnscrypt.utils.WakeLocksManager;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 
+@SuppressWarnings("BusyWait")
 public class GetNewBridges implements GetNewBridgesCallbacks {
 
     private volatile static WeakReference<PleaseWaitDialogBridgesRequest> dialogPleaseWait;

@@ -158,7 +158,7 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
             ArrayList<DNSServerRelays> routesCurrentTmp = (ArrayList<DNSServerRelays>) args.getSerializable("routesCurrent");
 
             if (routesCurrentTmp != null) {
-                routesCurrent = (ArrayList<DNSServerRelays>) routesCurrentTmp;
+                routesCurrent = routesCurrentTmp;
             }
 
             serverIPv6 = args.getBoolean("dnsServerIPv6");

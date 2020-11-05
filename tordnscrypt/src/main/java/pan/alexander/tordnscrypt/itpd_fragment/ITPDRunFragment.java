@@ -275,11 +275,8 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
     @Override
     public void onScrollChanged() {
         if (presenter != null && svITPDLog!= null) {
-            if (svITPDLog.canScrollVertically(1) && svITPDLog.canScrollVertically(-1)) {
-                presenter.itpdLogAutoScrollingAllowed(false);
-            } else {
-                presenter.itpdLogAutoScrollingAllowed(true);
-            }
+            presenter.itpdLogAutoScrollingAllowed(!svITPDLog.canScrollVertically(1)
+                    || !svITPDLog.canScrollVertically(-1));
         }
     }
 

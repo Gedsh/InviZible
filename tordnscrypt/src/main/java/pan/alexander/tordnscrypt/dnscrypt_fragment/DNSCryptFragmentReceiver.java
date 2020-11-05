@@ -51,8 +51,8 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
 public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
-    private DNSCryptFragmentView view;
-    private DNSCryptFragmentPresenterCallbacks presenter;
+    private final DNSCryptFragmentView view;
+    private final DNSCryptFragmentPresenterCallbacks presenter;
 
     private String dnscryptPath;
     private String busyboxPath;

@@ -154,30 +154,27 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     @Override
     public void onClick(View view) {
 
-        switch (view.getId()) {
+        int id = view.getId();
+        if (id == R.id.btnSaveLogs) {
+            if (!isWriteExternalStoragePermissions()) {
+                requestWriteExternalStoragePermissions();
+                return;
+            }
 
-            case R.id.btnSaveLogs:
-                if (!isWriteExternalStoragePermissions()) {
-                    requestWriteExternalStoragePermissions();
-                    return;
-                }
+            info = Utils.INSTANCE.collectInfo();
+            br.setInfo(info);
 
-                info = Utils.INSTANCE.collectInfo();
-                br.setInfo(info);
+            dialogFragment = PleaseWaitProgressDialog.getInstance();
+            dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
+            br.setProgressDialog(dialogFragment);
 
-                dialogFragment = PleaseWaitProgressDialog.getInstance();
-                dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
-                br.setProgressDialog(dialogFragment);
-
-                if (modulesStatus.isRootAvailable()) {
-                    collectLogsMethodOne(info);
-                } else {
-                    CachedExecutor.INSTANCE.getExecutorService().submit(br.saveLogs(getApplicationContext(), null));
-                }
-                break;
-            case R.id.etLogsPath:
-                chooseOutputFolder();
-                break;
+            if (modulesStatus.isRootAvailable()) {
+                collectLogsMethodOne(info);
+            } else {
+                CachedExecutor.INSTANCE.getExecutorService().submit(br.saveLogs(getApplicationContext(), null));
+            }
+        } else if (id == R.id.etLogsPath) {
+            chooseOutputFolder();
         }
     }
 

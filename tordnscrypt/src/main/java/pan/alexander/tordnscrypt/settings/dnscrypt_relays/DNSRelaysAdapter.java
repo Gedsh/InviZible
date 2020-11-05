@@ -76,9 +76,9 @@ class DNSRelaysAdapter extends RecyclerView.Adapter<DNSRelaysAdapter.DNSRelaysVi
 
 
     class DNSRelaysViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, CompoundButton.OnCheckedChangeListener, View.OnFocusChangeListener {
-        private TextView tvDNSRelayName;
-        private TextView tvDNSRelayDescription;
-        private CheckBox chbDNSRelay;
+        private final TextView tvDNSRelayName;
+        private final TextView tvDNSRelayDescription;
+        private final CheckBox chbDNSRelay;
 
         DNSRelaysViewHolder(@NonNull View itemView) {
             super(itemView);

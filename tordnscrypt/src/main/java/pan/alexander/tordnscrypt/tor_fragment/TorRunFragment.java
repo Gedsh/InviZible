@@ -264,11 +264,8 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
     @Override
     public void onScrollChanged() {
         if (presenter != null && svTorLog != null) {
-            if (svTorLog.canScrollVertically(1) && svTorLog.canScrollVertically(-1)) {
-                presenter.torLogAutoScrollingAllowed(false);
-            } else {
-                presenter.torLogAutoScrollingAllowed(true);
-            }
+            presenter.torLogAutoScrollingAllowed(!svTorLog.canScrollVertically(1)
+                    || !svTorLog.canScrollVertically(-1));
         }
     }
 

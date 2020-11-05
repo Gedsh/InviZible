@@ -42,7 +42,7 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
 public class AskForceClose extends ExtendedDialogFragment {
     private static String module;
-    private ModulesStatus modulesStatus = ModulesStatus.getInstance();
+    private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
     public static DialogFragment getInstance(String module) {
         AskForceClose.module = module;

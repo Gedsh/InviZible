@@ -44,9 +44,9 @@ import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class HelpActivityReceiver extends BroadcastReceiver {
-    private Handler mHandler;
-    private String appDataDir;
-    private String cacheDir;
+    private final Handler mHandler;
+    private final String appDataDir;
+    private final String cacheDir;
     private String info;
     private String pathToSaveLogs;
     private DialogFragment progressDialog;

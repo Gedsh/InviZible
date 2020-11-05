@@ -26,7 +26,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 public class ExternalStoragePermissions {
-    private Activity activity;
+    private final Activity activity;
 
     public ExternalStoragePermissions(Activity activity) {
         this.activity = activity;

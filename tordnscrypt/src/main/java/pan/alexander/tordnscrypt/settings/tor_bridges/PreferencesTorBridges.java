@@ -509,14 +509,12 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.btnAddBridges:
-                FileOperations.readTextFile(getActivity(), appDataDir + "/app_data/tor/bridges_custom.lst", addBridgesTag);
-                break;
-            case R.id.btnRequestBridges:
-                GetNewBridges getNewBridges = new GetNewBridges(new WeakReference<>((SettingsActivity) getActivity()));
-                getNewBridges.selectTransport();
-                break;
+        int id = view.getId();
+        if (id == R.id.btnAddBridges) {
+            FileOperations.readTextFile(getActivity(), appDataDir + "/app_data/tor/bridges_custom.lst", addBridgesTag);
+        } else if (id == R.id.btnRequestBridges) {
+            GetNewBridges getNewBridges = new GetNewBridges(new WeakReference<>((SettingsActivity) getActivity()));
+            getNewBridges.selectTransport();
         }
     }
 
@@ -950,71 +948,66 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             return;
         }
 
-        switch (compoundButton.getId()) {
-            case R.id.rbNoBridges:
-                if (newValue) {
-                    new PrefManager(context).setBoolPref("useNoBridges", true);
-                    new PrefManager(context).setBoolPref("useDefaultBridges", false);
-                    new PrefManager(context).setBoolPref("useOwnBridges", false);
+        int id = compoundButton.getId();
 
-                    noBridgesOperation();
+        if (id == R.id.rbNoBridges) {
+            if (newValue) {
+                new PrefManager(context).setBoolPref("useNoBridges", true);
+                new PrefManager(context).setBoolPref("useDefaultBridges", false);
+                new PrefManager(context).setBoolPref("useOwnBridges", false);
 
-                    for (int i = 0; i < tor_conf.size(); i++) {
-                        if (tor_conf.get(i).contains("UseBridges")) {
-                            String line = tor_conf.get(i);
-                            String result = line.replace("1", "0");
-                            if (!result.equals(line)) {
-                                tor_conf.set(i, result);
-                            }
+                noBridgesOperation();
+
+                for (int i = 0; i < tor_conf.size(); i++) {
+                    if (tor_conf.get(i).contains("UseBridges")) {
+                        String line = tor_conf.get(i);
+                        String result = line.replace("1", "0");
+                        if (!result.equals(line)) {
+                            tor_conf.set(i, result);
                         }
                     }
                 }
+            }
+        } else if (id == R.id.rbDefaultBridges) {
+            if (newValue) {
+                new PrefManager(context).setBoolPref("useNoBridges", false);
+                new PrefManager(context).setBoolPref("useDefaultBridges", true);
+                new PrefManager(context).setBoolPref("useOwnBridges", false);
 
-                break;
-            case R.id.rbDefaultBridges:
-                if (newValue) {
-                    new PrefManager(context).setBoolPref("useNoBridges", false);
-                    new PrefManager(context).setBoolPref("useDefaultBridges", true);
-                    new PrefManager(context).setBoolPref("useOwnBridges", false);
+                bridges_file_path = appDataDir + "/app_data/tor/bridges_default.lst";
 
-                    bridges_file_path = appDataDir + "/app_data/tor/bridges_default.lst";
+                FileOperations.readTextFile(context, bridges_file_path, defaultBridgesOperationTag);
 
-                    FileOperations.readTextFile(context, bridges_file_path, defaultBridgesOperationTag);
-
-                    for (int i = 0; i < tor_conf.size(); i++) {
-                        if (tor_conf.get(i).contains("UseBridges")) {
-                            String line = tor_conf.get(i);
-                            String result = line.replace("0", "1");
-                            if (!result.equals(line)) {
-                                tor_conf.set(i, result);
-                            }
+                for (int i = 0; i < tor_conf.size(); i++) {
+                    if (tor_conf.get(i).contains("UseBridges")) {
+                        String line = tor_conf.get(i);
+                        String result = line.replace("0", "1");
+                        if (!result.equals(line)) {
+                            tor_conf.set(i, result);
                         }
                     }
                 }
+            }
+        } else if (id == R.id.rbOwnBridges) {
+            if (newValue) {
+                new PrefManager(context).setBoolPref("useNoBridges", false);
+                new PrefManager(context).setBoolPref("useDefaultBridges", false);
+                new PrefManager(context).setBoolPref("useOwnBridges", true);
 
-                break;
-            case R.id.rbOwnBridges:
-                if (newValue) {
-                    new PrefManager(context).setBoolPref("useNoBridges", false);
-                    new PrefManager(context).setBoolPref("useDefaultBridges", false);
-                    new PrefManager(context).setBoolPref("useOwnBridges", true);
+                bridges_file_path = appDataDir + "/app_data/tor/bridges_custom.lst";
 
-                    bridges_file_path = appDataDir + "/app_data/tor/bridges_custom.lst";
+                FileOperations.readTextFile(context, bridges_file_path, ownBridgesOperationTag);
 
-                    FileOperations.readTextFile(context, bridges_file_path, ownBridgesOperationTag);
-
-                    for (int i = 0; i < tor_conf.size(); i++) {
-                        if (tor_conf.get(i).contains("UseBridges")) {
-                            String line = tor_conf.get(i);
-                            String result = line.replace("0", "1");
-                            if (!result.equals(line)) {
-                                tor_conf.set(i, result);
-                            }
+                for (int i = 0; i < tor_conf.size(); i++) {
+                    if (tor_conf.get(i).contains("UseBridges")) {
+                        String line = tor_conf.get(i);
+                        String result = line.replace("0", "1");
+                        if (!result.equals(line)) {
+                            tor_conf.set(i, result);
                         }
                     }
                 }
-
-                break;
+            }
         }
     }
 
@@ -1027,21 +1020,20 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             return;
         }
 
-        switch (adapterView.getId()) {
-            case R.id.spDefaultBridges:
-                new PrefManager(context).setStrPref("defaultBridgesObfs", String.valueOf(i));
-                if (rbDefaultBridges.isChecked()) {
-                    bridges_file_path = appDataDir + "/app_data/tor/bridges_default.lst";
-                    FileOperations.readTextFile(context, bridges_file_path, defaultBridgesOperationTag);
-                }
-                break;
-            case R.id.spOwnBridges:
-                new PrefManager(context).setStrPref("ownBridgesObfs", String.valueOf(i));
-                if (rbOwnBridges.isChecked()) {
-                    bridges_file_path = appDataDir + "/app_data/tor/bridges_custom.lst";
-                    FileOperations.readTextFile(context, bridges_file_path, ownBridgesOperationTag);
-                }
-                break;
+        int id = adapterView.getId();
+
+        if (id == R.id.spDefaultBridges) {
+            new PrefManager(context).setStrPref("defaultBridgesObfs", String.valueOf(i));
+            if (rbDefaultBridges.isChecked()) {
+                bridges_file_path = appDataDir + "/app_data/tor/bridges_default.lst";
+                FileOperations.readTextFile(context, bridges_file_path, defaultBridgesOperationTag);
+            }
+        } else if (id == R.id.spOwnBridges) {
+            new PrefManager(context).setStrPref("ownBridgesObfs", String.valueOf(i));
+            if (rbOwnBridges.isChecked()) {
+                bridges_file_path = appDataDir + "/app_data/tor/bridges_custom.lst";
+                FileOperations.readTextFile(context, bridges_file_path, ownBridgesOperationTag);
+            }
         }
     }
 
