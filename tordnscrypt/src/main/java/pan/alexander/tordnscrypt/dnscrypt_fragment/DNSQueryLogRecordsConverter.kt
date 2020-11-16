@@ -19,21 +19,68 @@ package pan.alexander.tordnscrypt.dnscrypt_fragment
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.content.Context
+import android.content.SharedPreferences
+import android.os.Build
 import android.util.Log
+import androidx.preference.PreferenceManager
+import pan.alexander.tordnscrypt.modules.ModulesStatus
+import pan.alexander.tordnscrypt.settings.firewall.APPS_ALLOW_GSM_PREF
+import pan.alexander.tordnscrypt.settings.firewall.APPS_ALLOW_LAN_PREF
+import pan.alexander.tordnscrypt.settings.firewall.APPS_ALLOW_ROAMING
+import pan.alexander.tordnscrypt.settings.firewall.APPS_ALLOW_WIFI_PREF
+import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
 import pan.alexander.tordnscrypt.utils.CachedExecutor
+import pan.alexander.tordnscrypt.utils.PrefManager
 import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.Utils.getHostByIP
-import java.util.concurrent.*
+import pan.alexander.tordnscrypt.utils.enums.OperationMode
+import pan.alexander.tordnscrypt.vpn.Util
+import pan.alexander.tordnscrypt.vpn.service.ServiceVPN
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.Future
 
-class DNSQueryLogRecordsConverter(private val blockIPv6: Boolean,
-                                  private val meteredNetwork: Boolean,
-                                  private val vpnDNS: CopyOnWriteArrayList<String>?) {
+class DNSQueryLogRecordsConverter(context: Context) {
+
+    private val sharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+    private val blockIPv6: Boolean = sharedPreferences.getBoolean("block_ipv6", true)
+    private var compatibilityMode = sharedPreferences.getBoolean("swCompatibilityMode", false)
+    private val meteredNetwork = Util.isMeteredNetwork(context)
+    private val vpnDNS = ServiceVPN.vpnDNS
+    private val modulesStatus = ModulesStatus.getInstance()
+    private val fixTTL = (modulesStatus.isFixTTL && modulesStatus.mode == OperationMode.ROOT_MODE
+            && !modulesStatus.isUseModulesWithRoot)
 
     private val dnsQueryLogRecords = ArrayList<DNSQueryLogRecord>()
     private val dnsQueryLogRecordsSublist = ArrayList<DNSQueryLogRecord>()
     private val reverseLookupQueue = ArrayBlockingQueue<String>(100, true)
     private val ipToHostAddressMap = HashMap<String, String>()
     private var futureTask: Future<*>? = null
+
+    private val firewallEnabled = PrefManager(context).getBoolPref("FirewallEnabled")
+    private var appsAllowed = mutableSetOf<Int>()
+    private val appsLanAllowed = mutableListOf<Int>()
+
+    init {
+        if (firewallEnabled) {
+            PrefManager(context).getSetStrPref(APPS_ALLOW_LAN_PREF).forEach { appsLanAllowed.add(it.toInt()) }
+
+            var tempSet: MutableSet<String>? = null
+            if (Util.isWifiActive(context) || Util.isEthernetActive(context)) {
+                tempSet = PrefManager(context).getSetStrPref(APPS_ALLOW_WIFI_PREF)
+            } else if (Util.isCellularActive(context)) {
+                tempSet = PrefManager(context).getSetStrPref(APPS_ALLOW_GSM_PREF)
+            } else if (Util.isRoaming(context)) {
+                tempSet = PrefManager(context).getSetStrPref(APPS_ALLOW_ROAMING)
+            }
+
+            tempSet?.forEach { appsAllowed.add(it.toInt()) }
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            compatibilityMode = true
+        }
+    }
 
     fun convertRecords(dnsQueryRawRecords: ArrayList<DNSQueryLogRecord>): ArrayList<DNSQueryLogRecord> {
 
@@ -68,7 +115,7 @@ class DNSQueryLogRecordsConverter(private val blockIPv6: Boolean,
 
     private fun isIdenticalRecord(dnsQueryRawRecord: DNSQueryLogRecord): Boolean {
 
-        for (i in dnsQueryLogRecords.size - 1 downTo 0 ) {
+        for (i in dnsQueryLogRecords.size - 1 downTo 0) {
             val record = dnsQueryLogRecords[i]
 
             if (dnsQueryRawRecord.aName == record.aName
@@ -92,12 +139,25 @@ class DNSQueryLogRecordsConverter(private val blockIPv6: Boolean,
     private fun addUID(dnsQueryRawRecord: DNSQueryLogRecord) {
         var savedRecord: DNSQueryLogRecord? = null
         dnsQueryLogRecordsSublist.clear()
+
+        val uidBlocked = if (firewallEnabled) {
+            !appsAllowed.contains(dnsQueryRawRecord.uid)
+                    && !(compatibilityMode && dnsQueryRawRecord.uid == ApplicationData.SPECIAL_UID_KERNEL)
+                    && !(fixTTL && dnsQueryRawRecord.uid == ApplicationData.SPECIAL_UID_KERNEL)
+        } else {
+            false
+        }
+
         for (index in dnsQueryLogRecords.size - 1 downTo 0) {
             val record = dnsQueryLogRecords[index]
             if (savedRecord == null && record.daddr.contains(dnsQueryRawRecord.daddr) && record.uid == -1000) {
+                record.blocked = uidBlocked
+                record.unused = false
                 dnsQueryLogRecordsSublist.add(record)
                 savedRecord = record
             } else if (savedRecord != null && savedRecord.aName == record.cName) {
+                record.blocked = uidBlocked
+                record.unused = false
                 dnsQueryLogRecordsSublist.add(record)
                 savedRecord = record
             } else if (savedRecord != null && savedRecord.aName != record.cName) {
@@ -109,6 +169,8 @@ class DNSQueryLogRecordsConverter(private val blockIPv6: Boolean,
 
             val dnsQueryNewRecord = DNSQueryLogRecord(savedRecord.qName, savedRecord.aName, savedRecord.cName,
                     savedRecord.hInfo, -1, dnsQueryRawRecord.saddr, "", dnsQueryRawRecord.uid)
+            dnsQueryNewRecord.blocked = uidBlocked
+            dnsQueryNewRecord.unused = false
 
             dnsQueryLogRecordsSublist.add(dnsQueryNewRecord)
 
@@ -123,6 +185,14 @@ class DNSQueryLogRecordsConverter(private val blockIPv6: Boolean,
                     dnsQueryRawRecord.reverseDNS = host
                 }
             }
+
+            if (isIpInLanRange(dnsQueryRawRecord.daddr)) {
+                dnsQueryRawRecord.blocked = !appsLanAllowed.contains(dnsQueryRawRecord.uid)
+            } else {
+                dnsQueryRawRecord.blocked = uidBlocked
+            }
+
+            dnsQueryRawRecord.unused = false
 
             dnsQueryLogRecords.removeAll { it == dnsQueryRawRecord }
             dnsQueryLogRecords.add(dnsQueryRawRecord)
@@ -168,19 +238,27 @@ class DNSQueryLogRecordsConverter(private val blockIPv6: Boolean,
 
     private fun setQueryBlocked(dnsQueryRawRecord: DNSQueryLogRecord): Boolean {
 
-        if (dnsQueryRawRecord.daddr == "0.0.0.0" || dnsQueryRawRecord.daddr == "127.0.0.1" || dnsQueryRawRecord.daddr == "::"
+        if (dnsQueryRawRecord.daddr == "0.0.0.0"
+                || dnsQueryRawRecord.daddr == "127.0.0.1"
+                || dnsQueryRawRecord.daddr == "::"
                 || dnsQueryRawRecord.daddr.contains(":") && blockIPv6
-                || dnsQueryRawRecord.hInfo.contains("dnscrypt") || dnsQueryRawRecord.rCode != 0) {
+                || dnsQueryRawRecord.hInfo.contains("dnscrypt")
+                || dnsQueryRawRecord.rCode != 0) {
 
-            if (dnsQueryRawRecord.hInfo.contains("block_ipv6") || dnsQueryRawRecord.daddr == "::"
-                    || dnsQueryRawRecord.daddr.contains(":") && blockIPv6) {
-                dnsQueryRawRecord.blockedByIpv6 = true
-            }
+            dnsQueryRawRecord.blockedByIpv6 = (dnsQueryRawRecord.hInfo.contains("block_ipv6")
+                    || dnsQueryRawRecord.daddr == "::"
+                    || dnsQueryRawRecord.daddr.contains(":") && blockIPv6)
 
             dnsQueryRawRecord.blocked = true
+            dnsQueryRawRecord.unused = false
 
-        } else if (dnsQueryRawRecord.daddr.isEmpty() && dnsQueryRawRecord.cName.isEmpty() && !dnsQueryRawRecord.aName.contains(".in-addr.arpa")) {
+        } else if (dnsQueryRawRecord.daddr.isBlank()
+                && dnsQueryRawRecord.cName.isBlank()
+                && !dnsQueryRawRecord.aName.contains(".in-addr.arpa")) {
             dnsQueryRawRecord.blocked = true
+            dnsQueryRawRecord.unused = false
+        } else {
+            dnsQueryRawRecord.unused = true
         }
 
         return dnsQueryRawRecord.blocked
@@ -188,5 +266,18 @@ class DNSQueryLogRecordsConverter(private val blockIPv6: Boolean,
 
     fun onStop() {
         futureTask?.let { if (!it.isCancelled) it.cancel(true) }
+    }
+
+    private fun isIpInLanRange(destAddress: String): Boolean {
+        if (destAddress.isBlank()) {
+            return false
+        }
+
+        for (address in Util.nonTorList) {
+            if (Util.isIpInSubnet(destAddress, address)) {
+                return true
+            }
+        }
+        return false
     }
 }

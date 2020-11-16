@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/imgAppIconFirewall"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="4dp"
+            android:adjustViewBounds="true"
+            android:cropToPadding="true"
+            android:scaleType="fitCenter"
+            app:srcCompat="@android:drawable/sym_def_app_icon" />
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/btnLanFirewall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="2dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/button_start_selector"
+            android:cropToPadding="true"
+            android:padding="2dp"
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/ic_firewall_lan" />
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/btnWifiFirewall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="2dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/button_start_selector"
+            android:cropToPadding="true"
+            android:padding="2dp"
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/ic_firewall_wifi_24" />
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/btnGsmFirewall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="2dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/button_start_selector"
+            android:cropToPadding="true"
+            android:padding="2dp"
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/ic_firewall_gsm_24" />
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/btnRoamingFirewall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="2dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/button_start_selector"
+            android:cropToPadding="true"
+            android:padding="2dp"
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/ic_firewall_roaming_24" />
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/btnVpnFirewall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="2dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/button_start_selector"
+            android:cropToPadding="true"
+            android:padding="2dp"
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/ic_firewall_vpn_key_24" />
+
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvAppName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_margin="4dp"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:text="" />
+</androidx.appcompat.widget.LinearLayoutCompat>

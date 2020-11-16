@@ -696,6 +696,7 @@
     <string name="notification_channel_services">Running services</string>
     <string name="notification_channel_update">Update notifications</string>
     <string name="notification_channel_root">Root commands notification</string>
+    <string name="notification_channel_firewall">Firewall notifications</string>
 
     <string name="dialog_send_crash_report">A crash report has been discovered. Want to send it to the developer to make InviZible better?</string>
     <string name="btn_new_tor_identity">New Tor identity</string>
@@ -722,5 +723,20 @@
     <string name="notification_mitm">Man-in-the-middle attack detected! Your data can be intercepted by another device on the local network.
         Turn off, wait a few seconds, and turn on Wi-Fi. Using current Wi-Fi hotspot may be unsafe!</string>
     <string name="toast_arp_detection_not_supported">ARP spoofing detection is not supported for your device!</string>
+    <string name="menu_firewall">Firewall</string>
+    <string name="firewall_all_apps">All</string>
+    <string name="firewall_system_apps">System</string>
+    <string name="firewall_user_apps">User</string>
+    <string name="firewall_search" translatable="false">Search</string>
+    <string name="firewall_sort_by_name">Sort by Name</string>
+    <string name="firewall_sort_by_uid">Sort by UID</string>
+    <string name="firewall_switch" translatable="false">Firewall On/Off</string>
+    <string name="ask_save_changes">Do you want to save the changes?</string>
+    <string name="firewall_warning_enable_module">To activate the firewall, you should start at least DNSCrypt or Tor.</string>
+    <string name="firewall_notification_allow_app_title">% is installed</string>
+    <string name="firewall_notification_allow_app">Allow Internet for it?</string>
+    <string name="allow">Allow</string>
+    <string name="deny">Deny</string>
+    <string name="empty_string" translatable="false"/>
 
 </resources>

@@ -58,6 +58,8 @@ class InstalledApplications(private val context: Context, private val activeApps
     private val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
     private val multiUserSupport = sharedPreferences.getBoolean("pref_common_multi_user", false)
     private var showSpecials = false
+    private var savedTime = 0L
+    private val onAppAddedRefreshPeriod = 250
 
     fun getInstalledApps(showSpecials: Boolean = false): List<ApplicationData> {
 
@@ -141,7 +143,11 @@ class InstalledApplications(private val context: Context, private val activeApps
                     if ((applicationInfo.flags and ApplicationInfo.FLAG_INSTALLED) != 0) {
                         application?.let {
                             userAppsMap[uid] = it
-                            onAppAddListener?.onAppAdded(it)
+                            val time = System.currentTimeMillis()
+                            if (time - savedTime > onAppAddedRefreshPeriod) {
+                                onAppAddListener?.onAppAdded(it)
+                                savedTime = time
+                            }
                         }
                     }
                 } else {
@@ -208,8 +214,12 @@ class InstalledApplications(private val context: Context, private val activeApps
 
                         tempMultiUserAppsMap[applicationUID] = application
 
-                        if (!multiUserAppsMap.containsKey(applicationUID)) {
+                        val time = System.currentTimeMillis()
+
+                        if (!multiUserAppsMap.containsKey(applicationUID)
+                                && time - savedTime > onAppAddedRefreshPeriod) {
                             onAppAddListener?.onAppAdded(application)
+                            savedTime = time
                         }
                     }
                 } catch (e: java.lang.Exception) {
@@ -236,7 +246,7 @@ class InstalledApplications(private val context: Context, private val activeApps
                 ApplicationData("Kernel", "UID -1", -1, defaultIcon, true, activeApps.contains("-1")),
                 ApplicationData("Root", "root", 0, defaultIcon, true, activeApps.contains("0")),
                 ApplicationData("Android Debug Bridge", "adb", adb, defaultIcon, true, activeApps.contains(adb.toString())),
-                ApplicationData("Media server", "media", media, defaultIcon, activeApps.contains(media.toString())),
+                ApplicationData("Media server", "media", media, defaultIcon, true, activeApps.contains(media.toString())),
                 ApplicationData("VPN", "vpn", vpn, defaultIcon, true, activeApps.contains(vpn.toString())),
                 ApplicationData("Digital Rights Management", "drm", drm, defaultIcon, true, activeApps.contains(drm.toString())),
                 ApplicationData("Multicast DNS", "mDNS", mdns, defaultIcon, true, activeApps.contains(mdns.toString())),
@@ -252,6 +262,8 @@ class InstalledApplications(private val context: Context, private val activeApps
         if (showSpecials) {
             specialDataApps.add(ApplicationData("Internet time servers", "ntp", ApplicationData.SPECIAL_UID_NTP, defaultIcon,
                     true, activeApps.contains(ApplicationData.SPECIAL_UID_NTP.toString())))
+            specialDataApps.add(ApplicationData("A-GPS", "agps", ApplicationData.SPECIAL_UID_AGPS, defaultIcon,
+                    true, activeApps.contains(ApplicationData.SPECIAL_UID_AGPS.toString())))
         }
 
         return specialDataApps
@@ -261,7 +273,7 @@ class InstalledApplications(private val context: Context, private val activeApps
         var result = defaultValue
         try {
             result = Process.getUidForName(name)
-        } catch (ignored: java.lang.Exception) {
+        } catch (ignored: Exception) {
         }
         return result
     }

@@ -147,6 +147,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
         rvListTorApps.setLayoutManager(mLayoutManager);
 
         mAdapter = new TorAppsAdapter();
+        mAdapter.setHasStableIds(true);
         rvListTorApps.setAdapter(mAdapter);
 
         getDeviceApps(context, setUnlockApps);
@@ -310,6 +311,11 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
         }
 
         @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
         public int getItemCount() {
             return appsUnlock.size();
         }
@@ -339,7 +345,6 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
             private final Activity activity;
             private final ImageView imgTorApp;
             private final TextView tvTorAppName;
-            private final ColorStateList tvTorAppNameColors;
             private final TextView tvTorAppPackage;
             private final SwitchCompat swTorApp;
             private final LinearLayoutCompat lLayoutTorApps;
@@ -351,7 +356,6 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
                 activity = getActivity();
                 imgTorApp = itemView.findViewById(R.id.imgTorApp);
                 tvTorAppName = itemView.findViewById(R.id.tvTorAppName);
-                tvTorAppNameColors = tvTorAppName.getTextColors();
                 tvTorAppPackage = itemView.findViewById(R.id.tvTorAppPackage);
                 swTorApp = itemView.findViewById(R.id.swTorApp);
                 CardView cardTorApps = itemView.findViewById(R.id.cardTorApp);
@@ -396,9 +400,9 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
 
                 tvTorAppName.setText(app.toString());
                 if (app.getSystem() && activity != null) {
-                    tvTorAppName.setTextColor(ContextCompat.getColor(activity, R.color.textModuleStatusColorAlert));
+                    tvTorAppName.setTextColor(ContextCompat.getColor(activity, R.color.colorAlert));
                 } else {
-                    tvTorAppName.setTextColor(tvTorAppNameColors);
+                    tvTorAppName.setTextColor(ContextCompat.getColor(activity, R.color.textModuleStatusColorStopped));
                 }
                 imgTorApp.setImageDrawable(app.getIcon());
                 String pack = String.format("[%s] %s", app.getUid(), app.getPack());

@@ -130,6 +130,7 @@ public class MainActivity extends LangAppCompatActivity
     private ViewPager viewPager;
     private static int viewPagerPosition = 0;
     private MenuItem newIdentityMenuItem;
+    private MenuItem firewallNavigationItem;
     private ImageView animatingImage;
     private RotateAnimation rotateAnimation;
     private BroadcastReceiver mainActivityReceiver;
@@ -160,6 +161,8 @@ public class MainActivity extends LangAppCompatActivity
         navigationView.setBackgroundColor(getResources().getColor(R.color.colorBackground));
         navigationView.setNavigationItemSelectedListener(this);
 
+        modulesStatus = ModulesStatus.getInstance();
+
         changeDrawerWithVersionAndDestination(navigationView);
 
         viewPager = findViewById(R.id.viewPager);
@@ -187,8 +190,6 @@ public class MainActivity extends LangAppCompatActivity
 
             viewPager.setCurrentItem(viewPagerPosition);
         }
-
-        modulesStatus = ModulesStatus.getInstance();
 
         Looper looper = Looper.getMainLooper();
         if (looper != null) {
@@ -667,6 +668,10 @@ public class MainActivity extends LangAppCompatActivity
         modulesStatus.setIptablesRulesUpdateRequested(true);
         ModulesAux.requestModulesStatusUpdate(this);
 
+        if (firewallNavigationItem != null) {
+            firewallNavigationItem.setVisible(false);
+        }
+
         invalidateOptionsMenu();
     }
 
@@ -690,6 +695,10 @@ public class MainActivity extends LangAppCompatActivity
         } else if (operationMode == VPN_MODE) {
             ServiceVPNHelper.stop("Switch to proxy mode", this);
             Toast.makeText(this, getText(R.string.vpn_mode_off), Toast.LENGTH_LONG).show();
+        }
+
+        if (firewallNavigationItem != null) {
+            firewallNavigationItem.setVisible(false);
         }
 
         invalidateOptionsMenu();
@@ -730,6 +739,10 @@ public class MainActivity extends LangAppCompatActivity
         if (dnsCryptState == STOPPED && torState == STOPPED && itpdState == STOPPED
                 && modulesStatus.isUseModulesWithRoot()) {
             disableUseModulesWithRoot();
+        }
+
+        if (firewallNavigationItem != null) {
+            firewallNavigationItem.setVisible(true);
         }
 
         invalidateOptionsMenu();
@@ -907,6 +920,10 @@ public class MainActivity extends LangAppCompatActivity
         } else if (id == R.id.nav_common_Pref) {
             Intent intent = new Intent(this, SettingsActivity.class);
             intent.setAction("common_Pref");
+            startActivity(intent);
+        } else if (id == R.id.nav_firewall) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            intent.setAction("firewall");
             startActivity(intent);
         } else if (id == R.id.nav_help) {
             Intent intent = new Intent(this, HelpActivity.class);
@@ -1095,6 +1112,13 @@ public class MainActivity extends LangAppCompatActivity
             if (item != null) {
                 item.setVisible(false);
             }
+        }
+
+        firewallNavigationItem = navigationView.getMenu().findItem(R.id.nav_firewall);
+        if ((modulesStatus.getMode() == PROXY_MODE || modulesStatus.getMode() == ROOT_MODE) && item != null) {
+            firewallNavigationItem.setVisible(false);
+        } else if (item != null) {
+            firewallNavigationItem.setVisible(true);
         }
     }
 

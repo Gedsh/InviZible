@@ -28,4 +28,6 @@
     <color name="mainStartButtonColorStart">#9e9e9e</color>
     <color name="mainStartButtonColorEnd">#C8C8C8</color>
     <color name="mainStartButtonColorActive">#64B5F6</color>
+    <color name="colorAlert">#FF5252</color>
+    <color name="chipColorFocused">#2A3F43</color>
 </resources>

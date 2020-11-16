@@ -22,7 +22,9 @@
         android:name="android.hardware.camera.front"
         android:required="false" />
 
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -32,7 +34,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <uses-permission
+        android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission
         android:name="android.permission.REQUEST_INSTALL_PACKAGES"
@@ -122,19 +126,24 @@
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="pan.alexander.tordnscrypt.ALWAYS_ON_VPN" />
-                <action android:name="pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL"
-                    tools:node="remove"/>
+                <action
+                    android:name="pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL"
+                    tools:node="remove" />
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="android.intent.action.REBOOT" />
             </intent-filter>
         </receiver>
+
+        <receiver
+            android:name=".settings.firewall.FirewallNotification"
+            android:exported="false" />
 
         <activity
             android:name=".backup.BackupActivity"
             android:theme="@style/AppTheme" />
         <activity
             android:name=".SettingsActivity"
-            android:label="@string/title_activity_settings"
+            android:label="@string/empty_string"
             android:theme="@style/AppTheme" />
         <activity android:name=".AboutActivity" />
 

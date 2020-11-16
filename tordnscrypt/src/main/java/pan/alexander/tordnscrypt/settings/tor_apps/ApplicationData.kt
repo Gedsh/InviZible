@@ -36,6 +36,7 @@ data class ApplicationData(private val name: String = "",
     }
 
     companion object {
+        const val SPECIAL_UID_KERNEL = -1
         const val SPECIAL_UID_NTP = -14
         const val SPECIAL_PORT_NTP = 123
         const val SPECIAL_UID_AGPS = -15

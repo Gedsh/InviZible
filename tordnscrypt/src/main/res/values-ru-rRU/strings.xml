@@ -423,8 +423,8 @@
     <string name="pref_dnscrypt_erase_cloaking_rules">Очистить cloaking rules</string>
     <string name="erase_dnscrypt_rules_dialog_message">Готово! Правила стерты.</string>
     <string name="dnscrypt_many_rules_dialog_message">Слишком много правил для отображения. Показана только первая 1000.</string>
-    <string name="pref_dnscrypt_ipv4_servers_summ">Испоьзовать IPv4 сервера</string>
-    <string name="pref_dnscrypt_ipv6_servers_summ">Испоьзовать IPv6 сервера</string>
+    <string name="pref_dnscrypt_ipv4_servers_summ">Использовать IPv4 сервера</string>
+    <string name="pref_dnscrypt_ipv6_servers_summ">Использовать IPv6 сервера</string>
     <string name="pref_dnscrypt_block_ipv6_summ">Немедленно отвечать на IPv6 запросы пустым ответом.
         Это ускоряет работу при отсутствии подключения по протоколу IPv6, но иногда может вызывать проблемы.</string>
     <string name="pref_common_local_eth_device_addr">IP адрес устройства в LAN</string>
@@ -437,6 +437,7 @@
     <string name="notification_channel_services">Запущенные сервисы</string>
     <string name="notification_channel_update">Обновление</string>
     <string name="notification_channel_root">Команды Рут</string>
+    <string name="notification_channel_firewall">Файрвол</string>
     <string name="pref_common_compatibility_mode">Режим совместимости</string>
     <string name="pref_common_compatibility_mode_summ">Включите если у Вас кастомная прошивка, и интернет пропадает при нажатии кнопки START</string>
     <string name="dialog_send_crash_report">Обнаружен отчет аварийного завершения приложения. Хотите его отправить разработчику, чтобы сделать InviZible лучше?</string>
@@ -479,4 +480,16 @@
     <string name="pref_tor_entry_nodes_alt_summ">Выключите мосты Tor, если хотите выбрать Entry Nodes.</string>
     <string name="pref_fast_tor_bypass_lan">Исключить LAN адреса</string>
     <string name="pref_fast_tor_bypass_lan_summ">Не использовать Tor для LAN адресов и зарезервированных блоков IP IANA</string>
+    <string name="menu_firewall">Файрвол</string>
+    <string name="firewall_all_apps">Все</string>
+    <string name="firewall_system_apps">Система</string>
+    <string name="firewall_user_apps">Пользователь</string>
+    <string name="firewall_sort_by_name">Сортировать по имени</string>
+    <string name="firewall_sort_by_uid">Сортировать по UID</string>
+    <string name="ask_save_changes">Вы хотите сохранить изменения?</string>
+    <string name="firewall_warning_enable_module">Чтобы активировать файрвол, нужно запустить хотя бы DNSCrypt или Tor.</string>
+    <string name="firewall_notification_allow_app_title">Установлено приложение %s</string>
+    <string name="firewall_notification_allow_app">Разрешить ему интернет?</string>
+    <string name="allow">Разрешить</string>
+    <string name="deny">Запретить</string>
 </resources>

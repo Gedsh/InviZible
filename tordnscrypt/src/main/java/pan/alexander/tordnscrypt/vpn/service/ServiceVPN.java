@@ -55,6 +55,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +75,9 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.modules.ServiceNotification;
 import pan.alexander.tordnscrypt.modules.UsageStatisticKt;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt;
+import pan.alexander.tordnscrypt.settings.firewall.FirewallNotification;
+import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
@@ -152,11 +156,13 @@ public class ServiceVPN extends VpnService {
     private boolean arpSpoofingDetection;
     private boolean blockInternetWhenArpAttackDetected;
     private boolean lan = false;
+    private boolean firewallEnabled;
     public static CopyOnWriteArrayList<String> vpnDNS;
 
     private boolean useProxy = false;
     private Set<String> setBypassProxy;
     private boolean fixTTL;
+    private FirewallNotification firewallNotificationReceiver;
 
     @SuppressLint("UseSparseArrays")
     private final Map<Integer, Boolean> mapUidAllowed = new HashMap<>();
@@ -165,6 +171,8 @@ public class ServiceVPN extends VpnService {
     @SuppressLint("UseSparseArrays")
     private final Map<Integer, Forward> mapForwardPort = new HashMap<>();
     private final Map<String, Forward> mapForwardAddress = new HashMap<>();
+    private final Set<Integer> uidLanAllowed = new HashSet<>();
+    private final Set<Integer> uidSpecialAllowed = new HashSet<>();
 
     private final VPNBinder binder = new VPNBinder();
 
@@ -257,7 +265,7 @@ public class ServiceVPN extends VpnService {
         return listDns;
     }
 
-    BuilderVPN getBuilder(List<Rule> listAllowed, List<Rule> listRule) {
+    BuilderVPN getBuilder(List<String> listAllowed, List<Rule> listRule) {
         SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
         //boolean ip6 = prefs.getBoolean("ipv6", true);
         boolean ip6 = true;
@@ -405,7 +413,7 @@ public class ServiceVPN extends VpnService {
         return builder;
     }
 
-    void startNative(final ParcelFileDescriptor vpn, List<Rule> listAllowed, List<Rule> listRule) {
+    void startNative(final ParcelFileDescriptor vpn, List<String> listAllowed, List<Rule> listRule) {
         SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
 
         blockHttp = prefs.getBoolean("pref_fast_block_http", false);
@@ -414,6 +422,14 @@ public class ServiceVPN extends VpnService {
         blockIPv6 = prefs.getBoolean("block_ipv6", true);
         arpSpoofingDetection = prefs.getBoolean("pref_common_arp_spoofing_detection", false);
         blockInternetWhenArpAttackDetected = prefs.getBoolean("pref_common_arp_block_internet", false);
+        firewallEnabled = new PrefManager(this).getBoolPref("FirewallEnabled");
+
+        uidLanAllowed.clear();
+        for (String uid: new PrefManager(this).getSetStrPref(FirewallFragmentKt.APPS_ALLOW_LAN_PREF)) {
+            if (uid != null && uid.matches("\\d+")) {
+                uidLanAllowed.add(Integer.valueOf(uid));
+            }
+        }
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             compatibilityMode = true;
@@ -530,16 +546,25 @@ public class ServiceVPN extends VpnService {
         lock.writeLock().unlock();
     }
 
-    private void prepareUidAllowed(List<Rule> listAllowed, List<Rule> listRule) {
+    private void prepareUidAllowed(List<String> listAllowed, List<Rule> listRule) {
         lock.writeLock().lock();
 
         mapUidAllowed.clear();
-        for (Rule rule : listAllowed)
-            mapUidAllowed.put(rule.uid, true);
+        uidSpecialAllowed.clear();
+        for (String uid : listAllowed) {
+            if (uid != null && uid.matches("\\d+")) {
+                mapUidAllowed.put(Integer.valueOf(uid), true);
+            } else if (uid != null && uid.matches("-\\d+")) {
+                uidSpecialAllowed.add(Integer.valueOf(uid));
+            }
+        }
 
         mapUidKnown.clear();
-        for (Rule rule : listRule)
-            mapUidKnown.put(rule.uid, rule.uid);
+        for (Rule rule : listRule) {
+            if (rule.uid >= 0) {
+                mapUidKnown.put(rule.uid, rule.uid);
+            }
+        }
 
         lock.writeLock().unlock();
     }
@@ -727,6 +752,35 @@ public class ServiceVPN extends VpnService {
         return !setBypassProxy.contains(String.valueOf(uid));
     }
 
+    private boolean isIpInLanRange(String destAddress) {
+        for (String address: Util.nonTorList) {
+            if (Util.isIpInSubnet(destAddress, address)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isDestinationInSpecialRange(int uid, int destPort) {
+        return uid == 0 && destPort == 53
+                || uid == ApplicationData.SPECIAL_UID_KERNEL
+                || destPort == ApplicationData.SPECIAL_PORT_NTP
+                || destPort == ApplicationData.SPECIAL_PORT_AGPS;
+    }
+
+    private boolean isSpecialAllowed(int uid, int destPort) {
+        if (uid == 0 && destPort == 53) {
+            return true;
+        } if (uid == ApplicationData.SPECIAL_UID_KERNEL) {
+            return uidSpecialAllowed.contains(ApplicationData.SPECIAL_UID_KERNEL);
+        } else if (destPort == ApplicationData.SPECIAL_PORT_NTP) {
+            return uidSpecialAllowed.contains(ApplicationData.SPECIAL_UID_NTP) || mapUidAllowed.containsKey(1000);
+        } else if (destPort == ApplicationData.SPECIAL_PORT_AGPS) {
+            return uidSpecialAllowed.contains(ApplicationData.SPECIAL_UID_AGPS) || mapUidAllowed.containsKey(1000);
+        }
+        return false;
+    }
+
     // Called from native code
     @TargetApi(Build.VERSION_CODES.Q)
     public int getUidQ(int version, int protocol, String saddr, int sport, String daddr, int dport) {
@@ -773,11 +827,15 @@ public class ServiceVPN extends VpnService {
 
         lock.readLock().lock();
 
+        boolean redirectToTor = isRedirectToTor(packet.uid, packet.daddr);
+        boolean redirectToProxy = isRedirectToProxy(packet.uid, packet.daddr);
+
         packet.allowed = false;
         // https://android.googlesource.com/platform/system/core/+/master/include/private/android_filesystem_config.h
         if ((!canFilter) && isSupported(packet.protocol)) {
             packet.allowed = true;
-        } else if (packet.uid == ownUID && isSupported(packet.protocol)) {
+        } else if ((packet.uid == ownUID || compatibilityMode && packet.uid == -1 && !fixTTLForPacket)
+                && isSupported(packet.protocol)) {
             // Allow self
             packet.allowed = true;
 
@@ -793,8 +851,8 @@ public class ServiceVPN extends VpnService {
             Log.i(LOG_TAG, "Block due to reloading " + packet);
         } else if ((blockIPv6 || fixTTLForPacket
                 || packet.dport == 53
-                || (torIsRunning && isRedirectToTor(packet.uid, packet.daddr))
-                || (useProxy && isRedirectToProxy(packet.uid, packet.daddr)))
+                || (torIsRunning && redirectToTor)
+                || (useProxy && redirectToProxy))
                 && (packet.saddr.contains(":") || packet.daddr.contains(":"))) {
             Log.i(LOG_TAG, "Block ipv6 " + packet);
         } else if (blockHttp && packet.dport == 80
@@ -809,7 +867,7 @@ public class ServiceVPN extends VpnService {
         }*/ else if (packet.uid <= 2000 &&
                 (!routeAllThroughTor || torTethering || fixTTLForPacket || compatibilityMode) &&
                 !mapUidKnown.containsKey(packet.uid)
-                && (!torIsRunning && !useProxy || packet.protocol == 6 || packet.dport == 53)
+                && (fixTTL || !torIsRunning && !useProxy || packet.protocol == 6 && packet.dport == 53)
                 && isSupported(packet.protocol)) {
 
             // Allow unknown system traffic
@@ -817,10 +875,14 @@ public class ServiceVPN extends VpnService {
             if (!fixTTLForPacket && !compatibilityMode) {
                 Log.w(LOG_TAG, "Allowing unknown system " + packet);
             }
-        } else if (torIsRunning && packet.protocol != 6 && packet.dport != 53 && isRedirectToTor(packet.uid, packet.daddr)) {
+        } else if (torIsRunning && packet.protocol != 6 && packet.dport != 53 && redirectToTor) {
             Log.w(LOG_TAG, "Disallowing non tcp traffic to Tor " + packet);
-        } else if (useProxy && packet.protocol != 6 && packet.dport != 53 && isRedirectToProxy(packet.uid, packet.daddr)) {
+        } else if (useProxy && packet.protocol != 6 && packet.dport != 53 && redirectToProxy) {
             Log.w(LOG_TAG, "Disallowing non tcp traffic to proxy " + packet);
+        } else if (firewallEnabled && isIpInLanRange(packet.daddr) && isSupported(packet.protocol)) {
+            packet.allowed = uidLanAllowed.contains(packet.uid);
+        } else if (firewallEnabled && isDestinationInSpecialRange(packet.uid, packet.dport) && isSupported(packet.protocol)) {
+            packet.allowed = isSpecialAllowed(packet.uid, packet.dport);
         } else {
 
             if (mapUidAllowed.containsKey(packet.uid)) {
@@ -830,13 +892,14 @@ public class ServiceVPN extends VpnService {
                     //Log.i(LOG_TAG, "Packet " + packet.toString() + " is allowed " + allow);
                 }
             } else {
-                Log.w(LOG_TAG, "No rules for " + packet);
+                Log.w(LOG_TAG, "UID is not allowed or no rules for " + packet);
             }
         }
 
         Allowed allowed = null;
         if (packet.allowed) {
-            if (/*packet.daddr.equals("127.0.0.1") || */packet.uid == ownUID) {
+            if (packet.uid == ownUID  || compatibilityMode && packet.uid == -1 && !fixTTLForPacket
+                    || packet.dport != 53 && !packet.daddr.equals(itpdRedirectAddress)) {
                 allowed = new Allowed();
             } else if (mapForwardPort.containsKey(packet.dport)) {
                 Forward fwd = mapForwardPort.get(packet.dport);
@@ -980,6 +1043,8 @@ public class ServiceVPN extends VpnService {
         ifPackage.addDataScheme("package");
         registerReceiver(packageChangedReceiver, ifPackage);
         registeredPackageChanged = true;
+
+        firewallNotificationReceiver = FirewallNotification.Companion.registerFirewallReceiver(this);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             try {
@@ -1234,6 +1299,8 @@ public class ServiceVPN extends VpnService {
         if (registeredPackageChanged) {
             unregisterReceiver(packageChangedReceiver);
             registeredPackageChanged = false;
+
+            FirewallNotification.Companion.unregisterFirewallReceiver(this, firewallNotificationReceiver);
         }
 
         if (networkCallback != null) {
