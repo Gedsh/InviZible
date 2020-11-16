@@ -412,3 +412,8 @@
 * Updated Purple I2P default configuration as ntcp is no longer supported.
 * Build Purple I2P from source including all dependencies.
 * Updated Tor with new dependencies.
+
+**InviZible Pro beta 1.1.1**
+* Implemented a firewall for VPN mode.
+* Updated Indonesian language.
+* Updated snowflake.

@@ -1,0 +1,4 @@
+**InviZible Pro beta 1.1.1**
+* Implemented a firewall for VPN mode.
+* Updated Indonesian language.
+* Updated snowflake.
