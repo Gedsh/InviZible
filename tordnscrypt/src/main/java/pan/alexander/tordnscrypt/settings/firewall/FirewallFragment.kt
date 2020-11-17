@@ -558,7 +558,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         return stringSet
     }
 
-    private fun sortByName() {
+    @Synchronized private fun sortByName() {
         if (binding.rvFirewallApps.isComputingLayout) {
             return
         }
@@ -567,7 +567,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         savedAppsListWhenSearch?.sortListBy { it.applicationData.names[0] }
     }
 
-    private fun sortByUid() {
+    @Synchronized private fun sortByUid() {
         if (binding.rvFirewallApps.isComputingLayout) {
             return
         }
@@ -660,7 +660,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         }
     }
 
-    private fun chipSelectAllApps(context: Context) {
+    @Synchronized private fun chipSelectAllApps(context: Context) {
         if (binding.rvFirewallApps.isComputingLayout) {
             return
         }
@@ -683,7 +683,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         }
     }
 
-    private fun chipSelectSystemApps(context: Context) {
+    @Synchronized private fun chipSelectSystemApps(context: Context) {
         if (binding.rvFirewallApps.isComputingLayout) {
             return
         }
@@ -714,7 +714,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         updateTopIcons(context)
     }
 
-    private fun chipSelectUserApps(context: Context) {
+    @Synchronized private fun chipSelectUserApps(context: Context) {
         if (binding.rvFirewallApps.isComputingLayout) {
             return
         }
@@ -762,7 +762,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         allowVPNForAll = appsList.count { it.allowVPN } == appListSize
     }
 
-    private fun updateTopIcons(context: Context) {
+    @Synchronized private fun updateTopIcons(context: Context) {
         updateLanIcon(context)
         updateWifiIcon(context)
         updateGsmIcon(context)
