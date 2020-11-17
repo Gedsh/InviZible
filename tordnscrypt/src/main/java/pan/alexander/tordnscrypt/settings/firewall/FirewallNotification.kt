@@ -27,6 +27,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
@@ -104,9 +105,12 @@ class FirewallNotification : BroadcastReceiver() {
 
         var label = ""
         var useInternet = false
+        var system = true
+
 
         try {
             val applicationInfo = packageManager.getPackageInfo(packages[0], 0).applicationInfo
+            system = (applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
             val pInfo: PackageInfo = packageManager.getPackageInfo(applicationInfo.packageName, PackageManager.GET_PERMISSIONS)
             if (pInfo.requestedPermissions != null) {
                 for (permInfo in pInfo.requestedPermissions) {
@@ -118,14 +122,28 @@ class FirewallNotification : BroadcastReceiver() {
             }
             label = packageManager.getApplicationLabel(applicationInfo).toString()
         } catch (e: Exception) {
+            useInternet = true
             Log.e(LOG_TAG, "FirewallNotification packageAdded exception  ${e.message}\n${e.cause}")
         }
 
-        if (!useInternet || label.isBlank()) {
+        if (label.isBlank()) {
+            try {
+                label = packageManager.getNameForUid(uid) ?: ""
+            } catch (e: Exception){
+                Log.e(LOG_TAG, "FirewallNotification packageAdded exception  ${e.message}\n${e.cause}")
+            }
+        }
+
+        if (system || !useInternet || label.isBlank()) {
             return
         }
 
-        val title = String.format(context.getString(R.string.firewall_notification_allow_app_title), label)
+        val title = try {
+            String.format(context.getString(R.string.firewall_notification_allow_app_title), label)
+        } catch (ignored: Exception) {
+            label
+        }
+
         val message = context.getString(R.string.firewall_notification_allow_app)
 
         sendNotification(context, uid, notificationStartId++, message,title, message)
