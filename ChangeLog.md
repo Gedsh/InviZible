@@ -417,3 +417,9 @@
 * Implemented a firewall for VPN mode.
 * Updated Indonesian language.
 * Updated snowflake.
+
+**InviZible Pro beta 1.1.2**
+* Fixed app crash when installing new app.
+* Fixed display of firewall menu item in Root or Proxy mode.
+* Don't show notification when updating system app or without Internet permission.
+* Prevent apps without Internet permission from being shown in app lists.
