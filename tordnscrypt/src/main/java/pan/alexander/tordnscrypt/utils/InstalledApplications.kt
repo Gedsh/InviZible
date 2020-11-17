@@ -115,7 +115,7 @@ class InstalledApplications(private val context: Context, private val activeApps
 
                 if (application == null) {
                     val system = (applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
-                    var useInternet = true
+                    var useInternet = false
                     val uid = applicationInfo.uid
 
                     try {
@@ -129,6 +129,7 @@ class InstalledApplications(private val context: Context, private val activeApps
                             }
                         }
                     } catch (e: Exception) {
+                        useInternet = true
                         Log.e(LOG_TAG, "InstalledApplications getApp exception  ${e.message}\n${e.cause}")
                     }
 
