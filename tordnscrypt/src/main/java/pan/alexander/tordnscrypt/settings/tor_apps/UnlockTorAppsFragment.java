@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
@@ -77,6 +78,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 public class UnlockTorAppsFragment extends Fragment implements InstalledApplications.OnAppAddListener,
         CompoundButton.OnCheckedChangeListener, SearchView.OnQueryTextListener {
     private Set<String> setUnlockApps;
+    private RecyclerView rvListTorApps;
     private RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHolder> mAdapter;
     private ProgressBar pbTorApp;
     private String unlockAppsStr;
@@ -141,7 +143,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
 
         setUnlockApps = new PrefManager(context).getSetStrPref(unlockAppsStr);
 
-        RecyclerView rvListTorApps = getActivity().findViewById(R.id.rvTorApps);
+        rvListTorApps = getActivity().findViewById(R.id.rvTorApps);
         rvListTorApps.requestFocus();
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(context);
         rvListTorApps.setLayoutManager(mLayoutManager);
@@ -233,7 +235,9 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
 
     @Override
     public void onCheckedChanged(CompoundButton compoundButton, boolean active) {
-        if (compoundButton.getId() == R.id.swTorAppSellectorAll && mAdapter != null && appsUnlock != null) {
+        if (compoundButton.getId() == R.id.swTorAppSellectorAll
+                && rvListTorApps != null && !rvListTorApps.isComputingLayout()
+                && mAdapter != null && appsUnlock != null) {
             if (active) {
                 for (int i = 0; i < appsUnlock.size(); i++) {
                     ApplicationData app = appsUnlock.get(i);
@@ -258,6 +262,10 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
 
     @Override
     public boolean onQueryTextChange(String s) {
+
+        if (rvListTorApps == null || rvListTorApps.isComputingLayout()) {
+            return false;
+        }
 
         if (s == null || s.isEmpty()) {
             if (savedAppsUnlockWhenSearch != null) {
@@ -288,6 +296,10 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
 
     @Override
     public void onAppAdded(@NotNull ApplicationData application) {
+        if (rvListTorApps == null || rvListTorApps.isComputingLayout()) {
+            return;
+        }
+
         appsUnlock.add(0, application);
         handler.post(() -> mAdapter.notifyDataSetChanged());
     }
@@ -426,13 +438,19 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
                 installedApplications.setOnAppAddListener(UnlockTorAppsFragment.this);
                 List<ApplicationData> installedApps = installedApplications.getInstalledApps(false);
 
+                while (rvListTorApps != null && rvListTorApps.isComputingLayout()) {
+                    TimeUnit.MILLISECONDS.sleep(100);
+                }
+
                 appsUnlock = new CopyOnWriteArrayList<>(installedApps);
 
                 if (handler != null && pbTorApp != null) {
                     handler.post(() -> {
-                        pbTorApp.setIndeterminate(false);
-                        pbTorApp.setVisibility(View.GONE);
-                        mAdapter.notifyDataSetChanged();
+                        if (pbTorApp != null && mAdapter != null) {
+                            pbTorApp.setIndeterminate(false);
+                            pbTorApp.setVisibility(View.GONE);
+                            mAdapter.notifyDataSetChanged();
+                        }
                     });
                 }
             } catch (Exception e) {
