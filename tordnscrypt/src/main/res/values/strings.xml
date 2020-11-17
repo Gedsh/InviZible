@@ -733,7 +733,7 @@
     <string name="firewall_switch" translatable="false">Firewall On/Off</string>
     <string name="ask_save_changes">Do you want to save the changes?</string>
     <string name="firewall_warning_enable_module">To activate the firewall, you should start at least DNSCrypt or Tor.</string>
-    <string name="firewall_notification_allow_app_title">% is installed</string>
+    <string name="firewall_notification_allow_app_title">%s is installed</string>
     <string name="firewall_notification_allow_app">Allow Internet for it?</string>
     <string name="allow">Allow</string>
     <string name="deny">Deny</string>
