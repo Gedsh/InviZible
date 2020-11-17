@@ -490,6 +490,12 @@ public class MainActivity extends LangAppCompatActivity
             menuRootMode.setVisible(false);
             menuRootMode.setEnabled(false);
         }
+
+        if ((mode == PROXY_MODE || mode == ROOT_MODE) && firewallNavigationItem != null) {
+            firewallNavigationItem.setVisible(false);
+        } else if (firewallNavigationItem != null) {
+            firewallNavigationItem.setVisible(true);
+        }
     }
 
     private void switchApIcon(Menu menu) {
@@ -1115,11 +1121,6 @@ public class MainActivity extends LangAppCompatActivity
         }
 
         firewallNavigationItem = navigationView.getMenu().findItem(R.id.nav_firewall);
-        if ((modulesStatus.getMode() == PROXY_MODE || modulesStatus.getMode() == ROOT_MODE) && item != null) {
-            firewallNavigationItem.setVisible(false);
-        } else if (item != null) {
-            firewallNavigationItem.setVisible(true);
-        }
     }
 
     private void registerBroadcastReceiver() {
