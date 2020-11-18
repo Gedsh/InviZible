@@ -136,24 +136,28 @@ object ProxyHelper {
         var clientOnlyLinePosition = -1
         var socksProxyLineExist = false
         val torConf = FileOperations.readTextFileSynchronous(context, torConfPath)
+        val torConfToSave = mutableListOf<String>()
         for (i in torConf.indices) {
-            val line = torConf[i]
+            var line = torConf[i]
             if (line.contains("Socks5Proxy")) {
-                socksProxyLineExist = true
-                if (enable) {
-                    torConf[i] = "Socks5Proxy $address"
-                } else {
-                    torConf[i] = "#Socks5Proxy $address"
+                when {
+                    socksProxyLineExist -> line = ""
+                    enable -> line = "Socks5Proxy $address"
+                    else -> line = "#Socks5Proxy $address"
                 }
-                break
+                socksProxyLineExist = true
             } else if (line.contains("ClientOnly")) {
                 clientOnlyLinePosition = i
             }
+
+            if (line.isNotEmpty()) {
+                torConfToSave.add(line)
+            }
         }
         if (enable && !socksProxyLineExist && clientOnlyLinePosition >= 0) {
-            torConf.add(clientOnlyLinePosition, "Socks5Proxy $address")
+            torConfToSave.add(clientOnlyLinePosition, "Socks5Proxy $address")
         }
-        FileOperations.writeTextFileSynchronous(context, torConfPath, torConf)
+        FileOperations.writeTextFileSynchronous(context, torConfPath, torConfToSave)
     }
 
     private fun manageITPDProxy(context: Context?, itpdConfPath: String?, address: String, enable: Boolean) {

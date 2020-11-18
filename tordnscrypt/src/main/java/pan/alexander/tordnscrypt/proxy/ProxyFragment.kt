@@ -125,11 +125,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
     override fun onStop() {
         super.onStop()
 
-        if (activity == null) {
-            return
-        }
-
-        val context = activity as Context
+        val context = activity ?: return
 
         var serverOrPortChanged = false
 

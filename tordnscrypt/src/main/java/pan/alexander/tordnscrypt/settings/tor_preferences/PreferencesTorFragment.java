@@ -415,7 +415,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             if (Boolean.parseBoolean(newValue.toString())) {
                 if (key_tor.contains("#Socks5Proxy")) {
                     key_tor.set(key_tor.indexOf("#Socks5Proxy"), "Socks5Proxy");
-                } else if (key_tor.contains("ClientOnly")){
+                } else if (key_tor.contains("ClientOnly") && !key_tor.contains("Socks5Proxy")) {
                     int index = key_tor.indexOf("ClientOnly");
                     key_tor.add(index, "Socks5Proxy");
                     val_tor.add(index, "127.0.0.1:1080");
