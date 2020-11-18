@@ -1,0 +1,5 @@
+**InviZible Pro beta 1.1.3**
+* Don't show firewall notification when updating user apps.
+* Fixed inconsistencies in the firewall UI in rare cases.
+* NTP can bypass Tor if allowed by firewall rules.
+* Fixed Proxy port does not change.

@@ -423,3 +423,9 @@
 * Fixed display of firewall menu item in Root or Proxy mode.
 * Don't show notification when updating system app or without Internet permission.
 * Prevent apps without Internet permission from being shown in app lists.
+
+**InviZible Pro beta 1.1.3**
+* Don't show firewall notification when updating user apps.
+* Fixed inconsistencies in the firewall UI in rare cases.
+* NTP can bypass Tor if allowed by firewall rules.
+* Fixed Proxy port does not change.
