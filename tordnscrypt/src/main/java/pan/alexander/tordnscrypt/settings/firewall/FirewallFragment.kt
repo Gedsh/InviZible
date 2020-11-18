@@ -227,6 +227,8 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
             return
         }
 
+        appsListComplete = false
+
         futureTask = getExecutorService().submit {
 
             reentrantLock.lock()
@@ -243,8 +245,6 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
                         PrefManager(context).setBoolPref("FirewallWasStarted", true)
                     }
 
-                    appsListComplete = false
-
                     appsAllowLan.addAll(stringSetToIntSet(PrefManager(context).getSetStrPref(APPS_ALLOW_LAN_PREF)))
                     appsAllowWifi.addAll(stringSetToIntSet(PrefManager(context).getSetStrPref(APPS_ALLOW_WIFI_PREF)))
                     appsAllowGsm.addAll(stringSetToIntSet(PrefManager(context).getSetStrPref(APPS_ALLOW_GSM_PREF)))
@@ -256,8 +256,6 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
                     val installedApplications = InstalledApplications(context, setOf())
                     installedApplications.setOnAppAddListener(this@FirewallFragment)
                     val installedApps = installedApplications.getInstalledApps(true)
-
-                    appsListComplete = true
 
                     while (binding.rvFirewallApps.isComputingLayout) {
                         TimeUnit.MILLISECONDS.sleep(100)
@@ -287,17 +285,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
                         }
                     }
 
-                    if (binding.chipFirewallSortUid.isChecked) {
-                        sortByUid()
-                    }
-
                     PrefManager(context).setSetStrPref(APPS_NEWLY_INSTALLED, setOf())
-
-                    if (binding.chipFirewallSystem.isChecked) {
-                        chipSelectSystemApps(context)
-                    } else if (binding.chipFirewallUser.isChecked) {
-                        chipSelectUserApps(context)
-                    }
 
                     val appListSize = appsList.size
                     allowLanForAll = appsAllowLan.size == appListSize
@@ -309,6 +297,18 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
                     handler?.post {
                         binding.pbFirewallApp.isIndeterminate = false
                         binding.pbFirewallApp.visibility = View.GONE
+
+                        appsListComplete = true
+
+                        if (binding.chipFirewallSortUid.isChecked) {
+                            sortByUid()
+                        }
+
+                        if (binding.chipFirewallSystem.isChecked) {
+                            chipSelectSystemApps(context)
+                        } else if (binding.chipFirewallUser.isChecked) {
+                            chipSelectUserApps(context)
+                        }
 
                         if (allowLanForAll || allowWifiForAll || allowGsmForAll
                                 || allowRoamingForAll || allowVPNForAll) {
@@ -322,6 +322,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
                         firewallAdapter?.notifyDataSetChanged()
                     }
                 } catch (e: Exception) {
+                    appsListComplete = true
                     Log.e(LOG_TAG, "FirewallFragment getDeviceApps exception ${e.message} ${e.cause} ${Arrays.toString(e.stackTrace)}")
                 }
 
@@ -433,6 +434,10 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
     }
 
     fun isFirewallChangesSavingRequired(): Boolean {
+        if (!appsListComplete) {
+            return false
+        }
+
         savedAppsListWhenSearch?.let {
             if (it.isNotEmpty()) {
                 appsList = it
@@ -558,7 +563,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         return stringSet
     }
 
-    @Synchronized private fun sortByName() {
+    private fun sortByName() {
         if (binding.rvFirewallApps.isComputingLayout) {
             return
         }
@@ -567,7 +572,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         savedAppsListWhenSearch?.sortListBy { it.applicationData.names[0] }
     }
 
-    @Synchronized private fun sortByUid() {
+    private fun sortByUid() {
         if (binding.rvFirewallApps.isComputingLayout) {
             return
         }
@@ -660,7 +665,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         }
     }
 
-    @Synchronized private fun chipSelectAllApps(context: Context) {
+    private fun chipSelectAllApps(context: Context) {
         if (binding.rvFirewallApps.isComputingLayout) {
             return
         }
@@ -683,7 +688,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         }
     }
 
-    @Synchronized private fun chipSelectSystemApps(context: Context) {
+    private fun chipSelectSystemApps(context: Context) {
         if (binding.rvFirewallApps.isComputingLayout) {
             return
         }
@@ -714,7 +719,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         updateTopIcons(context)
     }
 
-    @Synchronized private fun chipSelectUserApps(context: Context) {
+    private fun chipSelectUserApps(context: Context) {
         if (binding.rvFirewallApps.isComputingLayout) {
             return
         }
@@ -762,7 +767,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         allowVPNForAll = appsList.count { it.allowVPN } == appListSize
     }
 
-    @Synchronized private fun updateTopIcons(context: Context) {
+    private fun updateTopIcons(context: Context) {
         updateLanIcon(context)
         updateWifiIcon(context)
         updateGsmIcon(context)
