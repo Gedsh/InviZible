@@ -21,7 +21,6 @@ package pan.alexander.tordnscrypt.settings.tor_apps;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -413,7 +412,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
                 tvTorAppName.setText(app.toString());
                 if (app.getSystem() && activity != null) {
                     tvTorAppName.setTextColor(ContextCompat.getColor(activity, R.color.colorAlert));
-                } else {
+                } else if (activity != null) {
                     tvTorAppName.setTextColor(ContextCompat.getColor(activity, R.color.textModuleStatusColorStopped));
                 }
                 imgTorApp.setImageDrawable(app.getIcon());
