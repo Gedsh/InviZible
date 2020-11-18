@@ -324,12 +324,12 @@ void check_tcp_socket(const struct arguments *args,
 
                     bool redirect_to_tor = false;
                     if (*tor_socks5_addr && tor_socks5_port) {
-                        redirect_to_tor = is_redirect_to_tor(args, s->tcp.uid, dest);
+                        redirect_to_tor = is_redirect_to_tor(args, s->tcp.uid, dest, s->tcp.dest);
                     }
 
                     bool redirect_to_proxy = false;
                     if (*proxy_socks5_addr && proxy_socks5_port) {
-                        redirect_to_proxy = is_redirect_to_proxy(args, s->tcp.uid, dest);
+                        redirect_to_proxy = is_redirect_to_proxy(args, s->tcp.uid, dest, s->tcp.dest);
                     }
 
                     if (redirect_to_tor || redirect_to_proxy) {
@@ -431,7 +431,7 @@ void check_tcp_socket(const struct arguments *args,
                 bool redirect_to_tor = false;
 
                 if (*tor_socks5_addr && tor_socks5_port) {
-                    redirect_to_tor = is_redirect_to_tor(args, s->tcp.uid, dest);
+                    redirect_to_tor = is_redirect_to_tor(args, s->tcp.uid, dest, s->tcp.dest);
                 }
 
                 if (*proxy_socks5_addr && proxy_socks5_port && !redirect_to_tor) {
@@ -1124,12 +1124,12 @@ int open_tcp_socket(const struct arguments *args,
 
         bool redirect_to_tor = false;
         if (*tor_socks5_addr && tor_socks5_port) {
-            redirect_to_tor = is_redirect_to_tor(args, cur->uid, dest);
+            redirect_to_tor = is_redirect_to_tor(args, cur->uid, dest, cur->dest);
         }
 
         bool redirect_to_proxy = false;
         if (*proxy_socks5_addr && proxy_socks5_port) {
-            redirect_to_proxy = is_redirect_to_proxy(args,  cur->uid, dest);
+            redirect_to_proxy = is_redirect_to_proxy(args,  cur->uid, dest, cur->dest);
         }
 
         if (redirect_to_tor) {

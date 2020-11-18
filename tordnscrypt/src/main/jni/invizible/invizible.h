@@ -513,9 +513,9 @@ void dns_resolved(const struct arguments *args, const char *qname, const char *a
 
 jboolean is_domain_blocked(const struct arguments *args, const char *name);
 
-jboolean is_redirect_to_tor(const struct arguments *args, const int uid, const char *daddr);
+jboolean is_redirect_to_tor(const struct arguments *args, const int uid, const char *daddr, const int port);
 
-jboolean is_redirect_to_proxy(const struct arguments *args, const int uid, const char *daddr);
+jboolean is_redirect_to_proxy(const struct arguments *args, const int uid, const char *daddr, const int port);
 
 jint get_uid_q(const struct arguments *args,
                jint version,

@@ -615,7 +615,7 @@ jboolean is_domain_blocked(const struct arguments *args, const char *name) {
 
 static jmethodID midIsRedirectToTor = NULL;
 
-jboolean is_redirect_to_tor(const struct arguments *args, const int uid, const char *daddr) {
+jboolean is_redirect_to_tor(const struct arguments *args, const int uid, const char *daddr, const int dport) {
 #ifdef PROFILE_JNI
     float mselapsed;
     struct timeval start, end;
@@ -625,7 +625,7 @@ jboolean is_redirect_to_tor(const struct arguments *args, const int uid, const c
     jclass clsService = (*args->env)->GetObjectClass(args->env, args->instance);
     ng_add_alloc(clsService, "clsService");
 
-    const char *signature = "(ILjava/lang/String;)Z";
+    const char *signature = "(ILjava/lang/String;I)Z";
     if (midIsRedirectToTor == NULL)
         midIsRedirectToTor = jniGetMethodID(args->env, clsService, "isRedirectToTor", signature);
 
@@ -633,7 +633,7 @@ jboolean is_redirect_to_tor(const struct arguments *args, const int uid, const c
     ng_add_alloc(jdaddr, "jdaddr");
 
     jboolean jredirect_to_tor = (*args->env)->CallBooleanMethod(
-            args->env, args->instance, midIsRedirectToTor, uid, jdaddr);
+            args->env, args->instance, midIsRedirectToTor, uid, jdaddr, dport);
     jniCheckException(args->env);
 
     (*args->env)->DeleteLocalRef(args->env, jdaddr);
@@ -654,7 +654,7 @@ jboolean is_redirect_to_tor(const struct arguments *args, const int uid, const c
 
 static jmethodID midIsRedirectToProxy = NULL;
 
-jboolean is_redirect_to_proxy(const struct arguments *args, const int uid, const char *daddr) {
+jboolean is_redirect_to_proxy(const struct arguments *args, const int uid, const char *daddr, const int dport) {
 #ifdef PROFILE_JNI
     float mselapsed;
     struct timeval start, end;
@@ -664,7 +664,7 @@ jboolean is_redirect_to_proxy(const struct arguments *args, const int uid, const
     jclass clsService = (*args->env)->GetObjectClass(args->env, args->instance);
     ng_add_alloc(clsService, "clsService");
 
-    const char *signature = "(ILjava/lang/String;)Z";
+    const char *signature = "(ILjava/lang/String;I)Z";
     if (midIsRedirectToProxy == NULL)
         midIsRedirectToProxy = jniGetMethodID(args->env, clsService, "isRedirectToProxy", signature);
 
@@ -672,7 +672,7 @@ jboolean is_redirect_to_proxy(const struct arguments *args, const int uid, const
     ng_add_alloc(jdaddr, "jdaddr");
 
     jboolean jredirect_to_proxy = (*args->env)->CallBooleanMethod(
-            args->env, args->instance, midIsRedirectToProxy, uid, jdaddr);
+            args->env, args->instance, midIsRedirectToProxy, uid, jdaddr, dport);
     jniCheckException(args->env);
 
     (*args->env)->DeleteLocalRef(args->env, jdaddr);
