@@ -77,8 +77,6 @@ class FirewallNotification : BroadcastReceiver() {
         }
         val action = intent?.action ?: return
 
-        Log.w(LOG_TAG, action)
-
         when (action) {
             Intent.ACTION_PACKAGE_ADDED -> packageAdded(context, intent)
             Intent.ACTION_PACKAGE_REMOVED -> packageRemoved(context, intent)
@@ -90,10 +88,13 @@ class FirewallNotification : BroadcastReceiver() {
 
     private fun packageAdded(context: Context?, intent: Intent) {
 
+        Log.i(LOG_TAG, "FirewallNotification packageAdded received intent $intent")
+
         val uid = intent.getIntExtra(Intent.EXTRA_UID, 0)
         val packageManager = context?.packageManager
 
-        if (uid == 0 || packageManager == null) {
+        if (uid == 0 || packageManager == null
+                || intent.getBooleanExtra(Intent.EXTRA_REPLACING, false)) {
             return
         }
 
@@ -150,12 +151,16 @@ class FirewallNotification : BroadcastReceiver() {
 
         val appsNewlyInstalled = PrefManager(context).getSetStrPref(APPS_NEWLY_INSTALLED)
         PrefManager(context).setSetStrPref(APPS_NEWLY_INSTALLED, appsNewlyInstalled.apply { add(uid.toString()) })
+
+        Log.i(LOG_TAG, "FirewallNotification package added UID $uid")
     }
 
     private fun packageRemoved(context: Context?, intent: Intent) {
+        Log.i(LOG_TAG, "FirewallNotification packageRemoved received intent $intent")
+
         val uid = intent.getIntExtra(Intent.EXTRA_UID, 0)
 
-        if (uid > 0) {
+        if (uid > 0 && intent.getBooleanExtra(Intent.EXTRA_DATA_REMOVED, false)) {
             val appsAllowLan = PrefManager(context).getSetStrPref(APPS_ALLOW_LAN_PREF)
             val appsAllowWifi = PrefManager(context).getSetStrPref(APPS_ALLOW_WIFI_PREF)
             val appsAllowGsm = PrefManager(context).getSetStrPref(APPS_ALLOW_GSM_PREF)
@@ -174,6 +179,8 @@ class FirewallNotification : BroadcastReceiver() {
             if (context != null) {
                 modulesStatus.setIptablesRulesUpdateRequested(context, true)
             }
+
+            Log.i(LOG_TAG, "FirewallNotification package removed UID $uid")
         }
     }
 
