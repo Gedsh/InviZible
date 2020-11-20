@@ -429,3 +429,7 @@
 * Fixed inconsistencies in the firewall UI in rare cases.
 * NTP can bypass Tor if allowed by firewall rules.
 * Fixed Proxy port does not change.
+
+**InviZible Pro beta 1.1.4**
+* Optimized Tor bridges handling and selection.
+* Updated Tor.
