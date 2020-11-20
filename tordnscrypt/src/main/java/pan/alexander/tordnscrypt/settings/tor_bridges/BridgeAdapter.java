@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
@@ -55,7 +56,6 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
     private final FragmentManager fragmentManager;
     private final LayoutInflater lInflater;
     private final PreferencesBridges preferencesBridges;
-    private BridgesSelector currentBridgesSelector;
 
     BridgeAdapter(SettingsActivity activity, FragmentManager fragmentManager, PreferencesBridges preferencesBridges) {
         this.activity = activity;
@@ -92,7 +92,8 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
         bridgeList.set(position, brg);
     }
 
-   class BridgeViewHolder extends RecyclerView.ViewHolder {
+    class BridgeViewHolder extends RecyclerView.ViewHolder implements CompoundButton.OnCheckedChangeListener,
+            View.OnClickListener {
 
         private final TextView tvBridge;
         private final SwitchCompat swBridge;
@@ -102,71 +103,12 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
 
             tvBridge = itemView.findViewById(R.id.tvBridge);
             swBridge = itemView.findViewById(R.id.swBridge);
-            CompoundButton.OnCheckedChangeListener onCheckedChangeListener = (compoundButton, newValue) -> {
-                List<String> currentBridges = preferencesBridges.getCurrentBridges();
+            swBridge.setOnCheckedChangeListener(this);
 
-                if (newValue) {
-
-                    boolean useNoBridges = new PrefManager(activity).getBoolPref("useNoBridges");
-                    boolean useDefaultBridges = new PrefManager(activity).getBoolPref("useDefaultBridges");
-                    boolean useOwnBridges = new PrefManager(activity).getBoolPref("useOwnBridges");
-
-                    if (!useNoBridges && !useDefaultBridges && !useOwnBridges) {
-                        currentBridgesSelector = BridgesSelector.NO_BRIDGES;
-                    } else if (useNoBridges) {
-                        currentBridgesSelector = BridgesSelector.NO_BRIDGES;
-                    } else if (useDefaultBridges) {
-                        currentBridgesSelector = BridgesSelector.DEFAULT_BRIDGES;
-                    } else {
-                        currentBridgesSelector = BridgesSelector.OWN_BRIDGES;
-                    }
-
-                    BridgeType obfsType = getItem(getAdapterPosition()).obfsType;
-                    if (!obfsType.equals(preferencesBridges.getCurrentBridgesType())) {
-                        currentBridges.clear();
-                        setCurrentBridgesType(obfsType);
-                    }
-
-                    if (!currentBridgesSelector.equals(preferencesBridges.getSavedBridgesSelector())) {
-                        currentBridges.clear();
-                        setSavedBridgesSelector(currentBridgesSelector);
-                    }
-
-                    boolean unicBridge = true;
-                    for (int i = 0; i < currentBridges.size(); i++) {
-                        String brg = currentBridges.get(i);
-                        if (brg.equals(getItem(getAdapterPosition()).bridge)) {
-                            unicBridge = false;
-                            break;
-                        }
-                    }
-                    if (unicBridge)
-                        currentBridges.add(getItem(getAdapterPosition()).bridge);
-                } else {
-                    for (int i = 0; i < currentBridges.size(); i++) {
-                        String brg = currentBridges.get(i);
-                        if (brg.equals(getItem(getAdapterPosition()).bridge)) {
-                            currentBridges.remove(i);
-                            break;
-                        }
-
-                    }
-                }
-                setActive(getAdapterPosition(), newValue);
-            };
-            swBridge.setOnCheckedChangeListener(onCheckedChangeListener);
             ImageButton ibtnBridgeDel = itemView.findViewById(R.id.ibtnBridgeDel);
-            View.OnClickListener onClickListener = view -> {
-                int id = view.getId();
-                if (id == R.id.cardBridge) {
-                    editBridge(getAdapterPosition());
-                } else if (id == R.id.ibtnBridgeDel) {
-                    deleteBridge(getAdapterPosition());
-                }
-            };
-            ibtnBridgeDel.setOnClickListener(onClickListener);
+            ibtnBridgeDel.setOnClickListener(this);
             CardView cardBridge = itemView.findViewById(R.id.cardBridge);
-            cardBridge.setOnClickListener(onClickListener);
+            cardBridge.setOnClickListener(this);
         }
 
         private void bind(int position) {
@@ -196,6 +138,55 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
             swBridge.setChecked(bridgeList.get(position).active);
         }
 
+        @Override
+        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            final Set<String> currentBridges = preferencesBridges.getCurrentBridges();
+
+            if (isChecked) {
+
+                boolean useNoBridges = new PrefManager(activity).getBoolPref("useNoBridges");
+                boolean useDefaultBridges = new PrefManager(activity).getBoolPref("useDefaultBridges");
+                boolean useOwnBridges = new PrefManager(activity).getBoolPref("useOwnBridges");
+
+                BridgesSelector currentBridgesSelector;
+                if (!useNoBridges && !useDefaultBridges && !useOwnBridges) {
+                    currentBridgesSelector = BridgesSelector.NO_BRIDGES;
+                } else if (useNoBridges) {
+                    currentBridgesSelector = BridgesSelector.NO_BRIDGES;
+                } else if (useDefaultBridges) {
+                    currentBridgesSelector = BridgesSelector.DEFAULT_BRIDGES;
+                } else {
+                    currentBridgesSelector = BridgesSelector.OWN_BRIDGES;
+                }
+
+                BridgeType obfsType = getItem(getAdapterPosition()).obfsType;
+                if (!obfsType.equals(preferencesBridges.getCurrentBridgesType())) {
+                    currentBridges.clear();
+                    setCurrentBridgesType(obfsType);
+                }
+
+                if (!currentBridgesSelector.equals(preferencesBridges.getSavedBridgesSelector())) {
+                    currentBridges.clear();
+                    setSavedBridgesSelector(currentBridgesSelector);
+                }
+
+                currentBridges.add(getItem(getAdapterPosition()).bridge);
+            } else {
+                currentBridges.remove(getItem(getAdapterPosition()).bridge);
+            }
+
+            setActive(getAdapterPosition(), isChecked);
+        }
+
+        @Override
+        public void onClick(View v) {
+            int id = v.getId();
+            if (id == R.id.cardBridge) {
+                editBridge(getAdapterPosition());
+            } else if (id == R.id.ibtnBridgeDel) {
+                deleteBridge(getAdapterPosition());
+            }
+        }
     }
 
     private void editBridge(final int position) {
@@ -208,7 +199,7 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
         builder.setTitle(R.string.pref_fast_use_tor_bridges_edit);
 
         List<ObfsBridge> bridgeList = preferencesBridges.getBridgeList();
-        String bridges_file_path = preferencesBridges.get_bridges_file_path();
+        String bridges_file_path = preferencesBridges.getBridgesFilePath();
 
         if (bridgeList == null || position >= bridgeList.size()) {
             return;
@@ -260,7 +251,7 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
         }
 
         List<ObfsBridge> bridgeList = preferencesBridges.getBridgeList();
-        String bridges_file_path = preferencesBridges.get_bridges_file_path();
+        String bridges_file_path = preferencesBridges.getBridgesFilePath();
 
         if (bridgeList == null || position >= bridgeList.size()) {
             return;
