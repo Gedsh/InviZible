@@ -141,9 +141,14 @@ class DNSQueryLogRecordsConverter(context: Context) {
         dnsQueryLogRecordsSublist.clear()
 
         val uidBlocked = if (firewallEnabled) {
-            !appsAllowed.contains(dnsQueryRawRecord.uid)
-                    && !(compatibilityMode && dnsQueryRawRecord.uid == ApplicationData.SPECIAL_UID_KERNEL)
-                    && !(fixTTL && dnsQueryRawRecord.uid == ApplicationData.SPECIAL_UID_KERNEL)
+            if (compatibilityMode && dnsQueryRawRecord.uid == ApplicationData.SPECIAL_UID_KERNEL
+                    || fixTTL && dnsQueryRawRecord.uid == ApplicationData.SPECIAL_UID_KERNEL) {
+                false
+            }  else if (isIpInLanRange(dnsQueryRawRecord.daddr)) {
+                !appsLanAllowed.contains(dnsQueryRawRecord.uid)
+            } else {
+                !appsAllowed.contains(dnsQueryRawRecord.uid)
+            }
         } else {
             false
         }
@@ -186,11 +191,7 @@ class DNSQueryLogRecordsConverter(context: Context) {
                 }
             }
 
-            if (isIpInLanRange(dnsQueryRawRecord.daddr)) {
-                dnsQueryRawRecord.blocked = !appsLanAllowed.contains(dnsQueryRawRecord.uid)
-            } else {
-                dnsQueryRawRecord.blocked = uidBlocked
-            }
+            dnsQueryRawRecord.blocked = uidBlocked
 
             dnsQueryRawRecord.unused = false
 
