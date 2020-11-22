@@ -834,7 +834,7 @@ public class MainActivity extends LangAppCompatActivity
             if (input.getText().toString().equals("debug")) {
                 TopFragment.debug = !TopFragment.debug;
                 Toast.makeText(getApplicationContext(), "Debug mode " + TopFragment.debug, Toast.LENGTH_LONG).show();
-            } else {
+            } else if (!input.getText().toString().trim().isEmpty()) {
                 String pass = Base64.encodeToString((input.getText().toString() + "-l-o-c-k-e-d").getBytes(), 16);
                 new PrefManager(getApplicationContext()).setStrPref("passwd", pass);
                 Toast.makeText(getApplicationContext(), getText(R.string.action_mode_dialog_locked), Toast.LENGTH_SHORT).show();
