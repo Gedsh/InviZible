@@ -41,6 +41,7 @@ import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import androidx.preference.PreferenceScreen;
+import androidx.preference.SwitchPreference;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -133,6 +134,8 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
             changePreferencesForGPVersion();
         } else if (appVersion.endsWith("d")) {
             changePreferencesForFDVersion();
+        } else if (appVersion.startsWith("l")) {
+            changePreferencesForLiteVersion();
         }
 
         return super.onCreateView(inflater, container, savedInstanceState);
@@ -511,6 +514,28 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         PreferenceCategory fastUpdateCategory = findPreference("fast_update");
         if (preferencesFast != null && fastUpdateCategory != null) {
             preferencesFast.removePreference(fastUpdateCategory);
+        }
+    }
+
+    private void changePreferencesForLiteVersion() {
+        Preference prefFastAutoUpdate = findPreference("pref_fast_auto_update");
+        Preference prefThroughTorUpdate = findPreference("pref_fast through_tor_update");
+        Preference prefCheckUpdate = findPreference("pref_fast_chek_update");
+
+        if (prefFastAutoUpdate != null) {
+            prefFastAutoUpdate.setSummary(R.string.only_for_pro);
+            ((SwitchPreference)prefFastAutoUpdate).setChecked(false);
+            prefFastAutoUpdate.setEnabled(false);
+        }
+
+        if (prefThroughTorUpdate != null) {
+            prefThroughTorUpdate.setSummary(R.string.only_for_pro);
+            prefThroughTorUpdate.setEnabled(false);
+        }
+
+        if (prefCheckUpdate != null) {
+            prefCheckUpdate.setSummary(R.string.only_for_pro);
+            prefCheckUpdate.setEnabled(false);
         }
     }
 }
