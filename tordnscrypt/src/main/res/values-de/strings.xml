@@ -291,7 +291,6 @@ Die Anfragen können das Vorhandensein von Malware, kaputten Applikationen oder 
     <string name="pref_itpd_addressbook_subscriptions_summ">"Addressbuch Bereitstellungs URLs."</string>
     <string name="pref_itpd_not_exist">"Voreinstellung existiert nicht in i2pd.conf!"</string>
     <string name="helper_dialog_title">"Info"</string>
-    <string name="helper_after_install">"Gratuliere! Du kannst dieses Tool nun benutzen, um ohne Einschränkungen schnellen Zugang zu allen Webseiten zu haben. Starte DNSCrypt mit oder ohne Tor und I2P wie gewünscht (Schneller Modus). Du kannst dieses Tool ebenfalls verwenden, um deine Privatsphäre zu verbessern. Starte Tor mit oder ohne I2P wie gewünscht (Verbesserte Privatsphäre Modus)."</string>
     <string name="helper_dnscrypt_stopped">"Es sieht aus, als wäre DNSCrypt vom System beendet worden.
 Deine Internetverbindung wurde wiederhergestellt. Bitte überprüfe deine Geräteeinstellungen!"</string>
     <string name="helper_tor_stopped">"Es sieht aus, als wäre Tor vom System beendet worden.

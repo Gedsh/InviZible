@@ -563,9 +563,6 @@
     <string name="pref_itpd_edit_tunnels">Edit tunnels.conf directly</string>
 
     <string name="helper_dialog_title">Info</string>
-    <string name="helper_after_install">Congratulations! You can use this tools to have fast access
-        for all websites without restrictions now. Start DNSCrypt with or without Tor and I2P as requested (Fast Mode). Or you can use
-        this tools to enhance privacy. Start Tor with or without I2P as requested(Enhanced Privacy Mode).</string>
     <string name="helper_dnscrypt_stopped">Looks like DNSCrypt was killed by android system.
         Your internet connection was restored. Check device Settings!</string>
     <string name="helper_tor_stopped">Looks like Tor was killed by android system.

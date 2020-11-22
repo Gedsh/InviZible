@@ -267,10 +267,6 @@
     <string name="pref_itpd_addressbook_subscriptions_summ">Каталог адресов.</string>
     <string name="pref_itpd_not_exist">Настройка не существует в i2pd.conf!</string>
     <string name="helper_dialog_title">Инфо</string>
-    <string name="helper_after_install">Поздравляю! Теперь вы можете использовать эти инструменты,
-        чтоб обеспечить легкий доступ к любым сайтам и без всяких ограничений. Запустите DNSCrypt
-        с или без Tor или I2P, как необходимо (Быстрый режим). Или можете использовать эти инструменты
-        для улучшения приватности. Запустите Tor с или без I2P, как необходимо (Режим улучшеной приватности)</string>
     <string name="helper_dnscrypt_stopped">Похоже андроид закрыл модуль DNSCrypt. Ваше интернет
         соединение восстановлено. Проверьте настройки устройства!</string>
     <string name="helper_tor_stopped">Похоже андроид закрыл модуль Tor. Ваше интернет

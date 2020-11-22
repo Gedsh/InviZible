@@ -292,9 +292,6 @@
     <string name="pref_itpd_addressbook_subscriptions_summ">"Osoitekirjatilausten (AddressBook) URL-osoitteet."</string>
     <string name="pref_itpd_not_exist">"Preferenssiä ei ole i2pd.conf!"</string>
     <string name="helper_dialog_title">"Tietoja"</string>
-    <string name="helper_after_install">"Onnittelut! Tämän työkalun avulla pääset nopeasti käsiksi
-        kaikille verkkosivustoille ilman rajoituksia. Käynnistä DNSCrypt Tori:lla tai I2P:llä tai ilman niitä (nopea tila). Tai voit käyttää
-        tämä työkalua parantaaksesi yksityisyyttä. Käynnistä Tor joko I2P:n kanssa tai ilman sitä (Enhanced Privacy Mode)."</string>
     <string name="helper_dnscrypt_stopped">"Näyttää siltä, ​​että android-järjestelmä sulki DNSCryptin.
         Internet-yhteytesi palautettiin. Tarkista laitteen asetukset!"</string>
     <string name="helper_tor_stopped">"Näyttää siltä, ​​että android-järjestelmä sulki Tor:in.

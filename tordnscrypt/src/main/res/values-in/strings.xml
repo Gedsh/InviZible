@@ -310,7 +310,6 @@ http://alamat:porta atau socks://alamat:porta."</string>
     <string name="pref_itpd_addressbook_subscriptions_summ">"URL langganan AddressBook."</string>
     <string name="pref_itpd_not_exist">"Prererensi tidak ada di i2pd.conf!"</string>
     <string name="helper_dialog_title">"Info"</string>
-    <string name="helper_after_install">"Selamat! Sekarang anda dapat menggunakan aplikasi ini untuk merambah cepat ke semua situs web tanpa batas. Hidupkan DNSCrypt dengan atau tanpa Tor dan I2P (Modus Cepat). Atau anda dapat lebih meningkatkan privasi dengan menghidupkan Tor dengan atau tanpa I2P (Modus privasi ditingkatkan)."</string>
     <string name="helper_dnscrypt_stopped">"Sepertinya DNSCrypt dimatikan Sistem Android. 
 
 Koneksi internet anda telah pulih. 

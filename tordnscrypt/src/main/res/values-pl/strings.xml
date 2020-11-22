@@ -349,9 +349,6 @@
     <string name="pref_itpd_not_exist">Ustawienie nie istnieje w i2pd.conf!</string>
 
     <string name="helper_dialog_title">Info</string>
-    <string name="helper_after_install">Gratulacje! Mozesz zastosowac te narzedzia aby miec szybki dostep
-        bez ograniczen do wszystkich stron. Uruchom DNSCrypt z lub bez Tora oraz I2P (ustawienia w Fast Mode). Mozesz tez uzyc
-        te narzedzia do zwiekszenia prywatnosci. Uruchom Tor z lub bez I2P (Tryb Enhanced Privacy Mode).</string>
     <string name="helper_dnscrypt_stopped">Wyglada na to ze system android wylaczyl DNSCrypt.
         Twoje polaczenie z siecia zostalo przywrocone. Szprawdz ustawienia urzadzenia!</string>
     <string name="helper_tor_stopped">Wyglada na to ze system android wylaczyl Tor.
