@@ -2,19 +2,19 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android" >
     <item android:state_pressed="true" >
         <shape android:shape="oval">
-            <stroke android:width="2dip" android:color="@color/mainStartButtonColorActive" />
+            <stroke android:width="2dp" android:color="@color/mainStartButtonColorActive" />
             <gradient android:angle="-90" android:startColor="@color/buttonColorPressedHighlight" android:endColor="@color/buttonColorPressedHighlight"  />
         </shape>
     </item>
     <item android:state_focused="true">
         <shape android:shape="oval"  >
-            <stroke android:width="2dip" android:color="@color/buttonColorFocusedHighlightStroke" />
+            <stroke android:width="2dp" android:color="@color/buttonColorFocusedHighlightStroke" />
             <solid android:color="@color/buttonColorFocusedHighlight"/>
         </shape>
     </item>
     <item >
         <shape android:shape="oval"  >
-            <stroke android:width="2dip" android:color="@color/cardsColor" />
+            <stroke android:width="2dp" android:color="@color/cardsColor" />
             <gradient android:angle="90" android:startColor="@color/mainStartButtonColorStart" android:endColor="@color/mainStartButtonColorEnd" />
             <padding android:bottom="4dp" android:top="4dp" android:right="4dp" android:left="4dp"/>
         </shape>
