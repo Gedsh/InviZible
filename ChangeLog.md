@@ -433,3 +433,8 @@
 **InviZible Pro beta 1.1.4**
 * Optimized Tor bridges handling and selection.
 * Updated Tor.
+
+**InviZible Pro beta 1.1.5**
+* Improved real-time Internet connections log.
+* Do not lock the interface if an empty password is used.
+* Minor fixes and improvements.
