@@ -5,7 +5,7 @@
 
 ### [Google Play stable version](https://play.google.com/store/apps/details?id=pan.alexander.tordnscrypt.gp)
 
-### [Download the latest beta version](https://github.com/Gedsh/InviZible/releases/latest)
+### [Download the latest version](https://github.com/Gedsh/InviZible/releases/latest)
 
 ### [IzzyOnDroid F-Droid beta version](https://apt.izzysoft.de/fdroid/index/apk/pan.alexander.tordnscrypt)
 
