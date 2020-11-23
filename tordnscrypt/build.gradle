@@ -11,8 +11,8 @@ android {
     productFlavors {
 
         fdroid{
-            applicationId "pan.alexander.tordnscrypt"
-            versionName "1.1.5-beta"
+            applicationId "pan.alexander.tordnscrypt.stable"
+            versionName "5.0.0"
             dimension = 'version'
             resValue 'string', 'package_name', applicationId
         }
