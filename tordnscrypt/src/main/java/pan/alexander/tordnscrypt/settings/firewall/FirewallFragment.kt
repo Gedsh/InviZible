@@ -568,8 +568,8 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
             return
         }
 
-        appsList.sortListBy { it.applicationData.names[0] }
-        savedAppsListWhenSearch?.sortListBy { it.applicationData.names[0] }
+        appsList.sortListBy { it.applicationData.names.first() }
+        savedAppsListWhenSearch?.sortListBy { it.applicationData.names.first() }
     }
 
     private fun sortByUid() {
