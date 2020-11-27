@@ -90,7 +90,7 @@ android {
         targetSdkVersion 30
         versionCode 115
 
-        resConfigs "en", "ru-rRU", "ru-rUA", "pl", "de", "fa", "fi", "in"
+        resConfigs "en", "ru-rRU", "ru-rUA", "pl", "de", "fa", "fi", "in", "fr"
 
         externalNativeBuild {
             cmake {
