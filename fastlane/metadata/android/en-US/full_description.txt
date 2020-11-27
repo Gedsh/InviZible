@@ -1,8 +1,8 @@
 <i>Protect your device from dangerous sites, get rid of annoying ads and tracking, get access to blocked resources in your country!</i>
 
-<i>InviZible Pro</i> includes the well-known modules DNSCrypt, Tor , Purple I2P. They are used to achieve maximum security, privacy and comfortable use of the Internet.
+<i>InviZible Pro</i> includes the well-known modules <b>DNSCrypt, Tor, Purple I2P</b>. They are used to achieve maximum security, privacy and comfortable use of the Internet.
 
-While this application is designed for Android devices with Root access, it can also use a local VPN to deliver Internet traffic to Tor, DNSCrypt and I2P networks if root access is not available.
+<i>InviZible Pro</i> can use root, if your device has root privileges, or uses a local VPN to deliver Internet traffic to Tor, DNSCrypt and I2P networks.
 
 <b>Features:</b>
 
@@ -11,10 +11,12 @@ While this application is designed for Android devices with Root access, it can 
 * Unblocks the restricted web content
 * Prevents tracking
 * Allows access to hidden networks
+* ARP spoofing detection
+* Built-in firewall
 * Tethering supported
 * Material design theme
 
-Just press all three buttons in <i>InviZible Pro,</i> and you turn from a simple user to an invisible one, which is very difficult to find, block, impose on you unnecessary products and services in the form of ubiquitous advertising.
+Just start <i>InviZible Pro,</i> and you turn from a simple user to an invisible one, which is very difficult to find, block, impose on you unnecessary products and services in the form of ubiquitous advertising.
 
 However, if you want to get full control over the program and your Internet connection - no problem! Provides access to a large number of both simple and professional settings. You can flexibly configure <i>InviZible Pro</i> itself, as well as its modules - <b>DNSCrypt, Tor and Purple I2P,</b> to satisfy the most non-standard requirements.
 
@@ -31,9 +33,9 @@ DNS is used by most applications to translate domain names into IP addresses to 
 
 * Encrypts DNS requests
 * Protects against DNS spoofing
-* Blocks ads *
+* Blocks ads¹
 * Protects against dangerous and phishing sites¹
-* Can block "adult" sites *
+* Can block "adult" sites¹
 * Hides visited sites from your provider
 * Prevents some types of resource locks
 
