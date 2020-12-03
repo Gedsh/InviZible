@@ -45,7 +45,8 @@ data class ApplicationData(private val name: String = "",
         const val SPECIAL_UID_NTP = -14
         const val SPECIAL_PORT_NTP = 123
         const val SPECIAL_UID_AGPS = -15
-        const val SPECIAL_PORT_AGPS = 7275
+        const val SPECIAL_PORT_AGPS1 = 7275
+        const val SPECIAL_PORT_AGPS2 = 7276
     }
 
     override fun compareTo(other: ApplicationData): Int {

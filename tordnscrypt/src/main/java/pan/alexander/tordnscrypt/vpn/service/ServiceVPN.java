@@ -780,7 +780,8 @@ public class ServiceVPN extends VpnService {
         return uid == 0 && destPort == 53
                 || uid == ApplicationData.SPECIAL_UID_KERNEL
                 || destPort == ApplicationData.SPECIAL_PORT_NTP
-                || destPort == ApplicationData.SPECIAL_PORT_AGPS;
+                || destPort == ApplicationData.SPECIAL_PORT_AGPS1
+                || destPort == ApplicationData.SPECIAL_PORT_AGPS2;
     }
 
     private boolean isSpecialAllowed(int uid, int destPort) {
@@ -790,7 +791,7 @@ public class ServiceVPN extends VpnService {
             return uidSpecialAllowed.contains(ApplicationData.SPECIAL_UID_KERNEL);
         } else if (uid == 1000 && destPort == ApplicationData.SPECIAL_PORT_NTP) {
             return uidSpecialAllowed.contains(ApplicationData.SPECIAL_UID_NTP) || mapUidAllowed.containsKey(1000);
-        } else if (destPort == ApplicationData.SPECIAL_PORT_AGPS) {
+        } else if (destPort == ApplicationData.SPECIAL_PORT_AGPS1 || destPort == ApplicationData.SPECIAL_PORT_AGPS2) {
             return uidSpecialAllowed.contains(ApplicationData.SPECIAL_UID_AGPS);
         }
         return false;
