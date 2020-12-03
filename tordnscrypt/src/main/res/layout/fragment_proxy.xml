@@ -11,7 +11,7 @@
         android:layout_height="match_parent"
         android:fillViewport="true">
 
-        <LinearLayout
+        <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
@@ -131,13 +131,13 @@
                 android:text="@string/proxy_save"
                 android:textColor="@color/buttonTextColor" />
 
-            <TextView
+            <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvProxyHint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:singleLine="false" />
 
-        </LinearLayout>
+        </androidx.appcompat.widget.LinearLayoutCompat>
     </androidx.core.widget.NestedScrollView>
 
 

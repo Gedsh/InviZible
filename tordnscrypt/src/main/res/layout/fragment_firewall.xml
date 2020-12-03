@@ -215,7 +215,7 @@
         android:indeterminateBehavior="cycle"
         android:visibility="gone" />
 
-    <LinearLayout
+    <androidx.appcompat.widget.LinearLayoutCompat
         android:id="@+id/llFirewallPower"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -229,6 +229,6 @@
             android:layout_height="wrap_content"
             android:background="@drawable/button_start_firewall_selector"
             app:srcCompat="@drawable/ic_round_power_settings_new_128" />
-    </LinearLayout>
+    </androidx.appcompat.widget.LinearLayoutCompat>
 
 </androidx.appcompat.widget.LinearLayoutCompat>

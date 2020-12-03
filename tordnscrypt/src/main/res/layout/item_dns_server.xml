@@ -75,7 +75,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp" />
 
-            <LinearLayout
+            <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="horizontal">
@@ -99,7 +99,7 @@
                     android:focusable="true"
                     android:scaleType="fitCenter"
                     app:srcCompat="@android:drawable/ic_menu_delete" />
-            </LinearLayout>
+            </androidx.appcompat.widget.LinearLayoutCompat>
 
         </androidx.appcompat.widget.LinearLayoutCompat>
     </androidx.cardview.widget.CardView>
