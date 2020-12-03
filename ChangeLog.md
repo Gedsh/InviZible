@@ -438,3 +438,11 @@
 * Improved real-time Internet connections log.
 * Do not lock the interface if an empty password is used.
 * Minor fixes and improvements.
+
+**InviZible Pro beta 1.1.6**
+* Updated Purple I2P to version 2.35.0
+* Implemented patches to change the default configuration after updating the application.
+* Updated default DNSCrypt configuration to use v3 update sources.
+* Enabled openssl enable-ec_nistp_64_gcc_128 for arm64 version to improve speed.
+* Added French language.
+* Minor fixes and improvements.
