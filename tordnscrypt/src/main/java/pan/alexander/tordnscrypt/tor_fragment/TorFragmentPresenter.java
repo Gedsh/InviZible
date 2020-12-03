@@ -722,7 +722,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
             FragmentManager fm = activity.getSupportFragmentManager();
             TopFragment topFragment = (TopFragment) fm.findFragmentByTag("topFragmentTAG");
             if (topFragment != null) {
-                topFragment.checkUpdates();
+                topFragment.checkUpdates(activity);
             }
         }
     }

@@ -26,5 +26,4 @@ data class AppFirewall(val applicationData: ApplicationData,
                        var allowWifi: Boolean,
                        var allowGsm: Boolean,
                        var allowRoaming: Boolean,
-                       var allowVPN: Boolean) {
-}
+                       var allowVPN: Boolean)

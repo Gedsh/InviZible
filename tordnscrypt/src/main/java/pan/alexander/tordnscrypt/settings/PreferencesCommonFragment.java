@@ -118,7 +118,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
-        if (activity == null || modulesStatus == null) {
+        if (activity == null) {
             return super.onCreateView(inflater, container, savedInstanceState);
         }
 
