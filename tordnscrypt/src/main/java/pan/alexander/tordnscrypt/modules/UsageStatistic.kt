@@ -130,10 +130,6 @@ class UsageStatistic(private val context: Context) {
     fun getTitle(): String {
         var title = ""
 
-        if (modulesStatus == null) {
-            return context.getString(R.string.app_name)
-        }
-
         if (modulesStatus.torState == ModuleState.RUNNING) {
             title += "TOR"
         }
@@ -156,7 +152,7 @@ class UsageStatistic(private val context: Context) {
     @Synchronized
     fun getMessage(currentTime: Long): String {
 
-        if (modulesStatus == null || uid == -1) {
+        if (uid == -1) {
             return context.getString(R.string.notification_text)
         }
 
