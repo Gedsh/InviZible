@@ -446,3 +446,11 @@
 * Enabled openssl enable-ec_nistp_64_gcc_128 for arm64 version to improve speed.
 * Added French language.
 * Minor fixes and improvements.
+
+**InviZible Pro beta 1.1.7**
+* Tor apps selection improvements.
+* Updated obfs4proxy (fixed meek_lite bridge).
+* Updated snowflake.
+* Updated German language.
+* Fixed crash on android 4.4.2.
+* Fixed rare bugs.
