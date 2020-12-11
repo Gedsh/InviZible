@@ -167,7 +167,6 @@
     <string name="pref_dnscrypt_require_nofilter_summ">"Le serveur ne doit pas appliquer sa propre liste noire (pour le contrôle parental, le blocage des publicités...)."</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Utilisez toujours le protocole TCP pour vous connecter aux serveurs en amont."</string>
     <string name="pref_dnscrypt_force_tcp_summ">" Cela peut être utile si vous avez besoin de tout faire passer par Tor.
-
                 Sinon, laissez cela à l'état faux (false), car cela n'améliore pas la sécurité (dnscrypt-proxy chiffrera toujours tout, même en utilisant l'UDP), et ne peut qu'augmenter la latence.
                 Ne l'activez pas si vous voulez utiliser les sites Tor en onion!"</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"Proxy SOCKS."</string>
@@ -185,7 +184,6 @@
     <string name="pref_dnscrypt_filters_categ">"FILTRES"</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Acheminez les requêtes de domaines spécifiques vers un ensemble de serveurs dédié."</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">"Le masquage renvoie une adresse prédéfinie pour un nom spécifique.
-
                 En plus d'agir comme un fichier HOSTS, il peut également renvoyer l'adresse IP d'un nom différent. Il fera également l'aplatissement CNAME.."</string>
     <string name="pref_dnscrypt_query_log_categ">"Journalisation des requêtes."</string>
     <string name="pref_dnscrypt_query_log_summ">"Enregistrer les requêtes des clients dans un fichier."</string>
@@ -194,7 +192,6 @@
     <string name="open_query_log">"Ouvrir le Journal des Requêtes"</string>
     <string name="pref_dnscrypt_nx_log_categ">"Journalisation des requêtes suspectes."</string>
     <string name="pref_dnscrypt_nx_log_summ">"Journaliser les requêtes pour les zones inexistantes.
-
          Ces requêtes peuvent révéler la présence de logiciels malveillants, d'applications endommagées/obsolètes et d'appareils signalant leur présence à des tiers."</string>
     <string name="pref_dnscrypt_nx_log">"Activer la journalisation de donnée suspecte"</string>
     <string name="open_nx_log">"Ouvrir le journal de suspicion"</string>

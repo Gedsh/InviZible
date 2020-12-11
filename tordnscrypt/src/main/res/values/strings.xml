@@ -727,5 +727,4 @@
     <string name="allow">Allow</string>
     <string name="deny">Deny</string>
     <string name="empty_string" translatable="false"/>
-
 </resources>
