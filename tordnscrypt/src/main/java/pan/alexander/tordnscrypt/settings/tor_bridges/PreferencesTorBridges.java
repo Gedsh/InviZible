@@ -430,7 +430,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             torConfCleaned.add("UseBridges 0");
         }
 
-        if (Arrays.equals(torConfCleaned.toArray(), tor_conf.toArray())) {
+        if (torConfCleaned.size() == tor_conf.size() && torConfCleaned.containsAll(tor_conf)) {
             return;
         }
 
@@ -785,7 +785,11 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     tor_conf.clear();
                     currentBridges.clear();
 
-                    tor_conf.addAll(lines);
+                    for (String line: lines) {
+                        if (!line.trim().isEmpty()) {
+                            tor_conf.add(line);
+                        }
+                    }
 
                     for (int i = 0; i < tor_conf.size(); i++) {
                         String line = tor_conf.get(i);
