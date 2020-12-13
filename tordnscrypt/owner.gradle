@@ -30,7 +30,7 @@ android {
     productFlavors {
         lite {
             applicationId "pan.alexander.tordnscrypt.stable"
-            versionName "5.0.0"
+            versionName "5.0.1"
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
@@ -38,7 +38,7 @@ android {
 
         pro {
             applicationId "pan.alexander.tordnscrypt.stable"
-            versionName "5.0.0"
+            versionName "5.0.1"
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
