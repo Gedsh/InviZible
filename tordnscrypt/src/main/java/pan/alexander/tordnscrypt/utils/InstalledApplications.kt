@@ -159,7 +159,7 @@ class InstalledApplications(private val context: Context, private val activeApps
                     val tempMultiUserAppsMap: Map<Int, ApplicationData> = checkPartOfMultiUser(applicationInfo, name, icon, uids, packageManager, multiUserAppsMap)
                     tempMultiUserAppsMap.forEach { (uid, applicationData) ->
                         if (multiUserAppsMap.containsKey(uid)) {
-                            multiUserAppsMap[uid]?.addName(applicationData.names.joinToString())
+                            multiUserAppsMap[uid]?.addAllNames(applicationData.names)
                         } else {
                             multiUserAppsMap[uid] = applicationData
                         }

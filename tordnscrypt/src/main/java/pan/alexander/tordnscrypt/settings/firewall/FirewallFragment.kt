@@ -231,10 +231,12 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
 
         futureTask = getExecutorService().submit {
 
-            reentrantLock.lock()
+            try {
 
-            if (appsList.isEmpty()) {
-                try {
+                reentrantLock.lockInterruptibly()
+
+                if (appsList.isEmpty()) {
+
                     handler?.post {
                         binding.pbFirewallApp.isIndeterminate = true
                         binding.pbFirewallApp.visibility = View.VISIBLE
@@ -321,15 +323,16 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
 
                         firewallAdapter?.notifyDataSetChanged()
                     }
-                } catch (e: Exception) {
-                    appsListComplete = true
-                    Log.e(LOG_TAG, "FirewallFragment getDeviceApps exception ${e.message} ${e.cause} ${Arrays.toString(e.stackTrace)}")
                 }
 
-
+            } catch (e: Exception) {
+                appsListComplete = true
+                Log.e(LOG_TAG, "FirewallFragment getDeviceApps exception ${e.message} ${e.cause} ${Arrays.toString(e.stackTrace)}")
+            } finally {
+                if (reentrantLock.isLocked) {
+                    reentrantLock.unlock()
+                }
             }
-
-            reentrantLock.unlock()
         }
     }
 
@@ -568,8 +571,8 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
             return
         }
 
-        appsList.sortListBy { it.applicationData.names[0] }
-        savedAppsListWhenSearch?.sortListBy { it.applicationData.names[0] }
+        appsList.sortListBy { it.applicationData.names.first() }
+        savedAppsListWhenSearch?.sortListBy { it.applicationData.names.first() }
     }
 
     private fun sortByUid() {

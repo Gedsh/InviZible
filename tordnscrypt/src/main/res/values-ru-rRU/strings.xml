@@ -87,6 +87,10 @@
     <string name="pref_fast_use_tor_bridges_close_dialog">Закрыть</string>
     <string name="pref_fast_unlock_host_wrong">Имя сайта неверное!</string>
     <string name="pref_fast_theme">Выбрать тему</string>
+    <string name="pref_fast_theme_titles_day_mode">Дневной режим</string>
+    <string name="pref_fast_theme_titles_night_mode">Ночной режим</string>
+    <string name="pref_fast_theme_titles_auto_mode">Автоматически</string>
+    <string name="pref_fast_theme_titles_default_mode">По умолчанию</string>
     <string name="pref_fast_language">Выбрать язык</string>
     <string name="pref_common_categ_run_with_root">Использовать Root привилегии</string>
     <string name="pref_common_run_with_root">Запуск модулей с Root</string>

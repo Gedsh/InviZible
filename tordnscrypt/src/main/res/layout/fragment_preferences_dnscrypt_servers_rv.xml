@@ -46,7 +46,7 @@
         android:layout_height="match_parent"
         android:scrollbars="vertical" />
 
-    <ImageButton
+    <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/ibAddOwnServer"
         android:layout_width="50dp"
         android:layout_height="50dp"
@@ -54,6 +54,6 @@
         android:layout_margin="10dp"
         android:background="@drawable/button_main_selector"
         android:scaleType="center"
-        android:src="@drawable/ic_add_circle_black_24dp" />
+        app:srcCompat="@drawable/ic_add_circle_black_24dp" />
 
 </FrameLayout>

@@ -21,6 +21,7 @@ package pan.alexander.tordnscrypt.settings.tor_apps
 
 import android.graphics.drawable.Drawable
 import java.util.*
+import java.util.concurrent.ConcurrentSkipListSet
 
 data class ApplicationData(private val name: String = "",
                            val pack: String = "",
@@ -29,10 +30,14 @@ data class ApplicationData(private val name: String = "",
                            val system: Boolean = false,
                            var active: Boolean = false): Comparable<ApplicationData> {
 
-    val names = arrayListOf(name)
+    val names = ConcurrentSkipListSet(setOf(name))
 
     fun addName(name: String) {
         names.add(name)
+    }
+
+    fun addAllNames(_names: ConcurrentSkipListSet<String>) {
+        names.addAll(_names)
     }
 
     companion object {
@@ -40,7 +45,8 @@ data class ApplicationData(private val name: String = "",
         const val SPECIAL_UID_NTP = -14
         const val SPECIAL_PORT_NTP = 123
         const val SPECIAL_UID_AGPS = -15
-        const val SPECIAL_PORT_AGPS = 7275
+        const val SPECIAL_PORT_AGPS1 = 7275
+        const val SPECIAL_PORT_AGPS2 = 7276
     }
 
     override fun compareTo(other: ApplicationData): Int {
@@ -49,7 +55,7 @@ data class ApplicationData(private val name: String = "",
         } else if (active && !other.active) {
             -1
         } else {
-            name.toLowerCase(Locale.getDefault()).compareTo(other.name.toLowerCase(Locale.getDefault()))
+            names.first().toLowerCase(Locale.getDefault()).compareTo(other.names.first().toLowerCase(Locale.getDefault()))
         }
     }
 

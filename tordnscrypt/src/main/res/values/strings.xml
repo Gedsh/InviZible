@@ -156,18 +156,10 @@
     <string name="pref_fast_use_tor_bridges_close_dialog">Close</string>
     <string name="pref_fast_unlock_host_wrong">Wrong host name!</string>
     <string name="pref_fast_theme">Select Theme</string>
-    <string-array name="pref_fast_theme_titles">
-        <item>Day Mode</item>
-        <item>Night Mode</item>
-        <item>Auto</item>
-        <item>System default</item>
-    </string-array>
-    <string-array name="pref_fast_theme_values">
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-        <item>4</item>
-    </string-array>
+    <string name="pref_fast_theme_titles_day_mode">Day Mode</string>
+    <string name="pref_fast_theme_titles_night_mode">Night Mode</string>
+    <string name="pref_fast_theme_titles_auto_mode">Auto</string>
+    <string name="pref_fast_theme_titles_default_mode">System default</string>
     <string name="pref_fast_tor_bypass_lan">Bypass LAN addresses</string>
     <string name="pref_fast_tor_bypass_lan_summ">Do not use Tor for LAN destinations and IANA reserved IP blocks</string>
     <string name="pref_fast_language">Select Language</string>
@@ -735,5 +727,4 @@
     <string name="allow">Allow</string>
     <string name="deny">Deny</string>
     <string name="empty_string" translatable="false"/>
-
 </resources>

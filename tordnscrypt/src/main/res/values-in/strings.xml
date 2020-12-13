@@ -180,7 +180,6 @@ Sistem Operasi seperti MIUI membutuhkan langkah khusus untuk menghapus InviZible
     <string name="pref_dnscrypt_require_nofilter_summ">"Server tidak boleh menerapkan daftar hitamnya sendiri (untuk kontrol orang tua, pemblokiran iklan ...)."</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Selalu gunakan TCP untuk terhubung ke server upstream."</string>
     <string name="pref_dnscrypt_force_tcp_summ">" Hal ini akan berguna jika anda ingin mengalihkan semua lalu lintas data melalui Tor.
-
          Atau anda bisa mengabaikan fitur tersebut, karena tak serta-merta meningkatkan keamanan (dnscrypt-proxy akan mengenkripsi apapun, bahkan UDP sekalipun), yang ada malah menambah latensi.
 Jangan hidupkan fitur ini jika anda mengakses situs onion Tor!"</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"Proxy HTTP / SOCKS."</string>
@@ -189,14 +188,12 @@ Jangan hidupkan fitur ini jika anda mengakses situs onion Tor!"</string>
          Tor tidak mendukung UDP, jadi setel force_tcp ke true juga."</string>
     <string name="pref_dnscrypt_proxy">"proxy_port"</string>
     <string name="pref_dnscrypt_other_categ">"Setelan Lainnya."</string>
-    <string name="pref_dnscrypt_fallback_resolver_summ">"Resolver Fallback merupakan resolver DNS yang tidak dienkripsi yang hanya akan dipakai untuk memroses kueri tertentu saat menerima daftar resolver dan jika konfigurasi DNS resolver sistem tidak bekerja semestinya. Proses tadi tidak dilakukan jika daftar resolver sudah di-cache. 
-
+    <string name="pref_dnscrypt_fallback_resolver_summ">"Resolver Fallback merupakan resolver DNS yang tidak dienkripsi yang hanya akan dipakai untuk memroses kueri tertentu saat menerima daftar resolver dan jika konfigurasi DNS resolver sistem tidak bekerja semestinya. Proses tadi tidak dilakukan jika daftar resolver sudah di-cache.
 Khusus warga Tiongkok, mungkin perlu menyetel alamat berikut : 114.114.114:53"</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">"Jangan biarkan dnscrypt-proxy mencoba menggunakan pengaturan DNS sistem. Gunakan resolver fallback hanya untuk kondisi tertentu"</string>
     <string name="pref_dnscrypt_filters_categ">"FILTERS"</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Merutekan query untuk domain tertentu ke sekumpulan server khusus. Dinonaktifkan sementara "</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">"Cloaking mengembalikan alamat yang telah ditentukan untuk nama tertentu.
-
          Selain bertindak sebagai file HOSTS, ia juga dapat mengembalikan alamat IP dari nama yang berbeda. Ini juga akan melakukan perataan CNAME.."</string>
     <string name="pref_dnscrypt_query_log_categ">"Pencatatan kueri."</string>
     <string name="pref_dnscrypt_query_log_summ">"Catat permintaan klien ke file."</string>
@@ -205,7 +202,6 @@ Khusus warga Tiongkok, mungkin perlu menyetel alamat berikut : 114.114.114:53"</
     <string name="open_query_log">"Buka Log Kueri"</string>
     <string name="pref_dnscrypt_nx_log_categ">"Pencatatan kueri yang mencurigakan."</string>
     <string name="pref_dnscrypt_nx_log_summ">"Catat kueri untuk zona yang tidak ada.
-
          Kueri ini dapat mengungkapkan keberadaan malware, aplikasi yang rusak / usang, dan perangkat yang memberi sinyal keberadaannya kepada pihak ketiga."</string>
     <string name="pref_dnscrypt_nx_log">"Aktifkan Pencatatan yang Mencurigakan"</string>
     <string name="open_nx_log">"Buka Log Mencurigakan"</string>
@@ -279,10 +275,11 @@ Khusus warga Tiongkok, mungkin perlu menyetel alamat berikut : 114.114.114:53"</
     <string name="pref_itpd_com_bandwidth_summ">"Batas bandwidth dalam KBps."</string>
     <string name="pref_itpd_com_share_summ">"Maks % batas bandwidth untuk transit. 0–100."</string>
     <string name="pref_itpd_com_ssu_summ">"Aktifkan protokol transport SSU (gunakan UDP)."</string>
-    <string name="pref_itpd_com_ntcp_summ">"Aktifkan protokol transport NTCP (gunakan TCP)."</string>
-    <string name="pref_itpd_com_use_ntcpproxy">"Aktifkan ntcpproxy"</string>
-    <string name="pref_itpd_com_ntcpproxy_summ">"Atur proxy NTCP. 
 
+    <!-- Fuzzy -->
+    <string name="pref_itpd_com_ntcp_summ">"Aktifkan protokol transport NTCP2 (gunakan TCP)."</string>
+    <string name="pref_itpd_com_use_ntcpproxy">"Aktifkan ntcpproxy"</string>
+    <string name="pref_itpd_com_ntcpproxy_summ">"Atur proxy NTCP.
 Contoh pola alamat 
 http://alamat:porta atau socks://alamat:porta."</string>
     <string name="pref_itpd_HTTP_proxy">"Proxy HTTP"</string>
@@ -310,16 +307,14 @@ http://alamat:porta atau socks://alamat:porta."</string>
     <string name="pref_itpd_addressbook_subscriptions_summ">"URL langganan AddressBook."</string>
     <string name="pref_itpd_not_exist">"Prererensi tidak ada di i2pd.conf!"</string>
     <string name="helper_dialog_title">"Info"</string>
-    <string name="helper_dnscrypt_stopped">"Sepertinya DNSCrypt dimatikan Sistem Android. 
-
+    <string name="helper_dnscrypt_stopped">"Sepertinya DNSCrypt dimatikan Sistem Android.
 Koneksi internet anda telah pulih. 
 Periksa pengaturan perangkat!"</string>
     <string name="helper_tor_stopped">"Sepertinya Tor dimatikan Sistem Android. 
 
 Koneksi internet anda telah pulih. 
 Periksa pengaturan perangkat!"</string>
-    <string name="helper_itpd_stopped">"Sepertinya I2P dimatikan Sistem Android. 
-
+    <string name="helper_itpd_stopped">"Sepertinya I2P dimatikan Sistem Android.
 Koneksi internet anda telah pulih. 
 Periksa pengaturan perangkat!"</string>
     <string name="helper_dnscrypt_no_internet">"Sepertinya InviZible Pro TIDAK BISA terhubung ke INTERNET.
@@ -495,4 +490,21 @@ Matikan dan hidupkan wifi beberapa saat, hotspot Wi-Fi yang anda akses saat ini 
     <string name="pref_fast_tor_bypass_lan">"Bypass alamat LAN"</string>
     <string name="pref_fast_tor_bypass_lan_summ">"Jangan gunakan jaringan Tor untuk "</string>
     <string name="pref_tor_entry_nodes_alt_summ">"Matikan brigde Tor jika anda ingin memilih noda masuk."</string>
+    <string name="notification_channel_firewall">"Firewall notifications"</string>
+    <string name="menu_firewall">"Firewall"</string>
+    <string name="firewall_all_apps">"All"</string>
+    <string name="firewall_system_apps">"System"</string>
+    <string name="firewall_user_apps">"User"</string>
+    <string name="firewall_sort_by_name">"Sort by Name"</string>
+    <string name="firewall_sort_by_uid">"Sort by UID"</string>
+    <string name="ask_save_changes">"Do you want to save the changes?"</string>
+    <string name="firewall_warning_enable_module">"To activate the firewall, you should start at least DNSCrypt or Tor."</string>
+    <string name="firewall_notification_allow_app_title">"%s is installed"</string>
+    <string name="firewall_notification_allow_app">"Allow Internet for it?"</string>
+    <string name="allow">"Allow"</string>
+    <string name="deny">"Deny"</string>
+    <string name="pref_fast_theme_titles_day_mode">"Day Mode"</string>
+    <string name="pref_fast_theme_titles_night_mode">"Night Mode"</string>
+    <string name="pref_fast_theme_titles_auto_mode">"Auto"</string>
+    <string name="pref_fast_theme_titles_default_mode">"System default"</string>
 </resources>

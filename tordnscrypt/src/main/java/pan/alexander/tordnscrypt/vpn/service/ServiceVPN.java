@@ -705,7 +705,7 @@ public class ServiceVPN extends VpnService {
     public boolean isRedirectToTor(int uid, String destAddress, int destPort) {
 
         if (uid == ownUID || destAddress.equals(itpdRedirectAddress) || destAddress.equals("127.0.0.1")
-                || fixTTL || (compatibilityMode && uid == -1)) {
+                || fixTTL || (compatibilityMode && uid == ApplicationData.SPECIAL_UID_KERNEL)) {
             return false;
         }
 
@@ -748,7 +748,7 @@ public class ServiceVPN extends VpnService {
     public boolean isRedirectToProxy(int uid, String destAddress, int destPort) {
         //Log.i(LOG_TAG, "Redirect to proxy " + uid + " " + destAddress + " " + redirect);
         if (uid == ownUID || destAddress.equals(itpdRedirectAddress) || destAddress.equals("127.0.0.1")
-                || (fixTTL && !useProxy) || (compatibilityMode && uid == -1)) {
+                || (fixTTL && !useProxy) || (compatibilityMode && uid == ApplicationData.SPECIAL_UID_KERNEL)) {
             return false;
         }
 
@@ -780,7 +780,8 @@ public class ServiceVPN extends VpnService {
         return uid == 0 && destPort == 53
                 || uid == ApplicationData.SPECIAL_UID_KERNEL
                 || destPort == ApplicationData.SPECIAL_PORT_NTP
-                || destPort == ApplicationData.SPECIAL_PORT_AGPS;
+                || destPort == ApplicationData.SPECIAL_PORT_AGPS1
+                || destPort == ApplicationData.SPECIAL_PORT_AGPS2;
     }
 
     private boolean isSpecialAllowed(int uid, int destPort) {
@@ -790,7 +791,7 @@ public class ServiceVPN extends VpnService {
             return uidSpecialAllowed.contains(ApplicationData.SPECIAL_UID_KERNEL);
         } else if (uid == 1000 && destPort == ApplicationData.SPECIAL_PORT_NTP) {
             return uidSpecialAllowed.contains(ApplicationData.SPECIAL_UID_NTP) || mapUidAllowed.containsKey(1000);
-        } else if (destPort == ApplicationData.SPECIAL_PORT_AGPS) {
+        } else if (destPort == ApplicationData.SPECIAL_PORT_AGPS1 || destPort == ApplicationData.SPECIAL_PORT_AGPS2) {
             return uidSpecialAllowed.contains(ApplicationData.SPECIAL_UID_AGPS);
         }
         return false;
@@ -849,7 +850,7 @@ public class ServiceVPN extends VpnService {
         // https://android.googlesource.com/platform/system/core/+/master/include/private/android_filesystem_config.h
         if ((!canFilter) && isSupported(packet.protocol)) {
             packet.allowed = true;
-        } else if ((packet.uid == ownUID || compatibilityMode && packet.uid == -1 && !fixTTLForPacket)
+        } else if ((packet.uid == ownUID || compatibilityMode && packet.uid == ApplicationData.SPECIAL_UID_KERNEL && !fixTTLForPacket)
                 && isSupported(packet.protocol)) {
             // Allow self
             packet.allowed = true;
@@ -913,7 +914,8 @@ public class ServiceVPN extends VpnService {
 
         Allowed allowed = null;
         if (packet.allowed) {
-            if (packet.uid == ownUID || compatibilityMode && packet.uid == -1 && !fixTTLForPacket
+            if (packet.uid == ownUID
+                    || compatibilityMode && packet.uid == ApplicationData.SPECIAL_UID_KERNEL && !fixTTLForPacket
                     || packet.dport != 53 && !packet.daddr.equals(itpdRedirectAddress)) {
                 allowed = new Allowed();
             } else if (mapForwardPort.containsKey(packet.dport)) {

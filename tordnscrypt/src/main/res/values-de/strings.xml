@@ -164,7 +164,6 @@ Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="pref_dnscrypt_require_nofilter_summ">"Server darf keine eigene Blacklist erzwingen (Elterliche Kontrolle, Blockieren von Werbung…)."</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Benutze immer TCP um zu Upstream Servern zu verbinden."</string>
     <string name="pref_dnscrypt_force_tcp_summ">" Dies kann nützlich sein, wenn du jeglichen Datenverkehr durch Tor schicken musst.
-
  Andernfalls belasse dies auf \"Deaktiviert\", da es die Sicherheit nicht verbessert und nur die Latenz erhöht.(Dnscrypt-Proxy wird immer alles (auch UDP) verschlüsseln)"</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"HTTP / SOCKS Proxy."</string>
     <string name="pref_dnscrypt_use_proxy">"Proxy aktivieren"</string>
@@ -180,7 +179,6 @@ Personen in China müssen hier möglicherweise 114.114.114.114:53 benutzen."</st
     <string name="pref_dnscrypt_filters_categ">"FILTER"</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Route Anfragen für spezifische Domains zu festgelegten Servern weiter. Temporär deaktiviert. "</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">"Cloaking gibt für spezifische Namen eine festgelegte Adresse zurück.
-
 Zusätzlich zur Funktion als HOSTS Datei, kann Cloaking auch die IP Adresse eines unterschiedlichen Namens zurückgeben. CNAME Flattening wird ebenso durchgeführt.."</string>
     <string name="pref_dnscrypt_query_log_categ">"Logging von Anfragen."</string>
     <string name="pref_dnscrypt_query_log_summ">"Logge Client-Anfragen in eine Datei."</string>
@@ -189,7 +187,6 @@ Zusätzlich zur Funktion als HOSTS Datei, kann Cloaking auch die IP Adresse eine
     <string name="open_query_log">"Öffne das Anfragen Log"</string>
     <string name="pref_dnscrypt_nx_log_categ">"Logging von verdächtigen Anfragen."</string>
     <string name="pref_dnscrypt_nx_log_summ">"Logge Anfragen für nichtexistente Zonen.
-
 Die Anfragen können das Vorhandensein von Malware, kaputten Applikationen oder Geräten an Dritte melden bzw aufdecken.."</string>
     <string name="pref_dnscrypt_nx_log">"Aktiviere Verdächtiges Logging"</string>
     <string name="open_nx_log">"Öffne das Verdächtigen Log"</string>
@@ -464,7 +461,7 @@ Möchtest du diesen zum Verbessern von InviZible an den Entwickler senden?"</str
     <string name="proxy_server_empty_field_hint">"Dieses Feld kann leer gelassen werden"</string>
     <string name="proxy_exclude_apps_from_proxy">"Ausschluss von Programmen"</string>
     <string name="proxy_exclude_apps_from_proxy_summ">"Liste von Applikationen zur Direktverbindung. Diese Programme werden weder Tor benutzen, noch sich über den Proxy ins Internet verbinden!"</string>
-    <string name="proxy_select_proxy_app">" Please select proxy owner application at least, if you are using a local proxy."</string>
+    <string name="proxy_select_proxy_app">"Bitte wähle zumindest die den Proxy ausführende App, falls du einen lokalen Proxy benutzt."</string>
     <string name="proxy_use_for_dnscrypt">"Benutze Proxy für DNSCrypt"</string>
     <string name="proxy_use_for_tor">"Benutze Proxy für Tor"</string>
     <string name="proxy_use_for_itpd">"Benutze Proxy für Purple I2P"</string>
@@ -477,8 +474,25 @@ Möchtest du diesen zum Verbessern von InviZible an den Entwickler senden?"</str
 WLAN aus- und kurz darauf wieder anschalten. Die Verwendung des derzeitigen Hotspots kann ebenfalls betroffen sein.
 "</string>
     <string name="toast_arp_detection_not_supported">"Erkennung von ARP Spoofing auf deinem Gerät wird leider nicht unterstützt!"</string>
-    <string name="pref_fast_use_tor_bridges_alt_summ">"Please disable Entry Nodes in Tor Settings, otherwise you cannot use Bridges."</string>
-    <string name="pref_fast_tor_bypass_lan">"Bypass LAN addresses"</string>
-    <string name="pref_fast_tor_bypass_lan_summ">"Do not use Tor for LAN destinations and IANA reserved IP blocks"</string>
-    <string name="pref_tor_entry_nodes_alt_summ">"Disable Tor bridges if you want to select entry nodes."</string>
+    <string name="pref_fast_use_tor_bridges_alt_summ">"Bitte deaktiviere die Einstiegsknoten in den Tor Einstellungen um Bridges nutzen zu können."</string>
+    <string name="pref_fast_tor_bypass_lan">"Umgehe LAN Adressen"</string>
+    <string name="pref_fast_tor_bypass_lan_summ">"Benutze Tor nicht für Ziele im LAN und IANA reservierte IP Blöcke."</string>
+    <string name="pref_tor_entry_nodes_alt_summ">"Deaktiviere Tor Bridges wenn du Einstiegsknoten verwenden möchtest."</string>
+    <string name="notification_channel_firewall">"Firewall Benachrichtigungen"</string>
+    <string name="menu_firewall">"Firewall"</string>
+    <string name="firewall_all_apps">"Alle"</string>
+    <string name="firewall_system_apps">"System"</string>
+    <string name="firewall_user_apps">"User"</string>
+    <string name="firewall_sort_by_name">"Sortiere nach Namen"</string>
+    <string name="firewall_sort_by_uid">"Sortiere nach UID"</string>
+    <string name="ask_save_changes">"Möchtest du die Änderungen speichern?"</string>
+    <string name="firewall_warning_enable_module">"Um die Firewall zu aktivieren solltest du mindestens DNSCrypt oder Tor starten."</string>
+    <string name="firewall_notification_allow_app_title">"%s ist installiert"</string>
+    <string name="firewall_notification_allow_app">"Internet hierfür erlauben?"</string>
+    <string name="allow">"Erlauben"</string>
+    <string name="deny">"Verweigern"</string>
+    <string name="pref_fast_theme_titles_day_mode">"Tagesmodus"</string>
+    <string name="pref_fast_theme_titles_night_mode">"Nachtmodus"</string>
+    <string name="pref_fast_theme_titles_auto_mode">"Automodus"</string>
+    <string name="pref_fast_theme_titles_default_mode">"Defaultmodus"</string>
 </resources>

@@ -35,6 +35,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.widget.LinearLayoutCompat;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.SwitchCompat;
@@ -55,6 +56,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
@@ -80,14 +82,57 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
     private RecyclerView rvListTorApps;
     private RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHolder> mAdapter;
     private ProgressBar pbTorApp;
+    private SearchView searchTorApp;
+    private String title = "";
     private String unlockAppsStr;
-    private volatile CopyOnWriteArrayList<ApplicationData> appsUnlock;
+    private final CopyOnWriteArrayList<ApplicationData> appsUnlock = new CopyOnWriteArrayList<>();
     private CopyOnWriteArrayList<ApplicationData> savedAppsUnlockWhenSearch = null;
     private FutureTask<?> futureTask;
     private Handler handler;
+    private final ReentrantLock reentrantLock = new ReentrantLock();
+    private volatile boolean appsListComplete = false;
 
 
     public UnlockTorAppsFragment() {
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        Context context = getActivity();
+
+        if (context == null) {
+            return;
+        }
+
+        setRetainInstance(true);
+
+        Looper looper = Looper.getMainLooper();
+        if (looper != null) {
+            handler = new Handler(looper);
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////////
+        ///////////////////////Reverse logic when route all through Tor!///////////////////
+        //////////////////////////////////////////////////////////////////////////////////
+
+        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean routeAllThroughTorDevice = shPref.getBoolean("pref_fast_all_through_tor", true);
+        boolean bypassAppsProxy = getArguments() != null && getArguments().getBoolean("proxy");
+
+        if (bypassAppsProxy) {
+            title = getString(R.string.proxy_exclude_apps_from_proxy);
+            unlockAppsStr = "clearnetAppsForProxy";
+        } else if (!routeAllThroughTorDevice) {
+            title = getString(R.string.pref_tor_unlock_app);
+            unlockAppsStr = "unlockApps";
+        } else {
+            title = getString(R.string.pref_tor_clearnet_app);
+            unlockAppsStr = "clearnetApps";
+        }
+
+        setUnlockApps = new PrefManager(context).getSetStrPref(unlockAppsStr);
     }
 
     @Override
@@ -97,8 +142,15 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
         View view = inflater.inflate(R.layout.fragment_preferences_tor_apps, container, false);
 
         ((SwitchCompat) view.findViewById(R.id.swTorAppSellectorAll)).setOnCheckedChangeListener(this);
-        ((SearchView) view.findViewById(R.id.searhTorApp)).setOnQueryTextListener(this);
+
+        searchTorApp = view.findViewById(R.id.searhTorApp);
+        searchTorApp.setOnQueryTextListener(this);
+
+
         pbTorApp = view.findViewById(R.id.pbTorApp);
+
+        rvListTorApps = view.findViewById(R.id.rvTorApps);
+        rvListTorApps.requestFocus();
 
         return view;
     }
@@ -114,36 +166,8 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
             return;
         }
 
-        ////////////////////////////////////////////////////////////////////////////////////
-        ///////////////////////Reverse logic when route all through Tor!///////////////////
-        //////////////////////////////////////////////////////////////////////////////////
+        getActivity().setTitle(title);
 
-        Looper looper = Looper.getMainLooper();
-        if (looper != null) {
-            handler = new Handler(looper);
-        }
-
-        appsUnlock = new CopyOnWriteArrayList<>();
-
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean routeAllThroughTorDevice = shPref.getBoolean("pref_fast_all_through_tor", true);
-        boolean bypassAppsProxy = getArguments() != null && getArguments().getBoolean("proxy");
-
-        if (bypassAppsProxy) {
-            requireActivity().setTitle(R.string.proxy_exclude_apps_from_proxy);
-            unlockAppsStr = "clearnetAppsForProxy";
-        } else if (!routeAllThroughTorDevice) {
-            requireActivity().setTitle(R.string.pref_tor_unlock_app);
-            unlockAppsStr = "unlockApps";
-        } else {
-            requireActivity().setTitle(R.string.pref_tor_clearnet_app);
-            unlockAppsStr = "clearnetApps";
-        }
-
-        setUnlockApps = new PrefManager(context).getSetStrPref(unlockAppsStr);
-
-        rvListTorApps = getActivity().findViewById(R.id.rvTorApps);
-        rvListTorApps.requestFocus();
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(context);
         rvListTorApps.setLayoutManager(mLayoutManager);
 
@@ -152,6 +176,12 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
         rvListTorApps.setAdapter(mAdapter);
 
         getDeviceApps(context, setUnlockApps);
+
+        CharSequence query = searchTorApp.getQuery();
+        if (!appsUnlock.isEmpty() && query != null && query.length() > 0) {
+            searchApps(query.toString());
+            mAdapter.notifyDataSetChanged();
+        }
 
         CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
             try {
@@ -183,23 +213,16 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
 
         Context context = getActivity();
 
-        if (context== null) {
+        if (context == null || !appsListComplete) {
             return;
-        }
-
-        if (futureTask != null && futureTask.cancel(true)) {
-            return;
-        }
-
-        if (handler != null) {
-            handler.removeCallbacksAndMessages(null);
         }
 
         PathVars pathVars = PathVars.getInstance(context);
         String appDataDir = pathVars.getAppDataDir();
 
         if (savedAppsUnlockWhenSearch != null) {
-            appsUnlock = savedAppsUnlockWhenSearch;
+            appsUnlock.clear();
+            appsUnlock.addAll(savedAppsUnlockWhenSearch);
         }
 
         Set<String> setAppUIDtoSave = new HashSet<>();
@@ -217,7 +240,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
 
         List<String> listAppUIDtoSave = new LinkedList<>();
 
-        for (String appUID: setAppUIDtoSave) {
+        for (String appUID : setAppUIDtoSave) {
             if (Integer.parseInt(appUID) >= 0) {
                 listAppUIDtoSave.add(appUID);
             }
@@ -233,10 +256,32 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
     }
 
     @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+
+        rvListTorApps = null;
+        mAdapter = null;
+        pbTorApp = null;
+        searchTorApp = null;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        if (futureTask != null && futureTask.cancel(true)) {
+            return;
+        }
+
+        if (handler != null) {
+            handler.removeCallbacksAndMessages(null);
+        }
+    }
+
+    @Override
     public void onCheckedChanged(CompoundButton compoundButton, boolean active) {
-        if (compoundButton.getId() == R.id.swTorAppSellectorAll
-                && rvListTorApps != null && !rvListTorApps.isComputingLayout()
-                && mAdapter != null && appsUnlock != null) {
+        if (compoundButton.getId() == R.id.swTorAppSellectorAll && rvListTorApps != null
+                && !rvListTorApps.isComputingLayout() && mAdapter != null && appsListComplete) {
             if (active) {
                 for (int i = 0; i < appsUnlock.size(); i++) {
                     ApplicationData app = appsUnlock.get(i);
@@ -256,23 +301,39 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
 
     @Override
     public boolean onQueryTextSubmit(String s) {
-        return false;
+        if (mAdapter == null || rvListTorApps == null || rvListTorApps.isComputingLayout() || !appsListComplete) {
+            return false;
+        }
+
+        searchApps(s);
+
+        mAdapter.notifyDataSetChanged();
+
+        return true;
     }
 
     @Override
     public boolean onQueryTextChange(String s) {
 
-        if (rvListTorApps == null || rvListTorApps.isComputingLayout()) {
+        if (mAdapter == null || rvListTorApps == null || rvListTorApps.isComputingLayout() || !appsListComplete) {
             return false;
         }
 
-        if (s == null || s.isEmpty()) {
+        searchApps(s);
+
+        mAdapter.notifyDataSetChanged();
+
+        return true;
+    }
+
+    private void searchApps(String text) {
+        if (text == null || text.isEmpty()) {
             if (savedAppsUnlockWhenSearch != null) {
-                appsUnlock = savedAppsUnlockWhenSearch;
+                appsUnlock.clear();
+                appsUnlock.addAll(savedAppsUnlockWhenSearch);
                 savedAppsUnlockWhenSearch = null;
-                mAdapter.notifyDataSetChanged();
             }
-            return true;
+            return;
         }
 
         if (savedAppsUnlockWhenSearch == null) {
@@ -283,24 +344,30 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
 
         for (int i = 0; i < savedAppsUnlockWhenSearch.size(); i++) {
             ApplicationData app = savedAppsUnlockWhenSearch.get(i);
-            if (app.toString().toLowerCase().contains(s.toLowerCase().trim())
-                    || app.getPack().toLowerCase().contains(s.toLowerCase().trim())) {
+            if (app.toString().toLowerCase().contains(text.toLowerCase().trim())
+                    || app.getPack().toLowerCase().contains(text.toLowerCase().trim())) {
                 appsUnlock.add(app);
             }
         }
-        mAdapter.notifyDataSetChanged();
-
-        return true;
     }
 
     @Override
     public void onAppAdded(@NotNull ApplicationData application) {
-        if (rvListTorApps == null || rvListTorApps.isComputingLayout()) {
+        if (handler == null || rvListTorApps == null
+                || mAdapter == null || rvListTorApps.isComputingLayout() || appsListComplete) {
             return;
         }
 
         appsUnlock.add(0, application);
-        handler.post(() -> mAdapter.notifyDataSetChanged());
+
+        handler.post(() -> {
+            if (rvListTorApps == null || mAdapter == null
+                    || rvListTorApps.isComputingLayout() || appsListComplete) {
+                return;
+            }
+
+            mAdapter.notifyDataSetChanged();
+        });
     }
 
     private class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHolder> {
@@ -352,7 +419,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
             }
         }
 
-        private class TorAppsViewHolder extends RecyclerView.ViewHolder {
+        private class TorAppsViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnFocusChangeListener {
             private final Activity activity;
             private final ImageView imgTorApp;
             private final TextView tvTorAppName;
@@ -365,42 +432,34 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
                 super(itemView);
 
                 activity = getActivity();
+
                 imgTorApp = itemView.findViewById(R.id.imgTorApp);
+
                 tvTorAppName = itemView.findViewById(R.id.tvTorAppName);
                 tvTorAppPackage = itemView.findViewById(R.id.tvTorAppPackage);
+
                 swTorApp = itemView.findViewById(R.id.swTorApp);
+                swTorApp.setFocusable(false);
+                swTorApp.setOnClickListener(this);
+
                 CardView cardTorApps = itemView.findViewById(R.id.cardTorApp);
+                cardTorApps.setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
+                cardTorApps.setOnClickListener(this);
                 cardTorApps.setFocusable(true);
+                cardTorApps.setOnFocusChangeListener(this);
+
                 lLayoutTorApps = itemView.findViewById(R.id.llayoutTorApps);
 
                 if (activity != null) {
                     cardTorAppFragment = activity.findViewById(R.id.cardTorAppFragment);
                 }
-
-                View.OnClickListener onClickListener = view -> {
-                    int appPosition = getAdapterPosition();
-                    boolean appActive = getItem(appPosition).getActive();
-                    setActive(appPosition, !appActive);
-                    mAdapter.notifyDataSetChanged();
-                };
-
-                swTorApp.setFocusable(false);
-                swTorApp.setOnClickListener(onClickListener);
-
-                cardTorApps.setOnClickListener(onClickListener);
-
-                View.OnFocusChangeListener onFocusChangeListener = (view, inFocus) -> {
-                    if (inFocus) {
-                        ((CardView) view).setCardBackgroundColor(getResources().getColor(R.color.colorSecond));
-                    } else {
-                        ((CardView) view).setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
-                    }
-                };
-                cardTorApps.setOnFocusChangeListener(onFocusChangeListener);
-                cardTorApps.setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
             }
 
             private void bind(int position) {
+                if (position < 0 || position > getItemCount() - 1) {
+                    return;
+                }
+
                 ApplicationData app = getItem(position);
 
                 if (position == 0 && cardTorAppFragment != null) {
@@ -421,42 +480,85 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
                 swTorApp.setChecked(app.getActive());
             }
 
+            @Override
+            public void onClick(View v) {
+                int appPosition = getAdapterPosition();
+                boolean appActive = getItem(appPosition).getActive();
+                setActive(appPosition, !appActive);
+                mAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onFocusChange(View view, boolean hasFocus) {
+                if (hasFocus) {
+                    ((CardView) view).setCardBackgroundColor(getResources().getColor(R.color.colorSecond));
+                } else {
+                    ((CardView) view).setCardBackgroundColor(getResources().getColor(R.color.colorFirst));
+                }
+            }
         }
     }
 
 
     private void getDeviceApps(final Context context, final Set<String> unlockAppsArrListSaved) {
 
-        pbTorApp.setIndeterminate(true);
-        pbTorApp.setVisibility(View.VISIBLE);
+        if (!appsUnlock.isEmpty()) {
+            return;
+        }
 
         futureTask = new FutureTask<>(() -> {
 
             try {
-                InstalledApplications installedApplications = new InstalledApplications(context, unlockAppsArrListSaved);
-                installedApplications.setOnAppAddListener(UnlockTorAppsFragment.this);
-                List<ApplicationData> installedApps = installedApplications.getInstalledApps(false);
 
-                while (rvListTorApps != null && rvListTorApps.isComputingLayout()) {
-                    TimeUnit.MILLISECONDS.sleep(100);
+                reentrantLock.lockInterruptibly();
+
+                if (appsUnlock.isEmpty()) {
+
+                    if (handler != null && pbTorApp != null) {
+                        handler.post(() -> {
+                            if (pbTorApp != null) {
+                                pbTorApp.setIndeterminate(true);
+                                pbTorApp.setVisibility(View.VISIBLE);
+                            }
+                        });
+                    }
+
+                    appsListComplete = false;
+
+                    InstalledApplications installedApplications = new InstalledApplications(context, unlockAppsArrListSaved);
+                    installedApplications.setOnAppAddListener(UnlockTorAppsFragment.this);
+                    List<ApplicationData> installedApps = installedApplications.getInstalledApps(false);
+
+                    while (rvListTorApps != null && rvListTorApps.isComputingLayout()) {
+                        TimeUnit.MILLISECONDS.sleep(100);
+                    }
+
+                    appsUnlock.clear();
+                    appsUnlock.addAll(installedApps);
+
+                    if (handler != null && pbTorApp != null) {
+                        handler.post(() -> {
+                            if (pbTorApp != null && mAdapter != null) {
+                                pbTorApp.setIndeterminate(false);
+                                pbTorApp.setVisibility(View.GONE);
+
+                                appsListComplete = true;
+
+                                mAdapter.notifyDataSetChanged();
+                            }
+                        });
+                    }
+
                 }
 
-                appsUnlock = new CopyOnWriteArrayList<>(installedApps);
-
-                if (handler != null && pbTorApp != null) {
-                    handler.post(() -> {
-                        if (pbTorApp != null && mAdapter != null) {
-                            pbTorApp.setIndeterminate(false);
-                            pbTorApp.setVisibility(View.GONE);
-                            mAdapter.notifyDataSetChanged();
-                        }
-                    });
-                }
             } catch (Exception e) {
                 Log.e(LOG_TAG, "UnlockTorAppsFragment getDeviceApps exception " + e.getMessage()
                         + "\n" + e.getCause() + "\n" + Arrays.toString(e.getStackTrace()));
+            } finally {
+                if (reentrantLock.isLocked()) {
+                    reentrantLock.unlock();
+                }
             }
-
 
             System.gc();
 

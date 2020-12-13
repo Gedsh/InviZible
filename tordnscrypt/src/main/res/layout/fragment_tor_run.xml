@@ -24,7 +24,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom">
 
-            <LinearLayout
+            <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
@@ -37,7 +37,7 @@
                     android:textIsSelectable="true"
                     android:textSize="@dimen/fragment_log_text_size"
                     android:typeface="monospace" />
-            </LinearLayout>
+            </androidx.appcompat.widget.LinearLayoutCompat>
         </ScrollView>
 
     </androidx.cardview.widget.CardView>

@@ -238,8 +238,13 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
     }
 
     private void dismissProgressDialog() {
-        if (dialogPleaseWait != null && dialogPleaseWait.get() != null && dialogPleaseWait.get().isAdded()) {
-            dialogPleaseWait.get().dismiss();
+        PleaseWaitDialogBridgesRequest dialog = null;
+        if (dialogPleaseWait != null) {
+            dialog = dialogPleaseWait.get();
+        }
+
+        if (dialog != null && dialog.isAdded() && !dialog.isStateSaved()) {
+            dialog.dismiss();
         }
     }
 

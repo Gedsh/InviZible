@@ -433,3 +433,24 @@
 **InviZible Pro beta 1.1.4**
 * Optimized Tor bridges handling and selection.
 * Updated Tor.
+
+**InviZible Pro beta 1.1.5**
+* Improved real-time Internet connections log.
+* Do not lock the interface if an empty password is used.
+* Minor fixes and improvements.
+
+**InviZible Pro beta 1.1.6**
+* Updated Purple I2P to version 2.35.0
+* Implemented patches to change the default configuration after updating the application.
+* Updated default DNSCrypt configuration to use v3 update sources.
+* Enabled openssl enable-ec_nistp_64_gcc_128 for arm64 version to improve speed.
+* Added French language.
+* Minor fixes and improvements.
+
+**InviZible Pro beta 1.1.7**
+* Tor apps selection improvements.
+* Updated obfs4proxy (fixed meek_lite bridge).
+* Updated snowflake.
+* Updated German language.
+* Fixed crash on android 4.4.2.
+* Fixed rare bugs.

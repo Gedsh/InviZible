@@ -83,7 +83,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+                              savedInstanceState: Bundle?): View {
         _binding = FragmentProxyBinding.inflate(inflater, container, false)
 
         val passAndNameIsEmpty = binding.etProxyPass.text.toString().trim().isEmpty()

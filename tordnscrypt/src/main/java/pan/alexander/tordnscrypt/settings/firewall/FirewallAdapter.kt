@@ -186,7 +186,7 @@ class FirewallAdapter(private val firewallFragment: FirewallFragment) :
 
             imgAppIconFirewall.setImageDrawable(appFirewall.applicationData.icon)
             val description = StringBuilder().apply {
-                append(appFirewall.applicationData.names.joinToString(", "))
+                append(appFirewall.applicationData.toString())
                 if (appFirewall.applicationData.uid >= 0) {
                     append(" ").append("\u00B7").append(" ")
                     append("UID").append(" ").append(appFirewall.applicationData.uid)

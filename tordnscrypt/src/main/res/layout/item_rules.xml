@@ -34,7 +34,7 @@
                 android:layout_weight="1"
                 android:ellipsize="end"
                 android:fontFamily="serif"
-                android:gravity="center_vertical"
+                android:gravity="center"
                 android:inputType="textNoSuggestions"
                 android:singleLine="true"
                 android:textAlignment="center" />
