@@ -69,6 +69,7 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.update.UpdateCheck;
 import pan.alexander.tordnscrypt.update.UpdateService;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.OwnFileReader;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Registration;
 import pan.alexander.tordnscrypt.utils.RootExecService;
@@ -77,6 +78,8 @@ import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
+import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
+import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -333,6 +336,8 @@ public class TopFragment extends Fragment {
             if (activity == null || activity.isFinishing()) {
                 return null;
             }
+
+           shortenTooLongSnowflakeLog(activity.getApplicationContext());
 
             try {
                 Verifier verifier = new Verifier(activity);
@@ -844,6 +849,23 @@ public class TopFragment extends Fragment {
         if (modulesLogsTimer != null && !modulesLogsTimer.isShutdown()) {
             modulesLogsTimer.shutdownNow();
             modulesLogsTimer = null;
+        }
+    }
+
+    private static void shortenTooLongSnowflakeLog(Context context) {
+        try {
+            boolean bridgesSnowflakeDefault = new PrefManager(context).getStrPref("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
+            boolean bridgesSnowflakeOwn = new PrefManager(context).getStrPref("ownBridgesObfs").equals(snowFlakeBridgesOwn);
+            SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
+            boolean showHelperMessages = shPref.getBoolean("pref_common_show_help", false);
+
+            if (showHelperMessages && (bridgesSnowflakeDefault || bridgesSnowflakeOwn)) {
+                PathVars pathVars = PathVars.getInstance(context);
+                OwnFileReader snowflakeLog = new OwnFileReader(context, pathVars.getAppDataDir() + "/logs/Snowflake.log");
+                snowflakeLog.shortenTooTooLongFile();
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "TopFragment shortenTooLongSnowflakeLog exception " + e.getMessage() + " " + e.getCause());
         }
     }
 

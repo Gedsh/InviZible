@@ -97,7 +97,6 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
     private ModuleState fixedModuleState = STOPPED;
 
     private volatile OwnFileReader logFile;
-    private volatile OwnFileReader snowflakeLog;
     private int displayLogPeriod = -1;
 
     private HttpsURLConnection httpsURLConnection;
@@ -136,13 +135,6 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
         }
 
         logFile = new OwnFileReader(context, appDataDir + "/logs/Tor.log");
-
-        boolean bridgesSnowflakeDefault = new PrefManager(context).getStrPref("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
-        boolean bridgesSnowflakeOwn = new PrefManager(context).getStrPref("ownBridgesObfs").equals(snowFlakeBridgesOwn);
-        boolean showHelperMessages = shPref.getBoolean("pref_common_show_help", false);
-        if (showHelperMessages && (bridgesSnowflakeDefault || bridgesSnowflakeOwn)) {
-            snowflakeLog = new OwnFileReader(context, appDataDir + "/logs/Snowflake.log");
-        }
 
         if (isTorInstalled(context)) {
             setTorInstalled(true);
@@ -733,8 +725,6 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
             return;
         }
 
-        shortenTooLongSnowflakeLog();
-
         ModulesRunner.runTor(context);
     }
 
@@ -744,22 +734,6 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
         }
 
         ModulesKiller.stopTor(context);
-    }
-
-    private void shortenTooLongSnowflakeLog() {
-        if (snowflakeLog == null) {
-            return;
-        }
-
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
-            try {
-                if (snowflakeLog != null) {
-                    snowflakeLog.shortenToToLongFile();
-                }
-            } catch (Exception e) {
-                Log.e(LOG_TAG, "TorFragmentPresenter shortenTooLongSnowflakeLog exception " + e.getMessage() + " " + e.getCause());
-            }
-        });
     }
 
     private void checkInternetAvailable() {
