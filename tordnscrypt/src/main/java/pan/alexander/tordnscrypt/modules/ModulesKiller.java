@@ -22,7 +22,6 @@ package pan.alexander.tordnscrypt.modules;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -38,7 +37,6 @@ import eu.chainfire.libsuperuser.Shell;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 import static pan.alexander.tordnscrypt.modules.ModulesService.DNSCRYPT_KEYWORD;
@@ -94,16 +92,7 @@ public class ModulesKiller {
     }
 
     private static void sendStopIntent(Context context, String action) {
-        Intent intent = new Intent(context, ModulesService.class);
-        intent.setAction(action);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            intent.putExtra("showNotification", true);
-            context.startForegroundService(intent);
-        } else {
-            intent.putExtra("showNotification", Utils.INSTANCE.isShowNotification(context));
-            context.startService(intent);
-        }
+        ModulesServiceInteractor.INSTANCE.sendIntent(context, action);
     }
 
     private void sendResultIntent(int moduleMark, String moduleKeyWord, String binaryPath) {

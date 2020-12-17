@@ -27,14 +27,14 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat.getSystemService
 import pan.alexander.tordnscrypt.crash_handling.TopExceptionHandler
 import pan.alexander.tordnscrypt.language.Language
+import java.lang.ref.WeakReference
 
 const val ANDROID_CHANNEL_ID = "InviZible"
 const val FIREWALL_CHANNEL_ID = "Firewall"
 
 class ApplicationExt : Application() {
 
-    //Required for an app update on AndroidQ
-    var langAppCompatActivityActive: Boolean = false
+    var currentActivity: WeakReference<Activity>? = null
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)

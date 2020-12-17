@@ -20,12 +20,10 @@ package pan.alexander.tordnscrypt.modules;
 */
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Build;
 
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
@@ -75,43 +73,30 @@ public class ModulesAux {
     }
 
     public static void requestModulesStatusUpdate(Context context) {
-        sendIntent(context, ModulesService.actionUpdateModulesStatus);
+        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.actionUpdateModulesStatus);
     }
 
     public static void recoverService(Context context) {
-        sendIntent(context, ModulesService.actionRecoverService);
+        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.actionRecoverService);
     }
 
     public static void speedupModulesStateLoopTimer(Context context) {
-        sendIntent(context, ModulesService.speedupLoop);
+        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.speedupLoop);
     }
 
     public static void slowdownModulesStateLoopTimer(Context context) {
-        sendIntent(context, ModulesService.slowdownLoop);
+        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.slowdownLoop);
     }
 
     public static void makeModulesStateExtraLoop(Context context) {
-        sendIntent(context, ModulesService.extraLoop);
+        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.extraLoop);
     }
 
     public static void startArpDetection(Context context) {
-        sendIntent(context, ModulesService.startArpScanner);
+        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.startArpScanner);
     }
 
     public static void stopArpDetection(Context context) {
-        sendIntent(context, ModulesService.stopArpScanner);
-    }
-
-    private static void sendIntent(Context context, String action) {
-        Intent intent = new Intent(context, ModulesService.class);
-        intent.setAction(action);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            intent.putExtra("showNotification", true);
-            context.startForegroundService(intent);
-        } else {
-            intent.putExtra("showNotification", Utils.INSTANCE.isShowNotification(context));
-            context.startService(intent);
-        }
+        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.stopArpScanner);
     }
 }
