@@ -31,6 +31,7 @@ import com.jrummyapps.android.shell.ShellNotFoundException;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
@@ -68,11 +69,12 @@ public class ModulesVersions {
     public void refreshVersions(final Context context) {
 
         CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
-            openCommandShell();
+            //openCommandShell();
 
             PathVars pathVars = getPathVars(context);
 
-            checkModulesVersions(pathVars);
+            //checkModulesVersions(pathVars);
+            checkModulesVersionsModern(pathVars);
 
             if (isBinaryFileAccessible(pathVars.getDNSCryptPath()) && !dnsCryptVersion.isEmpty()) {
                 sendResult(context, dnsCryptVersion, DNSCryptRunFragmentMark);
@@ -86,7 +88,7 @@ public class ModulesVersions {
                 sendResult(context, itpdVersion, I2PDRunFragmentMark);
             }
 
-            closeCommandShell();
+            //closeCommandShell();
         });
     }
 
@@ -131,6 +133,24 @@ public class ModulesVersions {
                 "echo 'ITPD_version'",
                 pathVars.getITPDPath() + " --version")
                 .getStdout();
+    }
+
+    private void checkModulesVersionsModern(PathVars pathVars) {
+
+        List<String> dnsCryptOutput = new ProcessStarter().startProcess(pathVars.getDNSCryptPath() + " --version").stdout;
+        if (!dnsCryptOutput.isEmpty()) {
+            dnsCryptVersion = "DNSCrypt_version " + dnsCryptOutput.get(0);
+        }
+
+        List<String> torOutput = new ProcessStarter().startProcess(pathVars.getTorPath() + " --version").stdout;
+        if (!torOutput.isEmpty()) {
+            torVersion = "Tor_version " + torOutput.get(0);
+        }
+
+        List<String> itpdOutput = new ProcessStarter().startProcess(pathVars.getITPDPath() + " --version").stdout;
+        if (!itpdOutput.isEmpty()) {
+            itpdVersion = "ITPD_version " + itpdOutput.get(0);
+        }
     }
 
     private void openCommandShell() {
