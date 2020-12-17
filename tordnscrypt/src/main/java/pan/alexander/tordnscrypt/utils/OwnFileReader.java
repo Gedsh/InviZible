@@ -19,15 +19,17 @@ package pan.alexander.tordnscrypt.utils;
 */
 
 import android.content.Context;
-import android.text.Html;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.RandomAccessFile;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
@@ -37,14 +39,15 @@ import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class OwnFileReader {
+    private final static long TOO_TOO_LONG_FILE_LENGTH = 1024 * 500;
+    private final static long TOO_TOO_LONG_FILE_LENGTH_HYSTERESIS = 1024 * 100;
+    private final static long TOO_LONG_FILE_LENGTH = 1024 * 100;
+    private final static int MAX_LINES_QUANTITY = 100;
 
     private static final ReentrantLock reentrantLock = new ReentrantLock();
 
     private final Context context;
     private final String filePath;
-    private BufferedReader br = null;
-    private FileInputStream fstream = null;
-    private List<String> lines;
 
     public OwnFileReader(Context context, String filePath) {
         this.context = context;
@@ -53,9 +56,13 @@ public class OwnFileReader {
 
     public String readLastLines() {
 
+        List<String> lines = new LinkedList<>();
         String result = "";
+        boolean fileIsTooLong = false;
 
-        try {
+        try (FileInputStream fstream = new FileInputStream(filePath);
+             InputStreamReader reader = new InputStreamReader(fstream);
+             BufferedReader br = new BufferedReader(reader)) {
 
             reentrantLock.lockInterruptibly();
 
@@ -83,21 +90,22 @@ public class OwnFileReader {
             lines = new LinkedList<>();
             StringBuilder sb = new StringBuilder();
 
-            shortenToToLongFile();
-
-
-            fstream = new FileInputStream(filePath);
-            br = new BufferedReader(new InputStreamReader(fstream));
+            shortenTooTooLongFile();
 
             for (String tmp; (tmp = br.readLine()) != null; )
-                if (lines.add(tmp) && lines.size() > 100) {
+                if (lines.add(tmp) && lines.size() > MAX_LINES_QUANTITY) {
                     lines.remove(0);
+                    fileIsTooLong = true;
                 }
 
             for (String s : lines) {
-                s = Html.escapeHtml(s);
+
+                //s = Html.escapeHtml(s);
+                s = TextUtils.htmlEncode(s);
+
                 if (s.toLowerCase().contains("[notice]") || s.toLowerCase().contains("/info")) {
-                    s = "<font color=#808080>" + s.replace("[notice]", "").replace("[NOTICE]", "") + "</font>";
+                    s = "<font color=#808080>" + s.replace("[notice]", "")
+                            .replace("[NOTICE]", "") + "</font>";
                 } else if (s.toLowerCase().contains("[warn]") || s.toLowerCase().contains("/warn")) {
                     s = "<font color=#ffa500>" + s + "</font>";
                 } else if (s.toLowerCase().contains("[warning]")) {
@@ -119,8 +127,6 @@ public class OwnFileReader {
 
             }
 
-            shortenToLongFile();
-
             result = sb.toString();
             int lastBrIndex = result.lastIndexOf("<br />");
             if (lastBrIndex > 0) {
@@ -130,53 +136,63 @@ public class OwnFileReader {
         } catch (Exception e) {
             Log.e(LOG_TAG, "Impossible to read file " + filePath + " " + e.getMessage() + " " + e.getCause());
         } finally {
-            try {
-                if (fstream != null) fstream.close();
-                if (br != null) br.close();
-            } catch (IOException ex) {
-                Log.e(LOG_TAG, "Error when close file " + filePath + " " + ex.getMessage());
-            }
-
             reentrantLock.unlock();
+        }
+
+        if (fileIsTooLong) {
+            shortenTooLongFile(lines);
         }
 
         return result;
     }
 
-    private void shortenToLongFile() {
+    private void shortenTooLongFile(List<String> lines) {
         File file = new File(filePath);
         if (!file.exists())
             return;
 
-        if (file.length() / 1024 > 100) {
-            try {
-                PrintWriter writer = new PrintWriter(file, "UTF-8");
+        if (file.length() > TOO_LONG_FILE_LENGTH) {
+            try (PrintWriter writer = new PrintWriter(file, "UTF-8")) {
                 if (lines != null && lines.size() != 0) {
                     StringBuilder buffer = new StringBuilder();
                     for (String line : lines) {
-                        buffer.append(line).append(System.lineSeparator());
+                        buffer.append(line).append("\n");
                     }
                     writer.println(buffer);
                 }
-                writer.close();
             } catch (IOException e) {
-                Log.e(LOG_TAG, "Unable to rewrite i2pd log file " + e.getMessage());
+                Log.e(LOG_TAG, "Unable to rewrite too long file" + filePath + e.getMessage() + " " + e.getCause());
             }
         }
     }
 
-    public void shortenToToLongFile() {
+    public void shortenTooTooLongFile() {
         File file = new File(filePath);
         if (!file.exists())
             return;
 
-        if (file.length() / 1024 > 500) {
-            try {
-                PrintWriter writer = new PrintWriter(file, "UTF-8");
-                writer.println("");
-                writer.close();
+        long fileLength = file.length();
+
+        if (fileLength > TOO_TOO_LONG_FILE_LENGTH) {
+
+            try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
+                 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+
+                randomAccessFile.seek(fileLength - (TOO_TOO_LONG_FILE_LENGTH - TOO_TOO_LONG_FILE_LENGTH_HYSTERESIS));
+
+                byte[] buffer = new byte[1024];
+                int len;
+                while ((len = randomAccessFile.read(buffer)) != -1) {
+                    baos.write(buffer, 0, len);
+                }
+                baos.flush();
+
+                randomAccessFile.seek(0);
+                randomAccessFile.write(baos.toByteArray());
+                randomAccessFile.setLength(baos.size());
+
             } catch (IOException e) {
-                Log.e(LOG_TAG, "Unable to rewrite +" + filePath + " log file " + e.getMessage());
+                Log.e(LOG_TAG, "Unable to rewrite too too long file" + filePath + e.getMessage() + " " + e.getCause());
             }
         }
     }
