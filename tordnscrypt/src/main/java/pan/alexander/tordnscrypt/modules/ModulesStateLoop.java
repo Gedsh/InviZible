@@ -288,7 +288,7 @@ public class ModulesStateLoop implements Runnable {
                 handler.postDelayed(() -> {
                     iptablesUpdateTemporaryBlocked = false;
                     ModulesAux.makeModulesStateExtraLoop(modulesService);
-                }, 9000);
+                }, 8000);
             }
 
         } else if (useModulesWithRoot && operationMode == ROOT_MODE) {
@@ -386,5 +386,11 @@ public class ModulesStateLoop implements Runnable {
 
     void setItpdThread(Thread itpdThread) {
         ModulesStateLoop.itpdThread = itpdThread;
+    }
+
+    void removeHandlerTasks() {
+        if (handler != null) {
+            handler.removeCallbacksAndMessages(null);
+        }
     }
 }

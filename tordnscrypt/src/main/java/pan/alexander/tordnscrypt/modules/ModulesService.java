@@ -75,6 +75,8 @@ public class ModulesService extends Service {
     public static final String actionStopService = "pan.alexander.tordnscrypt.action.STOP_SERVICE";
     public static final String actionStopServiceForeground = "pan.alexander.tordnscrypt.action.STOP_SERVICE_FOREGROUND";
 
+    public static boolean serviceIsRunning = false;
+
     private final static int TIMER_HIGH_SPEED = 1000;
     private final static int TIMER_LOW_SPEED = 30000;
 
@@ -140,6 +142,8 @@ public class ModulesService extends Service {
             ServiceNotification notification = new ServiceNotification(this, notificationManager, UsageStatisticKt.getStartTime());
             notification.sendNotification(title, message);
         }
+
+        serviceIsRunning = true;
 
         pathVars = PathVars.getInstance(this);
 
@@ -351,10 +355,6 @@ public class ModulesService extends Service {
 
         makeDelay(2);
 
-        if (modulesStatus == null) {
-            return;
-        }
-
         if (modulesStatus.isUseModulesWithRoot() || dnsCryptThread.isAlive()) {
             modulesStatus.setDnsCryptState(RUNNING);
 
@@ -473,10 +473,6 @@ public class ModulesService extends Service {
     private void changeTorStatus(final Thread torThread) {
 
         makeDelay(2);
-
-        if (modulesStatus == null) {
-            return;
-        }
 
         if (modulesStatus.isUseModulesWithRoot() || torThread.isAlive()) {
             modulesStatus.setTorState(RUNNING);
@@ -600,10 +596,6 @@ public class ModulesService extends Service {
     private void changeITPDStatus(final Thread itpdThread) {
 
         makeDelay(3);
-
-        if (modulesStatus == null) {
-            return;
-        }
 
         if (modulesStatus.isUseModulesWithRoot() || itpdThread.isAlive()) {
             modulesStatus.setItpdState(RUNNING);
@@ -903,6 +895,10 @@ public class ModulesService extends Service {
 
         releaseWakelocks();
 
+        if (checkModulesStateTask != null && modulesStatus.getMode() == VPN_MODE) {
+            checkModulesStateTask.removeHandlerTasks();
+        }
+
         stopModulesThreadsTimer();
 
         stopArpScanner();
@@ -912,6 +908,8 @@ public class ModulesService extends Service {
         CachedExecutor.INSTANCE.stopExecutorService();
 
         mHandler.removeCallbacksAndMessages(null);
+
+        serviceIsRunning = false;
 
         super.onDestroy();
     }

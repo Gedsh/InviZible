@@ -102,6 +102,7 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
@@ -1148,6 +1149,20 @@ public class MainActivity extends LangAppCompatActivity
         super.onPause();
 
         unregisterBroadcastReceiver();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        if (ModulesService.serviceIsRunning && modulesStatus.getMode() == VPN_MODE
+                && (modulesStatus.getDnsCryptState() == STOPPED || modulesStatus.getDnsCryptState() == FAULT)
+                && (modulesStatus.getTorState() == STOPPED || modulesStatus.getTorState() == FAULT)
+                && (modulesStatus.getItpdState() == STOPPED || modulesStatus.getItpdState() == FAULT)) {
+            Intent intent = new Intent(this, ModulesService.class);
+            intent.setAction(ModulesService.actionStopService);
+            startService(intent);
+        }
     }
 
     @Override
