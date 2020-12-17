@@ -254,7 +254,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
     private void shortenTooLongITPDLog() {
         OwnFileReader ofr = new OwnFileReader(context, appDataDir + "/logs/i2pd.log");
-        ofr.shortenToToLongFile();
+        ofr.shortenTooTooLongFile();
     }
 
     private void startHOTSPOT() {

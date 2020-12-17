@@ -502,7 +502,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                 && !view.getFragmentActivity().isFinishing()
                 && (modulesStatus.getMode() == VPN_MODE || fixTTL) && !bound) {
             bindToVPNService(view.getFragmentActivity());
-            return false;
+            //return false;
         }
 
         if (modulesStatus.getDnsCryptState() == RESTARTING) {

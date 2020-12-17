@@ -567,7 +567,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
             OwnFileReader ofr = new OwnFileReader(context, appDataDir + "/logs/i2pd.log");
 
-            ofr.shortenToToLongFile();
+            ofr.shortenTooTooLongFile();
         }
 
         view.setITPDProgressBarIndeterminate(true);

@@ -179,7 +179,6 @@ public class SettingsActivity extends LangAppCompatActivity {
             for (String str : arr) {
                 rules_file.add(str.trim());
             }
-            fSupportTrans = getSupportFragmentManager().beginTransaction();
             Bundle bundle = new Bundle();
             bundle.putStringArrayList("rules_file", rules_file);
             bundle.putString("path", subscriptions);
