@@ -44,6 +44,7 @@ import android.os.PowerManager;
 import android.os.Process;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -491,14 +492,20 @@ public class ServiceVPN extends VpnService {
             jni_start(jni_context, prio);
 
             tunnelThread = new Thread(() -> {
-                Log.i(LOG_TAG, "VPN Running tunnel context=" + jni_context);
-                boolean canFilterSynchronous = true;
-                if (compatibilityMode && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    canFilterSynchronous = Util.canFilter();
+                try {
+                    Log.i(LOG_TAG, "VPN Running tunnel context=" + jni_context);
+                    boolean canFilterSynchronous = true;
+                    if (compatibilityMode && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        canFilterSynchronous = Util.canFilter();
+                    }
+                    jni_run(jni_context, vpn.getFd(), mapForwardPort.containsKey(53), finalRcode, compatibilityMode, canFilterSynchronous);
+                    Log.i(LOG_TAG, "VPN Tunnel exited");
+                    tunnelThread = null;
+                } catch (Exception e) {
+                    Toast.makeText(ServiceVPN.this, e.getMessage() + " " + e.getCause(), Toast.LENGTH_LONG).show();
+                    Log.e(LOG_TAG, "ServiceVPN startNative exception " + e.getMessage() + " " + e.getCause());
                 }
-                jni_run(jni_context, vpn.getFd(), mapForwardPort.containsKey(53), finalRcode, compatibilityMode, canFilterSynchronous);
-                Log.i(LOG_TAG, "VPN Tunnel exited");
-                tunnelThread = null;
+
             });
 
             tunnelThread.start();
