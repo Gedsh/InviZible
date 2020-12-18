@@ -313,14 +313,14 @@
 
     <string name="pref_dnscrypt_filters_categ">FILTERS</string>
 
-    <string name="pref_dnscrypt_forwarding_rules_categ" translatable="false">Forwarding rules.</string>
+    <string name="pref_dnscrypt_forwarding_rules_categ">Forwarding rules</string>
     <string name="pref_dnscrypt_forwarding_rules" translatable="false">forwarding_rules</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">Route queries for specific domains to a dedicated set of servers.</string>
     <string name="pref_dnscrypt_import_forwarding_rules">Import forwarding rules</string>
     <string name="pref_dnscrypt_import_forwarding_rules_summ">Import a forwarding rules file. You can select multiple files, duplicate lines will be removed.</string>
     <string name="pref_dnscrypt_erase_forwarding_rules">Erase forwarding rules</string>
 
-    <string name="pref_dnscrypt_cloaking_rules_categ" translatable="false">Cloaking rules.</string>
+    <string name="pref_dnscrypt_cloaking_rules_categ">Cloaking rules</string>
     <string name="pref_dnscrypt_cloaking_rules" translatable="false">cloaking_rules</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking returns a predefined address for a specific name.\n
         In addition to acting as a HOSTS file, it can also return the IP address of a different name. It will also do CNAME flattening..</string>
