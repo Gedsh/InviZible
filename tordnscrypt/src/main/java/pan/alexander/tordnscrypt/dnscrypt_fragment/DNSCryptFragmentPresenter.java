@@ -76,6 +76,8 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
+    private final static int MAX_LINES_IN_LOG = 100;
+
     private volatile boolean bound;
 
     private int displayLogPeriod = -1;
@@ -538,7 +540,13 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
         lines.append("<br />");
 
-        for (int i = 0; i < dnsQueryLogRecords.size(); i++) {
+        int i = 0;
+        int logSize = dnsQueryLogRecords.size();
+        if (logSize > MAX_LINES_IN_LOG) {
+            i = logSize - MAX_LINES_IN_LOG;
+        }
+
+        for (; i < logSize; i++) {
             record = dnsQueryLogRecords.get(i);
 
             if (appVersion.startsWith("g") && record.getBlocked() && record.getBlockedByIpv6()
