@@ -31,6 +31,7 @@ import android.content.ClipData;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.preference.PreferenceManager;
@@ -50,6 +51,7 @@ import pan.alexander.tordnscrypt.settings.PreferencesCommonFragment;
 import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
 import pan.alexander.tordnscrypt.settings.dnscrypt_settings.PreferencesDNSFragment;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallFragment;
+import pan.alexander.tordnscrypt.settings.firewall.PreferencesFirewallFragment;
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges;
 import pan.alexander.tordnscrypt.settings.SettingsParser;
 import pan.alexander.tordnscrypt.settings.ShowLogFragment;
@@ -78,7 +80,9 @@ public class SettingsActivity extends LangAppCompatActivity {
     private SettingsParser settingsParser;
     private PreferencesDNSFragment preferencesDNSFragment;
     private FirewallFragment firewallFragment;
+    private UnlockTorAppsFragment unlockTorAppsFragment;
     private Fragment currentFragment;
+    private boolean showMenu;
 
 
     @SuppressLint("NewApi")
@@ -216,6 +220,9 @@ public class SettingsActivity extends LangAppCompatActivity {
             unlockTorAppsFragment.setArguments(bundle);
             fSupportTrans.replace(android.R.id.content, unlockTorAppsFragment);
             fSupportTrans.commit();
+        } else if (Objects.equals(intent.getAction(), "firewall_pref")) {
+            fSupportTrans.replace(android.R.id.content, new PreferencesFirewallFragment(), "PreferencesFirewallFragment");
+            fSupportTrans.commit();
         }
 
     }
@@ -231,14 +238,15 @@ public class SettingsActivity extends LangAppCompatActivity {
 
         if (fragment instanceof PreferencesDNSFragment) {
             preferencesDNSFragment = (PreferencesDNSFragment) fragment;
-            currentFragment = preferencesDNSFragment;
         } else if (fragment instanceof PreferencesTorFragment) {
             preferencesTorFragment = (PreferencesTorFragment) fragment;
-            currentFragment = preferencesTorFragment;
         } else if (fragment instanceof FirewallFragment) {
             firewallFragment = (FirewallFragment) fragment;
-            currentFragment = firewallFragment;
+        } else if (fragment instanceof UnlockTorAppsFragment) {
+            unlockTorAppsFragment = (UnlockTorAppsFragment) fragment;
         }
+
+        currentFragment = fragment;
     }
 
     @Override
@@ -307,37 +315,81 @@ public class SettingsActivity extends LangAppCompatActivity {
         settingsParser = null;
         preferencesDNSFragment = null;
         firewallFragment = null;
+        unlockTorAppsFragment = null;
+        currentFragment = null;
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        String action = null;
         Intent intent = getIntent();
 
-        if (Objects.equals(intent.getAction(), "firewall")) {
-            getMenuInflater().inflate(R.menu.settings_firewall, menu);
+        if (intent != null) {
+            action = intent.getAction();
+        }
+
+        if (Objects.equals(action, "firewall")
+                || Objects.equals(action, "tor_apps_unlock")
+                || Objects.equals(action, "proxy_apps_exclude")) {
+            getMenuInflater().inflate(R.menu.settings_menu, menu);
+            showMenu = true;
             return true;
         } else {
+            showMenu = false;
             return super.onCreateOptionsMenu(menu);
         }
     }
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
+        String action = null;
         Intent intent = getIntent();
 
-        if (Objects.equals(intent.getAction(), "firewall") && firewallFragment != null) {
-            MenuItem searchItem = menu.findItem(R.id.firewall_search);
-            SearchView searchFirewall = (SearchView) searchItem.getActionView();
-            searchFirewall.setOnQueryTextListener(firewallFragment);
+        if (intent != null) {
+            action = intent.getAction();
+        }
 
-            MenuItem switchItem = menu.findItem(R.id.firewall_switch_item);
-            SwitchCompat switchFirewall = switchItem.getActionView().findViewById(R.id.firewall_switch);
+        SearchView menuSearchView;
+        MenuItem switchItem;
+        SwitchCompat menuSwitch;
+        MenuItem menuSettingsItem;
+
+        if (showMenu) {
+            MenuItem menuSearch = menu.findItem(R.id.menu_search);
+            menuSearchView = (SearchView) menuSearch.getActionView();
+
+            switchItem = menu.findItem(R.id.menu_switch_item);
+            menuSwitch = switchItem.getActionView().findViewById(R.id.menu_switch);
+
+            menuSettingsItem = menu.findItem(R.id.menu_settings);
+        } else {
+            return super.onPrepareOptionsMenu(menu);
+        }
+
+        if (menuSearchView == null || menuSwitch == null || menuSettingsItem == null) {
+            return super.onPrepareOptionsMenu(menu);
+        }
+
+        if (Objects.equals(action, "firewall") && firewallFragment != null) {
+            menuSearchView.setOnQueryTextListener(firewallFragment);
 
             boolean firewallEnabled = new PrefManager(this).getBoolPref("FirewallEnabled");
-            switchFirewall.setChecked(firewallEnabled);
+            menuSwitch.setChecked(firewallEnabled);
 
-            switchFirewall.setOnCheckedChangeListener(firewallFragment);
-            firewallFragment.setFirewallSwitch(switchFirewall);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                menuSwitch.setTooltipText(getString(R.string.firewall_switch));
+            }
+            menuSwitch.setOnCheckedChangeListener(firewallFragment);
+
+            firewallFragment.setFirewallSwitch(menuSwitch);
+
+            menuSettingsItem.setVisible(true);
+        } else if ((Objects.equals(action, "tor_apps_unlock")
+                || Objects.equals(action, "proxy_apps_exclude"))
+                && unlockTorAppsFragment != null) {
+            menuSearchView.setOnQueryTextListener(unlockTorAppsFragment);
+
+            switchItem.setVisible(false);
         }
 
         return super.onPrepareOptionsMenu(menu);
@@ -345,15 +397,26 @@ public class SettingsActivity extends LangAppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {// API 5+ solution
+        int id = item.getItemId();
+        if (id == android.R.id.home) {// API 5+ solution
             onBackPressed();
-            return true;
+        } else if (id == R.id.menu_settings) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            intent.setAction("firewall_pref");
+            startActivity(intent);
+        } else {
+            return super.onOptionsItemSelected(item);
         }
-        return super.onOptionsItemSelected(item);
+
+        return true;
     }
 
     @Override
     public void onBackPressed() {
+        if (currentFragment == null) {
+            super.onBackPressed();
+        }
+
         if (currentFragment instanceof FirewallFragment) {
             boolean savingFirewallChangesRequired = firewallFragment.isFirewallChangesSavingRequired();
             SaveFirewallChanges saveFirewallChanges = null;

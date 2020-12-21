@@ -151,9 +151,12 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
 
         binding.chipGroupFirewallSort.setOnCheckedChangeListener(this)
 
+        searchText = null
+
         when {
             binding.chipFirewallSystem.isChecked -> chipSelectSystemApps(context)
             binding.chipFirewallUser.isChecked -> chipSelectUserApps(context)
+            binding.chipFirewallAll.isChecked -> chipSelectAllApps(context)
             else -> updateTopIcons(context)
         }
 
@@ -185,21 +188,12 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         if (searchText != null && appsListComplete && !binding.rvFirewallApps.isComputingLayout) {
             updateTopIconsData()
             updateTopIcons(context)
-            searchText = null
-            searchApps(searchText)
             firewallAdapter?.notifyDataSetChanged()
         }
     }
 
     override fun onPause() {
         super.onPause()
-
-        savedAppsListWhenSearch?.let {
-            if (it.isNotEmpty()) {
-                appsList = it
-                savedAppsListWhenSearch = null
-            }
-        }
 
         if (appsList.isNotEmpty() && appsListComplete) {
 
@@ -238,8 +232,10 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
                 if (appsList.isEmpty()) {
 
                     handler?.post {
-                        binding.pbFirewallApp.isIndeterminate = true
-                        binding.pbFirewallApp.visibility = View.VISIBLE
+                        if (_binding != null) {
+                            binding.pbFirewallApp.isIndeterminate = true
+                            binding.pbFirewallApp.visibility = View.VISIBLE
+                        }
                     }
 
                     val firewallFirstStart = !PrefManager(context).getBoolPref("FirewallWasStarted")
@@ -259,9 +255,11 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
                     installedApplications.setOnAppAddListener(this@FirewallFragment)
                     val installedApps = installedApplications.getInstalledApps(true)
 
-                    while (binding.rvFirewallApps.isComputingLayout) {
+                    while (_binding?.rvFirewallApps?.isComputingLayout == true) {
                         TimeUnit.MILLISECONDS.sleep(100)
                     }
+
+                    appsListComplete = true
 
                     appsList.clear()
 
@@ -296,32 +294,37 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
                     allowRoamingForAll = appsAllowRoaming.size == appListSize
                     allowVPNForAll = appsAllowVpn.size == appListSize
 
+                    while (_binding?.rvFirewallApps?.isComputingLayout == true) {
+                        TimeUnit.MILLISECONDS.sleep(100)
+                    }
+
                     handler?.post {
-                        binding.pbFirewallApp.isIndeterminate = false
-                        binding.pbFirewallApp.visibility = View.GONE
 
-                        appsListComplete = true
+                        if (_binding != null) {
+                            binding.pbFirewallApp.isIndeterminate = false
+                            binding.pbFirewallApp.visibility = View.GONE
 
-                        if (binding.chipFirewallSortUid.isChecked) {
-                            sortByUid()
+                            if (binding.chipFirewallSortUid.isChecked) {
+                                sortByUid()
+                            }
+
+                            if (binding.chipFirewallSystem.isChecked) {
+                                chipSelectSystemApps(context)
+                            } else if (binding.chipFirewallUser.isChecked) {
+                                chipSelectUserApps(context)
+                            }
+
+                            if (allowLanForAll || allowWifiForAll || allowGsmForAll
+                                    || allowRoamingForAll || allowVPNForAll) {
+                                updateTopIcons(context)
+                            }
+
+                            if (firewallFirstStart) {
+                                activateAllFirsStart(context)
+                            }
+
+                            firewallAdapter?.notifyDataSetChanged()
                         }
-
-                        if (binding.chipFirewallSystem.isChecked) {
-                            chipSelectSystemApps(context)
-                        } else if (binding.chipFirewallUser.isChecked) {
-                            chipSelectUserApps(context)
-                        }
-
-                        if (allowLanForAll || allowWifiForAll || allowGsmForAll
-                                || allowRoamingForAll || allowVPNForAll) {
-                            updateTopIcons(context)
-                        }
-
-                        if (firewallFirstStart) {
-                            activateAllFirsStart(context)
-                        }
-
-                        firewallAdapter?.notifyDataSetChanged()
                     }
                 }
 
@@ -337,7 +340,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
     }
 
     override fun onAppAdded(application: ApplicationData) {
-        if (appsListComplete || binding.rvFirewallApps.isComputingLayout) {
+        if (appsListComplete || _binding?.rvFirewallApps?.isComputingLayout == true) {
             return
         }
 
@@ -353,18 +356,20 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         )
 
         handler?.post {
-            if (!appsListComplete && !binding.rvFirewallApps.isComputingLayout) {
+            if (!appsListComplete && _binding?.rvFirewallApps?.isComputingLayout == false) {
                 firewallAdapter?.notifyDataSetChanged()
             }
         }
     }
 
     override fun onClick(v: View?) {
-        if (firewallEnabled && !appsListComplete) {
+        val context = v?.context
+
+        if (firewallEnabled && !appsListComplete || context == null) {
             return
         }
 
-        when (v?.id) {
+        when (v.id) {
             R.id.btnTopLanFirewall -> activateAllLan(v.context)
             R.id.btnTopWifiFirewall -> activateAllWifi(v.context)
             R.id.btnTopGsmFirewall -> activateAllGsm(v.context)
@@ -376,7 +381,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
                 enableFirewall(v.context)
                 modulesStatus.setIptablesRulesUpdateRequested(context, true)
             }
-            else -> Log.e(LOG_TAG, "FirewallFragment onClick unknown id: ${v?.id}")
+            else -> Log.e(LOG_TAG, "FirewallFragment onClick unknown id: ${v.id}")
         }
     }
 
@@ -426,7 +431,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
     override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
         val context = buttonView?.context ?: return
 
-        if (buttonView.id == R.id.firewall_switch) {
+        if (buttonView.id == R.id.menu_switch) {
             if (isChecked) {
                 enableFirewall(context)
             } else {
@@ -495,6 +500,15 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
     }
 
     fun saveFirewallChanges() {
+
+        val context = context ?: return
+
+        savedAppsListWhenSearch?.let {
+            if (it.isNotEmpty()) {
+                appsList = it
+                savedAppsListWhenSearch = null
+            }
+        }
 
         val appsAllowLanToSave = mutableSetOf<Int>()
         val appsAllowWifiToSave = mutableSetOf<Int>()
@@ -567,7 +581,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
     }
 
     private fun sortByName() {
-        if (binding.rvFirewallApps.isComputingLayout) {
+        if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
         }
 
@@ -576,7 +590,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
     }
 
     private fun sortByUid() {
-        if (binding.rvFirewallApps.isComputingLayout) {
+        if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
         }
 
@@ -625,17 +639,29 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
     }
 
     private fun searchApps(text: String?) {
+        val context = context ?: return
+
         searchText = text
 
-        if (binding.rvFirewallApps.isComputingLayout) {
+        if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
         }
+
+        val allAppsSelected = binding.chipFirewallAll.isChecked
+        val systemAppsSelected = binding.chipFirewallSystem.isChecked
+        val userAppsSelected = binding.chipFirewallUser.isChecked
 
         if (text == null || text.isEmpty()) {
 
             savedAppsListWhenSearch?.let {
                 appsList = it
                 savedAppsListWhenSearch = null
+            }
+
+            if (systemAppsSelected) {
+                chipSelectSystemApps(context)
+            } else if (userAppsSelected) {
+                chipSelectUserApps(context)
             }
 
             return
@@ -646,10 +672,6 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         }
 
         appsList.clear()
-
-        val allAppsSelected = binding.chipFirewallAll.isChecked
-        val systemAppsSelected = binding.chipFirewallSystem.isChecked
-        val userAppsSelected = binding.chipFirewallUser.isChecked
 
         savedAppsListWhenSearch?.forEach { savedApp ->
             if (savedApp.applicationData.toString().toLowerCase(Locale.ROOT).contains(text.toLowerCase(Locale.ROOT).trim())) {
@@ -662,14 +684,12 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
             }
         }
 
-        context?.let {
-            updateTopIconsData()
-            updateTopIcons(it)
-        }
+        updateTopIconsData()
+        updateTopIcons(context)
     }
 
     private fun chipSelectAllApps(context: Context) {
-        if (binding.rvFirewallApps.isComputingLayout) {
+        if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
         }
 
@@ -692,7 +712,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
     }
 
     private fun chipSelectSystemApps(context: Context) {
-        if (binding.rvFirewallApps.isComputingLayout) {
+        if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
         }
 
@@ -723,7 +743,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
     }
 
     private fun chipSelectUserApps(context: Context) {
-        if (binding.rvFirewallApps.isComputingLayout) {
+        if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
         }
 
@@ -779,7 +799,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
     }
 
     private fun activateAllLan(context: Context) {
-        if (binding.rvFirewallApps.isComputingLayout) {
+        if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
         }
 
@@ -816,7 +836,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
     }
 
     private fun activateAllWifi(context: Context) {
-        if (binding.rvFirewallApps.isComputingLayout) {
+        if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
         }
 
@@ -853,7 +873,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
     }
 
     private fun activateAllGsm(context: Context) {
-        if (binding.rvFirewallApps.isComputingLayout) {
+        if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
         }
 
@@ -890,7 +910,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
     }
 
     private fun activateAllRoaming(context: Context) {
-        if (binding.rvFirewallApps.isComputingLayout) {
+        if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
         }
 
@@ -927,7 +947,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
     }
 
     private fun activateAllVpn(context: Context) {
-        if (binding.rvFirewallApps.isComputingLayout) {
+        if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
         }
 
@@ -964,7 +984,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
     }
 
     private fun activateAll(context: Context, activate: Boolean) {
-        if (binding.rvFirewallApps.isComputingLayout) {
+        if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
         }
 
