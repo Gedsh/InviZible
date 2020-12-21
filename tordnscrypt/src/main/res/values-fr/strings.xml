@@ -40,8 +40,8 @@
     <string name="premium">"Version Premium"</string>
     <string name="agree">"J'approuve"</string>
     <string name="disagree">"Je désapprouve"</string>
-    <string name="message_no_root_used">"Vous pouvez utiliser InviZible Pro en mode VPN local, ou des applications avec leurs propre proxy ou via la fonction VPN locale en mode proxy."</string>
-    <string name="message_no_root_used_kitkat">"Vous pouvez utiliser InviZible Pro avec des applications ayant leurs propre proxy ou avec la fonction VPN locale en mode proxy."</string>
+    <string name="message_no_root_used">"Vous pouvez utiliser InviZible Pro en mode VPN local, ou des applications avec leurs propre mandataire ou via la fonction VPN locale en mode proxy."</string>
+    <string name="message_no_root_used_kitkat">"Vous pouvez utiliser InviZible Pro avec des applications ayant leurs propre mandataire ou avec la fonction VPN locale en mode proxy."</string>
     <string name="write_file_error">"Erreur de sauvegarde du fichier!"</string>
     <string name="drawer_menu_commonSettings">"Paramètres Communs"</string>
     <string name="drawer_menu_DNSSettings">"Paramètres de DNSCrypt"</string>
@@ -78,7 +78,6 @@
     <string name="pref_fast_exclude_from_tor_summ">"Liste des sites Web à ouvrir directement"</string>
     <string name="pref_fast_exclude_apps_from_tor">"Exclure des Applications"</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">"Liste d'applications à ouvrir directement"</string>
-    <string name="pref_fast_exclude_apps_from_ipro_summ">"Liste des applications à ouvrir directement"</string>
     <string name="pref_fast_site_refresh_interval">"Intervalle de Rafraîchissement"</string>
     <string name="pref_fast_site_refresh_interval_summ">"Durée en heures entre chaque actualisation des adresses IP des sites Web. Pour Android 5.1 et supérieur. Mettez 0 pour empêcher le rafraîchissement."</string>
     <string name="pref_fast_use_tor_bridges">"Passerelles"</string>
@@ -120,7 +119,7 @@
     <string name="pref_common_refresh_rules_summ">"Mettre à jour les règles à chaque changement de connectivité"</string>
     <string name="pref_common_show_notification">"Afficher la notification"</string>
     <string name="pref_common_wakelock">"Empêcher la mise en veille de l'appareil"</string>
-    <string name="pref_common_wakelock_summ">"Protection additionnel du mode sans Root pour éviter que l'application ne soit tuée par le système. Peut décharger la batterie"</string>
+    <string name="pref_common_wakelock_summ">"Protection additionnel du mode sans Privilèges pour éviter que l'application ne soit tuée par le système. Peut décharger la batterie"</string>
     <string name="pref_common_show_help">"Messages d'aide"</string>
     <string name="pref_common_show_help_summ">"Toujours afficher les messages d'aide"</string>
     <string name="pref_common_notification_helper">"Veuillez exclure InviZible Pro de l'optimisation de la batterie d'Android.
@@ -167,12 +166,12 @@
     <string name="pref_dnscrypt_require_nofilter_summ">"Le serveur ne doit pas appliquer sa propre liste noire (pour le contrôle parental, le blocage des publicités...)."</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Utilisez toujours le protocole TCP pour vous connecter aux serveurs en amont."</string>
     <string name="pref_dnscrypt_force_tcp_summ">" Cela peut être utile si vous avez besoin de tout faire passer par Tor.
-                Sinon, laissez cela à l'état faux (false), car cela n'améliore pas la sécurité (dnscrypt-proxy chiffrera toujours tout, même en utilisant l'UDP), et ne peut qu'augmenter la latence.
+                Sinon, laissez cela sur faux (false), car cela n'améliore pas la sécurité (dnscrypt-proxy chiffrera toujours tout, même en utilisant l'UDP), et ne peut qu'augmenter la latence.
                 Ne l'activez pas si vous voulez utiliser les sites Tor en onion!"</string>
-    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"Proxy SOCKS."</string>
-    <string name="pref_dnscrypt_use_proxy">"Activer le proxy"</string>
+    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"Mandataire SOCKS."</string>
+    <string name="pref_dnscrypt_use_proxy">"Activer le mandataire"</string>
     <string name="pref_dnscrypt_proxy_summ">"Router toutes les connexions TCP vers un noeud Tor local.
-                Tor ne supporte pas l'UDP, donc réglez force_tcp à vrai (true) également."</string>
+                Tor ne supporte pas l'UDP, donc réglez force_tcp sur vrai (true) également."</string>
     <string name="pref_dnscrypt_proxy">"port_proxy"</string>
     <string name="pref_dnscrypt_other_categ">"Autres Réglages."</string>
     <string name="pref_dnscrypt_fallback_resolver_summ">"Résolveur de secours.
@@ -182,8 +181,10 @@
                 Les personnes en Chine peuvent avoir besoin d'utiliser 114.114.114.114:53 ici."</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">"Ne laissez jamais dnscrypt-proxy essayer d'utiliser les paramètres DNS du système. Utilisez sans condition le résolveur de secours.."</string>
     <string name="pref_dnscrypt_filters_categ">"FILTRES"</string>
+    <string name="pref_dnscrypt_forwarding_rules_categ">"Règles de Réacheminement"</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Acheminez les requêtes de domaines spécifiques vers un ensemble de serveurs dédié."</string>
-    <string name="pref_dnscrypt_cloaking_rules_summ">"Le masquage renvoie une adresse prédéfinie pour un nom spécifique.
+    <string name="pref_dnscrypt_cloaking_rules_categ">"Règles de Masquage"</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">"Le masquage (cloaking) renvoie une adresse prédéfinie pour un nom spécifique.
                 En plus d'agir comme un fichier HOSTS, il peut également renvoyer l'adresse IP d'un nom différent. Il fera également l'aplatissement CNAME.."</string>
     <string name="pref_dnscrypt_query_log_categ">"Journalisation des requêtes."</string>
     <string name="pref_dnscrypt_query_log_summ">"Enregistrer les requêtes des clients dans un fichier."</string>
@@ -195,7 +196,7 @@
          Ces requêtes peuvent révéler la présence de logiciels malveillants, d'applications endommagées/obsolètes et d'appareils signalant leur présence à des tiers."</string>
     <string name="pref_dnscrypt_nx_log">"Activer la journalisation de donnée suspecte"</string>
     <string name="open_nx_log">"Ouvrir le journal de suspicion"</string>
-    <string name="pref_dnscrypt_blacklist_categ">"Blocage basé sur des motifs (liste noire)."</string>
+    <string name="pref_dnscrypt_blacklist_categ">"Blocage basé sur un modèle (liste noire)."</string>
     <string name="pref_dnscrypt_blacklist">"Liste Noire"</string>
     <string name="pref_dnscrypt_blacklist_summ">"Les listes noires sont composées d'un modèle par ligne."</string>
     <string name="pref_dnscrypt_ipblacklist_categ">"Blocage d'IP basé sur un modèle (liste noire d'IP)."</string>
@@ -232,12 +233,12 @@
     <string name="pref_tor_new_circuit_period_summ">"Toutes les NUM secondes, envisagez de construire un nouveau circuit."</string>
     <string name="pref_tor_max_circuit_dirtiness_summ">"Réutilisation possible d'un circuit qui a été utilisé pour la première fois il y a tout au plus NUM secondes, mais n'attachez jamais un nouveau flux à un circuit trop ancien."</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">"Si activé, Tor ne placera pas deux serveurs dont les adresses IP sont trop proches sur le même circuit. Actuellement, deux adresses sont trop proches si elles se trouvent dans la même plage /16."</string>
-    <string name="pref_tor_enable_SOCKS_proxy">"Activer le proxy SOCKS"</string>
+    <string name="pref_tor_enable_SOCKS_proxy">"Activer le mandataire SOCKS"</string>
     <string name="pref_tor_SOCKS_port_summ">"Ouvrez ce port pour écouter les connexions des applications parlant au SOCKS."</string>
     <string name="pref_tor_enable_HTTPTunnel_proxy">"Activer HTTPTunnel"</string>
-    <string name="pref_tor_HTTPTunnel_port_summ">"Ouvrez ce port pour écouter les connexions proxy en utilisant le protocole HTTP CONNECT au lieu de SOCKS."</string>
-    <string name="pref_tor_enable_transparent_proxy">"Activer le proxy Transparent"</string>
-    <string name="pref_tor_trans_port_summ">"Ouvrez ce port pour écouter les connexions aux proxy transparent."</string>
+    <string name="pref_tor_HTTPTunnel_port_summ">"Ouvrez ce port pour écouter les connexions au mandataire en utilisant le protocole HTTP CONNECT au lieu de SOCKS."</string>
+    <string name="pref_tor_enable_transparent_proxy">"Activer le mandataire Transparent"</string>
+    <string name="pref_tor_trans_port_summ">"Ouvrez ce port pour écouter les connexions aux mandataire transparent."</string>
     <string name="pref_tor_enable_DNS">"Activer le DNS"</string>
     <string name="pref_tor_DNS_port_summ">"Ouvrez ce port pour écouter les requêtes DNS UDP et les résoudre de manière anonyme."</string>
     <string name="pref_tor_client_use_IPv4_summ">"Si désactivée, Tor évitera de se connecter aux serveurs de répertoire ou à des nœuds d'entrée via l'IPv4."</string>
@@ -247,8 +248,6 @@
     <string name="pref_tor_clearnet">"Hôte ou IP pour le contournement"</string>
     <string name="pref_tor_unlock_edit">"Éditer l'hôte ou l'IP"</string>
     <string name="pref_tor_unlock_disabled">"Désactivé"</string>
-    <string name="pref_tor_unlock_app">"Apps à Torifié"</string>
-    <string name="pref_tor_clearnet_app">"Apps contournant Tor"</string>
     <string name="pref_tor_clean_module_folder">"Nettoyer le dossier module"</string>
     <string name="pref_routing_unlock_app">"Apps à utiliser avec InviZible"</string>
     <string name="pref_routing_clearnet_app">"Apps contournant InviZible"</string>
@@ -267,15 +266,15 @@
     <string name="pref_itpd_com_ssu_summ">"Activer le protocole de transport SSU (utiliser l'UDP)."</string>
     <string name="pref_itpd_com_ntcp_summ">"Activer le protocole de transport NTCP2 (utiliser TCP)."</string>
     <string name="pref_itpd_com_use_ntcpproxy">"Activer ntcpproxy"</string>
-    <string name="pref_itpd_com_ntcpproxy_summ">"Spécifiez le serveur proxy pour NTCP. Doit être http://adresse:port ou socks://adresse:port."</string>
-    <string name="pref_itpd_HTTP_proxy">"Proxy HTTP"</string>
-    <string name="pref_itpd_HTTP_proxy_enabled">"Proxy HTTP"</string>
-    <string name="pref_itpd_HTTP_proxy_port">"Port du proxy HTTP"</string>
-    <string name="pref_itpd_HTTP_proxy_port_summ">"Le port sur lequel écouter (proxy HTTP)."</string>
-    <string name="pref_itpd_Socks_proxy">"Proxy Socks"</string>
-    <string name="pref_itpd_Socks_proxy_enabled">"Proxy Socks"</string>
-    <string name="pref_itpd_Socks_proxy_port">"Port du proxy Socks"</string>
-    <string name="pref_itpd_Socks_proxy_port_summ">"Le port à écouter (proxy SOCKS)"</string>
+    <string name="pref_itpd_com_ntcpproxy_summ">"Spécifiez le serveur mandataire pour NTCP. Doit être http://adresse:port ou socks://adresse:port."</string>
+    <string name="pref_itpd_HTTP_proxy">"Mandataire HTTP"</string>
+    <string name="pref_itpd_HTTP_proxy_enabled">"Mandataire HTTP"</string>
+    <string name="pref_itpd_HTTP_proxy_port">"Port du mandataire HTTP"</string>
+    <string name="pref_itpd_HTTP_proxy_port_summ">"Le port sur lequel écouter (mandataire HTTP)."</string>
+    <string name="pref_itpd_Socks_proxy">"Mandataire Socks"</string>
+    <string name="pref_itpd_Socks_proxy_enabled">"Mandataire Socks"</string>
+    <string name="pref_itpd_Socks_proxy_port">"Port du mandataire Socks"</string>
+    <string name="pref_itpd_Socks_proxy_port_summ">"Le port à écouter (mandataire SOCKS)"</string>
     <string name="pref_itpd_SAM_interface">"Interface SAM"</string>
     <string name="pref_itpd_SAM_interface_enabled">"Interface SAM"</string>
     <string name="pref_itpd_SAM_interface_port">"Port de l'interface SAM"</string>
@@ -351,7 +350,7 @@
     <string name="vpn_mode_active">"Le mode VPN est actif"</string>
     <string name="vpn_mode_off">"Le mode VPN est désactivé"</string>
     <string name="vpn_mode_error">"Erreur du mode VPN!"</string>
-    <string name="vpn_tor_tether_summ">"Veuillez configurer l'utilisation du serveur proxy dans les paramètres de l'appareil connecté. Valeurs par défaut: IP:10.1.10.1 Port:8118"</string>
+    <string name="vpn_tor_tether_summ">"Veuillez configurer l'utilisation du serveur mandataire (proxy) dans les paramètres de l'appareil connecté. Valeurs par défaut: IP:10.1.10.1 Port:8118"</string>
     <string name="main_fragment_hide_ip">"Masquer l'IP avec TOR"</string>
     <string name="main_fragment_protect_dns">"Protection du DNS avec DNSCRYPT"</string>
     <string name="main_fragment_access_i2p">"Accès aux sites I2P avec Purple I2P"</string>
@@ -383,11 +382,11 @@
         
 \tinvizible.net/fr/privacy
     "</string>
-    <string name="pref_itpd_use_HTTP_outproxy">"Proxy HTTP sortant"</string>
-    <string name="pref_itpd_HTTP_outproxy_address">"Adresse du proxy HTTP sortant"</string>
-    <string name="pref_itpd_use_Socks_outproxy">"Proxy SOCKS sortant"</string>
-    <string name="pref_itpd_Socks_outproxy_address">"Adresse du proxy SOCKS sortant"</string>
-    <string name="pref_itpd_Socks_outproxy_port">"Port du proxy SOCKS sortant"</string>
+    <string name="pref_itpd_use_HTTP_outproxy">"Mandataire HTTP sortant"</string>
+    <string name="pref_itpd_HTTP_outproxy_address">"Adresse du mandataire HTTP sortant"</string>
+    <string name="pref_itpd_use_Socks_outproxy">"Mandataire SOCKS sortant"</string>
+    <string name="pref_itpd_Socks_outproxy_address">"Adresse du mandataire SOCKS sortant"</string>
+    <string name="pref_itpd_Socks_outproxy_port">"Port du mandataire SOCKS sortant"</string>
     <string name="save_changes">"Sauvegarder les modifications"</string>
     <string name="discard_changes">"Annuler les modifications"</string>
     <string name="pref_dnscrypt_edit_toml">"Modifier directement dnscrypt-proxy.toml"</string>
@@ -397,10 +396,10 @@
     <string name="config_changes_dialog_message">"Voulez-vous enregistrer les modifications? Cela peut casser InviZible Pro."</string>
     <string name="pref_dnscrypt_ipv4_servers_summ">"Utiliser des serveurs accessibles via l'IPv4"</string>
     <string name="pref_dnscrypt_ipv6_servers_summ">"Utiliser des serveurs accessibles via l'IPv6"</string>
-    <string name="pref_dnscrypt_import_forwarding_rules">"Importer les règles de transfert"</string>
-    <string name="pref_dnscrypt_import_forwarding_rules_summ">"Importez un fichier de règles de transfert. Vous pouvez sélectionner plusieurs fichiers, les lignes en double seront supprimées."</string>
-    <string name="pref_dnscrypt_erase_forwarding_rules">"Effacer les règles de transfert"</string>
-    <string name="pref_dnscrypt_import_cloaking_rules">"Importer des règles de masquage (cloaking)"</string>
+    <string name="pref_dnscrypt_import_forwarding_rules">"Importer les règles de réacheminement"</string>
+    <string name="pref_dnscrypt_import_forwarding_rules_summ">"Importez un fichier de règles de réacheminement. Vous pouvez sélectionner plusieurs fichiers, les lignes en double seront supprimées."</string>
+    <string name="pref_dnscrypt_erase_forwarding_rules">"Effacer les règles de réacheminement"</string>
+    <string name="pref_dnscrypt_import_cloaking_rules">"Importer des règles de masquage"</string>
     <string name="pref_dnscrypt_import_cloaking_rules_summ">"Importez un fichier de règles de masquage. Vous pouvez sélectionner plusieurs fichiers, les lignes en double seront supprimées."</string>
     <string name="pref_dnscrypt_erase_cloaking_rules">"Effacer les règles de masquage"</string>
     <string name="pref_dnscrypt_import_blacklist">"Importer une liste noire"</string>
@@ -429,9 +428,9 @@
     <string name="pref_common_arp_spoofing_detection_summ">"Détectez l'usurpation ARP par l'Homme-Du-Millieu et les attaques DHCP malveillantes dans les réseaux Wi-Fi."</string>
     <string name="pref_common_arp_block_internet">"Bloquer Internet lorsqu'une attaque est détectée"</string>
     <string name="pref_common_arp_block_internet_summ">"La connexion Internet sera bloquée pendant une attaque"</string>
-    <string name="pref_common_proxy_categ">"Proxy"</string>
-    <string name="pref_common_proxy">"Utiliser un proxy socks5"</string>
-    <string name="pref_common_proxy_summ">"InviZible Pro établira toutes les connexions via le proxy SOCKS5"</string>
+    <string name="pref_common_proxy_categ">"Mandataire (Proxy)"</string>
+    <string name="pref_common_proxy">"Utiliser un mandataire socks5"</string>
+    <string name="pref_common_proxy_summ">"InviZible Pro établira toutes les connexions via le mandataire SOCKS5"</string>
     <string name="pref_common_compatibility_mode">"Mode compatibilité"</string>
     <string name="pref_common_compatibility_mode_summ">"Activer si votre appareil utilisant une ROM personnalisée perd sa connexion lorsque vous appuyez sur le bouton DÉMARRER"</string>
     <string name="pref_common_shell_control">"Activer le contrôle de script"</string>
@@ -442,27 +441,27 @@
     <string name="pref_common_local_eth_device_addr_summ">"Activez Fixer la DDV et configurez le périphérique LAN pour qu'il se connecte à InviZible. Utilisez la passerelle par défaut: %s, serveur DNS: %s."</string>
     <string name="pref_common_multi_user">"Support multi-utilisateurs"</string>
     <string name="pref_common_multi_user_summ">"Soutien des applications doubles, MIUI, Island, Shelter et utilisant le Profil Professionnel"</string>
-    <string name="pref_tor_enable_SOCKS_output_proxy">"Activer le proxy de sortie SOCKS"</string>
-    <string name="pref_tor_SOCKS_output_address_summ">"Tor établira toutes les connexions OR via le proxy SOCKS 5."</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">"Activer le mandataire SOCKS de sortie"</string>
+    <string name="pref_tor_SOCKS_output_address_summ">"Tor établira toutes les connexions OR via le mandataire SOCKS 5."</string>
     <string name="notification_channel_services">"Services en cours d'exécution"</string>
     <string name="notification_channel_update">"Notifications de mise à jour"</string>
     <string name="notification_channel_root">"Notification des commandes Administrateur"</string>
     <string name="dialog_send_crash_report">"Un rapport de plantage a été découvert. Vous voulez l'envoyer au développeur pour améliorer InviZible?"</string>
     <string name="btn_new_tor_identity">"Nouvelle identité Tor"</string>
     <string name="toast_new_tor_identity">"L'identité Tor a changé"</string>
-    <string name="proxy_server_ip">"Serveur proxy:"</string>
-    <string name="proxy_server_port">"Port proxy:"</string>
+    <string name="proxy_server_ip">"Serveur mandataire:"</string>
+    <string name="proxy_server_port">"Port du mandataire:"</string>
     <string name="proxy_server_user_name">"Identifiant:"</string>
     <string name="proxy_server_user_pass">"Mot de Passe:"</string>
     <string name="proxy_server_empty_field_hint">"Ce champ peut être laissé vide"</string>
     <string name="proxy_exclude_apps_from_proxy">"Exclure des applications"</string>
-    <string name="proxy_exclude_apps_from_proxy_summ">"Liste d'applications à ouvrir directement. Celle-ci n'utiliseront ni Tor ni Proxy pour se connecter à Internet!"</string>
-    <string name="proxy_select_proxy_app">" Veuillez sélectionner au moins l'application du propriétaire du proxy, si vous utilisez un proxy local."</string>
-    <string name="proxy_use_for_dnscrypt">"Utiliser un proxy pour DNSCrypt"</string>
-    <string name="proxy_use_for_tor">"Utiliser un proxy pour Tor"</string>
-    <string name="proxy_use_for_itpd">"Utiliser un proxy pour Purple I2P"</string>
+    <string name="proxy_exclude_apps_from_proxy_summ">"Liste d'applications à ouvrir directement. Celle-ci n'utiliseront ni Tor ni mandataire pour se connecter à Internet!"</string>
+    <string name="proxy_select_proxy_app">" Veuillez sélectionner au moins l'application du propriétaire du mandataire, si vous utilisez un mandataire local."</string>
+    <string name="proxy_use_for_dnscrypt">"Utiliser un mandataire pour DNSCrypt"</string>
+    <string name="proxy_use_for_tor">"Utiliser un mandataire pour Tor"</string>
+    <string name="proxy_use_for_itpd">"Utiliser un mandataire pour Purple I2P"</string>
     <string name="proxy_save">"Enregistrer et activer"</string>
-    <string name="proxy_no_connection">"Impossible de se connecter au proxy: %s"</string>
+    <string name="proxy_no_connection">"Impossible de se connecter au mandataire: %s"</string>
     <string name="proxy_successful_connection">"Connexion réussie. Ping de %s ms."</string>
     <string name="notification_arp_spoofing">"Usurpation ARP détectée!"</string>
     <string name="notification_rogue_dhcp">"DHCP malveillant détecté!"</string>
