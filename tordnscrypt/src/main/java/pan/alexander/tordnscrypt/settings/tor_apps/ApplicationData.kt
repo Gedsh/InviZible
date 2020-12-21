@@ -22,6 +22,8 @@ package pan.alexander.tordnscrypt.settings.tor_apps
 import android.graphics.drawable.Drawable
 import java.util.*
 import java.util.concurrent.ConcurrentSkipListSet
+import java.util.concurrent.CopyOnWriteArrayList
+import kotlin.Comparator
 
 data class ApplicationData(private val name: String = "",
                            val pack: String = "",
@@ -47,6 +49,15 @@ data class ApplicationData(private val name: String = "",
         const val SPECIAL_UID_AGPS = -15
         const val SPECIAL_PORT_AGPS1 = 7275
         const val SPECIAL_PORT_AGPS2 = 7276
+
+        fun <T> sortListBy(list: CopyOnWriteArrayList<T>?, comparator: Comparator<T>) {
+            if (list != null && list.size > 1) {
+                val sortedList = ArrayList(list)
+                sortedList.sortWith(comparator)
+                list.clear()
+                list.addAll(sortedList)
+            }
+        }
     }
 
     override fun compareTo(other: ApplicationData): Int {
