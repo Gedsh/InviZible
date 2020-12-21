@@ -24,7 +24,7 @@ import pan.alexander.tordnscrypt.MainActivity;
 public class AccelerateDevelop {
     public final static String mSkuId = "";
 
-    public static boolean accelerated = true;
+    public static volatile boolean accelerated = true;
 
     public AccelerateDevelop(MainActivity activity) {
     }

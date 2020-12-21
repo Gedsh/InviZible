@@ -75,8 +75,8 @@ public class AccelerateDevelop implements BillingClientStateListener {
     private BillingClient mBillingClient;
     private final Map<String, SkuDetails> mSkuDetailsMap = new HashMap<>();
     private volatile boolean billingServiceConnected = false;
-    private volatile String signedData = "";
-    private volatile String signature = "";
+    private volatile String signedData;
+    private volatile String signature;
 
     public AccelerateDevelop(MainActivity activity) {
         this.activity = activity;
