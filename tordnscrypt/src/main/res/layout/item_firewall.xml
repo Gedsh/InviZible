@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -33,7 +34,9 @@
             android:cropToPadding="true"
             android:padding="2dp"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/ic_firewall_lan" />
+            android:tooltipText="@string/firewall_item_button_tooltip"
+            app:srcCompat="@drawable/ic_firewall_lan"
+            tools:targetApi="o" />
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/btnWifiFirewall"
@@ -46,7 +49,9 @@
             android:cropToPadding="true"
             android:padding="2dp"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/ic_firewall_wifi_24" />
+            android:tooltipText="@string/firewall_item_button_tooltip"
+            app:srcCompat="@drawable/ic_firewall_wifi_24"
+            tools:targetApi="o" />
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/btnGsmFirewall"
@@ -59,7 +64,9 @@
             android:cropToPadding="true"
             android:padding="2dp"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/ic_firewall_gsm_24" />
+            android:tooltipText="@string/firewall_item_button_tooltip"
+            app:srcCompat="@drawable/ic_firewall_gsm_24"
+            tools:targetApi="o" />
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/btnRoamingFirewall"
@@ -72,7 +79,9 @@
             android:cropToPadding="true"
             android:padding="2dp"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/ic_firewall_roaming_24" />
+            android:tooltipText="@string/firewall_item_button_tooltip"
+            app:srcCompat="@drawable/ic_firewall_roaming_24"
+            tools:targetApi="o" />
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/btnVpnFirewall"
@@ -85,7 +94,9 @@
             android:cropToPadding="true"
             android:padding="2dp"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/ic_firewall_vpn_key_24" />
+            android:tooltipText="@string/firewall_item_button_tooltip"
+            app:srcCompat="@drawable/ic_firewall_vpn_key_24"
+            tools:targetApi="o" />
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 

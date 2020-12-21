@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -16,16 +17,16 @@
             android:layout_height="wrap_content"
             android:paddingStart="4dp"
             android:paddingEnd="4dp"
-            app:checkedChip="@id/chipFirewallAll"
+            app:checkedChip="@id/chipFirewallUser"
             app:selectionRequired="true"
             app:singleSelection="true">
 
             <com.google.android.material.chip.Chip
-                android:id="@+id/chipFirewallAll"
+                android:id="@+id/chipFirewallUser"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checkable="true"
-                android:text="@string/firewall_all_apps"
+                android:text="@string/firewall_user_apps"
                 android:textColor="@color/buttonTextColor"
                 app:checkedIconVisible="false"
                 app:chipBackgroundColor="@drawable/chip_firewall_selector"
@@ -45,11 +46,11 @@
                 app:closeIconVisible="false" />
 
             <com.google.android.material.chip.Chip
-                android:id="@+id/chipFirewallUser"
+                android:id="@+id/chipFirewallAll"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checkable="true"
-                android:text="@string/firewall_user_apps"
+                android:text="@string/firewall_all_apps"
                 android:textColor="@color/buttonTextColor"
                 app:checkedIconVisible="false"
                 app:chipBackgroundColor="@drawable/chip_firewall_selector"
@@ -112,8 +113,10 @@
             android:background="@drawable/button_start_selector"
             android:cropToPadding="true"
             android:padding="2dp"
+            android:tooltipText="@string/firewall_btnTopLanFirewall_tooltip"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/ic_firewall_lan" />
+            app:srcCompat="@drawable/ic_firewall_lan"
+            tools:targetApi="o" />
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/btnTopWifiFirewall"
@@ -125,8 +128,10 @@
             android:background="@drawable/button_start_selector"
             android:cropToPadding="true"
             android:padding="2dp"
+            android:tooltipText="@string/firewall_btnTopWifiFirewall_tooltip"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/ic_firewall_wifi_24" />
+            app:srcCompat="@drawable/ic_firewall_wifi_24"
+            tools:targetApi="o" />
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/btnTopGsmFirewall"
@@ -138,8 +143,10 @@
             android:background="@drawable/button_start_selector"
             android:cropToPadding="true"
             android:padding="2dp"
+            android:tooltipText="@string/firewall_btnTopGsmFirewall_tooltip"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/ic_firewall_gsm_24" />
+            app:srcCompat="@drawable/ic_firewall_gsm_24"
+            tools:targetApi="o" />
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/btnTopRoamingFirewall"
@@ -151,8 +158,10 @@
             android:background="@drawable/button_start_selector"
             android:cropToPadding="true"
             android:padding="2dp"
+            android:tooltipText="@string/firewall_btnTopRoamingFirewall_tooltip"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/ic_firewall_roaming_24" />
+            app:srcCompat="@drawable/ic_firewall_roaming_24"
+            tools:targetApi="o" />
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/btnTopVpnFirewall"
@@ -164,8 +173,10 @@
             android:background="@drawable/button_start_selector"
             android:cropToPadding="true"
             android:padding="2dp"
+            android:tooltipText="@string/firewall_btnTopVpnFirewall_tooltip"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/ic_firewall_vpn_key_24" />
+            app:srcCompat="@drawable/ic_firewall_vpn_key_24"
+            tools:targetApi="o" />
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/btnTopCheckAllFirewall"
@@ -177,8 +188,10 @@
             android:background="@drawable/button_start_selector"
             android:cropToPadding="true"
             android:padding="2dp"
+            android:tooltipText="@string/firewall_btnTopCheckAllFirewall_tooltip"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/ic_outline_check_box_24" />
+            app:srcCompat="@drawable/ic_outline_check_box_24"
+            tools:targetApi="o" />
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/btnTopUnCheckAllFirewall"
@@ -190,8 +203,10 @@
             android:background="@drawable/button_start_selector"
             android:cropToPadding="true"
             android:padding="2dp"
+            android:tooltipText="@string/firewall_btnTopUnCheckAllFirewall_tooltip"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/ic_outline_check_box_outline_blank_24" />
+            app:srcCompat="@drawable/ic_outline_check_box_outline_blank_24"
+            tools:targetApi="o" />
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 

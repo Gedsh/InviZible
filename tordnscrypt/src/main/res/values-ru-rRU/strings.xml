@@ -94,7 +94,8 @@
     <string name="pref_fast_language">Выбрать язык</string>
     <string name="pref_common_categ_run_with_root">Использовать Root привилегии</string>
     <string name="pref_common_run_with_root">Запуск модулей с Root</string>
-    <string name="pref_common_run_with_root_summ">Использовать Root привилегии для DNSCrypt, Tor, I2P</string>
+    <string name="pref_common_run_with_root_summ">Использовать Root привилегии для модулей DNSCrypt, Tor и I2P.
+        Включение этой функции оставляет модули неуправляемыми, и может вызвать проблемы с подключением!</string>
     <string name="pref_common_categ_other">Другие</string>
     <string name="pref_common_notification_summ">Защитите приложение в Безрутовом Режиме, чтоб андроид не завершил его</string>
     <string name="pref_common_show_notification">Показывать уведомление</string>
@@ -225,8 +226,6 @@
     <string name="pref_tor_clearnet">Сайт или IP без Tor</string>
     <string name="pref_tor_unlock_edit">Редактировать сайт или IP</string>
     <string name="pref_tor_unlock_disabled">Выключено</string>
-    <string name="pref_tor_unlock_app">Приложения для Tor</string>
-    <string name="pref_tor_clearnet_app">"Приложения без Tor "</string>
     <string name="pref_tor_snowflake_stun">STUN сервера для мостов SnowFlake</string>
     <string name="pref_tor_isolate_dest_address_summ">Разделить трафик приложений на основе удаленного адреса.</string>
     <string name="pref_tor_isolate_dest_port_summ">Разделить трафик приложений на основе удаленного порта.</string>
@@ -361,7 +360,6 @@
     <string name="main_fragment_protect_dns">Защитить DNS с помощью DNSCRYPT</string>
     <string name="main_fragment_access_i2p">Доступ к I2P сайтам с помощью Purple I2P</string>
     <string name="tvTorConnecting">Подключение</string>
-    <string name="pref_fast_exclude_apps_from_ipro_summ">Приложения, открывающиеся в обход InviZible</string>
     <string name="ask_force_close_title">Внимание</string>
     <string name="ask_force_close_text">InviZible Pro не может запустить %s! Пожалуйста, проверьте настройки %s или попробуйте Завершить приложение.
         Если это не помогает, перезагрузите ваше устройство.</string>
@@ -486,10 +484,23 @@
     <string name="firewall_user_apps">Пользователь</string>
     <string name="firewall_sort_by_name">Сортировать по имени</string>
     <string name="firewall_sort_by_uid">Сортировать по UID</string>
+    <string name="firewall_switch">Файрвол Вкл/Выкл</string>
     <string name="ask_save_changes">Вы хотите сохранить изменения?</string>
     <string name="firewall_warning_enable_module">Чтобы активировать файрвол, нужно запустить хотя бы DNSCrypt или Tor.</string>
     <string name="firewall_notification_allow_app_title">Установлено приложение %s</string>
     <string name="firewall_notification_allow_app">Разрешить ему интернет?</string>
+    <string name="firewall_btnTopLanFirewall_tooltip">Разрешить соединения в локальной сети, к onion и i2p сайтам</string>
+    <string name="firewall_btnTopWifiFirewall_tooltip">Разрешить соединения в WiFi сетях</string>
+    <string name="firewall_btnTopGsmFirewall_tooltip">Разрешить соединения в GSM сетях</string>
+    <string name="firewall_btnTopRoamingFirewall_tooltip">Разрешить соединения в роуминге</string>
+    <string name="firewall_btnTopVpnFirewall_tooltip">Разрешить соединения с включенным VPN</string>
+    <string name="firewall_btnTopCheckAllFirewall_tooltip">Выбрать все</string>
+    <string name="firewall_btnTopUnCheckAllFirewall_tooltip">Очистить выбранное</string>
+    <string name="firewall_item_button_tooltip">Зеленый - разрешить, белый - запретить подключения</string>
+    <string name="pref_firewall_title">Настройки файрвола</string>
+    <string name="pref_firewall_allow_internet_for_new_apps">Разрешить интернет для новых приложений</string>
+    <string name="pref_firewall_allow_internet_for_new_apps_on_summ">Доступ к интернету для новых установленных приложений разрешен.</string>
+    <string name="pref_firewall_allow_internet_for_new_apps_off_summ">Доступ к интернету для новых установленных приложений запрещен.</string>
     <string name="allow">Разрешить</string>
     <string name="deny">Запретить</string>
 </resources>

@@ -302,8 +302,6 @@
     <string name="pref_tor_clearnet">Host lub IP ktory chcesz pominac</string>
     <string name="pref_tor_unlock_edit">Edytuj Host lub IP</string>
     <string name="pref_tor_unlock_disabled">Zablokowane</string>
-    <string name="pref_tor_unlock_app">Aplikacje laczace sie przez Tor</string>
-    <string name="pref_tor_clearnet_app">Aplikacje pomijajace Tor</string>
 
     <string name="country_select_select_all">Zaznacz wszystko</string>
     <string name="country_select_unselect_all">Usun zaznaczenie</string>
@@ -429,7 +427,6 @@
     <string name="main_fragment_protect_dns">Chroń DNS za pomocą DNSCRYPT</string>
     <string name="main_fragment_access_i2p">" Dostęp do stron I2P za pomocą Purple I2P"</string>
     <string name="tvTorConnecting">Złączony</string>
-    <string name="pref_fast_exclude_apps_from_ipro_summ">Lista aplikacji laczacych sie bezposrednio</string>
     <string name="ask_force_close_title">Attention</string>
     <string name="ask_force_close_text">InviZible Pro cannot start %s! Please check %s settings or try to Force Close the application. If this does not help, please reboot your device.</string>
     <string name="ask_force_close_btn">Force close</string>
