@@ -79,6 +79,7 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallNotification;
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData;
+import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
@@ -1387,20 +1388,22 @@ public class ServiceVPN extends VpnService {
     }
 
     public void clearDnsQueryRawRecords() {
-        try {
-            rrLock.writeLock().lockInterruptibly();
+        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+            try {
+                rrLock.writeLock().lockInterruptibly();
 
-            if (!dnsQueryRawRecords.isEmpty()) {
-                dnsQueryRawRecords.clear();
-            }
+                if (!dnsQueryRawRecords.isEmpty()) {
+                    dnsQueryRawRecords.clear();
+                }
 
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "ServiseVPN clearDnsQueryRawRecords exception " + e.getMessage() + " " + e.getCause());
-        } finally {
-            if (rrLock.isWriteLockedByCurrentThread()) {
-                rrLock.writeLock().unlock();
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "ServiseVPN clearDnsQueryRawRecords exception " + e.getMessage() + " " + e.getCause());
+            } finally {
+                if (rrLock.isWriteLockedByCurrentThread()) {
+                    rrLock.writeLock().unlock();
+                }
             }
-        }
+        });
     }
 
     public void lockDnsQueryRawRecordsListForRead(boolean lock) {
