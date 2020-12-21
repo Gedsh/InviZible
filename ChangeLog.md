@@ -454,3 +454,14 @@
 * Updated German language.
 * Fixed crash on android 4.4.2.
 * Fixed rare bugs.
+
+**InviZible Pro beta 1.1.8**
+* Implemented option to allow/block the Internet for newly installed applications.
+* Implemented sorting and filtering for the Tor apps selection option.
+* Changed the way of Tor, DNSCrypt and I2P starting.
+* Added tooltips to firewall.
+* Improved handling of modules log files.
+* Limited size of real-time Internet connections log.
+* Updated French language.
+* Fixed rare ANR when stopping DNSCrypt.
+* Other fixes and improvements.
