@@ -533,7 +533,7 @@
     <string name="pref_itpd_UPNP_summ">Enable or disable UPnP.</string>
     <string name="pref_itpd_ntcp2" translatable="false">ntcp2</string>
     <string name="pref_itpd_ntcp2_enabled">ntcp2 enabled</string>
-    <string name="pref_itpd_reseeding" translatable="false">Reseeding</string>
+    <string name="pref_itpd_reseeding">Reseeding</string>
     <string name="pref_itpd_reseeding_enabled" translatable="false">verify</string>
     <string name="pref_itpd_reseeding_summ">Verify .su3 signature.</string>
     <string name="pref_itpd_limits">Limits</string>
@@ -543,7 +543,7 @@
     <string name="pref_itpd_limits_openfiles_summ">Limit number of open file descriptors (0 - use system limit).</string>
     <string name="pref_itpd_limits_coresize" translatable="false">coresize</string>
     <string name="pref_itpd_limits_coresize_summ">Maximum size of corefile in Kb (0 - use system limit).</string>
-    <string name="pref_itpd_addressbook" translatable="false">Addressbook</string>
+    <string name="pref_itpd_addressbook">Addressbook</string>
     <string name="pref_itpd_addressbook_defaulturl" translatable="false">defaulturl</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">AddressBook subscription URL for initial setup.</string>
     <string name="pref_itpd_addressbook_subscriptions" translatable="false">subscriptions</string>
