@@ -18,6 +18,7 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_servers;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Build;
@@ -45,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
@@ -74,10 +76,10 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
     private ArrayList<String> dnsServerDescr;
     private ArrayList<String> dnsServerSDNS;
     private ArrayList<String> dnscrypt_proxy_toml;
-    private ArrayList<String> dnscrypt_servers_current;
-    private ArrayList<DNSServerRelays> routes_current;
-    private ArrayList<DNSServerItem> list_dns_servers;
-    private ArrayList<DNSServerItem> list_dns_servers_saved;
+    private CopyOnWriteArrayList<String> dnscrypt_servers_current;
+    private CopyOnWriteArrayList<DNSServerRelays> routes_current;
+    private CopyOnWriteArrayList<DNSServerItem> list_dns_servers;
+    private CopyOnWriteArrayList<DNSServerItem> list_dns_servers_saved;
     private String appDataDir;
     private ArrayList<DNSServerItem> savedOwnDNSCryptServers;
     private String ownServersFilePath;
@@ -98,16 +100,21 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
         setRetainInstance(true);
 
+        Context context = getActivity();
+        if (context == null) {
+            return;
+        }
+
         takeArguments();
 
         CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
             try {
-                Verifier verifier = new Verifier(getActivity());
+                Verifier verifier = new Verifier(context);
                 String appSign = verifier.getApkSignatureZip();
                 String appSignAlt = verifier.getApkSignature();
                 if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                            getActivity(), getText(R.string.verifier_error).toString(), "6787");
+                            context, getText(R.string.verifier_error).toString(), "6787");
                     if (notificationHelper != null && isAdded()) {
                         notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
                     }
@@ -115,7 +122,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
             } catch (Exception e) {
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                        getActivity(), getText(R.string.verifier_error).toString(), "8990");
+                        context, getText(R.string.verifier_error).toString(), "8990");
                 if (isAdded() && notificationHelper != null) {
                     notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
                 }
@@ -149,32 +156,37 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
     public void onStart() {
         super.onStart();
 
-        if (getActivity() == null) {
+        Activity activity = getActivity();
+        if (activity == null) {
             return;
         }
 
-        getActivity().setTitle(R.string.pref_fast_dns_server);
+        activity.setTitle(R.string.pref_fast_dns_server);
 
-        PathVars pathVars = PathVars.getInstance(getActivity());
+        PathVars pathVars = PathVars.getInstance(activity);
         appDataDir = pathVars.getAppDataDir();
 
         FileOperations.setOnFileOperationCompleteListener(this);
 
-        fillDNSServersList();
+        fillDNSServersList(activity);
 
-        createAndFillRecyclerView();
+        createAndFillRecyclerView(activity);
 
-        readOwnServers();
+        readOwnServers(activity);
     }
 
     @Override
     public void onResume() {
         super.onResume();
 
+        Context context = getActivity();
+        if (context == null) {
+            return;
+        }
+
         searchDNSServer.setQuery(searchQuery, true);
 
-        if (getActivity() != null
-                && getActivity().getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+        if (context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
 
             FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             int margins = ((ViewGroup.MarginLayoutParams) cardSearchDNSServer.getLayoutParams()).bottomMargin;
@@ -199,8 +211,10 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
         FileOperations.deleteOnFileOperationCompleteListener(this);
 
-        if (getActivity() == null)
+        Context context = getActivity();
+        if (context == null) {
             return;
+        }
 
         if (list_dns_servers.size() == 0 && list_dns_servers_saved.size() == 0) {
             return;
@@ -208,15 +222,15 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
         list_dns_servers = list_dns_servers_saved;
 
-        saveOwnDNSCryptServersIfChanged(getActivity());
+        saveOwnDNSCryptServersIfChanged(context);
 
-        String dnscrypt_servers = dnsServersListToLine();
+        String dnscrypt_servers = dnsServersListToLine(context);
 
         if (dnscrypt_servers.isEmpty()) {
             return;
         }
 
-        saveDNSServersToPrefs(dnscrypt_servers);
+        saveDNSServersToPrefs(context, dnscrypt_servers);
 
         boolean isChanges = saveDNSServersToTomlList(dnscrypt_servers);
 
@@ -225,13 +239,13 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         isChanges = saveOwnServersToTomlList() || isChanges;
 
         if (isChanges) {
-            saveLinesToTomlFile();
-            restartDNSCryptIfRunning();
+            saveLinesToTomlFile(context);
+            restartDNSCryptIfRunning(context);
         }
     }
 
     @Override
-    public void onRoutesChange(ArrayList<DNSServerRelays> routesNew) {
+    public void onRoutesChange(CopyOnWriteArrayList<DNSServerRelays> routesNew) {
         routes_current = routesNew;
     }
 
@@ -246,21 +260,27 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
                 dnscrypt_proxy_toml = getArguments().getStringArrayList("dnscrypt_proxy_toml");
             }
 
-            if (dnscrypt_servers_current == null) {
-                dnscrypt_servers_current = getArguments().getStringArrayList("dnscrypt_servers");
+            if (dnscrypt_servers_current == null && getArguments() != null) {
+                List<String> dnscrypt_servers  = getArguments().getStringArrayList("dnscrypt_servers");
+                if (dnscrypt_servers != null) {
+                    dnscrypt_servers_current = new CopyOnWriteArrayList<>(dnscrypt_servers);
+                }
             }
 
-            if (routes_current == null) {
-                routes_current = (ArrayList<DNSServerRelays>) getArguments().getSerializable("routes");
+            if (routes_current == null && getArguments() != null) {
+                List<DNSServerRelays> routes = (ArrayList<DNSServerRelays>) getArguments().getSerializable("routes");
+                if (routes != null) {
+                    routes_current = new CopyOnWriteArrayList<>(routes);
+                }
             }
         } else {
             Log.e(LOG_TAG, "PreferencesDNSCryptServers getArguments() nullPointer");
         }
     }
 
-    private void fillDNSServersList() {
-        Context context = getActivity();
-        list_dns_servers = new ArrayList<>();
+    private void fillDNSServersList(Context context) {
+
+        list_dns_servers = new CopyOnWriteArrayList<>();
 
         for (int i = 0; i < dnsServerNames.size(); i++) {
             try {
@@ -278,16 +298,21 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
         }
 
-        Collections.sort(list_dns_servers);
+        if (list_dns_servers.size() > 1) {
+            ArrayList<DNSServerItem> tmpList = new ArrayList<>(list_dns_servers);
+            Collections.sort(tmpList);
+            list_dns_servers.clear();
+            list_dns_servers.addAll(tmpList);
+        }
 
-        list_dns_servers_saved = new ArrayList<>(list_dns_servers);
+        list_dns_servers_saved = new CopyOnWriteArrayList<>(list_dns_servers);
     }
 
-    private void readOwnServers() {
+    private void readOwnServers(Context context) {
         ownServersFilePath = appDataDir + "/app_data/dnscrypt-proxy/own-resolvers.md";
 
         if (new File(ownServersFilePath).isFile()) {
-            FileOperations.readTextFile(getActivity(), ownServersFilePath, "own-resolvers.md");
+            FileOperations.readTextFile(context, ownServersFilePath, "own-resolvers.md");
         }
     }
 
@@ -309,17 +334,13 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         }
     }
 
-    private void createAndFillRecyclerView() {
+    private void createAndFillRecyclerView(Activity activity) {
 
-        if (getActivity() == null) {
-            return;
-        }
-
-        rvDNSServers = getActivity().findViewById(R.id.rvDNSServers);
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity());
+        rvDNSServers = activity.findViewById(R.id.rvDNSServers);
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(activity);
         rvDNSServers.setLayoutManager(mLayoutManager);
 
-        dNSServersAdapter = new DNSServersAdapter(getActivity(), searchDNSServer,
+        dNSServersAdapter = new DNSServersAdapter(activity, searchDNSServer,
                 this, getParentFragmentManager(),
                 list_dns_servers, list_dns_servers_saved, routes_current, isRelaysMdExist());
 
@@ -344,7 +365,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         }
     }
 
-    private String dnsServersListToLine() {
+    private String dnsServersListToLine(Context context) {
         dnscrypt_servers_current.clear();
 
         String line = "";
@@ -362,7 +383,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         }
 
         if (dnscrypt_servers.toString().equals("['")) {
-            Toast.makeText(getActivity(), getText(R.string.pref_dnscrypt_select_server_names), Toast.LENGTH_LONG).show();
+            Toast.makeText(context, getText(R.string.pref_dnscrypt_select_server_names), Toast.LENGTH_LONG).show();
             return line;
         }
 
@@ -373,10 +394,8 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         return line;
     }
 
-    private void saveDNSServersToPrefs(String dnscrypt_servers) {
-        if (getActivity() != null) {
-            new PrefManager(getActivity()).setStrPref("DNSCrypt Servers", dnscrypt_servers);
-        }
+    private void saveDNSServersToPrefs(Context context, String dnscrypt_servers) {
+        new PrefManager(context).setStrPref("DNSCrypt Servers", dnscrypt_servers);
     }
 
     private boolean saveDNSServersToTomlList(String dnscrypt_servers) {
@@ -442,7 +461,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         ArrayList<String> newLines = new ArrayList<>();
 
         newLines.add("[static]");
-        for (DNSServerItem dnsServerItem: list_dns_servers) {
+        for (DNSServerItem dnsServerItem : list_dns_servers) {
             if (dnsServerItem.getOwnServer()) {
                 newLines.add("[static.'" + dnsServerItem.getName() + "']");
                 newLines.add("stamp = 'sdns:" + dnsServerItem.getSDNS() + "'");
@@ -462,7 +481,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
                 oldLines.add(line);
             } else if (line.contains("[") && line.contains("]") && !line.contains("static") && lockStatic) {
                 lockStatic = false;
-            } else if (lockStatic){
+            } else if (lockStatic) {
                 oldLines.add(line);
             }
         }
@@ -513,22 +532,18 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         return routesLines;
     }
 
-    private void saveLinesToTomlFile() {
-        FileOperations.writeToTextFile(getActivity(), appDataDir
+    private void saveLinesToTomlFile(Context context) {
+        FileOperations.writeToTextFile(context, appDataDir
                         + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml", dnscrypt_proxy_toml,
                 SettingsActivity.public_resolvers_md_tag);
     }
 
-    private void restartDNSCryptIfRunning() {
+    private void restartDNSCryptIfRunning(Context context) {
 
-        if (getActivity() == null) {
-            return;
-        }
-
-        boolean dnsCryptRunning = new PrefManager(getActivity()).getBoolPref("DNSCrypt Running");
+        boolean dnsCryptRunning = new PrefManager(context).getBoolPref("DNSCrypt Running");
 
         if (dnsCryptRunning) {
-            ModulesRestarter.restartDNSCrypt(getActivity());
+            ModulesRestarter.restartDNSCrypt(context);
         }
     }
 
@@ -552,13 +567,15 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
     @Override
     public void OnFileOperationComplete(FileOperationsVariants currentFileOperation, boolean fileOperationResult, String path, String tag, List<String> lines) {
-        if (getActivity() == null) {
+
+        Context context = getActivity();
+        if (context == null) {
             return;
         }
 
         if (currentFileOperation == FileOperationsVariants.readTextFile && tag.equals("own-resolvers.md")) {
 
-            ArrayList<DNSServerItem> ownDNSCryptServers = parseOwnDNSCryptServers(lines);
+            ArrayList<DNSServerItem> ownDNSCryptServers = parseOwnDNSCryptServers(context, lines);
 
             savedOwnDNSCryptServers = new ArrayList<>();
             savedOwnDNSCryptServers.addAll(ownDNSCryptServers);
@@ -576,8 +593,8 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         }
     }
 
-    private ArrayList <DNSServerItem> parseOwnDNSCryptServers(List<String> lines) {
-        ArrayList <DNSServerItem> dnsServerItemsOwn = new ArrayList<>();
+    private ArrayList<DNSServerItem> parseOwnDNSCryptServers(Context context, List<String> lines) {
+        ArrayList<DNSServerItem> dnsServerItemsOwn = new ArrayList<>();
 
         if (lines == null) {
             return dnsServerItemsOwn;
@@ -603,7 +620,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
                     sb.setLength(0);
 
                     try {
-                        DNSServerItem item = new DNSServerItem(getActivity(), name, description, sdns);
+                        DNSServerItem item = new DNSServerItem(context, name, description, sdns);
                         setDnsServerChecked(item);
                         setRoutes(item);
                         item.setOwnServer(true);
@@ -628,7 +645,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         ArrayList<DNSServerItem> newOwnItems = new ArrayList<>();
         ArrayList<String> linesReadyToSave = new ArrayList<>();
 
-        for (DNSServerItem dnsServerItem: list_dns_servers) {
+        for (DNSServerItem dnsServerItem : list_dns_servers) {
             if (dnsServerItem.getOwnServer()) {
                 linesReadyToSave.add("## " + dnsServerItem.getName());
                 linesReadyToSave.add(dnsServerItem.getDescription());
@@ -642,7 +659,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
             return;
         }
 
-        FileOperations.writeToTextFile(context, ownServersFilePath, linesReadyToSave,  "ignored");
+        FileOperations.writeToTextFile(context, ownServersFilePath, linesReadyToSave, "ignored");
 
     }
 
@@ -671,7 +688,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
             return false;
         }
 
-        searchQuery  = searchText;
+        searchQuery = searchText;
 
         if (searchText == null || searchText.isEmpty()) {
             list_dns_servers.clear();

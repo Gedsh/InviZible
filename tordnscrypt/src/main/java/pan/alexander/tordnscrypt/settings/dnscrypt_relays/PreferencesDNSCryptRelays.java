@@ -19,6 +19,7 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_relays;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -33,6 +34,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
@@ -49,7 +51,7 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOperationsCompleteListener {
     private String dnsServerName;
     private final ArrayList<DNSRelayItem> dnsRelayItems = new ArrayList<>();
-    private ArrayList<DNSServerRelays> routesCurrent;
+    private CopyOnWriteArrayList<DNSServerRelays> routesCurrent;
     private RecyclerView.Adapter<DNSRelaysAdapter.DNSRelaysViewHolder> adapter;
     private OnRoutesChangeListener onRoutesChangeListener;
     private static DialogFragment pleaseWaitDialog;
@@ -61,7 +63,7 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
     }
 
     public interface OnRoutesChangeListener {
-        void onRoutesChange(ArrayList<DNSServerRelays> routesNew);
+        void onRoutesChange(CopyOnWriteArrayList<DNSServerRelays> routesNew);
     }
 
     public void setOnRoutesChangeListener(OnRoutesChangeListener onRoutesChangeListener) {
@@ -71,10 +73,6 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        if (getActivity() == null) {
-            return;
-        }
 
         setRetainInstance(true);
 
@@ -87,26 +85,27 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
     public void onResume() {
         super.onResume();
 
-        if (getActivity() == null) {
+        Activity activity = getActivity();
+        if (activity == null) {
             return;
         }
 
         FileOperations.setOnFileOperationCompleteListener(this);
 
-        PathVars pathVars = PathVars.getInstance(getActivity());
+        PathVars pathVars = PathVars.getInstance(activity);
 
         if (dnsRelayItems.isEmpty()) {
-            FileOperations.readTextFile(getActivity(), pathVars.getAppDataDir() + "/app_data/dnscrypt-proxy/relays.md", "relays.md");
+            FileOperations.readTextFile(activity, pathVars.getAppDataDir() + "/app_data/dnscrypt-proxy/relays.md", "relays.md");
         }
 
-        getActivity().setTitle(R.string.pref_dnscrypt_relays_title);
+        activity.setTitle(R.string.pref_dnscrypt_relays_title);
 
-        RecyclerView rvDNSRelay = getActivity().findViewById(R.id.rvDNSRelays);
+        RecyclerView rvDNSRelay = activity.findViewById(R.id.rvDNSRelays);
 
-        RecyclerView.LayoutManager manager = new LinearLayoutManager(getActivity());
+        RecyclerView.LayoutManager manager = new LinearLayoutManager(activity);
         rvDNSRelay.setLayoutManager(manager);
 
-        adapter = new DNSRelaysAdapter(getActivity(), dnsRelayItems);
+        adapter = new DNSRelaysAdapter(activity, dnsRelayItems);
         rvDNSRelay.setAdapter(adapter);
     }
 
@@ -140,12 +139,12 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
         }
 
         if (routesCurrent == null) {
-            routesCurrent = new ArrayList<>();
+            routesCurrent = new CopyOnWriteArrayList<>();
         }
 
         DNSServerRelays dnsServerRelaysNew = createRelaysObjForCurrentServer();
 
-        ArrayList<DNSServerRelays> routesNew = updateRelaysListForAllServers(dnsServerRelaysNew);
+        CopyOnWriteArrayList<DNSServerRelays> routesNew = updateRelaysListForAllServers(dnsServerRelaysNew);
 
         callbackToPreferencesDNSCryptServers(routesNew);
     }
@@ -155,7 +154,7 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
         if (args != null) {
             dnsServerName = args.getString("dnsServerName");
 
-            ArrayList<DNSServerRelays> routesCurrentTmp = (ArrayList<DNSServerRelays>) args.getSerializable("routesCurrent");
+            CopyOnWriteArrayList<DNSServerRelays> routesCurrentTmp = (CopyOnWriteArrayList<DNSServerRelays>) args.getSerializable("routesCurrent");
 
             if (routesCurrentTmp != null) {
                 routesCurrent = routesCurrentTmp;
@@ -213,8 +212,9 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
             }
         }
 
-        if (getActivity() != null) {
-            getActivity().runOnUiThread(() -> adapter.notifyDataSetChanged());
+        Activity activity = getActivity();
+        if (activity != null) {
+            activity.runOnUiThread(() -> adapter.notifyDataSetChanged());
         }
     }
 
@@ -254,8 +254,8 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
         return dnsServerRelaysNew;
     }
 
-    private ArrayList<DNSServerRelays> updateRelaysListForAllServers(DNSServerRelays dnsServerRelaysNew) {
-        ArrayList<DNSServerRelays> routesNew = new ArrayList<>();
+    private CopyOnWriteArrayList<DNSServerRelays> updateRelaysListForAllServers(DNSServerRelays dnsServerRelaysNew) {
+        CopyOnWriteArrayList<DNSServerRelays> routesNew = new CopyOnWriteArrayList<>();
 
         for (int i = 0; i < routesCurrent.size(); i++) {
 
@@ -277,7 +277,7 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
         return routesNew;
     }
 
-    private void callbackToPreferencesDNSCryptServers(ArrayList<DNSServerRelays> routesNew) {
+    private void callbackToPreferencesDNSCryptServers(CopyOnWriteArrayList<DNSServerRelays> routesNew) {
         if (onRoutesChangeListener != null) {
             onRoutesChangeListener.onRoutesChange(routesNew);
         }
