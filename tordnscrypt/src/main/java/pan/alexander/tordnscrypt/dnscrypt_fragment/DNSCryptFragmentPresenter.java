@@ -60,7 +60,6 @@ import pan.alexander.tordnscrypt.utils.OwnFileReader;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.vpn.Rule;
-import pan.alexander.tordnscrypt.vpn.Util;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPN;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHandler;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
@@ -76,7 +75,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
-    private final static int MAX_LINES_IN_LOG = 100;
+    private final static int MAX_LINES_IN_LOG = 200;
 
     private volatile boolean bound;
 
@@ -764,17 +763,6 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     private void runDNSCrypt(Context context) {
         if (context == null || view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
-        }
-
-        if (Util.isPrivateDns(context)) {
-            FragmentManager fragmentManager = view.getFragmentFragmentManager();
-            if (fragmentManager != null) {
-                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                        context, context.getText(R.string.helper_dnscrypt_private_dns).toString(), "helper_dnscrypt_private_dns");
-                if (notificationHelper != null) {
-                    notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
-                }
-            }
         }
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
