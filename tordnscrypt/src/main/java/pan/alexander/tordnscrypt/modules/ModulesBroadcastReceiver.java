@@ -47,6 +47,7 @@ import java.util.concurrent.TimeUnit;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.iptables.Tethering;
 import pan.alexander.tordnscrypt.utils.ApManager;
+import pan.alexander.tordnscrypt.utils.AuxNotificationSender;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.vpn.Util;
@@ -199,7 +200,15 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
                 Log.i(LOG_TAG, "ModulesBroadcastReceiver Available network=" + network);
                 updateIptablesRules(false);
                 resetArpScanner(true);
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && last_network != network.hashCode()) {
+                    AuxNotificationSender.INSTANCE.checkPrivateDNSAndProxy(
+                            context.getApplicationContext(), null
+                    );
+                }
+
                 last_network = network.hashCode();
+
             }
 
             @Override
@@ -219,6 +228,12 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
                 if (network.hashCode() != last_network) {
                     last_network = network.hashCode();
                     resetArpScanner();
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        AuxNotificationSender.INSTANCE.checkPrivateDNSAndProxy(
+                                context.getApplicationContext(), linkProperties
+                        );
+                    }
                 }
             }
 

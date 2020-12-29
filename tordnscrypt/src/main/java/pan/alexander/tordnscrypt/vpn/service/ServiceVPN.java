@@ -79,6 +79,7 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallNotification;
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData;
+import pan.alexander.tordnscrypt.utils.AuxNotificationSender;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Utils;
@@ -1037,6 +1038,12 @@ public class ServiceVPN extends VpnService {
 
                 reload("Network available", ServiceVPN.this);
 
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && last_network != network.hashCode()) {
+                    AuxNotificationSender.INSTANCE.checkPrivateDNSAndProxy(
+                            ServiceVPN.this.getApplicationContext(), null
+                    );
+                }
+
                 last_network = network.hashCode();
             }
 
@@ -1056,6 +1063,13 @@ public class ServiceVPN extends VpnService {
 
                     if (network.hashCode() != last_network) {
                         last_network = network.hashCode();
+
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                            AuxNotificationSender.INSTANCE.checkPrivateDNSAndProxy(
+                                    ServiceVPN.this.getApplicationContext(), linkProperties
+                            );
+                        }
+
                         reload("VPN Link properties changed", ServiceVPN.this);
                     }
                 }

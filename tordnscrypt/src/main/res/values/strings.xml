@@ -397,7 +397,9 @@
     <string name="pref_dnscrypt_block_ipv6_summ">Immediately respond to IPv6-related queries with an empty response.
         This makes things faster when there is no IPv6 connectivity, but can also cause reliability issues with some stub resolvers.</string>
 
-    <string name="helper_dnscrypt_private_dns">Please turn off \"Private DNS\" in Android network settings. This option interferes with DNSCrypt.</string>
+    <string name="helper_dnscrypt_private_dns">Please turn off \"Private DNS\" in Android network settings. This option interferes with InviZible.</string>
+    <string name="helper_dnscrypt_proxy_wifi">Please disable proxy in Android WiFi network settings. This option interferes with InviZible.</string>
+    <string name="helper_dnscrypt_proxy_gsm">Please disable proxy in Android Mobile network APN settings. This option interferes with InviZible.</string>
 
     <string name="import_dnscrypt_rules_dialog_title">Import Rules</string>
     <string name="import_dnscrypt_rules_dialog_message">Please wait… Imported %d rules.</string>
@@ -684,6 +686,7 @@
     <string name="notification_channel_update">Update notifications</string>
     <string name="notification_channel_root">Root commands notification</string>
     <string name="notification_channel_firewall">Firewall notifications</string>
+    <string name="notification_channel_auxiliary">Auxiliary notifications</string>
 
     <string name="dialog_send_crash_report">A crash report has been discovered. Want to send it to the developer to make InviZible better?</string>
     <string name="btn_new_tor_identity">New Tor identity</string>

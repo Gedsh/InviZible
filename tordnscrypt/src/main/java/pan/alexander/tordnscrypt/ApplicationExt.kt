@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt
 import android.annotation.TargetApi
 import android.app.*
 import android.content.res.Configuration
+import android.graphics.Color
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat.getSystemService
@@ -31,6 +32,7 @@ import java.lang.ref.WeakReference
 
 const val ANDROID_CHANNEL_ID = "InviZible"
 const val FIREWALL_CHANNEL_ID = "Firewall"
+const val AUX_CHANNEL_ID = "Auxiliary"
 
 class ApplicationExt : Application() {
 
@@ -50,6 +52,7 @@ class ApplicationExt : Application() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createNotificationChannel()
             createFirewallChannel()
+            createAuxChannel()
         }
 
         setExceptionHandler()
@@ -76,6 +79,20 @@ class ApplicationExt : Application() {
         channel.description = ""
         channel.enableLights(true)
         channel.enableVibration(true)
+        channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+        channel.setShowBadge(true)
+        notificationManager?.createNotificationChannel(channel)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun createAuxChannel() {
+        val notificationManager = getSystemService(this, NotificationManager::class.java)
+        val channel = NotificationChannel(AUX_CHANNEL_ID, getString(R.string.notification_channel_auxiliary), NotificationManager.IMPORTANCE_HIGH)
+        channel.setSound(null, Notification.AUDIO_ATTRIBUTES_DEFAULT)
+        channel.description = ""
+        channel.enableLights(true)
+        channel.lightColor = Color.YELLOW
+        channel.enableVibration(false)
         channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
         channel.setShowBadge(true)
         notificationManager?.createNotificationChannel(channel)

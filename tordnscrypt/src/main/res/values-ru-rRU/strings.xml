@@ -400,7 +400,9 @@
     <string name="save_changes">Сохранить изменения</string>
     <string name="discard_changes">Отменить изменения</string>
     <string name="config_changes_dialog_message">Вы хотите сохранить изменения? Это может нарушить работу InviZible Pro.</string>
-    <string name="helper_dnscrypt_private_dns">Пожалуйста, отключите \"Частный DNS\" в настройках телефона. Эта опция мешает работе DNSCrypt.</string>
+    <string name="helper_dnscrypt_private_dns">Пожалуйста, отключите \"Персональный DNS\" в настройках телефона. Эта опция мешает работе InviZible.</string>
+    <string name="helper_dnscrypt_proxy_wifi">Пожалуйста, отключите прокси в WiFi настройках телефона. Эта опция мешает работе InviZible.</string>
+    <string name="helper_dnscrypt_proxy_gsm">Пожалуйста, отключите прокси в APN в настройках мобильной сети телефона. Эта опция мешает работе InviZible.</string>
     <string name="import_dnscrypt_rules_dialog_title">Импорт правил</string>
     <string name="import_dnscrypt_rules_dialog_message">Пожалуйста подождите… Импортировано %d правил(а).</string>
     <string name="import_dnscrypt_rules_complete_dialog_message">Готово! Импортировано %d правил(а).</string>
@@ -436,6 +438,7 @@
     <string name="notification_channel_update">Обновление</string>
     <string name="notification_channel_root">Команды Рут</string>
     <string name="notification_channel_firewall">Файрвол</string>
+    <string name="notification_channel_auxiliary">Вспомогательные</string>
     <string name="pref_common_compatibility_mode">Режим совместимости</string>
     <string name="pref_common_compatibility_mode_summ">Включите если у Вас кастомная прошивка, и интернет пропадает при нажатии кнопки START</string>
     <string name="dialog_send_crash_report">Обнаружен отчет аварийного завершения приложения. Хотите его отправить разработчику, чтобы сделать InviZible лучше?</string>
