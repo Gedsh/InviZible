@@ -283,11 +283,13 @@
     <string name="pref_itpd_elgamal_summ">"Utiliser les tables précalculées d'ElGamal."</string>
     <string name="pref_itpd_UPNP_summ">"Activer ou désactiver l'UPnP."</string>
     <string name="pref_itpd_ntcp2_enabled">"ntcp2 activé"</string>
+    <string name="pref_itpd_reseeding">"Réensemencement"</string>
     <string name="pref_itpd_reseeding_summ">"Vérifiez la signature .su3."</string>
     <string name="pref_itpd_limits">"Limites"</string>
     <string name="pref_itpd_limits_transittunnels_summ">"Ne pas tenir compte du nombre maximum de tunnels de transit. 2500 par défaut."</string>
     <string name="pref_itpd_limits_openfiles_summ">"Limiter le nombre de descripteurs de fichiers ouverts (0 - utiliser la limite système)."</string>
     <string name="pref_itpd_limits_coresize_summ">"Taille maximale du fichier core en Kb (0 - utiliser la limite système)."</string>
+   <string name="pref_itpd_addressbook">"Carnet d'adresses"</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">"URL d'abonnement au carnet d'adresses pour la configuration initiale."</string>
     <string name="pref_itpd_addressbook_subscriptions_summ">"URL d'abonnements au carnet d'adresses."</string>
     <string name="pref_itpd_not_exist">"La préférence n'existe pas dans i2pd.conf!"</string>
@@ -479,6 +481,7 @@
     <string name="firewall_user_apps">"Utilisateur"</string>
     <string name="firewall_sort_by_name">"Trier par nom"</string>
     <string name="firewall_sort_by_uid">"Trier par UID"</string>
+    <string name="firewall_switch">"Firewall On/Off"</string>
     <string name="ask_save_changes">"Voulez-vous enregistrer les modifications?"</string>
     <string name="firewall_warning_enable_module">"Pour activer le pare-feu, vous devez démarrer au moins DNSCrypt ou Tor."</string>
     <string name="firewall_notification_allow_app_title">"%s est installé"</string>
@@ -489,4 +492,12 @@
     <string name="pref_fast_theme_titles_night_mode">"Mode Nuit"</string>
     <string name="pref_fast_theme_titles_auto_mode">"Auto"</string>
     <string name="pref_fast_theme_titles_default_mode">"Identique au système"</string>
+    <string name="firewall_btnTopLanFirewall_tooltip">"Autorise les connexions au réseau local, aux sites onion et I2P"</string>
+    <string name="firewall_btnTopWifiFirewall_tooltip">"Autorise les connexions aux réseaux WIFI"</string>
+    <string name="firewall_btnTopGsmFirewall_tooltip">"Autorise les connexions aux réseaux GSM"</string>
+    <string name="firewall_btnTopRoamingFirewall_tooltip">"Autorise les connexions en itinérance"</string>
+    <string name="firewall_item_button_tooltip">"Vert - autorise, Blanc - refuse les connexions"</string>
+    <string name="pref_firewall_allow_internet_for_new_apps">"Permettre aux applications nouvellement installée de ce connecter"</string>
+    <string name="pref_firewall_allow_internet_for_new_apps_on_summ">"Les connexions Internet pour les applications nouvellement installées sont autorisées"</string>
+    <string name="pref_firewall_allow_internet_for_new_apps_off_summ">"Les connexions Internet pour les applications nouvellement installées sont bloquées"</string>
 </resources>
