@@ -200,13 +200,6 @@ public class TopFragment extends Fragment {
                 ModulesAux.switchModes(context, rootIsAvailable, runModulesWithRoot, mode);
             }
 
-            if (!runModulesWithRoot && haveModulesSavedStateRunning(context) && !isModulesStarterServiceRunning(context)) {
-                startModulesStarterServiceIfStoppedBySystem(context);
-                Log.e(LOG_TAG, "ModulesService stopped by system!");
-            } else {
-                ModulesAux.speedupModulesStateLoopTimer(context);
-            }
-
             if (PathVars.isModulesInstalled(context) && appVersion.endsWith("p")) {
                 checkAgreement(context);
             }
@@ -337,7 +330,29 @@ public class TopFragment extends Fragment {
                 return null;
             }
 
-           shortenTooLongSnowflakeLog(activity.getApplicationContext());
+            Context context = activity.getApplicationContext();
+
+           shortenTooLongSnowflakeLog(context);
+
+           if (topFragment.handler != null) {
+               topFragment.handler.postDelayed(() -> {
+
+                   if (activity.isFinishing()) {
+                       return;
+                   }
+
+                   if (!topFragment.runModulesWithRoot
+                           && haveModulesSavedStateRunning(context)
+                           && !isModulesStarterServiceRunning(context)) {
+                       startModulesStarterServiceIfStoppedBySystem(context);
+                       Log.e(LOG_TAG, "ModulesService stopped by system!");
+                   } else {
+                       ModulesAux.speedupModulesStateLoopTimer(context);
+                   }
+               }, 3000);
+           }
+
+
 
             try {
                 Verifier verifier = new Verifier(activity);
@@ -729,15 +744,15 @@ public class TopFragment extends Fragment {
         }
     }
 
-    private void startModulesStarterServiceIfStoppedBySystem(Context context) {
+    private static void startModulesStarterServiceIfStoppedBySystem(Context context) {
         ModulesAux.recoverService(context);
     }
 
-    private boolean isModulesStarterServiceRunning(Context context) {
+    private static boolean isModulesStarterServiceRunning(Context context) {
         return Utils.INSTANCE.isServiceRunning(context, ModulesService.class);
     }
 
-    private boolean haveModulesSavedStateRunning(Context context) {
+    private static boolean haveModulesSavedStateRunning(Context context) {
 
         boolean dnsCryptRunning = new PrefManager(context).getBoolPref("DNSCrypt Running");
         boolean torRunning = new PrefManager(context).getBoolPref("Tor Running");
