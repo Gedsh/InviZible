@@ -465,3 +465,12 @@
 * Updated French language.
 * Fixed rare ANR when stopping DNSCrypt.
 * Other fixes and improvements.
+
+**InviZible Pro beta 1.1.9**
+* Added notification if private DNS or proxy is enabled.
+* Implemented automatic Tor geoip update.
+* Fixed allowing Internet for newly installed apps by default.
+* Updated Tor.
+* Updated snowflake.
+* Updated Tor geoip.
+* Updated French language.
