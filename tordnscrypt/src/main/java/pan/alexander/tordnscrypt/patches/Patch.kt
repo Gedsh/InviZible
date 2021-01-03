@@ -71,6 +71,8 @@ class Patch(private val activity: Activity) {
                             configUtil.patchItpdConfig(itpdConfigPatches)
                         }
 
+                        configUtil.updateTorGeoip()
+
                         PrefManager(activity).setIntPref(SAVED_VERSION_CODE, currentVersion)
                     }
                 } catch (e: Exception) {
