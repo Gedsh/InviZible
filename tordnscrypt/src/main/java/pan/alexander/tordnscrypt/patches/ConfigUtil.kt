@@ -68,7 +68,7 @@ class ConfigUtil(private val activity: Activity) {
             if (line.isNotEmpty()) {
                 text.append(line).append("\n")
             }
-         }
+        }
 
         if (file.isFile && (file.canWrite() || file.setWritable(true))) {
             file.writeText(text.toString())
@@ -116,15 +116,19 @@ class ConfigUtil(private val activity: Activity) {
                 var zipEntry = zipInputStream.nextEntry
                 while (zipEntry != null) {
                     val fileName = zipEntry.name
-                    if (fileName.contains("geoip6") && zipEntry.size != installedGeoip6Size) {
-                        FileOutputStream(geoip6).use { outputStream ->
-                            copyData(zipInputStream, outputStream)
-                            Log.i(LOG_TAG, "Tor geoip6 was updated!")
+                    if (fileName.contains("geoip6")) {
+                        if (zipEntry.size != installedGeoip6Size) {
+                            FileOutputStream(geoip6).use { outputStream ->
+                                copyData(zipInputStream, outputStream)
+                                Log.i(LOG_TAG, "Tor geoip6 was updated!")
+                            }
                         }
-                    } else if (fileName.contains("geoip") && zipEntry.size != installedGeoipSize) {
-                        FileOutputStream(geoip).use { outputStream ->
-                            copyData(zipInputStream, outputStream)
-                            Log.i(LOG_TAG, "Tor geoip was updated!")
+                    } else if (fileName.contains("geoip")) {
+                        if (zipEntry.size != installedGeoipSize) {
+                            FileOutputStream(geoip).use { outputStream ->
+                                copyData(zipInputStream, outputStream)
+                                Log.i(LOG_TAG, "Tor geoip was updated!")
+                            }
                         }
                     }
                     zipEntry = zipInputStream.nextEntry
