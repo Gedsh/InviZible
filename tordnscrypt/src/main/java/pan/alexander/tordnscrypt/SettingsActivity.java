@@ -264,19 +264,19 @@ public class SettingsActivity extends LangAppCompatActivity {
 
                 switch (requestCode) {
                     case PreferencesDNSFragment.PICK_BLACKLIST_HOSTS:
-                        preferencesDNSFragment.importRules(DNSCryptRulesVariant.BLACKLIST_HOSTS, filesUri);
+                        preferencesDNSFragment.importRules(this, DNSCryptRulesVariant.BLACKLIST_HOSTS, filesUri);
                         break;
                     case PreferencesDNSFragment.PICK_WHITELIST_HOSTS:
-                        preferencesDNSFragment.importRules(DNSCryptRulesVariant.WHITELIST_HOSTS, filesUri);
+                        preferencesDNSFragment.importRules(this, DNSCryptRulesVariant.WHITELIST_HOSTS, filesUri);
                         break;
                     case PreferencesDNSFragment.PICK_BLACKLIST_IPS:
-                        preferencesDNSFragment.importRules(DNSCryptRulesVariant.BLACKLIST_IPS, filesUri);
+                        preferencesDNSFragment.importRules(this, DNSCryptRulesVariant.BLACKLIST_IPS, filesUri);
                         break;
                     case PreferencesDNSFragment.PICK_FORWARDING:
-                        preferencesDNSFragment.importRules(DNSCryptRulesVariant.FORWARDING, filesUri);
+                        preferencesDNSFragment.importRules(this, DNSCryptRulesVariant.FORWARDING, filesUri);
                         break;
                     case PreferencesDNSFragment.PICK_CLOAKING:
-                        preferencesDNSFragment.importRules(DNSCryptRulesVariant.CLOAKING, filesUri);
+                        preferencesDNSFragment.importRules(this, DNSCryptRulesVariant.CLOAKING, filesUri);
                         break;
                     default:
                         Log.e(LOG_TAG, "SettingsActivity wrong onActivityRequestCode " + requestCode);
