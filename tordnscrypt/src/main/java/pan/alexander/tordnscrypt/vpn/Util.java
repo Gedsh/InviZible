@@ -72,6 +72,13 @@ public class Util {
             "240.0.0.0/4",
             "255.255.255.255/32"));
 
+    public static final ArrayList<String> dnsRebindList = new ArrayList<>(Arrays.asList(
+            "10.0.0.0/8",
+            "172.16.0.0/12",
+            "192.168.0.0/16",
+            "100.64.0.0/10"
+            ));
+
     private static native String jni_getprop(String name);
 
     private static native boolean is_numeric_address(String ip);

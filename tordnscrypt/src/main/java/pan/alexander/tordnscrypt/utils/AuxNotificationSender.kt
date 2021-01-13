@@ -39,7 +39,6 @@ import pan.alexander.tordnscrypt.MainActivity
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
-import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.vpn.Util
 

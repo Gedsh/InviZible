@@ -33,7 +33,7 @@ import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.preference.PreferenceManager
 import com.jrummyapps.android.shell.Shell
-import pan.alexander.tordnscrypt.ANDROID_CHANNEL_ID
+import pan.alexander.tordnscrypt.AUX_CHANNEL_ID
 import pan.alexander.tordnscrypt.MainActivity
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.modules.ModulesStatus
@@ -686,7 +686,7 @@ class ArpScanner private constructor(val context: Context,
         if (iconResource == 0) {
             iconResource = android.R.drawable.ic_lock_power_off
         }
-        val builder = NotificationCompat.Builder(context, ANDROID_CHANNEL_ID)
+        val builder = NotificationCompat.Builder(context, AUX_CHANNEL_ID)
         @Suppress("DEPRECATION")
         builder.setContentIntent(contentIntent)
                 .setOngoing(false) //Can be swiped out
@@ -699,7 +699,7 @@ class ArpScanner private constructor(val context: Context,
                 .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
                 .setAutoCancel(true)
                 .setVibrate(longArrayOf(1000))
-                .setChannelId(ANDROID_CHANNEL_ID)
+                .setChannelId(AUX_CHANNEL_ID)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             builder.setCategory(Notification.CATEGORY_ALARM)

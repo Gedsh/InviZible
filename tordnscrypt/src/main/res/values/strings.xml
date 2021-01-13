@@ -185,6 +185,8 @@
     <string name="pref_common_arp_spoofing_detection_summ">Detect Man-in-the-middle ARP spoofing and rogue DHCP attacks in Wi-Fi networks.</string>
     <string name="pref_common_arp_block_internet">Block internet when an attack is detected</string>
     <string name="pref_common_arp_block_internet_summ">Internet connection will be blocked during attack</string>
+    <string name="pref_common_dns_rebind_protection">DNS rebinding protection</string>
+    <string name="pref_common_dns_rebind_protection_summ">Block site when DNS rebinding attack is detected</string>
     <string name="pref_common_proxy_categ">Proxy</string>
     <string name="pref_common_proxy">Use socks5 proxy</string>
     <string name="pref_common_proxy_summ">InviZible Pro will make all connections through the SOCKS5 proxy</string>
@@ -713,6 +715,8 @@
     <string name="notification_mitm">Man-in-the-middle attack detected! Your data can be intercepted by another device on the local network.
         Turn off, wait a few seconds, and turn on Wi-Fi. Using current Wi-Fi hotspot may be unsafe!</string>
     <string name="toast_arp_detection_not_supported">ARP spoofing detection is not supported for your device!</string>
+    <string name="notification_dns_rebinding_title">DNS rebinding</string>
+    <string name="notification_dns_rebinding_text">Potential DNS Rebinding Attack Detected! Site %s has been blocked.</string>
     <string name="menu_firewall">Firewall</string>
     <string name="firewall_all_apps">All</string>
     <string name="firewall_system_apps">System</string>

@@ -192,6 +192,15 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             }
         }
 
+        Preference rebindDetection = findPreference("pref_common_dns_rebind_protection");
+        if (mitmCategory != null && rebindDetection != null) {
+            if (modulesStatus.getMode() == VPN_MODE || fixTTL) {
+                rebindDetection.setOnPreferenceChangeListener(this);
+            } else {
+                mitmCategory.removePreference(rebindDetection);
+            }
+        }
+
         if (modulesStatus.getMode() == ROOT_MODE) {
             registerPreferences();
         } else {
@@ -368,6 +377,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             case "pref_common_local_eth_device_addr":
             case "swCompatibilityMode":
             case "pref_common_multi_user":
+            case "pref_common_dns_rebind_protection":
                 ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
                 break;
             case "swWakelock":

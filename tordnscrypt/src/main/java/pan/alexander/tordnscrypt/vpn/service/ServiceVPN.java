@@ -69,6 +69,7 @@ import pan.alexander.tordnscrypt.BootCompleteReceiver;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
+import pan.alexander.tordnscrypt.arp.DNSRebindProtection;
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSQueryLogRecord;
 import pan.alexander.tordnscrypt.iptables.Tethering;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
@@ -158,6 +159,8 @@ public class ServiceVPN extends VpnService {
     private boolean compatibilityMode;
     private boolean arpSpoofingDetection;
     private boolean blockInternetWhenArpAttackDetected;
+    private boolean dnsRebindProtection;
+    private final Set<String> dnsRebindHosts = new HashSet<>();
     private boolean lan = false;
     private boolean firewallEnabled;
     public static CopyOnWriteArrayList<String> vpnDNS;
@@ -427,6 +430,7 @@ public class ServiceVPN extends VpnService {
         torTethering = prefs.getBoolean("pref_common_tor_tethering", false);
         blockIPv6 = prefs.getBoolean("block_ipv6", true);
         arpSpoofingDetection = prefs.getBoolean("pref_common_arp_spoofing_detection", false);
+        dnsRebindProtection = prefs.getBoolean("pref_common_dns_rebind_protection", false);
         blockInternetWhenArpAttackDetected = prefs.getBoolean("pref_common_arp_block_internet", false);
         firewallEnabled = new PrefManager(this).getBoolPref("FirewallEnabled");
 
@@ -672,7 +676,7 @@ public class ServiceVPN extends VpnService {
     }
 
     // Called from native code
-    private void logPacket(Packet packet) {
+    public void logPacket(Packet packet) {
         //Log.i(LOG_TAG, "VPN Log packet " + packet.toString());
     }
 
@@ -694,6 +698,26 @@ public class ServiceVPN extends VpnService {
                 }
             }
 
+            if (dnsRebindProtection) {
+                String qname = rr.QName.trim();
+                String destAddress = rr.Resource.trim();
+
+                if (!qname.isEmpty() && !destAddress.isEmpty()
+                        && !qname.endsWith(".onion")
+                        && !qname.endsWith(".i2p")
+                        && !dnsRebindHosts.contains(qname)) {
+                    if (isIpInDNSRebindRange(destAddress)) {
+                        dnsRebindHosts.add(qname);
+                        DNSRebindProtection.INSTANCE.sendNotification(this, qname);
+                        Log.w(LOG_TAG, "ServiseVPN DNS rebind attack detected " + rr.toString());
+                    } else if ((destAddress.equals("0.0.0.0") || destAddress.equals("127.0.0.1"))
+                            && rr.Rcode == 0 && !rr.HInfo.contains("dnscrypt")) {
+                        Log.w(LOG_TAG, "ServiseVPN DNS rebind attack detected " + rr.toString());
+                        dnsRebindHosts.add(qname);
+                    }
+                }
+            }
+
         } catch (Exception e) {
             Log.e(LOG_TAG, "ServiseVPN dnsResolved exception " + e.getMessage() + " " + e.getCause());
         } finally {
@@ -707,6 +731,15 @@ public class ServiceVPN extends VpnService {
     // Called from native code
     public boolean isDomainBlocked(String name) {
         //Log.i(LOG_TAG, " Ask domain is blocked " + name);
+        try {
+            if (dnsRebindProtection && dnsRebindHosts.contains(name)) {
+                Log.w(LOG_TAG, "ServiseVPN domain is blocked due to DNS rebind suspicion " + name);
+                return true;
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "ServiseVPN isDomainBlocked exception " + e.getMessage() + " " + e.getCause());
+        }
+
         return false;
     }
 
@@ -785,6 +818,15 @@ public class ServiceVPN extends VpnService {
         return false;
     }
 
+    private boolean isIpInDNSRebindRange(String destAddress) {
+        for (String address : Util.dnsRebindList) {
+            if (Util.isIpInSubnet(destAddress, address)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean isDestinationInSpecialRange(int uid, int destPort) {
         return uid == 0 && destPort == 53
                 || uid == ApplicationData.SPECIAL_UID_KERNEL
@@ -852,8 +894,15 @@ public class ServiceVPN extends VpnService {
 
         lock.readLock().lock();
 
-        boolean redirectToTor = isRedirectToTor(packet.uid, packet.daddr, packet.dport);
-        boolean redirectToProxy = isRedirectToProxy(packet.uid, packet.daddr, packet.dport);
+        boolean redirectToTor = false;
+        if (torIsRunning) {
+            redirectToTor = isRedirectToTor(packet.uid, packet.daddr, packet.dport);
+        }
+
+        boolean redirectToProxy = false;
+        if (useProxy) {
+            redirectToProxy = isRedirectToProxy(packet.uid, packet.daddr, packet.dport);
+        }
 
         packet.allowed = false;
         // https://android.googlesource.com/platform/system/core/+/master/include/private/android_filesystem_config.h

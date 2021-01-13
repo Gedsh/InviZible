@@ -92,7 +92,7 @@ class ApplicationExt : Application() {
         channel.description = ""
         channel.enableLights(true)
         channel.lightColor = Color.YELLOW
-        channel.enableVibration(false)
+        channel.enableVibration(true)
         channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
         channel.setShowBadge(true)
         notificationManager?.createNotificationChannel(channel)
