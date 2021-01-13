@@ -65,7 +65,6 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
@@ -74,13 +73,13 @@ import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.arp.ArpScannerKt;
+import pan.alexander.tordnscrypt.arp.DNSRebindProtectionKt;
 import pan.alexander.tordnscrypt.assistance.AccelerateDevelop;
 import pan.alexander.tordnscrypt.backup.BackupActivity;
+import pan.alexander.tordnscrypt.dialogs.ChangeModeDialog;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptRunFragment;
 import pan.alexander.tordnscrypt.help.HelpActivity;
-import pan.alexander.tordnscrypt.iptables.IptablesRules;
-import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.main_fragment.MainFragment;
 import pan.alexander.tordnscrypt.main_fragment.ViewPagerAdapter;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
@@ -93,9 +92,9 @@ import pan.alexander.tordnscrypt.itpd_fragment.ITPDRunFragment;
 import pan.alexander.tordnscrypt.tor_fragment.TorRunFragment;
 import pan.alexander.tordnscrypt.utils.ApManager;
 import pan.alexander.tordnscrypt.utils.AppExitDetectService;
+import pan.alexander.tordnscrypt.utils.ChangeModeInterface;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Registration;
-import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
@@ -111,7 +110,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class MainActivity extends LangAppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, ChangeModeInterface {
 
     public static DialogInterface modernDialog = null;
     private static final int CODE_IS_AP_ON = 100;
@@ -307,6 +306,15 @@ public class MainActivity extends LangAppCompatActivity
                 DialogFragment commandResult = NotificationDialogFragment.newInstance(getString(R.string.notification_mitm));
                 commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
             }, 1000);
+        }
+
+        String site = intent.getStringExtra(DNSRebindProtectionKt.dnsRebindingWarning);
+        if (site != null) {
+            final String siteFinal = String.format(getString(R.string.notification_dns_rebinding_text), site);
+            handler.postDelayed(() -> {
+                DialogFragment commandResult = NotificationDialogFragment.newInstance(siteFinal);
+                commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
+            }, 1200);
         }
     }
 
@@ -653,118 +661,24 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     private void switchToRootMode(MenuItem item) {
-        item.setChecked(true);
-
-        new PrefManager(this).setStrPref("OPERATION_MODE", ROOT_MODE.toString());
-
-        Log.i(LOG_TAG, "Root mode enabled");
-
-        boolean fixTTL = modulesStatus.isFixTTL() && !modulesStatus.isUseModulesWithRoot();
-
-        OperationMode operationMode = modulesStatus.getMode();
-
-        if ((operationMode == VPN_MODE) && !fixTTL) {
-            ServiceVPNHelper.stop("Switch to root mode", this);
-            Toast.makeText(this, getText(R.string.vpn_mode_off), Toast.LENGTH_LONG).show();
-        } else if ((operationMode == PROXY_MODE) && fixTTL) {
-            prepareVPNService();
+        ChangeModeDialog dialog = ChangeModeDialog.INSTANCE.getInstance(this, item, ROOT_MODE);
+        if (dialog != null) {
+            dialog.show(getSupportFragmentManager(), "ChangeModeDialog");
         }
-
-        //This start iptables adaptation
-        modulesStatus.setMode(ROOT_MODE);
-        modulesStatus.setIptablesRulesUpdateRequested(true);
-        ModulesAux.requestModulesStatusUpdate(this);
-
-        if (firewallNavigationItem != null) {
-            firewallNavigationItem.setVisible(false);
-        }
-
-        invalidateOptionsMenu();
     }
 
     private void switchToProxyMode(MenuItem item) {
-        item.setChecked(true);
-
-        new PrefManager(this).setStrPref("OPERATION_MODE", PROXY_MODE.toString());
-
-        Log.i(LOG_TAG, "Proxy mode enabled");
-
-        OperationMode operationMode = modulesStatus.getMode();
-
-        //This stop iptables adaptation
-        modulesStatus.setMode(PROXY_MODE);
-
-        if (modulesStatus.isRootAvailable() && operationMode == ROOT_MODE) {
-            IptablesRules iptablesRules = new ModulesIptablesRules(this);
-            List<String> commands = iptablesRules.clearAll();
-            iptablesRules.sendToRootExecService(commands);
-            Log.i(LOG_TAG, "Iptables rules removed");
-        } else if (operationMode == VPN_MODE) {
-            ServiceVPNHelper.stop("Switch to proxy mode", this);
-            Toast.makeText(this, getText(R.string.vpn_mode_off), Toast.LENGTH_LONG).show();
+        ChangeModeDialog dialog = ChangeModeDialog.INSTANCE.getInstance(this, item, PROXY_MODE);
+        if (dialog != null) {
+            dialog.show(getSupportFragmentManager(), "ChangeModeDialog");
         }
-
-        if (firewallNavigationItem != null) {
-            firewallNavigationItem.setVisible(false);
-        }
-
-        invalidateOptionsMenu();
     }
 
     private void switchToVPNMode(MenuItem item) {
-        item.setChecked(true);
-
-        new PrefManager(this).setStrPref("OPERATION_MODE", VPN_MODE.toString());
-
-        Log.i(LOG_TAG, "VPN mode enabled");
-
-        OperationMode operationMode = modulesStatus.getMode();
-
-        //This stop iptables adaptation
-        modulesStatus.setMode(VPN_MODE);
-
-        if (modulesStatus.isRootAvailable() && operationMode == ROOT_MODE) {
-            IptablesRules iptablesRules = new ModulesIptablesRules(this);
-            List<String> commands = iptablesRules.clearAll();
-            iptablesRules.sendToRootExecService(commands);
-            Log.i(LOG_TAG, "Iptables rules removed");
+        ChangeModeDialog dialog = ChangeModeDialog.INSTANCE.getInstance(this, item, VPN_MODE);
+        if (dialog != null) {
+            dialog.show(getSupportFragmentManager(), "ChangeModeDialog");
         }
-
-        ModuleState dnsCryptState = modulesStatus.getDnsCryptState();
-        ModuleState torState = modulesStatus.getTorState();
-        ModuleState itpdState = modulesStatus.getItpdState();
-
-        if (dnsCryptState != STOPPED || torState != STOPPED || itpdState != STOPPED) {
-            if (modulesStatus.isUseModulesWithRoot()) {
-                Toast.makeText(this, "Stop modules...", Toast.LENGTH_LONG).show();
-                disableUseModulesWithRoot();
-            } else {
-                prepareVPNService();
-            }
-        }
-
-        if (dnsCryptState == STOPPED && torState == STOPPED && itpdState == STOPPED
-                && modulesStatus.isUseModulesWithRoot()) {
-            disableUseModulesWithRoot();
-        }
-
-        if (firewallNavigationItem != null) {
-            firewallNavigationItem.setVisible(true);
-        }
-
-        invalidateOptionsMenu();
-    }
-
-    private void disableUseModulesWithRoot() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        sharedPreferences.edit().putBoolean("swUseModulesRoot", false).apply();
-
-        ModulesAux.stopModulesIfRunning(this);
-        modulesStatus.setUseModulesWithRoot(false);
-        modulesStatus.setContextUIDUpdateRequested(true);
-        ModulesAux.requestModulesStatusUpdate(this);
-
-        Log.i(LOG_TAG, "Switch to VPN mode, disable use modules with root option");
     }
 
     private void checkHotspotState() {
@@ -1056,6 +970,7 @@ public class MainActivity extends LangAppCompatActivity
         }
     }
 
+    @Override
     public void prepareVPNService() {
         Log.i(LOG_TAG, "MainActivity prepare VPN Service");
 
@@ -1142,6 +1057,11 @@ public class MainActivity extends LangAppCompatActivity
         if (mainActivityReceiver != null) {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(mainActivityReceiver);
         }
+    }
+
+    @Override
+    public void setFirewallNavigationItemVisible(boolean visibility) {
+        firewallNavigationItem.setVisible(visibility);
     }
 
     @Override
