@@ -474,3 +474,12 @@
 * Updated snowflake.
 * Updated Tor geoip.
 * Updated French language.
+
+**InviZible Pro beta 1.2.0**
+* Update Tor to version 4.5.3.
+* Updated DNSCrypt to version 2.0.45.
+* Updated DNSCrypt default configuration.
+* Implemented DNS rebinding protection for VPN mode.
+* Added dialog to confirm mode change.
+* Fixed duplicate DNSCrypt rules when editing.
+* Fixed import DNSCrypt rules for android 10, 11.
