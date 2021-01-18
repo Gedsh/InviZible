@@ -99,4 +99,8 @@ public class ModulesAux {
     public static void stopArpDetection(Context context) {
         ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.stopArpScanner);
     }
+
+    public static void clearIptablesCommandsSavedHash(Context context) {
+        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.clearIptablesCommandsHash);
+    }
 }

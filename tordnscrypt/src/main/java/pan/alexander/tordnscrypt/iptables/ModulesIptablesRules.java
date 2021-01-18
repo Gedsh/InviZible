@@ -510,6 +510,46 @@ public class ModulesIptablesRules extends IptablesRulesSender {
     }
 
     @Override
+    public List<String> fastUpdate() {
+
+        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
+        runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+        String appUID = String.valueOf(Process.myUid());
+        if (runModulesWithRoot) {
+            appUID = "0";
+        }
+
+        String unblockHOTSPOT = iptables + "-D FORWARD -j DROP 2> /dev/null || true";
+        String blockHOTSPOT = iptables + "-I FORWARD -j DROP";
+        if (apIsOn || modemIsOn) {
+            blockHOTSPOT = "";
+        }
+
+        ArrayList<String> commands = new ArrayList<>(Arrays.asList(
+                "TOR_UID=" + appUID,
+                iptables + "-I OUTPUT -j DROP",
+                ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
+                ip6tables + "-D OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT 2> /dev/null || true",
+                ip6tables + "-I OUTPUT -j DROP",
+                ip6tables + "-I OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT",
+                iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output 2> /dev/null || true",
+                iptables + "-D OUTPUT -j tordnscrypt 2> /dev/null || true",
+                busybox + "sleep 1",
+                iptables + "-t nat -I OUTPUT -j tordnscrypt_nat_output",
+                iptables + "-I OUTPUT -j tordnscrypt",
+                unblockHOTSPOT,
+                blockHOTSPOT,
+                iptables + "-D OUTPUT -j DROP 2> /dev/null || true"
+        ));
+
+        List<String> commandsTether = tethering.fastUpdate();
+        if (commandsTether.size() > 0)
+            commands.addAll(commandsTether);
+
+        return commands;
+    }
+
+    @Override
     public List<String> clearAll() {
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
         if (modulesStatus.isFixTTL()) {

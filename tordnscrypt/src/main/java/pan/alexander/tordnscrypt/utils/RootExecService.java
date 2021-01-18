@@ -74,6 +74,8 @@ public class RootExecService extends Service {
     public static final String LOG_TAG = "pan.alexander.TPDCLogs";
     public static final String ROOT_CHANNEL_ID = "ROOT_COMMANDS_INVIZIBLE";
 
+    public static boolean lastRootCommandsReturnError;
+
     private static boolean saveRootLogs = false;
     private static String autoStartDelay = "0";
     private static boolean showToastWithCommandsResultError;
@@ -171,6 +173,8 @@ public class RootExecService extends Service {
 
         if (!error.isEmpty() || exitCode != 0)  {
 
+            lastRootCommandsReturnError = true;
+
             String exitCodeStr = exitCode == 0 ? "" : "Exit code=" + exitCode + " ";
             String errorStr = error.isEmpty() ? "" : "STDERR="
                     + new LinkedHashSet<>(error).toString()
@@ -197,6 +201,8 @@ public class RootExecService extends Service {
                     handler.post(() -> Toast.makeText(RootExecService.this, errorMessageFinal, Toast.LENGTH_LONG).show());
                 }
             }
+        } else {
+            lastRootCommandsReturnError = false;
         }
 
         if (saveRootLogs) {

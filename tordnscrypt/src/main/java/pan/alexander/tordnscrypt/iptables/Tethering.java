@@ -630,6 +630,44 @@ public class Tethering {
         return cleanupCommands(tetheringCommands);
     }
 
+    List<String> fastUpdate() {
+        List<String> tetheringCommands = new ArrayList<>();
+        boolean tetherIptablesRulesIsClean = new PrefManager(context).getBoolPref("TetherIptablesRulesIsClean");
+
+        if (tetherIptablesRulesIsClean) {
+            return tetheringCommands;
+        }
+
+        String ip6tables = pathVars.getIp6tablesPath();
+        String busybox = pathVars.getBusyboxPath();
+
+        ModulesStatus modulesStatus = ModulesStatus.getInstance();
+        boolean ttlFix = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE) && !modulesStatus.isUseModulesWithRoot();
+        boolean ttlFixed = new PrefManager(context).getBoolPref("TTLisFixed");
+
+        tetheringCommands.addAll(Arrays.asList(
+                iptables + "-I FORWARD -j DROP",
+                ip6tables + "-D INPUT -j DROP 2> /dev/null || true",
+                ip6tables + "-I INPUT -j DROP || true",
+                ip6tables + "-D FORWARD -j DROP 2> /dev/null || true",
+                ip6tables + "-I FORWARD -j DROP",
+                iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting 2> /dev/null || true",
+                iptables + "-D FORWARD -j tordnscrypt_forward 2> /dev/null || true",
+                busybox + "sleep 1",
+                iptables + "-t nat -A PREROUTING -j tordnscrypt_prerouting",
+                iptables + "-A FORWARD -j tordnscrypt_forward",
+                iptables + "-D FORWARD -j DROP 2> /dev/null || true"
+        ));
+
+        if (ttlFix) {
+            tetheringCommands.addAll(fixTTLCommands());
+        } else if (ttlFixed) {
+            tetheringCommands.addAll(unfixTTLCommands());
+        }
+
+        return tetheringCommands;
+    }
+
     void setInterfaceNames() {
         final String addressesRangeUSB = "192.168.42.";
         final String addressesRangeWiFi = "192.168.43.";
@@ -742,6 +780,7 @@ public class Tethering {
                 iptables + "-t nat -I tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes(),
                 iptables + "-D tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j RETURN 2> /dev/null && "
                         + iptables + "-I tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j ACCEPT 2> /dev/null || true",
+                iptables + "-D tordnscrypt_forward -o !" + vpnInterfaceName + " -j REJECT 2> /dev/null",
                 iptables + "-I tordnscrypt_forward -o !" + vpnInterfaceName + " -j REJECT 2> /dev/null",
                 iptables + "-D tordnscrypt_forward -p all -j ACCEPT 2> /dev/null || true",
                 iptables + "-A tordnscrypt_forward -p all -j ACCEPT 2> /dev/null",

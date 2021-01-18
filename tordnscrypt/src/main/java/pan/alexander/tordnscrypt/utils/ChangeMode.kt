@@ -55,8 +55,8 @@ object ChangeMode {
 
         //This start iptables adaptation
         modulesStatus.mode = OperationMode.ROOT_MODE
+        ModulesAux.clearIptablesCommandsSavedHash(context)
         modulesStatus.setIptablesRulesUpdateRequested(true)
-        ModulesAux.requestModulesStatusUpdate(context)
 
         changeModeInterface?.setFirewallNavigationItemVisible(false)
         changeModeInterface?.invalidateOptionsMenu()

@@ -97,6 +97,7 @@ public class ModulesService extends Service {
     static final String extraLoop = "pan.alexander.tordnscrypt.action.MAKE_EXTRA_LOOP";
     static final String startArpScanner= "pan.alexander.tordnscrypt.action.START_ARP_SCANNER";
     static final String stopArpScanner= "pan.alexander.tordnscrypt.action.STOP_ARP_SCANNER";
+    static final String clearIptablesCommandsHash = "pan.alexander.tordnscrypt.action.CLEAR_IPTABLES_COMMANDS_HASH";
 
     static final String DNSCRYPT_KEYWORD = "checkDNSRunning";
     static final String TOR_KEYWORD = "checkTrRunning";
@@ -269,6 +270,9 @@ public class ModulesService extends Service {
                 break;
             case stopArpScanner:
                 stopArpScanner();
+                break;
+            case clearIptablesCommandsHash:
+                clearIptablesCommandsSavedHash();
                 break;
         }
 
@@ -1085,6 +1089,12 @@ public class ModulesService extends Service {
     private void stopArpScanner() {
         if (arpScanner != null) {
             arpScanner.stop();
+        }
+    }
+
+    private void clearIptablesCommandsSavedHash() {
+        if (checkModulesStateTask != null) {
+            checkModulesStateTask.clearIptablesCommandHash();
         }
     }
 }

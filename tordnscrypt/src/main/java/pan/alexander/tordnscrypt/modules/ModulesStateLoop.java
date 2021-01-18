@@ -37,6 +37,7 @@ import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.iptables.IptablesRules;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
@@ -77,6 +78,8 @@ public class ModulesStateLoop implements Runnable {
     private final SharedPreferences sharedPreferences;
 
     private final Handler handler;
+
+    private int savedIptablesCommandsHash = 0;
 
     ModulesStateLoop(ModulesService modulesService) {
         //Delay in sec before service can stop
@@ -249,6 +252,14 @@ public class ModulesStateLoop implements Runnable {
 
             if (iptablesRules != null && rootIsAvailable && operationMode == ROOT_MODE) {
                 List<String> commands = iptablesRules.configureIptables(dnsCryptState, torState, itpdState);
+                int hashCode = commands.hashCode();
+
+                if (hashCode == savedIptablesCommandsHash && !RootExecService.lastRootCommandsReturnError) {
+                    commands = iptablesRules.fastUpdate();
+                }
+
+                savedIptablesCommandsHash = hashCode;
+
                 iptablesRules.sendToRootExecService(commands);
 
                 Log.i(LOG_TAG, "Iptables rules updated");
@@ -386,6 +397,10 @@ public class ModulesStateLoop implements Runnable {
 
     void setItpdThread(Thread itpdThread) {
         ModulesStateLoop.itpdThread = itpdThread;
+    }
+
+    void clearIptablesCommandHash() {
+        savedIptablesCommandsHash = 0;
     }
 
     void removeHandlerTasks() {
