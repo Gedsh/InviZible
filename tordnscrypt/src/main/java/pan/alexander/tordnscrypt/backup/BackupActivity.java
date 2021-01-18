@@ -19,8 +19,15 @@ package pan.alexander.tordnscrypt.backup;
 */
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.fragment.app.Fragment;
+
 import android.view.MenuItem;
 
 import java.util.Objects;
@@ -30,6 +37,7 @@ import pan.alexander.tordnscrypt.R;
 
 public class BackupActivity extends LangAppCompatActivity {
 
+    private BackupFragment backupFragment;
 
     @SuppressLint("NewApi")
     @Override
@@ -55,5 +63,31 @@ public class BackupActivity extends LangAppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onAttachFragment(@NonNull Fragment fragment) {
+        super.onAttachFragment(fragment);
+
+        if (fragment instanceof BackupFragment) {
+            backupFragment = (BackupFragment) fragment;
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+
+        if (backupFragment != null && !isFinishing()) {
+            backupFragment.onResultActivity(this, requestCode, resultCode, data);
+        }
+
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    protected void onDestroy() {
+        backupFragment = null;
+        super.onDestroy();
     }
 }

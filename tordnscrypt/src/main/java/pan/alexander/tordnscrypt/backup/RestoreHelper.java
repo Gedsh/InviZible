@@ -21,16 +21,28 @@ package pan.alexander.tordnscrypt.backup;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
+
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.util.Log;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
@@ -40,27 +52,50 @@ import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import pan.alexander.tordnscrypt.installer.Installer;
 
+import static pan.alexander.tordnscrypt.backup.BackupFragment.CODE_READ;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 class RestoreHelper extends Installer {
-    private final String appDataDir;
-    private String pathBackup;
-    private Activity activity;
+    private final List<String> requiredFiles = Arrays.asList(
+            "app_bin/busybox", "app_bin/iptables", "app_bin/ip6tables",
 
-    RestoreHelper(Activity activity, String appDataDir, String pathBackup) {
+            "app_data/dnscrypt-proxy/blacklist.txt", "app_data/dnscrypt-proxy/cloaking-rules.txt",
+            "app_data/dnscrypt-proxy/dnscrypt-proxy.toml", "app_data/dnscrypt-proxy/forwarding-rules.txt",
+            "app_data/dnscrypt-proxy/ip-blacklist.txt", "app_data/dnscrypt-proxy/whitelist.txt",
+
+            "app_data/tor/bridges_custom.lst", "app_data/tor/bridges_default.lst",
+            "app_data/tor/geoip", "app_data/tor/geoip6", "app_data/tor/tor.conf",
+
+            "app_data/i2pd/i2pd.conf", "app_data/i2pd/tunnels.conf",
+
+            "defaultSharedPref", "sharedPreferences"
+    );
+
+    private Activity activity;
+    private final String appDataDir;
+    private final String cacheDir;
+    private String pathBackup;
+
+    RestoreHelper(Activity activity, String appDataDir, String cacheDir, String pathBackup) {
         super(activity);
 
         this.activity = activity;
         this.appDataDir = appDataDir;
+        this.cacheDir = cacheDir;
         this.pathBackup = pathBackup;
     }
 
-    void restoreAll() {
+    void restoreAll(InputStream inputStream) {
 
         CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
             try {
+
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+                    copyData(inputStream);
+                }
+
                 if (!isBackupExist()) {
-                    throw new IllegalStateException("No file to restore " + pathBackup + "/InvizibleBackup.zip");
+                    throw new IllegalStateException("No file or file is corrupted " + pathBackup + "/InvizibleBackup.zip");
                 }
 
                 registerReceiver(activity);
@@ -110,7 +145,7 @@ class RestoreHelper extends Installer {
 
                 if (activity instanceof BackupActivity) {
                     try {
-                        BackupActivity backupActivity = (BackupActivity)activity;
+                        BackupActivity backupActivity = (BackupActivity) activity;
                         FragmentManager manager = backupActivity.getSupportFragmentManager();
                         BackupFragment fragment = (BackupFragment) manager.findFragmentById(R.id.backupFragment);
                         if (fragment != null) {
@@ -118,7 +153,7 @@ class RestoreHelper extends Installer {
                             fragment.showToast(activity.getString(R.string.wrong));
                         }
                     } catch (Exception ex) {
-                        Log.e(LOG_TAG, "RestoreHelper close progress fault " + ex.getMessage() + " " +ex.getCause());
+                        Log.e(LOG_TAG, "RestoreHelper close progress fault " + ex.getMessage() + " " + ex.getCause());
                     }
 
                 }
@@ -127,8 +162,72 @@ class RestoreHelper extends Installer {
     }
 
     private boolean isBackupExist() {
-        File file = new File(pathBackup + "/InvizibleBackup.zip");
-        return file.isFile();
+
+        String path = pathBackup + "/InvizibleBackup.zip";
+
+        File file = new File(path);
+        if (!file.isFile()) {
+            return false;
+        }
+
+        List<String> zipEntries = new ArrayList<>();
+
+        try (FileInputStream fileInputStream = new FileInputStream(pathBackup + "/InvizibleBackup.zip");
+             ZipInputStream zipInputStream = new ZipInputStream(fileInputStream)) {
+
+            ZipEntry zipEntry = zipInputStream.getNextEntry();
+
+            while (zipEntry != null) {
+                zipEntries.add(zipEntry.getName());
+                zipEntry = zipInputStream.getNextEntry();
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "RestoreHelper isBackupExist exception " + e.getMessage() + " " + e.getCause());
+        }
+
+        if (zipEntries.containsAll(requiredFiles)) {
+            return true;
+        } else {
+            ArrayList<String> copy = new ArrayList<>(requiredFiles);
+            copy.removeAll(zipEntries);
+            Log.e(LOG_TAG, "RestoreHelper isBackupExist backup file corrupted " + copy.toString());
+        }
+
+        return zipEntries.containsAll(requiredFiles);
+    }
+
+    void openFileWithSAF() {
+        if (activity == null || activity.isFinishing()) {
+            return;
+        }
+
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("application/zip");
+
+        PackageManager packageManager = activity.getPackageManager();
+        if (packageManager != null && intent.resolveActivity(packageManager) != null) {
+            activity.startActivityForResult(intent, CODE_READ);
+        }
+
+    }
+
+    private void copyData(InputStream inputStream) throws Exception {
+
+        if (inputStream == null) {
+            return;
+        }
+
+        try (FileOutputStream fileOutputStream = new FileOutputStream(cacheDir + "/InvizibleBackup.zip")) {
+            byte[] buffer = new byte[8 * 1024];
+
+            for (int len; (len = inputStream.read(buffer)) > 0; ) {
+                fileOutputStream.write(buffer, 0, len);
+            }
+            fileOutputStream.flush();
+        } finally {
+            inputStream.close();
+        }
     }
 
     private String saveSomeOldInfo() {
@@ -146,9 +245,6 @@ class RestoreHelper extends Installer {
     }
 
     private void refreshInstallationParameters() {
-        /*PathVars pathVars = PathVars.getInstance(activity);
-        pathVars.saveAppUID(activity);*/
-
         new PrefManager(activity).setBoolPref("DNSCrypt Running", false);
         new PrefManager(activity).setBoolPref("Tor Running", false);
         new PrefManager(activity).setBoolPref("I2PD Running", false);
@@ -166,10 +262,10 @@ class RestoreHelper extends Installer {
         loadSharedPreferencesFromFile(editor, src);
         editor.apply();
 
-        Log.i(LOG_TAG, "RestoreHelper: sharedPreferences restore OK");
+        Log.i(LOG_TAG, "RestoreHelper: sharedPreferences restore " + src + " OK");
     }
 
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     private void loadSharedPreferencesFromFile(SharedPreferences.Editor prefEdit, String src) throws Exception {
         try (ObjectInputStream input = new ObjectInputStream(new FileInputStream(src))) {
             prefEdit.clear();

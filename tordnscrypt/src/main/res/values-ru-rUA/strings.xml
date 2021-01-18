@@ -511,4 +511,6 @@
     <string name="pref_common_dns_rebind_protection_summ">Заблокировать сайт при обнаружении атаки повторного связывания DNS</string>
     <string name="notification_dns_rebinding_title">DNS rebinding</string>
     <string name="notification_dns_rebinding_text">Обнаружена атака повторного связывания DNS! Сайт %s заблокирован.</string>
+    <string name="backupSaved">Резервная копия сохранена</string>
+    <string name="backupRestored">Резервная копия восстановлена</string>
 </resources>

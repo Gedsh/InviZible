@@ -91,6 +91,8 @@
     <string name="btnSaveBackup">Save All</string>
     <string name="etPathBackup">Folder Path:</string>
     <string name="backupFolder">Choose backup folder:</string>
+    <string name="backupSaved">Backup saved</string>
+    <string name="backupRestored">Backup restored</string>
 
     <string name="menu_use_root" translatable="false">Root Mode</string>
     <string name="menu_use_proxies" translatable="false">Proxy Mode</string>
