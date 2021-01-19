@@ -26,7 +26,7 @@ import androidx.annotation.RequiresApi;
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public class GetIPsJobService extends JobService {
 
-    JobParameters params;
+    private JobParameters params;
 
     public GetIPsJobService() {
     }
