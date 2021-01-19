@@ -139,9 +139,14 @@ class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHold
 
         @Override
         public void onClick(View v) {
-            int appPosition = getAdapterPosition();
-            boolean appActive = getItem(appPosition).getActive();
-            setActive(appPosition, !appActive);
+            int position = getAdapterPosition();
+
+            if (position < 0) {
+                return;
+            }
+
+            boolean appActive = getItem(position).getActive();
+            setActive(position, !appActive);
             fragment.mAdapter.notifyDataSetChanged();
         }
 
