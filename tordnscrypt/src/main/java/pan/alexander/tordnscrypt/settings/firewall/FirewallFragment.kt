@@ -304,6 +304,10 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
                             binding.pbFirewallApp.isIndeterminate = false
                             binding.pbFirewallApp.visibility = View.GONE
 
+                            if (firewallFirstStart) {
+                                activateAllFirsStart(context)
+                            }
+
                             if (binding.chipFirewallSortUid.isChecked) {
                                 sortByUid()
                             }
@@ -317,10 +321,6 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
                             if (allowLanForAll || allowWifiForAll || allowGsmForAll
                                     || allowRoamingForAll || allowVPNForAll) {
                                 updateTopIcons(context)
-                            }
-
-                            if (firewallFirstStart) {
-                                activateAllFirsStart(context)
                             }
 
                             firewallAdapter?.notifyDataSetChanged()
