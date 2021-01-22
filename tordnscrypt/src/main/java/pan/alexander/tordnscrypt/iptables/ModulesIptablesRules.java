@@ -47,8 +47,13 @@ import pan.alexander.tordnscrypt.vpn.Util;
 import static pan.alexander.tordnscrypt.iptables.Tethering.usbModemAddressesRange;
 import static pan.alexander.tordnscrypt.iptables.Tethering.vpnInterfaceName;
 import static pan.alexander.tordnscrypt.iptables.Tethering.wifiAPAddressesRange;
+import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
+import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.CLEARNET_APPS;
+import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.UNLOCK_APPS;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
+import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_FOR_CLEARNET;
+import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_TO_UNLOCK;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -78,9 +83,11 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         blockHttp = shPref.getBoolean("pref_fast_block_http", false);
         apIsOn = new PrefManager(context).getBoolPref("APisON");
         modemIsOn = new PrefManager(context).getBoolPref("ModemIsON");
-        Set<String> unlockApps = new PrefManager(context).getSetStrPref("unlockApps");
-        Set<String> clearnetApps = new PrefManager(context).getSetStrPref("clearnetApps");
-        Set<String> clearnetAppsForProxy = new PrefManager(context).getSetStrPref("clearnetAppsForProxy");
+        Set<String> unlockApps = new PrefManager(context).getSetStrPref(UNLOCK_APPS);
+        Set<String> unlockIPs = new PrefManager(context).getSetStrPref(IPS_TO_UNLOCK);
+        Set<String> clearnetApps = new PrefManager(context).getSetStrPref(CLEARNET_APPS);
+        Set<String> clearnetIPs = new PrefManager(context).getSetStrPref(IPS_FOR_CLEARNET);
+        Set<String> clearnetAppsForProxy = new PrefManager(context).getSetStrPref(CLEARNET_APPS_FOR_PROXY);
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
         boolean ttlFix = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE) && !modulesStatus.isUseModulesWithRoot();
@@ -101,7 +108,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         String bypassLanFilter = "";
         if (lan) {
             StringBuilder nonTorRanges = new StringBuilder();
-            for (String address: Util.nonTorList) {
+            for (String address : Util.nonTorList) {
                 nonTorRanges.append(address).append(" ");
             }
             nonTorRanges.deleteCharAt(nonTorRanges.lastIndexOf(" "));
@@ -119,24 +126,74 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         String kernelBypassNat = "";
         String kernelBypassFilter = "";
         String kernelRedirectNatTCP = "";
-        String kernelRejectNonTCP = "";
+        String kernelRejectNonTCPFilter = "";
         if (routeAllThroughTor && (clearnetApps.contains("-1") || (ttlFix && useProxy && clearnetAppsForProxy.contains("-1")))) {
             kernelBypassNat = iptables + "-t nat -A tordnscrypt_nat_output -p all -m owner ! --uid-owner 0:999999999 -j RETURN || true";
             kernelBypassFilter = iptables + "-A tordnscrypt -p all -m owner ! --uid-owner 0:999999999 -j RETURN || true";
         } else if (!routeAllThroughTor && unlockApps.contains("-1") && (!clearnetAppsForProxy.contains("-1") || !useProxy || !ttlFix)) {
             kernelRedirectNatTCP = iptables + "-t nat -A tordnscrypt_nat_output -p tcp -m owner ! --uid-owner 0:999999999 -j REDIRECT --to-port " + pathVars.getTorTransPort() + " || true";
-            kernelRejectNonTCP = iptables + "-A tordnscrypt ! -p tcp -m owner ! --uid-owner 0:999999999 -j REJECT || true";
+            kernelRejectNonTCPFilter = iptables + "-A tordnscrypt ! -p tcp -m owner ! --uid-owner 0:999999999 -j REJECT || true";
         }
 
         String torSitesBypassNat = "";
         String torSitesBypassFilter = "";
         String torAppsBypassNat = "";
         String torAppsBypassFilter = "";
+
+        String torSitesRedirectNat = "";
+        String torSitesRejectNonTCPFilter = "";
+        String torAppsRedirectNat = "";
+        String torAppsRejectNonTCPFilter = "";
+
         if (routeAllThroughTor) {
-            torSitesBypassNat = busybox + "cat " + appDataDir + "/app_data/tor/clearnet 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p all -d $var1 -j RETURN; done";
-            torSitesBypassFilter = busybox + "cat " + appDataDir + "/app_data/tor/clearnet 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt -p all -d $var1 -j RETURN; done";
-            torAppsBypassNat = busybox + "cat " + appDataDir + "/app_data/tor/clearnetApps 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p all -m owner --uid-owner $var1 -j RETURN; done";
-            torAppsBypassFilter = busybox + "cat " + appDataDir + "/app_data/tor/clearnetApps 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt -p all -m owner --uid-owner $var1 -j RETURN; done";
+
+            StringBuilder torSitesBypassNatBuilder = new StringBuilder();
+            StringBuilder torSitesBypassFilterBuilder = new StringBuilder();
+            StringBuilder torAppsBypassNatBuilder = new StringBuilder();
+            StringBuilder torAppsBypassFilterBuilder = new StringBuilder();
+
+            for (String torClearnetIP : clearnetIPs) {
+                if (torClearnetIP.matches("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$")) {
+                    torSitesBypassNatBuilder.append(iptables).append("-t nat -A tordnscrypt_nat_output -p all -d ").append(torClearnetIP).append(" -j RETURN; ");
+                    torSitesBypassFilterBuilder.append(iptables).append("-A tordnscrypt -p all -d ").append(torClearnetIP).append(" -j RETURN; ");
+                }
+            }
+
+            for (String torClearnetApp : clearnetApps) {
+                if (torClearnetApp.matches("^\\d+$")) {
+                    torAppsBypassNatBuilder.append(iptables).append("-t nat -A tordnscrypt_nat_output -p all -m owner --uid-owner ").append(torClearnetApp).append(" -j RETURN; ");
+                    torAppsBypassFilterBuilder.append(iptables).append("-A tordnscrypt -p all -m owner --uid-owner ").append(torClearnetApp).append(" -j RETURN; ");
+                }
+            }
+
+            torSitesBypassNat = removeRedundantSymbols(torSitesBypassNatBuilder);
+            torSitesBypassFilter = removeRedundantSymbols(torSitesBypassFilterBuilder);
+            torAppsBypassNat = removeRedundantSymbols(torAppsBypassNatBuilder);
+            torAppsBypassFilter = removeRedundantSymbols(torAppsBypassFilterBuilder);
+        } else {
+            StringBuilder torSitesRedirectNatBuilder = new StringBuilder();
+            StringBuilder torSitesRejectNonTCPFilterBuilder = new StringBuilder();
+            StringBuilder torAppsRedirectNatBuilder = new StringBuilder();
+            StringBuilder torAppsRejectNonTCPFilterBuilder = new StringBuilder();
+
+            for (String unlockIP : unlockIPs) {
+                if (unlockIP.matches("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$")) {
+                    torSitesRedirectNatBuilder.append(iptables).append("-t nat -A tordnscrypt_nat_output -p tcp -d ").append(unlockIP).append(" -j REDIRECT --to-port ").append(pathVars.getTorTransPort()).append("; ");
+                    torSitesRejectNonTCPFilterBuilder.append(iptables).append("-A tordnscrypt ! -p tcp -d ").append(unlockIP).append(" -j REJECT; ");
+                }
+            }
+
+            for (String unlockApp : unlockApps) {
+                if (unlockApp.matches("^\\d+$")) {
+                    torAppsRedirectNatBuilder.append(iptables).append("-t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner ").append(unlockApp).append(" -j REDIRECT --to-port ").append(pathVars.getTorTransPort()).append("; ");
+                    torAppsRejectNonTCPFilterBuilder.append(iptables).append("-A tordnscrypt ! -p tcp -m owner --uid-owner ").append(unlockApp).append(" -j REJECT; ");
+                }
+            }
+
+            torSitesRedirectNat = removeRedundantSymbols(torSitesRedirectNatBuilder);
+            torSitesRejectNonTCPFilter = removeRedundantSymbols(torSitesRejectNonTCPFilterBuilder);
+            torAppsRedirectNat = removeRedundantSymbols(torAppsRedirectNatBuilder);
+            torAppsRejectNonTCPFilter = removeRedundantSymbols(torAppsRejectNonTCPFilterBuilder);
         }
 
         String blockHttpRuleFilterAll = "";
@@ -191,9 +248,18 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
         String proxyAppsBypassNat = "";
         String proxyAppsBypassFilter = "";
+
         if (ttlFix && useProxy) {
-            proxyAppsBypassNat = busybox + "cat " + appDataDir + "/app_data/tor/clearnetAppsForProxy 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p all -m owner --uid-owner $var1 -j RETURN; done";
-            proxyAppsBypassFilter = busybox + "cat " + appDataDir + "/app_data/tor/clearnetAppsForProxy 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt -p all -m owner --uid-owner $var1 -j RETURN; done";
+            StringBuilder proxyAppsBypassNatBuilder = new StringBuilder();
+            StringBuilder proxyAppsBypassFilterBuilder = new StringBuilder();
+
+            for (String clearnetAppForProxy : clearnetAppsForProxy) {
+                proxyAppsBypassNatBuilder.append(iptables).append("-t nat -A tordnscrypt_nat_output -p all -m owner --uid-owner ").append(clearnetAppForProxy).append(" -j RETURN; ");
+                proxyAppsBypassFilterBuilder.append(iptables).append("-A tordnscrypt -p all -m owner --uid-owner ").append(clearnetAppForProxy).append(" -j RETURN; ");
+            }
+
+            proxyAppsBypassNat = removeRedundantSymbols(proxyAppsBypassNatBuilder);
+            proxyAppsBypassFilter = removeRedundantSymbols(proxyAppsBypassFilterBuilder);
         }
 
         if (arpSpoofingDetection && blockInternetWhenArpAttackDetected && mitmDetected) {
@@ -256,17 +322,17 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         proxyAppsBypassNat,
                         bypassLanNat,
                         //Redirect TCP sites to Tor
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlock 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
+                        torSitesRedirectNat,
                         //Redirect TCP apps to Tor
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlockApps 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
+                        torAppsRedirectNat,
                         kernelRedirectNatTCP,
                         proxyAppsBypassFilter,
                         bypassLanFilter,
                         //Block all except TCP for Tor sites
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlock 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt ! -p tcp -d $var1 -j REJECT; done",
+                        torSitesRejectNonTCPFilter,
                         //Block all except TCP for Tor apps
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlockApps 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt ! -p tcp -m owner --uid-owner $var1 -j REJECT; done",
-                        kernelRejectNonTCP,
+                        torAppsRejectNonTCPFilter,
+                        kernelRejectNonTCPFilter,
                         iptables + "-A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
                         iptables + "-I OUTPUT -j tordnscrypt",
                         unblockHOTSPOT,
@@ -427,18 +493,18 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         proxyAppsBypassNat,
                         bypassLanNat,
                         //Redirect TCP sites to Tor
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlock 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
+                        torSitesRedirectNat,
                         //Redirect TCP apps to Tor
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlockApps 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -m owner --uid-owner $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
+                        torAppsRedirectNat,
                         kernelRedirectNatTCP,
                         //Bypass proxy apps
                         proxyAppsBypassFilter,
                         bypassLanFilter,
                         //Block all except TCP for Tor sites
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlock 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt ! -p tcp -d $var1 -j REJECT; done",
+                        torSitesRejectNonTCPFilter,
                         //Block all except TCP for Tor apps
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlockApps 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt ! -p tcp -m owner --uid-owner $var1 -j REJECT; done",
-                        kernelRejectNonTCP,
+                        torAppsRejectNonTCPFilter,
+                        kernelRejectNonTCPFilter,
                         iptables + "-A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
                         iptables + "-I OUTPUT -j tordnscrypt",
                         unblockHOTSPOT,
@@ -464,7 +530,6 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         torRootDNSAllowedNat,
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort(),
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort(),
-                        //busybox + "cat " + appDataDir + "/app_data/tor/bridgesIP 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + "; done",
                         iptables + "-t nat -A tordnscrypt_nat_output -m owner --uid-owner $TOR_UID -j RETURN",
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
                         blockHttpRuleNatTCP,
@@ -596,7 +661,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
         if (!vpnInterfaceName.equals(savedVpnInterfaceName)
                 || !Tethering.wifiAPInterfaceName.equals(savedWifiAPInterfaceName)
-                || !Tethering.usbModemInterfaceName.equals(savedUsbModemInterfaceName)) {
+                || !Tethering.usbModemInterfaceName.equals(savedUsbModemInterfaceName)
+                || isLastIptablesCommandsReturnError()) {
 
             sendToRootExecService(tethering.fixTTLCommands());
 
@@ -664,6 +730,14 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         Looper looper = Looper.getMainLooper();
         if (looper != null) {
             new Handler(looper).postDelayed(() -> executeCommands(context, commands), 1000);
+        }
+    }
+
+    private String removeRedundantSymbols(StringBuilder stringBuilder) {
+        if (stringBuilder.length() > 2) {
+            return stringBuilder.substring(0, stringBuilder.length() - 2);
+        } else {
+            return "";
         }
     }
 

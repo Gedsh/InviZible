@@ -37,7 +37,6 @@ import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.iptables.IptablesRules;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
@@ -254,7 +253,7 @@ public class ModulesStateLoop implements Runnable {
                 List<String> commands = iptablesRules.configureIptables(dnsCryptState, torState, itpdState);
                 int hashCode = commands.hashCode();
 
-                if (hashCode == savedIptablesCommandsHash && !RootExecService.lastRootCommandsReturnError) {
+                if (hashCode == savedIptablesCommandsHash && !iptablesRules.isLastIptablesCommandsReturnError()) {
                     commands = iptablesRules.fastUpdate();
                 }
 
@@ -404,6 +403,10 @@ public class ModulesStateLoop implements Runnable {
     }
 
     void removeHandlerTasks() {
+        if (iptablesRules != null) {
+            iptablesRules.unregisterReceiver();
+        }
+
         if (handler != null) {
             handler.removeCallbacksAndMessages(null);
         }

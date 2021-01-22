@@ -39,6 +39,8 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.vpn.Util;
 
+import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_FOR_CLEARNET_TETHER;
+import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_TO_UNLOCK_TETHER;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -61,14 +63,11 @@ public class Tethering {
 
     private final PathVars pathVars;
     private String iptables = "iptables ";
-    private final String appDataDir;
     private boolean apIsOn = false;
 
     Tethering(Context context) {
         this.context = context;
         pathVars = PathVars.getInstance(context);
-        appDataDir = pathVars.getAppDataDir();
-
     }
 
     @NonNull
@@ -97,6 +96,8 @@ public class Tethering {
         boolean lan = shPref.getBoolean("Allow LAN", false);
         boolean ttlFix = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE) && !modulesStatus.isUseModulesWithRoot();
         apIsOn = new PrefManager(context).getBoolPref("APisON");
+        Set<String> ipsToUnlockTether = new PrefManager(context).getSetStrPref(IPS_TO_UNLOCK_TETHER);
+        Set<String> ipsForClearNetTether = new PrefManager(context).getSetStrPref(IPS_FOR_CLEARNET_TETHER);
 
         setInterfaceNames();
 
@@ -121,9 +122,56 @@ public class Tethering {
 
         String torSitesBypassPrerouting = "";
         String torSitesBypassForward = "";
+
+        String torSitesRedirectPreroutingWiFi = "";
+        String torSitesRedirectPreroutingUSBModem = "";
+        String torSitesRedirectPreroutingEthernet = "";
+
+        String torSitesRejectNonTCPForwardWiFi = "";
+        String torSitesRejectNonTCPForwardUSBModem = "";
+        String torSitesRejectNonTCPForwardEthernet = "";
+
         if (routeAllThroughTorTether) {
-            torSitesBypassPrerouting = busybox + "cat " + appDataDir + "/app_data/tor/clearnet_tether 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -p all -d $var1 -j ACCEPT; done";
-            torSitesBypassForward = busybox + "cat " + appDataDir + "/app_data/tor/clearnet_tether 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt_forward -p all -d $var1 -j ACCEPT; done";
+            StringBuilder torSitesBypassPreroutingBuilder = new StringBuilder();
+            StringBuilder torSitesBypassForwardBuilder = new StringBuilder();
+
+            for (String ipForClearNetTether: ipsForClearNetTether) {
+                torSitesBypassPreroutingBuilder.append(iptables).append("-t nat -A tordnscrypt_prerouting -p all -d ").append(ipForClearNetTether).append(" -j ACCEPT; ");
+                torSitesBypassForwardBuilder.append(iptables).append("-A tordnscrypt_forward -p all -d ").append(ipForClearNetTether).append(" -j ACCEPT; ");
+            }
+
+            if (torSitesBypassPreroutingBuilder.length() > 2) {
+                torSitesBypassPrerouting = torSitesBypassPreroutingBuilder.substring(0, torSitesBypassPreroutingBuilder.length() - 2);
+            }
+            if (torSitesBypassForwardBuilder.length() > 2) {
+                torSitesBypassForward = torSitesBypassForwardBuilder.substring(0, torSitesBypassForwardBuilder.length() - 2);
+            }
+        } else {
+            StringBuilder torSitesRedirectPreroutingWiFiBuilder = new StringBuilder();
+            StringBuilder torSitesRedirectPreroutingUSBModemBuilder = new StringBuilder();
+            StringBuilder torSitesRedirectPreroutingEthernetBuilder = new StringBuilder();
+
+            StringBuilder torSitesRejectNonTCPForwardWiFiBuilder = new StringBuilder();
+            StringBuilder torSitesRejectNonTCPForwardUSBModemBuilder = new StringBuilder();
+            StringBuilder torSitesRejectNonTCPForwardEthernetBuilder = new StringBuilder();
+
+            for (String ipToUnlockTether: ipsToUnlockTether) {
+                torSitesRedirectPreroutingWiFiBuilder.append(iptables).append("-t nat -A tordnscrypt_prerouting -i ").append(wifiAPInterfaceName).append(" -p tcp -d ").append(ipToUnlockTether).append(" -j REDIRECT --to-port ").append(pathVars.getTorTransPort()).append(" || true; ");
+                torSitesRedirectPreroutingUSBModemBuilder.append(iptables).append("-t nat -A tordnscrypt_prerouting -i ").append(usbModemInterfaceName).append(" -p tcp -d ").append(ipToUnlockTether).append(" -j REDIRECT --to-port ").append(pathVars.getTorTransPort()).append(" || true; ");
+                torSitesRedirectPreroutingEthernetBuilder.append(iptables).append("-t nat -A tordnscrypt_prerouting -i ").append(ethernetInterfaceName).append(" -p tcp -d ").append(ipToUnlockTether).append(" -j REDIRECT --to-port ").append(pathVars.getTorTransPort()).append(" || true; ");
+
+                torSitesRejectNonTCPForwardWiFiBuilder.append(iptables).append("-A tordnscrypt_forward -i ").append(wifiAPInterfaceName).append(" ! -p tcp -d ").append(ipToUnlockTether).append(" -j REJECT || true; ");
+                torSitesRejectNonTCPForwardUSBModemBuilder.append(iptables).append("-A tordnscrypt_forward -i ").append(usbModemInterfaceName).append(" ! -p tcp -d ").append(ipToUnlockTether).append(" -j REJECT || true; ");
+                torSitesRejectNonTCPForwardEthernetBuilder.append(iptables).append("-A tordnscrypt_forward -i ").append(ethernetInterfaceName).append(" ! -p tcp -d ").append(ipToUnlockTether).append(" -j REJECT || true; ");
+            }
+
+            torSitesRedirectPreroutingWiFi = removeRedundantSymbols(torSitesRedirectPreroutingWiFiBuilder);
+            torSitesRedirectPreroutingUSBModem = removeRedundantSymbols(torSitesRedirectPreroutingUSBModemBuilder);
+            torSitesRedirectPreroutingEthernet = removeRedundantSymbols(torSitesRedirectPreroutingEthernetBuilder);
+
+            torSitesRejectNonTCPForwardWiFi = removeRedundantSymbols(torSitesRejectNonTCPForwardWiFiBuilder);
+            torSitesRejectNonTCPForwardUSBModem = removeRedundantSymbols(torSitesRejectNonTCPForwardUSBModemBuilder);
+            torSitesRejectNonTCPForwardEthernet = removeRedundantSymbols(torSitesRejectNonTCPForwardEthernetBuilder);
         }
 
         String blockHttpRuleForwardTCP = "";
@@ -351,15 +399,15 @@ public class Tethering {
                         blockHttpRulePreroutingTCPeth,
                         blockHttpRulePreroutingUDPeth,
                         busybox + "sleep 1",
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + " || true; done",
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + " || true; done",
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + " || true; done",
+                        torSitesRedirectPreroutingWiFi,
+                        torSitesRedirectPreroutingUSBModem,
+                        torSitesRedirectPreroutingEthernet,
                         iptables + "-A tordnscrypt_forward -p tcp --dport 53 -j ACCEPT",
                         iptables + "-A tordnscrypt_forward -p udp --dport 53 -j ACCEPT",
                         //Block all except TCP for Tor sites
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt_forward -i " + wifiAPInterfaceName + " ! -p tcp -d $var1 -j REJECT || true; done",
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt_forward -i " + usbModemInterfaceName + " ! -p tcp -d $var1 -j REJECT || true; done",
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt_forward -i " + ethernetInterfaceName + " ! -p tcp -d $var1 -j REJECT || true; done",
+                        torSitesRejectNonTCPForwardWiFi,
+                        torSitesRejectNonTCPForwardUSBModem,
+                        torSitesRejectNonTCPForwardEthernet,
                         blockHttpRuleForwardTCP,
                         blockHttpRuleForwardUDP,
                         iptables + "-D FORWARD -j DROP 2> /dev/null || true"
@@ -516,15 +564,15 @@ public class Tethering {
                         blockHttpRulePreroutingTCPeth,
                         blockHttpRulePreroutingUDPeth,
                         busybox + "sleep 1",
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + " || true; done",
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + " || true; done",
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether 2> /dev/null | while read var1; do " + iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p tcp -d $var1 -j REDIRECT --to-port " + pathVars.getTorTransPort() + " || true; done",
+                        torSitesRedirectPreroutingWiFi,
+                        torSitesRedirectPreroutingUSBModem,
+                        torSitesRedirectPreroutingEthernet,
                         iptables + "-A tordnscrypt_forward -p tcp --dport 53 -j ACCEPT",
                         iptables + "-A tordnscrypt_forward -p udp --dport 53 -j ACCEPT",
                         //Block all except TCP for Tor sites
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt_forward -i " + wifiAPInterfaceName + " ! -p tcp -d $var1 -j REJECT || true; done",
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt_forward -i " + usbModemInterfaceName + " ! -p tcp -d $var1 -j REJECT || true; done",
-                        busybox + "cat " + appDataDir + "/app_data/tor/unlock_tether 2> /dev/null | while read var1; do " + iptables + "-A tordnscrypt_forward -i " + ethernetInterfaceName + " ! -p tcp -d $var1 -j REJECT || true; done",
+                        torSitesRejectNonTCPForwardWiFi,
+                        torSitesRejectNonTCPForwardUSBModem,
+                        torSitesRejectNonTCPForwardEthernet,
                         blockHttpRuleForwardTCP,
                         blockHttpRuleForwardUDP,
                         iptables + "-D FORWARD -j DROP 2> /dev/null || true"
@@ -638,12 +686,14 @@ public class Tethering {
             return tetheringCommands;
         }
 
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        addressLocalPC = sharedPreferences.getString("pref_common_local_eth_device_addr", "192.168.0.100");
+        apIsOn = new PrefManager(context).getBoolPref("APisON");
+
+        setInterfaceNames();
+
         String ip6tables = pathVars.getIp6tablesPath();
         String busybox = pathVars.getBusyboxPath();
-
-        ModulesStatus modulesStatus = ModulesStatus.getInstance();
-        boolean ttlFix = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE) && !modulesStatus.isUseModulesWithRoot();
-        boolean ttlFixed = new PrefManager(context).getBoolPref("TTLisFixed");
 
         tetheringCommands.addAll(Arrays.asList(
                 iptables + "-I FORWARD -j DROP",
@@ -658,12 +708,6 @@ public class Tethering {
                 iptables + "-A FORWARD -j tordnscrypt_forward",
                 iptables + "-D FORWARD -j DROP 2> /dev/null || true"
         ));
-
-        if (ttlFix) {
-            tetheringCommands.addAll(fixTTLCommands());
-        } else if (ttlFixed) {
-            tetheringCommands.addAll(unfixTTLCommands());
-        }
 
         return tetheringCommands;
     }
@@ -764,6 +808,15 @@ public class Tethering {
                 "ip rule delete from " + wifiAPAddressesRange + " lookup 63 2> /dev/null || true",
                 "ip rule delete from " + usbModemAddressesRange + " lookup 62 2> /dev/null || true",
                 "ip rule delete from " + addressLocalPC + " lookup 64 2> /dev/null || true",
+                "ip route delete default dev " + vpnInterfaceName + " scope link table 63 2> /dev/null || true",
+                "ip route delete default dev " + vpnInterfaceName + " scope link table 62 2> /dev/null || true",
+                "ip route delete default dev " + vpnInterfaceName + " scope link table 64 2> /dev/null || true",
+                "ip route delete " + wifiAPAddressesRange + " dev " + wifiAPInterfaceName + " scope link table 63 2> /dev/null || true",
+                "ip route delete " + usbModemAddressesRange + " dev " + usbModemInterfaceName + " scope link table 62 2> /dev/null || true",
+                "ip route delete " + addressLocalPC + " dev " + ethernetInterfaceName + " scope link table 64 2> /dev/null || true",
+                "ip route delete broadcast 255.255.255.255 dev " + wifiAPInterfaceName + " scope link table 63 2> /dev/null || true",
+                "ip route delete broadcast 255.255.255.255 dev " + usbModemInterfaceName + " scope link table 62 2> /dev/null || true",
+                "ip route delete broadcast 255.255.255.255 dev " + ethernetInterfaceName + " scope link table 64 2> /dev/null || true",
                 iptables + "-D FORWARD -j tordnscrypt_forward 2> /dev/null || true",
                 //iptables + "-t nat -D POSTROUTING -o " + vpnInterfaceName + " -j MASQUERADE || true",
                 iptables + "-t nat -D tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes() + " 2> /dev/null || true",
@@ -789,15 +842,15 @@ public class Tethering {
                 "ip rule add from " + wifiAPAddressesRange + " lookup 63 2> /dev/null || true",
                 "ip rule add from " + usbModemAddressesRange + " lookup 62 2> /dev/null || true",
                 "ip rule add from " + addressLocalPC + " lookup 64 2> /dev/null || true",
-                "ip route add default dev " + vpnInterfaceName + " scope link table 63 2> /dev/null || true",
-                "ip route add default dev " + vpnInterfaceName + " scope link table 62 2> /dev/null || true",
-                "ip route add default dev " + vpnInterfaceName + " scope link table 64 2> /dev/null || true",
-                "ip route add " + wifiAPAddressesRange + " dev " + wifiAPInterfaceName + " scope link table 63 2> /dev/null || true",
-                "ip route add " + usbModemAddressesRange + " dev " + usbModemInterfaceName + " scope link table 62 2> /dev/null || true",
-                "ip route add " + addressLocalPC + " dev " + ethernetInterfaceName + " scope link table 64 2> /dev/null || true",
-                "ip route add broadcast 255.255.255.255 dev " + wifiAPInterfaceName + " scope link table 63 2> /dev/null || true",
-                "ip route add broadcast 255.255.255.255 dev " + usbModemInterfaceName + " scope link table 62 2> /dev/null || true",
-                "ip route add broadcast 255.255.255.255 dev " + ethernetInterfaceName + " scope link table 64 2> /dev/null || true",
+                "ip route add default dev " + vpnInterfaceName + " scope link table 63 || true",
+                "ip route add default dev " + vpnInterfaceName + " scope link table 62 || true",
+                "ip route add default dev " + vpnInterfaceName + " scope link table 64 || true",
+                "ip route add " + wifiAPAddressesRange + " dev " + wifiAPInterfaceName + " scope link table 63 || true",
+                "ip route add " + usbModemAddressesRange + " dev " + usbModemInterfaceName + " scope link table 62 || true",
+                "ip route add " + addressLocalPC + " dev " + ethernetInterfaceName + " scope link table 64 || true",
+                "ip route add broadcast 255.255.255.255 dev " + wifiAPInterfaceName + " scope link table 63 || true",
+                "ip route add broadcast 255.255.255.255 dev " + usbModemInterfaceName + " scope link table 62 || true",
+                "ip route add broadcast 255.255.255.255 dev " + ethernetInterfaceName + " scope link table 64 || true",
                 iptables + "-D FORWARD -j DROP 2> /dev/null || true"
                 //iptables + "-D PREROUTING -t mangle -p udp --dport 53 -j MARK --set-mark 111 || true",
                 //iptables + "-A PREROUTING -t mangle -p udp --dport 53 -j MARK --set-mark 111",
@@ -838,7 +891,9 @@ public class Tethering {
                     commands.set(i, "");
                 }
             }
-        } else if (!apIsOn) {
+        }
+
+        if (!apIsOn) {
             for (int i = 0; i < commands.size(); i++) {
                 String command = commands.get(i);
                 if (command.contains(wifiAPInterfaceName) || command.contains(wifiAPAddressesRange) || command.contains("table 63")) {
@@ -857,5 +912,13 @@ public class Tethering {
         }
 
         return commands;
+    }
+
+    private String removeRedundantSymbols(StringBuilder stringBuilder) {
+        if (stringBuilder.length() > 2) {
+            return stringBuilder.substring(0, stringBuilder.length() - 2);
+        } else {
+            return "";
+        }
     }
 }

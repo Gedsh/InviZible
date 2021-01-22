@@ -29,4 +29,6 @@ public interface IptablesRules {
     void refreshFixTTLRules();
     List<String> clearAll();
     void sendToRootExecService(List<String> commands);
+    void unregisterReceiver();
+    boolean isLastIptablesCommandsReturnError();
 }
