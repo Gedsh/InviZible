@@ -38,23 +38,23 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
+import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_FOR_CLEARNET;
+import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_FOR_CLEARNET_TETHER;
+import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_TO_UNLOCK;
+import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_TO_UNLOCK_TETHER;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class TorRefreshIPsWork {
     private final Pattern IP_PATTERN = Pattern.compile("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$");
 
     private final Context context;
-    private final String appDataDir;
     private final GetIPsJobService getIPsJobService;
 
     public TorRefreshIPsWork(Context context, GetIPsJobService getIPsJobService) {
         this.context = context;
         this.getIPsJobService = getIPsJobService;
-        this.appDataDir = PathVars.getInstance(context).getAppDataDir();
     }
 
     public void refreshIPs() {
@@ -130,9 +130,9 @@ public class TorRefreshIPsWork {
         }
 
         if (!routeAllThroughTorDevice) {
-            settingsChanged = saveSettings(context, unlockIPsReadyDevice, "ipsToUnlock");
+            settingsChanged = saveSettings(context, unlockIPsReadyDevice, IPS_TO_UNLOCK);
         } else {
-            settingsChanged = saveSettings(context, unlockIPsReadyDevice, "ipsForClearNet");
+            settingsChanged = saveSettings(context, unlockIPsReadyDevice, IPS_FOR_CLEARNET);
         }
 
         return settingsChanged;
@@ -162,15 +162,11 @@ public class TorRefreshIPsWork {
         }
 
         if (!routeAllThroughTorTether) {
-            settingsChanged = saveSettings(context, unlockIPsReadyTether, "ipsToUnlockTether");
-            if (settingsChanged) {
-                FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/unlock_tether", new ArrayList<>(unlockIPsReadyTether), "ignored");
-            }
+            settingsChanged = saveSettings(context, unlockIPsReadyTether, IPS_TO_UNLOCK_TETHER);
+            //FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/unlock_tether", new ArrayList<>(unlockIPsReadyTether), "ignored");
         } else {
-            settingsChanged = saveSettings(context, unlockIPsReadyTether, "ipsForClearNetTether");
-            if (settingsChanged) {
-                FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/clearnet_tether", new ArrayList<>(unlockIPsReadyTether), "ignored");
-            }
+            settingsChanged = saveSettings(context, unlockIPsReadyTether, IPS_FOR_CLEARNET_TETHER);
+            //FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/clearnet_tether", new ArrayList<>(unlockIPsReadyTether), "ignored");
         }
 
         return settingsChanged;

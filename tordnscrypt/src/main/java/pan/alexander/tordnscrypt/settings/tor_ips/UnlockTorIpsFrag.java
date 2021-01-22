@@ -50,11 +50,9 @@ import java.util.concurrent.Future;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
-import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Verifier;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
@@ -63,6 +61,11 @@ import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class UnlockTorIpsFrag extends Fragment {
+
+    public static final String IPS_TO_UNLOCK = "ipsToUnlock";
+    public static final String IPS_FOR_CLEARNET = "ipsForClearNet";
+    public static final String IPS_TO_UNLOCK_TETHER = "ipsToUnlockTether";
+    public static final String IPS_FOR_CLEARNET_TETHER = "ipsForClearNetTether";
 
     RecyclerView rvListHostIP;
     RecyclerView.Adapter<HostIPAdapter.HostIPViewHolder> rvAdapter;
@@ -80,7 +83,6 @@ public class UnlockTorIpsFrag extends Fragment {
     String unlockIPsStr;
 
     private Future<?> getHostIPTask;
-    private String appDataDir;
 
     public UnlockTorIpsFrag() {
     }
@@ -95,9 +97,6 @@ public class UnlockTorIpsFrag extends Fragment {
         if (activity == null) {
             return;
         }
-
-        PathVars pathVars = PathVars.getInstance(activity);
-        appDataDir = pathVars.getAppDataDir();
 
         ////////////////////////////////////////////////////////////////////////////////////
         ///////////////////////Reverse logic when route all through Tor!///////////////////
@@ -258,10 +257,10 @@ public class UnlockTorIpsFrag extends Fragment {
 
         if ("device".equals(deviceOrTether)) {
             if (!routeAllThroughTorDevice) {
-                settingsChanged = saveSettings(context, ipsToUnlock, "ipsToUnlock");
+                settingsChanged = saveSettings(context, ipsToUnlock, IPS_TO_UNLOCK);
                 //FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/unlock", ipsToUnlock, "ignored");
             } else {
-                settingsChanged = saveSettings(context, ipsToUnlock, "ipsForClearNet");
+                settingsChanged = saveSettings(context, ipsToUnlock, IPS_FOR_CLEARNET);
                 //FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/clearnet", ipsToUnlock, "ignored");
             }
 
@@ -270,15 +269,11 @@ public class UnlockTorIpsFrag extends Fragment {
             /////////////////////////////////////////////////////////////////////////////////////
         } else if ("tether".equals(deviceOrTether)) {
             if (!routeAllThroughTorTether) {
-                settingsChanged = saveSettings(context, ipsToUnlock, "ipsToUnlockTether");
-                if (settingsChanged) {
-                    FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/unlock_tether", new ArrayList<>(ipsToUnlock), "ignored");
-                }
+                settingsChanged = saveSettings(context, ipsToUnlock, IPS_TO_UNLOCK_TETHER);
+                //FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/unlock_tether", new ArrayList<>(ipsToUnlock), "ignored");
             } else {
-                settingsChanged = saveSettings(context, ipsToUnlock, "ipsForClearNetTether");
-                if (settingsChanged) {
-                    FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/clearnet_tether", new ArrayList<>(ipsToUnlock), "ignored");
-                }
+                settingsChanged = saveSettings(context, ipsToUnlock, IPS_FOR_CLEARNET_TETHER);
+                //FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/clearnet_tether", new ArrayList<>(ipsToUnlock), "ignored");
             }
         }
 

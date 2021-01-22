@@ -100,6 +100,8 @@ import static pan.alexander.tordnscrypt.modules.ModulesService.actionStopService
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
+import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_FOR_CLEARNET;
+import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_TO_UNLOCK;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -588,9 +590,9 @@ public class ServiceVPN extends VpnService {
 
         ipsForTor.clear();
         if (routeAllThroughTor) {
-            ipsForTor.addAll(new PrefManager(this).getSetStrPref("ipsForClearNet"));
+            ipsForTor.addAll(new PrefManager(this).getSetStrPref(IPS_FOR_CLEARNET));
         } else {
-            ipsForTor.addAll(new PrefManager(this).getSetStrPref("ipsToUnlock"));
+            ipsForTor.addAll(new PrefManager(this).getSetStrPref(IPS_TO_UNLOCK));
         }
 
         lock.writeLock().unlock();
