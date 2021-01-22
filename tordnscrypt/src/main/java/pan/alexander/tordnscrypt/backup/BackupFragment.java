@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.backup;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -30,8 +31,8 @@ import android.os.Environment;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.LinearLayoutCompat;
-import androidx.cardview.widget.CardView;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 
@@ -48,39 +49,65 @@ import com.github.angads25.filepicker.model.DialogProperties;
 import com.github.angads25.filepicker.view.FilePickerDialog;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
-import pan.alexander.tordnscrypt.help.Utils;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.file_operations.ExternalStoragePermissions;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import pan.alexander.tordnscrypt.utils.file_operations.OnBinaryFileOperationsCompleteListener;
 
 import static android.app.Activity.RESULT_OK;
+import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
+import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_ALLOW_GSM_PREF;
+import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_ALLOW_LAN_PREF;
+import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_ALLOW_ROAMING;
+import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_ALLOW_VPN;
+import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_ALLOW_WIFI_PREF;
+import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.CLEARNET_APPS;
+import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.UNLOCK_APPS;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.deleteFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
 
 
-public class BackupFragment extends Fragment implements View.OnClickListener, OnBinaryFileOperationsCompleteListener {
+public class BackupFragment extends Fragment implements View.OnClickListener,
+        DialogInterface.OnClickListener,
+        OnBinaryFileOperationsCompleteListener {
+
+    final static Set<String> TAGS_TO_CONVERT = new HashSet<>(Arrays.asList(
+            APPS_ALLOW_LAN_PREF,
+            APPS_ALLOW_WIFI_PREF,
+            APPS_ALLOW_GSM_PREF,
+            APPS_ALLOW_ROAMING,
+            APPS_ALLOW_VPN,
+            CLEARNET_APPS_FOR_PROXY,
+            UNLOCK_APPS,
+            CLEARNET_APPS
+    ));
 
     final static int CODE_READ = 10;
     final static int CODE_WRITE = 20;
 
-    private LinearLayoutCompat llFragmentBackup;
-    private CardView cardRules;
+    private LinearLayoutCompat llCardBackup;
     private EditText etFilePath;
     private String pathBackup;
     private String cacheDir;
     private String appDataDir;
     private DialogFragment progress;
 
+    private ResetHelper resetHelper;
     private BackupHelper backupHelper;
     private RestoreHelper restoreHelper;
+
+    private boolean logsDirAccessible;
 
     public BackupFragment() {
     }
@@ -99,6 +126,9 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_backup, container, false);
 
+        Button btnResetSettings = view.findViewById(R.id.btnResetSettings);
+        btnResetSettings.setOnClickListener(this);
+
         Button btnRestoreBackup = view.findViewById(R.id.btnRestoreBackup);
         btnRestoreBackup.setOnClickListener(this);
 
@@ -106,9 +136,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
         btnSaveBackup.setOnClickListener(this);
         btnSaveBackup.requestFocus();
 
-        llFragmentBackup = view.findViewById(R.id.llFragmentBackup);
-
-        cardRules = view.findViewById(R.id.cardRules);
+        llCardBackup = view.findViewById(R.id.llCardBackup);
 
         hideSelectionEditTextIfRequired(getActivity());
 
@@ -143,6 +171,10 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
         if (backupHelper != null) {
             backupHelper.setActivity(activity);
         }
+
+        if (resetHelper != null) {
+            resetHelper.setActivity(activity);
+        }
     }
 
     @Override
@@ -154,39 +186,56 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
         }
 
         int id = v.getId();
-        if (id == R.id.btnRestoreBackup) {
-            restoreHelper = new RestoreHelper(activity, appDataDir, cacheDir, pathBackup);
-            restoreBackup();
+        if (id == R.id.btnResetSettings) {
+            showAreYouSureDialog(activity, R.string.btnResetSettings, () -> resetSettings(activity));
+        } else if (id == R.id.btnRestoreBackup) {
+            showAreYouSureDialog(activity, R.string.btnRestoreBackup, () -> restoreBackup(activity));
         } else if (id == R.id.btnSaveBackup) {
-            backupHelper = new BackupHelper(activity, appDataDir, cacheDir, pathBackup);
-            saveBackup();
+            saveBackup(activity);
         } else if (id == R.id.etPathBackup) {
             selectBackupPath(activity);
         }
 
     }
 
-    private void restoreBackup() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            ExternalStoragePermissions permissions = new ExternalStoragePermissions(getActivity());
-            if (!permissions.isWritePermissions()) {
-                permissions.requestReadWritePermissions();
-                return;
-            }
+    @Override
+    public void onClick(DialogInterface dialog, int which) {
+
+    }
+
+    private void resetSettings(Activity activity) {
+
+        openPleaseWaitDialog();
+
+        resetHelper = new ResetHelper(activity, this);
+        resetHelper.resetSettings();
+    }
+
+    private void restoreBackup(Activity activity) {
+
+        restoreHelper = new RestoreHelper(activity, appDataDir, cacheDir, pathBackup);
+
+        ExternalStoragePermissions permissions = new ExternalStoragePermissions(activity);
+        if (!permissions.isReadPermissions()) {
+            permissions.requestReadPermissions();
+            return;
+        }
+
+        if (logsDirAccessible) {
 
             openPleaseWaitDialog();
 
-            restoreHelper.restoreAll(null);
+            restoreHelper.restoreAll(null, logsDirAccessible);
         } else {
             restoreHelper.openFileWithSAF();
         }
 
     }
 
-    private void saveBackup() {
+    private void saveBackup(Activity activity) {
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            ExternalStoragePermissions permissions = new ExternalStoragePermissions(getActivity());
+        if (logsDirAccessible) {
+            ExternalStoragePermissions permissions = new ExternalStoragePermissions(activity);
             if (!permissions.isWritePermissions()) {
                 permissions.requestReadWritePermissions();
                 return;
@@ -195,7 +244,8 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
 
         openPleaseWaitDialog();
 
-        backupHelper.saveAll();
+        backupHelper = new BackupHelper(activity, appDataDir, cacheDir, pathBackup);
+        backupHelper.saveAll(logsDirAccessible);
     }
 
     private void selectBackupPath(Activity activity) {
@@ -329,7 +379,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
 
             if (requestCode == CODE_READ) {
                 contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                restoreHelper.restoreAll(contentResolver.openInputStream(uri));
+                restoreHelper.restoreAll(contentResolver.openInputStream(uri), logsDirAccessible);
 
                 openPleaseWaitDialog();
             } else if (requestCode == CODE_WRITE) {
@@ -346,17 +396,26 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
         }
     }
 
+    private void showAreYouSureDialog(Activity activity, int title, Runnable action) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
+        builder.setTitle(title);
+        builder.setMessage(R.string.areYouSure);
+        builder.setPositiveButton(R.string.ok, (dialog, which) -> action.run());
+        builder.setNegativeButton(getText(R.string.cancel), (dialog, i) -> dialog.cancel());
+        builder.show();
+    }
+
     private void hideSelectionEditTextIfRequired(Activity activity) {
         CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
-            boolean logsDirAccessible = false;
+
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                 logsDirAccessible = Utils.INSTANCE.isLogsDirAccessible();
             }
-            if (activity != null && !activity.isFinishing() && !logsDirAccessible && cardRules != null) {
+
+            if (activity != null && !activity.isFinishing() && !logsDirAccessible && llCardBackup != null) {
                 activity.runOnUiThread(() -> {
-                    if (!activity.isFinishing() && cardRules != null && llFragmentBackup != null) {
-                        cardRules.setVisibility(View.GONE);
-                        llFragmentBackup.setPadding(0, pan.alexander.tordnscrypt.utils.Utils.INSTANCE.dips2pixels(10, activity), 0, 0);
+                    if (!activity.isFinishing() && llCardBackup != null) {
+                        llCardBackup.setVisibility(View.GONE);
                         pathBackup = cacheDir;
                     }
                 });

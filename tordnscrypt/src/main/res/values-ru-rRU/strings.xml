@@ -34,6 +34,7 @@
     <string name="install">Установить</string>
     <string name="exit">Выход</string>
     <string name="wrong">Что-то пошло не так!</string>
+    <string name="areYouSure">Вы уверены? Это действие не может быть отменено!</string>
     <string name="install_message">Вы хотите завершить установку?</string>
     <string name="write_file_error">Ошибка при сохранении файла!</string>
     <string name="drawer_menu_commonSettings">Общие настройки</string>
@@ -44,8 +45,9 @@
     <string name="drawer_menu_backup">Сохранить&amp;восстановить</string>
     <string name="drawer_menu_about">О программе</string>
     <string name="drawer_menu_help">Логи</string>
-    <string name="btnRestoreBackup">Восстановить все</string>
-    <string name="btnSaveBackup">Сохранить все</string>
+    <string name="btnRestoreBackup">Восстановить настройки</string>
+    <string name="btnSaveBackup">Сохранить настройки</string>
+    <string name="btnResetSettings">Сбросить настройки</string>
     <string name="etPathBackup">Путь к папке:</string>
     <string name="backupFolder">Выбрать папку для сохранения:</string>
     <string name="title_activity_settings">Настройки</string>

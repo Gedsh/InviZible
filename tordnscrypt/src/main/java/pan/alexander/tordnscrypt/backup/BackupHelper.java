@@ -28,7 +28,6 @@ import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
 
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.util.Log;
 
 import java.io.File;
@@ -39,16 +38,24 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.InstalledApplications;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 import static pan.alexander.tordnscrypt.backup.BackupFragment.CODE_WRITE;
+import static pan.alexander.tordnscrypt.backup.BackupFragment.TAGS_TO_CONVERT;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 class BackupHelper {
@@ -64,15 +71,19 @@ class BackupHelper {
         this.pathBackup = pathBackup;
     }
 
-    void saveAll() {
+    void saveAll(boolean logsDirAccessible) {
 
         CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
             try {
+                convertSharedPreferencesUIDsToPackageNames(activity);
+
                 SharedPreferences defaultSharedPref = PreferenceManager.getDefaultSharedPreferences(activity);
                 saveSharedPreferencesToFile(defaultSharedPref, cacheDir + "/defaultSharedPref");
 
                 SharedPreferences sharedPreferences = activity.getSharedPreferences(PrefManager.getPrefName(), Context.MODE_PRIVATE);
                 saveSharedPreferencesToFile(sharedPreferences, cacheDir + "/sharedPreferences");
+
+                clearSharesPreferencesBackupData(activity);
 
                 compressAllToZip(cacheDir + "/InvizibleBackup.zip",
                         appDataDir + "/app_bin", appDataDir + "/app_data",
@@ -83,7 +94,7 @@ class BackupHelper {
                     throw new IllegalStateException("Backup file not exist " + backup.getAbsolutePath());
                 }
 
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                if (logsDirAccessible) {
                     saveFile();
                 } else {
                     saveFileWithSAF();
@@ -178,6 +189,53 @@ class BackupHelper {
                 Log.e(LOG_TAG, "BackupHelper close progress fault " + ex.getMessage()
                         + " " + ex.getCause() + " " + Arrays.toString(ex.getStackTrace()));
             }
+        }
+    }
+
+    private void convertSharedPreferencesUIDsToPackageNames(Context context) {
+        InstalledApplications installedApplications = new InstalledApplications(context, Collections.emptySet());
+        List<ApplicationData> applications = installedApplications.getInstalledApps(false);
+
+        for (String tag: TAGS_TO_CONVERT) {
+            convertUIDsToPackageNames(applications, tag);
+        }
+    }
+
+    private void convertUIDsToPackageNames(List<ApplicationData> applications, String tag) {
+        Set<String> savedUIDs = new PrefManager(activity).getSetStrPref(tag);
+        Set<String> packagesToSave = new HashSet<>();
+
+        for (String savedUIDStr: savedUIDs) {
+
+            int savedUID = 0;
+            if (savedUIDStr.matches("^-?\\d+$")) {
+                savedUID = Integer.parseInt(savedUIDStr);
+            }
+
+            if (savedUID <= 2000) {
+                packagesToSave.add(savedUIDStr);
+                continue;
+            }
+
+            for (ApplicationData applicationData: applications) {
+                if (applicationData.getUid() == savedUID) {
+                    String pack = applicationData.getPack();
+                    ConcurrentSkipListSet<String> names = applicationData.getNames();
+                    if (!names.isEmpty() && names.first().contains("(M)")) {
+                        pack +="(M)";
+                    }
+                    packagesToSave.add(pack);
+                    break;
+                }
+            }
+        }
+
+        new PrefManager(activity).setSetStrPref(tag + "Backup", packagesToSave);
+    }
+
+    private void clearSharesPreferencesBackupData(Context context) {
+        for (String tag: TAGS_TO_CONVERT) {
+            new PrefManager(context).setSetStrPref(tag + "Backup", Collections.emptySet());
         }
     }
 

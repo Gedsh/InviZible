@@ -71,6 +71,10 @@
     <string name="disagree">I disagree</string>
     <string name="save_changes">Save changes</string>
     <string name="discard_changes">Discard changes</string>
+    <string name="allow">Allow</string>
+    <string name="deny">Deny</string>
+    <string name="areYouSure">Are you sure? This action cannot be undone!</string>
+    <string name="empty_string" translatable="false"/>
 
     <string name="message_no_root_used">You can use InviZible Pro with local VPN mode, or applications with own proxy or local VPN feature in proxy mode.</string>
     <string name="message_no_root_used_kitkat">You can use InviZible Pro with applications with own proxy or local VPN feature in proxy mode.</string>
@@ -87,8 +91,9 @@
     <string name="drawer_menu_help">Logs</string>
     <string name="drawer_menu_donate">Donate</string>
 
-    <string name="btnRestoreBackup">Restore All</string>
-    <string name="btnSaveBackup">Save All</string>
+    <string name="btnRestoreBackup">Restore Settings</string>
+    <string name="btnSaveBackup">Save Settings</string>
+    <string name="btnResetSettings">Reset Settings</string>
     <string name="etPathBackup">Folder Path:</string>
     <string name="backupFolder">Choose backup folder:</string>
     <string name="backupSaved">Backup saved</string>
@@ -587,7 +592,8 @@
     <string name="update_core_yes">Update</string>
     <string name="update_core_no">Later</string>
     <string name="update_core_not_show_again">Not ask again</string>
-    <string name="update_core_restart">Please restart InviZible Pro and allow complete installation!         After installation reconfigure HOTSPOT, if you use it!</string>
+    <string name="update_core_restart">Please restart InviZible Pro and allow complete installation!
+        After installation reconfigure HOTSPOT, if you use it!</string>
 
     <string name="about_build_ver" translatable="false">Build Version:</string>
     <string name="about_app_ver" translatable="false">Application Version:</string>
@@ -743,7 +749,5 @@
     <string name="pref_firewall_allow_internet_for_new_apps">Allow connections for new apps</string>
     <string name="pref_firewall_allow_internet_for_new_apps_on_summ">Internet connections for newly installed apps are allowed.</string>
     <string name="pref_firewall_allow_internet_for_new_apps_off_summ">Internet connections for newly installed applications are blocked.</string>
-    <string name="allow">Allow</string>
-    <string name="deny">Deny</string>
-    <string name="empty_string" translatable="false"/>
+
 </resources>

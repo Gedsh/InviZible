@@ -28,7 +28,6 @@ import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
 
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.util.Log;
 
 import java.io.File;
@@ -38,14 +37,20 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.patches.Patch;
+import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.InstalledApplications;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
@@ -53,6 +58,8 @@ import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import pan.alexander.tordnscrypt.installer.Installer;
 
 import static pan.alexander.tordnscrypt.backup.BackupFragment.CODE_READ;
+import static pan.alexander.tordnscrypt.backup.BackupFragment.TAGS_TO_CONVERT;
+import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_NEWLY_INSTALLED;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 class RestoreHelper extends Installer {
@@ -85,12 +92,12 @@ class RestoreHelper extends Installer {
         this.pathBackup = pathBackup;
     }
 
-    void restoreAll(InputStream inputStream) {
+    void restoreAll(InputStream inputStream, boolean logsDirAccessible) {
 
         CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
             try {
 
-                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+                if (!logsDirAccessible) {
                     copyData(inputStream);
                 }
 
@@ -131,6 +138,8 @@ class RestoreHelper extends Installer {
                 SharedPreferences sharedPreferences = activity.getSharedPreferences(PrefManager.getPrefName(), Context.MODE_PRIVATE);
                 restoreSharedPreferencesFromFile(sharedPreferences, appDataDir + "/sharedPreferences");
 
+                convertSharedPreferencesPackageNamesToUIDs(activity);
+
                 FileOperations.deleteFile(activity, appDataDir, "defaultSharedPref", "defaultSharedPref");
                 FileOperations.deleteFile(activity, appDataDir, "sharedPreferences", "sharedPreferences");
 
@@ -139,6 +148,9 @@ class RestoreHelper extends Installer {
                 restoreOldInfo(code);
 
                 refreshModulesStatus(activity);
+
+                Patch patch = new Patch(activity);
+                patch.checkPatches();
 
             } catch (Exception e) {
                 Log.e(LOG_TAG, "Restore fault " + e.getMessage() + " " + e.getCause());
@@ -248,6 +260,8 @@ class RestoreHelper extends Installer {
         new PrefManager(activity).setBoolPref("DNSCrypt Running", false);
         new PrefManager(activity).setBoolPref("Tor Running", false);
         new PrefManager(activity).setBoolPref("I2PD Running", false);
+
+        new PrefManager(activity).setSetStrPref(APPS_NEWLY_INSTALLED, Collections.emptySet());
     }
 
     private void extractBackup() throws Exception {
@@ -259,6 +273,7 @@ class RestoreHelper extends Installer {
 
     private void restoreSharedPreferencesFromFile(SharedPreferences sharedPref, String src) throws Exception {
         SharedPreferences.Editor editor = sharedPref.edit();
+        editor.clear();
         loadSharedPreferencesFromFile(editor, src);
         editor.apply();
 
@@ -268,7 +283,6 @@ class RestoreHelper extends Installer {
     @SuppressWarnings({"unchecked"})
     private void loadSharedPreferencesFromFile(SharedPreferences.Editor prefEdit, String src) throws Exception {
         try (ObjectInputStream input = new ObjectInputStream(new FileInputStream(src))) {
-            prefEdit.clear();
 
             Map<String, ?> entries = (Map<String, ?>) input.readObject();
 
@@ -291,6 +305,43 @@ class RestoreHelper extends Installer {
                 }
             }
         }
+    }
+
+    private void convertSharedPreferencesPackageNamesToUIDs(Context context) {
+        InstalledApplications installedApplications = new InstalledApplications(context, Collections.emptySet());
+        List<ApplicationData> applications = installedApplications.getInstalledApps(false);
+
+        for (String tag: TAGS_TO_CONVERT) {
+            convertPackageNamesToUIDs(applications, tag);
+        }
+    }
+
+    private void convertPackageNamesToUIDs(List<ApplicationData> applications, String tag) {
+        Set<String> savedPackageNames = new PrefManager(activity).getSetStrPref(tag + "Backup");
+        Set<String> uIDsToSave = new HashSet<>();
+
+        for (String savedPackage: savedPackageNames) {
+
+            if (savedPackage.matches("^-?\\d+$")) {
+                uIDsToSave.add(savedPackage);
+                continue;
+            }
+
+            for (ApplicationData applicationData: applications) {
+                String pack = applicationData.getPack();
+                ConcurrentSkipListSet<String> names = applicationData.getNames();
+                if (!names.isEmpty() && names.first().contains("(M)")) {
+                    pack +="(M)";
+                }
+
+                if (pack.equals(savedPackage)) {
+                    uIDsToSave.add(String.valueOf(applicationData.getUid()));
+                }
+            }
+        }
+
+        new PrefManager(activity).setSetStrPref(tag, uIDsToSave);
+        new PrefManager(activity).setSetStrPref(tag + "Backup", Collections.emptySet());
     }
 
     void setPathBackup(String pathBackup) {
