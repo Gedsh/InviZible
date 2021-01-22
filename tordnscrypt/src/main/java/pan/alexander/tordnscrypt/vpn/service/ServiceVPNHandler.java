@@ -261,8 +261,11 @@ public class ServiceVPNHandler extends Handler {
         serviceVPN.startNative(serviceVPN.vpn, listAllowed, listRule);
 
         if (fixTTL) {
-            modulesStatus.setFixTTLRulesUpdateRequested(serviceVPN, true);
-            ModulesIptablesRules.allowTethering(serviceVPN, oldVpnInterfaceName);
+            String finalOldVpnInterfaceName = oldVpnInterfaceName;
+            postDelayed(() -> {
+                modulesStatus.setFixTTLRulesUpdateRequested(serviceVPN, true);
+                ModulesIptablesRules.allowTethering(serviceVPN, finalOldVpnInterfaceName);
+            }, 1000);
         }
 
         serviceVPN.reloading = false;
