@@ -8,10 +8,10 @@
     tools:context=".help.HelpActivity">
 
     <androidx.cardview.widget.CardView
-        android:id="@+id/cardRules"
+        android:id="@+id/cardLogsPath"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_margin="8dp"
         android:focusable="false"
         app:cardBackgroundColor="@color/cardsColor"
         app:cardCornerRadius="5dp"
@@ -34,29 +34,58 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
+                android:focusableInTouchMode="false"
                 android:hint="@string/etPathBackup"
                 android:importantForAutofill="no"
-                android:inputType="text"
+                android:inputType="textNoSuggestions"
                 android:singleLine="false" />
+
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardLogsButtons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:focusable="false"
+        app:cardBackgroundColor="@color/cardsColor"
+        app:cardCornerRadius="5dp"
+        app:cardUseCompatPadding="true"
+        app:contentPadding="8dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnSaveLogs"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/button_start_selector"
-                android:minHeight="40dp"
+                android:minHeight="45dp"
                 android:text="@string/help_activity_save_logs"
                 android:textColor="@color/buttonTextColor"
                 android:typeface="serif" />
+
+            <View
+                android:id="@+id/dividerSaveLogs"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="4dp"
+                android:background="?android:attr/listDivider" />
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/swRootCommandsLog"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="8dp"
+                android:minHeight="45dp"
                 android:text="@string/pref_common_log_root_commands" />
-
-        </androidx.appcompat.widget.LinearLayoutCompat>
+        </LinearLayout>
 
     </androidx.cardview.widget.CardView>
 
