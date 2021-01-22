@@ -198,44 +198,55 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
     }
 
-    private void extractDNSCrypt() throws Exception {
-        mainActivity.runOnUiThread(installerUIChanger.dnsCryptProgressBarIndeterminate(true));
+    protected void extractDNSCrypt() throws Exception {
+        if (mainActivity != null) {
+            mainActivity.runOnUiThread(installerUIChanger.dnsCryptProgressBarIndeterminate(true));
+        }
 
         Command command = new DNSCryptExtractCommand(activity, appDataDir);
         command.execute();
 
-        mainActivity.runOnUiThread(installerUIChanger.dnsCryptProgressBarIndeterminate(false));
-        mainActivity.runOnUiThread(installerUIChanger.setDnsCryptInstalledStatus());
+        if (mainActivity != null) {
+            mainActivity.runOnUiThread(installerUIChanger.dnsCryptProgressBarIndeterminate(false));
+            mainActivity.runOnUiThread(installerUIChanger.setDnsCryptInstalledStatus());
+        }
 
         Log.i(LOG_TAG, "Installer: extractDNSCrypt OK");
     }
 
-    private void extractTor() throws Exception {
-        mainActivity.runOnUiThread(installerUIChanger.torProgressBarIndeterminate(true));
+    protected void extractTor() throws Exception {
+        if (mainActivity != null) {
+            mainActivity.runOnUiThread(installerUIChanger.torProgressBarIndeterminate(true));
+        }
 
         Command command = new TorExtractCommand(activity, appDataDir);
         command.execute();
 
-        mainActivity.runOnUiThread(installerUIChanger.torProgressBarIndeterminate(false));
-        mainActivity.runOnUiThread(installerUIChanger.setTorInstalledStatus());
+        if (mainActivity != null) {
+            mainActivity.runOnUiThread(installerUIChanger.torProgressBarIndeterminate(false));
+            mainActivity.runOnUiThread(installerUIChanger.setTorInstalledStatus());
+        }
 
         Log.i(LOG_TAG, "Installer: extractTor OK");
     }
 
-    private void extractITPD() throws Exception {
-
-        mainActivity.runOnUiThread(installerUIChanger.itpdProgressBarIndeterminate(true));
+    protected void extractITPD() throws Exception {
+        if (mainActivity != null) {
+            mainActivity.runOnUiThread(installerUIChanger.itpdProgressBarIndeterminate(true));
+        }
 
         Command command = new ITPDExtractCommand(activity, appDataDir);
         command.execute();
 
-        mainActivity.runOnUiThread(installerUIChanger.itpdProgressBarIndeterminate(false));
-        mainActivity.runOnUiThread(installerUIChanger.setItpdInstalledStatus());
+        if (mainActivity != null) {
+            mainActivity.runOnUiThread(installerUIChanger.itpdProgressBarIndeterminate(false));
+            mainActivity.runOnUiThread(installerUIChanger.setItpdInstalledStatus());
+        }
 
         Log.i(LOG_TAG, "Installer: extractITPD OK");
     }
 
-    private void savePreferencesModulesInstalled(boolean installed) {
+    protected void savePreferencesModulesInstalled(boolean installed) {
         if (activity == null) {
             return;
         }
