@@ -29,6 +29,7 @@ import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
@@ -51,7 +52,9 @@ import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.ConfigEditorFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.DNSCryptRulesVariant;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
@@ -76,6 +79,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
     private ArrayList<String> val_toml_orig;
     private String appDataDir;
     private boolean isChanged = false;
+    private boolean rootDirAccessible;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -83,6 +87,8 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         setRetainInstance(true);
 
         addPreferencesFromResource(R.xml.preferences_dnscrypt);
+
+        checkRootDirAccessible();
 
         if (appVersion.endsWith("p")) {
             removePreferencesWithGPVersion();
@@ -403,23 +409,28 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             ConfigEditorFragment.openEditorFragment(getParentFragmentManager(), "dnscrypt-proxy.toml");
             return true;
         } else if (Objects.equals(preference.getKey().trim(), "erase_blacklist") && isAdded()) {
-            eraseRules(activity, DNSCryptRulesVariant.BLACKLIST_HOSTS, "remote_blacklist");
+            showAreYouSureDialog(activity, R.string.pref_dnscrypt_erase_blacklist, () ->
+                    eraseRules(activity, DNSCryptRulesVariant.BLACKLIST_HOSTS, "remote_blacklist"));
             return true;
         } else if (Objects.equals(preference.getKey().trim(), "erase_whitelist") && isAdded()) {
-            eraseRules(activity, DNSCryptRulesVariant.WHITELIST_HOSTS, "remote_whitelist");
+            showAreYouSureDialog(activity, R.string.pref_dnscrypt_erase_whitelist, () ->
+                    eraseRules(activity, DNSCryptRulesVariant.WHITELIST_HOSTS, "remote_whitelist"));
             return true;
         } else if (Objects.equals(preference.getKey().trim(), "erase_ipblacklist") && isAdded()) {
-            eraseRules(activity, DNSCryptRulesVariant.BLACKLIST_IPS, "remote_ipblacklist");
+            showAreYouSureDialog(activity, R.string.pref_dnscrypt_erase_ipblacklist, () ->
+                    eraseRules(activity, DNSCryptRulesVariant.BLACKLIST_IPS, "remote_ipblacklist"));
             return true;
         } else if (Objects.equals(preference.getKey().trim(), "erase_forwarding_rules") && isAdded()) {
-            eraseRules(activity, DNSCryptRulesVariant.FORWARDING, "remote_forwarding_rules");
+            showAreYouSureDialog(activity, R.string.pref_dnscrypt_erase_forwarding_rules, () ->
+                    eraseRules(activity, DNSCryptRulesVariant.FORWARDING, "remote_forwarding_rules"));
             return true;
         } else if (Objects.equals(preference.getKey().trim(), "erase_cloaking_rules") && isAdded()) {
-            eraseRules(activity, DNSCryptRulesVariant.CLOAKING, "remote_cloaking_rules");
+            showAreYouSureDialog(activity, R.string.pref_dnscrypt_erase_cloaking_rules, () ->
+                    eraseRules(activity, DNSCryptRulesVariant.CLOAKING, "remote_cloaking_rules"));
             return true;
         } else if (Objects.equals(preference.getKey().trim(), "local_blacklist") && isAdded()) {
 
-            if (isDownloadDirAccessible()) {
+            if (rootDirAccessible) {
                 FilePickerDialog dialog = new FilePickerDialog(activity, getFilePickerProperties(activity));
                 dialog.setDialogSelectionListener(files -> importRules(activity, DNSCryptRulesVariant.BLACKLIST_HOSTS, files));
                 dialog.show();
@@ -430,7 +441,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             return true;
         } else if (Objects.equals(preference.getKey().trim(), "local_whitelist") && isAdded()) {
 
-            if (isDownloadDirAccessible()) {
+            if (rootDirAccessible) {
                 FilePickerDialog dialog = new FilePickerDialog(activity, getFilePickerProperties(activity));
                 dialog.setDialogSelectionListener(files -> importRules(activity, DNSCryptRulesVariant.WHITELIST_HOSTS, files));
                 dialog.show();
@@ -441,7 +452,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             return true;
         } else if (Objects.equals(preference.getKey().trim(), "local_ipblacklist") && isAdded()) {
 
-            if (isDownloadDirAccessible()) {
+            if (rootDirAccessible) {
                 FilePickerDialog dialog = new FilePickerDialog(activity, getFilePickerProperties(activity));
                 dialog.setDialogSelectionListener(files -> importRules(activity, DNSCryptRulesVariant.BLACKLIST_IPS, files));
                 dialog.show();
@@ -452,7 +463,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             return true;
         } else if (Objects.equals(preference.getKey().trim(), "local_forwarding_rules") && isAdded()) {
 
-            if (isDownloadDirAccessible()) {
+            if (rootDirAccessible) {
                 FilePickerDialog dialog = new FilePickerDialog(activity, getFilePickerProperties(activity));
                 dialog.setDialogSelectionListener(files -> importRules(activity, DNSCryptRulesVariant.FORWARDING, files));
                 dialog.show();
@@ -463,7 +474,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             return true;
         } else if (Objects.equals(preference.getKey().trim(), "local_cloaking_rules") && isAdded()) {
 
-            if (isDownloadDirAccessible()) {
+            if (rootDirAccessible) {
                 FilePickerDialog dialog = new FilePickerDialog(activity, getFilePickerProperties(activity));
                 dialog.setDialogSelectionListener(files -> importRules(activity, DNSCryptRulesVariant.CLOAKING, files));
                 dialog.show();
@@ -499,6 +510,15 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         EraseRules eraseRules = new EraseRules(context, getParentFragmentManager(),
                 dnsCryptRulesVariant, remoteRulesLinkPreferenceTag);
         eraseRules.start();
+    }
+
+    private void showAreYouSureDialog(Activity activity, int title, Runnable action) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
+        builder.setTitle(title);
+        builder.setMessage(R.string.areYouSure);
+        builder.setPositiveButton(R.string.ok, (dialog, which) -> action.run());
+        builder.setNegativeButton(getText(R.string.cancel), (dialog, i) -> dialog.cancel());
+        builder.show();
     }
 
     private void openFileWithSAF(Activity activity, int fileType) {
@@ -556,27 +576,12 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         }
     }
 
-    private boolean isDownloadDirAccessible() {
-        boolean result = false;
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            return false;
+    private void checkRootDirAccessible() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+                rootDirAccessible = Utils.INSTANCE.isLogsDirAccessible();
+            });
         }
-
-        try {
-            @SuppressWarnings("deprecation")
-            File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-
-            if (dir != null && dir.isDirectory() && Objects.requireNonNull(dir.list()).length > 0) {
-                result = true;
-            } else {
-                Log.w(LOG_TAG, "Download Dir is not accessible!");
-            }
-        } catch (Exception e) {
-            Log.w(LOG_TAG, "Download Dir is not accessible " + e.getMessage() + e.getCause());
-        }
-
-        return result;
     }
 
     private DialogProperties getFilePickerProperties(Context context) {
