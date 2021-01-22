@@ -173,20 +173,6 @@ public class PathVars {
                 && new PrefManager(Objects.requireNonNull(context)).getBoolPref("I2PD Installed");
     }
 
-    /*public void saveAppUID(Context context) {
-        String appUID = "";
-        try {
-            ApplicationInfo applicationInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), 0);
-            appUID = String.valueOf(applicationInfo.uid);
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "saveAppUID function fault " + e.getMessage() + " " + e.getCause());
-        }
-
-        new PrefManager(context).setStrPref("appUID", appUID);
-
-        Log.i(LOG_TAG, "PathVars AppDataDir " + appDataDir + " AppUID " + appUID);
-    }*/
-
     public String getRejectAddress() {
         return "10.191.0.2";
     }

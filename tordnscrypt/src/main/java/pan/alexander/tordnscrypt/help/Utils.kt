@@ -124,41 +124,4 @@ object Utils {
                     "SIGN_VERSION " + TopFragment.appSign
         }
     }
-
-    fun isLogsDirAccessible(): Boolean {
-        var result = false
-        try {
-            val dir = Environment.getExternalStorageDirectory()
-            if (dir != null && dir.isDirectory) {
-                result = dir.list()?.isNotEmpty() ?: false
-            } else {
-                Log.w(LOG_TAG, "Root Dir is not read accessible!")
-            }
-
-            var rootDirPath = "/storage/emulated/0"
-            if (dir != null && result) {
-                rootDirPath = dir.canonicalPath
-            }
-            val saveDirPath = "$rootDirPath/TorDNSCrypt"
-            val saveDir = File(saveDirPath)
-            if (result && !saveDir.isDirectory && !saveDir.mkdir()) {
-                result = false
-                Log.w(LOG_TAG, "Root Dir is not write accessible!")
-            }
-
-            if (result) {
-                val testFilePath = "$saveDirPath/testFile"
-                val testFile = File(testFilePath)
-                PrintWriter(testFile).print("")
-                if (!testFile.isFile || !testFile.delete()) {
-                    result = false
-                    Log.w(LOG_TAG, "Root Dir is not write accessible!")
-                }
-            }
-
-        } catch (e: Exception) {
-            Log.w(LOG_TAG, "Download Dir is not accessible " + e.message + e.cause)
-        }
-        return result
-    }
 }

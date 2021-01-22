@@ -97,6 +97,7 @@ import pan.alexander.tordnscrypt.vpn.Util;
 
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
 import static pan.alexander.tordnscrypt.modules.ModulesService.actionStopServiceForeground;
+import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -450,7 +451,7 @@ public class ServiceVPN extends VpnService {
         if (proxyPortStr != null && proxyPortStr.matches("\\d+")) {
             proxyPort = Integer.parseInt(proxyPortStr);
         }
-        setBypassProxy = new PrefManager(this).getSetStrPref("clearnetAppsForProxy");
+        setBypassProxy = new PrefManager(this).getSetStrPref(CLEARNET_APPS_FOR_PROXY);
 
         // Prepare rules
         prepareUidAllowed(listAllowed, listRule);

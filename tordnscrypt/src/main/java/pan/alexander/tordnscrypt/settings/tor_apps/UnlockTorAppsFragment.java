@@ -45,7 +45,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -56,16 +55,15 @@ import java.util.concurrent.locks.ReentrantLock;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
-import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.InstalledApplications;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Verifier;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
+import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
@@ -73,6 +71,9 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class UnlockTorAppsFragment extends Fragment implements InstalledApplications.OnAppAddListener,
         CompoundButton.OnCheckedChangeListener, ChipGroup.OnCheckedChangeListener, SearchView.OnQueryTextListener {
+
+    public static final String UNLOCK_APPS = "unlockApps";
+    public static final String CLEARNET_APPS = "clearnetApps";
 
     private Chip chipTorAppsUser;
     private Chip chipTorAppsSystem;
@@ -123,11 +124,11 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
         boolean bypassAppsProxy = getArguments() != null && getArguments().getBoolean("proxy");
 
         if (bypassAppsProxy) {
-            unlockAppsStr = "clearnetAppsForProxy";
+            unlockAppsStr = CLEARNET_APPS_FOR_PROXY;
         } else if (!routeAllThroughTorDevice) {
-            unlockAppsStr = "unlockApps";
+            unlockAppsStr = UNLOCK_APPS;
         } else {
-            unlockAppsStr = "clearnetApps";
+            unlockAppsStr = CLEARNET_APPS;
         }
 
         setUnlockApps = new PrefManager(context).getSetStrPref(unlockAppsStr);
@@ -152,7 +153,6 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
         pbTorApp = view.findViewById(R.id.pbTorApp);
 
         rvListTorApps = view.findViewById(R.id.rvTorApps);
-        //rvListTorApps.requestFocus();
 
         searchText = null;
 
@@ -221,9 +221,6 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
             return;
         }
 
-        PathVars pathVars = PathVars.getInstance(context);
-        String appDataDir = pathVars.getAppDataDir();
-
         if (savedAppsUnlockWhenSearch != null) {
             appsUnlock.clear();
             appsUnlock.addAll(savedAppsUnlockWhenSearch);
@@ -242,7 +239,10 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
 
         new PrefManager(context).setSetStrPref(unlockAppsStr, setAppUIDtoSave);
 
-        List<String> listAppUIDtoSave = new LinkedList<>();
+        setUnlockApps.clear();
+        setUnlockApps.addAll(setAppUIDtoSave);
+
+        /*List<String> listAppUIDtoSave = new LinkedList<>();
 
         for (String appUID : setAppUIDtoSave) {
             if (Integer.parseInt(appUID) >= 0) {
@@ -250,7 +250,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
             }
         }
 
-        FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/" + unlockAppsStr, listAppUIDtoSave, "ignored");
+        FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/" + unlockAppsStr, listAppUIDtoSave, "ignored");*/
         Toast.makeText(context, getString(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();

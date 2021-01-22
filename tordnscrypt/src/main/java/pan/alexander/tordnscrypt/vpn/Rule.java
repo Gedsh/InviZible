@@ -42,6 +42,9 @@ import pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment;
 import pan.alexander.tordnscrypt.utils.InstalledApplications;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 
+import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
+import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.CLEARNET_APPS;
+import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.UNLOCK_APPS;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class Rule {
@@ -76,14 +79,14 @@ public class Rule {
 
             String unlockAppsStr;
             if (!routeAllThroughIniZible) {
-                unlockAppsStr = "unlockApps";
+                unlockAppsStr = UNLOCK_APPS;
             } else {
-                unlockAppsStr = "clearnetApps";
+                unlockAppsStr = CLEARNET_APPS;
             }
 
             Set<String> setUnlockApps = new PrefManager(context).getSetStrPref(unlockAppsStr);
 
-            Set<String> setBypassProxy = new PrefManager(context).getSetStrPref("clearnetAppsForProxy");
+            Set<String> setBypassProxy = new PrefManager(context).getSetStrPref(CLEARNET_APPS_FOR_PROXY);
 
             // Build rule list
             List<Rule> listRules = new CopyOnWriteArrayList<>();

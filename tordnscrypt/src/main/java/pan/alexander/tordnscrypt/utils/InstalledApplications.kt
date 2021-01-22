@@ -130,7 +130,7 @@ class InstalledApplications(private val context: Context, private val activeApps
                         }
                     } catch (e: Exception) {
                         useInternet = true
-                        Log.e(LOG_TAG, "InstalledApplications getApp exception  ${e.message}\n${e.cause}")
+                        Log.w(LOG_TAG, "InstalledApplications getApp exception  ${e.message}\n${e.cause}")
                     }
 
                     if (!useInternet && !system || uid == ownUID) {

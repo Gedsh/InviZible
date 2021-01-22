@@ -48,6 +48,7 @@ import pan.alexander.tordnscrypt.utils.PrefManager
 import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
 import java.util.concurrent.Future
 
+const val CLEARNET_APPS_FOR_PROXY = "clearnetAppsForProxy"
 private val IP_REGEX = Regex("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
 private val PORT_REGEX = Regex("^\\d+$")
 
@@ -152,7 +153,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
         saveToSharedPreferences("ProxyUserName", proxyUserName)
         saveToSharedPreferences("ProxyPass", proxyPass)
 
-        val setBypassProxy = PrefManager(context).getSetStrPref("clearnetAppsForProxy")
+        val setBypassProxy = PrefManager(context).getSetStrPref(CLEARNET_APPS_FOR_PROXY)
 
         if (proxyServer.isNotEmpty() && proxyPort.isNotEmpty()
                 && (setBypassProxy.isNotEmpty() || proxyServer != "127.0.0.1")) {
@@ -219,7 +220,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
         if (server.isEmpty() || !server.matches(IP_REGEX)) {
             binding.etProxyServer.background = ContextCompat.getDrawable(context, R.drawable.error_hint_selector)
             return
-        } else if (server == "127.0.0.1" && PrefManager(context).getSetStrPref("clearnetAppsForProxy").isEmpty()) {
+        } else if (server == "127.0.0.1" && PrefManager(context).getSetStrPref(CLEARNET_APPS_FOR_PROXY).isEmpty()) {
             binding.tvProxyHint.apply {
                 setText(R.string.proxy_select_proxy_app)
                 setTextColor(ContextCompat.getColor(context, R.color.textModuleStatusColorAlert))
