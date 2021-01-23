@@ -1,0 +1,12 @@
+**InviZible Pro beta 1.2.1**
+* Optimized using iptables in Root mode.
+* Improved websites handling for the Tor Exclude/Select websites feature.
+* Improved backup/restore feature.
+* Implemented reset settings feature.
+* Improved save logs feature.
+* Improved Fix TTL feature.
+* Improved import DNSCrypt rules feature.
+* Updated default DNSCrypt configuration.
+* Added Japanese language.
+* Updated French language.
+* Minor fixes and optimizations.
