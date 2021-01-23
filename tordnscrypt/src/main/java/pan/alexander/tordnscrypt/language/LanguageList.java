@@ -29,22 +29,24 @@ public class LanguageList {
     private static final String[] HUMAN_RAW = {
             null,
             "RW5nbGlzaCAoRW5nbGlzaCk=",
-            "R2VybWFuIChEZXV0c2NoZSk=",
-            "SW5kb25lc2lhbiAoYmFoYXNhIEluZG9uZXNpYSk=",
-            "UGVyc2lhbiAo2YHYp9ix2LPbjCk=",
             "RmlubmlzaCAoU3VvbWFsYWluZW4p",
             "RnJlbmNoIChGcmFuw6dhaXNlKQ==",
+            "R2VybWFuIChEZXV0c2NoZSk=",
+            "SW5kb25lc2lhbiAoYmFoYXNhIEluZG9uZXNpYSk=",
+            "SmFwYW5lc2UgKOaXpeacrOS6uik=",
+            "UGVyc2lhbiAo2YHYp9ix2LPbjCk=",
             "UG9saXNoIChQb2xza2kp",
             "UnVzc2lhbiAo0KDRg9GB0YHQutC40Lkp"
     };
     private static final String[] MACHINE = {
             "",
             "en",
-            "de",
-            "in",
-            "fa",
             "fi",
             "fr",
+            "de",
+            "in",
+            "ja",
+            "fa",
             "pl",
             "ru"
     };
