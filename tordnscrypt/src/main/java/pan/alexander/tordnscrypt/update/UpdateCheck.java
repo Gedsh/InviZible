@@ -260,7 +260,7 @@ public class UpdateCheck {
                 request.put("submit", "submit");
 
 
-                String url = domainName + "/ru/update";
+                String url = domainName + "/ru/update/";
                 String serverAnswerEncoded = HttpsRequest.post(context, url, HttpsRequest.hashMapToUrl(request));
 
                 //Uses for testing purposes:
