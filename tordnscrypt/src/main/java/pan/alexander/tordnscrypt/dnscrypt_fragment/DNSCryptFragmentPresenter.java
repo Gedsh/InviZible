@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.dnscrypt_fragment;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.ComponentName;
@@ -60,7 +60,6 @@ import pan.alexander.tordnscrypt.utils.OwnFileReader;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.vpn.Rule;
-import pan.alexander.tordnscrypt.vpn.Util;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPN;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHandler;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
@@ -76,6 +75,8 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
+    private final static int MAX_LINES_IN_LOG = 200;
+
     private volatile boolean bound;
 
     private int displayLogPeriod = -1;
@@ -502,7 +503,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                 && !view.getFragmentActivity().isFinishing()
                 && (modulesStatus.getMode() == VPN_MODE || fixTTL) && !bound) {
             bindToVPNService(view.getFragmentActivity());
-            return false;
+            //return false;
         }
 
         if (modulesStatus.getDnsCryptState() == RESTARTING) {
@@ -538,7 +539,13 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
         lines.append("<br />");
 
-        for (int i = 0; i < dnsQueryLogRecords.size(); i++) {
+        int i = 0;
+        int logSize = dnsQueryLogRecords.size();
+        if (logSize > MAX_LINES_IN_LOG) {
+            i = logSize - MAX_LINES_IN_LOG;
+        }
+
+        for (; i < logSize; i++) {
             record = dnsQueryLogRecords.get(i);
 
             if (appVersion.startsWith("g") && record.getBlocked() && record.getBlockedByIpv6()
@@ -756,17 +763,6 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     private void runDNSCrypt(Context context) {
         if (context == null || view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
-        }
-
-        if (Util.isPrivateDns(context)) {
-            FragmentManager fragmentManager = view.getFragmentFragmentManager();
-            if (fragmentManager != null) {
-                NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                        context, context.getText(R.string.helper_dnscrypt_private_dns).toString(), "helper_dnscrypt_private_dns");
-                if (notificationHelper != null) {
-                    notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
-                }
-            }
         }
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);

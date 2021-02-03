@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.job.JobInfo;
@@ -254,7 +254,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
     private void shortenTooLongITPDLog() {
         OwnFileReader ofr = new OwnFileReader(context, appDataDir + "/logs/i2pd.log");
-        ofr.shortenToToLongFile();
+        ofr.shortenTooTooLongFile();
     }
 
     private void startHOTSPOT() {

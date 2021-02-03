@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Activity;
@@ -27,8 +27,6 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.os.PowerManager;
 import android.provider.Settings;
 
@@ -73,6 +71,7 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
+import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
 import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.ISOLATE_DEST_ADDRESS;
 import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.ISOLATE_DEST_PORT;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -94,7 +93,6 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     private String itpdConfPath = "";
     private String itpdTunnelsPath = "";
     private boolean commandDisableProxy;
-    private Handler handler;
 
     public PreferencesCommonFragment() {
     }
@@ -120,11 +118,6 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         if (activity == null) {
             return super.onCreateView(inflater, container, savedInstanceState);
-        }
-
-        Looper looper = Looper.getMainLooper();
-        if (looper != null) {
-            handler = new Handler(looper);
         }
 
         activity.setTitle(R.string.drawer_menu_commonSettings);
@@ -192,6 +185,15 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             }
         }
 
+        Preference rebindDetection = findPreference("pref_common_dns_rebind_protection");
+        if (mitmCategory != null && rebindDetection != null) {
+            if (modulesStatus.getMode() == VPN_MODE || fixTTL) {
+                rebindDetection.setOnPreferenceChangeListener(this);
+            } else {
+                mitmCategory.removePreference(rebindDetection);
+            }
+        }
+
         if (modulesStatus.getMode() == ROOT_MODE) {
             registerPreferences();
         } else {
@@ -248,7 +250,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         boolean swUseProxy = sharedPreferences.getBoolean("swUseProxy", false);
         String proxyServer = sharedPreferences.getString("ProxyServer", "");
         String proxyPort = sharedPreferences.getString("ProxyPort", "");
-        Set<String> setBypassProxy = new PrefManager(context).getSetStrPref("clearnetAppsForProxy");
+        Set<String> setBypassProxy = new PrefManager(context).getSetStrPref(CLEARNET_APPS_FOR_PROXY);
         if (swUseProxy && ModulesStatus.getInstance().getMode() == VPN_MODE
                 && (proxyServer == null || proxyServer.isEmpty()
                 || proxyPort == null || proxyPort.isEmpty()
@@ -311,19 +313,11 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             case "pref_common_tor_tethering":
                 allowTorTether = Boolean.parseBoolean(newValue.toString());
                 readTorConf(context);
-                if (new PrefManager(context).getBoolPref("Tor Running")) {
-                    ModulesRestarter.restartTor(context);
-                    ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
-                }
                 break;
             case "pref_common_itpd_tethering":
                 allowITPDtether = Boolean.parseBoolean(newValue.toString());
                 readITPDConf(context);
                 readITPDTunnelsConf(context);
-                if (new PrefManager(context).getBoolPref("I2PD Running")) {
-                    ModulesRestarter.restartITPD(context);
-                    ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
-                }
                 break;
             case "pref_common_tor_route_all":
                 Preference prefTorSiteUnlockTether = findPreference("prefTorSiteUnlockTether");
@@ -368,6 +362,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             case "pref_common_local_eth_device_addr":
             case "swCompatibilityMode":
             case "pref_common_multi_user":
+            case "pref_common_dns_rebind_protection":
                 ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
                 break;
             case "swWakelock":
@@ -491,6 +486,11 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         }
 
         FileOperations.writeToTextFile(context, torConfPath, torConf, "ignored");
+
+        if (new PrefManager(context).getBoolPref("Tor Running")) {
+            ModulesRestarter.restartTor(context);
+            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
+        }
     }
 
     private String addIsolateFlags(String port, boolean allowTorTethering, boolean isolateDestinationAddress, boolean isolateDestinationPort) {
@@ -543,6 +543,11 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         }
 
         FileOperations.writeToTextFile(context, itpdConfPath, itpdConf, "ignored");
+
+        if (new PrefManager(context).getBoolPref("I2PD Running")) {
+            ModulesRestarter.restartITPD(context);
+            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
+        }
     }
 
     private void readITPDTunnelsConf(Context context) {
@@ -577,26 +582,20 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     public void OnFileOperationComplete(FileOperationsVariants currentFileOperation,
                                         boolean fileOperationResult, String path, final String tag, final List<String> lines) {
 
-        if (handler == null) {
-            return;
-        }
-
         if (fileOperationResult && currentFileOperation == readTextFile) {
-            handler.post(() -> {
-                if (lines != null) {
-                    switch (tag) {
-                        case SettingsActivity.tor_conf_tag:
-                            allowTorTethering(lines);
-                            break;
-                        case SettingsActivity.itpd_conf_tag:
-                            allowITPDTethering(lines);
-                            break;
-                        case SettingsActivity.itpd_tunnels_tag:
-                            allowITPDTunnelsTethering(lines);
-                            break;
-                    }
+            if (lines != null) {
+                switch (tag) {
+                    case SettingsActivity.tor_conf_tag:
+                        allowTorTethering(lines);
+                        break;
+                    case SettingsActivity.itpd_conf_tag:
+                        allowITPDTethering(lines);
+                        break;
+                    case SettingsActivity.itpd_tunnels_tag:
+                        allowITPDTunnelsTethering(lines);
+                        break;
                 }
-            });
+            }
         }
     }
 
@@ -776,11 +775,6 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-
-        if (handler != null) {
-            handler.removeCallbacksAndMessages(null);
-            handler = null;
-        }
 
         FileOperations.deleteOnFileOperationCompleteListener(this);
     }

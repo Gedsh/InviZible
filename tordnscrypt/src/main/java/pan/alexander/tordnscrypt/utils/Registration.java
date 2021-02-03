@@ -15,12 +15,11 @@ package pan.alexander.tordnscrypt.utils;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -40,16 +39,16 @@ import pan.alexander.tordnscrypt.TopFragment;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class Registration {
-    private final Context context;
+    private final Activity activity;
     public static boolean wrongRegistrationCode = true;
 
-    public Registration(Context context) {
-        this.context = context;
+    public Registration(Activity activity) {
+        this.activity = activity;
     }
 
     public void showDonateDialog() {
         try {
-            AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomAlertDialogTheme);
+            AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
             builder.setMessage(R.string.donate_project)
                     .setTitle(R.string.donate)
                     .setPositiveButton(R.string.enter_code_button, (dialog, which) -> {
@@ -65,9 +64,9 @@ public class Registration {
                             link = "https://invizible.net/en/donate/";
                         }
                         Intent donatePage = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
-                        PackageManager packageManager = context.getPackageManager();
+                        PackageManager packageManager = activity.getPackageManager();
                         if (packageManager != null && donatePage.resolveActivity(packageManager) != null) {
-                            context.startActivity(donatePage);
+                            activity.startActivity(donatePage);
                         }
                         dialogInterface.dismiss();
                     })
@@ -83,31 +82,31 @@ public class Registration {
 
     public void showEnterCodeDialog() {
 
-        if (context == null || !(context instanceof MainActivity) || ((MainActivity) context).isFinishing()) {
+        if (activity == null || !(activity instanceof MainActivity) || activity.isFinishing()) {
             return;
         }
 
-        LayoutInflater inflater = ((Activity)context).getLayoutInflater();
+        LayoutInflater inflater = activity.getLayoutInflater();
         @SuppressLint("InflateParams") final View inputView = inflater.inflate(R.layout.edit_text_for_dialog, null, false);
         final EditText editText = inputView.findViewById(R.id.etForDialog);
         editText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
         builder .setTitle(R.string.enter_code)
                 .setPositiveButton(R.string.ok, (dialog, which) -> {
-                    if (((MainActivity) context).isFinishing()) {
+                    if (activity.isFinishing()) {
                         dialog.dismiss();
                         return;
                     }
 
-                    new PrefManager(context).setStrPref("registrationCode",editText.getText().toString().trim());
+                    new PrefManager(activity).setStrPref("registrationCode",editText.getText().toString().trim());
 
                     wrongRegistrationCode = false;
 
-                    TopFragment topFragment = (TopFragment) ((MainActivity)context).getSupportFragmentManager().findFragmentByTag("topFragmentTAG");
+                    TopFragment topFragment = (TopFragment) ((MainActivity)activity).getSupportFragmentManager().findFragmentByTag("topFragmentTAG");
                     if (topFragment!=null) {
                         topFragment.checkNewVer();
-                        MainActivity.modernDialog = ((MainActivity)context).modernProgressDialog();
+                        MainActivity.modernDialog = ((MainActivity)activity).modernProgressDialog();
                     }
                     dialog.dismiss();
                 })

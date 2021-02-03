@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.vpn;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
@@ -71,6 +71,13 @@ public class Util {
             "224.0.0.0/4",
             "240.0.0.0/4",
             "255.255.255.255/32"));
+
+    public static final ArrayList<String> dnsRebindList = new ArrayList<>(Arrays.asList(
+            "10.0.0.0/8",
+            "172.16.0.0/12",
+            "192.168.0.0/16",
+            "100.64.0.0/10"
+            ));
 
     private static native String jni_getprop(String name);
 

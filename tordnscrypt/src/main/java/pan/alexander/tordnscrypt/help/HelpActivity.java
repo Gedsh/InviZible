@@ -15,13 +15,14 @@ package pan.alexander.tordnscrypt.help;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -84,6 +85,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     private static DialogFragment dialogFragment;
     private ModulesStatus modulesStatus;
     private String info;
+    private boolean logsDirAccessible;
 
     @SuppressLint("NewApi")
     @Override
@@ -106,9 +108,16 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         btnSaveLogs.setOnClickListener(this);
         btnSaveLogs.requestFocus();
 
+        View dividerSaveLogs = findViewById(R.id.dividerSaveLogs);
         SwitchCompat swRootCommandsLog = findViewById(R.id.swRootCommandsLog);
-        swRootCommandsLog.setChecked(new PrefManager(this).getBoolPref("swRootCommandsLog"));
-        swRootCommandsLog.setOnCheckedChangeListener(this);
+
+        if (ModulesStatus.getInstance().isRootAvailable()) {
+            swRootCommandsLog.setChecked(new PrefManager(this).getBoolPref("swRootCommandsLog"));
+            swRootCommandsLog.setOnCheckedChangeListener(this);
+        } else {
+            swRootCommandsLog.setVisibility(View.GONE);
+            dividerSaveLogs.setVisibility(View.GONE);
+        }
 
         Handler mHandler = null;
         Looper looper = Looper.getMainLooper();
@@ -156,7 +165,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
         int id = view.getId();
         if (id == R.id.btnSaveLogs) {
-            if (!isWriteExternalStoragePermissions()) {
+            if (logsDirAccessible && !isWriteExternalStoragePermissions()) {
                 requestWriteExternalStoragePermissions();
                 return;
             }
@@ -308,7 +317,11 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
     private void hideSelectionEditTextIfRequired() {
         CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
-            boolean logsDirAccessible = Utils.INSTANCE.isLogsDirAccessible();
+
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                logsDirAccessible = pan.alexander.tordnscrypt.utils.Utils.INSTANCE.isLogsDirAccessible();
+            }
+
             if (!isFinishing() && !logsDirAccessible && etLogsPath != null && tvLogsPath != null) {
                 runOnUiThread(() ->{
                     if (!isFinishing() && etLogsPath != null && tvLogsPath != null) {

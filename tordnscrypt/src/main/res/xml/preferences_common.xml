@@ -96,6 +96,12 @@
             android:key="pref_common_arp_block_internet"
             android:summary="@string/pref_common_arp_block_internet_summ"
             android:title="@string/pref_common_arp_block_internet" />
+        <SwitchPreference
+            android:id="@+id/pref_common_dns_rebind_protection"
+            android:defaultValue="false"
+            android:key="pref_common_dns_rebind_protection"
+            android:summary="@string/pref_common_dns_rebind_protection_summ"
+            android:title="@string/pref_common_dns_rebind_protection" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_common_proxy_categ"
         android:key="categoryCommonProxy">

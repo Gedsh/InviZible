@@ -34,6 +34,7 @@
     <string name="install">Установить</string>
     <string name="exit">Выход</string>
     <string name="wrong">Что-то пошло не так!</string>
+    <string name="areYouSure">Вы уверены? Это действие не может быть отменено!</string>
     <string name="install_message">Вы хотите завершить установку?</string>
     <string name="write_file_error">Ошибка при сохранении файла!</string>
     <string name="drawer_menu_commonSettings">Общие настройки</string>
@@ -44,8 +45,9 @@
     <string name="drawer_menu_backup">Сохранить&amp;восстановить</string>
     <string name="drawer_menu_about">О программе</string>
     <string name="drawer_menu_help">Логи</string>
-    <string name="btnRestoreBackup">Восстановить все</string>
-    <string name="btnSaveBackup">Сохранить все</string>
+    <string name="btnRestoreBackup">Восстановить настройки</string>
+    <string name="btnSaveBackup">Сохранить настройки</string>
+    <string name="btnResetSettings">Сбросить настройки</string>
     <string name="etPathBackup">Путь к папке:</string>
     <string name="backupFolder">Выбрать папку для сохранения:</string>
     <string name="title_activity_settings">Настройки</string>
@@ -94,7 +96,8 @@
     <string name="pref_fast_language">Выбрать язык</string>
     <string name="pref_common_categ_run_with_root">Использовать Root привилегии</string>
     <string name="pref_common_run_with_root">Запуск модулей с Root</string>
-    <string name="pref_common_run_with_root_summ">Использовать Root привилегии для DNSCrypt, Tor, I2P</string>
+    <string name="pref_common_run_with_root_summ">Использовать Root привилегии для модулей DNSCrypt, Tor и I2P.
+        Включение этой функции оставляет модули неуправляемыми, и может вызвать проблемы с подключением!</string>
     <string name="pref_common_categ_other">Другие</string>
     <string name="pref_common_notification_summ">Защитите приложение в Безрутовом Режиме, чтоб андроид не завершил его</string>
     <string name="pref_common_show_notification">Показывать уведомление</string>
@@ -225,8 +228,6 @@
     <string name="pref_tor_clearnet">Сайт или IP без Tor</string>
     <string name="pref_tor_unlock_edit">Редактировать сайт или IP</string>
     <string name="pref_tor_unlock_disabled">Выключено</string>
-    <string name="pref_tor_unlock_app">Приложения для Tor</string>
-    <string name="pref_tor_clearnet_app">"Приложения без Tor "</string>
     <string name="pref_tor_snowflake_stun">STUN сервера для мостов SnowFlake</string>
     <string name="pref_tor_isolate_dest_address_summ">Разделить трафик приложений на основе удаленного адреса.</string>
     <string name="pref_tor_isolate_dest_port_summ">Разделить трафик приложений на основе удаленного порта.</string>
@@ -361,7 +362,6 @@
     <string name="main_fragment_protect_dns">Защитить DNS с помощью DNSCRYPT</string>
     <string name="main_fragment_access_i2p">Доступ к I2P сайтам с помощью Purple I2P</string>
     <string name="tvTorConnecting">Подключение</string>
-    <string name="pref_fast_exclude_apps_from_ipro_summ">Приложения, открывающиеся в обход InviZible</string>
     <string name="ask_force_close_title">Внимание</string>
     <string name="ask_force_close_text">InviZible Pro не может запустить %s! Пожалуйста, проверьте настройки %s или попробуйте Завершить приложение.
         Если это не помогает, перезагрузите ваше устройство.</string>
@@ -383,7 +383,7 @@
         \n\tInviZible Pro может использовать рут, если у Вас есть рут права, или использовать локальный VPN для доставки интернет траффика в сети Tor, DNSCrypt и I2P.
         \n\tЭто приложение созданно независимо от проектов Tor®, DNSCrypt и Purple I2P. Эти проекты не предоставляют данному приложению какие-либо гарантии в отношении качества, пригодности или чего-то еще.
         \n\tInviZible Pro распространяется в надежде на то, что будет полезно, но БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ; в том числе подразумеваемых гарантией ТОВАРНОЙ ПРИГОДНОСТИ и ГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННОЙ ЦЕЛИ.
-        \n\tCopyright © 2019-2020
+        \n\tCopyright © 2019-2021
         \n\tGarmatin Oleksandr
         \n\tinvizible.soft@gmail.com
         \n\tinvizible.net/en/privacy
@@ -402,7 +402,9 @@
     <string name="save_changes">Сохранить изменения</string>
     <string name="discard_changes">Отменить изменения</string>
     <string name="config_changes_dialog_message">Вы хотите сохранить изменения? Это может нарушить работу InviZible Pro.</string>
-    <string name="helper_dnscrypt_private_dns">Пожалуйста, отключите \"Частный DNS\" в настройках телефона. Эта опция мешает работе DNSCrypt.</string>
+    <string name="helper_dnscrypt_private_dns">Пожалуйста, отключите \"Персональный DNS\" в настройках телефона. Эта опция мешает работе InviZible.</string>
+    <string name="helper_dnscrypt_proxy_wifi">Пожалуйста, отключите прокси в WiFi настройках телефона. Эта опция мешает работе InviZible.</string>
+    <string name="helper_dnscrypt_proxy_gsm">Пожалуйста, отключите прокси в APN в настройках мобильной сети телефона. Эта опция мешает работе InviZible.</string>
     <string name="import_dnscrypt_rules_dialog_title">Импорт правил</string>
     <string name="import_dnscrypt_rules_dialog_message">Пожалуйста подождите… Импортировано %d правил(а).</string>
     <string name="import_dnscrypt_rules_complete_dialog_message">Готово! Импортировано %d правил(а).</string>
@@ -438,6 +440,7 @@
     <string name="notification_channel_update">Обновление</string>
     <string name="notification_channel_root">Команды Рут</string>
     <string name="notification_channel_firewall">Файрвол</string>
+    <string name="notification_channel_auxiliary">Вспомогательные</string>
     <string name="pref_common_compatibility_mode">Режим совместимости</string>
     <string name="pref_common_compatibility_mode_summ">Включите если у Вас кастомная прошивка, и интернет пропадает при нажатии кнопки START</string>
     <string name="dialog_send_crash_report">Обнаружен отчет аварийного завершения приложения. Хотите его отправить разработчику, чтобы сделать InviZible лучше?</string>
@@ -486,10 +489,29 @@
     <string name="firewall_user_apps">Пользователь</string>
     <string name="firewall_sort_by_name">Сортировать по имени</string>
     <string name="firewall_sort_by_uid">Сортировать по UID</string>
+    <string name="firewall_switch">Файрвол Вкл/Выкл</string>
     <string name="ask_save_changes">Вы хотите сохранить изменения?</string>
     <string name="firewall_warning_enable_module">Чтобы активировать файрвол, нужно запустить хотя бы DNSCrypt или Tor.</string>
     <string name="firewall_notification_allow_app_title">Установлено приложение %s</string>
     <string name="firewall_notification_allow_app">Разрешить ему интернет?</string>
+    <string name="firewall_btnTopLanFirewall_tooltip">Разрешить соединения в локальной сети, к onion и i2p сайтам</string>
+    <string name="firewall_btnTopWifiFirewall_tooltip">Разрешить соединения в WiFi сетях</string>
+    <string name="firewall_btnTopGsmFirewall_tooltip">Разрешить соединения в GSM сетях</string>
+    <string name="firewall_btnTopRoamingFirewall_tooltip">Разрешить соединения в роуминге</string>
+    <string name="firewall_btnTopVpnFirewall_tooltip">Разрешить соединения с включенным VPN</string>
+    <string name="firewall_btnTopCheckAllFirewall_tooltip">Выбрать все</string>
+    <string name="firewall_btnTopUnCheckAllFirewall_tooltip">Очистить выбранное</string>
+    <string name="firewall_item_button_tooltip">Зеленый - разрешить, белый - запретить подключения</string>
+    <string name="pref_firewall_title">Настройки файрвола</string>
+    <string name="pref_firewall_allow_internet_for_new_apps">Разрешить интернет для новых приложений</string>
+    <string name="pref_firewall_allow_internet_for_new_apps_on_summ">Доступ к интернету для новых установленных приложений разрешен.</string>
+    <string name="pref_firewall_allow_internet_for_new_apps_off_summ">Доступ к интернету для новых установленных приложений запрещен.</string>
     <string name="allow">Разрешить</string>
     <string name="deny">Запретить</string>
+    <string name="pref_common_dns_rebind_protection">Защита от DNS rebinding</string>
+    <string name="pref_common_dns_rebind_protection_summ">Заблокировать сайт при обнаружении атаки повторного связывания DNS</string>
+    <string name="notification_dns_rebinding_title">DNS rebinding</string>
+    <string name="notification_dns_rebinding_text">Обнаружена атака повторного связывания DNS! Сайт %s заблокирован.</string>
+    <string name="backupSaved">Резервная копия сохранена</string>
+    <string name="backupRestored">Резервная копия восстановлена</string>
 </resources>

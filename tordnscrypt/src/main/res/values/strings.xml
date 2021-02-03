@@ -71,6 +71,10 @@
     <string name="disagree">I disagree</string>
     <string name="save_changes">Save changes</string>
     <string name="discard_changes">Discard changes</string>
+    <string name="allow">Allow</string>
+    <string name="deny">Deny</string>
+    <string name="areYouSure">Are you sure? This action cannot be undone!</string>
+    <string name="empty_string" translatable="false"/>
 
     <string name="message_no_root_used">You can use InviZible Pro with local VPN mode, or applications with own proxy or local VPN feature in proxy mode.</string>
     <string name="message_no_root_used_kitkat">You can use InviZible Pro with applications with own proxy or local VPN feature in proxy mode.</string>
@@ -87,10 +91,13 @@
     <string name="drawer_menu_help">Logs</string>
     <string name="drawer_menu_donate">Donate</string>
 
-    <string name="btnRestoreBackup">Restore All</string>
-    <string name="btnSaveBackup">Save All</string>
+    <string name="btnRestoreBackup">Restore Settings</string>
+    <string name="btnSaveBackup">Save Settings</string>
+    <string name="btnResetSettings">Reset Settings</string>
     <string name="etPathBackup">Folder Path:</string>
     <string name="backupFolder">Choose backup folder:</string>
+    <string name="backupSaved">Backup saved</string>
+    <string name="backupRestored">Backup restored</string>
 
     <string name="menu_use_root" translatable="false">Root Mode</string>
     <string name="menu_use_proxies" translatable="false">Proxy Mode</string>
@@ -119,7 +126,6 @@
     <string name="pref_fast_exclude_from_tor_summ">WebSites list to open directly. This feature does not work for sites behind CDN</string>
     <string name="pref_fast_exclude_apps_from_tor">Exclude Applications</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">Applications list to open directly</string>
-    <string name="pref_fast_exclude_apps_from_ipro_summ">Applications list to open directly</string>
     <string name="pref_fast_site_refresh_interval">Refresh Interval</string>
     <string name="pref_fast_site_refresh_interval_summ">Period in hours to refresh WebSites IPs. For Android 5.1 and higher. Put 0 to stop refresh.</string>
     <string name="pref_fast_use_tor_bridges">Bridges</string>
@@ -175,7 +181,8 @@
 
     <string name="pref_common_categ_run_with_root">Use Root Privileges</string>
     <string name="pref_common_run_with_root">Run Modules With Root</string>
-    <string name="pref_common_run_with_root_summ">Use Root privileges for DNSCrypt, Tor, I2P </string>
+    <string name="pref_common_run_with_root_summ">Use Root privileges for DNSCrypt, Tor and I2P modules.
+        Enabling this feature leaves modules unmanaged and may cause connection problems!</string>
     <string name="pref_common_categ_other">Other</string>
     <string name="pref_common_block_http">Block HOTSPOT http</string>
     <string name="pref_common_block_http_summ">Deny connection to http port 80 for HOTSPOT</string>
@@ -185,6 +192,8 @@
     <string name="pref_common_arp_spoofing_detection_summ">Detect Man-in-the-middle ARP spoofing and rogue DHCP attacks in Wi-Fi networks.</string>
     <string name="pref_common_arp_block_internet">Block internet when an attack is detected</string>
     <string name="pref_common_arp_block_internet_summ">Internet connection will be blocked during attack</string>
+    <string name="pref_common_dns_rebind_protection">DNS rebinding protection</string>
+    <string name="pref_common_dns_rebind_protection_summ">Block site when DNS rebinding attack is detected</string>
     <string name="pref_common_proxy_categ">Proxy</string>
     <string name="pref_common_proxy">Use socks5 proxy</string>
     <string name="pref_common_proxy_summ">InviZible Pro will make all connections through the SOCKS5 proxy</string>
@@ -313,14 +322,14 @@
 
     <string name="pref_dnscrypt_filters_categ">FILTERS</string>
 
-    <string name="pref_dnscrypt_forwarding_rules_categ" translatable="false">Forwarding rules.</string>
+    <string name="pref_dnscrypt_forwarding_rules_categ">Forwarding rules</string>
     <string name="pref_dnscrypt_forwarding_rules" translatable="false">forwarding_rules</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">Route queries for specific domains to a dedicated set of servers.</string>
     <string name="pref_dnscrypt_import_forwarding_rules">Import forwarding rules</string>
     <string name="pref_dnscrypt_import_forwarding_rules_summ">Import a forwarding rules file. You can select multiple files, duplicate lines will be removed.</string>
     <string name="pref_dnscrypt_erase_forwarding_rules">Erase forwarding rules</string>
 
-    <string name="pref_dnscrypt_cloaking_rules_categ" translatable="false">Cloaking rules.</string>
+    <string name="pref_dnscrypt_cloaking_rules_categ">Cloaking rules</string>
     <string name="pref_dnscrypt_cloaking_rules" translatable="false">cloaking_rules</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking returns a predefined address for a specific name.\n
         In addition to acting as a HOSTS file, it can also return the IP address of a different name. It will also do CNAME flattening..</string>
@@ -397,7 +406,9 @@
     <string name="pref_dnscrypt_block_ipv6_summ">Immediately respond to IPv6-related queries with an empty response.
         This makes things faster when there is no IPv6 connectivity, but can also cause reliability issues with some stub resolvers.</string>
 
-    <string name="helper_dnscrypt_private_dns">Please turn off \"Private DNS\" in Android network settings. This option interferes with DNSCrypt.</string>
+    <string name="helper_dnscrypt_private_dns">Please turn off \"Private DNS\" in Android network settings. This option interferes with InviZible.</string>
+    <string name="helper_dnscrypt_proxy_wifi">Please disable proxy in Android WiFi network settings. This option interferes with InviZible.</string>
+    <string name="helper_dnscrypt_proxy_gsm">Please disable proxy in Android Mobile network APN settings. This option interferes with InviZible.</string>
 
     <string name="import_dnscrypt_rules_dialog_title">Import Rules</string>
     <string name="import_dnscrypt_rules_dialog_message">Please wait… Imported %d rules.</string>
@@ -454,8 +465,6 @@
     <string name="pref_tor_clearnet">Host or IP for bypass</string>
     <string name="pref_tor_unlock_edit">Edit Host or IP</string>
     <string name="pref_tor_unlock_disabled">Disabled</string>
-    <string name="pref_tor_unlock_app">Apps to Torify</string>
-    <string name="pref_tor_clearnet_app">Apps to bypass Tor</string>
     <string name="pref_tor_snowflake_stun">STUN servers for SnowFlake bridges</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">Enable SOCKS output proxy</string>
     <string name="pref_tor_SOCKS_output_address" translatable="false">Socks5Proxy</string>
@@ -535,7 +544,7 @@
     <string name="pref_itpd_UPNP_summ">Enable or disable UPnP.</string>
     <string name="pref_itpd_ntcp2" translatable="false">ntcp2</string>
     <string name="pref_itpd_ntcp2_enabled">ntcp2 enabled</string>
-    <string name="pref_itpd_reseeding" translatable="false">Reseeding</string>
+    <string name="pref_itpd_reseeding">Reseeding</string>
     <string name="pref_itpd_reseeding_enabled" translatable="false">verify</string>
     <string name="pref_itpd_reseeding_summ">Verify .su3 signature.</string>
     <string name="pref_itpd_limits">Limits</string>
@@ -545,7 +554,7 @@
     <string name="pref_itpd_limits_openfiles_summ">Limit number of open file descriptors (0 - use system limit).</string>
     <string name="pref_itpd_limits_coresize" translatable="false">coresize</string>
     <string name="pref_itpd_limits_coresize_summ">Maximum size of corefile in Kb (0 - use system limit).</string>
-    <string name="pref_itpd_addressbook" translatable="false">Addressbook</string>
+    <string name="pref_itpd_addressbook">Addressbook</string>
     <string name="pref_itpd_addressbook_defaulturl" translatable="false">defaulturl</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">AddressBook subscription URL for initial setup.</string>
     <string name="pref_itpd_addressbook_subscriptions" translatable="false">subscriptions</string>
@@ -583,13 +592,14 @@
     <string name="update_core_yes">Update</string>
     <string name="update_core_no">Later</string>
     <string name="update_core_not_show_again">Not ask again</string>
-    <string name="update_core_restart">Please restart InviZible Pro and allow complete installation!         After installation reconfigure HOTSPOT, if you use it!</string>
+    <string name="update_core_restart">Please restart InviZible Pro and allow complete installation!
+        After installation reconfigure HOTSPOT, if you use it!</string>
 
     <string name="about_build_ver" translatable="false">Build Version:</string>
     <string name="about_app_ver" translatable="false">Application Version:</string>
     <string name="about_build_date" translatable="false">Build Date:</string>
     <string name="about_proc_ver" translatable="false">Processor Version:</string>
-    <string name="about_own_copyright" translatable="false">Copyright (C) 2019-2020 Garmatin Oleksandr\n All Rights Reserved\n Web Site:</string>
+    <string name="about_own_copyright" translatable="false">Copyright (C) 2019-2021 Garmatin Oleksandr\n All Rights Reserved\n Web Site:</string>
     <string name="about_own_licence" translatable="false">
         \tInviZible Pro is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -674,7 +684,7 @@
         \n\tInviZible Pro can use root, if your device has root privileges, or uses a local VPN to deliver Internet traffic to Tor, DNSCrypt and I2P networks.
         \n\tThis product is produced independently from the Tor®, DNSCrypt, Purple I2P software and carries no guarantee from The Above Projects about quality, suitability or anything else.
         \n\tInviZible Pro is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-        \n\tCopyright © 2019-2020
+        \n\tCopyright © 2019-2021
         \n\tGarmatin Oleksandr
         \n\tinvizible.soft@gmail.com
         \n\tinvizible.net/en/privacy
@@ -686,6 +696,7 @@
     <string name="notification_channel_update">Update notifications</string>
     <string name="notification_channel_root">Root commands notification</string>
     <string name="notification_channel_firewall">Firewall notifications</string>
+    <string name="notification_channel_auxiliary">Auxiliary notifications</string>
 
     <string name="dialog_send_crash_report">A crash report has been discovered. Want to send it to the developer to make InviZible better?</string>
     <string name="btn_new_tor_identity">New Tor identity</string>
@@ -712,6 +723,8 @@
     <string name="notification_mitm">Man-in-the-middle attack detected! Your data can be intercepted by another device on the local network.
         Turn off, wait a few seconds, and turn on Wi-Fi. Using current Wi-Fi hotspot may be unsafe!</string>
     <string name="toast_arp_detection_not_supported">ARP spoofing detection is not supported for your device!</string>
+    <string name="notification_dns_rebinding_title">DNS rebinding</string>
+    <string name="notification_dns_rebinding_text">Potential DNS Rebinding Attack Detected! Site %s has been blocked.</string>
     <string name="menu_firewall">Firewall</string>
     <string name="firewall_all_apps">All</string>
     <string name="firewall_system_apps">System</string>
@@ -719,12 +732,22 @@
     <string name="firewall_search" translatable="false">Search</string>
     <string name="firewall_sort_by_name">Sort by Name</string>
     <string name="firewall_sort_by_uid">Sort by UID</string>
-    <string name="firewall_switch" translatable="false">Firewall On/Off</string>
+    <string name="firewall_switch">Firewall On/Off</string>
     <string name="ask_save_changes">Do you want to save the changes?</string>
     <string name="firewall_warning_enable_module">To activate the firewall, you should start at least DNSCrypt or Tor.</string>
     <string name="firewall_notification_allow_app_title">%s is installed</string>
     <string name="firewall_notification_allow_app">Allow Internet for it?</string>
-    <string name="allow">Allow</string>
-    <string name="deny">Deny</string>
-    <string name="empty_string" translatable="false"/>
+    <string name="firewall_btnTopLanFirewall_tooltip">Allow connections to local network, onion and i2p sites</string>
+    <string name="firewall_btnTopWifiFirewall_tooltip">Allow connections in WiFi networks</string>
+    <string name="firewall_btnTopGsmFirewall_tooltip">Allow connections in GSM networks</string>
+    <string name="firewall_btnTopRoamingFirewall_tooltip">Allow connections while roaming</string>
+    <string name="firewall_btnTopVpnFirewall_tooltip">Allow connections with VPN enabled</string>
+    <string name="firewall_btnTopCheckAllFirewall_tooltip">Select all</string>
+    <string name="firewall_btnTopUnCheckAllFirewall_tooltip">Unselect all</string>
+    <string name="firewall_item_button_tooltip">Green - allow, white - deny connections</string>
+    <string name="pref_firewall_title">Firewall Settings</string>
+    <string name="pref_firewall_allow_internet_for_new_apps">Allow connections for new apps</string>
+    <string name="pref_firewall_allow_internet_for_new_apps_on_summ">Internet connections for newly installed apps are allowed.</string>
+    <string name="pref_firewall_allow_internet_for_new_apps_off_summ">Internet connections for newly installed applications are blocked.</string>
+
 </resources>

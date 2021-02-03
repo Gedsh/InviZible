@@ -15,9 +15,10 @@ package pan.alexander.tordnscrypt.update;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -49,6 +50,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.ref.WeakReference;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
@@ -320,7 +322,9 @@ public class UpdateService extends Service {
                             if (context.getApplicationContext() instanceof ApplicationExt) {
 
                                 ApplicationExt applicationExt = (ApplicationExt) context.getApplicationContext();
-                                isActivityActive = applicationExt.getLangAppCompatActivityActive();
+                                WeakReference<Activity> currentActivity = applicationExt.getCurrentActivity();
+                                isActivityActive = currentActivity != null && currentActivity.get() != null
+                                        && !currentActivity.get().isFinishing();
                             }
 
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !isActivityActive) {

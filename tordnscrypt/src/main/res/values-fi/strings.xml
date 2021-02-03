@@ -78,7 +78,6 @@
     <string name="pref_fast_exclude_from_tor_summ">"Suoraan avattavat nettisivustot. Tämä ominaisuus ei toimi CDN:n takana olevissa sivustoissa."</string>
     <string name="pref_fast_exclude_apps_from_tor">"Hylkää sovellukset"</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">"Suoraan avattava sovelluslista"</string>
-    <string name="pref_fast_exclude_apps_from_ipro_summ">"Suoraan avattava sovelluslista"</string>
     <string name="pref_fast_site_refresh_interval">"Päivitä intervalli"</string>
     <string name="pref_fast_site_refresh_interval_summ">"Verkkosivustojen IP:ien päivittämisaika tunteina. Android 5.1 tai uudempi. Laita 0 pysäyttääksesi päivityksen."</string>
     <string name="pref_fast_use_tor_bridges">"Sillat"</string>
@@ -246,8 +245,6 @@
     <string name="pref_tor_clearnet">"Isäntä tai IP, jota ohittaa"</string>
     <string name="pref_tor_unlock_edit">"Muuta isäntää tai IP:tä"</string>
     <string name="pref_tor_unlock_disabled">"Pois käytöstä"</string>
-    <string name="pref_tor_unlock_app">"Torifyitävät sovellukset"</string>
-    <string name="pref_tor_clearnet_app">"Tor:in ohittavat sovellukset"</string>
     <string name="pref_tor_clean_module_folder">"Siivoa moduuli kansio"</string>
     <string name="pref_routing_unlock_app">"InviZible:ä käyttävät sovellukset"</string>
     <string name="pref_routing_clearnet_app">"InviZible:n ohittavat sovellukset"</string>
@@ -373,7 +370,7 @@
         
 \tInviZible Prota jaetaan siinä toivossa, että se on hyödyllinen, mutta ILMAN TAKUUTA; ilman edes implisiittistä takuita kaupallisuudelle tai sopivuudelle tietylle tavoitteelle.
 
-\tCopyright © 2019-2020
+\tCopyright © 2019-2021
         
 \tGarmatin Oleksandr
         

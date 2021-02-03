@@ -16,11 +16,14 @@ package pan.alexander.tordnscrypt.iptables;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.util.List;
 
@@ -28,7 +31,11 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 
+import static pan.alexander.tordnscrypt.utils.RootExecService.COMMAND_RESULT;
+
 abstract class IptablesRulesSender implements IptablesRules {
+    private static boolean receiverIsRegistered;
+
     Context context;
     PathVars pathVars;
     String appDataDir;
@@ -36,6 +43,7 @@ abstract class IptablesRulesSender implements IptablesRules {
 
     boolean runModulesWithRoot;
     Tethering tethering;
+    IptablesReceiver receiver;
     boolean routeAllThroughTor;
     boolean blockHttp;
     boolean apIsOn;
@@ -50,6 +58,42 @@ abstract class IptablesRulesSender implements IptablesRules {
         rejectAddress = pathVars.getRejectAddress();
 
         tethering = new Tethering(context);
+
+        registerReceiver();
+    }
+
+    private void registerReceiver() {
+
+        if (receiverIsRegistered) {
+            return;
+        }
+
+        receiverIsRegistered = true;
+
+        receiver = new IptablesReceiver();
+
+        IntentFilter intentFilterBckgIntSer = new IntentFilter(COMMAND_RESULT);
+        LocalBroadcastManager.getInstance(context).registerReceiver(receiver, intentFilterBckgIntSer);
+    }
+
+    @Override
+    public void unregisterReceiver() {
+        if (receiver != null && receiverIsRegistered) {
+            receiverIsRegistered = false;
+            try {
+                LocalBroadcastManager.getInstance(context).unregisterReceiver(receiver);
+            } catch (Exception ignored){}
+        }
+    }
+
+
+    @Override
+    public boolean isLastIptablesCommandsReturnError() {
+        if (receiver == null) {
+            return false;
+        } else {
+            return receiver.getLastIptablesCommandsReturnError();
+        }
     }
 
     @Override
@@ -58,7 +102,7 @@ abstract class IptablesRulesSender implements IptablesRules {
         Intent intent = new Intent(context, RootExecService.class);
         intent.setAction(RootExecService.RUN_COMMAND);
         intent.putExtra("Commands", rootCommands);
-        intent.putExtra("Mark", RootExecService.NullMark);
+        intent.putExtra("Mark", RootExecService.IptablesMark);
         RootExecService.performAction(context, intent);
     }
 }

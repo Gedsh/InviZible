@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.modules;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
@@ -114,7 +114,7 @@ public class ModulesStarterHelper {
                         + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml -pidfile " + appDataDir + "/dnscrypt-proxy.pid";
                 new PrefManager(service).setBoolPref("DNSCryptStartedWithRoot", false);
 
-                shellResult = Shell.SH.run(dnsCmdString);
+                shellResult = new ProcessStarter().startProcess(dnsCmdString);
             }
 
             if (!shellResult.isSuccessful()) {
@@ -144,6 +144,8 @@ public class ModulesStarterHelper {
 
                 sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
             }
+
+            Thread.currentThread().interrupt();
         };
     }
 
@@ -187,7 +189,7 @@ public class ModulesStarterHelper {
                         + appDataDir + "/app_data/tor/tor.conf -pidfile " + appDataDir + "/tor.pid";
                 new PrefManager(service).setBoolPref("TorStartedWithRoot", false);
 
-                shellResult = Shell.SH.run(torCmdString);
+                shellResult = new ProcessStarter().startProcess(torCmdString);
             }
 
             if (!shellResult.isSuccessful()) {
@@ -221,6 +223,8 @@ public class ModulesStarterHelper {
 
                 sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
             }
+
+            Thread.currentThread().interrupt();
         };
     }
 
@@ -262,7 +266,7 @@ public class ModulesStarterHelper {
                         + "/i2pd_data --pidfile " + appDataDir + "/i2pd.pid";
                 new PrefManager(service).setBoolPref("ITPDStartedWithRoot", false);
 
-                shellResult = Shell.SH.run(itpdCmdString);
+                shellResult = new ProcessStarter().startProcess(itpdCmdString);
             }
 
             if (!shellResult.isSuccessful()) {
@@ -290,6 +294,8 @@ public class ModulesStarterHelper {
 
                 sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
             }
+
+            Thread.currentThread().interrupt();
         };
     }
 

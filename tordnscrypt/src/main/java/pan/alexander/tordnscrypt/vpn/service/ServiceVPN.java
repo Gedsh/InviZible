@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.vpn.service;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
@@ -44,6 +44,7 @@ import android.os.PowerManager;
 import android.os.Process;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -68,6 +69,7 @@ import pan.alexander.tordnscrypt.BootCompleteReceiver;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
+import pan.alexander.tordnscrypt.arp.DNSRebindProtection;
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSQueryLogRecord;
 import pan.alexander.tordnscrypt.iptables.Tethering;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
@@ -78,6 +80,8 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallNotification;
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData;
+import pan.alexander.tordnscrypt.utils.AuxNotificationSender;
+import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
@@ -93,8 +97,11 @@ import pan.alexander.tordnscrypt.vpn.Util;
 
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
 import static pan.alexander.tordnscrypt.modules.ModulesService.actionStopServiceForeground;
+import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
+import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_FOR_CLEARNET;
+import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_TO_UNLOCK;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -155,6 +162,8 @@ public class ServiceVPN extends VpnService {
     private boolean compatibilityMode;
     private boolean arpSpoofingDetection;
     private boolean blockInternetWhenArpAttackDetected;
+    private boolean dnsRebindProtection;
+    private final Set<String> dnsRebindHosts = new HashSet<>();
     private boolean lan = false;
     private boolean firewallEnabled;
     public static CopyOnWriteArrayList<String> vpnDNS;
@@ -424,6 +433,7 @@ public class ServiceVPN extends VpnService {
         torTethering = prefs.getBoolean("pref_common_tor_tethering", false);
         blockIPv6 = prefs.getBoolean("block_ipv6", true);
         arpSpoofingDetection = prefs.getBoolean("pref_common_arp_spoofing_detection", false);
+        dnsRebindProtection = prefs.getBoolean("pref_common_dns_rebind_protection", false);
         blockInternetWhenArpAttackDetected = prefs.getBoolean("pref_common_arp_block_internet", false);
         firewallEnabled = new PrefManager(this).getBoolPref("FirewallEnabled");
 
@@ -443,7 +453,7 @@ public class ServiceVPN extends VpnService {
         if (proxyPortStr != null && proxyPortStr.matches("\\d+")) {
             proxyPort = Integer.parseInt(proxyPortStr);
         }
-        setBypassProxy = new PrefManager(this).getSetStrPref("clearnetAppsForProxy");
+        setBypassProxy = new PrefManager(this).getSetStrPref(CLEARNET_APPS_FOR_PROXY);
 
         // Prepare rules
         prepareUidAllowed(listAllowed, listRule);
@@ -491,14 +501,20 @@ public class ServiceVPN extends VpnService {
             jni_start(jni_context, prio);
 
             tunnelThread = new Thread(() -> {
-                Log.i(LOG_TAG, "VPN Running tunnel context=" + jni_context);
-                boolean canFilterSynchronous = true;
-                if (compatibilityMode && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    canFilterSynchronous = Util.canFilter();
+                try {
+                    Log.i(LOG_TAG, "VPN Running tunnel context=" + jni_context);
+                    boolean canFilterSynchronous = true;
+                    if (compatibilityMode && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        canFilterSynchronous = Util.canFilter();
+                    }
+                    jni_run(jni_context, vpn.getFd(), mapForwardPort.containsKey(53), finalRcode, compatibilityMode, canFilterSynchronous);
+                    Log.i(LOG_TAG, "VPN Tunnel exited");
+                    tunnelThread = null;
+                } catch (Exception e) {
+                    Toast.makeText(ServiceVPN.this, e.getMessage() + " " + e.getCause(), Toast.LENGTH_LONG).show();
+                    Log.e(LOG_TAG, "ServiceVPN startNative exception " + e.getMessage() + " " + e.getCause());
                 }
-                jni_run(jni_context, vpn.getFd(), mapForwardPort.containsKey(53), finalRcode, compatibilityMode, canFilterSynchronous);
-                Log.i(LOG_TAG, "VPN Tunnel exited");
-                tunnelThread = null;
+
             });
 
             tunnelThread.start();
@@ -574,9 +590,9 @@ public class ServiceVPN extends VpnService {
 
         ipsForTor.clear();
         if (routeAllThroughTor) {
-            ipsForTor.addAll(new PrefManager(this).getSetStrPref("ipsForClearNet"));
+            ipsForTor.addAll(new PrefManager(this).getSetStrPref(IPS_FOR_CLEARNET));
         } else {
-            ipsForTor.addAll(new PrefManager(this).getSetStrPref("ipsToUnlock"));
+            ipsForTor.addAll(new PrefManager(this).getSetStrPref(IPS_TO_UNLOCK));
         }
 
         lock.writeLock().unlock();
@@ -663,7 +679,7 @@ public class ServiceVPN extends VpnService {
     }
 
     // Called from native code
-    private void logPacket(Packet packet) {
+    public void logPacket(Packet packet) {
         //Log.i(LOG_TAG, "VPN Log packet " + packet.toString());
     }
 
@@ -685,6 +701,26 @@ public class ServiceVPN extends VpnService {
                 }
             }
 
+            if (dnsRebindProtection) {
+                String qname = rr.QName.trim();
+                String destAddress = rr.Resource.trim();
+
+                if (!qname.isEmpty() && !destAddress.isEmpty()
+                        && !qname.endsWith(".onion")
+                        && !qname.endsWith(".i2p")
+                        && !dnsRebindHosts.contains(qname)) {
+                    if (isIpInDNSRebindRange(destAddress)) {
+                        dnsRebindHosts.add(qname);
+                        DNSRebindProtection.INSTANCE.sendNotification(this, qname);
+                        Log.w(LOG_TAG, "ServiseVPN DNS rebind attack detected " + rr.toString());
+                    } else if ((destAddress.equals("0.0.0.0") || destAddress.equals("127.0.0.1"))
+                            && rr.Rcode == 0 && !rr.HInfo.contains("dnscrypt")) {
+                        Log.w(LOG_TAG, "ServiseVPN DNS rebind attack detected " + rr.toString());
+                        dnsRebindHosts.add(qname);
+                    }
+                }
+            }
+
         } catch (Exception e) {
             Log.e(LOG_TAG, "ServiseVPN dnsResolved exception " + e.getMessage() + " " + e.getCause());
         } finally {
@@ -698,6 +734,15 @@ public class ServiceVPN extends VpnService {
     // Called from native code
     public boolean isDomainBlocked(String name) {
         //Log.i(LOG_TAG, " Ask domain is blocked " + name);
+        try {
+            if (dnsRebindProtection && dnsRebindHosts.contains(name)) {
+                Log.w(LOG_TAG, "ServiseVPN domain is blocked due to DNS rebind suspicion " + name);
+                return true;
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "ServiseVPN isDomainBlocked exception " + e.getMessage() + " " + e.getCause());
+        }
+
         return false;
     }
 
@@ -776,6 +821,15 @@ public class ServiceVPN extends VpnService {
         return false;
     }
 
+    private boolean isIpInDNSRebindRange(String destAddress) {
+        for (String address : Util.dnsRebindList) {
+            if (Util.isIpInSubnet(destAddress, address)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean isDestinationInSpecialRange(int uid, int destPort) {
         return uid == 0 && destPort == 53
                 || uid == ApplicationData.SPECIAL_UID_KERNEL
@@ -843,8 +897,15 @@ public class ServiceVPN extends VpnService {
 
         lock.readLock().lock();
 
-        boolean redirectToTor = isRedirectToTor(packet.uid, packet.daddr, packet.dport);
-        boolean redirectToProxy = isRedirectToProxy(packet.uid, packet.daddr, packet.dport);
+        boolean redirectToTor = false;
+        if (torIsRunning) {
+            redirectToTor = isRedirectToTor(packet.uid, packet.daddr, packet.dport);
+        }
+
+        boolean redirectToProxy = false;
+        if (useProxy) {
+            redirectToProxy = isRedirectToProxy(packet.uid, packet.daddr, packet.dport);
+        }
 
         packet.allowed = false;
         // https://android.googlesource.com/platform/system/core/+/master/include/private/android_filesystem_config.h
@@ -1029,6 +1090,12 @@ public class ServiceVPN extends VpnService {
 
                 reload("Network available", ServiceVPN.this);
 
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && last_network != network.hashCode()) {
+                    AuxNotificationSender.INSTANCE.checkPrivateDNSAndProxy(
+                            ServiceVPN.this.getApplicationContext(), null
+                    );
+                }
+
                 last_network = network.hashCode();
             }
 
@@ -1048,6 +1115,13 @@ public class ServiceVPN extends VpnService {
 
                     if (network.hashCode() != last_network) {
                         last_network = network.hashCode();
+
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                            AuxNotificationSender.INSTANCE.checkPrivateDNSAndProxy(
+                                    ServiceVPN.this.getApplicationContext(), linkProperties
+                            );
+                        }
+
                         reload("VPN Link properties changed", ServiceVPN.this);
                     }
                 }
@@ -1380,20 +1454,22 @@ public class ServiceVPN extends VpnService {
     }
 
     public void clearDnsQueryRawRecords() {
-        try {
-            rrLock.writeLock().lockInterruptibly();
+        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+            try {
+                rrLock.writeLock().lockInterruptibly();
 
-            if (!dnsQueryRawRecords.isEmpty()) {
-                dnsQueryRawRecords.clear();
-            }
+                if (!dnsQueryRawRecords.isEmpty()) {
+                    dnsQueryRawRecords.clear();
+                }
 
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "ServiseVPN clearDnsQueryRawRecords exception " + e.getMessage() + " " + e.getCause());
-        } finally {
-            if (rrLock.isWriteLockedByCurrentThread()) {
-                rrLock.writeLock().unlock();
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "ServiseVPN clearDnsQueryRawRecords exception " + e.getMessage() + " " + e.getCause());
+            } finally {
+                if (rrLock.isWriteLockedByCurrentThread()) {
+                    rrLock.writeLock().unlock();
+                }
             }
-        }
+        });
     }
 
     public void lockDnsQueryRawRecordsListForRead(boolean lock) {

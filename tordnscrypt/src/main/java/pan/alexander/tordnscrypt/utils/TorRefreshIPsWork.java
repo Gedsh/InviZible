@@ -15,44 +15,41 @@ package pan.alexander.tordnscrypt.utils;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
+
 import androidx.preference.PreferenceManager;
+
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import java.net.InetAddress;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
+import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_FOR_CLEARNET;
+import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_FOR_CLEARNET_TETHER;
+import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_TO_UNLOCK;
+import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_TO_UNLOCK_TETHER;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class TorRefreshIPsWork {
+    private final Pattern IP_PATTERN = Pattern.compile("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$");
+
     private final Context context;
-    private ArrayList<String> unlockHostsDevice;
-    private ArrayList<String> unlockIPsDevice;
-    private ArrayList<String> unlockHostsTether;
-    private ArrayList<String> unlockIPsTether;
-    private String appDataDir;
-    private boolean torTethering;
-    private boolean routeAllThroughTorDevice;
-    private boolean routeAllThroughTorTether;
     private final GetIPsJobService getIPsJobService;
 
     public TorRefreshIPsWork(Context context, GetIPsJobService getIPsJobService) {
@@ -61,93 +58,12 @@ public class TorRefreshIPsWork {
     }
 
     public void refreshIPs() {
-        boolean rootIsAvailable = new PrefManager(context.getApplicationContext()).getBoolPref("rootIsAvailable");
-        if (!rootIsAvailable) return;
-
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        torTethering = shPref.getBoolean("pref_common_tor_tethering", false);
-        routeAllThroughTorDevice = shPref.getBoolean("pref_fast_all_through_tor", true);
-        routeAllThroughTorTether = shPref.getBoolean("pref_common_tor_route_all", false);
-
-        PathVars pathVars = PathVars.getInstance(context);
-        appDataDir = pathVars.getAppDataDir();
-
-        Set<String> setUnlockHosts;
-        Set<String> setUnlockIPs;
-        if (!routeAllThroughTorDevice) {
-            setUnlockHosts = new PrefManager(Objects.requireNonNull(context)).getSetStrPref("unlockHosts");
-            setUnlockIPs = new PrefManager(Objects.requireNonNull(context)).getSetStrPref("unlockIPs");
-        } else {
-            setUnlockHosts = new PrefManager(Objects.requireNonNull(context)).getSetStrPref("clearnetHosts");
-            setUnlockIPs = new PrefManager(Objects.requireNonNull(context)).getSetStrPref("clearnetIPs");
-        }
-        unlockHostsDevice = new ArrayList<>(setUnlockHosts);
-        unlockIPsDevice = new ArrayList<>(setUnlockIPs);
-
-        if (!routeAllThroughTorTether) {
-            setUnlockHosts = new PrefManager(Objects.requireNonNull(context)).getSetStrPref("unlockHostsTether");
-            setUnlockIPs = new PrefManager(Objects.requireNonNull(context)).getSetStrPref("unlockIPsTether");
-        } else {
-            setUnlockHosts = new PrefManager(Objects.requireNonNull(context)).getSetStrPref("clearnetHostsTether");
-            setUnlockIPs = new PrefManager(Objects.requireNonNull(context)).getSetStrPref("clearnetIPsTether");
-        }
-        unlockHostsTether = new ArrayList<>(setUnlockHosts);
-        unlockIPsTether = new ArrayList<>(setUnlockIPs);
-
-        performBackgroundWork();
-    }
-
-    private void performBackgroundWork() {
-
         CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
-            Log.i(LOG_TAG, "TorRefreshIPsWork performBackgroundWork");
+
+            Log.i(LOG_TAG, "TorRefreshIPsWork refreshIPs");
 
             try {
-                if (!unlockHostsDevice.isEmpty() || !unlockIPsDevice.isEmpty()) {
-
-                    List<String> unlockIPsReadyDevice = universalGetIPs(unlockHostsDevice, unlockIPsDevice);
-
-                    if (unlockIPsReadyDevice == null) {
-                        unlockIPsReadyDevice = new LinkedList<>();
-                        unlockIPsReadyDevice.add("");
-                    }
-
-                    List<String> unlockIPsReadyTether = universalGetIPs(unlockHostsTether, unlockIPsTether);
-
-                    if (unlockIPsReadyTether == null) {
-                        unlockIPsReadyTether = new LinkedList<>();
-                        unlockIPsReadyTether.add("");
-                    }
-
-
-                    if (!routeAllThroughTorDevice) {
-                        FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/unlock", unlockIPsReadyDevice, "ignored");
-                        new PrefManager(context).setSetStrPref("ipsToUnlock", new HashSet<>(unlockIPsReadyDevice));
-                    } else {
-                        FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/clearnet", unlockIPsReadyDevice, "ignored");
-                        new PrefManager(context).setSetStrPref("ipsForClearNet", new HashSet<>(unlockIPsReadyDevice));
-                    }
-
-                    if (torTethering) {
-                        if (!routeAllThroughTorTether) {
-                            FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/unlock_tether", unlockIPsReadyTether, "ignored");
-                        } else {
-                            FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/clearnet_tether", unlockIPsReadyTether, "ignored");
-                        }
-                    }
-                }
-
-                try {
-                    TimeUnit.SECONDS.sleep(5);
-                } catch (InterruptedException e) {
-                    Log.e(LOG_TAG, "TorRefreshIPsWork interrupt exception " + e.getMessage() + " " + e.getCause());
-                }
-
-                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && getIPsJobService != null) {
-                    getIPsJobService.finishJob();
-                }
+                updateData();
             } catch (Exception e) {
                 Log.e(LOG_TAG, "TorRefreshIPsWork performBackgroundWork exception " + e.getMessage()
                         + " " + e.getCause() + "\n" + Arrays.toString(e.getStackTrace()));
@@ -156,12 +72,111 @@ public class TorRefreshIPsWork {
         });
     }
 
+    private void updateData() {
 
-    private List<String> universalGetIPs(ArrayList<String> hosts, ArrayList<String> IPs) {
+        if (context == null) {
+            return;
+        }
+
+        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean torTethering = shPref.getBoolean("pref_common_tor_tethering", false);
+        boolean routeAllThroughTorDevice = shPref.getBoolean("pref_fast_all_through_tor", true);
+        boolean routeAllThroughTorTether = shPref.getBoolean("pref_common_tor_route_all", false);
+
+        boolean settingsChanged = false;
+
+        if (updateDeviceData(routeAllThroughTorDevice)) {
+            settingsChanged = true;
+        }
+
+        if (torTethering && updateTetheringData(routeAllThroughTorTether)) {
+            settingsChanged = true;
+        }
+
+        if (settingsChanged) {
+            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && getIPsJobService != null) {
+            Looper looper = Looper.getMainLooper();
+            Handler handler = new Handler(looper);
+            handler.post(getIPsJobService::finishJob);
+        }
+
+    }
 
 
-        ArrayList<String> unlockIPsPrepared = new ArrayList<>();
-        List<String> IPsReady = new LinkedList<>();
+    private boolean updateDeviceData(boolean routeAllThroughTorDevice) {
+        Set<String> setUnlockHostsDevice;
+        Set<String> setUnlockIPsDevice;
+        if (!routeAllThroughTorDevice) {
+            setUnlockHostsDevice = new PrefManager(context).getSetStrPref("unlockHosts");
+            setUnlockIPsDevice = new PrefManager(context).getSetStrPref("unlockIPs");
+        } else {
+            setUnlockHostsDevice = new PrefManager(context).getSetStrPref("clearnetHosts");
+            setUnlockIPsDevice = new PrefManager(context).getSetStrPref("clearnetIPs");
+        }
+
+        if (setUnlockHostsDevice.isEmpty() && setUnlockIPsDevice.isEmpty()) {
+            return false;
+        }
+
+        boolean settingsChanged;
+
+        Set<String> unlockIPsReadyDevice = universalGetIPs(setUnlockHostsDevice, setUnlockIPsDevice);
+
+        if (unlockIPsReadyDevice.isEmpty()) {
+            return false;
+        }
+
+        if (!routeAllThroughTorDevice) {
+            settingsChanged = saveSettings(context, unlockIPsReadyDevice, IPS_TO_UNLOCK);
+        } else {
+            settingsChanged = saveSettings(context, unlockIPsReadyDevice, IPS_FOR_CLEARNET);
+        }
+
+        return settingsChanged;
+    }
+
+    private boolean updateTetheringData(boolean routeAllThroughTorTether) {
+        Set<String> setUnlockHostsTether;
+        Set<String> setUnlockIPsTether;
+        if (!routeAllThroughTorTether) {
+            setUnlockHostsTether = new PrefManager(Objects.requireNonNull(context)).getSetStrPref("unlockHostsTether");
+            setUnlockIPsTether = new PrefManager(Objects.requireNonNull(context)).getSetStrPref("unlockIPsTether");
+        } else {
+            setUnlockHostsTether = new PrefManager(Objects.requireNonNull(context)).getSetStrPref("clearnetHostsTether");
+            setUnlockIPsTether = new PrefManager(Objects.requireNonNull(context)).getSetStrPref("clearnetIPsTether");
+        }
+
+        if (setUnlockHostsTether.isEmpty() && setUnlockIPsTether.isEmpty()) {
+            return false;
+        }
+
+        boolean settingsChanged;
+
+        Set<String> unlockIPsReadyTether = universalGetIPs(setUnlockHostsTether, setUnlockIPsTether);
+
+        if (unlockIPsReadyTether.isEmpty()) {
+            return false;
+        }
+
+        if (!routeAllThroughTorTether) {
+            settingsChanged = saveSettings(context, unlockIPsReadyTether, IPS_TO_UNLOCK_TETHER);
+            //FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/unlock_tether", new ArrayList<>(unlockIPsReadyTether), "ignored");
+        } else {
+            settingsChanged = saveSettings(context, unlockIPsReadyTether, IPS_FOR_CLEARNET_TETHER);
+            //FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/clearnet_tether", new ArrayList<>(unlockIPsReadyTether), "ignored");
+        }
+
+        return settingsChanged;
+    }
+
+    private Set<String> universalGetIPs(Set<String> hosts, Set<String> IPs) {
+
+
+        Set<String> unlockIPsPrepared = new HashSet<>();
+        Set<String> IPsReady = new HashSet<>();
 
         if (hosts != null) {
             for (String host : hosts) {
@@ -171,23 +186,23 @@ public class TorRefreshIPsWork {
                 }
             }
 
-            for (String unlockIPprepared : unlockIPsPrepared) {
-                if (unlockIPprepared.matches("[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}"))
-                    IPsReady.add(unlockIPprepared);
+            for (String unlockIPPrepared : unlockIPsPrepared) {
+                Matcher matcher = IP_PATTERN.matcher(unlockIPPrepared);
+                if (matcher.find()) {
+                    IPsReady.add(unlockIPPrepared);
+                }
             }
         }
 
         if (IPs != null) {
             for (String unlockIP : IPs) {
-                if (!unlockIP.startsWith("#")) {
+                Matcher matcher = IP_PATTERN.matcher(unlockIP);
+                if (matcher.find()) {
                     IPsReady.add(unlockIP);
                 }
             }
 
         }
-
-        if (IPsReady.isEmpty())
-            return null;
 
         return IPsReady;
     }
@@ -199,9 +214,19 @@ public class TorRefreshIPsWork {
             for (InetAddress address : addresses) {
                 preparedIPs.add(address.getHostAddress());
             }
-        } catch (UnknownHostException | MalformedURLException e) {
+        } catch (Exception e) {
             Log.e(LOG_TAG, "TorRefreshIPsWork handleActionGetIP exception " + e.getMessage() + " " + e.getCause());
         }
         return preparedIPs;
+    }
+
+    private boolean saveSettings(Context context, Set<String> ipsToUnlock, String settingsKey) {
+        Set<String> ips = new PrefManager(context).getSetStrPref(settingsKey);
+        if (ips.size() == ipsToUnlock.size() && ips.containsAll(ipsToUnlock)) {
+            return false;
+        } else {
+            new PrefManager(context).setSetStrPref(settingsKey, ipsToUnlock);
+            return true;
+        }
     }
 }

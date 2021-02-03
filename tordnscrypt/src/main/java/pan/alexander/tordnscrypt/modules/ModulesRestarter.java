@@ -16,11 +16,10 @@ package pan.alexander.tordnscrypt.modules;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Build;
 import android.util.Log;
 
@@ -30,14 +29,13 @@ import java.util.List;
 import eu.chainfire.libsuperuser.Shell;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class ModulesRestarter {
     public static void restartDNSCrypt(Context context) {
-        sendIntent(context, ModulesService.actionRestartDnsCrypt);
+        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.actionRestartDnsCrypt);
     }
 
     public static void restartTor(Context context) {
@@ -47,30 +45,17 @@ public class ModulesRestarter {
         if (useDefaultBridges || useOwnBridges) {
             restartTorFull(context);
         } else {
-            sendIntent(context, ModulesService.actionRestartTor);
+            ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.actionRestartTor);
         }
 
     }
 
     public static void restartTorFull(Context context) {
-        sendIntent(context, ModulesService.actionRestartTorFull);
+        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.actionRestartTorFull);
     }
 
     public static void restartITPD(Context context) {
-        sendIntent(context, ModulesService.actionRestartITPD);
-    }
-
-    private static void sendIntent(Context context, String action) {
-        Intent intent = new Intent(context, ModulesService.class);
-        intent.setAction(action);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            intent.putExtra("showNotification", true);
-            context.startForegroundService(intent);
-        } else {
-            intent.putExtra("showNotification", Utils.INSTANCE.isShowNotification(context));
-            context.startService(intent);
-        }
+        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.actionRestartITPD);
     }
 
     Runnable getTorRestarterRunnable(Context context) {

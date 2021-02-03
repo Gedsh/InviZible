@@ -17,7 +17,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 #include "invizible.h"
@@ -249,14 +249,15 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
                 }
             }
 
-            // Log qname
-            char name[DNS_QNAME_MAX + 40 + 1];
+            // Log qname. Currently is not used.
+            /*char name[DNS_QNAME_MAX + 40 + 1];
             sprintf(name, "qtype %d qname %s rcode %d", qtype, qname, dns->rcode);
             jobject objPacket = create_packet(
                     args, version, s->protocol, "",
                     source, sport, dest, dport,
                     name, 0, 0);
-            log_packet(args, objPacket);
+
+            log_packet(args, objPacket);*/
         }
     } else if (acount > 0)
         log_android(ANDROID_LOG_WARN,

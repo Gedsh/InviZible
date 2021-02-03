@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.patches
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Activity
@@ -58,6 +58,7 @@ class Patch(private val activity: Activity) {
 
                         removeQuad9FromBrokenImplementation()
                         changeV2DNSCryptUpdateSourcesToV3()
+                        replaceBlackNames()
 
                         if (dnsCryptConfigPatches.isNotEmpty()) {
                             configUtil.patchDNSCryptConfig(dnsCryptConfigPatches)
@@ -70,6 +71,8 @@ class Patch(private val activity: Activity) {
                         if (itpdConfigPatches.isNotEmpty()) {
                             configUtil.patchItpdConfig(itpdConfigPatches)
                         }
+
+                        configUtil.updateTorGeoip()
 
                         PrefManager(activity).setIntPref(SAVED_VERSION_CODE, currentVersion)
                     }
@@ -100,5 +103,21 @@ class Patch(private val activity: Activity) {
                 Regex(".*v2/relays.md.*"),
                 "urls = ['https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v3/relays.md'," +
                         " 'https://download.dnscrypt.info/resolvers-list/v3/relays.md']"))
+    }
+
+    private fun replaceBlackNames() {
+        dnsCryptConfigPatches.add(PatchLine("[blacklist]",
+                Regex("blacklist_file = 'blacklist.txt'"), "blocked_names_file = 'blacklist.txt'"))
+        dnsCryptConfigPatches.add(PatchLine("[ip_blacklist]",
+                Regex("blacklist_file = 'ip-blacklist.txt'"), "blocked_ips_file = 'ip-blacklist.txt'"))
+        dnsCryptConfigPatches.add(PatchLine("[whitelist]",
+                Regex("whitelist_file = 'whitelist.txt'"), "allowed_names_file = 'whitelist.txt'"))
+
+        dnsCryptConfigPatches.add(PatchLine("",
+                Regex("\\[blacklist]"), "[blocked_names]"))
+        dnsCryptConfigPatches.add(PatchLine("",
+                Regex("\\[ip_blacklist]"), "[blocked_ips]"))
+        dnsCryptConfigPatches.add(PatchLine("",
+                Regex("\\[whitelist]"), "[allowed_names]"))
     }
 }

@@ -16,42 +16,22 @@ package pan.alexander.tordnscrypt.modules;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
-import android.content.Intent;
-import android.os.Build;
-
-import pan.alexander.tordnscrypt.utils.Utils;
 
 public class ModulesRunner {
 
-    private ModulesRunner() {
-    }
-
     public static void runDNSCrypt(Context context) {
-       sendStarterIntent(context, ModulesService.actionStartDnsCrypt);
+        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.actionStartDnsCrypt);
     }
 
     public static void runTor(Context context) {
-        sendStarterIntent(context, ModulesService.actionStartTor);
+        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.actionStartTor);
     }
 
     public static void runITPD(Context context) {
-        sendStarterIntent(context, ModulesService.actionStartITPD);
-    }
-
-    private static void sendStarterIntent(Context context, String action) {
-        Intent intent = new Intent(context, ModulesService.class);
-        intent.setAction(action);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            intent.putExtra("showNotification", true);
-            context.startForegroundService(intent);
-        } else {
-            intent.putExtra("showNotification", Utils.INSTANCE.isShowNotification(context));
-            context.startService(intent);
-        }
+        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.actionStartITPD);
     }
 }

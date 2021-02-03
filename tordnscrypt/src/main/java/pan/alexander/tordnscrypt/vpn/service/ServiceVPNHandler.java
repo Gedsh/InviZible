@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.vpn.service;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Intent;
@@ -261,8 +261,11 @@ public class ServiceVPNHandler extends Handler {
         serviceVPN.startNative(serviceVPN.vpn, listAllowed, listRule);
 
         if (fixTTL) {
-            modulesStatus.setFixTTLRulesUpdateRequested(serviceVPN, true);
-            ModulesIptablesRules.allowTethering(serviceVPN, oldVpnInterfaceName);
+            String finalOldVpnInterfaceName = oldVpnInterfaceName;
+            postDelayed(() -> {
+                modulesStatus.setFixTTLRulesUpdateRequested(serviceVPN, true);
+                ModulesIptablesRules.allowTethering(serviceVPN, finalOldVpnInterfaceName);
+            }, 1000);
         }
 
         serviceVPN.reloading = false;

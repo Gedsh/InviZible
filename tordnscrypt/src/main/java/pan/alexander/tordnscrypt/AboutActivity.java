@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
@@ -145,31 +145,23 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
 
     @Override
     public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.dnscryptLicense:
-                showLicense(R.string.about_license_dnscrypt,R.raw.dnscrypt_license,false);
-                break;
-            case R.id.torLicense:
-                showLicense(R.string.about_license_tor,R.raw.tor_license,false);
-                break;
-            case R.id.itpdLicense:
-                showLicense(R.string.about_license_itpd,R.raw.itpd_license,false);
-                break;
-            case R.id.libsuperuserLicense:
-                showLicense(R.string.about_license_libsupeuser,R.raw.libsuperuser_license,true);
-                break;
-            case R.id.androidShellLicense:
-                showLicense(R.string.about_license_AndroidShell,R.raw.androidshell_license,true);
-                break;
-            case R.id.netGuardLicense:
-                showLicense(R.string.about_license_NetGuard,R.raw.netguard_license,false);
-                break;
-            case R.id.filepickerLicense:
-                showLicense(R.string.about_license_filepicker,R.raw.filepicker_license,true);
-                break;
-            case R.id.busyboxLicense:
-                showLicense(R.string.about_license_busybox,R.raw.busybox_license,false);
-                break;
+        int id = view.getId();
+        if (id == R.id.dnscryptLicense) {
+            showLicense(R.string.about_license_dnscrypt, R.raw.dnscrypt_license, false);
+        } else if (id == R.id.torLicense) {
+            showLicense(R.string.about_license_tor, R.raw.tor_license, false);
+        } else if (id == R.id.itpdLicense) {
+            showLicense(R.string.about_license_itpd, R.raw.itpd_license, false);
+        } else if (id == R.id.libsuperuserLicense) {
+            showLicense(R.string.about_license_libsupeuser, R.raw.libsuperuser_license, true);
+        } else if (id == R.id.androidShellLicense) {
+            showLicense(R.string.about_license_AndroidShell, R.raw.androidshell_license, true);
+        } else if (id == R.id.netGuardLicense) {
+            showLicense(R.string.about_license_NetGuard, R.raw.netguard_license, false);
+        } else if (id == R.id.filepickerLicense) {
+            showLicense(R.string.about_license_filepicker, R.raw.filepicker_license, true);
+        } else if (id == R.id.busyboxLicense) {
+            showLicense(R.string.about_license_busybox, R.raw.busybox_license, false);
         }
     }
 }

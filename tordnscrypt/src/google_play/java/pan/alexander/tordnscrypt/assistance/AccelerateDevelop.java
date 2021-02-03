@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.assistance;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
@@ -75,8 +75,8 @@ public class AccelerateDevelop implements BillingClientStateListener {
     private BillingClient mBillingClient;
     private final Map<String, SkuDetails> mSkuDetailsMap = new HashMap<>();
     private volatile boolean billingServiceConnected = false;
-    private volatile String signedData = "";
-    private volatile String signature = "";
+    private volatile String signedData;
+    private volatile String signature;
 
     public AccelerateDevelop(MainActivity activity) {
         this.activity = activity;

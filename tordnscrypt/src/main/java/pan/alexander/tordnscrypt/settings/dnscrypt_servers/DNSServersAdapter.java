@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_servers;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
@@ -40,8 +40,8 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.ArrayList;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.dnscrypt_relays.DNSServerRelays;
@@ -51,9 +51,9 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
     private final Context context;
     private final FragmentManager fragmentManager;
     private final PreferencesDNSCryptServers preferencesDNSCryptServers;
-    private final ArrayList<DNSServerItem> list_dns_servers;
-    private final ArrayList<DNSServerItem> list_dns_servers_saved;
-    private final ArrayList<DNSServerRelays> routes_current;
+    private final CopyOnWriteArrayList<DNSServerItem> list_dns_servers;
+    private final CopyOnWriteArrayList<DNSServerItem> list_dns_servers_saved;
+    private final CopyOnWriteArrayList<DNSServerRelays> routes_current;
     private final LayoutInflater lInflater;
     private final boolean relaysMdExist;
     private final SearchView searchDNSServer;
@@ -61,9 +61,9 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
     DNSServersAdapter(Context context, SearchView searchDNSServer,
                       PreferencesDNSCryptServers preferencesDNSCryptServers,
                       FragmentManager fragmentManager,
-                      ArrayList<DNSServerItem> list_dns_servers,
-                      ArrayList<DNSServerItem> list_dns_servers_saved,
-                      ArrayList<DNSServerRelays> routes_current, boolean relaysMdExist) {
+                      CopyOnWriteArrayList<DNSServerItem> list_dns_servers,
+                      CopyOnWriteArrayList<DNSServerItem> list_dns_servers_saved,
+                      CopyOnWriteArrayList<DNSServerRelays> routes_current, boolean relaysMdExist) {
         this.context = context;
         this.searchDNSServer = searchDNSServer;
         this.preferencesDNSCryptServers = preferencesDNSCryptServers;

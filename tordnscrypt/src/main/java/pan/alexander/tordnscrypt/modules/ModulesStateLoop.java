@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.modules;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Intent;
@@ -77,6 +77,8 @@ public class ModulesStateLoop implements Runnable {
     private final SharedPreferences sharedPreferences;
 
     private final Handler handler;
+
+    private int savedIptablesCommandsHash = 0;
 
     ModulesStateLoop(ModulesService modulesService) {
         //Delay in sec before service can stop
@@ -249,6 +251,14 @@ public class ModulesStateLoop implements Runnable {
 
             if (iptablesRules != null && rootIsAvailable && operationMode == ROOT_MODE) {
                 List<String> commands = iptablesRules.configureIptables(dnsCryptState, torState, itpdState);
+                int hashCode = commands.hashCode();
+
+                if (hashCode == savedIptablesCommandsHash && !iptablesRules.isLastIptablesCommandsReturnError()) {
+                    commands = iptablesRules.fastUpdate();
+                }
+
+                savedIptablesCommandsHash = hashCode;
+
                 iptablesRules.sendToRootExecService(commands);
 
                 Log.i(LOG_TAG, "Iptables rules updated");
@@ -288,7 +298,7 @@ public class ModulesStateLoop implements Runnable {
                 handler.postDelayed(() -> {
                     iptablesUpdateTemporaryBlocked = false;
                     ModulesAux.makeModulesStateExtraLoop(modulesService);
-                }, 9000);
+                }, 8000);
             }
 
         } else if (useModulesWithRoot && operationMode == ROOT_MODE) {
@@ -386,5 +396,19 @@ public class ModulesStateLoop implements Runnable {
 
     void setItpdThread(Thread itpdThread) {
         ModulesStateLoop.itpdThread = itpdThread;
+    }
+
+    void clearIptablesCommandHash() {
+        savedIptablesCommandsHash = 0;
+    }
+
+    void removeHandlerTasks() {
+        if (iptablesRules != null) {
+            iptablesRules.unregisterReceiver();
+        }
+
+        if (handler != null) {
+            handler.removeCallbacksAndMessages(null);
+        }
     }
 }

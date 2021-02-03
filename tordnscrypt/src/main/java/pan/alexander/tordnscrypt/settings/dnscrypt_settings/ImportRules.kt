@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_settings
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context
@@ -38,7 +38,7 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.collections.ArrayList
 
 private val blackListHostRulesRegex = Regex("^[a-zA-Z\\d-.=_*\\[\\]]+$")
-private val blacklistIPRulesRegex = Regex("^(?:[0-9*]{1,3}\\.){3}[0-9*]{1,3}(?:/\\d+)*$")
+private val blacklistIPRulesRegex = Regex("^(?:[0-9*]{1,3}\\.){1,3}[0-9*]{1,3}(?:/\\d+)*$")
 private val cloakingRulesRegex = Regex("^[a-zA-Z\\d-.=_*]+[ \\t]+[a-zA-Z\\d-.=_*]+$")
 private val forwardingRulesRegex = Regex("^[a-zA-Z\\d-._]+[ \\t]+(?:[0-9*]{1,3}\\.){3}[0-9*]{1,3}(?:, ?(?:[0-9*]{1,3}\\.){3}[0-9*]{1,3})*$")
 private val whiteListHostRulesRegex = Regex("^[a-zA-Z\\d-.=_*\\[\\]]+$")

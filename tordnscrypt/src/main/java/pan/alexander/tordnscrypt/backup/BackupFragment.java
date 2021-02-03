@@ -16,15 +16,23 @@ package pan.alexander.tordnscrypt.backup;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.LinearLayoutCompat;
-import androidx.cardview.widget.CardView;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 
@@ -41,34 +49,65 @@ import com.github.angads25.filepicker.model.DialogProperties;
 import com.github.angads25.filepicker.view.FilePickerDialog;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
-import pan.alexander.tordnscrypt.help.Utils;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.file_operations.ExternalStoragePermissions;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import pan.alexander.tordnscrypt.utils.file_operations.OnBinaryFileOperationsCompleteListener;
 
+import static android.app.Activity.RESULT_OK;
+import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
+import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_ALLOW_GSM_PREF;
+import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_ALLOW_LAN_PREF;
+import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_ALLOW_ROAMING;
+import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_ALLOW_VPN;
+import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_ALLOW_WIFI_PREF;
+import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.CLEARNET_APPS;
+import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.UNLOCK_APPS;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.deleteFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
 
 
-public class BackupFragment extends Fragment implements View.OnClickListener, OnBinaryFileOperationsCompleteListener {
+public class BackupFragment extends Fragment implements View.OnClickListener,
+        DialogInterface.OnClickListener,
+        OnBinaryFileOperationsCompleteListener {
 
-    private LinearLayoutCompat llFragmentBackup;
-    private CardView cardRules;
+    final static Set<String> TAGS_TO_CONVERT = new HashSet<>(Arrays.asList(
+            APPS_ALLOW_LAN_PREF,
+            APPS_ALLOW_WIFI_PREF,
+            APPS_ALLOW_GSM_PREF,
+            APPS_ALLOW_ROAMING,
+            APPS_ALLOW_VPN,
+            CLEARNET_APPS_FOR_PROXY,
+            UNLOCK_APPS,
+            CLEARNET_APPS
+    ));
+
+    final static int CODE_READ = 10;
+    final static int CODE_WRITE = 20;
+
+    private LinearLayoutCompat llCardBackup;
     private EditText etFilePath;
     private String pathBackup;
     private String cacheDir;
     private String appDataDir;
     private DialogFragment progress;
 
+    private ResetHelper resetHelper;
     private BackupHelper backupHelper;
     private RestoreHelper restoreHelper;
+
+    private boolean logsDirAccessible;
 
     public BackupFragment() {
     }
@@ -87,6 +126,9 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_backup, container, false);
 
+        Button btnResetSettings = view.findViewById(R.id.btnResetSettings);
+        btnResetSettings.setOnClickListener(this);
+
         Button btnRestoreBackup = view.findViewById(R.id.btnRestoreBackup);
         btnRestoreBackup.setOnClickListener(this);
 
@@ -94,9 +136,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
         btnSaveBackup.setOnClickListener(this);
         btnSaveBackup.requestFocus();
 
-        llFragmentBackup = view.findViewById(R.id.llFragmentBackup);
-
-        cardRules = view.findViewById(R.id.cardRules);
+        llCardBackup = view.findViewById(R.id.llCardBackup);
 
         hideSelectionEditTextIfRequired(getActivity());
 
@@ -118,57 +158,99 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
     public void onResume() {
         super.onResume();
 
+        Activity activity = getActivity();
+
+        if (activity == null) {
+            return;
+        }
+
         if (restoreHelper != null) {
-            restoreHelper.setActivity(getActivity());
+            restoreHelper.setActivity(activity);
         }
 
         if (backupHelper != null) {
-            backupHelper.setContext(getActivity());
+            backupHelper.setActivity(activity);
+        }
+
+        if (resetHelper != null) {
+            resetHelper.setActivity(activity);
         }
     }
 
     @Override
     public void onClick(View v) {
+        Activity activity = getActivity();
+
+        if (activity == null) {
+            return;
+        }
+
         int id = v.getId();
-        if (id == R.id.btnRestoreBackup) {
-            restoreHelper = new RestoreHelper(getActivity(), appDataDir, pathBackup);
-            restoreBackup();
+        if (id == R.id.btnResetSettings) {
+            showAreYouSureDialog(activity, R.string.btnResetSettings, () -> resetSettings(activity));
+        } else if (id == R.id.btnRestoreBackup) {
+            showAreYouSureDialog(activity, R.string.btnRestoreBackup, () -> restoreBackup(activity));
         } else if (id == R.id.btnSaveBackup) {
-            backupHelper = new BackupHelper(getActivity(), appDataDir, pathBackup);
-            saveBackup();
+            saveBackup(activity);
         } else if (id == R.id.etPathBackup) {
-            selectBackupPath();
+            selectBackupPath(activity);
         }
 
     }
 
-    private void restoreBackup() {
-        ExternalStoragePermissions permissions = new ExternalStoragePermissions(getActivity());
-        if (!permissions.isWritePermissions()) {
-            permissions.requestReadWritePermissions();
+    @Override
+    public void onClick(DialogInterface dialog, int which) {
+
+    }
+
+    private void resetSettings(Activity activity) {
+
+        openPleaseWaitDialog();
+
+        resetHelper = new ResetHelper(activity, this);
+        resetHelper.resetSettings();
+    }
+
+    private void restoreBackup(Activity activity) {
+
+        restoreHelper = new RestoreHelper(activity, appDataDir, cacheDir, pathBackup);
+
+        ExternalStoragePermissions permissions = new ExternalStoragePermissions(activity);
+        if (!permissions.isReadPermissions()) {
+            permissions.requestReadPermissions();
             return;
+        }
+
+        if (logsDirAccessible) {
+
+            openPleaseWaitDialog();
+
+            restoreHelper.restoreAll(null, logsDirAccessible);
+        } else {
+            restoreHelper.openFileWithSAF();
+        }
+
+    }
+
+    private void saveBackup(Activity activity) {
+
+        if (logsDirAccessible) {
+            ExternalStoragePermissions permissions = new ExternalStoragePermissions(activity);
+            if (!permissions.isWritePermissions()) {
+                permissions.requestReadWritePermissions();
+                return;
+            }
         }
 
         openPleaseWaitDialog();
 
-        restoreHelper.restoreAll();
+        backupHelper = new BackupHelper(activity, appDataDir, cacheDir, pathBackup);
+        backupHelper.saveAll(logsDirAccessible);
     }
 
-    private void saveBackup() {
-        ExternalStoragePermissions permissions = new ExternalStoragePermissions(getActivity());
-        if (!permissions.isWritePermissions()) {
-            permissions.requestReadWritePermissions();
-            return;
-        }
+    private void selectBackupPath(Activity activity) {
 
-        openPleaseWaitDialog();
-
-        backupHelper.saveAll();
-    }
-
-    private void selectBackupPath() {
-
-        if (getActivity() == null || getActivity().isFinishing()) {
+        if (activity == null || activity.isFinishing()) {
             return;
         }
 
@@ -176,25 +258,28 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
         properties.selection_mode = DialogConfigs.SINGLE_MODE;
         properties.selection_type = DialogConfigs.DIR_SELECT;
         properties.root = new File(Environment.getExternalStorageDirectory().getPath());
-        properties.error_dir = new File(PathVars.getInstance(getActivity()).getCacheDirPath(getActivity()));
+        properties.error_dir = new File(PathVars.getInstance(activity).getCacheDirPath(activity));
         properties.offset = new File(Environment.getExternalStorageDirectory().getPath());
         properties.extensions = null;
 
-        FilePickerDialog dial = new FilePickerDialog(getActivity(), properties);
+        FilePickerDialog dial = new FilePickerDialog(activity, properties);
         dial.setTitle(R.string.backupFolder);
-        dial.setDialogSelectionListener(files -> {
-            pathBackup = files[0];
-            etFilePath.setText(pathBackup);
-
-            if (backupHelper != null) {
-                backupHelper.setPathBackup(pathBackup);
-            }
-
-            if (restoreHelper != null) {
-                restoreHelper.setPathBackup(pathBackup);
-            }
-        });
+        dial.setDialogSelectionListener(files -> setBackupPath(files[0]));
         dial.show();
+    }
+
+    private void setBackupPath(String path) {
+        pathBackup = path;
+
+        etFilePath.setText(path);
+
+        if (backupHelper != null) {
+            backupHelper.setPathBackup(path);
+        }
+
+        if (restoreHelper != null) {
+            restoreHelper.setPathBackup(path);
+        }
     }
 
     private void openPleaseWaitDialog() {
@@ -209,19 +294,41 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
     }
 
     void closePleaseWaitDialog() {
-        if (getActivity() != null) {
+        Activity activity = getActivity();
+
+        if (activity == null || activity.isFinishing() || progress == null) {
+            return;
+        }
+
+        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
             try {
-                progress.dismiss();
+                while (progress != null) {
+                    if (progress.isStateSaved()) {
+                        TimeUnit.SECONDS.sleep(1);
+                    } else {
+                        progress.dismiss();
+                        progress = null;
+                        break;
+                    }
+                }
             } catch (Exception ex) {
+                if (!activity.isFinishing() && progress != null && !progress.isStateSaved()) {
+                    progress.dismiss();
+                    progress = null;
+                }
                 Log.e(LOG_TAG, "BackupFragment close progress fault " + ex.getMessage() + " " + ex.getCause());
             }
-        }
+        });
     }
 
     void showToast(final String text) {
-        if (getActivity() != null) {
-            getActivity().runOnUiThread(() -> Toast.makeText(getActivity(), text, Toast.LENGTH_LONG).show());
+        Activity activity = getActivity();
+
+        if (activity == null) {
+            return;
         }
+
+        activity.runOnUiThread(() -> Toast.makeText(activity, text, Toast.LENGTH_LONG).show());
     }
 
     @Override
@@ -229,6 +336,8 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
         super.onDestroy();
 
         FileOperations.deleteOnFileOperationCompleteListener(this);
+
+        progress = null;
     }
 
     @Override
@@ -236,7 +345,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
         if (currentFileOperation == moveBinaryFile && tag.equals("InvizibleBackup.zip")) {
             closePleaseWaitDialog();
             if (fileOperationResult) {
-                showToast("Backup OK");
+                showToast(getString(R.string.backupSaved));
             } else {
                 showToast(getString(R.string.wrong));
             }
@@ -244,21 +353,69 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
         } else if (currentFileOperation == deleteFile && tag.equals("sharedPreferences")) {
             closePleaseWaitDialog();
             if (fileOperationResult) {
-                showToast("Restore OK");
+                showToast(getString(R.string.backupRestored));
             } else {
                 showToast(getString(R.string.wrong));
             }
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    void onResultActivity(Context context, int requestCode, int resultCode, @Nullable Intent data) {
+
+        try {
+
+            final ContentResolver contentResolver = context.getContentResolver();
+
+            if (resultCode != RESULT_OK) {
+                throw new IllegalStateException("result " + resultCode);
+            }
+
+            final Uri uri = data != null ? data.getData() : null;
+
+            if (uri == null) {
+                throw new IllegalStateException("missing URI?");
+            }
+
+            if (requestCode == CODE_READ) {
+                contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                restoreHelper.restoreAll(contentResolver.openInputStream(uri), logsDirAccessible);
+
+                openPleaseWaitDialog();
+            } else if (requestCode == CODE_WRITE) {
+                contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                backupHelper.copyData(contentResolver.openOutputStream(uri));
+
+                closePleaseWaitDialog();
+                showToast(getString(R.string.backupSaved));
+            }
+        } catch (Exception e) {
+            closePleaseWaitDialog();
+            showToast(getString(R.string.wrong));
+            Log.e(LOG_TAG, "BackupFragment onResultActivity exception " + e.getMessage() +" " + e.getCause());
+        }
+    }
+
+    private void showAreYouSureDialog(Activity activity, int title, Runnable action) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
+        builder.setTitle(title);
+        builder.setMessage(R.string.areYouSure);
+        builder.setPositiveButton(R.string.ok, (dialog, which) -> action.run());
+        builder.setNegativeButton(getText(R.string.cancel), (dialog, i) -> dialog.cancel());
+        builder.show();
+    }
+
     private void hideSelectionEditTextIfRequired(Activity activity) {
         CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
-            boolean logsDirAccessible = Utils.INSTANCE.isLogsDirAccessible();
-            if (activity != null && !activity.isFinishing() && !logsDirAccessible && cardRules != null) {
+
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                logsDirAccessible = Utils.INSTANCE.isLogsDirAccessible();
+            }
+
+            if (activity != null && !activity.isFinishing() && !logsDirAccessible && llCardBackup != null) {
                 activity.runOnUiThread(() -> {
-                    if (!activity.isFinishing() && cardRules != null && llFragmentBackup != null) {
-                        cardRules.setVisibility(View.GONE);
-                        llFragmentBackup.setPadding(0, pan.alexander.tordnscrypt.utils.Utils.INSTANCE.dips2pixels(10, activity), 0, 0);
+                    if (!activity.isFinishing() && llCardBackup != null) {
+                        llCardBackup.setVisibility(View.GONE);
                         pathBackup = cacheDir;
                     }
                 });

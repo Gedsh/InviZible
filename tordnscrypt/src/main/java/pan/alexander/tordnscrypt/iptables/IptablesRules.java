@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.iptables;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import java.util.List;
@@ -25,7 +25,10 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 
 public interface IptablesRules {
     List<String> configureIptables(ModuleState dnsCryptState, ModuleState torState, ModuleState itpdState);
+    List<String> fastUpdate();
     void refreshFixTTLRules();
     List<String> clearAll();
     void sendToRootExecService(List<String> commands);
+    void unregisterReceiver();
+    boolean isLastIptablesCommandsReturnError();
 }

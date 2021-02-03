@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.utils
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.Manifest
@@ -130,7 +130,7 @@ class InstalledApplications(private val context: Context, private val activeApps
                         }
                     } catch (e: Exception) {
                         useInternet = true
-                        Log.e(LOG_TAG, "InstalledApplications getApp exception  ${e.message}\n${e.cause}")
+                        Log.w(LOG_TAG, "InstalledApplications getApp exception  ${e.message}\n${e.cause}")
                     }
 
                     if (!useInternet && !system || uid == ownUID) {

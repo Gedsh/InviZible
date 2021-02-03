@@ -15,9 +15,10 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -28,6 +29,7 @@ import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
@@ -50,7 +52,9 @@ import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.ConfigEditorFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.DNSCryptRulesVariant;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
@@ -75,6 +79,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
     private ArrayList<String> val_toml_orig;
     private String appDataDir;
     private boolean isChanged = false;
+    private boolean rootDirAccessible;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -82,6 +87,8 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         setRetainInstance(true);
 
         addPreferencesFromResource(R.xml.preferences_dnscrypt);
+
+        checkRootDirAccessible();
 
         if (appVersion.endsWith("p")) {
             removePreferencesWithGPVersion();
@@ -209,13 +216,14 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
     public void onResume() {
         super.onResume();
 
-        if (getActivity() == null) {
+        Activity activity = getActivity();
+        if (activity == null) {
             return;
         }
 
-        getActivity().setTitle(R.string.drawer_menu_DNSSettings);
+        activity.setTitle(R.string.drawer_menu_DNSSettings);
 
-        PathVars pathVars = PathVars.getInstance(getActivity());
+        PathVars pathVars = PathVars.getInstance(activity);
         appDataDir = pathVars.getAppDataDir();
 
         isChanged = false;
@@ -232,7 +240,8 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
     public void onStop() {
         super.onStop();
 
-        if (getActivity() == null || key_toml == null || val_toml == null || key_toml_orig == null || val_toml_orig == null) {
+        Context context = getActivity();
+        if (context == null || key_toml == null || val_toml == null || key_toml_orig == null || val_toml_orig == null) {
             return;
         }
 
@@ -253,13 +262,13 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
         if (!isChanged) return;
 
-        FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml", dnscrypt_proxy_toml, SettingsActivity.dnscrypt_proxy_toml_tag);
+        FileOperations.writeToTextFile(context, appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml", dnscrypt_proxy_toml, SettingsActivity.dnscrypt_proxy_toml_tag);
 
-        boolean dnsCryptRunning = new PrefManager(getActivity()).getBoolPref("DNSCrypt Running");
+        boolean dnsCryptRunning = new PrefManager(context).getBoolPref("DNSCrypt Running");
 
         if (dnsCryptRunning) {
-            ModulesRestarter.restartDNSCrypt(getActivity());
-            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(getActivity(), true);
+            ModulesRestarter.restartDNSCrypt(context);
+            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
         }
     }
 
@@ -267,7 +276,8 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
 
-        if (getActivity() == null || val_toml == null || key_toml == null) {
+        Context context = getActivity();
+        if (context == null || val_toml == null || key_toml == null) {
             return false;
         }
 
@@ -378,11 +388,11 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                 val_toml.set(key_toml.indexOf(preference.getKey()), newValue.toString());
                 return true;
             } else {
-                Toast.makeText(getActivity(), R.string.pref_dnscrypt_not_exist, Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, R.string.pref_dnscrypt_not_exist, Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
             Log.e(LOG_TAG, "PreferencesDNSFragment exception " + e.getMessage() + " " + e.getCause());
-            Toast.makeText(getActivity(), R.string.wrong, Toast.LENGTH_LONG).show();
+            Toast.makeText(context, R.string.wrong, Toast.LENGTH_LONG).show();
         }
 
         return false;
@@ -390,7 +400,8 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
     @Override
     public boolean onPreferenceClick(Preference preference) {
-        if (getActivity() == null) {
+        Activity activity = getActivity();
+        if (activity == null) {
             return false;
         }
 
@@ -398,72 +409,77 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             ConfigEditorFragment.openEditorFragment(getParentFragmentManager(), "dnscrypt-proxy.toml");
             return true;
         } else if (Objects.equals(preference.getKey().trim(), "erase_blacklist") && isAdded()) {
-            eraseRules(DNSCryptRulesVariant.BLACKLIST_HOSTS, "remote_blacklist");
+            showAreYouSureDialog(activity, R.string.pref_dnscrypt_erase_blacklist, () ->
+                    eraseRules(activity, DNSCryptRulesVariant.BLACKLIST_HOSTS, "remote_blacklist"));
             return true;
         } else if (Objects.equals(preference.getKey().trim(), "erase_whitelist") && isAdded()) {
-            eraseRules(DNSCryptRulesVariant.WHITELIST_HOSTS, "remote_whitelist");
+            showAreYouSureDialog(activity, R.string.pref_dnscrypt_erase_whitelist, () ->
+                    eraseRules(activity, DNSCryptRulesVariant.WHITELIST_HOSTS, "remote_whitelist"));
             return true;
         } else if (Objects.equals(preference.getKey().trim(), "erase_ipblacklist") && isAdded()) {
-            eraseRules(DNSCryptRulesVariant.BLACKLIST_IPS, "remote_ipblacklist");
+            showAreYouSureDialog(activity, R.string.pref_dnscrypt_erase_ipblacklist, () ->
+                    eraseRules(activity, DNSCryptRulesVariant.BLACKLIST_IPS, "remote_ipblacklist"));
             return true;
         } else if (Objects.equals(preference.getKey().trim(), "erase_forwarding_rules") && isAdded()) {
-            eraseRules(DNSCryptRulesVariant.FORWARDING, "remote_forwarding_rules");
+            showAreYouSureDialog(activity, R.string.pref_dnscrypt_erase_forwarding_rules, () ->
+                    eraseRules(activity, DNSCryptRulesVariant.FORWARDING, "remote_forwarding_rules"));
             return true;
         } else if (Objects.equals(preference.getKey().trim(), "erase_cloaking_rules") && isAdded()) {
-            eraseRules(DNSCryptRulesVariant.CLOAKING, "remote_cloaking_rules");
+            showAreYouSureDialog(activity, R.string.pref_dnscrypt_erase_cloaking_rules, () ->
+                    eraseRules(activity, DNSCryptRulesVariant.CLOAKING, "remote_cloaking_rules"));
             return true;
         } else if (Objects.equals(preference.getKey().trim(), "local_blacklist") && isAdded()) {
 
-            if (isDownloadDirAccessible()) {
-                FilePickerDialog dialog = new FilePickerDialog(getActivity(), getFilePickerProperties(getActivity()));
-                dialog.setDialogSelectionListener(files -> importRules(DNSCryptRulesVariant.BLACKLIST_HOSTS, files));
+            if (rootDirAccessible) {
+                FilePickerDialog dialog = new FilePickerDialog(activity, getFilePickerProperties(activity));
+                dialog.setDialogSelectionListener(files -> importRules(activity, DNSCryptRulesVariant.BLACKLIST_HOSTS, files));
                 dialog.show();
             } else {
-                openFileWithSAF(PICK_BLACKLIST_HOSTS);
+                openFileWithSAF(activity, PICK_BLACKLIST_HOSTS);
             }
 
             return true;
         } else if (Objects.equals(preference.getKey().trim(), "local_whitelist") && isAdded()) {
 
-            if (isDownloadDirAccessible()) {
-                FilePickerDialog dialog = new FilePickerDialog(getActivity(), getFilePickerProperties(getActivity()));
-                dialog.setDialogSelectionListener(files -> importRules(DNSCryptRulesVariant.WHITELIST_HOSTS, files));
+            if (rootDirAccessible) {
+                FilePickerDialog dialog = new FilePickerDialog(activity, getFilePickerProperties(activity));
+                dialog.setDialogSelectionListener(files -> importRules(activity, DNSCryptRulesVariant.WHITELIST_HOSTS, files));
                 dialog.show();
             } else {
-                openFileWithSAF(PICK_WHITELIST_HOSTS);
+                openFileWithSAF(activity, PICK_WHITELIST_HOSTS);
             }
 
             return true;
         } else if (Objects.equals(preference.getKey().trim(), "local_ipblacklist") && isAdded()) {
 
-            if (isDownloadDirAccessible()) {
-                FilePickerDialog dialog = new FilePickerDialog(getActivity(), getFilePickerProperties(getActivity()));
-                dialog.setDialogSelectionListener(files -> importRules(DNSCryptRulesVariant.BLACKLIST_IPS, files));
+            if (rootDirAccessible) {
+                FilePickerDialog dialog = new FilePickerDialog(activity, getFilePickerProperties(activity));
+                dialog.setDialogSelectionListener(files -> importRules(activity, DNSCryptRulesVariant.BLACKLIST_IPS, files));
                 dialog.show();
             } else {
-                openFileWithSAF(PICK_BLACKLIST_IPS);
+                openFileWithSAF(activity, PICK_BLACKLIST_IPS);
             }
 
             return true;
         } else if (Objects.equals(preference.getKey().trim(), "local_forwarding_rules") && isAdded()) {
 
-            if (isDownloadDirAccessible()) {
-                FilePickerDialog dialog = new FilePickerDialog(getActivity(), getFilePickerProperties(getActivity()));
-                dialog.setDialogSelectionListener(files -> importRules(DNSCryptRulesVariant.FORWARDING, files));
+            if (rootDirAccessible) {
+                FilePickerDialog dialog = new FilePickerDialog(activity, getFilePickerProperties(activity));
+                dialog.setDialogSelectionListener(files -> importRules(activity, DNSCryptRulesVariant.FORWARDING, files));
                 dialog.show();
             } else {
-                openFileWithSAF(PICK_FORWARDING);
+                openFileWithSAF(activity, PICK_FORWARDING);
             }
 
             return true;
         } else if (Objects.equals(preference.getKey().trim(), "local_cloaking_rules") && isAdded()) {
 
-            if (isDownloadDirAccessible()) {
-                FilePickerDialog dialog = new FilePickerDialog(getActivity(), getFilePickerProperties(getActivity()));
-                dialog.setDialogSelectionListener(files -> importRules(DNSCryptRulesVariant.CLOAKING, files));
+            if (rootDirAccessible) {
+                FilePickerDialog dialog = new FilePickerDialog(activity, getFilePickerProperties(activity));
+                dialog.setDialogSelectionListener(files -> importRules(activity, DNSCryptRulesVariant.CLOAKING, files));
                 dialog.show();
             } else {
-                openFileWithSAF(PICK_CLOAKING);
+                openFileWithSAF(activity, PICK_CLOAKING);
             }
 
             return true;
@@ -472,13 +488,13 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         return false;
     }
 
-    public void importRules(DNSCryptRulesVariant dnsCryptRulesVariant, Object[] files) {
+    public void importRules(Context context, DNSCryptRulesVariant dnsCryptRulesVariant, Object[] files) {
 
-        if (getActivity() == null) {
+        if (context == null) {
             return;
         }
 
-        ImportRules importRules = new ImportRules(getActivity(), dnsCryptRulesVariant,
+        ImportRules importRules = new ImportRules(context, dnsCryptRulesVariant,
                 true, files);
         ImportRulesDialog importRulesDialog = ImportRulesDialog.newInstance();
         importRules.setOnDNSCryptRuleAddLineListener(importRulesDialog);
@@ -486,18 +502,27 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         importRules.start();
     }
 
-    private void eraseRules(DNSCryptRulesVariant dnsCryptRulesVariant, String remoteRulesLinkPreferenceTag) {
-        if (getActivity() == null) {
+    private void eraseRules(Context context, DNSCryptRulesVariant dnsCryptRulesVariant, String remoteRulesLinkPreferenceTag) {
+        if (context == null) {
             return;
         }
 
-        EraseRules eraseRules = new EraseRules(getActivity(), getParentFragmentManager(),
+        EraseRules eraseRules = new EraseRules(context, getParentFragmentManager(),
                 dnsCryptRulesVariant, remoteRulesLinkPreferenceTag);
         eraseRules.start();
     }
 
-    private void openFileWithSAF(int fileType) {
-        if (getActivity() == null) {
+    private void showAreYouSureDialog(Activity activity, int title, Runnable action) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
+        builder.setTitle(title);
+        builder.setMessage(R.string.areYouSure);
+        builder.setPositiveButton(R.string.ok, (dialog, which) -> action.run());
+        builder.setNegativeButton(getText(R.string.cancel), (dialog, i) -> dialog.cancel());
+        builder.show();
+    }
+
+    private void openFileWithSAF(Activity activity, int fileType) {
+        if (activity == null) {
             return;
         }
 
@@ -512,9 +537,9 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             intent.putExtra(EXTRA_INITIAL_URI, uri);
         }
 
-        PackageManager packageManager = getActivity().getPackageManager();
+        PackageManager packageManager = activity.getPackageManager();
         if (packageManager != null && intent.resolveActivity(packageManager) != null) {
-            getActivity().startActivityForResult(intent, fileType);
+            activity.startActivityForResult(intent, fileType);
         }
 
     }
@@ -551,22 +576,12 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         }
     }
 
-    private boolean isDownloadDirAccessible() {
-        boolean result = false;
-
-        try {
-            File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-
-            if (dir != null && dir.isDirectory() && Objects.requireNonNull(dir.list()).length > 0) {
-                result = true;
-            } else {
-                Log.w(LOG_TAG, "Download Dir is not accessible!");
-            }
-        } catch (Exception e) {
-            Log.w(LOG_TAG, "Download Dir is not accessible " + e.getMessage() + e.getCause());
+    private void checkRootDirAccessible() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+                rootDirAccessible = Utils.INSTANCE.isLogsDirAccessible();
+            });
         }
-
-        return result;
     }
 
     private DialogProperties getFilePickerProperties(Context context) {

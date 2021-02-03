@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.modules;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.NotificationManager;
@@ -75,6 +75,8 @@ public class ModulesService extends Service {
     public static final String actionStopService = "pan.alexander.tordnscrypt.action.STOP_SERVICE";
     public static final String actionStopServiceForeground = "pan.alexander.tordnscrypt.action.STOP_SERVICE_FOREGROUND";
 
+    public static boolean serviceIsRunning = false;
+
     private final static int TIMER_HIGH_SPEED = 1000;
     private final static int TIMER_LOW_SPEED = 30000;
 
@@ -95,6 +97,7 @@ public class ModulesService extends Service {
     static final String extraLoop = "pan.alexander.tordnscrypt.action.MAKE_EXTRA_LOOP";
     static final String startArpScanner= "pan.alexander.tordnscrypt.action.START_ARP_SCANNER";
     static final String stopArpScanner= "pan.alexander.tordnscrypt.action.STOP_ARP_SCANNER";
+    static final String clearIptablesCommandsHash = "pan.alexander.tordnscrypt.action.CLEAR_IPTABLES_COMMANDS_HASH";
 
     static final String DNSCRYPT_KEYWORD = "checkDNSRunning";
     static final String TOR_KEYWORD = "checkTrRunning";
@@ -140,6 +143,8 @@ public class ModulesService extends Service {
             ServiceNotification notification = new ServiceNotification(this, notificationManager, UsageStatisticKt.getStartTime());
             notification.sendNotification(title, message);
         }
+
+        serviceIsRunning = true;
 
         pathVars = PathVars.getInstance(this);
 
@@ -266,6 +271,9 @@ public class ModulesService extends Service {
             case stopArpScanner:
                 stopArpScanner();
                 break;
+            case clearIptablesCommandsHash:
+                clearIptablesCommandsSavedHash();
+                break;
         }
 
         setBroadcastReceiver();
@@ -350,10 +358,6 @@ public class ModulesService extends Service {
     private void changeDNSCryptStatus(final Thread dnsCryptThread) {
 
         makeDelay(2);
-
-        if (modulesStatus == null) {
-            return;
-        }
 
         if (modulesStatus.isUseModulesWithRoot() || dnsCryptThread.isAlive()) {
             modulesStatus.setDnsCryptState(RUNNING);
@@ -473,10 +477,6 @@ public class ModulesService extends Service {
     private void changeTorStatus(final Thread torThread) {
 
         makeDelay(2);
-
-        if (modulesStatus == null) {
-            return;
-        }
 
         if (modulesStatus.isUseModulesWithRoot() || torThread.isAlive()) {
             modulesStatus.setTorState(RUNNING);
@@ -600,10 +600,6 @@ public class ModulesService extends Service {
     private void changeITPDStatus(final Thread itpdThread) {
 
         makeDelay(3);
-
-        if (modulesStatus == null) {
-            return;
-        }
 
         if (modulesStatus.isUseModulesWithRoot() || itpdThread.isAlive()) {
             modulesStatus.setItpdState(RUNNING);
@@ -903,6 +899,10 @@ public class ModulesService extends Service {
 
         releaseWakelocks();
 
+        if (checkModulesStateTask != null && modulesStatus.getMode() == VPN_MODE) {
+            checkModulesStateTask.removeHandlerTasks();
+        }
+
         stopModulesThreadsTimer();
 
         stopArpScanner();
@@ -912,6 +912,8 @@ public class ModulesService extends Service {
         CachedExecutor.INSTANCE.stopExecutorService();
 
         mHandler.removeCallbacksAndMessages(null);
+
+        serviceIsRunning = false;
 
         super.onDestroy();
     }
@@ -973,7 +975,7 @@ public class ModulesService extends Service {
         if (modulesStatus.getMode() == ROOT_MODE
                 && !modulesStatus.isUseModulesWithRoot()
                 && modulesBroadcastReceiver == null) {
-            modulesBroadcastReceiver = new ModulesBroadcastReceiver(this, arpScanner);
+            modulesBroadcastReceiver = new ModulesBroadcastReceiver(this.getApplicationContext(), arpScanner);
             modulesBroadcastReceiver.registerReceivers();
         } else if (modulesStatus.getMode() != ROOT_MODE
                 && modulesBroadcastReceiver != null) {
@@ -1087,6 +1089,12 @@ public class ModulesService extends Service {
     private void stopArpScanner() {
         if (arpScanner != null) {
             arpScanner.stop();
+        }
+    }
+
+    private void clearIptablesCommandsSavedHash() {
+        if (checkModulesStateTask != null) {
+            checkModulesStateTask.clearIptablesCommandHash();
         }
     }
 }

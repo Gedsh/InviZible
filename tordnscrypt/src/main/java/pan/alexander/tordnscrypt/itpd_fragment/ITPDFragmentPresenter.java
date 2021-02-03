@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.itpd_fragment;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
@@ -567,7 +567,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
             OwnFileReader ofr = new OwnFileReader(context, appDataDir + "/logs/i2pd.log");
 
-            ofr.shortenToToLongFile();
+            ofr.shortenTooTooLongFile();
         }
 
         view.setITPDProgressBarIndeterminate(true);

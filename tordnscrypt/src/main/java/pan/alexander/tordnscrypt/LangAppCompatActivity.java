@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.res.Configuration;
@@ -29,6 +29,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.lang.ref.WeakReference;
+import java.util.Objects;
 
 import pan.alexander.tordnscrypt.language.Language;
 
@@ -36,6 +37,7 @@ import pan.alexander.tordnscrypt.language.Language;
 public abstract class LangAppCompatActivity extends AppCompatActivity {
 
     private final boolean DEVELOPER_MODE = false;
+    private ApplicationExt applicationExt;
 
     @RequiresApi(api = Build.VERSION_CODES.P)
     @Override
@@ -61,10 +63,17 @@ public abstract class LangAppCompatActivity extends AppCompatActivity {
 
         Language.setFromPreference(this, "pref_fast_language");
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && getApplicationContext() instanceof  ApplicationExt) {
-            //Required for an app update
-            ApplicationExt applicationExt = (ApplicationExt) getApplicationContext();
-            applicationExt.setLangAppCompatActivityActive(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && getApplicationContext() instanceof  ApplicationExt) {
+            applicationExt = (ApplicationExt) getApplicationContext();
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        if (applicationExt != null) {
+            applicationExt.setCurrentActivity(new WeakReference<>(this));
         }
     }
 
@@ -86,13 +95,25 @@ public abstract class LangAppCompatActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    protected void onStop() {
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && getApplicationContext() instanceof  ApplicationExt) {
-            //Required for an app update
-            ApplicationExt applicationExt = (ApplicationExt) getApplicationContext();
-            applicationExt.setLangAppCompatActivityActive(false);
+        clearCurrentActivity();
+
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+
+        clearCurrentActivity();
+
+        super.onDestroy();
+    }
+
+    private void clearCurrentActivity() {
+        if (applicationExt != null && applicationExt.getCurrentActivity() != null
+                && Objects.equals(applicationExt.getCurrentActivity().get(), this)) {
+            applicationExt.setCurrentActivity(null);
         }
     }
 }

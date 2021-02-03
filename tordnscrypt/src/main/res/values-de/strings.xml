@@ -78,7 +78,6 @@
     <string name="pref_fast_exclude_from_tor_summ">"Webseiten die  direkt geöffnet werden"</string>
     <string name="pref_fast_exclude_apps_from_tor">"Applikationen ausschliessen"</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">"Liste der Apps die direkt geöffnet werden"</string>
-    <string name="pref_fast_exclude_apps_from_ipro_summ">"Liste der Apps die direkt geöffnet werden"</string>
     <string name="pref_fast_site_refresh_interval">"Aktualisierungsintervall"</string>
     <string name="pref_fast_site_refresh_interval_summ">"Zeitraum in Stunden um Webseiten-IPs zu aktualisieren. Für Android 5.1 und höher. Setze auf 0 um die Aktualisierungen zu stoppen."</string>
     <string name="pref_fast_use_tor_bridges">"Bridges"</string>
@@ -177,7 +176,9 @@ Er wird nie benutzt sobald sich Listen im Cache befinden.
 Personen in China müssen hier möglicherweise 114.114.114.114:53 benutzen."</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">"Lasse Dnscrypt-proxy niemals versuchen die DNS Einstellungen des Systems zu verwenden. Verwende den Fallback Resolver.."</string>
     <string name="pref_dnscrypt_filters_categ">"FILTER"</string>
+    <string name="pref_dnscrypt_forwarding_rules_categ">"Forwarding rules"</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Route Anfragen für spezifische Domains zu festgelegten Servern weiter. Temporär deaktiviert. "</string>
+    <string name="pref_dnscrypt_cloaking_rules_categ">"Cloaking rules"</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">"Cloaking gibt für spezifische Namen eine festgelegte Adresse zurück.
 Zusätzlich zur Funktion als HOSTS Datei, kann Cloaking auch die IP Adresse eines unterschiedlichen Namens zurückgeben. CNAME Flattening wird ebenso durchgeführt.."</string>
     <string name="pref_dnscrypt_query_log_categ">"Logging von Anfragen."</string>
@@ -242,8 +243,6 @@ Die Anfragen können das Vorhandensein von Malware, kaputten Applikationen oder 
     <string name="pref_tor_clearnet">"Host oder IP Umgehung"</string>
     <string name="pref_tor_unlock_edit">"Bearbeite Host oder IP"</string>
     <string name="pref_tor_unlock_disabled">"Deaktiviert"</string>
-    <string name="pref_tor_unlock_app">"Apps die Tor benutzen"</string>
-    <string name="pref_tor_clearnet_app">"Apps die Tor umgehen"</string>
     <string name="pref_tor_clean_module_folder">"Clean module folder"</string>
     <string name="pref_routing_unlock_app">"Apps zur Benutzung von InviZible"</string>
     <string name="pref_routing_clearnet_app">"Apps zur Umgehung InviZible"</string>
@@ -279,11 +278,13 @@ Die Anfragen können das Vorhandensein von Malware, kaputten Applikationen oder 
     <string name="pref_itpd_elgamal_summ">"Benutze vorberechnete ElGamal Tabellen."</string>
     <string name="pref_itpd_UPNP_summ">"UPnP aktivieren/deaktivieren."</string>
     <string name="pref_itpd_ntcp2_enabled">"ntcp2 aktiv"</string>
+    <string name="pref_itpd_reseeding">"Reseeding"</string>
     <string name="pref_itpd_reseeding_summ">"Verifiziere .su3 Signatur."</string>
     <string name="pref_itpd_limits">"Begrenzungen"</string>
     <string name="pref_itpd_limits_transittunnels_summ">"Setze maximale Anzahl von Transit Tunnels ausser Kraft. 2500 Standard."</string>
     <string name="pref_itpd_limits_openfiles_summ">"Begrenze die Anzahl an offenen Dateien (0 - Benutze Systemgrenze)."</string>
     <string name="pref_itpd_limits_coresize_summ">"Maximale Grösse der Kerndatei in Kb (0 - Benutze Systemgrenze)."</string>
+    <string name="pref_itpd_addressbook">"Addressbook"</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">"Addressbuch Bereitstellungs URL für die Ersteinrichtung."</string>
     <string name="pref_itpd_addressbook_subscriptions_summ">"Addressbuch Bereitstellungs URLs."</string>
     <string name="pref_itpd_not_exist">"Voreinstellung existiert nicht in i2pd.conf!"</string>
@@ -373,7 +374,7 @@ Falls das nicht helfen sollte, starte dein Gerät bitte neu."</string>
         
 \tInviZible Pro wird veröffentlicht in der Hoffnung etwas Nützliches zu schaffen, allerdings OHNE JEGLICHE GEWÄHRLEISTUNG; ferner ohne jegliche auch nur implizierte Zusicherung von Verwendbarkeit oder Gebrauchstauglichkeit für spezielle Einsatzzwecke.
         
-\tCopyright © 2019-2020
+\tCopyright © 2019-2021
         
 \tGarmatin Oleksandr
         
@@ -485,6 +486,7 @@ WLAN aus- und kurz darauf wieder anschalten. Die Verwendung des derzeitigen Hots
     <string name="firewall_user_apps">"User"</string>
     <string name="firewall_sort_by_name">"Sortiere nach Namen"</string>
     <string name="firewall_sort_by_uid">"Sortiere nach UID"</string>
+    <string name="firewall_switch">"Firewall On/Off"</string>
     <string name="ask_save_changes">"Möchtest du die Änderungen speichern?"</string>
     <string name="firewall_warning_enable_module">"Um die Firewall zu aktivieren solltest du mindestens DNSCrypt oder Tor starten."</string>
     <string name="firewall_notification_allow_app_title">"%s ist installiert"</string>

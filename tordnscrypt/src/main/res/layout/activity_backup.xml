@@ -6,10 +6,10 @@
     android:orientation="vertical"
     tools:context=".backup.BackupActivity">
 
-    <fragment
+    <androidx.fragment.app.FragmentContainerView
         android:id="@+id/backupFragment"
         android:name="pan.alexander.tordnscrypt.backup.BackupFragment"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         tools:layout="@layout/fragment_backup" />
 </androidx.appcompat.widget.LinearLayoutCompat>

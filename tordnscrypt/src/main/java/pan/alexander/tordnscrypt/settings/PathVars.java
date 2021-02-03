@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
@@ -172,20 +172,6 @@ public class PathVars {
                 && new PrefManager(Objects.requireNonNull(context)).getBoolPref("Tor Installed")
                 && new PrefManager(Objects.requireNonNull(context)).getBoolPref("I2PD Installed");
     }
-
-    /*public void saveAppUID(Context context) {
-        String appUID = "";
-        try {
-            ApplicationInfo applicationInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), 0);
-            appUID = String.valueOf(applicationInfo.uid);
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "saveAppUID function fault " + e.getMessage() + " " + e.getCause());
-        }
-
-        new PrefManager(context).setStrPref("appUID", appUID);
-
-        Log.i(LOG_TAG, "PathVars AppDataDir " + appDataDir + " AppUID " + appUID);
-    }*/
 
     public String getRejectAddress() {
         return "10.191.0.2";

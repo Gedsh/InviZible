@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.utils;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Notification;
@@ -31,7 +31,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
@@ -53,7 +52,6 @@ import java.util.concurrent.Executors;
 import eu.chainfire.libsuperuser.Shell;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
 public class RootExecService extends Service {
     public RootExecService() {
@@ -68,6 +66,7 @@ public class RootExecService extends Service {
     public static final int FileOperationsMark = 700;
     public static final int InstallerMark = 800;
     public static final int TopFragmentMark = 900;
+    public static final int IptablesMark = 1000;
     public static final int DEFAULT_NOTIFICATION_ID = 102;
     public static final String RUN_COMMAND = "pan.alexander.tordnscrypt.action.RUN_COMMAND";
     public static final String COMMAND_RESULT = "pan.alexander.tordnscrypt.action.COMMANDS_RESULT";
@@ -76,7 +75,6 @@ public class RootExecService extends Service {
 
     private static boolean saveRootLogs = false;
     private static String autoStartDelay = "0";
-    private static boolean showToastWithCommandsResultError;
 
     private ExecutorService executorService;
     private NotificationManager notificationManager;
@@ -120,7 +118,6 @@ public class RootExecService extends Service {
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
         autoStartDelay = shPref.getString("pref_fast_autostart_delay", "0");
-        showToastWithCommandsResultError = shPref.getBoolean("pref_common_show_help", false);
 
 
         Log.i(LOG_TAG, "RootExecService Root = " + true + " performAction");
@@ -171,32 +168,28 @@ public class RootExecService extends Service {
 
         if (!error.isEmpty() || exitCode != 0)  {
 
-            String exitCodeStr = exitCode == 0 ? "" : "Exit code=" + exitCode + " ";
-            String errorStr = error.isEmpty() ? "" : "STDERR="
-                    + new LinkedHashSet<>(error).toString()
-                    .replace(", Try `iptables -h' or 'iptables --help' for more information.", "") + " ";
-            String resultStr = result.isEmpty() ? "" : "STDOUT=" + result;
+            String exitCodeStr = "";
+            if (exitCode != 0) {
+                exitCodeStr = "Exit code=" + exitCode + " ";
+                result.add(exitCodeStr);
+            }
+
+            String errorStr = "";
+            if (!error.isEmpty()) {
+                errorStr = "STDERR=" + new LinkedHashSet<>(error).toString()
+                        .replace(", Try `iptables -h' or 'iptables --help' for more information.", "") + " ";
+                result.addAll(error);
+            }
+
+            String resultStr = "";
+            if (!result.isEmpty()) {
+                resultStr = "STDOUT=" + result;
+            }
 
             String errorMessageFinal = "Warning executing root commands.\n"
                     + exitCodeStr + errorStr + resultStr;
 
             Log.e(LOG_TAG, errorMessageFinal + " Commands:" + runCommands);
-
-            if (handler != null) {
-                if (errorStr.contains("unknown option \"-w\"")) {
-                    handler.post(() -> {
-                        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(RootExecService.this);
-                        sharedPreferences.edit().putString("pref_common_use_iptables", "2").apply();
-                        handler.postDelayed(() -> ModulesStatus.getInstance().setIptablesRulesUpdateRequested(this, true), 1000);
-                    });
-                } else if (errorStr.contains(" -w ") || exitCode == 4) {
-                    handler.postDelayed(() -> ModulesStatus.getInstance().setIptablesRulesUpdateRequested(this, true), 5000);
-                }
-
-                if (showToastWithCommandsResultError) {
-                    handler.post(() -> Toast.makeText(RootExecService.this, errorMessageFinal, Toast.LENGTH_LONG).show());
-                }
-            }
         }
 
         if (saveRootLogs) {

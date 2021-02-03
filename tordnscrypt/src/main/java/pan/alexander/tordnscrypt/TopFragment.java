@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Activity;
@@ -69,6 +69,7 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.update.UpdateCheck;
 import pan.alexander.tordnscrypt.update.UpdateService;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.OwnFileReader;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Registration;
 import pan.alexander.tordnscrypt.utils.RootExecService;
@@ -77,6 +78,8 @@ import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
+import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
+import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -195,13 +198,6 @@ public class TopFragment extends Fragment {
             if (!operationMode.isEmpty()) {
                 mode = OperationMode.valueOf(operationMode);
                 ModulesAux.switchModes(context, rootIsAvailable, runModulesWithRoot, mode);
-            }
-
-            if (!runModulesWithRoot && haveModulesSavedStateRunning(context) && !isModulesStarterServiceRunning(context)) {
-                startModulesStarterServiceIfStoppedBySystem(context);
-                Log.e(LOG_TAG, "ModulesService stopped by system!");
-            } else {
-                ModulesAux.speedupModulesStateLoopTimer(context);
             }
 
             if (PathVars.isModulesInstalled(context) && appVersion.endsWith("p")) {
@@ -333,6 +329,30 @@ public class TopFragment extends Fragment {
             if (activity == null || activity.isFinishing()) {
                 return null;
             }
+
+            Context context = activity.getApplicationContext();
+
+           shortenTooLongSnowflakeLog(context);
+
+           if (topFragment.handler != null) {
+               topFragment.handler.postDelayed(() -> {
+
+                   if (activity.isFinishing()) {
+                       return;
+                   }
+
+                   if (!topFragment.runModulesWithRoot
+                           && haveModulesSavedStateRunning(context)
+                           && !isModulesStarterServiceRunning(context)) {
+                       startModulesStarterServiceIfStoppedBySystem(context);
+                       Log.e(LOG_TAG, "ModulesService stopped by system!");
+                   } else {
+                       ModulesAux.speedupModulesStateLoopTimer(context);
+                   }
+               }, 3000);
+           }
+
+
 
             try {
                 Verifier verifier = new Verifier(activity);
@@ -724,15 +744,15 @@ public class TopFragment extends Fragment {
         }
     }
 
-    private void startModulesStarterServiceIfStoppedBySystem(Context context) {
+    private static void startModulesStarterServiceIfStoppedBySystem(Context context) {
         ModulesAux.recoverService(context);
     }
 
-    private boolean isModulesStarterServiceRunning(Context context) {
+    private static boolean isModulesStarterServiceRunning(Context context) {
         return Utils.INSTANCE.isServiceRunning(context, ModulesService.class);
     }
 
-    private boolean haveModulesSavedStateRunning(Context context) {
+    private static boolean haveModulesSavedStateRunning(Context context) {
 
         boolean dnsCryptRunning = new PrefManager(context).getBoolPref("DNSCrypt Running");
         boolean torRunning = new PrefManager(context).getBoolPref("Tor Running");
@@ -844,6 +864,23 @@ public class TopFragment extends Fragment {
         if (modulesLogsTimer != null && !modulesLogsTimer.isShutdown()) {
             modulesLogsTimer.shutdownNow();
             modulesLogsTimer = null;
+        }
+    }
+
+    private static void shortenTooLongSnowflakeLog(Context context) {
+        try {
+            boolean bridgesSnowflakeDefault = new PrefManager(context).getStrPref("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
+            boolean bridgesSnowflakeOwn = new PrefManager(context).getStrPref("ownBridgesObfs").equals(snowFlakeBridgesOwn);
+            SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
+            boolean showHelperMessages = shPref.getBoolean("pref_common_show_help", false);
+
+            if (showHelperMessages && (bridgesSnowflakeDefault || bridgesSnowflakeOwn)) {
+                PathVars pathVars = PathVars.getInstance(context);
+                OwnFileReader snowflakeLog = new OwnFileReader(context, pathVars.getAppDataDir() + "/logs/Snowflake.log");
+                snowflakeLog.shortenTooTooLongFile();
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "TopFragment shortenTooLongSnowflakeLog exception " + e.getMessage() + " " + e.getCause());
         }
     }
 

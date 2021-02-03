@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.patches
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Activity
@@ -24,6 +24,10 @@ import android.util.Log
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
 import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
+import java.io.OutputStream
+import java.util.zip.ZipInputStream
 
 class ConfigUtil(private val activity: Activity) {
     private val pathVars = PathVars.getInstance(activity)
@@ -64,7 +68,7 @@ class ConfigUtil(private val activity: Activity) {
             if (line.isNotEmpty()) {
                 text.append(line).append("\n")
             }
-         }
+        }
 
         if (file.isFile && (file.canWrite() || file.setWritable(true))) {
             file.writeText(text.toString())
@@ -99,6 +103,48 @@ class ConfigUtil(private val activity: Activity) {
             newLines
         } else {
             emptyList()
+        }
+    }
+
+    fun updateTorGeoip() {
+        val geoip = File(pathVars.appDataDir + "/app_data/tor/geoip")
+        val geoip6 = File(pathVars.appDataDir + "/app_data/tor/geoip6")
+        val installedGeoipSize = geoip.length()
+        val installedGeoip6Size = geoip6.length()
+        try {
+            ZipInputStream(activity.assets.open("tor.mp3")).use { zipInputStream ->
+                var zipEntry = zipInputStream.nextEntry
+                while (zipEntry != null) {
+                    val fileName = zipEntry.name
+                    if (fileName.contains("geoip6")) {
+                        if (zipEntry.size != installedGeoip6Size) {
+                            FileOutputStream(geoip6).use { outputStream ->
+                                copyData(zipInputStream, outputStream)
+                                Log.i(LOG_TAG, "Tor geoip6 was updated!")
+                            }
+                        }
+                    } else if (fileName.contains("geoip")) {
+                        if (zipEntry.size != installedGeoipSize) {
+                            FileOutputStream(geoip).use { outputStream ->
+                                copyData(zipInputStream, outputStream)
+                                Log.i(LOG_TAG, "Tor geoip was updated!")
+                            }
+                        }
+                    }
+                    zipEntry = zipInputStream.nextEntry
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(LOG_TAG, "ConfigUtil updateTorGeoip exception " + e.message + " " + e.cause)
+        }
+    }
+
+    @Throws(java.lang.Exception::class)
+    private fun copyData(inputStream: InputStream, outputStream: OutputStream) {
+        val buffer = ByteArray(8 * 1024)
+        var len: Int
+        while (inputStream.read(buffer).also { len = it } > 0) {
+            outputStream.write(buffer, 0, len)
         }
     }
 }

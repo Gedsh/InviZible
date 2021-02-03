@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.help
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context
@@ -123,42 +123,5 @@ object Utils {
                     "I2PD_INTERNAL_VERSION " + TopFragment.ITPDVersion + 10.toChar() +
                     "SIGN_VERSION " + TopFragment.appSign
         }
-    }
-
-    fun isLogsDirAccessible(): Boolean {
-        var result = false
-        try {
-            val dir = Environment.getExternalStorageDirectory()
-            if (dir != null && dir.isDirectory) {
-                result = dir.list()?.isNotEmpty() ?: false
-            } else {
-                Log.w(LOG_TAG, "Root Dir is not read accessible!")
-            }
-
-            var rootDirPath = "/storage/emulated/0"
-            if (dir != null && result) {
-                rootDirPath = dir.canonicalPath
-            }
-            val saveDirPath = "$rootDirPath/TorDNSCrypt"
-            val saveDir = File(saveDirPath)
-            if (result && !saveDir.isDirectory && !saveDir.mkdir()) {
-                result = false
-                Log.w(LOG_TAG, "Root Dir is not write accessible!")
-            }
-
-            if (result) {
-                val testFilePath = "$saveDirPath/testFile"
-                val testFile = File(testFilePath)
-                PrintWriter(testFile).print("")
-                if (!testFile.isFile || !testFile.delete()) {
-                    result = false
-                    Log.w(LOG_TAG, "Root Dir is not write accessible!")
-                }
-            }
-
-        } catch (e: Exception) {
-            Log.w(LOG_TAG, "Download Dir is not accessible " + e.message + e.cause)
-        }
-        return result
     }
 }

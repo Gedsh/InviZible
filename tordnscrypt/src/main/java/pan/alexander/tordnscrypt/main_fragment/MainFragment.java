@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.main_fragment;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
@@ -264,8 +264,9 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
         }
 
         if (context == null || activity.isFinishing()
-                || modulesStatus == null
-                || dnsCryptFragmentPresenter == null || torFragmentPresenter == null || itpdFragmentPresenter == null
+                || dnsCryptFragmentPresenter == null
+                || torFragmentPresenter == null
+                || itpdFragmentPresenter == null
                 || orientationLandscape) {
             return;
         }
@@ -321,9 +322,12 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
             context = activity.getApplicationContext();
         }
 
-        if (context == null || activity.isFinishing()
-                || modulesStatus == null || buttonView == null
-                || dnsCryptFragmentPresenter == null || torFragmentPresenter == null || itpdFragmentPresenter == null
+        if (context == null
+                || activity.isFinishing()
+                || buttonView == null
+                || dnsCryptFragmentPresenter == null
+                || torFragmentPresenter == null
+                || itpdFragmentPresenter == null
                 || orientationLandscape) {
             return;
         }
