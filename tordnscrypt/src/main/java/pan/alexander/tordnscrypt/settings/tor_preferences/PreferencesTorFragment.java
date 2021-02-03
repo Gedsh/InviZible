@@ -18,6 +18,7 @@ package pan.alexander.tordnscrypt.settings.tor_preferences;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
@@ -56,11 +57,15 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
     public static final String ISOLATE_DEST_ADDRESS = "IsolateDestAddr";
     public static final String ISOLATE_DEST_PORT = "IsolateDestPort";
-    public static ArrayList<String> key_tor;
-    public static ArrayList<String> val_tor;
+    private ArrayList<String> key_tor;
+    private ArrayList<String> val_tor;
     private ArrayList<String> key_tor_orig;
     private ArrayList<String> val_tor_orig;
     private String appDataDir;
+    public String entryNodes;
+    public String excludeNodes;
+    public String excludeExitNodes;
+    public String exitNodes;
     private boolean isChanged;
 
 
@@ -71,6 +76,11 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         setRetainInstance(true);
 
         addPreferencesFromResource(R.xml.preferences_tor);
+
+        Context context = getActivity();
+        if (context == null) {
+            return;
+        }
 
         if (appVersion.endsWith("p")) {
             changePreferencesForGPVersion();
@@ -85,7 +95,6 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         preferences.add(findPreference("ExcludeExitNodes"));
         preferences.add(findPreference("ExitNodes"));
         preferences.add(findPreference("ExcludeNodes"));
-        preferences.add(findPreference("EntryNodes"));
         preferences.add(findPreference("StrictNodes"));
         preferences.add(findPreference("FascistFirewall"));
         preferences.add(findPreference("NewCircuitPeriod"));
@@ -102,6 +111,8 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         preferences.add(findPreference("ClientUseIPv4"));
         preferences.add(findPreference("ClientUseIPv6"));
         preferences.add(findPreference("pref_tor_snowflake_stun"));
+        preferences.add(findPreference("Enable output Socks5Proxy"));
+        preferences.add(findPreference("Socks5Proxy"));
         preferences.add(findPreference("pref_tor_isolate_dest_address"));
         preferences.add(findPreference("pref_tor_isolate_dest_port"));
 
@@ -110,6 +121,24 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 preference.setOnPreferenceChangeListener(this);
             } else if (!appVersion.startsWith("g")) {
                 Log.e(LOG_TAG, "PreferencesTorFragment preference is null exception");
+            }
+        }
+
+
+        Preference entryNodesPref = findPreference("EntryNodes");
+        boolean useDefaultBridges = new PrefManager(context).getBoolPref("useDefaultBridges");
+        boolean useOwnBridges = new PrefManager(context).getBoolPref("useOwnBridges");
+        boolean entryNodesActive = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("EntryNodes", false);
+        if (entryNodesPref != null) {
+            if (useDefaultBridges || useOwnBridges) {
+                if (entryNodesActive) {
+                    entryNodesPref.setOnPreferenceChangeListener(this);
+                } else {
+                    entryNodesPref.setEnabled(false);
+                }
+                entryNodesPref.setSummary(R.string.pref_tor_entry_nodes_alt_summ);
+            } else {
+                entryNodesPref.setOnPreferenceChangeListener(this);
             }
         }
 
@@ -123,12 +152,10 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             cleanTorFolder.setOnPreferenceClickListener(this);
         }
 
-        if (getArguments() != null) {
-            key_tor = getArguments().getStringArrayList("key_tor");
-            val_tor = getArguments().getStringArrayList("val_tor");
-            key_tor_orig = new ArrayList<>(key_tor);
-            val_tor_orig = new ArrayList<>(val_tor);
-        }
+        entryNodes = null;
+        excludeNodes = null;
+        excludeExitNodes = null;
+        exitNodes = null;
     }
 
     @Override
@@ -148,19 +175,56 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
         PathVars pathVars = PathVars.getInstance(getActivity());
         appDataDir = pathVars.getAppDataDir();
+
+        isChanged = false;
+
+        if (getArguments() != null) {
+            key_tor = getArguments().getStringArrayList("key_tor");
+            val_tor = getArguments().getStringArrayList("val_tor");
+            key_tor_orig = new ArrayList<>(key_tor);
+            val_tor_orig = new ArrayList<>(val_tor);
+        }
     }
 
     @Override
     public void onStop() {
         super.onStop();
 
+        if (getActivity() == null || key_tor == null || val_tor == null || key_tor_orig == null || val_tor_orig == null) {
+            return;
+        }
+
+        if (entryNodes != null && key_tor.contains("EntryNodes")) {
+            val_tor.set(key_tor.indexOf("EntryNodes"), entryNodes);
+            entryNodes = null;
+        } else if (entryNodes != null && key_tor.contains("#EntryNodes")) {
+            val_tor.set(key_tor.indexOf("#EntryNodes"), entryNodes);
+            entryNodes = null;
+        } else if (excludeNodes != null && key_tor.contains("ExcludeNodes")) {
+            val_tor.set(key_tor.indexOf("ExcludeNodes"), excludeNodes);
+            excludeNodes = null;
+        } else if (excludeNodes != null && key_tor.contains("#ExcludeNodes")) {
+            val_tor.set(key_tor.indexOf("#ExcludeNodes"), excludeNodes);
+            excludeNodes = null;
+        } else if (excludeExitNodes != null && key_tor.contains("ExcludeExitNodes")) {
+            val_tor.set(key_tor.indexOf("ExcludeExitNodes"), excludeExitNodes);
+            excludeExitNodes = null;
+        } else if (excludeExitNodes != null && key_tor.contains("#ExcludeExitNodes")) {
+            val_tor.set(key_tor.indexOf("#ExcludeExitNodes"), excludeExitNodes);
+            excludeExitNodes = null;
+        } else if (exitNodes != null && key_tor.contains("ExitNodes")) {
+            val_tor.set(key_tor.indexOf("ExitNodes"), exitNodes);
+            exitNodes = null;
+        } else if (exitNodes != null && key_tor.contains("#ExitNodes")) {
+            val_tor.set(key_tor.indexOf("#ExitNodes"), exitNodes);
+            exitNodes = null;
+        }
+
         List<String> tor_conf = new LinkedList<>();
         for (int i = 0; i < key_tor.size(); i++) {
 
-            if (key_tor.size() != key_tor_orig.size()
-                    || (!(key_tor_orig.get(i).equals(key_tor.get(i))
-                    && val_tor_orig.get(i).equals(val_tor.get(i)))
-                    && !isChanged)) {
+            if (!isChanged
+                    && (key_tor_orig.size() != key_tor.size() || !key_tor_orig.get(i).equals(key_tor.get(i)) || !val_tor_orig.get(i).equals(val_tor.get(i)))) {
                 isChanged = true;
             }
 
@@ -191,7 +255,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
 
-        if (getActivity() == null) {
+        if (getActivity() == null || key_tor == null || val_tor == null) {
             return false;
         }
 
@@ -347,6 +411,22 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         } else if ((Objects.equals(preference.getKey(), "NewCircuitPeriod") || Objects.equals(preference.getKey(), "MaxCircuitDirtiness"))
                 && !newValue.toString().matches("\\d+")) {
             return false;
+        } else if ((Objects.equals(preference.getKey(), "Enable output Socks5Proxy"))) {
+            if (Boolean.parseBoolean(newValue.toString())) {
+                if (key_tor.contains("#Socks5Proxy")) {
+                    key_tor.set(key_tor.indexOf("#Socks5Proxy"), "Socks5Proxy");
+                } else if (key_tor.contains("ClientOnly") && !key_tor.contains("Socks5Proxy")) {
+                    int index = key_tor.indexOf("ClientOnly");
+                    key_tor.add(index, "Socks5Proxy");
+                    val_tor.add(index, "127.0.0.1:1080");
+                }
+            } else if (key_tor.contains("Socks5Proxy")) {
+                key_tor.set(key_tor.indexOf("Socks5Proxy"), "#Socks5Proxy");
+            }
+            return true;
+        } else if (Objects.equals(preference.getKey(), "Socks5Proxy")
+                && !newValue.toString().matches("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(:\\d+)?$")) {
+            return false;
         }
 
         if (key_tor.contains(preference.getKey().trim())) {
@@ -375,7 +455,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
     }
 
     private void openCountrySelectFragment(int nodesType, String keyStr) {
-        if (!isAdded()) {
+        if (!isAdded() || key_tor == null || val_tor == null) {
             return;
         }
 

@@ -275,24 +275,42 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
     @Override
     public void onScrollChanged() {
         if (presenter != null && svITPDLog!= null) {
-            if (svITPDLog.canScrollVertically(1) && svITPDLog.canScrollVertically(-1)) {
-                presenter.itpdLogAutoScrollingAllowed(false);
-            } else {
-                presenter.itpdLogAutoScrollingAllowed(true);
-            }
+            presenter.itpdLogAutoScrollingAllowed(!svITPDLog.canScrollVertically(1)
+                    || !svITPDLog.canScrollVertically(-1));
         }
     }
 
     @Override
     public void scrollITPDLogViewToBottom() {
-        svITPDLog.post(() -> {
-            View lastChild = svITPDLog.getChildAt(svITPDLog.getChildCount() - 1);
-            int bottom = lastChild.getBottom() + svITPDLog.getPaddingBottom();
-            int sy = svITPDLog.getScrollY();
-            int sh = svITPDLog.getHeight();
-            int delta = bottom - (sy + sh);
+        if (svITPDLog == null) {
+            return;
+        }
 
-            svITPDLog.smoothScrollBy(0, delta);
+        svITPDLog.post(() -> {
+            int delta = 0;
+
+            if (svITPDLog == null) {
+                return;
+            }
+
+            int childIndex= svITPDLog.getChildCount() - 1;
+
+            if (childIndex < 0) {
+                return;
+            }
+
+            View lastChild = svITPDLog.getChildAt(childIndex);
+
+            if (lastChild != null) {
+                int bottom = lastChild.getBottom() + svITPDLog.getPaddingBottom();
+                int sy = svITPDLog.getScrollY();
+                int sh = svITPDLog.getHeight();
+                delta = bottom - (sy + sh);
+            }
+
+            if (delta > 0) {
+                svITPDLog.smoothScrollBy(0, delta);
+            }
         });
     }
 }

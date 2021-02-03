@@ -57,6 +57,7 @@ import pan.alexander.tordnscrypt.utils.WakeLocksManager;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 
+@SuppressWarnings("BusyWait")
 public class GetNewBridges implements GetNewBridgesCallbacks {
 
     private volatile static WeakReference<PleaseWaitDialogBridgesRequest> dialogPleaseWait;
@@ -237,8 +238,13 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
     }
 
     private void dismissProgressDialog() {
-        if (dialogPleaseWait != null && dialogPleaseWait.get() != null && dialogPleaseWait.get().isAdded()) {
-            dialogPleaseWait.get().dismiss();
+        PleaseWaitDialogBridgesRequest dialog = null;
+        if (dialogPleaseWait != null) {
+            dialog = dialogPleaseWait.get();
+        }
+
+        if (dialog != null && dialog.isAdded() && !dialog.isStateSaved()) {
+            dialog.dismiss();
         }
     }
 

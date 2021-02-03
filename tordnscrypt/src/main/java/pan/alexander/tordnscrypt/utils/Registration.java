@@ -22,6 +22,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import androidx.appcompat.app.AlertDialog;
 import android.text.InputType;
@@ -39,7 +40,7 @@ import pan.alexander.tordnscrypt.TopFragment;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class Registration {
-    private Context context;
+    private final Context context;
     public static boolean wrongRegistrationCode = true;
 
     public Registration(Context context) {
@@ -64,7 +65,10 @@ public class Registration {
                             link = "https://invizible.net/en/donate/";
                         }
                         Intent donatePage = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
-                        context.startActivity(donatePage);
+                        PackageManager packageManager = context.getPackageManager();
+                        if (packageManager != null && donatePage.resolveActivity(packageManager) != null) {
+                            context.startActivity(donatePage);
+                        }
                         dialogInterface.dismiss();
                     })
                     .setCancelable(false);
@@ -91,7 +95,7 @@ public class Registration {
         AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomAlertDialogTheme);
         builder .setTitle(R.string.enter_code)
                 .setPositiveButton(R.string.ok, (dialog, which) -> {
-                    if (context == null || !(context instanceof MainActivity) || ((MainActivity) context).isFinishing()) {
+                    if (((MainActivity) context).isFinishing()) {
                         dialog.dismiss();
                         return;
                     }

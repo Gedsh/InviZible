@@ -24,15 +24,18 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 import java.util.concurrent.locks.ReentrantLock;
 
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.utils.enums.VPNCommand;
 
+import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
@@ -87,19 +90,23 @@ public class ServiceVPNHelper {
 
         reentrantLock.lock();
 
-        OperationMode operationMode = modulesStatus.getMode();
+        try {
+            OperationMode operationMode = modulesStatus.getMode();
 
-        boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
-                && !modulesStatus.isUseModulesWithRoot();
+            boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
+                    && !modulesStatus.isUseModulesWithRoot();
 
-        SharedPreferences prefs = android.preference.PreferenceManager.getDefaultSharedPreferences(activity);
-        if (((operationMode == VPN_MODE) || fixTTL)
-                && activity instanceof MainActivity
-                && !prefs.getBoolean("VPNServiceEnabled", false)) {
-            ((MainActivity) activity).prepareVPNService();
+            SharedPreferences prefs = android.preference.PreferenceManager.getDefaultSharedPreferences(activity);
+            if (((operationMode == VPN_MODE) || fixTTL)
+                    && activity instanceof MainActivity
+                    && !prefs.getBoolean("VPNServiceEnabled", false)) {
+                ((MainActivity) activity).prepareVPNService();
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "ServiceVPNHelper prepareVPNServiceIfRequired exception " + e.getMessage() + e.getCause());
+        } finally {
+            reentrantLock.unlock();
         }
-
-        reentrantLock.unlock();
     }
 
     private static void sendIntent(Context context, Intent intent) {
@@ -109,13 +116,8 @@ public class ServiceVPNHelper {
             intent.putExtra("showNotification", true);
             context.startForegroundService(intent);
         } else {
-            intent.putExtra("showNotification", isShowNotification(context));
+            intent.putExtra("showNotification", Utils.INSTANCE.isShowNotification(context));
             context.startService(intent);
         }
-    }
-
-    private static boolean isShowNotification(Context context) {
-        SharedPreferences shPref = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
-        return shPref.getBoolean("swShowNotification", true);
     }
 }

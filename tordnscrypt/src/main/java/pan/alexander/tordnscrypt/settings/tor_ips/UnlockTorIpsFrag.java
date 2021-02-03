@@ -96,6 +96,8 @@ public class UnlockTorIpsFrag extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        setRetainInstance(true);
     }
 
     @Override
@@ -178,7 +180,7 @@ public class UnlockTorIpsFrag extends Fragment {
                 String appSignAlt = verifier.getApkSignature();
                 if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                            getActivity(), getText(R.string.verifier_error).toString(), "123");
+                            getActivity(), getString(R.string.verifier_error), "123");
                     if (notificationHelper != null && isAdded()) {
                         notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
                     }
@@ -186,7 +188,7 @@ public class UnlockTorIpsFrag extends Fragment {
 
             } catch (Exception e) {
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                        getActivity(), getText(R.string.verifier_error).toString(), "168");
+                        getActivity(), getString(R.string.verifier_error), "168");
                 if (notificationHelper != null && isAdded()) {
                     notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
                 }
@@ -387,13 +389,11 @@ public class UnlockTorIpsFrag extends Fragment {
             }
 
             View.OnClickListener onClickListener = v -> {
-                switch (v.getId()) {
-                    case R.id.imbtnTorItem:
-                        delItem(getAdapterPosition());
-                        break;
-                    case R.id.llHostIP:
-                        editHostIPDialog(getAdapterPosition());
-                        break;
+                int id = v.getId();
+                if (id == R.id.imbtnTorItem) {
+                    delItem(getAdapterPosition());
+                } else if (id == R.id.llHostIP) {
+                    editHostIPDialog(getAdapterPosition());
                 }
 
             };
@@ -606,6 +606,7 @@ public class UnlockTorIpsFrag extends Fragment {
         builder.show();
     }
 
+    @SuppressWarnings("deprecation")
     static class GetHostIP extends AsyncTask<Void, Integer, Void> {
 
         WeakReference<UnlockTorIpsFrag> unlockTorIpsFragWeakReference;

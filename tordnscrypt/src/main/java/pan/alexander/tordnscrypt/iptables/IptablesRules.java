@@ -19,11 +19,13 @@ package pan.alexander.tordnscrypt.iptables;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import java.util.List;
+
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 
 public interface IptablesRules {
-    String[] configureIptables(ModuleState dnsCryptState, ModuleState torState, ModuleState itpdState);
+    List<String> configureIptables(ModuleState dnsCryptState, ModuleState torState, ModuleState itpdState);
     void refreshFixTTLRules();
-    String[] clearAll();
-    void sendToRootExecService(String[] commands);
+    List<String> clearAll();
+    void sendToRootExecService(List<String> commands);
 }

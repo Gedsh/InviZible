@@ -31,10 +31,15 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData;
+import pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment;
+import pan.alexander.tordnscrypt.utils.InstalledApplications;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -43,19 +48,7 @@ public class Rule {
     public int uid;
     public String packageName;
     public String appName;
-
     public boolean apply = true;
-
-    private static PackageManager packageManager;
-
-    private static List<PackageInfo> getPackages(Context context) {
-        packageManager = context.getPackageManager();
-        return new ArrayList<>(packageManager.getInstalledPackages(0));
-    }
-
-    private static String getLabel(PackageInfo info) {
-        return info.applicationInfo.loadLabel(packageManager).toString();
-    }
 
     private static boolean isSystem(String packageName, Context context) {
         return Util.isSystem(packageName, context);
@@ -69,25 +62,10 @@ public class Rule {
         return Util.isEnabled(info, context);
     }
 
-    private Rule(PackageInfo info) {
-        this.uid = info.applicationInfo.uid;
-        this.packageName = info.packageName;
-
-        if (info.applicationInfo.uid == 0) {
-            this.appName = "Root";
-        } else if (info.applicationInfo.uid == 1013) {
-            this.appName = "Media server";
-        } else if (info.applicationInfo.uid == 1020) {
-            this.appName = "MulticastDNSResponder";
-        } else if (info.applicationInfo.uid == 1021) {
-            this.appName = "GPS";
-        } else if (info.applicationInfo.uid == 1051) {
-            this.appName = "DNS services";
-        } else if (info.applicationInfo.uid == 9999) {
-            this.appName = "Any app";
-        } else {
-            this.appName = getLabel(info);
-        }
+    private Rule(ApplicationData info) {
+        this.uid = info.getUid();
+        this.packageName = info.getPack();
+        this.appName = info.toString();
     }
 
     public static List<Rule> getRules(Context context) {
@@ -105,92 +83,31 @@ public class Rule {
 
             Set<String> setUnlockApps = new PrefManager(context).getSetStrPref(unlockAppsStr);
 
+            Set<String> setBypassProxy = new PrefManager(context).getSetStrPref("clearnetAppsForProxy");
+
             // Build rule list
             List<Rule> listRules = new CopyOnWriteArrayList<>();
-            List<PackageInfo> listPI = getPackages(context);
 
-            int userId = Process.myUid() / 100000;
+            InstalledApplications installedApplications = new InstalledApplications(context, Collections.emptySet());
+            List<ApplicationData> installedApps = installedApplications.getInstalledApps(false);
 
-            // Add root
-            PackageInfo root = new PackageInfo();
-            root.packageName = "root";
-            root.versionCode = Build.VERSION.SDK_INT;
-            root.versionName = Build.VERSION.RELEASE;
-            root.applicationInfo = new ApplicationInfo();
-            root.applicationInfo.uid = 0;
-            root.applicationInfo.icon = 0;
-            listPI.add(root);
 
-            // Add mediaserver
-            PackageInfo media = new PackageInfo();
-            media.packageName = "android.media";
-            media.versionCode = Build.VERSION.SDK_INT;
-            media.versionName = Build.VERSION.RELEASE;
-            media.applicationInfo = new ApplicationInfo();
-            media.applicationInfo.uid = 1013 + userId * 100000;
-            media.applicationInfo.icon = 0;
-            listPI.add(media);
-
-            // MulticastDNSResponder
-            PackageInfo mdr = new PackageInfo();
-            mdr.packageName = "android.multicast";
-            mdr.versionCode = Build.VERSION.SDK_INT;
-            mdr.versionName = Build.VERSION.RELEASE;
-            mdr.applicationInfo = new ApplicationInfo();
-            mdr.applicationInfo.uid = 1020 + userId * 100000;
-            mdr.applicationInfo.icon = 0;
-            listPI.add(mdr);
-
-            // Add GPS daemon
-            PackageInfo gps = new PackageInfo();
-            gps.packageName = "android.gps";
-            gps.versionCode = Build.VERSION.SDK_INT;
-            gps.versionName = Build.VERSION.RELEASE;
-            gps.applicationInfo = new ApplicationInfo();
-            gps.applicationInfo.uid = 1021 + userId * 100000;
-            gps.applicationInfo.icon = 0;
-            listPI.add(gps);
-
-            // Add DNS daemon
-            PackageInfo dns = new PackageInfo();
-            dns.packageName = "android.dns";
-            dns.versionCode = Build.VERSION.SDK_INT;
-            dns.versionName = Build.VERSION.RELEASE;
-            dns.applicationInfo = new ApplicationInfo();
-            dns.applicationInfo.uid = 1051 + userId * 100000;
-            dns.applicationInfo.icon = 0;
-            listPI.add(dns);
-
-            // Add nobody
-            PackageInfo nobody = new PackageInfo();
-            nobody.packageName = "nobody";
-            nobody.versionCode = Build.VERSION.SDK_INT;
-            nobody.versionName = Build.VERSION.RELEASE;
-            nobody.applicationInfo = new ApplicationInfo();
-            nobody.applicationInfo.uid = 9999;
-            nobody.applicationInfo.icon = 0;
-            listPI.add(nobody);
-
-            for (PackageInfo info : listPI)
+            for (ApplicationData info : installedApps)
                 try {
-                    // Skip self
-                    if (info.applicationInfo.uid == Process.myUid())
-                        continue;
 
                     Rule rule = new Rule(info);
 
+                    String UID = String.valueOf(info.getUid());
                     if (routeAllThroughIniZible) {
-                        rule.apply = !setUnlockApps.contains(String.valueOf(info.applicationInfo.uid));
+                        rule.apply = !setUnlockApps.contains(UID) && !setBypassProxy.contains(UID);
                     } else {
-                        rule.apply = setUnlockApps.contains(String.valueOf(info.applicationInfo.uid));
+                        rule.apply = setUnlockApps.contains(UID) && !setBypassProxy.contains(UID);
                     }
 
                     listRules.add(rule);
                 } catch (Throwable ex) {
                     Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
                 }
-
-            packageManager = null;
 
             return listRules;
         }

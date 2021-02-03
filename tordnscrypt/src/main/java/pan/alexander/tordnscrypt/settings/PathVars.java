@@ -21,7 +21,6 @@ package pan.alexander.tordnscrypt.settings;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.pm.ApplicationInfo;
 import android.os.Environment;
 import android.util.Log;
 
@@ -40,12 +39,12 @@ public class PathVars {
     private final SharedPreferences preferences;
 
     private String appDataDir;
-    private String dnscryptPath;
-    private String torPath;
-    private String itpdPath;
-    private String obfsPath;
-    private String snowflakePath;
-    private boolean bbOK;
+    private final String dnscryptPath;
+    private final String torPath;
+    private final String itpdPath;
+    private final String obfsPath;
+    private final String snowflakePath;
+    private final boolean bbOK;
 
 
     @SuppressLint("SdCardPath")
@@ -61,9 +60,9 @@ public class PathVars {
 
         String nativeLibPath = context.getApplicationInfo().nativeLibraryDir;
 
-        if (!isModulesInstalled(context) || new PrefManager(context).getStrPref("appUID").isEmpty()) {
+        /*if (!isModulesInstalled(context) || new PrefManager(context).getStrPref("appUID").isEmpty()) {
             saveAppUID(context);
-        }
+        }*/
 
         bbOK = new PrefManager(context).getBoolPref("bbOK");
 
@@ -105,7 +104,7 @@ public class PathVars {
             case "1":
 
             default:
-                path = appDataDir + "/app_bin/iptables ";
+                path = appDataDir + "/app_bin/iptables -w ";
                 break;
         }
 
@@ -127,9 +126,9 @@ public class PathVars {
 
             default:
                 if (new File(appDataDir + "/app_bin/ip6tables").isFile()) {
-                    path = appDataDir + "/app_bin/ip6tables ";
+                    path = appDataDir + "/app_bin/ip6tables -w ";
                 } else {
-                    path = "ip6tables ";
+                    path = "ip6tables -w ";
                 }
                 break;
         }
@@ -174,7 +173,7 @@ public class PathVars {
                 && new PrefManager(Objects.requireNonNull(context)).getBoolPref("I2PD Installed");
     }
 
-    public void saveAppUID(Context context) {
+    /*public void saveAppUID(Context context) {
         String appUID = "";
         try {
             ApplicationInfo applicationInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), 0);
@@ -186,7 +185,7 @@ public class PathVars {
         new PrefManager(context).setStrPref("appUID", appUID);
 
         Log.i(LOG_TAG, "PathVars AppDataDir " + appDataDir + " AppUID " + appUID);
-    }
+    }*/
 
     public String getRejectAddress() {
         return "10.191.0.2";
@@ -368,5 +367,21 @@ public class PathVars {
         }
 
         return cacheDirPath;
+    }
+
+    public String getDnscryptConfPath () {
+        return appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml";
+    }
+
+    public String getTorConfPath() {
+        return appDataDir + "/app_data/tor/tor.conf";
+    }
+
+    public String getItpdConfPath() {
+        return appDataDir + "/app_data/i2pd/i2pd.conf";
+    }
+
+    public String getItpdTunnelsPath () {
+        return appDataDir + "/app_data/i2pd/tunnels.conf";
     }
 }

@@ -22,10 +22,10 @@ package pan.alexander.tordnscrypt.modules
 import android.content.Context
 import android.net.TrafficStats
 import android.os.Build
+import android.os.Process
 import android.util.Log
 import androidx.annotation.RequiresApi
 import pan.alexander.tordnscrypt.R
-import pan.alexander.tordnscrypt.utils.PrefManager
 import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
@@ -49,7 +49,7 @@ class UsageStatistic(private val context: Context) {
     private var timer: ScheduledExecutorService? = null
     private val modulesStatus = ModulesStatus.getInstance()
 
-    private var uid = PrefManager(context).getStrPref("appUID").toInt()
+    private val uid = Process.myUid()
 
     private var scheduledFuture: ScheduledFuture<*>? = null
     private var updatePeriod = 0
@@ -130,10 +130,6 @@ class UsageStatistic(private val context: Context) {
     fun getTitle(): String {
         var title = ""
 
-        if (modulesStatus == null) {
-            return context.getString(R.string.app_name)
-        }
-
         if (modulesStatus.torState == ModuleState.RUNNING) {
             title += "TOR"
         }
@@ -156,7 +152,7 @@ class UsageStatistic(private val context: Context) {
     @Synchronized
     fun getMessage(currentTime: Long): String {
 
-        if (modulesStatus == null) {
+        if (uid == -1) {
             return context.getString(R.string.notification_text)
         }
 

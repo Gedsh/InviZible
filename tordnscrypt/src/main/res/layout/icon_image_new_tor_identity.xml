@@ -1,6 +1,7 @@
-<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.appcompat.widget.AppCompatImageView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:src="@drawable/ic_baseline_refresh_24"
+    app:srcCompat="@drawable/ic_baseline_refresh_24"
     style="@style/Widget.AppCompat.ActionButton"
     android:contentDescription="@string/btn_new_tor_identity" />

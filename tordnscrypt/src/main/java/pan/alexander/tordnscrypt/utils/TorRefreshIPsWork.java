@@ -29,6 +29,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -41,10 +42,9 @@ import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
-import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 public class TorRefreshIPsWork {
-    private Context context;
+    private final Context context;
     private ArrayList<String> unlockHostsDevice;
     private ArrayList<String> unlockIPsDevice;
     private ArrayList<String> unlockHostsTether;
@@ -53,7 +53,7 @@ public class TorRefreshIPsWork {
     private boolean torTethering;
     private boolean routeAllThroughTorDevice;
     private boolean routeAllThroughTorTether;
-    private GetIPsJobService getIPsJobService;
+    private final GetIPsJobService getIPsJobService;
 
     public TorRefreshIPsWork(Context context, GetIPsJobService getIPsJobService) {
         this.context = context;
@@ -102,54 +102,57 @@ public class TorRefreshIPsWork {
         CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
             Log.i(LOG_TAG, "TorRefreshIPsWork performBackgroundWork");
 
-            if (!unlockHostsDevice.isEmpty() || !unlockIPsDevice.isEmpty()) {
+            try {
+                if (!unlockHostsDevice.isEmpty() || !unlockIPsDevice.isEmpty()) {
 
-                List<String> unlockIPsReadyDevice = universalGetIPs(unlockHostsDevice, unlockIPsDevice);
+                    List<String> unlockIPsReadyDevice = universalGetIPs(unlockHostsDevice, unlockIPsDevice);
 
-                if (unlockIPsReadyDevice == null) {
-                    unlockIPsReadyDevice = new LinkedList<>();
-                    unlockIPsReadyDevice.add("");
-                }
+                    if (unlockIPsReadyDevice == null) {
+                        unlockIPsReadyDevice = new LinkedList<>();
+                        unlockIPsReadyDevice.add("");
+                    }
 
-                List<String> unlockIPsReadyTether = universalGetIPs(unlockHostsTether, unlockIPsTether);
+                    List<String> unlockIPsReadyTether = universalGetIPs(unlockHostsTether, unlockIPsTether);
 
-                if (unlockIPsReadyTether == null) {
-                    unlockIPsReadyTether = new LinkedList<>();
-                    unlockIPsReadyTether.add("");
-                }
+                    if (unlockIPsReadyTether == null) {
+                        unlockIPsReadyTether = new LinkedList<>();
+                        unlockIPsReadyTether.add("");
+                    }
 
 
-                if (!routeAllThroughTorDevice) {
-                    FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/unlock", unlockIPsReadyDevice, "ignored");
-                    new PrefManager(context).setSetStrPref("ipsToUnlock", new HashSet<>(unlockIPsReadyDevice));
-                } else {
-                    FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/clearnet", unlockIPsReadyDevice, "ignored");
-                    new PrefManager(context).setSetStrPref("ipsForClearNet", new HashSet<>(unlockIPsReadyDevice));
-                }
-
-                if (torTethering) {
-                    if (!routeAllThroughTorTether) {
-                        FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/unlock_tether", unlockIPsReadyTether, "ignored");
+                    if (!routeAllThroughTorDevice) {
+                        FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/unlock", unlockIPsReadyDevice, "ignored");
+                        new PrefManager(context).setSetStrPref("ipsToUnlock", new HashSet<>(unlockIPsReadyDevice));
                     } else {
-                        FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/clearnet_tether", unlockIPsReadyTether, "ignored");
+                        FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/clearnet", unlockIPsReadyDevice, "ignored");
+                        new PrefManager(context).setSetStrPref("ipsForClearNet", new HashSet<>(unlockIPsReadyDevice));
+                    }
+
+                    if (torTethering) {
+                        if (!routeAllThroughTorTether) {
+                            FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/unlock_tether", unlockIPsReadyTether, "ignored");
+                        } else {
+                            FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/clearnet_tether", unlockIPsReadyTether, "ignored");
+                        }
                     }
                 }
-            }
 
-            try {
-                TimeUnit.SECONDS.sleep(5);
-            } catch (InterruptedException e) {
-                Log.e(LOG_TAG, "TorRefreshIPsWork interrupt exception " + e.getMessage() + " " + e.getCause());
-            }
+                try {
+                    TimeUnit.SECONDS.sleep(5);
+                } catch (InterruptedException e) {
+                    Log.e(LOG_TAG, "TorRefreshIPsWork interrupt exception " + e.getMessage() + " " + e.getCause());
+                }
 
-            if (ModulesStatus.getInstance().getMode() == ROOT_MODE) {
                 ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
-                //ModulesAux.requestModulesStatusUpdate(context);
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && getIPsJobService != null) {
+                    getIPsJobService.finishJob();
+                }
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "TorRefreshIPsWork performBackgroundWork exception " + e.getMessage()
+                        + " " + e.getCause() + "\n" + Arrays.toString(e.getStackTrace()));
             }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && getIPsJobService != null) {
-                getIPsJobService.finishJob();
-            }
         });
     }
 

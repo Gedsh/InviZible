@@ -20,6 +20,7 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_settings;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -111,11 +112,6 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         preferences.add(findPreference("block_unqualified"));
         preferences.add(findPreference("block_undelegated"));
         preferences.add(findPreference("block_ipv6"));
-        preferences.add(findPreference("local_blacklist"));
-        preferences.add(findPreference("local_whitelist"));
-        preferences.add(findPreference("local_ipblacklist"));
-        preferences.add(findPreference("local_forwarding_rules"));
-        preferences.add(findPreference("local_cloaking_rules"));
 
         for (Preference preference : preferences) {
             if (preference != null) {
@@ -125,7 +121,22 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             }
         }
 
-        preferences = new ArrayList<>();
+        Preference editDNSTomlDirectly = findPreference("editDNSTomlDirectly");
+        if (editDNSTomlDirectly != null) {
+            editDNSTomlDirectly.setOnPreferenceClickListener(this);
+        } else if (!appVersion.startsWith("g")) {
+            Log.e(LOG_TAG, "PreferencesDNSFragment preference is null exception");
+        }
+
+        if (ModulesStatus.getInstance().isUseModulesWithRoot()) {
+            removeImportErasePrefs();
+        } else {
+            registerImportErasePrefs();
+        }
+    }
+
+    private void registerImportErasePrefs() {
+        ArrayList<Preference> preferences = new ArrayList<>();
 
         preferences.add(findPreference("local_blacklist"));
         preferences.add(findPreference("local_whitelist"));
@@ -137,7 +148,6 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         preferences.add(findPreference("erase_ipblacklist"));
         preferences.add(findPreference("erase_forwarding_rules"));
         preferences.add(findPreference("erase_cloaking_rules"));
-        preferences.add(findPreference("editDNSTomlDirectly"));
 
         for (Preference preference : preferences) {
             if (preference != null) {
@@ -146,12 +156,47 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                 Log.e(LOG_TAG, "PreferencesDNSFragment preference is null exception");
             }
         }
+    }
 
-        if (getArguments() != null) {
-            key_toml = getArguments().getStringArrayList("key_toml");
-            val_toml = getArguments().getStringArrayList("val_toml");
-            key_toml_orig = new ArrayList<>(key_toml);
-            val_toml_orig = new ArrayList<>(val_toml);
+    private void removeImportErasePrefs() {
+        PreferenceCategory forwarding = findPreference("pref_dnscrypt_forwarding_rules");
+        Preference local_forwarding_rules = findPreference("local_forwarding_rules");
+        Preference erase_forwarding_rules = findPreference("erase_forwarding_rules");
+        if (forwarding != null && local_forwarding_rules != null && erase_forwarding_rules != null) {
+            forwarding.removePreference(local_forwarding_rules);
+            forwarding.removePreference(erase_forwarding_rules);
+        }
+
+        PreferenceCategory cloaking = findPreference("pref_dnscrypt_cloaking_rules");
+        Preference local_cloaking_rules = findPreference("local_cloaking_rules");
+        Preference erase_cloaking_rules = findPreference("erase_cloaking_rules");
+        if (cloaking != null && local_cloaking_rules != null && erase_cloaking_rules != null) {
+            cloaking.removePreference(local_cloaking_rules);
+            cloaking.removePreference(erase_cloaking_rules);
+        }
+
+        PreferenceCategory blacklist = findPreference("pref_dnscrypt_blacklist");
+        Preference local_blacklist = findPreference("local_blacklist");
+        Preference erase_blacklist = findPreference("erase_blacklist");
+        if (blacklist != null && local_blacklist != null && erase_blacklist != null) {
+            blacklist.removePreference(local_blacklist);
+            blacklist.removePreference(erase_blacklist);
+        }
+
+        PreferenceCategory ipblacklist = findPreference("pref_dnscrypt_ipblacklist");
+        Preference local_ipblacklist = findPreference("local_ipblacklist");
+        Preference erase_ipblacklist = findPreference("erase_ipblacklist");
+        if (ipblacklist != null && local_ipblacklist != null && erase_ipblacklist != null) {
+            ipblacklist.removePreference(local_ipblacklist);
+            ipblacklist.removePreference(erase_ipblacklist);
+        }
+
+        PreferenceCategory whitelist = findPreference("pref_dnscrypt_whitelist");
+        Preference local_whitelist = findPreference("local_whitelist");
+        Preference erase_whitelist = findPreference("erase_whitelist");
+        if (whitelist != null && local_whitelist != null && erase_whitelist != null) {
+            whitelist.removePreference(local_whitelist);
+            whitelist.removePreference(erase_whitelist);
         }
     }
 
@@ -172,19 +217,29 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
         PathVars pathVars = PathVars.getInstance(getActivity());
         appDataDir = pathVars.getAppDataDir();
+
+        isChanged = false;
+
+        if (getArguments() != null) {
+            key_toml = getArguments().getStringArrayList("key_toml");
+            val_toml = getArguments().getStringArrayList("val_toml");
+            key_toml_orig = new ArrayList<>(key_toml);
+            val_toml_orig = new ArrayList<>(val_toml);
+        }
     }
 
     @Override
     public void onStop() {
         super.onStop();
 
-        if (getActivity() == null) {
+        if (getActivity() == null || key_toml == null || val_toml == null || key_toml_orig == null || val_toml_orig == null) {
             return;
         }
 
         List<String> dnscrypt_proxy_toml = new LinkedList<>();
         for (int i = 0; i < key_toml.size(); i++) {
-            if (!(key_toml_orig.get(i).equals(key_toml.get(i)) && val_toml_orig.get(i).equals(val_toml.get(i))) && !isChanged) {
+            if (!isChanged
+                    && (key_toml_orig.size() != key_toml.size() || !key_toml_orig.get(i).equals(key_toml.get(i)) || !val_toml_orig.get(i).equals(val_toml.get(i)))) {
                 isChanged = true;
             }
 
@@ -205,7 +260,6 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         if (dnsCryptRunning) {
             ModulesRestarter.restartDNSCrypt(getActivity());
             ModulesStatus.getInstance().setIptablesRulesUpdateRequested(getActivity(), true);
-            //ModulesAux.requestModulesStatusUpdate(getActivity());
         }
     }
 
@@ -213,7 +267,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
 
-        if (getActivity() == null) {
+        if (getActivity() == null || val_toml == null || key_toml == null) {
             return false;
         }
 
@@ -274,10 +328,12 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                 val_toml.set(key_toml.lastIndexOf("refresh_delay"), newValue.toString());
                 return true;
             } else if (Objects.equals(preference.getKey(), "Enable proxy")) {
-                if (Boolean.parseBoolean(newValue.toString())) {
+                if (Boolean.parseBoolean(newValue.toString()) && key_toml.contains("#proxy") && key_toml.contains("force_tcp")) {
                     key_toml.set(key_toml.indexOf("#proxy"), "proxy");
-                } else {
+                    val_toml.set(key_toml.indexOf("force_tcp"), "true");
+                } else if (key_toml.contains("proxy") && key_toml.contains("force_tcp")) {
                     key_toml.set(key_toml.indexOf("proxy"), "#proxy");
+                    val_toml.set(key_toml.indexOf("force_tcp"), "false");
                 }
                 return true;
             } else if (Objects.equals(preference.getKey().trim(), "Enable Query logging")) {
@@ -456,10 +512,9 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             intent.putExtra(EXTRA_INITIAL_URI, uri);
         }
 
-        try {
+        PackageManager packageManager = getActivity().getPackageManager();
+        if (packageManager != null && intent.resolveActivity(packageManager) != null) {
             getActivity().startActivityForResult(intent, fileType);
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "PreferencesDNSFragment openFileWithSAF exception " + e.getMessage() + " " + e.getCause());
         }
 
     }

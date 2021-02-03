@@ -113,7 +113,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     private ScrollView svITPDLog;
     private ConstraintLayout clITPDLog;
 
-    private ModulesStatus modulesStatus = ModulesStatus.getInstance();
+    private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
     private boolean orientationLandscape;
 
@@ -257,17 +257,26 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     @Override
     public void onClick(View v) {
 
-        if (getActivity() == null || orientationLandscape) {
+        Context context = null;
+        Activity activity = getActivity();
+        if (activity != null) {
+            context = activity.getApplicationContext();
+        }
+
+        if (context == null || activity.isFinishing()
+                || modulesStatus == null
+                || dnsCryptFragmentPresenter == null || torFragmentPresenter == null || itpdFragmentPresenter == null
+                || orientationLandscape) {
             return;
         }
 
-        if (!isDNSCryptInstalled(getActivity())
-                || !isTorInstalled(getActivity())
-                || !isITPDInstalled(getActivity())) {
+        if (!isDNSCryptInstalled(context)
+                || !isTorInstalled(context)
+                || !isITPDInstalled(context)) {
             return;
         }
 
-        if (isControlLocked(getActivity())) {
+        if (isControlLocked(activity)) {
             return;
         }
 
@@ -278,27 +287,27 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
                     && modulesStatus.getItpdState() == STOPPED) {
 
                 if (chbProtectDnsMainFragment.isChecked()) {
-                    dnsCryptFragmentPresenter.startButtonOnClick(getActivity());
+                    dnsCryptFragmentPresenter.startButtonOnClick(activity);
                 }
 
                 if (chbHideIpMainFragment.isChecked()) {
-                    torFragmentPresenter.startButtonOnClick(getActivity());
+                    torFragmentPresenter.startButtonOnClick(activity);
                 }
 
                 if (chbAccessITPMainFragment.isChecked()) {
-                    itpdFragmentPresenter.startButtonOnClick(getActivity());
+                    itpdFragmentPresenter.startButtonOnClick(activity);
                 }
             } else {
                 if (modulesStatus.getDnsCryptState() != STOPPED) {
-                    dnsCryptFragmentPresenter.startButtonOnClick(getActivity());
+                    dnsCryptFragmentPresenter.startButtonOnClick(activity);
                 }
 
                 if (modulesStatus.getTorState() != STOPPED) {
-                    torFragmentPresenter.startButtonOnClick(getActivity());
+                    torFragmentPresenter.startButtonOnClick(activity);
                 }
 
                 if (modulesStatus.getItpdState() != STOPPED) {
-                    itpdFragmentPresenter.startButtonOnClick(getActivity());
+                    itpdFragmentPresenter.startButtonOnClick(activity);
                 }
             }
         }
@@ -306,13 +315,20 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        Context context = null;
+        Activity activity = getActivity();
+        if (activity != null) {
+            context = activity.getApplicationContext();
+        }
 
-        if (getActivity() == null || getActivity().isFinishing()
-                || modulesStatus == null || buttonView == null || orientationLandscape) {
+        if (context == null || activity.isFinishing()
+                || modulesStatus == null || buttonView == null
+                || dnsCryptFragmentPresenter == null || torFragmentPresenter == null || itpdFragmentPresenter == null
+                || orientationLandscape) {
             return;
         }
 
-        if (isControlLocked(getActivity())) {
+        if (isControlLocked(activity)) {
             return;
         }
 
@@ -320,41 +336,35 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
                 || modulesStatus.getTorState() != STOPPED
                 || modulesStatus.getItpdState() != STOPPED) {
 
-            switch (buttonView.getId()) {
-                case R.id.chbProtectDnsMainFragment:
-                    if (modulesStatus.getDnsCryptState() != STOPPED && !isChecked) {
-                        dnsCryptFragmentPresenter.startButtonOnClick(getActivity());
-                    } else if (modulesStatus.getDnsCryptState() == STOPPED && isChecked) {
-                        dnsCryptFragmentPresenter.startButtonOnClick(getActivity());
-                    }
-                    break;
-                case R.id.chbHideIpMainFragment:
-                    if (modulesStatus.getTorState() != STOPPED && !isChecked) {
-                        torFragmentPresenter.startButtonOnClick(getActivity());
-                    } else if (modulesStatus.getTorState() == STOPPED && isChecked) {
-                        torFragmentPresenter.startButtonOnClick(getActivity());
-                    }
-                    break;
-                case R.id.chbAccessITPMainFragment:
-                    if (modulesStatus.getItpdState() != STOPPED && !isChecked) {
-                        itpdFragmentPresenter.startButtonOnClick(getActivity());
-                    } else if (modulesStatus.getItpdState() == STOPPED && isChecked) {
-                        itpdFragmentPresenter.startButtonOnClick(getActivity());
-                    }
-                    break;
+            int id = buttonView.getId();
+            if (id == R.id.chbProtectDnsMainFragment) {
+                if (modulesStatus.getDnsCryptState() != STOPPED && !isChecked) {
+                    dnsCryptFragmentPresenter.startButtonOnClick(activity);
+                } else if (modulesStatus.getDnsCryptState() == STOPPED && isChecked) {
+                    dnsCryptFragmentPresenter.startButtonOnClick(activity);
+                }
+            } else if (id == R.id.chbHideIpMainFragment) {
+                if (modulesStatus.getTorState() != STOPPED && !isChecked) {
+                    torFragmentPresenter.startButtonOnClick(activity);
+                } else if (modulesStatus.getTorState() == STOPPED && isChecked) {
+                    torFragmentPresenter.startButtonOnClick(activity);
+                }
+            } else if (id == R.id.chbAccessITPMainFragment) {
+                if (modulesStatus.getItpdState() != STOPPED && !isChecked) {
+                    itpdFragmentPresenter.startButtonOnClick(activity);
+                } else if (modulesStatus.getItpdState() == STOPPED && isChecked) {
+                    itpdFragmentPresenter.startButtonOnClick(activity);
+                }
             }
         }
 
-        switch (buttonView.getId()) {
-            case R.id.chbProtectDnsMainFragment:
-                new PrefManager(getActivity()).setBoolPref("ProtectDns", isChecked);
-                break;
-            case R.id.chbHideIpMainFragment:
-                new PrefManager(getActivity()).setBoolPref("HideIp", isChecked);
-                break;
-            case R.id.chbAccessITPMainFragment:
-                new PrefManager(getActivity()).setBoolPref("AccessITP", isChecked);
-                break;
+        int id = buttonView.getId();
+        if (id == R.id.chbProtectDnsMainFragment) {
+            new PrefManager(context).setBoolPref("ProtectDns", isChecked);
+        } else if (id == R.id.chbHideIpMainFragment) {
+            new PrefManager(context).setBoolPref("HideIp", isChecked);
+        } else if (id == R.id.chbAccessITPMainFragment) {
+            new PrefManager(context).setBoolPref("AccessITP", isChecked);
         }
     }
 
@@ -388,23 +398,11 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
                     && modulesStatus.getTorState() != STOPPING
                     && modulesStatus.getItpdState() != STOPPING) {
 
-                if (modulesStatus.getDnsCryptState() == STOPPED) {
-                    setChbProtectDnsMainFragment(false);
-                } else {
-                    setChbProtectDnsMainFragment(true);
-                }
+                setChbProtectDnsMainFragment(modulesStatus.getDnsCryptState() != STOPPED);
 
-                if (modulesStatus.getTorState() == STOPPED) {
-                    setChbHideIpMainFragment(false);
-                } else {
-                    setChbHideIpMainFragment(true);
-                }
+                setChbHideIpMainFragment(modulesStatus.getTorState() != STOPPED);
 
-                if (modulesStatus.getItpdState() == STOPPED) {
-                    setChbAccessITPMainFragment(false);
-                } else {
-                    setChbAccessITPMainFragment(true);
-                }
+                setChbAccessITPMainFragment(modulesStatus.getItpdState() != STOPPED);
             }
         }
     }
@@ -779,7 +777,33 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     }
 
     private synchronized void scrollToBottom(ScrollView scrollView) {
-        scrollView.post(() -> scrollView.fullScroll(ScrollView.FOCUS_DOWN));
+
+        if (scrollView == null) {
+            return;
+        }
+
+        scrollView.post(() -> {
+            int delta = 0;
+
+            int childIndex= scrollView.getChildCount() - 1;
+
+            if (childIndex < 0) {
+              return;
+            }
+
+            View lastChild = scrollView.getChildAt(childIndex);
+
+            if (lastChild != null) {
+                int bottom = lastChild.getBottom() + scrollView.getPaddingBottom();
+                int sy = scrollView.getScrollY();
+                int sh = scrollView.getHeight();
+                delta = bottom - (sy + sh);
+            }
+
+            if (delta > 0) {
+                scrollView.smoothScrollBy(0, delta);
+            }
+        });
     }
 
     public DNSCryptFragmentPresenter getDnsCryptFragmentPresenter() {
@@ -828,27 +852,18 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     public void onScrollChanged() {
 
         if (dnsCryptFragmentPresenter != null && svDNSCryptLog != null) {
-            if (svDNSCryptLog.canScrollVertically(1) && svDNSCryptLog.canScrollVertically(-1)) {
-                dnsCryptFragmentPresenter.dnsCryptLogAutoScrollingAllowed(false);
-            } else {
-                dnsCryptFragmentPresenter.dnsCryptLogAutoScrollingAllowed(true);
-            }
+            dnsCryptFragmentPresenter.dnsCryptLogAutoScrollingAllowed(!svDNSCryptLog.canScrollVertically(1)
+                    || !svDNSCryptLog.canScrollVertically(-1));
         }
 
         if (torFragmentPresenter != null && svTorLog != null) {
-            if (svTorLog.canScrollVertically(1) && svTorLog.canScrollVertically(-1)) {
-                torFragmentPresenter.torLogAutoScrollingAllowed(false);
-            } else {
-                torFragmentPresenter.torLogAutoScrollingAllowed(true);
-            }
+            torFragmentPresenter.torLogAutoScrollingAllowed(!svTorLog.canScrollVertically(1)
+                    || !svTorLog.canScrollVertically(-1));
         }
 
         if (itpdFragmentPresenter != null && svITPDLog != null) {
-            if (svITPDLog.canScrollVertically(1) && svITPDLog.canScrollVertically(-1)) {
-                itpdFragmentPresenter.itpdLogAutoScrollingAllowed(false);
-            } else {
-                itpdFragmentPresenter.itpdLogAutoScrollingAllowed(true);
-            }
+            itpdFragmentPresenter.itpdLogAutoScrollingAllowed(!svITPDLog.canScrollVertically(1)
+                    || !svITPDLog.canScrollVertically(-1));
         }
     }
 

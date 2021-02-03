@@ -87,6 +87,10 @@
     <string name="pref_fast_use_tor_bridges_close_dialog">Закрыть</string>
     <string name="pref_fast_unlock_host_wrong">Имя сайта неверное!</string>
     <string name="pref_fast_theme">Выбрать тему</string>
+    <string name="pref_fast_theme_titles_day_mode">Дневной режим</string>
+    <string name="pref_fast_theme_titles_night_mode">Ночной режим</string>
+    <string name="pref_fast_theme_titles_auto_mode">Автоматически</string>
+    <string name="pref_fast_theme_titles_default_mode">По умолчанию</string>
     <string name="pref_common_categ_run_with_root">Использовать Root привилегии</string>
     <string name="pref_common_run_with_root">Запуск модулей с Root</string>
     <string name="pref_common_run_with_root_summ">Использовать Root привилегии для DNSCrypt, Tor, I2P</string>
@@ -137,8 +141,9 @@
     <string name="pref_dnscrypt_require_nofilter_summ">Сервера не должны использовать черный список (для родительского контроля, блокировки рекламы…).</string>
     <string name="pref_dnscrypt_force_tcp_categ">Всегда использовать TCP протокол, для соединения с серверами.</string>
     <string name="pref_dnscrypt_force_tcp_summ">Это может быть полезным, когда вы перенаправляете весь трафик через Tor.
-        Иначе не активируйте, так как это не улучшит безопасность. DNSCrypt и так шифрует все запросы, даже через UDP. А задержки могут увеличиться.</string>
-    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">HTTP / SOCKS прокси.</string>
+        Иначе не активируйте, так как это не улучшит безопасность. DNSCrypt и так шифрует все запросы, даже через UDP. А задержки могут увеличиться.
+        Не включайте если хотите пользоваться onion сайтами Tor!</string>
+    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS прокси.</string>
     <string name="pref_dnscrypt_use_proxy">Включить прокси</string>
     <string name="pref_dnscrypt_proxy_summ">Перенаправить все TCP соединения на Tor. Tor не поддерживает UDP, поэтому обязательно активируйте force_tcp.</string>
     <string name="pref_dnscrypt_proxy">Прокси порт</string>
@@ -220,7 +225,7 @@
     <string name="pref_tor_unlock_disabled">Выключено</string>
     <string name="pref_tor_unlock_app">Приложения для Tor</string>
     <string name="pref_tor_clearnet_app">"Приложения без Tor "</string>
-    <string name="pref_tor_snowflake_stun">STUN сервер для мостов SnowFlake</string>
+    <string name="pref_tor_snowflake_stun">STUN сервера для мостов SnowFlake</string>
     <string name="pref_tor_isolate_dest_address_summ">Разделить трафик приложений на основе удаленного адреса.</string>
     <string name="pref_tor_isolate_dest_port_summ">Разделить трафик приложений на основе удаленного порта.</string>
     <string name="country_select_select_all">Активировать все</string>
@@ -236,7 +241,7 @@
     <string name="pref_itpd_com_bandwidth_summ">Ограничение полосы пропускания в KBps.</string>
     <string name="pref_itpd_com_share_summ">Максимальная полоса пропускания для транзита 0–100%.</string>
     <string name="pref_itpd_com_ssu_summ">Включить SSU протокол (использовать UDP).</string>
-    <string name="pref_itpd_com_ntcp_summ">Включить NTCP протокол (использовать TCP).</string>
+    <string name="pref_itpd_com_ntcp_summ">Включить NTCP2 протокол (использовать TCP).</string>
     <string name="pref_itpd_com_use_ntcpproxy">Включить ntcpproxy</string>
     <string name="pref_itpd_com_ntcpproxy_summ">Выбрать прокси сервер для NTCP. Должно быть http://address:port или socks://address:port.</string>
     <string name="pref_itpd_HTTP_proxy_port">HTTP proxy порт</string>
@@ -260,16 +265,10 @@
     <string name="pref_itpd_limits_transittunnels_summ">Максимальное количество транзитных тунелей. 2500 по умолчанию.</string>
     <string name="pref_itpd_limits_openfiles_summ">Ограничить количество открытых файловых дескрипторов (0 - использовать системное ограничение).</string>
     <string name="pref_itpd_limits_coresize_summ">Максимальный размер файла ядра в Kb (0 - использовать системное ограничение).</string>
-    <string name="pref_itpd_limits_ntcpsoft_summ">Порог для запуска вероятностного завершения ntcp сессии. (0 - использовать системное ограничение).</string>
-    <string name="pref_itpd_limits_ntcphard_summ">Максимальное количество ntcp сессий. (0 - использовать системное ограничение).</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">Каталог адресов для начальной настройки.</string>
     <string name="pref_itpd_addressbook_subscriptions_summ">Каталог адресов.</string>
     <string name="pref_itpd_not_exist">Настройка не существует в i2pd.conf!</string>
     <string name="helper_dialog_title">Инфо</string>
-    <string name="helper_after_install">Поздравляю! Теперь вы можете использовать эти инструменты,
-        чтоб обеспечить легкий доступ к любым сайтам и без всяких ограничений. Запустите DNSCrypt
-        с или без Tor или I2P, как необходимо (Быстрый режим). Или можете использовать эти инструменты
-        для улучшения приватности. Запустите Tor с или без I2P, как необходимо (Режим улучшеной приватности)</string>
     <string name="helper_dnscrypt_stopped">Похоже андроид закрыл модуль DNSCrypt. Ваше интернет
         соединение восстановлено. Проверьте настройки устройства!</string>
     <string name="helper_tor_stopped">Похоже андроид закрыл модуль Tor. Ваше интернет
@@ -425,8 +424,8 @@
     <string name="pref_dnscrypt_erase_cloaking_rules">Очистить cloaking rules</string>
     <string name="erase_dnscrypt_rules_dialog_message">Готово! Правила стерты.</string>
     <string name="dnscrypt_many_rules_dialog_message">Слишком много правил для отображения. Показана только первая 1000.</string>
-    <string name="pref_dnscrypt_ipv4_servers_summ">Испоьзовать IPv4 сервера</string>
-    <string name="pref_dnscrypt_ipv6_servers_summ">Испоьзовать IPv6 сервера</string>
+    <string name="pref_dnscrypt_ipv4_servers_summ">Использовать IPv4 сервера</string>
+    <string name="pref_dnscrypt_ipv6_servers_summ">Использовать IPv6 сервера</string>
     <string name="pref_dnscrypt_block_ipv6_summ">Немедленно отвечать на IPv6 запросы пустым ответом.
         Это ускоряет работу при отсутствии подключения по протоколу IPv6, но иногда может вызывать проблемы.</string>
     <string name="pref_common_local_eth_device_addr">IP адрес устройства в LAN</string>
@@ -439,9 +438,59 @@
     <string name="notification_channel_services">Запущенные сервисы</string>
     <string name="notification_channel_update">Обновление</string>
     <string name="notification_channel_root">Команды Рут</string>
+    <string name="notification_channel_firewall">Файрвол</string>
     <string name="pref_common_compatibility_mode">Режим совместимости</string>
     <string name="pref_common_compatibility_mode_summ">Включите если у Вас кастомная прошивка, и интернет пропадает при нажатии кнопки START</string>
     <string name="dialog_send_crash_report">Обнаружен отчет аварийного завершения приложения. Хотите его отправить разработчику, чтобы сделать InviZible лучше?</string>
     <string name="btn_new_tor_identity">Новая цепочка Tor</string>
     <string name="toast_new_tor_identity">Сервер Tor изменился</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">Включить выходной SOCKS прокси</string>
+    <string name="pref_tor_SOCKS_output_address_summ">Tor будет выполнять все соединения через SOCKS5 прокси.</string>
+    <string name="pref_common_proxy_categ">Прокси</string>
+    <string name="pref_common_proxy">Использовать socks5 прокси</string>
+    <string name="pref_common_proxy_summ">InviZible Pro будет выполнять все подключения через SOCKS5 proxy</string>
+    <string name="proxy_server_ip">Прокси сервер:</string>
+    <string name="proxy_server_port">Прокси порт:</string>
+    <string name="proxy_server_user_name">Пользователь:</string>
+    <string name="proxy_server_user_pass">Пароль:</string>
+    <string name="proxy_server_empty_field_hint">Это поле можно оставить пустым</string>
+    <string name="proxy_exclude_apps_from_proxy">Исключить приложения</string>
+    <string name="proxy_exclude_apps_from_proxy_summ">Список приложений для использования напрямую. Эти приложения не будут использовать Tor или прокси, чтобы подключиться к интернету!</string>
+    <string name="proxy_select_proxy_app"> Пожалуйста, выберите как минимум приложение - владелец прокси, если вы используете локальный прокси.</string>
+    <string name="proxy_use_for_dnscrypt">Использовать прокси для DNSCrypt</string>
+    <string name="proxy_use_for_tor">Использовать прокси для Tor</string>
+    <string name="proxy_use_for_itpd">Использовать прокси для Purple I2P</string>
+    <string name="proxy_save">Сохранить и активировать</string>
+    <string name="proxy_no_connection">Не удается подключиться к прокси: %s</string>
+    <string name="proxy_successful_connection">Успешное соединение. Ping %s ms.</string>
+    <string name="pref_common_multi_user">Многопользовательская поддержка</string>
+    <string name="pref_common_multi_user_summ">Поддержка двойных приложений, MIUI, Island, Shelter и приложений рабочего профиля</string>
+    <string name="dialog_new_tor_default_bridges_available">Доступны новые мосты Tor по-умолчанию. Вы хотите их обновить?</string>
+
+    <string name="pref_common_mitm_categ">Обнаружение MITM атак</string>
+    <string name="pref_common_arp_spoofing_detection">Обнаружение ARP-спуфинга</string>
+    <string name="pref_common_arp_spoofing_detection_summ">Обнаружение ARP-спуфинга и мошеннических DHCP в Wi-Fi сетях.</string>
+    <string name="pref_common_arp_block_internet">Заблокировать интернет при обнаружении атаки</string>
+    <string name="pref_common_arp_block_internet_summ">Интернет соединение будет заблокировано во время атаки</string>
+    <string name="notification_arp_spoofing">Обнаружена атака ARP-спуфинг!</string>
+    <string name="notification_rogue_dhcp">Обнаружен мошеннический DHCP!</string>
+    <string name="notification_mitm">Обнаружена атака «человек посередине»! Ваши данные могут быть перехвачены другим устройством в локальной сети.
+        Выключите, подождите несколько секунд и включите Wi-Fi. Использование текущей Wi-Fi точки доступа может быть небезопасным!</string>
+    <string name="toast_arp_detection_not_supported">Обнаружение ARP-спуфинг атак не поддерживается на вашем устройстве!</string>
+    <string name="pref_fast_use_tor_bridges_alt_summ">Пожалуйста, выключите Entry Nodes в настройках Tor, иначе Вы не сможете использовать мосты.</string>
+    <string name="pref_tor_entry_nodes_alt_summ">Выключите мосты Tor, если хотите выбрать Entry Nodes.</string>
+    <string name="pref_fast_tor_bypass_lan">Исключить LAN адреса</string>
+    <string name="pref_fast_tor_bypass_lan_summ">Не использовать Tor для LAN адресов и зарезервированных блоков IP IANA</string>
+    <string name="menu_firewall">Файрвол</string>
+    <string name="firewall_all_apps">Все</string>
+    <string name="firewall_system_apps">Система</string>
+    <string name="firewall_user_apps">Пользователь</string>
+    <string name="firewall_sort_by_name">Сортировать по имени</string>
+    <string name="firewall_sort_by_uid">Сортировать по UID</string>
+    <string name="ask_save_changes">Вы хотите сохранить изменения?</string>
+    <string name="firewall_warning_enable_module">Чтобы активировать файрвол, нужно запустить хотя бы DNSCrypt или Tor.</string>
+    <string name="firewall_notification_allow_app_title">Установлено приложение %s</string>
+    <string name="firewall_notification_allow_app">Разрешить ему интернет?</string>
+    <string name="allow">Разрешить</string>
+    <string name="deny">Запретить</string>
 </resources>

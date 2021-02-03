@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Objects;
 
 public class DNSServerRelays implements Serializable {
-    private String dnsServerName;
-    private List<String> dnsServerRelays;
+    private final String dnsServerName;
+    private final List<String> dnsServerRelays;
 
     public DNSServerRelays(String dnsServerName, List<String> dnsServerRelays) {
         this.dnsServerName = dnsServerName;

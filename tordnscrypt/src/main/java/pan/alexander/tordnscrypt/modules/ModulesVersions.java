@@ -29,6 +29,8 @@ import com.jrummyapps.android.shell.Shell;
 import com.jrummyapps.android.shell.ShellNotFoundException;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
 
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
@@ -103,7 +105,7 @@ public class ModulesVersions {
             return;
         }
 
-        RootCommands comResult = new RootCommands(new String[]{version});
+        RootCommands comResult = new RootCommands(new ArrayList<>(Collections.singletonList(version)));
         Intent intent = new Intent(COMMAND_RESULT);
         intent.putExtra("CommandsResult",comResult);
         intent.putExtra("Mark",mark);

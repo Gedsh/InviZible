@@ -320,7 +320,7 @@
 
     <string name="pref_itpd_com_share_summ">Max % pasma na ruch tranzytowy. 0–100.</string>
     <string name="pref_itpd_com_ssu_summ">Uruchom protokol transferu SSU (uzyj UDP).</string>
-    <string name="pref_itpd_com_ntcp_summ">Uruchom protokol transferu NTCP (uzyj TCP).</string>
+    <string name="pref_itpd_com_ntcp_summ">Uruchom protokol transferu NTCP2 (uzyj TCP).</string>
     <string name="pref_itpd_com_use_ntcpproxy">Uruchom ntcpproxy</string>
     <string name="pref_itpd_com_ntcpproxy_summ">Okresl serwer proxy dla NTCP. Albo http://address:port albo socks://address:port.</string>
     <string name="pref_itpd_HTTP_proxy">proxy HTTP</string>
@@ -344,16 +344,11 @@
     <string name="pref_itpd_limits_transittunnels_summ">Zmien maksymalna ilosc tuneli tranzytowych. Domyslnie 2500.</string>
     <string name="pref_itpd_limits_openfiles_summ">Ogranicz ilosc deskryptorow plikow (0 - zastosuj ograniczenie systemowe).</string>
     <string name="pref_itpd_limits_coresize_summ">Maksymalna wielkosc corefile w Kb (0 - zastosuj ograniczenie systemowe).</string>
-    <string name="pref_itpd_limits_ntcpsoft_summ">Prog rozpoczecia probabilsitycznego cofania sesji ntcp(0 - zastosuj ograniczenie systemowe).</string>
-    <string name="pref_itpd_limits_ntcphard_summ">Maksymalna ilosc sesji ntcp (0 - zastosuj ograniczenie systemowe).</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">Subskrybcja URL ksiazki adresowej dla ustawien poczatkowych.</string>
     <string name="pref_itpd_addressbook_subscriptions_summ">URL subskrybcji ksiaki adresowej.</string>
     <string name="pref_itpd_not_exist">Ustawienie nie istnieje w i2pd.conf!</string>
 
     <string name="helper_dialog_title">Info</string>
-    <string name="helper_after_install">Gratulacje! Mozesz zastosowac te narzedzia aby miec szybki dostep
-        bez ograniczen do wszystkich stron. Uruchom DNSCrypt z lub bez Tora oraz I2P (ustawienia w Fast Mode). Mozesz tez uzyc
-        te narzedzia do zwiekszenia prywatnosci. Uruchom Tor z lub bez I2P (Tryb Enhanced Privacy Mode).</string>
     <string name="helper_dnscrypt_stopped">Wyglada na to ze system android wylaczyl DNSCrypt.
         Twoje polaczenie z siecia zostalo przywrocone. Szprawdz ustawienia urzadzenia!</string>
     <string name="helper_tor_stopped">Wyglada na to ze system android wylaczyl Tor.

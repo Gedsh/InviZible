@@ -344,3 +344,113 @@
 * Updated Purple I2P to version 2.33.0.
 * Optimized memory usage.
 * Added Finnish language.
+
+**InviZible Pro beta 1.0.3**
+* Implemented system-wide socks5 proxy.
+* Implemented and fixed modules proxy settings.
+* Fixed saving files with direct configuration editor.
+* Performs a full Tor restart in case of using bridges.
+
+**InviZible Pro beta 1.0.4**
+* Implemented multi-user support.
+* Implemented xtables lock for iptables.
+* Implemented default Tor bridges update.
+* Implemented system-wide socks5 proxy for Root mode with Fix TTL enabled.
+* Improved applications selection.
+* Improved real-time Internet connections log.
+* Improved iptables rules for Root mode.
+* Updated default Tor bridges.
+* Updated snowflake Tor bridge.
+* Fixed selection of DNSCrypt anonimized relays after device rotation.
+* Fixed import of DNSCrypt rules when site name contains _
+* Fixed changing I2P settings after rotating device.
+* Fixed language selection for android Q.
+* Removed Quad9 servers from anonimized relays broken implementation.
+* Optimized the speed of Internet responses in VPN mode.
+
+**InviZible Pro beta 1.0.5**
+* Added script for building Tor for Android from source using Gitlab CI / CD.
+* Updated Tor to version 4.4.5.
+* Changed default I2P outproxy address.
+* Updated German language.
+* Fixed real-time connections log when default DNS servers are unavailable.
+* Fixed bridges selection after activity recreate.
+* Fixed activity not found exception.
+
+**InviZible Pro beta 1.0.6**
+* Implemented ARP spoofing and rogue DHCP attacks detection.
+* Bug fixes.
+
+**InviZible Pro beta 1.0.7**
+* Improved ARP spoofing and rogue DHCP attacks detection when always-on VPN is active.
+* Updated Persian language.
+* Minor fixes.
+
+**InviZible Pro beta 1.0.8**
+* Added bypass Tor option for LAN and IANA addresses.
+* Added Purple I2P build script.
+* Updated Purple I2P.
+* Updated Tor.
+* Updated snowflake.
+* Updated Persian language.
+* Removed unnecessary lines from the manifest.
+* Fixed usb modem and wifi hotspot detection.
+* Implemented auxiliary detection of enabling hotspot.
+* Fixed application usage when uid0 is blocked by firewall.
+* Fixed reading files content when using Run modules with Root.
+* Other fixes.
+
+**InviZible Pro beta 1.0.9**
+* Updated snowflake.
+* Updated German language
+* Changed method of defining own uid to fix backup and restore using third party applications.
+* Fixed using a proxy with the FixTTL option enabled.
+* Other minor fixes.
+
+**InviZible Pro beta 1.1.0**
+* Updated Purple I2P to version 2.34.0
+* Updated Purple I2P default configuration as ntcp is no longer supported.
+* Build Purple I2P from source including all dependencies.
+* Updated Tor with new dependencies.
+
+**InviZible Pro beta 1.1.1**
+* Implemented a firewall for VPN mode.
+* Updated Indonesian language.
+* Updated snowflake.
+
+**InviZible Pro beta 1.1.2**
+* Fixed app crash when installing new app.
+* Fixed display of firewall menu item in Root or Proxy mode.
+* Don't show notification when updating system app or without Internet permission.
+* Prevent apps without Internet permission from being shown in app lists.
+
+**InviZible Pro beta 1.1.3**
+* Don't show firewall notification when updating user apps.
+* Fixed inconsistencies in the firewall UI in rare cases.
+* NTP can bypass Tor if allowed by firewall rules.
+* Fixed Proxy port does not change.
+
+**InviZible Pro beta 1.1.4**
+* Optimized Tor bridges handling and selection.
+* Updated Tor.
+
+**InviZible Pro beta 1.1.5**
+* Improved real-time Internet connections log.
+* Do not lock the interface if an empty password is used.
+* Minor fixes and improvements.
+
+**InviZible Pro beta 1.1.6**
+* Updated Purple I2P to version 2.35.0
+* Implemented patches to change the default configuration after updating the application.
+* Updated default DNSCrypt configuration to use v3 update sources.
+* Enabled openssl enable-ec_nistp_64_gcc_128 for arm64 version to improve speed.
+* Added French language.
+* Minor fixes and improvements.
+
+**InviZible Pro beta 1.1.7**
+* Tor apps selection improvements.
+* Updated obfs4proxy (fixed meek_lite bridge).
+* Updated snowflake.
+* Updated German language.
+* Fixed crash on android 4.4.2.
+* Fixed rare bugs.

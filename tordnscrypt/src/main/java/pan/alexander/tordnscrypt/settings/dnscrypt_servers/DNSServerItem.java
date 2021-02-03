@@ -41,10 +41,10 @@ public class DNSServerItem implements Comparable<DNSServerItem> {
     private boolean ipv6 = false;
     private boolean visibility = true;
     private String name;
-    private String description;
-    private String sdns;
+    private final String description;
+    private final String sdns;
     private boolean ownServer = false;
-    private ArrayList<String> routes = new ArrayList<>();
+    private final ArrayList<String> routes = new ArrayList<>();
 
     public DNSServerItem(Context context, String name, String description, String sdns) throws Exception {
         this.name = name;

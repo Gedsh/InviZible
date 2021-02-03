@@ -20,6 +20,8 @@ package pan.alexander.tordnscrypt;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.fragment.app.Fragment;
@@ -34,22 +36,28 @@ import android.os.Bundle;
 import androidx.preference.PreferenceManager;
 
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 
 import java.util.ArrayList;
 import java.util.Objects;
 
+import pan.alexander.tordnscrypt.dialogs.SaveFirewallChanges;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
+import pan.alexander.tordnscrypt.proxy.ProxyFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.PreferencesCommonFragment;
 import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
 import pan.alexander.tordnscrypt.settings.dnscrypt_settings.PreferencesDNSFragment;
+import pan.alexander.tordnscrypt.settings.firewall.FirewallFragment;
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges;
 import pan.alexander.tordnscrypt.settings.SettingsParser;
 import pan.alexander.tordnscrypt.settings.ShowLogFragment;
 import pan.alexander.tordnscrypt.settings.show_rules.ShowRulesRecycleFrag;
 import pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment;
 import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag;
+import pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment;
+import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.DNSCryptRulesVariant;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
@@ -66,8 +74,11 @@ public class SettingsActivity extends LangAppCompatActivity {
     public static final String rules_tag = "pan.alexander.tordnscrypt/app_data/abstract_rules";
 
     public DialogFragment dialogFragment;
+    public PreferencesTorFragment preferencesTorFragment;
     private SettingsParser settingsParser;
     private PreferencesDNSFragment preferencesDNSFragment;
+    private FirewallFragment firewallFragment;
+    private Fragment currentFragment;
 
 
     @SuppressLint("NewApi")
@@ -98,7 +109,6 @@ public class SettingsActivity extends LangAppCompatActivity {
             dialogFragment = PleaseWaitProgressDialog.getInstance();
             dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
             FileOperations.readTextFile(this, appDataDir + "/app_data/tor/tor.conf", tor_conf_tag);
-
         } else if (Objects.equals(intent.getAction(), "I2PD_Pref")) {
             dialogFragment = PleaseWaitProgressDialog.getInstance();
             dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
@@ -109,6 +119,9 @@ public class SettingsActivity extends LangAppCompatActivity {
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "common_Pref")) {
             fSupportTrans.replace(android.R.id.content, new PreferencesCommonFragment());
+            fSupportTrans.commit();
+        } else if (Objects.equals(intent.getAction(), "firewall")) {
+            fSupportTrans.replace(android.R.id.content, new FirewallFragment());
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "DNS_servers_Pref")) {
             dialogFragment = PleaseWaitProgressDialog.getInstance();
@@ -194,6 +207,16 @@ public class SettingsActivity extends LangAppCompatActivity {
         } else if (Objects.equals(intent.getAction(), "tor_bridges")) {
             fSupportTrans.replace(android.R.id.content, new PreferencesTorBridges(), "PreferencesTorBridges");
             fSupportTrans.commit();
+        } else if (Objects.equals(intent.getAction(), "use_proxy")) {
+            fSupportTrans.replace(android.R.id.content, new ProxyFragment(), "ProxyFragment");
+            fSupportTrans.commit();
+        } else if (Objects.equals(intent.getAction(), "proxy_apps_exclude")) {
+            Bundle bundle = new Bundle();
+            bundle.putBoolean("proxy", true);
+            UnlockTorAppsFragment unlockTorAppsFragment = new UnlockTorAppsFragment();
+            unlockTorAppsFragment.setArguments(bundle);
+            fSupportTrans.replace(android.R.id.content, unlockTorAppsFragment);
+            fSupportTrans.commit();
         }
 
     }
@@ -209,6 +232,13 @@ public class SettingsActivity extends LangAppCompatActivity {
 
         if (fragment instanceof PreferencesDNSFragment) {
             preferencesDNSFragment = (PreferencesDNSFragment) fragment;
+            currentFragment = preferencesDNSFragment;
+        } else if (fragment instanceof PreferencesTorFragment) {
+            preferencesTorFragment = (PreferencesTorFragment) fragment;
+            currentFragment = preferencesTorFragment;
+        } else if (fragment instanceof FirewallFragment) {
+            firewallFragment = (FirewallFragment) fragment;
+            currentFragment = firewallFragment;
         }
     }
 
@@ -272,6 +302,46 @@ public class SettingsActivity extends LangAppCompatActivity {
 
         if (settingsParser != null)
             settingsParser.deactivateSettingsParser();
+
+        dialogFragment = null;
+        preferencesTorFragment = null;
+        settingsParser = null;
+        preferencesDNSFragment = null;
+        firewallFragment = null;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        Intent intent = getIntent();
+
+        if (Objects.equals(intent.getAction(), "firewall")) {
+            getMenuInflater().inflate(R.menu.settings_firewall, menu);
+            return true;
+        } else {
+            return super.onCreateOptionsMenu(menu);
+        }
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        Intent intent = getIntent();
+
+        if (Objects.equals(intent.getAction(), "firewall") && firewallFragment != null) {
+            MenuItem searchItem = menu.findItem(R.id.firewall_search);
+            SearchView searchFirewall = (SearchView) searchItem.getActionView();
+            searchFirewall.setOnQueryTextListener(firewallFragment);
+
+            MenuItem switchItem = menu.findItem(R.id.firewall_switch_item);
+            SwitchCompat switchFirewall = switchItem.getActionView().findViewById(R.id.firewall_switch);
+
+            boolean firewallEnabled = new PrefManager(this).getBoolPref("FirewallEnabled");
+            switchFirewall.setChecked(firewallEnabled);
+
+            switchFirewall.setOnCheckedChangeListener(firewallFragment);
+            firewallFragment.setFirewallSwitch(switchFirewall);
+        }
+
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -281,5 +351,25 @@ public class SettingsActivity extends LangAppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (currentFragment instanceof FirewallFragment) {
+            boolean savingFirewallChangesRequired = firewallFragment.isFirewallChangesSavingRequired();
+            SaveFirewallChanges saveFirewallChanges = null;
+            boolean saveFirewallChangesFragmentIsDisplayed = getSupportFragmentManager().findFragmentByTag("SaveFirewallChanges") != null;
+
+            if (savingFirewallChangesRequired && !saveFirewallChangesFragmentIsDisplayed) {
+                saveFirewallChanges = SaveFirewallChanges.INSTANCE.getInstance(firewallFragment);
+            }
+            if (saveFirewallChanges != null && !isFinishing()) {
+                saveFirewallChanges.show(getSupportFragmentManager(), "SaveFirewallChanges");
+            } else {
+                super.onBackPressed();
+            }
+        } else {
+            super.onBackPressed();
+        }
     }
 }

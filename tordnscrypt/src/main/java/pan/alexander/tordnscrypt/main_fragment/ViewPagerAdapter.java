@@ -29,7 +29,7 @@ import java.util.ArrayList;
 
 public class ViewPagerAdapter extends FragmentPagerAdapter {
 
-    private ArrayList<ViewPagerFragment> viewPagerFragments = new ArrayList<>(4);
+    private final ArrayList<ViewPagerFragment> viewPagerFragments = new ArrayList<>(4);
 
     public ViewPagerAdapter(@NonNull FragmentManager fm, int behavior) {
         super(fm, behavior);
@@ -57,8 +57,8 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
     }
 
     public static class ViewPagerFragment {
-        private String title;
-        private Fragment fragment;
+        private final String title;
+        private final Fragment fragment;
 
         public ViewPagerFragment(String title, Fragment fragment) {
             this.title = title;

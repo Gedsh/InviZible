@@ -65,10 +65,6 @@
         <Preference
             android:key="pref_common_tethering_settings"
             android:title="@string/pref_common_tethering_settings">
-            <intent
-                android:action="ACTION_MAIN"
-                android:targetClass="com.android.settings.Settings$TetherSettingsActivity"
-                android:targetPackage="com.android.settings" />
         </Preference>
         <SwitchPreference
             android:defaultValue="false"
@@ -84,6 +80,31 @@
             android:key="swUseModulesRoot"
             android:summary="@string/pref_common_run_with_root_summ"
             android:title="@string/pref_common_run_with_root" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_common_mitm_categ"
+        android:key="pref_common_mitm_categ">
+        <SwitchPreference
+            android:id="@+id/pref_common_arp_spoofing_detection"
+            android:defaultValue="false"
+            android:key="pref_common_arp_spoofing_detection"
+            android:summary="@string/pref_common_arp_spoofing_detection_summ"
+            android:title="@string/pref_common_arp_spoofing_detection" />
+        <SwitchPreference
+            android:id="@+id/pref_common_arp_block_internet"
+            android:defaultValue="false"
+            android:dependency="pref_common_arp_spoofing_detection"
+            android:key="pref_common_arp_block_internet"
+            android:summary="@string/pref_common_arp_block_internet_summ"
+            android:title="@string/pref_common_arp_block_internet" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_common_proxy_categ"
+        android:key="categoryCommonProxy">
+        <SwitchPreference
+            android:id="@+id/swUseProxy"
+            android:defaultValue="false"
+            android:key="swUseProxy"
+            android:summary="@string/pref_common_proxy_summ"
+            android:title="@string/pref_common_proxy" />
     </PreferenceCategory>
     <PreferenceCategory
         android:title="@string/pref_common_categ_other"
@@ -113,6 +134,12 @@
             android:key="swCompatibilityMode"
             android:summary="@string/pref_common_compatibility_mode_summ"
             android:title="@string/pref_common_compatibility_mode" />
+        <SwitchPreference
+            android:id="@+id/pref_common_multi_user"
+            android:defaultValue="false"
+            android:key="pref_common_multi_user"
+            android:summary="@string/pref_common_multi_user_summ"
+            android:title="@string/pref_common_multi_user" />
         <SwitchPreference
             android:id="@+id/pref_common_show_help"
             android:defaultValue="false"

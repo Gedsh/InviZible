@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string-array name="pref_fast_theme_titles">
+        <item>@string/pref_fast_theme_titles_day_mode</item>
+        <item>@string/pref_fast_theme_titles_night_mode</item>
+        <item>@string/pref_fast_theme_titles_auto_mode</item>
+        <item>@string/pref_fast_theme_titles_default_mode</item>
+    </string-array>
+    <string-array name="pref_fast_theme_values">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </string-array>
     <string-array name="pref_countries_titles">
         <item>Afghanistan</item>
         <item>Åland Islands</item>

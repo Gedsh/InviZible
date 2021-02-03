@@ -1,4 +1,4 @@
-<resources tools:ignore="MissingTranslation" xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <string name="app_name" translatable="false">InviZible Pro</string>
     <string name="navigation_drawer_open" translatable="false">Open navigation drawer</string>
     <string name="navigation_drawer_close" translatable="false">Close navigation drawer</string>
@@ -124,6 +124,7 @@
     <string name="pref_fast_site_refresh_interval_summ">Period in hours to refresh WebSites IPs. For Android 5.1 and higher. Put 0 to stop refresh.</string>
     <string name="pref_fast_use_tor_bridges">Bridges</string>
     <string name="pref_fast_use_tor_bridges_summ">Use it if you can not connect to Tor network</string>
+    <string name="pref_fast_use_tor_bridges_alt_summ">Please disable Entry Nodes in Tor Settings, otherwise you cannot use Bridges.</string>
     <string name="pref_fast_use_tor_bridges_no">Do Not Use Bridges</string>
     <string name="pref_fast_use_tor_bridges_default">Use Bridges Default List</string>
     <string name="pref_fast_use_tor_bridges_own">Use Bridges Own List</string>
@@ -146,6 +147,7 @@
         <item>snowflake</item>
         <item>vanilla</item>
     </string-array>
+    <string name="dialog_new_tor_default_bridges_available">New default Tor bridges are available. Do you want to update them?</string>
     <string name="pref_fast_use_tor_bridges_transport_select">Pls select obfuscation type:</string>
     <string name="pref_fast_use_tor_bridges_enter_characters">Pls enter characters from image</string>
     <string name="pref_fast_use_tor_bridges_request_dialog">Requesting new Bridges</string>
@@ -154,18 +156,12 @@
     <string name="pref_fast_use_tor_bridges_close_dialog">Close</string>
     <string name="pref_fast_unlock_host_wrong">Wrong host name!</string>
     <string name="pref_fast_theme">Select Theme</string>
-    <string-array name="pref_fast_theme_titles">
-        <item>Day Mode</item>
-        <item>Night Mode</item>
-        <item>Auto</item>
-        <item>System default</item>
-    </string-array>
-    <string-array name="pref_fast_theme_values">
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-        <item>4</item>
-    </string-array>
+    <string name="pref_fast_theme_titles_day_mode">Day Mode</string>
+    <string name="pref_fast_theme_titles_night_mode">Night Mode</string>
+    <string name="pref_fast_theme_titles_auto_mode">Auto</string>
+    <string name="pref_fast_theme_titles_default_mode">System default</string>
+    <string name="pref_fast_tor_bypass_lan">Bypass LAN addresses</string>
+    <string name="pref_fast_tor_bypass_lan_summ">Do not use Tor for LAN destinations and IANA reserved IP blocks</string>
     <string name="pref_fast_language">Select Language</string>
     <string name="pref_fast_block_http">Block http</string>
     <string name="pref_fast_block_http_summ">Deny connection to http port 80</string>
@@ -184,6 +180,14 @@
     <string name="pref_common_block_http">Block HOTSPOT http</string>
     <string name="pref_common_block_http_summ">Deny connection to http port 80 for HOTSPOT</string>
     <string name="pref_common_notification_summ">Protect application with No Root Mode to prevent app being killed by android</string>
+    <string name="pref_common_mitm_categ">MITM attack detection</string>
+    <string name="pref_common_arp_spoofing_detection">ARP spoofing detection</string>
+    <string name="pref_common_arp_spoofing_detection_summ">Detect Man-in-the-middle ARP spoofing and rogue DHCP attacks in Wi-Fi networks.</string>
+    <string name="pref_common_arp_block_internet">Block internet when an attack is detected</string>
+    <string name="pref_common_arp_block_internet_summ">Internet connection will be blocked during attack</string>
+    <string name="pref_common_proxy_categ">Proxy</string>
+    <string name="pref_common_proxy">Use socks5 proxy</string>
+    <string name="pref_common_proxy_summ">InviZible Pro will make all connections through the SOCKS5 proxy</string>
     <string name="pref_common_refresh_rules">Refresh rules</string>
     <string name="pref_common_refresh_rules_summ">Update rules on every connectivity change</string>
     <string name="pref_common_show_notification">Show notification</string>
@@ -236,6 +240,8 @@
     <string name="pref_common_restart_dnscrypt">Please restart DNSCrypt</string>
     <string name="pref_common_restart_tor">Please restart Tor</string>
     <string name="pref_common_restart_itpd">Please restart I2P</string>
+    <string name="pref_common_multi_user">Multi-user support</string>
+    <string name="pref_common_multi_user_summ">Support for Dual Apps, MIUI, Island, Shelter and Work profile applications</string>
 
     <string name="pref_common_use_iptables">Select Iptables</string>
     <string-array name="pref_common_categ_use_iptables_titles">
@@ -285,10 +291,11 @@
 
     <string name="pref_dnscrypt_force_tcp_categ">Always use TCP to connect to upstream servers.</string>
     <string name="pref_dnscrypt_force_tcp_summ"> This can be can be useful if you need to route everything through Tor.\n
-        Otherwise, leave this to false, as it doesn\'t improve security (dnscrypt-proxy will always encrypt everything even using UDP), and can only increase latency.</string>
+        Otherwise, leave this to false, as it doesn\'t improve security (dnscrypt-proxy will always encrypt everything even using UDP), and can only increase latency.
+        Do not enable if you want to use Tor onion sites!</string>
     <string name="pref_dnscrypt_force_tcp" translatable="false">force_tcp</string>
 
-    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">HTTP / SOCKS proxy.</string>
+    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS proxy.</string>
     <string name="pref_dnscrypt_use_proxy">Enable proxy</string>
     <string name="pref_dnscrypt_proxy_summ">Route all TCP connections to a local Tor node.
         Tor doesn\'t support UDP, so set force_tcp to true as well.</string>
@@ -415,6 +422,7 @@
     <string name="pref_tor_exclude_nodes_summ">A list of country codes to avoid when building a circuit.</string>
     <string name="pref_tor_entry_nodes" translatable="false">EntryNodes</string>
     <string name="pref_tor_entry_nodes_summ">A list of country codes of nodes to use for the first hop in your normal circuits.</string>
+    <string name="pref_tor_entry_nodes_alt_summ">Disable Tor bridges if you want to select entry nodes.</string>
     <string name="pref_tor_strict_nodes" translatable="false">StrictNodes</string>
     <string name="pref_tor_strict_nodes_summ">If StrictNodes enabled, Tor will treat solely the ExcludeNodes option as a requirement to follow for all the circuits you generate, even if doing so will break functionality for you.</string>
     <string name="pref_tor_fascist_firewall" translatable="false">FascistFirewall</string>
@@ -448,7 +456,10 @@
     <string name="pref_tor_unlock_disabled">Disabled</string>
     <string name="pref_tor_unlock_app">Apps to Torify</string>
     <string name="pref_tor_clearnet_app">Apps to bypass Tor</string>
-    <string name="pref_tor_snowflake_stun">STUN server for SnowFlake bridges</string>
+    <string name="pref_tor_snowflake_stun">STUN servers for SnowFlake bridges</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">Enable SOCKS output proxy</string>
+    <string name="pref_tor_SOCKS_output_address" translatable="false">Socks5Proxy</string>
+    <string name="pref_tor_SOCKS_output_address_summ">Tor will make all OR connections through the SOCKS 5 proxy.</string>
     <string name="pref_tor_edit_conf">Edit tor.conf directly</string>
     <string name="pref_tor_clean_module_folder">Clean module folder</string>
     <string name="pref_tor_isolate_dest_address" translatable="false">IsolateDestAddr</string>
@@ -495,7 +506,7 @@
     <string name="pref_itpd_com_ssu" translatable="false">ssu</string>
     <string name="pref_itpd_com_ssu_summ">Enable SSU transport protocol (use UDP).</string>
     <string name="pref_itpd_com_ntcp" translatable="false">ntcp</string>
-    <string name="pref_itpd_com_ntcp_summ">Enable NTCP transport protocol (use TCP).</string>
+    <string name="pref_itpd_com_ntcp_summ">Enable NTCP2 transport protocol (use TCP).</string>
     <string name="pref_itpd_com_use_ntcpproxy">Enable ntcpproxy</string>
     <string name="pref_itpd_com_ntcpproxy" translatable="false">ntcpproxy</string>
     <string name="pref_itpd_com_ntcpproxy_summ">Specify proxy server for NTCP. Should be http://address:port or socks://address:port.</string>
@@ -534,10 +545,6 @@
     <string name="pref_itpd_limits_openfiles_summ">Limit number of open file descriptors (0 - use system limit).</string>
     <string name="pref_itpd_limits_coresize" translatable="false">coresize</string>
     <string name="pref_itpd_limits_coresize_summ">Maximum size of corefile in Kb (0 - use system limit).</string>
-    <string name="pref_itpd_limits_ntcpsoft" translatable="false">ntcpsoft</string>
-    <string name="pref_itpd_limits_ntcpsoft_summ">Threshold to start probabalistic backoff with ntcp sessions (0 - use system limit).</string>
-    <string name="pref_itpd_limits_ntcphard" translatable="false">ntcphard</string>
-    <string name="pref_itpd_limits_ntcphard_summ">Maximum number of ntcp sessions (0 - use system limit).</string>
     <string name="pref_itpd_addressbook" translatable="false">Addressbook</string>
     <string name="pref_itpd_addressbook_defaulturl" translatable="false">defaulturl</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">AddressBook subscription URL for initial setup.</string>
@@ -548,9 +555,6 @@
     <string name="pref_itpd_edit_tunnels">Edit tunnels.conf directly</string>
 
     <string name="helper_dialog_title">Info</string>
-    <string name="helper_after_install">Congratulations! You can use this tools to have fast access
-        for all websites without restrictions now. Start DNSCrypt with or without Tor and I2P as requested (Fast Mode). Or you can use
-        this tools to enhance privacy. Start Tor with or without I2P as requested(Enhanced Privacy Mode).</string>
     <string name="helper_dnscrypt_stopped">Looks like DNSCrypt was killed by android system.
         Your internet connection was restored. Check device Settings!</string>
     <string name="helper_tor_stopped">Looks like Tor was killed by android system.
@@ -681,9 +685,46 @@
     <string name="notification_channel_services">Running services</string>
     <string name="notification_channel_update">Update notifications</string>
     <string name="notification_channel_root">Root commands notification</string>
+    <string name="notification_channel_firewall">Firewall notifications</string>
 
     <string name="dialog_send_crash_report">A crash report has been discovered. Want to send it to the developer to make InviZible better?</string>
     <string name="btn_new_tor_identity">New Tor identity</string>
     <string name="toast_new_tor_identity">Tor identity has changed</string>
 
+    <string name="proxy_server_ip">Proxy server:</string>
+    <string name="proxy_server_ip_hint" translatable="false">127.0.0.1</string>
+    <string name="proxy_server_port">Proxy port:</string>
+    <string name="proxy_server_port_hint" translatable="false">1080</string>
+    <string name="proxy_server_user_name">Username:</string>
+    <string name="proxy_server_user_pass">Password:</string>
+    <string name="proxy_server_empty_field_hint">This field can be left blank</string>
+    <string name="proxy_exclude_apps_from_proxy">Exclude Applications</string>
+    <string name="proxy_exclude_apps_from_proxy_summ">Applications list to open directly. These applications will not use Tor or Proxy to connect to the Internet!</string>
+    <string name="proxy_select_proxy_app"> Please select proxy owner application at least, if you are using a local proxy.</string>
+    <string name="proxy_use_for_dnscrypt">Use proxy for DNSCrypt</string>
+    <string name="proxy_use_for_tor">Use proxy for Tor</string>
+    <string name="proxy_use_for_itpd">Use proxy for Purple I2P</string>
+    <string name="proxy_save">Save and enable</string>
+    <string name="proxy_no_connection">Cannot connect to proxy: %s</string>
+    <string name="proxy_successful_connection">Successful connection. Ping %s ms.</string>
+    <string name="notification_arp_spoofing">ARP spoofing detected!</string>
+    <string name="notification_rogue_dhcp">Rogue DHCP detected!</string>
+    <string name="notification_mitm">Man-in-the-middle attack detected! Your data can be intercepted by another device on the local network.
+        Turn off, wait a few seconds, and turn on Wi-Fi. Using current Wi-Fi hotspot may be unsafe!</string>
+    <string name="toast_arp_detection_not_supported">ARP spoofing detection is not supported for your device!</string>
+    <string name="menu_firewall">Firewall</string>
+    <string name="firewall_all_apps">All</string>
+    <string name="firewall_system_apps">System</string>
+    <string name="firewall_user_apps">User</string>
+    <string name="firewall_search" translatable="false">Search</string>
+    <string name="firewall_sort_by_name">Sort by Name</string>
+    <string name="firewall_sort_by_uid">Sort by UID</string>
+    <string name="firewall_switch" translatable="false">Firewall On/Off</string>
+    <string name="ask_save_changes">Do you want to save the changes?</string>
+    <string name="firewall_warning_enable_module">To activate the firewall, you should start at least DNSCrypt or Tor.</string>
+    <string name="firewall_notification_allow_app_title">%s is installed</string>
+    <string name="firewall_notification_allow_app">Allow Internet for it?</string>
+    <string name="allow">Allow</string>
+    <string name="deny">Deny</string>
+    <string name="empty_string" translatable="false"/>
 </resources>

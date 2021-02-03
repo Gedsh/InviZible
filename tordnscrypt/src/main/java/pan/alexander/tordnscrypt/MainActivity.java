@@ -19,9 +19,12 @@ package pan.alexander.tordnscrypt;
 */
 
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.net.VpnService;
@@ -41,6 +44,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.ViewPager;
@@ -61,12 +65,15 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import pan.alexander.tordnscrypt.arp.ArpScanner;
+import pan.alexander.tordnscrypt.arp.ArpScannerKt;
 import pan.alexander.tordnscrypt.assistance.AccelerateDevelop;
 import pan.alexander.tordnscrypt.backup.BackupActivity;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
@@ -123,8 +130,10 @@ public class MainActivity extends LangAppCompatActivity
     private ViewPager viewPager;
     private static int viewPagerPosition = 0;
     private MenuItem newIdentityMenuItem;
+    private MenuItem firewallNavigationItem;
     private ImageView animatingImage;
     private RotateAnimation rotateAnimation;
+    private BroadcastReceiver mainActivityReceiver;
 
     @SuppressLint("NewApi")
     @Override
@@ -151,6 +160,8 @@ public class MainActivity extends LangAppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setBackgroundColor(getResources().getColor(R.color.colorBackground));
         navigationView.setNavigationItemSelectedListener(this);
+
+        modulesStatus = ModulesStatus.getInstance();
 
         changeDrawerWithVersionAndDestination(navigationView);
 
@@ -180,8 +191,6 @@ public class MainActivity extends LangAppCompatActivity
             viewPager.setCurrentItem(viewPagerPosition);
         }
 
-        modulesStatus = ModulesStatus.getInstance();
-
         Looper looper = Looper.getMainLooper();
         if (looper != null) {
             handler = new Handler(looper);
@@ -201,6 +210,10 @@ public class MainActivity extends LangAppCompatActivity
         checkUpdates();
 
         showUpdateResultMessage();
+
+        handleMitmAttackWarning();
+
+        registerBroadcastReceiver();
 
         if (appVersion.equals("gp")) {
             accelerateDevelop = new AccelerateDevelop(this);
@@ -281,6 +294,18 @@ public class MainActivity extends LangAppCompatActivity
 
             intent.setAction(null);
             setIntent(intent);
+        }
+    }
+
+    private void handleMitmAttackWarning() {
+        Intent intent = getIntent();
+        if (intent.getBooleanExtra(ArpScannerKt.mitmAttackWarning, false)
+                && (ArpScanner.INSTANCE.getArpAttackDetected() || ArpScanner.INSTANCE.getDhcpGatewayAttackDetected())) {
+
+            handler.postDelayed(() -> {
+                DialogFragment commandResult = NotificationDialogFragment.newInstance(getString(R.string.notification_mitm));
+                commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
+            }, 1000);
         }
     }
 
@@ -368,6 +393,9 @@ public class MainActivity extends LangAppCompatActivity
 
         boolean busyBoxIsAvailable = new PrefManager(this).getBoolPref("bbOK");
 
+        boolean mitmDetected = ArpScanner.INSTANCE.getArpAttackDetected()
+                || ArpScanner.INSTANCE.getDhcpGatewayAttackDetected();
+
         fixTTL = fixTTL && !useModulesWithRoot;
 
         OperationMode mode = UNDEFINED;
@@ -405,7 +433,9 @@ public class MainActivity extends LangAppCompatActivity
                 new PrefManager(this).setStrPref("OPERATION_MODE", mode.toString());
             }
 
-            if (mode == ROOT_MODE && fixTTL) {
+            if (mitmDetected) {
+                rootIcon.setIcon(R.drawable.ic_arp_attack_notification);
+            } else if (mode == ROOT_MODE && fixTTL) {
                 rootIcon.setIcon(R.drawable.ic_ttl_main);
             } else if (mode == ROOT_MODE && busyBoxIsAvailable) {
                 rootIcon.setIcon(R.drawable.ic_done_all_white_24dp);
@@ -446,7 +476,9 @@ public class MainActivity extends LangAppCompatActivity
                 new PrefManager(this).setStrPref("OPERATION_MODE", mode.toString());
             }
 
-            if (mode == PROXY_MODE) {
+            if (mitmDetected) {
+                rootIcon.setIcon(R.drawable.ic_arp_attack_notification);
+            } else if (mode == PROXY_MODE) {
                 rootIcon.setIcon(R.drawable.ic_warning_white_24dp);
             } else {
                 rootIcon.setIcon(R.drawable.ic_vpn_key_white_24dp);
@@ -457,6 +489,12 @@ public class MainActivity extends LangAppCompatActivity
 
             menuRootMode.setVisible(false);
             menuRootMode.setEnabled(false);
+        }
+
+        if ((mode == PROXY_MODE || mode == ROOT_MODE) && firewallNavigationItem != null) {
+            firewallNavigationItem.setVisible(false);
+        } else if (firewallNavigationItem != null) {
+            firewallNavigationItem.setVisible(true);
         }
     }
 
@@ -512,11 +550,7 @@ public class MainActivity extends LangAppCompatActivity
             return;
         }
 
-        if (modulesStatus.getTorState() == RUNNING) {
-            newIdentityMenuItem.setVisible(true);
-        } else {
-            newIdentityMenuItem.setVisible(false);
-        }
+        newIdentityMenuItem.setVisible(modulesStatus.getTorState() != STOPPED);
     }
 
     public void showNewTorIdentityIcon(boolean show) {
@@ -539,32 +573,24 @@ public class MainActivity extends LangAppCompatActivity
             return false;
         }
 
-        switch (id) {
-            case R.id.item_unlock:
-                if (isInterfaceLocked()) {
-                    childUnlock(item);
-                } else {
-                    childLock(item);
-                }
-                break;
-            case R.id.item_hotspot:
-                switchHotspot();
-                break;
-            case R.id.item_root:
-                showInfoAboutRoot();
-                break;
-            case R.id.item_new_identity:
-                newTorIdentity();
-                break;
-            case R.id.menu_root_mode:
-                switchToRootMode(item);
-                break;
-            case R.id.menu_vpn_mode:
-                switchToVPNMode(item);
-                break;
-            case R.id.menu_proxies_mode:
-                switchToProxyMode(item);
-                break;
+        if (id == R.id.item_unlock) {
+            if (isInterfaceLocked()) {
+                childUnlock(item);
+            } else {
+                childLock(item);
+            }
+        } else if (id == R.id.item_hotspot) {
+            switchHotspot();
+        } else if (id == R.id.item_root) {
+            showInfoAboutRoot();
+        } else if (id == R.id.item_new_identity) {
+            newTorIdentity();
+        } else if (id == R.id.menu_root_mode) {
+            switchToRootMode(item);
+        } else if (id == R.id.menu_vpn_mode) {
+            switchToVPNMode(item);
+        } else if (id == R.id.menu_proxies_mode) {
+            switchToProxyMode(item);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -580,7 +606,11 @@ public class MainActivity extends LangAppCompatActivity
                 ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.TetherSettings");
                 intent.setComponent(cn);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivityForResult(intent, CODE_IS_AP_ON);
+                try {
+                    startActivityForResult(intent, CODE_IS_AP_ON);
+                } catch (Exception e) {
+                    Log.e(LOG_TAG, "MainActivity switchHotspot exception " + e.getMessage() + " " + e.getCause());
+                }
             }
         } catch (Exception e) {
             Log.e(LOG_TAG, "MainActivity onOptionsItemSelected exception " + e.getMessage() + " " + e.getCause());
@@ -644,6 +674,10 @@ public class MainActivity extends LangAppCompatActivity
         modulesStatus.setIptablesRulesUpdateRequested(true);
         ModulesAux.requestModulesStatusUpdate(this);
 
+        if (firewallNavigationItem != null) {
+            firewallNavigationItem.setVisible(false);
+        }
+
         invalidateOptionsMenu();
     }
 
@@ -661,12 +695,16 @@ public class MainActivity extends LangAppCompatActivity
 
         if (modulesStatus.isRootAvailable() && operationMode == ROOT_MODE) {
             IptablesRules iptablesRules = new ModulesIptablesRules(this);
-            String[] commands = iptablesRules.clearAll();
+            List<String> commands = iptablesRules.clearAll();
             iptablesRules.sendToRootExecService(commands);
             Log.i(LOG_TAG, "Iptables rules removed");
         } else if (operationMode == VPN_MODE) {
             ServiceVPNHelper.stop("Switch to proxy mode", this);
             Toast.makeText(this, getText(R.string.vpn_mode_off), Toast.LENGTH_LONG).show();
+        }
+
+        if (firewallNavigationItem != null) {
+            firewallNavigationItem.setVisible(false);
         }
 
         invalidateOptionsMenu();
@@ -686,7 +724,7 @@ public class MainActivity extends LangAppCompatActivity
 
         if (modulesStatus.isRootAvailable() && operationMode == ROOT_MODE) {
             IptablesRules iptablesRules = new ModulesIptablesRules(this);
-            String[] commands = iptablesRules.clearAll();
+            List<String> commands = iptablesRules.clearAll();
             iptablesRules.sendToRootExecService(commands);
             Log.i(LOG_TAG, "Iptables rules removed");
         }
@@ -707,6 +745,10 @@ public class MainActivity extends LangAppCompatActivity
         if (dnsCryptState == STOPPED && torState == STOPPED && itpdState == STOPPED
                 && modulesStatus.isUseModulesWithRoot()) {
             disableUseModulesWithRoot();
+        }
+
+        if (firewallNavigationItem != null) {
+            firewallNavigationItem.setVisible(true);
         }
 
         invalidateOptionsMenu();
@@ -792,7 +834,7 @@ public class MainActivity extends LangAppCompatActivity
             if (input.getText().toString().equals("debug")) {
                 TopFragment.debug = !TopFragment.debug;
                 Toast.makeText(getApplicationContext(), "Debug mode " + TopFragment.debug, Toast.LENGTH_LONG).show();
-            } else {
+            } else if (!input.getText().toString().trim().isEmpty()) {
                 String pass = Base64.encodeToString((input.getText().toString() + "-l-o-c-k-e-d").getBytes(), 16);
                 new PrefManager(getApplicationContext()).setStrPref("passwd", pass);
                 Toast.makeText(getApplicationContext(), getText(R.string.action_mode_dialog_locked), Toast.LENGTH_SHORT).show();
@@ -884,6 +926,10 @@ public class MainActivity extends LangAppCompatActivity
         } else if (id == R.id.nav_common_Pref) {
             Intent intent = new Intent(this, SettingsActivity.class);
             intent.setAction("common_Pref");
+            startActivity(intent);
+        } else if (id == R.id.nav_firewall) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            intent.setAction("firewall");
             startActivity(intent);
         } else if (id == R.id.nav_help) {
             Intent intent = new Intent(this, HelpActivity.class);
@@ -983,8 +1029,13 @@ public class MainActivity extends LangAppCompatActivity
     private void showInfoAboutRoot() {
         boolean rootIsAvailable = new PrefManager(this).getBoolPref("rootIsAvailable");
         boolean busyBoxIsAvailable = new PrefManager(this).getBoolPref("bbOK");
+        boolean mitmDetected = ArpScanner.INSTANCE.getArpAttackDetected()
+                || ArpScanner.INSTANCE.getDhcpGatewayAttackDetected();
 
-        if (rootIsAvailable) {
+        if (mitmDetected) {
+            DialogFragment commandResult = NotificationDialogFragment.newInstance(getString(R.string.notification_mitm));
+            commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
+        } else if (rootIsAvailable) {
             DialogFragment commandResult;
             if (busyBoxIsAvailable) {
                 commandResult = NotificationDialogFragment.newInstance(TopFragment.verSU + "\n\t\n" + TopFragment.verBB);
@@ -1068,6 +1119,35 @@ public class MainActivity extends LangAppCompatActivity
                 item.setVisible(false);
             }
         }
+
+        firewallNavigationItem = navigationView.getMenu().findItem(R.id.nav_firewall);
+    }
+
+    private void registerBroadcastReceiver() {
+        mainActivityReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (ArpScannerKt.mitmAttackWarning.equals(intent.getAction())) {
+                    handler.post(() -> invalidateOptionsMenu());
+                }
+            }
+        };
+
+        IntentFilter mitmDetected = new IntentFilter(ArpScannerKt.mitmAttackWarning);
+        LocalBroadcastManager.getInstance(this).registerReceiver(mainActivityReceiver, mitmDetected);
+    }
+
+    private void unregisterBroadcastReceiver() {
+        if (mainActivityReceiver != null) {
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(mainActivityReceiver);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        unregisterBroadcastReceiver();
     }
 
     @Override
@@ -1132,5 +1212,4 @@ public class MainActivity extends LangAppCompatActivity
         }
         return super.onKeyLongPress(keyCode, event);
     }
-
 }

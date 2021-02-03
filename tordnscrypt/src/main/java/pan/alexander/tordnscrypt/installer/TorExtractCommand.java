@@ -24,7 +24,7 @@ import android.content.Context;
 import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
 
 public class TorExtractCommand extends AssetsExtractCommand {
-    private String appDataDir;
+    private final String appDataDir;
 
     TorExtractCommand(Context context,  String appDataDir) {
         super(context);

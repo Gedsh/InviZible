@@ -18,6 +18,8 @@ package pan.alexander.tordnscrypt.settings;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import androidx.preference.Preference;
@@ -30,7 +32,6 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
@@ -80,7 +81,6 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
         preferences.add(findPreference("bandwidth"));
         preferences.add(findPreference("share"));
         preferences.add(findPreference("ssu"));
-        preferences.add(findPreference("ntcp"));
         preferences.add(findPreference("Enable ntcpproxy"));
         preferences.add(findPreference("ntcpproxy"));
         preferences.add(findPreference("HTTP proxy"));
@@ -101,8 +101,6 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
         preferences.add(findPreference("transittunnels"));
         preferences.add(findPreference("openfiles"));
         preferences.add(findPreference("coresize"));
-        preferences.add(findPreference("ntcpsoft"));
-        preferences.add(findPreference("ntcphard"));
         preferences.add(findPreference("defaulturl"));
 
         for (Preference preference : preferences) {
@@ -127,13 +125,6 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
         if (cleanITPDFolder != null) {
             cleanITPDFolder.setOnPreferenceClickListener(this);
         }
-
-        if (getArguments() != null) {
-            key_itpd = getArguments().getStringArrayList("key_itpd");
-            val_itpd = getArguments().getStringArrayList("val_itpd");
-            key_itpd_orig = new ArrayList<>(key_itpd);
-            val_itpd_orig = new ArrayList<>(val_itpd);
-        }
     }
 
     @Override
@@ -145,60 +136,79 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
     public void onResume() {
         super.onResume();
 
-        if (getActivity() == null) {
+        Activity activity = getActivity();
+
+        if (activity == null) {
             return;
         }
 
-        getActivity().setTitle(R.string.drawer_menu_I2PDSettings);
+        activity.setTitle(R.string.drawer_menu_I2PDSettings);
 
         PathVars pathVars = PathVars.getInstance(getActivity());
         appDataDir = pathVars.getAppDataDir();
+
+        isChanged = false;
+
+        if (getArguments() != null) {
+            key_itpd = getArguments().getStringArrayList("key_itpd");
+            val_itpd = getArguments().getStringArrayList("val_itpd");
+            key_itpd_orig = new ArrayList<>(key_itpd);
+            val_itpd_orig = new ArrayList<>(val_itpd);
+        }
     }
 
     public void onStop() {
         super.onStop();
 
-        if (getActivity() == null) {
+        Context context = getActivity();
+
+        if (context == null || key_itpd == null || val_itpd == null || key_itpd_orig == null || val_itpd_orig == null) {
             return;
         }
 
-        List<String> itpd_conf = new LinkedList<>();
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
-
-        if (key_itpd.indexOf("subscriptions") >= 0)
-            val_itpd.set(key_itpd.indexOf("subscriptions"), sp.getString("subscriptions", ""));
+        List<String> itpd_conf = new ArrayList<>();
+        List<String> key_itpd_to_save = new ArrayList<>(key_itpd);
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
 
 
-        for (int i = 0; i < key_itpd.size(); i++) {
-            if (!(key_itpd_orig.get(i).equals(key_itpd.get(i)) && val_itpd_orig.get(i).equals(val_itpd.get(i))) && !isChanged) {
+
+        if (key_itpd_to_save.contains("subscriptions")) {
+            val_itpd.set(key_itpd_to_save.indexOf("subscriptions"), sp.getString("subscriptions", ""));
+        }
+
+
+        for (int i = 0; i < key_itpd_to_save.size(); i++) {
+
+            if (!isChanged
+                    && (key_itpd_orig.size() != key_itpd_to_save.size() || !key_itpd_orig.get(i).equals(key_itpd_to_save.get(i)) || !val_itpd_orig.get(i).equals(val_itpd.get(i)))) {
                 isChanged = true;
             }
 
-            switch (key_itpd.get(i)) {
+            switch (key_itpd_to_save.get(i)) {
                 case "incoming host":
-                    key_itpd.set(i, "host");
+                    key_itpd_to_save.set(i, "host");
                     break;
                 case "HTTP outproxy address":
                     if (sp.getBoolean("HTTP outproxy", false)) {
-                        key_itpd.set(i, "outproxy");
+                        key_itpd_to_save.set(i, "outproxy");
                     } else {
-                        key_itpd.set(i, "#outproxy");
+                        key_itpd_to_save.set(i, "#outproxy");
                     }
                     break;
                 case "incoming port":
                 case "Socks proxy port":
                 case "HTTP proxy port":
                 case "SAM interface port":
-                    key_itpd.set(i, "port");
+                    key_itpd_to_save.set(i, "port");
                     break;
                 case "Socks outproxy":
-                    key_itpd.set(i, "outproxy.enabled");
+                    key_itpd_to_save.set(i, "outproxy.enabled");
                     break;
                 case "Socks outproxy port":
-                    key_itpd.set(i, "outproxyport");
+                    key_itpd_to_save.set(i, "outproxyport");
                     break;
                 case "Socks outproxy address":
-                    key_itpd.set(i, "outproxy");
+                    key_itpd_to_save.set(i, "outproxy");
                     break;
                 case "ntcp2 enabled":
                 case "SAM interface":
@@ -206,28 +216,27 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                 case "http enabled":
                 case "HTTP proxy":
                 case "UPNP":
-                    key_itpd.set(i, "enabled");
+                    key_itpd_to_save.set(i, "enabled");
                     break;
             }
 
             if (val_itpd.get(i).isEmpty()) {
-                itpd_conf.add(key_itpd.get(i));
+                itpd_conf.add(key_itpd_to_save.get(i));
             } else {
-                itpd_conf.add(key_itpd.get(i) + " = " + val_itpd.get(i));
+                itpd_conf.add(key_itpd_to_save.get(i) + " = " + val_itpd.get(i));
             }
 
         }
 
         if (!isChanged) return;
 
-        FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/i2pd/i2pd.conf", itpd_conf, SettingsActivity.itpd_conf_tag);
+        FileOperations.writeToTextFile(context, appDataDir + "/app_data/i2pd/i2pd.conf", itpd_conf, SettingsActivity.itpd_conf_tag);
 
-        boolean itpdRunning = new PrefManager(getActivity()).getBoolPref("I2PD Running");
+        boolean itpdRunning = new PrefManager(context).getBoolPref("I2PD Running");
 
         if (itpdRunning) {
-            ModulesRestarter.restartITPD(getActivity());
-            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(getActivity(), true);
-            //ModulesAux.requestModulesStatusUpdate(getActivity());
+            ModulesRestarter.restartITPD(context);
+            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
         }
 
 
@@ -235,23 +244,33 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
 
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
+
+        Context context = getActivity();
+
+        if (context == null || key_itpd == null || val_itpd == null) {
+            return false;
+        }
+
         try {
             if (Objects.equals(preference.getKey(), "Allow incoming connections")) {
-                if (Boolean.parseBoolean(newValue.toString())) {
+                if (Boolean.parseBoolean(newValue.toString()) && key_itpd.contains("#host") && key_itpd.contains("#port")) {
                     key_itpd.set(key_itpd.indexOf("#host"), "incoming host");
                     key_itpd.set(key_itpd.indexOf("#port"), "incoming port");
-                } else {
+                } else if (key_itpd.contains("incoming host") && key_itpd.contains("incoming port")){
                     key_itpd.set(key_itpd.indexOf("incoming host"), "#host");
                     key_itpd.set(key_itpd.indexOf("incoming port"), "#port");
                 }
                 return true;
             } else if (Objects.equals(preference.getKey(), "Enable ntcpproxy")) {
-                if (Boolean.parseBoolean(newValue.toString())) {
-                    key_itpd.set(key_itpd.indexOf("#ntcpproxy"), "ntcpproxy");
-                } else {
-                    key_itpd.set(key_itpd.indexOf("ntcpproxy"), "#ntcpproxy");
-                }
+                enableProxy(Boolean.parseBoolean(newValue.toString()));
                 return true;
+            } else if (Objects.equals(preference.getKey(), "ntcpproxy")) {
+                if (newValue.toString().matches("^(http|socks)://((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(:\\d+)?$")) {
+                    changeProxySettings(newValue.toString());
+                    return true;
+                } else {
+                    return false;
+                }
             } else if (Objects.equals(preference.getKey(), "HTTP outproxy")) {
                 isChanged = true;
                 return true;
@@ -269,9 +288,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
             } else if ((Objects.equals(preference.getKey(), "share")
                     || Objects.equals(preference.getKey(), "transittunnels")
                     || Objects.equals(preference.getKey(), "openfiles")
-                    || Objects.equals(preference.getKey(), "coresize")
-                    || Objects.equals(preference.getKey(), "ntcpsoft")
-                    || Objects.equals(preference.getKey(), "ntcphard"))
+                    || Objects.equals(preference.getKey(), "coresize"))
                     && !newValue.toString().matches("\\d+")) {
                 return false;
             } else if ((Objects.equals(preference.getKey(), "incoming host")
@@ -286,15 +303,79 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                 val_itpd.set(key_itpd.indexOf(preference.getKey()), newValue.toString());
                 return true;
             } else {
-                Toast.makeText(getActivity(), R.string.pref_itpd_not_exist, Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, R.string.pref_itpd_not_exist, Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
             Log.e(LOG_TAG, "PreferencesITPDFragment onPreferenceChange exception " + e.getMessage() + " " + e.getCause());
-            Toast.makeText(getActivity(), R.string.wrong, Toast.LENGTH_LONG).show();
+            Toast.makeText(context, R.string.wrong, Toast.LENGTH_LONG).show();
         }
 
 
         return false;
+    }
+
+    private void enableProxy(boolean enable) {
+        ArrayList<String> itpdKeysHelper = new ArrayList<>();
+
+        boolean ntcp2proxyFound = false;
+
+        String header = "";
+        for (int i = 0; i < key_itpd.size(); i++) {
+
+            String key = key_itpd.get(i);
+
+            if (!key.contains("#") && key.matches("\\[\\w+]")) {
+
+                if (header.equals("[ntcp2]") && !ntcp2proxyFound) {
+                    itpdKeysHelper.add("proxy");
+                    val_itpd.add(i, "http://127.0.0.1:8118");
+                }
+
+                header = key;
+            }
+
+            switch (header) {
+                case "":
+                    if (enable && key.matches("# *ntcpproxy")) {
+                        key = "ntcpproxy";
+                    } else if (!enable && key.equals("ntcpproxy")) {
+                        key = "#ntcpproxy";
+                    }
+                    break;
+                case "[ntcp2]":
+                    if (enable && key.matches("# *proxy")) {
+                        key = "proxy";
+                        ntcp2proxyFound = true;
+                    } else if (!enable && key.equals("proxy")) {
+                        key = "#proxy";
+                        ntcp2proxyFound = true;
+                    }
+                    break;
+                case "[reseed]":
+                    if (enable && key.matches("# *proxy")) {
+                        key = "proxy";
+                    } else if (!enable && key.equals("proxy")) {
+                        key = "#proxy";
+                    }
+                    break;
+            }
+
+            itpdKeysHelper.add(key);
+        }
+
+        key_itpd = itpdKeysHelper;
+    }
+
+    private void changeProxySettings(String proxyAddress) {
+
+        for (int i = 0; i < key_itpd.size(); i++) {
+
+            String key = key_itpd.get(i);
+
+            if (key.equals("ntcpproxy") || key.equals("proxy")) {
+                val_itpd.set(i, proxyAddress);
+            }
+        }
     }
 
     @Override
@@ -376,8 +457,6 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
             ArrayList<Preference> preferences = new ArrayList<>();
             preferences.add(findPreference("openfiles"));
             preferences.add(findPreference("coresize"));
-            preferences.add(findPreference("ntcpsoft"));
-            preferences.add(findPreference("ntcphard"));
 
             for (Preference preference : preferences) {
                 if (preference != null) {

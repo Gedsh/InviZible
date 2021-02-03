@@ -30,6 +30,8 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -57,8 +59,8 @@ public class Installer implements TopFragment.OnActivityChangeListener {
     private MainActivity mainActivity;
     private InstallerReceiver br;
     private static CountDownLatch countDownLatch;
-    private String appDataDir;
-    private PathVars pathVars;
+    private final String appDataDir;
+    private final PathVars pathVars;
     protected static boolean interruptInstallation = false;
 
     private InstallerUIChanger installerUIChanger;
@@ -394,7 +396,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             busyboxNative = "busybox ";
         }
 
-        String[] commandsInstall = {
+        List<String> commandsInstall = new ArrayList<>(Arrays.asList(
                 "ip6tables -D OUTPUT -j DROP 2> /dev/null || true",
                 "ip6tables -I OUTPUT -j DROP 2> /dev/null",
                 "iptables -t nat -F tordnscrypt_nat_output 2> /dev/null",
@@ -413,7 +415,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
                 busyboxNative + "pgrep -l /libtor.so 2> /dev/null",
                 busyboxNative + "pgrep -l /libi2pd.so 2> /dev/null",
                 busyboxNative + "echo 'checkModulesRunning' 2> /dev/null"
-        };
+        ));
 
         RootCommands rootCommands = new RootCommands(commandsInstall);
         Intent intent = new Intent(activity, RootExecService.class);
@@ -458,7 +460,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
     }
 
     private void sendModulesStopResult(String result) {
-        RootCommands comResult = new RootCommands(new String[]{result});
+        RootCommands comResult = new RootCommands(new ArrayList<>(Collections.singletonList(result)));
         Intent intent = new Intent(COMMAND_RESULT);
         intent.putExtra("CommandsResult", comResult);
         intent.putExtra("Mark", InstallerMark);

@@ -1,0 +1,16 @@
+**InviZible Pro beta 1.0.4**
+* Implemented multi-user support.
+* Implemented xtables lock for iptables.
+* Implemented default Tor bridges update.
+* Implemented system-wide socks5 proxy for Root mode with Fix TTL enabled.
+* Improved applications selection.
+* Improved real-time Internet connections log.
+* Improved iptables rules for Root mode.
+* Updated default Tor bridges.
+* Updated snowflake Tor bridge.
+* Fixed selection of DNSCrypt anonimized relays after device rotation.
+* Fixed import of DNSCrypt rules when site name contains _
+* Fixed changing I2P settings after rotating device.
+* Fixed language selection for android Q.
+* Removed Quad9 servers from anonimized relays broken implementation.
+* Optimized the speed of Internet responses in VPN mode.

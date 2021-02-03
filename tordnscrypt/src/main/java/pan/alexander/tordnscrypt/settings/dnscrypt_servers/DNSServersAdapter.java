@@ -48,15 +48,15 @@ import pan.alexander.tordnscrypt.settings.dnscrypt_relays.DNSServerRelays;
 import pan.alexander.tordnscrypt.settings.dnscrypt_relays.PreferencesDNSCryptRelays;
 
 class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServersViewHolder> {
-    private Context context;
-    private FragmentManager fragmentManager;
-    private PreferencesDNSCryptServers preferencesDNSCryptServers;
-    private ArrayList<DNSServerItem> list_dns_servers;
-    private ArrayList<DNSServerItem> list_dns_servers_saved;
-    private ArrayList<DNSServerRelays> routes_current;
-    private LayoutInflater lInflater;
-    private boolean relaysMdExist;
-    private SearchView searchDNSServer;
+    private final Context context;
+    private final FragmentManager fragmentManager;
+    private final PreferencesDNSCryptServers preferencesDNSCryptServers;
+    private final ArrayList<DNSServerItem> list_dns_servers;
+    private final ArrayList<DNSServerItem> list_dns_servers_saved;
+    private final ArrayList<DNSServerRelays> routes_current;
+    private final LayoutInflater lInflater;
+    private final boolean relaysMdExist;
+    private final SearchView searchDNSServer;
 
     DNSServersAdapter(Context context, SearchView searchDNSServer,
                       PreferencesDNSCryptServers preferencesDNSCryptServers,
@@ -120,14 +120,14 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
             CompoundButton.OnCheckedChangeListener,
             View.OnFocusChangeListener {
 
-        private CardView cardDNSServer;
-        private TextView tvDNSServerName;
-        private CheckBox chbDNSServer;
-        private TextView tvDNSServerDescription;
-        private TextView tvDNSServerFlags;
-        private Button btnDNSServerRelay;
-        private ImageButton delBtnDNSServer;
-        private LinearLayoutCompat llDNSServer;
+        private final CardView cardDNSServer;
+        private final TextView tvDNSServerName;
+        private final CheckBox chbDNSServer;
+        private final TextView tvDNSServerDescription;
+        private final TextView tvDNSServerFlags;
+        private final Button btnDNSServerRelay;
+        private final ImageButton delBtnDNSServer;
+        private final LinearLayoutCompat llDNSServer;
 
         DNSServersViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -245,23 +245,22 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
 
         @Override
         public void onClick(View view) {
-            switch (view.getId()) {
-                case R.id.cardDNSServer:
-                    int position = getAdapterPosition();
-                    DNSServerItem dnsServer = getItem(position);
-                    dnsServer.setChecked(!dnsServer.isChecked());
-                    setItem(position, dnsServer);
-                    DNSServersAdapter.this.notifyItemChanged(position);
-                    break;
-                case R.id.btnDNSServerRelay:
-                    position = getAdapterPosition();
-                    openDNSRelaysPref(position);
-                    break;
-                case R.id.delBtnDNSServer:
-                    position = getAdapterPosition();
-                    removeItem(position);
-                    DNSServersAdapter.this.notifyItemRemoved(position);
-                    break;
+            int id = view.getId();
+            if (id == R.id.cardDNSServer) {
+                int position = getAdapterPosition();
+                DNSServerItem dnsServer = getItem(position);
+                dnsServer.setChecked(!dnsServer.isChecked());
+                setItem(position, dnsServer);
+                DNSServersAdapter.this.notifyItemChanged(position);
+            } else if (id == R.id.btnDNSServerRelay) {
+                int position;
+                position = getAdapterPosition();
+                openDNSRelaysPref(position);
+            } else if (id == R.id.delBtnDNSServer) {
+                int position;
+                position = getAdapterPosition();
+                removeItem(position);
+                DNSServersAdapter.this.notifyItemRemoved(position);
             }
         }
 

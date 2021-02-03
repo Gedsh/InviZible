@@ -13,7 +13,7 @@ object CachedExecutor {
     fun getExecutorService(): ExecutorService {
 
         if (instance == null || instance?.isShutdown == true) {
-            synchronized(CachedExecutor::class) {
+            synchronized(CachedExecutor::class.java) {
                 if (instance == null || instance?.isShutdown == true) {
                     instance = Executors.newCachedThreadPool()
                     Log.i(LOG_TAG, "CachedExecutor is restarted")
@@ -26,7 +26,7 @@ object CachedExecutor {
 
     fun startExecutorService() {
         if (instance == null || instance?.isShutdown == true) {
-            synchronized(CachedExecutor::class) {
+            synchronized(CachedExecutor::class.java) {
                 if (instance == null || instance?.isShutdown == true) {
                     instance = Executors.newCachedThreadPool()
                     Log.i(LOG_TAG, "CachedExecutor is started")

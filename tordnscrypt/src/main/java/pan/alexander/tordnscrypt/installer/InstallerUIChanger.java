@@ -29,9 +29,7 @@ import pan.alexander.tordnscrypt.itpd_fragment.ITPDRunFragment;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.tor_fragment.TorRunFragment;
-import pan.alexander.tordnscrypt.dialogs.DialogAfterInstallation;
 
-import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 class InstallerUIChanger {
@@ -211,17 +209,12 @@ class InstallerUIChanger {
     }
 
     Runnable showDialogAfterInstallation() {
-        if (appVersion.endsWith("p")) {
-            return () -> {
-                AlertDialog.Builder agreementDialogBuilder = AgreementDialog.getDialogBuilder(mainActivity);
-                if (agreementDialogBuilder != null) {
-                    agreementDialogBuilder.show();
-                }
-            };
-        } else {
-            return () -> DialogAfterInstallation.getDialogBuilder(mainActivity).show();
-        }
-
+        return () -> {
+            AlertDialog.Builder agreementDialogBuilder = AgreementDialog.getDialogBuilder(mainActivity);
+            if (agreementDialogBuilder != null) {
+                agreementDialogBuilder.show();
+            }
+        };
     }
 
     Runnable setModulesStatusTextError() {

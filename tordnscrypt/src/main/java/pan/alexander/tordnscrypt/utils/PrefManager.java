@@ -29,7 +29,7 @@ import static android.content.Context.MODE_PRIVATE;
 public class PrefManager {
 
     private static final String PREF_NAME = "TorPlusDNSCryptPref";
-    private SharedPreferences sPref;
+    private final SharedPreferences sPref;
 
     public PrefManager(Context context) {
         this.sPref = context.getSharedPreferences(PREF_NAME, MODE_PRIVATE);
@@ -72,9 +72,19 @@ public class PrefManager {
         return sPref.getFloat(floatID, 0f);
     }
 
-    public void setFloatPref(String intID, float floatValue) {
+    public void setFloatPref(String floatID, float floatValue) {
         SharedPreferences.Editor edit = sPref.edit();
-        edit.putFloat(intID, floatValue);
+        edit.putFloat(floatID, floatValue);
+        edit.apply();
+    }
+
+    public int getIntPref(String intID) {
+        return sPref.getInt(intID, 0);
+    }
+
+    public void setIntPref(String intID, int intValue) {
+        SharedPreferences.Editor edit = sPref.edit();
+        edit.putInt(intID, intValue);
         edit.apply();
     }
 

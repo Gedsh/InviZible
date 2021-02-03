@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="5dp">
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollProxy"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvProxyServer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/proxy_server_ip" />
+
+            <androidx.appcompat.widget.AppCompatEditText
+                android:id="@+id/etProxyServer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:hint="@string/proxy_server_ip_hint"
+                android:inputType="textPersonName" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvProxyPort"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/proxy_server_port" />
+
+            <androidx.appcompat.widget.AppCompatEditText
+                android:id="@+id/etProxyPort"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:hint="@string/proxy_server_port_hint"
+                android:inputType="textPersonName" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvProxyUserName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/proxy_server_user_name" />
+
+            <androidx.appcompat.widget.AppCompatEditText
+                android:id="@+id/etProxyUserName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:hint="@string/proxy_server_empty_field_hint"
+                android:inputType="textPersonName" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvProxyPass"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/proxy_server_user_pass" />
+
+            <androidx.appcompat.widget.AppCompatEditText
+                android:id="@+id/etProxyPass"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:hint="@string/proxy_server_empty_field_hint"
+                android:inputType="textPersonName" />
+
+            <View
+                android:id="@+id/divider2"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="8dp"
+                android:background="?android:attr/listDivider" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnSelectWoProxyApps"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/button_start_selector"
+                android:text="@string/proxy_exclude_apps_from_proxy"
+                android:textColor="@color/buttonTextColor" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvSelectWoProxyApps"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/proxy_exclude_apps_from_proxy_summ" />
+
+            <View
+                android:id="@+id/divider3"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="4dp"
+                android:background="?android:attr/listDivider" />
+
+            <androidx.appcompat.widget.AppCompatCheckBox
+                android:id="@+id/chbProxyDNSCrypt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                android:text="@string/proxy_use_for_dnscrypt" />
+
+            <androidx.appcompat.widget.AppCompatCheckBox
+                android:id="@+id/chbProxyTor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                android:text="@string/proxy_use_for_tor" />
+
+            <androidx.appcompat.widget.AppCompatCheckBox
+                android:id="@+id/chbProxyITPD"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                android:text="@string/proxy_use_for_itpd" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnProxySave"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/button_start_selector"
+                android:text="@string/proxy_save"
+                android:textColor="@color/buttonTextColor" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvProxyHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:singleLine="false" />
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+    </androidx.core.widget.NestedScrollView>
+
+
+</androidx.appcompat.widget.LinearLayoutCompat>

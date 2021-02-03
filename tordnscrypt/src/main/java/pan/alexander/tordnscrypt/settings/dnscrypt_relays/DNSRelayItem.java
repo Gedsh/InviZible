@@ -24,8 +24,8 @@ import androidx.annotation.NonNull;
 import java.util.Objects;
 
 class DNSRelayItem {
-    private String name;
-    private String description;
+    private final String name;
+    private final String description;
     private boolean checked;
 
     DNSRelayItem(String name, String description) {

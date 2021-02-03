@@ -40,9 +40,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt;
+import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.VPNCommand;
 import pan.alexander.tordnscrypt.vpn.Rule;
@@ -62,13 +65,14 @@ public class ServiceVPNHandler extends Handler {
     private static List<Rule> listRule;
     private final ServiceVPN serviceVPN;
     private ServiceVPN.Builder last_builder = null;
+    private ArpScanner arpScanner;
 
     private ServiceVPNHandler(Looper looper, ServiceVPN serviceVPN) {
         super(looper);
         this.serviceVPN = serviceVPN;
     }
 
-    static ServiceVPNHandler getInstance (Looper looper, ServiceVPN serviceVPN) {
+    static ServiceVPNHandler getInstance(Looper looper, ServiceVPN serviceVPN) {
         return serviceVPNHandler = new ServiceVPNHandler(looper, serviceVPN);
     }
 
@@ -85,9 +89,9 @@ public class ServiceVPNHandler extends Handler {
     @Override
     public void handleMessage(@NonNull Message msg) {
         try {
-            synchronized (serviceVPN) {
-                handleIntent((Intent) msg.obj);
-            }
+            //synchronized (serviceVPN) {
+            handleIntent((Intent) msg.obj);
+            //}
         } catch (Throwable ex) {
             Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
         }
@@ -154,10 +158,13 @@ public class ServiceVPNHandler extends Handler {
     }
 
     private void start() {
+
+        arpScanner = ArpScanner.INSTANCE.getInstance(serviceVPN, null);
+
         if (serviceVPN.vpn == null) {
 
             listRule = Rule.getRules(serviceVPN);
-            List<Rule> listAllowed = getAllowedRules(listRule);
+            List<String> listAllowed = getAllowedRules(listRule);
 
             last_builder = serviceVPN.getBuilder(listAllowed, listRule);
             serviceVPN.vpn = startVPN(last_builder);
@@ -183,7 +190,7 @@ public class ServiceVPNHandler extends Handler {
         }
 
         listRule = Rule.getRules(serviceVPN);
-        List<Rule> listAllowed = getAllowedRules(listRule);
+        List<String> listAllowed = getAllowedRules(listRule);
 
         ServiceVPN.Builder builder = serviceVPN.getBuilder(listAllowed, listRule);
 
@@ -259,6 +266,8 @@ public class ServiceVPNHandler extends Handler {
         }
 
         serviceVPN.reloading = false;
+
+        arpScanner.reset(serviceVPN.last_connected || serviceVPN.last_connected_override);
     }
 
     private void stop() {
@@ -272,8 +281,8 @@ public class ServiceVPNHandler extends Handler {
         stopServiceVPN();
     }
 
-    private List<Rule> getAllowedRules(List<Rule> listRule) {
-        List<Rule> listAllowed = new ArrayList<>();
+    private List<String> getAllowedRules(List<Rule> listRule) {
+        List<String> listAllowed = new ArrayList<>();
 
         // Update connected state
         serviceVPN.last_connected = Util.isConnected(serviceVPN);
@@ -284,7 +293,18 @@ public class ServiceVPNHandler extends Handler {
         }
 
         if (serviceVPN.last_connected || serviceVPN.last_connected_override) {
-            listAllowed.addAll(listRule);
+
+            if (!new PrefManager(serviceVPN).getBoolPref("FirewallEnabled")) {
+                for (Rule rule: listRule) {
+                    listAllowed.add(String.valueOf(rule.uid));
+                }
+            } else if (Util.isWifiActive(serviceVPN) || Util.isEthernetActive(serviceVPN)) {
+                listAllowed.addAll(new PrefManager(serviceVPN).getSetStrPref(FirewallFragmentKt.APPS_ALLOW_WIFI_PREF));
+            } else if (Util.isCellularActive(serviceVPN)) {
+                listAllowed.addAll(new PrefManager(serviceVPN).getSetStrPref(FirewallFragmentKt.APPS_ALLOW_GSM_PREF));
+            } else if (Util.isRoaming(serviceVPN)) {
+                listAllowed.addAll(new PrefManager(serviceVPN).getSetStrPref(FirewallFragmentKt.APPS_ALLOW_ROAMING));
+            }
         }
 
         Log.i(LOG_TAG, "VPN Handler Allowed " + listAllowed.size() + " of " + listRule.size());
@@ -334,7 +354,7 @@ public class ServiceVPNHandler extends Handler {
                 serviceVPN.notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
                 serviceVPN.stopForeground(true);
             } catch (Exception e) {
-                Log.e(LOG_TAG, "ServiceVPNHandler stopServiceVPN exception " + e.getMessage() + " " +e.getCause());
+                Log.e(LOG_TAG, "ServiceVPNHandler stopServiceVPN exception " + e.getMessage() + " " + e.getCause());
             }
         }
 

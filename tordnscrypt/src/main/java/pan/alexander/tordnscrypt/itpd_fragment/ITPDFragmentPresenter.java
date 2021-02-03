@@ -484,14 +484,12 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
             return;
         }
 
-        if (((MainActivity) context).childLockActive) {
+        if (context instanceof MainActivity && ((MainActivity) context).childLockActive) {
             Toast.makeText(context, context.getText(R.string.action_mode_dialog_locked), Toast.LENGTH_LONG).show();
             return;
         }
 
         view.setITPDStartButtonEnabled(false);
-
-        //cleanLogFileNoRootMethod();
 
         if (!new PrefManager(Objects.requireNonNull(context)).getBoolPref("I2PD Running")
                 && new PrefManager(Objects.requireNonNull(context)).getBoolPref("Tor Running")

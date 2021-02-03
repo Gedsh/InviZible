@@ -64,7 +64,7 @@ class ShowBridgesDialog private constructor(): ExtendedDialogFragment() {
                 val fm = requireActivity().supportFragmentManager
                 val frgPreferencesTorBridges = fm.findFragmentByTag("PreferencesTorBridges") as PreferencesTorBridges?
                 if (frgPreferencesTorBridges != null) {
-                    frgPreferencesTorBridges.readCurrentCustomBridges(bridges)
+                    frgPreferencesTorBridges.readSavedCustomBridges(bridges)
                 } else {
                     Toast.makeText(requireActivity(), "Unable to save bridges!", Toast.LENGTH_LONG).show()
                 }

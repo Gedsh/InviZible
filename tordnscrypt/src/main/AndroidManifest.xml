@@ -6,10 +6,15 @@
     android:targetSandboxVersion="1"
     tools:targetApi="o">
 
-    <uses-feature android:name="android.software.leanback" android:required="false" />
-    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
-    
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -20,14 +25,10 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <!-- https://developer.android.com/preview/privacy/package-visibility -->
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
-    <!--queries>
-        <intent>
-            <action android:name="android.intent.action.MAIN" />
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent>
-    </queries-->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <uses-permission
         android:name="android.permission.WRITE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
@@ -41,26 +42,27 @@
     <application
         android:name=".ApplicationExt"
         android:allowBackup="false"
+        android:appCategory="productivity"
+        android:banner="@drawable/banner_tv"
+        android:extractNativeLibs="true"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:largeHeap="true"
+        android:logo="@drawable/ic_help_title"
         android:networkSecurityConfig="@xml/network_security_config"
+        android:requestLegacyExternalStorage="true"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        android:banner="@drawable/banner_tv"
-        android:extractNativeLibs="true"
-        android:largeHeap="true"
-        android:appCategory="productivity"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:logo="@drawable/ic_help_title"
-        android:requestLegacyExternalStorage="true"
+        android:usesCleartextTraffic="true"
         tools:targetApi="q">
 
         <service
             android:name=".utils.AppExitDetectService"
             android:enabled="true"
             android:exported="false"
-            android:stopWithTask = "true"/>
+            android:stopWithTask="true" />
         <service
             android:name=".update.UpdateService"
             android:enabled="true"
@@ -75,7 +77,7 @@
         <service
             android:name=".modules.ModulesService"
             android:enabled="true"
-            android:exported="false"/>
+            android:exported="false" />
 
         <activity
             android:name=".MainActivity"
@@ -83,6 +85,7 @@
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
@@ -107,20 +110,24 @@
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
-                <action android:name="pan.alexander.tordnscrypt.ALWAYS_ON_VPN"/>
-                <action android:name="pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL"/>
-                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
-                <action android:name="android.intent.action.REBOOT"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="pan.alexander.tordnscrypt.ALWAYS_ON_VPN" />
+                <action android:name="pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="android.intent.action.REBOOT" />
             </intent-filter>
         </receiver>
+
+        <receiver
+            android:name=".settings.firewall.FirewallNotification"
+            android:exported="false" />
 
         <activity
             android:name=".backup.BackupActivity"
             android:theme="@style/AppTheme" />
         <activity
             android:name=".SettingsActivity"
-            android:label="@string/title_activity_settings"
+            android:label="@string/empty_string"
             android:theme="@style/AppTheme" />
         <activity android:name=".AboutActivity" />
 

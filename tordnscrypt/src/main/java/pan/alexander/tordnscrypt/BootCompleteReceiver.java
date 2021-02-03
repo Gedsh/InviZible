@@ -155,9 +155,9 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                 shortenTooLongITPDLog();
             }
 
-            if (tethering_autostart) {
+            ModulesStatus.getInstance().setFixTTL(fixTTL);
 
-                ModulesStatus.getInstance().setFixTTL(fixTTL);
+            if (tethering_autostart) {
 
                 if (!action.equalsIgnoreCase(MY_PACKAGE_REPLACED) && !action.equalsIgnoreCase(ALWAYS_ON_VPN)
                         && !action.equals(SHELL_SCRIPT_CONTROL)) {
@@ -261,18 +261,18 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
         new PrefManager(context).setBoolPref("APisON", true);
 
-        try {
-            ApManager apManager = new ApManager(context);
-            if (!apManager.configApState()) {
-                Intent intent_tether = new Intent(Intent.ACTION_MAIN, null);
-                intent_tether.addCategory(Intent.CATEGORY_LAUNCHER);
-                ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.TetherSettings");
-                intent_tether.setComponent(cn);
-                intent_tether.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        ApManager apManager = new ApManager(context);
+        if (!apManager.configApState()) {
+            Intent intent_tether = new Intent(Intent.ACTION_MAIN, null);
+            intent_tether.addCategory(Intent.CATEGORY_LAUNCHER);
+            ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.TetherSettings");
+            intent_tether.setComponent(cn);
+            intent_tether.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            try {
                 context.startActivity(intent_tether);
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "BootCompleteReceiver startHOTSPOT exception " + e.getMessage() + " " + e.getCause());
             }
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "BootCompleteReceiver ApManager exception " + e.getMessage() + " " + e.getCause());
         }
     }
 
@@ -372,25 +372,21 @@ public class BootCompleteReceiver extends BroadcastReceiver {
     }
 
     private void stopServicesForeground(Context context, OperationMode mode, boolean fixTTL) {
-        if (mode == VPN_MODE || mode == ROOT_MODE && fixTTL) {
-            Intent stopVPNServiceForeground = new Intent(context, VpnService.class);
-            stopVPNServiceForeground.setAction(actionStopServiceForeground);
-            if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                context.startService(stopVPNServiceForeground);
-            } else {
+
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (mode == VPN_MODE || mode == ROOT_MODE && fixTTL) {
+                Intent stopVPNServiceForeground = new Intent(context, VpnService.class);
+                stopVPNServiceForeground.setAction(actionStopServiceForeground);
+                stopVPNServiceForeground.putExtra("showNotification", true);
                 context.startForegroundService(stopVPNServiceForeground);
             }
 
-        }
-
-        Intent stopModulesServiceForeground = new Intent(context, ModulesService.class);
-        stopModulesServiceForeground.setAction(actionStopServiceForeground);
-        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            context.startService(stopModulesServiceForeground);
-        } else {
+            Intent stopModulesServiceForeground = new Intent(context, ModulesService.class);
+            stopModulesServiceForeground.setAction(actionStopServiceForeground);
             context.startForegroundService(stopModulesServiceForeground);
-        }
+            stopModulesServiceForeground.putExtra("showNotification", true);
 
-        Log.i(LOG_TAG, "BootCompleteReceiver stop running services foreground");
+            Log.i(LOG_TAG, "BootCompleteReceiver stop running services foreground");
+        }
     }
 }

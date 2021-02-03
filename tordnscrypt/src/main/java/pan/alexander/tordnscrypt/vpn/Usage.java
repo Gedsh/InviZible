@@ -18,6 +18,8 @@ package pan.alexander.tordnscrypt.vpn;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import androidx.annotation.NonNull;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -32,8 +34,9 @@ public class Usage {
     public long Sent;
     public long Received;
 
-    private static DateFormat formatter = SimpleDateFormat.getDateTimeInstance();
+    private static final DateFormat formatter = SimpleDateFormat.getDateTimeInstance();
 
+    @NonNull
     @Override
     public String toString() {
         return formatter.format(new Date(Time).getTime()) +

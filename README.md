@@ -5,7 +5,7 @@
 
 ### [Google Play stable version](https://play.google.com/store/apps/details?id=pan.alexander.tordnscrypt.gp)
 
-### [Download the latest beta version](https://github.com/Gedsh/InviZible/releases/latest)
+### [Download the latest version](https://github.com/Gedsh/InviZible/releases/latest)
 
 ### [IzzyOnDroid F-Droid beta version](https://apt.izzysoft.de/fdroid/index/apk/pan.alexander.tordnscrypt)
 
@@ -19,9 +19,9 @@ They are used to achieve maximum security, privacy and comfortable use of the In
 ### DNSCrypt
 * Encrypts DNS requests
 * Protects against DNS spoofing
-* Can blocks ads *
-* Can protects against dangerous and malicious sites *
-* Can blocks "adult" sites *
+* Can block ads *
+* Can protect against dangerous and malicious sites *
+* Can block "adult" sites *
 * Hides visited sites from your provider
 * Prevents some types of resource blocks
 * Open-source
@@ -150,7 +150,7 @@ and carries no guarantee from The Above Projects about quality, suitability or a
 
 ## Donations
 
-**Bitcoin**: 1Ds4DTm32Dx7suEB7Fc6u94PdQpaxhYv6Z
+**Bitcoin**: 1GfJwiHG6xKCQCpHeW6fELzFfgsvcSxVUR
 
 **Bitcoin Cache**: qzl4w4ahh7na2z23056qawwdyuclkgty5gc4q8tw88
 

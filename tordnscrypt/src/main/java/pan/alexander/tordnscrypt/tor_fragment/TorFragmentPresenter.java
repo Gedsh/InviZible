@@ -90,13 +90,14 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
     public TorFragmentView view;
 
     private ScheduledFuture<?> scheduledFuture;
-    private int mJobId = PreferencesFastFragment.mJobId;
+    private final int mJobId = PreferencesFastFragment.mJobId;
     private int refreshPeriodHours = 12;
 
     private ModulesStatus modulesStatus;
     private ModuleState fixedModuleState = STOPPED;
 
     private volatile OwnFileReader logFile;
+    private volatile OwnFileReader snowflakeLog;
     private int displayLogPeriod = -1;
 
     private HttpsURLConnection httpsURLConnection;
@@ -135,6 +136,13 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
         }
 
         logFile = new OwnFileReader(context, appDataDir + "/logs/Tor.log");
+
+        boolean bridgesSnowflakeDefault = new PrefManager(context).getStrPref("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
+        boolean bridgesSnowflakeOwn = new PrefManager(context).getStrPref("ownBridgesObfs").equals(snowFlakeBridgesOwn);
+        boolean showHelperMessages = shPref.getBoolean("pref_common_show_help", false);
+        if (showHelperMessages && (bridgesSnowflakeDefault || bridgesSnowflakeOwn)) {
+            snowflakeLog = new OwnFileReader(context, appDataDir + "/logs/Snowflake.log");
+        }
 
         if (isTorInstalled(context)) {
             setTorInstalled(true);
@@ -609,7 +617,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
             return;
         }
 
-        if (((MainActivity) context).childLockActive) {
+        if (context instanceof MainActivity && ((MainActivity) context).childLockActive) {
             Toast.makeText(context, context.getText(R.string.action_mode_dialog_locked), Toast.LENGTH_LONG).show();
             return;
         }
@@ -714,7 +722,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
             FragmentManager fm = activity.getSupportFragmentManager();
             TopFragment topFragment = (TopFragment) fm.findFragmentByTag("topFragmentTAG");
             if (topFragment != null) {
-                topFragment.checkUpdates();
+                topFragment.checkUpdates(activity);
             }
         }
     }
@@ -724,6 +732,8 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
         if (context == null || view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
             return;
         }
+
+        shortenTooLongSnowflakeLog();
 
         ModulesRunner.runTor(context);
     }
@@ -736,16 +746,32 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
         ModulesKiller.stopTor(context);
     }
 
+    private void shortenTooLongSnowflakeLog() {
+        if (snowflakeLog == null) {
+            return;
+        }
+
+        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+            try {
+                if (snowflakeLog != null) {
+                    snowflakeLog.shortenToToLongFile();
+                }
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "TorFragmentPresenter shortenTooLongSnowflakeLog exception " + e.getMessage() + " " + e.getCause());
+            }
+        });
+    }
+
     private void checkInternetAvailable() {
         checkInetAvailableFutureTask = new FutureTask<>(() -> {
+
+            reentrantLock.lock();
 
             try {
 
                 if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
                     return null;
                 }
-
-                reentrantLock.lock();
 
                 Context context = view.getFragmentActivity();
 

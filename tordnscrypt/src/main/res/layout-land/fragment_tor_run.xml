@@ -52,7 +52,7 @@
         android:layout_gravity="bottom"
         android:background="@drawable/logs_scroll_view_selector">
 
-        <LinearLayout
+        <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
@@ -65,7 +65,7 @@
                 android:textIsSelectable="false"
                 android:textSize="@dimen/fragment_log_text_size"
                 android:typeface="monospace" />
-        </LinearLayout>
+        </androidx.appcompat.widget.LinearLayoutCompat>
     </ScrollView>
 
 </androidx.appcompat.widget.LinearLayoutCompat>

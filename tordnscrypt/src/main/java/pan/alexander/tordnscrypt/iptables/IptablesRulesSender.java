@@ -22,6 +22,8 @@ package pan.alexander.tordnscrypt.iptables;
 import android.content.Context;
 import android.content.Intent;
 
+import java.util.List;
+
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
@@ -30,9 +32,6 @@ abstract class IptablesRulesSender implements IptablesRules {
     Context context;
     PathVars pathVars;
     String appDataDir;
-    String busybox;
-    String iptables;
-    String ip6tables;
     String rejectAddress;
 
     boolean runModulesWithRoot;
@@ -41,22 +40,20 @@ abstract class IptablesRulesSender implements IptablesRules {
     boolean blockHttp;
     boolean apIsOn;
     boolean modemIsOn;
+    boolean lan;
 
     IptablesRulesSender(Context context) {
         this.context = context;
 
         pathVars = PathVars.getInstance(context);
         appDataDir = pathVars.getAppDataDir();
-        busybox = pathVars.getBusyboxPath();
-        iptables = pathVars.getIptablesPath();
-        ip6tables = pathVars.getIp6tablesPath();
         rejectAddress = pathVars.getRejectAddress();
 
         tethering = new Tethering(context);
     }
 
     @Override
-    public void sendToRootExecService(String[] commands) {
+    public void sendToRootExecService(List<String> commands) {
         RootCommands rootCommands = new RootCommands(commands);
         Intent intent = new Intent(context, RootExecService.class);
         intent.setAction(RootExecService.RUN_COMMAND);

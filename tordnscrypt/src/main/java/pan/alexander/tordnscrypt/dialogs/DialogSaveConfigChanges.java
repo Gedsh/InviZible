@@ -19,8 +19,11 @@ package pan.alexander.tordnscrypt.dialogs;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
@@ -65,10 +68,21 @@ public class DialogSaveConfigChanges extends ExtendedDialogFragment {
 
         alertDialog.setPositiveButton(R.string.save_changes, (dialog, id) -> {
             if (filePath != null && fileText != null) {
-                List<String> lines = Arrays.asList(fileText.split(System.lineSeparator()));
+                List<String> lines = Arrays.asList(fileText.split("\n"));
                 FileOperations.writeToTextFile(getActivity(), filePath, lines, "ignored");
                 restartModuleIfRequired();
-                reopenSettings();
+
+                Looper looper = Looper.getMainLooper();
+                Handler handler = null;
+                if (looper != null) {
+                    handler = new Handler(looper);
+                }
+
+                Activity activity = getActivity();
+
+                if (handler != null && activity != null) {
+                    handler.postDelayed(() -> reopenSettings(activity), 300);
+                }
             }
         });
 
@@ -100,17 +114,17 @@ public class DialogSaveConfigChanges extends ExtendedDialogFragment {
 
             if (torTethering && routeAllThroughTorTether && itpdTethering) {
                 ModulesStatus.getInstance().setIptablesRulesUpdateRequested(getActivity(), true);
-                //ModulesAux.requestModulesStatusUpdate(getActivity());
             }
         }
     }
 
-    private void reopenSettings() {
-        if (getActivity() == null) {
+    private void reopenSettings(Activity activity) {
+
+        if (activity == null) {
             return;
         }
 
-        Intent intent = new Intent(getActivity(), SettingsActivity.class);
+        Intent intent = new Intent(activity, SettingsActivity.class);
 
         if ("DNSCrypt".equals(moduleName)) {
             intent.setAction("DNS_Pref");
@@ -123,10 +137,10 @@ public class DialogSaveConfigChanges extends ExtendedDialogFragment {
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK
                 | Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
 
-        getActivity().overridePendingTransition(0, 0);
-        getActivity().finish();
+        activity.overridePendingTransition(0, 0);
+        activity.finish();
 
-        getActivity().overridePendingTransition(0, 0);
-        startActivity(intent);
+        activity.overridePendingTransition(0, 0);
+        activity.startActivity(intent);
     }
 }

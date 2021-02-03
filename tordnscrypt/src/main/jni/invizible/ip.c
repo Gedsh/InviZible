@@ -30,7 +30,8 @@ extern bool compatibility_mode;
 extern bool can_filter;
 
 uint16_t get_mtu() {
-    return 10000;
+    //return 10000;
+    return 1500;
 }
 
 uint16_t get_default_mss(int version) {
@@ -150,7 +151,7 @@ void handle_ip(const struct arguments *args,
         if (ip4hdr->frag_off & IP_MF) {
             log_android(ANDROID_LOG_ERROR, "IP fragment offset %u",
                         (ip4hdr->frag_off & IP_OFFMASK) * 8);
-            return;
+            //return;
         }
 
         uint8_t ipoptlen = (uint8_t) ((ip4hdr->ihl - 5) * 4);
@@ -333,6 +334,8 @@ void handle_ip(const struct arguments *args,
     } else {
         if (protocol == IPPROTO_UDP)
             block_udp(args, pkt, length, payload, uid);
+        else if (protocol == IPPROTO_TCP)
+            handle_tcp(args, pkt, length, payload, uid, allowed, redirect, epoll_fd);
 
         log_android(ANDROID_LOG_WARN, "Address v%d p%d %s/%u syn %d not allowed",
                     version, protocol, dest, dport, syn);

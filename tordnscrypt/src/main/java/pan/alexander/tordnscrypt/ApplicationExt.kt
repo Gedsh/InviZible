@@ -23,12 +23,13 @@ import android.annotation.TargetApi
 import android.app.*
 import android.content.res.Configuration
 import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat.getSystemService
 import pan.alexander.tordnscrypt.crash_handling.TopExceptionHandler
 import pan.alexander.tordnscrypt.language.Language
-import java.lang.ref.WeakReference
 
 const val ANDROID_CHANNEL_ID = "InviZible"
+const val FIREWALL_CHANNEL_ID = "Firewall"
 
 class ApplicationExt : Application() {
 
@@ -48,6 +49,7 @@ class ApplicationExt : Application() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createNotificationChannel()
+            createFirewallChannel()
         }
 
         setExceptionHandler()
@@ -63,6 +65,19 @@ class ApplicationExt : Application() {
         channel.enableVibration(false)
         channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
         channel.setShowBadge(false)
+        notificationManager?.createNotificationChannel(channel)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun createFirewallChannel() {
+        val notificationManager = getSystemService(this, NotificationManager::class.java)
+        val channel = NotificationChannel(FIREWALL_CHANNEL_ID, getString(R.string.notification_channel_firewall), NotificationManager.IMPORTANCE_HIGH)
+        channel.setSound(null, Notification.AUDIO_ATTRIBUTES_DEFAULT)
+        channel.description = ""
+        channel.enableLights(true)
+        channel.enableVibration(true)
+        channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+        channel.setShowBadge(true)
         notificationManager?.createNotificationChannel(channel)
     }
 

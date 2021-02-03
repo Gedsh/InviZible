@@ -90,7 +90,6 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
     private volatile ArrayList<DNSQueryLogRecord> savedDNSQueryRawRecords;
     private int savedDNSQueryRecordsLenght = 0;
     private volatile DNSQueryLogRecordsConverter dnsQueryLogRecordsConverter;
-    private boolean torTethering;
     private boolean apIsOn;
     private String localEthernetDeviceAddress = "192.168.0.100";
     private boolean dnsCryptLogAutoScroll = true;
@@ -120,10 +119,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         savedDNSQueryRawRecords = new ArrayList<>();
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        torTethering = sharedPreferences.getBoolean("pref_common_tor_tethering", false);
         localEthernetDeviceAddress = sharedPreferences.getString("pref_common_local_eth_device_addr", "192.168.0.100");
         apIsOn = new PrefManager(context).getBoolPref("APisON");
-        boolean blockIPv6 = sharedPreferences.getBoolean("block_ipv6", true);
 
         logFile = new OwnFileReader(context, appDataDir + "/logs/DnsCrypt.log");
 
@@ -152,7 +149,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             setDNSCryptInstalled(false);
         }
 
-        dnsQueryLogRecordsConverter = new DNSQueryLogRecordsConverter(blockIPv6, Util.isMeteredNetwork(context), pathVars.getDNSCryptFallbackRes());
+        dnsQueryLogRecordsConverter = new DNSQueryLogRecordsConverter(context);
 
         registerZoomGestureDetector(context);
     }
@@ -447,7 +444,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
         if ((lastLines.contains("connect: connection refused")
                 || lastLines.contains("ERROR"))
-                && !lastLines.contains(" OK ")) {
+                && !lastLines.contains(" latencies:")) {
             Log.e(LOG_TAG, "DNSCrypt Error: " + lastLines);
 
             if (fragmentManager != null) {
@@ -544,91 +541,88 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         for (int i = 0; i < dnsQueryLogRecords.size(); i++) {
             record = dnsQueryLogRecords.get(i);
 
-            if (appVersion.startsWith("g") && record.getBlockedByIpv6()) {
+            if (appVersion.startsWith("g") && record.getBlocked() && record.getBlockedByIpv6()
+                    /*remove artifacts*/
+                    || (record.getAName().trim().equals("=") || record.getQName().trim().equals("="))
+                    && record.getUid() == -1000) {
                 continue;
             }
 
             if (record.getBlocked()) {
-                if (!record.getAName().isEmpty()) {
-                    lines.append("<font color=#f08080>").append(record.getAName().toLowerCase());
-
-                    if (record.getBlockedByIpv6()) {
-                        lines.append(" ipv6");
-                    }
-
-                    lines.append("</font>");
-                } else {
-                    lines.append("<font color=#f08080>").append(record.getQName().toLowerCase()).append("</font>");
-                }
+                lines.append("<font color=#f08080>");
+            } else if (record.getUid() != -1000 && !record.getDaddr().trim().isEmpty()) {
+                lines.append("<font color=#E7AD42>");
+            } else if (record.getUnused()) {
+                lines.append("<font color=#9e9e9e>");
             } else {
+                lines.append("<font color=#009688>");
+            }
 
-                if (record.getUid() != -1000 && !record.getDaddr().isEmpty()) {
-                    lines.append("<font color=#E7AD42>");
-                } else {
-                    lines.append("<font color=#009688>");
-                }
+            if (record.getUid() != -1000) {
+                if (view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isFinishing()) {
 
-                if (record.getUid() != -1000) {
-                    if (view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isFinishing()) {
+                    String appName = "";
 
-                        String appName = "";
+                    List<Rule> appList = ServiceVPNHandler.getAppsList();
 
-                        List<Rule> appList = ServiceVPNHandler.getAppsList();
-
-                        if (appList != null) {
-                            for (Rule rule : appList) {
-                                if (rule.uid == record.getUid()) {
-                                    appName = rule.appName;
-                                    break;
-                                }
+                    if (appList != null) {
+                        for (Rule rule : appList) {
+                            if (rule.uid == record.getUid()) {
+                                appName = rule.appName;
+                                break;
                             }
                         }
-
-                        if (appName.isEmpty() || record.getUid() == 1000) {
-                            appName = view.getFragmentActivity().getPackageManager().getNameForUid(record.getUid());
-                        }
-
-                        if (appName != null && !appName.isEmpty()) {
-                            lines.append("<b>").append(appName).append("</b>").append(" -> ");
-                        } else if (!torTethering && !apIsOn && !Tethering.usbTetherOn && !Tethering.ethernetOn && !fixTTL) {
-                            lines.append("<b>").append("Unknown system traffic").append("</b>").append(" -> ");
-                        } else if (apIsOn && fixTTL && record.getSaddr().contains("192.168.43.")) {
-                            lines.append("<b>").append("WiFi").append("</b>").append(" -> ");
-                        } else if (Tethering.usbTetherOn && fixTTL && record.getSaddr().contains("192.168.42.")) {
-                            lines.append("<b>").append("USB").append("</b>").append(" -> ");
-                        } else if (Tethering.ethernetOn && fixTTL && record.getSaddr().contains(localEthernetDeviceAddress)) {
-                            lines.append("<b>").append("LAN").append("</b>").append(" -> ");
-                        }
-                    }
-                }
-
-                if (!record.getAName().isEmpty()) {
-                    lines.append(record.getAName().toLowerCase());
-
-                    if (record.getDaddr().contains(":")) {
-                        lines.append(" ipv6");
-                    }
-                }
-
-                if (!record.getCName().isEmpty() && record.getUid() == -1000) {
-                    lines.append(" -> ").append(record.getCName().toLowerCase());
-                }
-
-                if (!record.getDaddr().isEmpty()) {
-
-                    if (record.getUid() == -1000) {
-                        lines.append(" -> ");
                     }
 
-                    if (record.getUid() != -1000 && !record.getReverseDNS().isEmpty()) {
-                        lines.append(record.getReverseDNS()).append(" -> ");
+                    if (appName.isEmpty() || record.getUid() == 1000) {
+                        appName = view.getFragmentActivity().getPackageManager().getNameForUid(record.getUid());
                     }
 
-                    lines.append(record.getDaddr());
+                    if (apIsOn && fixTTL && record.getSaddr().contains("192.168.43.")) {
+                        lines.append("<b>").append("WiFi").append("</b>").append(" -> ");
+                    } else if (Tethering.usbTetherOn && fixTTL && record.getSaddr().contains("192.168.42.")) {
+                        lines.append("<b>").append("USB").append("</b>").append(" -> ");
+                    } else if (Tethering.ethernetOn && fixTTL && record.getSaddr().contains(localEthernetDeviceAddress)) {
+                        lines.append("<b>").append("LAN").append("</b>").append(" -> ");
+                    } else if (appName != null && !appName.isEmpty()) {
+                        lines.append("<b>").append(appName).append("</b>").append(" -> ");
+                    } else {
+                        lines.append("<b>").append("Unknown UID").append(record.getUid()).append("</b>").append(" -> ");
+                    }
                 }
-
-                lines.append("</font>");
             }
+
+            if (!record.getAName().trim().isEmpty()) {
+                lines.append(record.getAName().toLowerCase());
+
+                if (record.getBlocked() && record.getBlockedByIpv6()) {
+                    lines.append(" ipv6");
+                }
+            } else if (!record.getQName().trim().isEmpty()) {
+                lines.append(record.getQName().toLowerCase());
+            }
+
+            if (!record.getCName().trim().isEmpty() && record.getUid() == -1000) {
+                lines.append(" -> ").append(record.getCName().toLowerCase());
+            }
+
+            if (!record.getDaddr().trim().isEmpty()
+                    && (!record.getDaddr().contains("0.0.0.0")
+                    && !record.getDaddr().contains("127.0.0.1")
+                    || record.getUid() != -1000)) {
+
+                if (record.getUid() == -1000) {
+                    lines.append(" -> ");
+                }
+
+                if (record.getUid() != -1000 && !record.getReverseDNS().isEmpty()) {
+                    lines.append(record.getReverseDNS()).append(" -> ");
+                }
+
+                lines.append(record.getDaddr());
+            }
+
+            lines.append("</font>");
 
             if (i < dnsQueryLogRecords.size() - 1) {
                 lines.append("<br />");
@@ -656,7 +650,6 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
 
         return true;
     }
-
 
 
     private LinkedList<DNSQueryLogRecord> getDnsQueryRawRecords() {
@@ -801,8 +794,10 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         serviceConnection = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
-                serviceVPN = ((ServiceVPN.VPNBinder) service).getService();
-                bound = true;
+                if (service instanceof ServiceVPN.VPNBinder) {
+                    serviceVPN = ((ServiceVPN.VPNBinder) service).getService();
+                    bound = true;
+                }
             }
 
             @Override
@@ -837,7 +832,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             return;
         }
 
-        if (((MainActivity) context).childLockActive) {
+        if (context instanceof MainActivity && ((MainActivity) context).childLockActive) {
             Toast.makeText(context, context.getText(R.string.action_mode_dialog_locked), Toast.LENGTH_LONG).show();
             return;
         }

@@ -34,11 +34,11 @@ import java.util.Objects;
 class BuilderVPN extends VpnService.Builder {
     private NetworkInfo networkInfo;
     private int mtu;
-    private List<String> listAddress = new ArrayList<>();
-    private List<String> listRoute = new ArrayList<>();
-    private List<InetAddress> listDns = new ArrayList<>();
-    private List<String> listDisallowed = new ArrayList<>();
-    private List<String> listAllowed = new ArrayList<>();
+    private final List<String> listAddress = new ArrayList<>();
+    private final List<String> listRoute = new ArrayList<>();
+    private final List<InetAddress> listDns = new ArrayList<>();
+    private final List<String> listDisallowed = new ArrayList<>();
+    private final List<String> listAllowed = new ArrayList<>();
     private String performAllowedOrDisallowed = "";
     private boolean fixTTL;
 

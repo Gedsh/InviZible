@@ -7,8 +7,6 @@
     android:layout_height="match_parent"
     tools:context=".settings.ShowLogFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshDNSQueries"
@@ -47,7 +45,7 @@
         android:adjustViewBounds="true"
         android:cropToPadding="true"
         android:fitsSystemWindows="false"
-        android:src="@drawable/ic_clear_white_24dp"
+        app:srcCompat="@drawable/ic_clear_white_24dp"
         app:backgroundTint="@color/buttonColor"
         app:fabSize="auto"
         app:rippleColor="@color/colorAccent" />

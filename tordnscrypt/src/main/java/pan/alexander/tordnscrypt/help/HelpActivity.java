@@ -31,6 +31,8 @@ import androidx.core.content.FileProvider;
 import androidx.fragment.app.DialogFragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import android.os.Looper;
+import android.os.Process;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -44,6 +46,9 @@ import com.github.angads25.filepicker.model.DialogProperties;
 import com.github.angads25.filepicker.view.FilePickerDialog;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import pan.alexander.tordnscrypt.LangAppCompatActivity;
 import pan.alexander.tordnscrypt.R;
@@ -105,14 +110,18 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         swRootCommandsLog.setChecked(new PrefManager(this).getBoolPref("swRootCommandsLog"));
         swRootCommandsLog.setOnCheckedChangeListener(this);
 
-        Handler mHandler = new Handler();
+        Handler mHandler = null;
+        Looper looper = Looper.getMainLooper();
+        if (looper != null) {
+            mHandler = new Handler(looper);
+        }
 
         PathVars pathVars = PathVars.getInstance(this);
         appDataDir = pathVars.getAppDataDir();
         busyboxPath = pathVars.getBusyboxPath();
         pathToSaveLogs = pathVars.getDefaultBackupPath();
         iptables = pathVars.getIptablesPath();
-        appUID = new PrefManager(this).getStrPref("appUID");
+        appUID = String.valueOf(Process.myUid());
 
         cacheDir = pathVars.getCacheDirPath(this);
 
@@ -145,30 +154,27 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     @Override
     public void onClick(View view) {
 
-        switch (view.getId()) {
+        int id = view.getId();
+        if (id == R.id.btnSaveLogs) {
+            if (!isWriteExternalStoragePermissions()) {
+                requestWriteExternalStoragePermissions();
+                return;
+            }
 
-            case R.id.btnSaveLogs:
-                if (!isWriteExternalStoragePermissions()) {
-                    requestWriteExternalStoragePermissions();
-                    return;
-                }
+            info = Utils.INSTANCE.collectInfo();
+            br.setInfo(info);
 
-                info = Utils.INSTANCE.collectInfo();
-                br.setInfo(info);
+            dialogFragment = PleaseWaitProgressDialog.getInstance();
+            dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
+            br.setProgressDialog(dialogFragment);
 
-                dialogFragment = PleaseWaitProgressDialog.getInstance();
-                dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
-                br.setProgressDialog(dialogFragment);
-
-                if (modulesStatus.isRootAvailable()) {
-                    collectLogsMethodOne(info);
-                } else {
-                    CachedExecutor.INSTANCE.getExecutorService().submit(br.saveLogs(getApplicationContext(), null));
-                }
-                break;
-            case R.id.etLogsPath:
-                chooseOutputFolder();
-                break;
+            if (modulesStatus.isRootAvailable()) {
+                collectLogsMethodOne(info);
+            } else {
+                CachedExecutor.INSTANCE.getExecutorService().submit(br.saveLogs(getApplicationContext(), null));
+            }
+        } else if (id == R.id.etLogsPath) {
+            chooseOutputFolder();
         }
     }
 
@@ -204,7 +210,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     private void collectLogsMethodOne (String info) {
         int pid = android.os.Process.myPid();
 
-        String[] logcatCommands = {
+        List<String> logcatCommands = new ArrayList<>(Arrays.asList(
                 "cd " + cacheDir,
                 busyboxPath + "rm -rf logs_dir 2> /dev/null",
                 busyboxPath + "mkdir -m 655 -p logs_dir 2> /dev/null",
@@ -221,7 +227,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                 busyboxPath + "chown -R " + appUID + "." + appUID + " logs_dir 2> /dev/null",
                 busyboxPath + "chmod -R 755 logs_dir 2> /dev/null",
                 busyboxPath + "echo 'Logs Saved' 2> /dev/null"
-        };
+        ));
         RootCommands rootCommands = new RootCommands(logcatCommands);
         Intent intent = new Intent(this, RootExecService.class);
         intent.setAction(RootExecService.RUN_COMMAND);
@@ -235,7 +241,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     public void onPause() {
         super.onPause();
 
-        FileOperations.deleteOnFileOperationCompleteListener();
+        FileOperations.deleteOnFileOperationCompleteListener(this);
     }
 
     @Override

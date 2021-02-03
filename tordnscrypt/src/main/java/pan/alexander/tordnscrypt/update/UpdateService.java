@@ -26,6 +26,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
@@ -48,7 +49,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.ref.WeakReference;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
@@ -60,10 +60,8 @@ import java.util.zip.CRC32;
 import javax.net.ssl.HttpsURLConnection;
 
 import pan.alexander.tordnscrypt.ApplicationExt;
-import pan.alexander.tordnscrypt.LangAppCompatActivity;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -335,13 +333,19 @@ public class UpdateService extends Service {
                                 intent.setData(apkUri);
                                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                context.startActivity(intent);
+                                PackageManager packageManager = context.getPackageManager();
+                                if (packageManager != null && intent.resolveActivity(packageManager) != null) {
+                                    context.startActivity(intent);
+                                }
                             } else {
                                 Uri apkUri = Uri.fromFile(file);
                                 Intent intent = new Intent(Intent.ACTION_VIEW);
                                 intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
                                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                context.startActivity(intent);
+                                PackageManager packageManager = context.getPackageManager();
+                                if (packageManager != null && intent.resolveActivity(packageManager) != null) {
+                                    context.startActivity(intent);
+                                }
                             }
 
                             makeDelay(3);

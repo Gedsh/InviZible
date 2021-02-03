@@ -19,6 +19,7 @@ package pan.alexander.tordnscrypt.assistance;
     Copyright 2019-2020 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.content.Context;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
@@ -45,10 +46,12 @@ import java.security.PublicKey;
 import java.security.Signature;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.crypto.Cipher;
 
@@ -64,19 +67,26 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 public class AccelerateDevelop implements BillingClientStateListener {
     public final static String mSkuId = "invizible_premium_version";
 
-    public static boolean accelerated = true;
+    public static volatile boolean accelerated = true;
 
-    private MainActivity activity;
+    private final MainActivity activity;
+    private final Context context;
+    private final ReentrantLock lock = new ReentrantLock();
     private BillingClient mBillingClient;
-    private Map<String, SkuDetails> mSkuDetailsMap = new HashMap<>();
-    private boolean billingServiceConnected = false;
+    private final Map<String, SkuDetails> mSkuDetailsMap = new HashMap<>();
+    private volatile boolean billingServiceConnected = false;
+    private volatile String signedData = "";
+    private volatile String signature = "";
 
     public AccelerateDevelop(MainActivity activity) {
         this.activity = activity;
+        this.context = activity.getApplicationContext();
+        this.signedData = new PrefManager(activity).getStrPref("gpData");
+        this.signature = new PrefManager(activity).getStrPref("gpSign");
     }
 
     public void initBilling() {
-        mBillingClient = BillingClient.newBuilder(activity)
+        mBillingClient = BillingClient.newBuilder(context)
                 .enablePendingPurchases()
                 .setListener(new PurchasesUpdatedListener() {
                     @Override
@@ -88,22 +98,22 @@ public class AccelerateDevelop implements BillingClientStateListener {
                     }
                 }).build();
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
-            mBillingClient.startConnection(AccelerateDevelop.this);
-        });
+        startBillingConnection();
     }
 
     public void launchBilling(String skuId) {
         if (billingServiceConnected) {
 
-            if (!mSkuDetailsMap.isEmpty() && mSkuDetailsMap.get(skuId) != null) {
+            SkuDetails skuDetails = mSkuDetailsMap.get(skuId);
+
+            if (skuDetails != null) {
 
                 Log.i(LOG_TAG, "Launch billing");
 
-                new PrefManager(activity).setBoolPref("helper_no_show_pending_purchase", false);
+                new PrefManager(context).setBoolPref("helper_no_show_pending_purchase", false);
 
                 BillingFlowParams billingFlowParams = BillingFlowParams.newBuilder()
-                        .setSkuDetails(Objects.requireNonNull(mSkuDetailsMap.get(skuId)))
+                        .setSkuDetails(skuDetails)
                         .build();
                 mBillingClient.launchBillingFlow(activity, billingFlowParams);
             } else {
@@ -112,7 +122,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
 
         } else {
             Log.w(LOG_TAG, "Launch billing but billing client is disconnected");
-            mBillingClient.startConnection(this);
+            startBillingConnection();
         }
     }
 
@@ -128,6 +138,12 @@ public class AccelerateDevelop implements BillingClientStateListener {
             //if the purchase has already been made to give the goods
             if (purchasesList != null) {
                 handlePurchases(purchasesList);
+            } else if (!signedData.isEmpty() && !signature.isEmpty() && verifyValidSignature(signedData, signature)) {
+                Log.w(LOG_TAG, "Purchases list is null but saved signature is correct. Allowing...");
+                payComplete();
+            } else {
+                Log.w(LOG_TAG, "Purchases list is null. Skipping...");
+                noPayment();
             }
         }
     }
@@ -138,9 +154,6 @@ public class AccelerateDevelop implements BillingClientStateListener {
         billingServiceConnected = false;
 
         Log.w(LOG_TAG, "Billing service disconnected");
-
-        String signedData = new PrefManager(activity).getStrPref("gpData");
-        String signature = new PrefManager(activity).getStrPref("gpSign");
 
         if (!signedData.isEmpty() && !signature.isEmpty() && verifyValidSignature(signedData, signature)) {
             Log.w(LOG_TAG, "BillingServiceDisconnected but saved signature is correct. Allowing...");
@@ -154,7 +167,8 @@ public class AccelerateDevelop implements BillingClientStateListener {
     private void querySkuDetails() {
 
         if (!billingServiceConnected) {
-            mBillingClient.startConnection(this);
+            Log.w(LOG_TAG, "QuerySkuDetails but billing client is disconnected");
+            startBillingConnection();
             return;
         }
 
@@ -173,8 +187,6 @@ public class AccelerateDevelop implements BillingClientStateListener {
                         }
                     } else {
                         Log.w(LOG_TAG, "Query SKU details is OK, but SKU list is empty " + billingResult.getDebugMessage());
-
-
                     }
 
                 } else {
@@ -191,13 +203,12 @@ public class AccelerateDevelop implements BillingClientStateListener {
 
     private void handlePurchases(@NonNull List<Purchase> purchasesList) {
         if (!billingServiceConnected) {
-            mBillingClient.startConnection(this);
+            Log.w(LOG_TAG, "HandlePurchases but billing client is disconnected");
+            startBillingConnection();
             return;
         }
 
         if (purchasesList.isEmpty()) {
-            String signedData = new PrefManager(activity).getStrPref("gpData");
-            String signature = new PrefManager(activity).getStrPref("gpSign");
 
             if (!signedData.isEmpty() && !signature.isEmpty() && verifyValidSignature(signedData, signature)) {
                 Log.w(LOG_TAG, "Purchases list is empty but saved signature is correct. Allowing...");
@@ -230,7 +241,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
                         if (!acknowledged && activity != null) {
                             activity.runOnUiThread(() -> {
                                 DialogFragment dialogFragment = NotificationDialogFragment.newInstance(R.string.wrong_purchase_signature_gp);
-                                if (activity != null && !activity.isDestroyed()) {
+                                if (!activity.isDestroyed()) {
                                     dialogFragment.show(activity.getSupportFragmentManager(), "wrong_purchase_signature");
                                 }
                             });
@@ -254,10 +265,6 @@ public class AccelerateDevelop implements BillingClientStateListener {
 
                                     if (activity != null) {
                                         activity.runOnUiThread(() -> {
-
-                                            if (activity == null) {
-                                                return;
-                                            }
 
                                             String thanks = activity.getString(R.string.thanks_for_donate);
                                             if (!thanks.contains(".")) {
@@ -283,12 +290,14 @@ public class AccelerateDevelop implements BillingClientStateListener {
                 } else if (TextUtils.equals(mSkuId, purchaseId) && purchaseState == Purchase.PurchaseState.PENDING) {
                     Log.i(LOG_TAG, "Purchase is pending " + purchase.getSku());
 
-                    NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                            activity, activity.getText(R.string.pending_purchase).toString()
-                                    + " " + purchase.getSku()
-                                    + " " + purchase.getOrderId(), "pending_purchase");
-                    if (notificationHelper != null) {
-                        notificationHelper.show(activity.getSupportFragmentManager(), NotificationHelper.TAG_HELPER);
+                    if (activity != null) {
+                        NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                                context, context.getString(R.string.pending_purchase)
+                                        + " " + purchase.getSku()
+                                        + " " + purchase.getOrderId(), "pending_purchase");
+                        if (notificationHelper != null && !activity.isDestroyed()) {
+                            notificationHelper.show(activity.getSupportFragmentManager(), NotificationHelper.TAG_HELPER);
+                        }
                     }
 
                     noPayment();
@@ -302,11 +311,35 @@ public class AccelerateDevelop implements BillingClientStateListener {
         noPayment();
     }
 
-    private boolean verifyValidSignature(String signedData, String signature) {
-        new PrefManager(activity).setStrPref("gpData", signedData);
-        new PrefManager(activity).setStrPref("gpSign", signature);
+    private void startBillingConnection() {
+        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+            try {
+                if (lock.tryLock()) {
+                    mBillingClient.startConnection(AccelerateDevelop.this);
 
+                    TimeUnit.SECONDS.sleep(1);
+
+                    if (!billingServiceConnected && !signedData.isEmpty() && !signature.isEmpty()
+                            && verifyValidSignature(signedData, signature)) {
+                        Log.w(LOG_TAG, "BillingService connection failed but saved signature is correct. Allowing...");
+                        payComplete();
+                    } else if (!billingServiceConnected) {
+                        Log.w(LOG_TAG, "BillingService connection failed. Skipping...");
+                        noPayment();
+                    }
+
+                    lock.unlock();
+                }
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "AccelerateDevelop startBillingConnection Exception "
+                        + e.getMessage() + " " + e.getCause() + " " + Arrays.toString(e.getStackTrace()));
+            }
+        });
+    }
+
+    private boolean verifyValidSignature(String signedData, String signature) {
         boolean result = false;
+
         try {
             PublicKey pkey = getAPKKey();
             Signature sig = Signature.getInstance("SHA1withRSA");
@@ -322,6 +355,14 @@ public class AccelerateDevelop implements BillingClientStateListener {
         } catch (Exception e) {
             Log.e(LOG_TAG, "AccelerateDevelop verifyValidSignature Exception " + e.getMessage() + " " + e.getCause());
         }
+
+        if (result) {
+            this.signedData = signedData;
+            this.signature = signature;
+            new PrefManager(context).setStrPref("gpData", signedData);
+            new PrefManager(context).setStrPref("gpSign", signature);
+        }
+
         return result;
     }
 
@@ -339,7 +380,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
     }
 
     private PublicKey getAPKKey() throws Exception{
-        byte[] decodedKey = Base64.decode(activity.getString(R.string.gp_property), Base64.DEFAULT);
+        byte[] decodedKey = Base64.decode(context.getString(R.string.gp_property), Base64.DEFAULT);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         return keyFactory.generatePublic(new X509EncodedKeySpec(decodedKey));
     }

@@ -33,6 +33,10 @@ import androidx.annotation.RequiresApi;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Enumeration;
 
 import pan.alexander.tordnscrypt.R;
 
@@ -41,9 +45,10 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 @SuppressLint("PrivateApi")
 public class ApManager {
-    private Context context;
-    public static int apStateON = 100;
-    public static int apStateOFF = 200;
+    private final Context context;
+    public final static int apStateON = 100;
+    public final static int apStateOFF = 200;
+    public final static int apStateUnknown = 300;
     private static Object mReservation;
 
     @SuppressLint("WifiManagerPotentialLeak")
@@ -54,7 +59,7 @@ public class ApManager {
 
     //check whether wifi hotspot on or off
     public int isApOn() {
-        int result = 300;
+        int result = apStateUnknown;
 
         try {
             WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -74,6 +79,54 @@ public class ApManager {
             }
         } catch (Exception e) {
             Log.w(LOG_TAG, "ApManager isApOn Exception " + e.getMessage() + System.lineSeparator() + e.getCause());
+        }
+
+        return result;
+    }
+
+    public int confirmApState() {
+        final String addressesRangeWiFi = "192.168.43.";
+        int result = apStateUnknown;
+
+        try {
+            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
+                 en.hasMoreElements(); ) {
+
+                NetworkInterface intf = en.nextElement();
+
+                if (intf.isLoopback()) {
+                    continue;
+                }
+                if (intf.isVirtual()) {
+                    continue;
+                }
+                if (!intf.isUp()) {
+                    continue;
+                }
+
+                if (intf.isPointToPoint()) {
+                    continue;
+                }
+                if (intf.getHardwareAddress() == null) {
+                    continue;
+                }
+
+                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses();
+                     enumIpAddr.hasMoreElements(); ) {
+                    InetAddress inetAddress = enumIpAddr.nextElement();
+                    String hostAddress = inetAddress.getHostAddress();
+
+                    if (hostAddress.contains(addressesRangeWiFi)) {
+                        result = apStateON;
+                    }
+                }
+            }
+
+            if (result == apStateUnknown) {
+                result = apStateOFF;
+            }
+        } catch (SocketException e) {
+            Log.e(LOG_TAG, "ApManager SocketException " + e.getMessage() + " " + e.getCause());
         }
 
         return result;

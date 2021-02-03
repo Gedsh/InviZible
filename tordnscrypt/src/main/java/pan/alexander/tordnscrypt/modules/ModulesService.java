@@ -48,9 +48,11 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.WakeLocksManager;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
@@ -91,6 +93,8 @@ public class ModulesService extends Service {
     static final String speedupLoop = "pan.alexander.tordnscrypt.action.SPEEDUP_LOOP";
     static final String slowdownLoop = "pan.alexander.tordnscrypt.action.SLOWDOWN_LOOP";
     static final String extraLoop = "pan.alexander.tordnscrypt.action.MAKE_EXTRA_LOOP";
+    static final String startArpScanner= "pan.alexander.tordnscrypt.action.START_ARP_SCANNER";
+    static final String stopArpScanner= "pan.alexander.tordnscrypt.action.STOP_ARP_SCANNER";
 
     static final String DNSCRYPT_KEYWORD = "checkDNSRunning";
     static final String TOR_KEYWORD = "checkTrRunning";
@@ -111,6 +115,7 @@ public class ModulesService extends Service {
     private ModulesStateLoop checkModulesStateTask;
     private ModulesKiller modulesKiller;
     private UsageStatistic usageStatistic;
+    private ArpScanner arpScanner;
 
     public ModulesService() {
     }
@@ -142,6 +147,8 @@ public class ModulesService extends Service {
 
         startModulesThreadsTimer();
 
+        startArpScanner();
+
         if (new PrefManager(this).getBoolPref("DNSCryptSystemDNSAllowed")) {
             mHandler.postDelayed(() -> {
                 if (new PrefManager(this).getBoolPref("DNSCryptSystemDNSAllowed")) {
@@ -160,9 +167,11 @@ public class ModulesService extends Service {
             stopModulesServiceForeground();
         }
 
-        boolean showNotification = true;
+        boolean showNotification;
         if (intent != null) {
             showNotification = intent.getBooleanExtra("showNotification", true);
+        } else {
+            showNotification = Utils.INSTANCE.isShowNotification(this);
         }
 
         if (showNotification) {
@@ -251,6 +260,12 @@ public class ModulesService extends Service {
             case actionStopService:
                 stopModulesService();
                 return START_NOT_STICKY;
+            case startArpScanner:
+                startArpScanner();
+                break;
+            case stopArpScanner:
+                stopArpScanner();
+                break;
         }
 
         setBroadcastReceiver();
@@ -880,6 +895,8 @@ public class ModulesService extends Service {
     @Override
     public void onDestroy() {
 
+        unregisterModulesBroadcastReceiver();
+
         if (usageStatistic != null) {
             usageStatistic.stopUpdate();
         }
@@ -888,11 +905,13 @@ public class ModulesService extends Service {
 
         stopModulesThreadsTimer();
 
+        stopArpScanner();
+
         stopVPNServiceIfRunning();
 
-        unregisterModulesBroadcastReceiver();
-
         CachedExecutor.INSTANCE.stopExecutorService();
+
+        mHandler.removeCallbacksAndMessages(null);
 
         super.onDestroy();
     }
@@ -954,7 +973,7 @@ public class ModulesService extends Service {
         if (modulesStatus.getMode() == ROOT_MODE
                 && !modulesStatus.isUseModulesWithRoot()
                 && modulesBroadcastReceiver == null) {
-            modulesBroadcastReceiver = new ModulesBroadcastReceiver(this);
+            modulesBroadcastReceiver = new ModulesBroadcastReceiver(this, arpScanner);
             modulesBroadcastReceiver.registerReceivers();
         } else if (modulesStatus.getMode() != ROOT_MODE
                 && modulesBroadcastReceiver != null) {
@@ -990,7 +1009,10 @@ public class ModulesService extends Service {
         threadGroup.enumerate(allThreads);
 
         for (Thread thread : allThreads) {
-            String name = thread.getName();
+            String name = "";
+            if (thread != null) {
+                name = thread.getName();
+            }
             //Log.i(LOG_TAG, "Current threads " + name);
             if (name.equals(threadName)) {
                 Log.i(LOG_TAG, "Found old module thread " + name);
@@ -1054,6 +1076,17 @@ public class ModulesService extends Service {
             writer.close();
         } catch (IOException e) {
             Log.e(LOG_TAG, "Unable to create dnsCrypt log file " + e.getMessage());
+        }
+    }
+
+    private void startArpScanner() {
+        arpScanner = ArpScanner.INSTANCE.getInstance(this, mHandler);
+        arpScanner.start();
+    }
+
+    private void stopArpScanner() {
+        if (arpScanner != null) {
+            arpScanner.stop();
         }
     }
 }

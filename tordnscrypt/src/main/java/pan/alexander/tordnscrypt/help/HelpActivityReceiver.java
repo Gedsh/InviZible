@@ -31,7 +31,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
-import java.util.Arrays;
 import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
@@ -45,9 +44,9 @@ import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class HelpActivityReceiver extends BroadcastReceiver {
-    private Handler mHandler;
-    private String appDataDir;
-    private String cacheDir;
+    private final Handler mHandler;
+    private final String appDataDir;
+    private final String cacheDir;
     private String info;
     private String pathToSaveLogs;
     private DialogFragment progressDialog;
@@ -69,7 +68,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
 
         RootCommands comResult = (RootCommands) intent.getSerializableExtra("CommandsResult");
 
-        if (comResult != null && comResult.getCommands().length == 0) {
+        if (comResult != null && comResult.getCommands().size() == 0) {
             closeProgressDialog();
             showSomethingWrongToast(context);
             return;
@@ -201,7 +200,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
 
         File invizibleLogs = new File(cacheDir + "/logs_dir");
 
-        return Arrays.toString(comResult.getCommands()).contains("Logs Saved")
+        return comResult.getCommands().toString().contains("Logs Saved")
                 && invizibleLogs.exists()
                 && invizibleLogs.list() != null
                 && Objects.requireNonNull(invizibleLogs.list()).length > 0;

@@ -24,7 +24,7 @@ import android.content.Context;
 import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
 
 public class DNSCryptExtractCommand extends AssetsExtractCommand {
-    private String appDataDir;
+    private final String appDataDir;
 
     DNSCryptExtractCommand(Context context, String appDataDir) {
         super(context);

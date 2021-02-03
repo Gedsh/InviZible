@@ -21,6 +21,8 @@ package pan.alexander.tordnscrypt.modules;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
+
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
@@ -45,6 +47,7 @@ public final class ModulesStatus {
     private ModulesStatus() {
     }
 
+    @NonNull
     public static ModulesStatus getInstance() {
         if (modulesStatus == null) {
             synchronized (ModulesStatus.class) {
@@ -118,7 +121,7 @@ public final class ModulesStatus {
     }
 
     public void setFixTTLRulesUpdateRequested(Context context, final boolean requestFixTTLRulesUpdate) {
-        this.requestFixTTLRulesUpdate = requestFixTTLRulesUpdate;
+        setFixTTLRulesUpdateRequested(requestFixTTLRulesUpdate);
         ModulesAux.makeModulesStateExtraLoop(context);
     }
 

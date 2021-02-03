@@ -11,8 +11,8 @@
     <string name="tvITPDInstalled">"I2P asennettiin"</string>
     <string name="tvITPDNotInstalled">"I2P ei ole asennettu"</string>
     <string name="swRunOnBoot">"Aloita käynnistyksessä"</string>
-    <string name="root_available">"Tarkistetaan Rootin saatavuutta…"</string>
-    <string name="please_wait">"Odota…"</string>
+    <string name="root_available">"Tarkistetaan Rootin saatavuutta..."</string>
+    <string name="please_wait">"Odota..."</string>
     <string name="dont_show">"Älä näytä uudestaan"</string>
     <string name="tvDNSStop">"DNSCrypt pysäytettin"</string>
     <string name="tvDNSInstalled">"DNSCrypt asennettiin"</string>
@@ -149,8 +149,8 @@
     <string name="pref_common_use_iptables">"Valitse Iptablet"</string>
     <string name="pref_common_log_root_commands">"Tallenna Root komennot lokiin"</string>
     <string name="notification_text">"DNSCrypt, Tor, I2P ovat suojattu. Älä piiloudu."</string>
-    <string name="notification_temp_text">"Suoritetaan root-komentoja …"</string>
-    <string name="tvSettings_text">"Odota…"</string>
+    <string name="notification_temp_text">"Suoritetaan root-komentoja ..."</string>
+    <string name="tvSettings_text">"Odota..."</string>
     <string name="toastSettings_saved">"Asetukset tallennettiin"</string>
     <string name="pref_dnscrypt_global_settings_categ">"YLEISET ASETUKSET"</string>
     <string name="pref_advanced">"Vain kokeneille käyttäjille!"</string>
@@ -178,7 +178,7 @@
         noudettaessa alkuperäisiä resolveri-listaa vain, jos järjestelmän DNS-määritykset eivät toimi.
         Sitä ei koskaan käytetä, jos luettelot on jo välimuistissa.
         Kiinassa asuvien on ehkä käytettävä tätä numeroa 114.114.114.114:53."</string>
-    <string name="pref_dnscrypt_ignore_system_dns_summ">"Älä koskaan anna dnscrypt-proxy:n yrittää käyttää järjestelmän DNS-asetuksia. Muuten käytä varaehtoista resolveria…"</string>
+    <string name="pref_dnscrypt_ignore_system_dns_summ">"Älä koskaan anna dnscrypt-proxy:n yrittää käyttää järjestelmän DNS-asetuksia. Muuten käytä varaehtoista resolveria..."</string>
     <string name="pref_dnscrypt_filters_categ">"SUODATUKSET"</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Reititä tiettyjen verkkotunnusten kyselyt omistettuun palvelinjoukkoon."</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">"Naamiointi palauttaa tietyn nimen ennalta määritetyn osoitteen.
@@ -191,7 +191,7 @@
     <string name="open_query_log">"Avaa kyselyloki"</string>
     <string name="pref_dnscrypt_nx_log_categ">"Epäilyttävien kysymysten kirjaaminen."</string>
     <string name="pref_dnscrypt_nx_log_summ">"Tallenna kyselyt puuttuville vyöhykkeille lokiin.
-        Nämä kyselyt voivat paljastaa haittaohjelmia, rikkoutuneita / vanhentuneita sovelluksia ja laitteita, jotka ilmoittavat niiden olemassaolosta kolmansille osapuolille…"</string>
+        Nämä kyselyt voivat paljastaa haittaohjelmia, rikkoutuneita / vanhentuneita sovelluksia ja laitteita, jotka ilmoittavat niiden olemassaolosta kolmansille osapuolille..."</string>
     <string name="pref_dnscrypt_nx_log">"Ota epäilyttävä kirjaaminen käyttöön"</string>
     <string name="open_nx_log">"Avaa epäilyttävä loki"</string>
     <string name="pref_dnscrypt_blacklist_categ">"Kuviopohjainen estäminen (Musta lista)."</string>
@@ -262,9 +262,9 @@
     <string name="pref_itpd_com_notransit_summ">"Reititin ei hyväksy kauttakulkutunneleita, poistamalla kuljetusliikenne kokonaan käytöstä."</string>
     <string name="pref_itpd_com_floodfill_summ">"Reititin tulee olemaan floodfillattu."</string>
     <string name="pref_itpd_com_bandwidth_summ">"Kaistanleveysrajoitus KBps /s."</string>
-    <string name="pref_itpd_com_share_summ">"Enimmäis % kaistanleveysrajoituksesta siirtämiseen. 0–100."</string>
+    <string name="pref_itpd_com_share_summ">"Enimmäis % kaistanleveysrajoituksesta siirtämiseen. 0-100."</string>
     <string name="pref_itpd_com_ssu_summ">"Ota SSU-siirtoprotokolla käyttöön (käytä UDP:tä)."</string>
-    <string name="pref_itpd_com_ntcp_summ">"Ota NTCP-siirtoprotokolla käyttöön (käytä TCP:tä)."</string>
+    <string name="pref_itpd_com_ntcp_summ">"Ota NTCP2-siirtoprotokolla käyttöön (käytä TCP:tä)."</string>
     <string name="pref_itpd_com_use_ntcpproxy">"Ota ntcpproxy käyttöön"</string>
     <string name="pref_itpd_com_ntcpproxy_summ">"Määritä proxy NTCP:lle. Pitäisi olla http: // osoite: portti tai socks: // osoite: portti."</string>
     <string name="pref_itpd_HTTP_proxy">"HTTP proxy"</string>
@@ -288,15 +288,10 @@
     <string name="pref_itpd_limits_transittunnels_summ">"Ohita kauttakulun tunnelien enimmäismäärä. 2500 oletuksena."</string>
     <string name="pref_itpd_limits_openfiles_summ">"Rajoita avoimien tiedostokuvausten lukumäärä (0 - käytä järjestelmän rajaa)."</string>
     <string name="pref_itpd_limits_coresize_summ">"Ydintiedoston enimmäiskoko (kt) (0 - järjestelmän käyttöraja)."</string>
-    <string name="pref_itpd_limits_ntcpsoft_summ">"Kynnys todennäköisen vastakkaisuuden aloittamiseen ntcp-istunnoilla (0 - järjestelmän käyttöraja)."</string>
-    <string name="pref_itpd_limits_ntcphard_summ">"Ntcp-istuntojen enimmäismäärä (0 - järjestelmän käyttöraja)."</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">"Osoitekirjan (AddressBook) tilauksen URL-osoite alkuasetuksia varten."</string>
     <string name="pref_itpd_addressbook_subscriptions_summ">"Osoitekirjatilausten (AddressBook) URL-osoitteet."</string>
     <string name="pref_itpd_not_exist">"Preferenssiä ei ole i2pd.conf!"</string>
     <string name="helper_dialog_title">"Tietoja"</string>
-    <string name="helper_after_install">"Onnittelut! Tämän työkalun avulla pääset nopeasti käsiksi
-        kaikille verkkosivustoille ilman rajoituksia. Käynnistä DNSCrypt Tori:lla tai I2P:llä tai ilman niitä (nopea tila). Tai voit käyttää
-        tämä työkalua parantaaksesi yksityisyyttä. Käynnistä Tor joko I2P:n kanssa tai ilman sitä (Enhanced Privacy Mode)."</string>
     <string name="helper_dnscrypt_stopped">"Näyttää siltä, ​​että android-järjestelmä sulki DNSCryptin.
         Internet-yhteytesi palautettiin. Tarkista laitteen asetukset!"</string>
     <string name="helper_tor_stopped">"Näyttää siltä, ​​että android-järjestelmä sulki Tor:in.
@@ -418,11 +413,78 @@
         Tämä nopeuttaa asioita, kun IPv6-yhteyttä ei ole, mutta voi myös aiheuttaa luotettavuusongelmia joihinkin tynkäratkaisureihin."</string>
     <string name="helper_dnscrypt_private_dns">"Poista \"Yksityinen DNS\" käytöstä Android-verkkoasetuksissa. Tämä vaihtoehto häiritsee DNSCryptia."</string>
     <string name="import_dnscrypt_rules_dialog_title">"Tuo sännöt"</string>
-    <string name="import_dnscrypt_rules_dialog_message">"Odota … %d -sääntöä tuotu."</string>
+    <string name="import_dnscrypt_rules_dialog_message">"Odota ... %d -sääntöä tuotu."</string>
     <string name="import_dnscrypt_rules_complete_dialog_message">"Tehty! %d sääntöä tuotiin."</string>
     <string name="erase_dnscrypt_rules_dialog_message">"Tehty! Säännöt poistettiin"</string>
     <string name="dnscrypt_many_rules_dialog_message">"Liian paljon sääntöjä näytettäväksi. Vain ensimmäiset 1000 näytetään."</string>
     <string name="pref_tor_snowflake_stun">"STUN-palvelin SnowFlake-siltoille"</string>
     <string name="pref_tor_isolate_dest_address_summ">"Älä jaa piirejä toiseen kohdeosoitteeseen kohdistuvien streamien kanssa."</string>
     <string name="pref_tor_isolate_dest_port_summ">"Älä jaa piirejä toiseen kohdeporttiin kohdistuvien virtojen (streams) kanssa."</string>
+    <string name="dialog_new_tor_default_bridges_available">"New default Tor bridges are available. Do you want to update them?"</string>
+    <string name="pref_common_mitm_categ">"MITM attack detection"</string>
+    <string name="pref_common_arp_spoofing_detection">"ARP spoofing detection"</string>
+    <string name="pref_common_arp_spoofing_detection_summ">"Detect Man-in-the-middle ARP spoofing and rogue DHCP attacks in Wi-Fi networks."</string>
+    <string name="pref_common_arp_block_internet">"Block internet when an attack is detected"</string>
+    <string name="pref_common_arp_block_internet_summ">"Internet connection will be blocked during attack"</string>
+    <string name="pref_common_proxy_categ">"Proxy"</string>
+    <string name="pref_common_proxy">"Use socks5 proxy"</string>
+    <string name="pref_common_proxy_summ">"InviZible Pro will make all connections through the SOCKS5 proxy"</string>
+    <string name="pref_common_compatibility_mode">"Compatibility mode"</string>
+    <string name="pref_common_compatibility_mode_summ">"Enable if your device with a custom ROM and the connection is lost when you press the START button"</string>
+    <string name="pref_common_shell_control">"Enable script control"</string>
+    <string name="pref_common_shell_control_summ">"Use the following command to manage application modules:
+        \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
+        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 -n %s/.BootCompleteReceiver\". Where 1 - starts, 0 - stops the module."</string>
+    <string name="pref_common_local_eth_device_addr">"LAN device IP address"</string>
+    <string name="pref_common_local_eth_device_addr_summ">"Enable Fix TTL and configure LAN device to connect to InviZible. Use default gateway: %s, DNS server: %s."</string>
+    <string name="pref_common_multi_user">"Multi-user support"</string>
+    <string name="pref_common_multi_user_summ">"Support for Dual Apps, MIUI, Island, Shelter and Work profile applications"</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">"Enable SOCKS output proxy"</string>
+    <string name="pref_tor_SOCKS_output_address_summ">"Tor will make all OR connections through the SOCKS 5 proxy."</string>
+    <string name="notification_channel_services">"Running services"</string>
+    <string name="notification_channel_update">"Update notifications"</string>
+    <string name="notification_channel_root">"Root commands notification"</string>
+    <string name="dialog_send_crash_report">"A crash report has been discovered. Want to send it to the developer to make InviZible better?"</string>
+    <string name="btn_new_tor_identity">"New Tor identity"</string>
+    <string name="toast_new_tor_identity">"Tor identity has changed"</string>
+    <string name="proxy_server_ip">"Proxy server:"</string>
+    <string name="proxy_server_port">"Proxy port:"</string>
+    <string name="proxy_server_user_name">"Username:"</string>
+    <string name="proxy_server_user_pass">"Password:"</string>
+    <string name="proxy_server_empty_field_hint">"This field can be left blank"</string>
+    <string name="proxy_exclude_apps_from_proxy">"Exclude Applications"</string>
+    <string name="proxy_exclude_apps_from_proxy_summ">"Applications list to open directly. These applications will not use Tor or Proxy to connect to the Internet!"</string>
+    <string name="proxy_select_proxy_app">" Please select proxy owner application at least, if you are using a local proxy."</string>
+    <string name="proxy_use_for_dnscrypt">"Use proxy for DNSCrypt"</string>
+    <string name="proxy_use_for_tor">"Use proxy for Tor"</string>
+    <string name="proxy_use_for_itpd">"Use proxy for Purple I2P"</string>
+    <string name="proxy_save">"Save and enable"</string>
+    <string name="proxy_no_connection">"Cannot connect to proxy: %s"</string>
+    <string name="proxy_successful_connection">"Successful connection. Ping %s ms."</string>
+    <string name="notification_arp_spoofing">"ARP spoofing detected!"</string>
+    <string name="notification_rogue_dhcp">"Rogue DHCP detected!"</string>
+    <string name="notification_mitm">"Man-in-the-middle attack detected! Your data can be intercepted by another device on the local network.
+        Turn off, wait a few seconds, and turn on Wi-Fi. Using current Wi-Fi hotspot may be unsafe!"</string>
+    <string name="toast_arp_detection_not_supported">"ARP spoofing detection is not supported for your device!"</string>
+    <string name="pref_fast_use_tor_bridges_alt_summ">"Please disable Entry Nodes in Tor Settings, otherwise you cannot use Bridges."</string>
+    <string name="pref_fast_tor_bypass_lan">"Bypass LAN addresses"</string>
+    <string name="pref_fast_tor_bypass_lan_summ">"Do not use Tor for LAN destinations and IANA reserved IP blocks"</string>
+    <string name="pref_tor_entry_nodes_alt_summ">"Disable Tor bridges if you want to select entry nodes."</string>
+    <string name="notification_channel_firewall">"Firewall notifications"</string>
+    <string name="menu_firewall">"Firewall"</string>
+    <string name="firewall_all_apps">"All"</string>
+    <string name="firewall_system_apps">"System"</string>
+    <string name="firewall_user_apps">"User"</string>
+    <string name="firewall_sort_by_name">"Sort by Name"</string>
+    <string name="firewall_sort_by_uid">"Sort by UID"</string>
+    <string name="ask_save_changes">"Do you want to save the changes?"</string>
+    <string name="firewall_warning_enable_module">"To activate the firewall, you should start at least DNSCrypt or Tor."</string>
+    <string name="firewall_notification_allow_app_title">"%s is installed"</string>
+    <string name="firewall_notification_allow_app">"Allow Internet for it?"</string>
+    <string name="allow">"Allow"</string>
+    <string name="deny">"Deny"</string>
+    <string name="pref_fast_theme_titles_day_mode">"Day Mode"</string>
+    <string name="pref_fast_theme_titles_night_mode">"Night Mode"</string>
+    <string name="pref_fast_theme_titles_auto_mode">"Auto"</string>
+    <string name="pref_fast_theme_titles_default_mode">"System default"</string>
 </resources>

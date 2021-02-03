@@ -75,6 +75,13 @@
                 android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
+        <EditTextPreference
+            android:defaultValue="12"
+            android:key="pref_fast_site_refresh_interval"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:summary="@string/pref_fast_site_refresh_interval_summ"
+            android:title="@string/pref_fast_site_refresh_interval" />
         <Preference
             android:key="prefTorAppExclude"
             android:title="@string/pref_fast_exclude_apps_from_tor"
@@ -85,13 +92,11 @@
                 android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
-        <EditTextPreference
-            android:defaultValue="12"
-            android:key="pref_fast_site_refresh_interval"
-            android:selectAllOnFocus="true"
-            android:singleLine="true"
-            android:summary="@string/pref_fast_site_refresh_interval_summ"
-            android:title="@string/pref_fast_site_refresh_interval" />
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="Allow LAN"
+            android:summary="@string/pref_fast_tor_bypass_lan_summ"
+            android:title="@string/pref_fast_tor_bypass_lan" />
         <Preference
             android:key="prefTorBridges"
             android:title="@string/pref_fast_use_tor_bridges"

@@ -24,6 +24,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Process;
 import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -39,11 +40,12 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Stack;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -67,7 +69,7 @@ public class FileOperations {
     private static final Map<String, List<String>> linesListMap = new HashMap<>();
     private static final ReentrantLock reentrantLock = new ReentrantLock();
     private static OnFileOperationsCompleteListener callback;
-    private static Stack<OnFileOperationsCompleteListener> stackCallbacks;
+    private static CopyOnWriteArrayList<OnFileOperationsCompleteListener> stackCallbacks;
     private static ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     private BroadcastReceiver br = new BroadcastReceiver() {
@@ -94,10 +96,9 @@ public class FileOperations {
 
         @SuppressLint("SetWorldReadable") Runnable runnable = () -> {
 
+            reentrantLock.lock();
+
             try {
-
-                reentrantLock.lock();
-
                 File dir = new File(outputPath);
                 if (!dir.isDirectory()) {
                     if (!dir.mkdirs()) {
@@ -202,11 +203,9 @@ public class FileOperations {
 
         Runnable runnable = () -> {
 
+            reentrantLock.lock();
 
             try {
-
-                reentrantLock.lock();
-
                 File dir = new File(outputPath);
                 if (!dir.isDirectory()) {
                     if (!dir.mkdirs()) {
@@ -302,10 +301,9 @@ public class FileOperations {
     private static void copyBinaryFileSynchronous(final Context context, final String inputPath,
                                                   final String inputFile, final String outputPath) {
 
+        reentrantLock.lock();
+
         try {
-
-            reentrantLock.lock();
-
             File dir = new File(outputPath);
             if (!dir.isDirectory()) {
                 if (!dir.mkdirs()) {
@@ -374,10 +372,10 @@ public class FileOperations {
     }
 
     public static void copyFolderSynchronous(final Context context, final String inputPath, final String outputPath) {
+
+        reentrantLock.lock();
+
         try {
-
-            reentrantLock.lock();
-
             File inDir = null;
 
             try {
@@ -434,9 +432,10 @@ public class FileOperations {
     }
 
     public static boolean deleteFileSynchronous(final Context context, final String inputPath, final String inputFile) {
-        try {
-            reentrantLock.lock();
 
+        reentrantLock.lock();
+
+        try {
             File usedFile = null;
 
             try {
@@ -458,7 +457,6 @@ public class FileOperations {
                         FileOperations fileOperations = new FileOperations();
                         fileOperations.restoreAccess(context, inputPath + "/" + inputFile);
                     } else if (!usedFile.setReadable(true) || !usedFile.setWritable(true)) {
-                        reentrantLock.unlock();
                         Log.e(LOG_TAG, "Unable to chmod file " + inputPath + "/" + inputFile);
                         return true;
                     }
@@ -473,28 +471,32 @@ public class FileOperations {
                         Log.e(LOG_TAG, "Unable to delete file " + usedFile.toString());
                     }
 
-                    reentrantLock.unlock();
                     return true;
                 }
             } else {
-                reentrantLock.unlock();
                 Log.w(LOG_TAG, "Unable to delete file internal function. No file " + usedFile.toString());
                 return false;
             }
         } catch (Exception e) {
-            reentrantLock.unlock();
+            if (e.getMessage() != null && e.getMessage().contains("Permission denied")) {
+                FileOperations fileOperations = new FileOperations();
+                fileOperations.restoreAccess(context, inputPath + "/" + inputFile);
+            }
+
             Log.e(LOG_TAG, "deleteFileSynchronous function fault " + e.getMessage());
             return true;
+        } finally {
+            reentrantLock.unlock();
         }
-        reentrantLock.unlock();
+
         return false;
     }
 
     public static void deleteFile(final Context context, final String inputPath, final String inputFile, final String tag) {
         Runnable runnable = () -> {
-            try {
-                reentrantLock.lock();
+            reentrantLock.lock();
 
+            try {
                 File usedFile = null;
 
                 try {
@@ -551,6 +553,11 @@ public class FileOperations {
                         throw new ClassCastException("Wrong File operations type. Choose binary type.");
                     }
                 }
+
+                if (e.getMessage() != null && e.getMessage().contains("Permission denied")) {
+                    FileOperations fileOperations = new FileOperations();
+                    fileOperations.restoreAccess(context, inputPath + "/" + inputFile);
+                }
             } finally {
                 reentrantLock.unlock();
             }
@@ -566,9 +573,9 @@ public class FileOperations {
         reentrantLock.lock();
 
         boolean result = false;
-        try{
+        File usedDir = null;
 
-            File usedDir = null;
+        try{
 
             try {
                 usedDir = new File(inputPath);
@@ -626,9 +633,14 @@ public class FileOperations {
             result = true;
         } catch (Exception e) {
             Log.e(LOG_TAG, "delete Dir function fault " + e.getMessage() + " " + e.getCause());
-        }
 
-        reentrantLock.unlock();
+            if (e.getMessage() != null && e.getMessage().contains("Permission denied")) {
+                FileOperations fileOperations = new FileOperations();
+                fileOperations.restoreAccess(context, inputPath);
+            }
+        } finally {
+            reentrantLock.unlock();
+        }
 
         return result;
     }
@@ -637,9 +649,9 @@ public class FileOperations {
     public static void readTextFile(final Context context, final String filePath, final String tag) {
         Runnable runnable = () -> {
 
-            try {
+            reentrantLock.lock();
 
-                reentrantLock.lock();
+            try {
 
                 linesListMap.remove(filePath);
 
@@ -682,6 +694,22 @@ public class FileOperations {
                     for (String tmp; (tmp = br.readLine()) != null; ) {
                         linesList.add(tmp.trim());
                     }
+                } catch (Exception ex) {
+                    if (ex.getMessage() != null && ex.getMessage().contains("Permission denied")) {
+                        FileOperations fileOperations = new FileOperations();
+                        fileOperations.restoreAccess(context, filePath);
+
+                        try (FileInputStream fstream = new FileInputStream(filePath);
+                             BufferedReader br = new BufferedReader(new InputStreamReader(fstream))) {
+
+                            for (String tmp; (tmp = br.readLine()) != null; ) {
+                                linesList.add(tmp.trim());
+                            }
+                        }
+
+                    } else {
+                        throw new IllegalStateException("readTextFile input stream exception " + ex.getMessage() + " " + ex.getCause());
+                    }
                 }
 
 
@@ -706,6 +734,11 @@ public class FileOperations {
                         throw new ClassCastException("Wrong File operations type. Choose text type.");
                     }
                 }
+
+                if (e.getMessage() != null && e.getMessage().contains("Permission denied")) {
+                    FileOperations fileOperations = new FileOperations();
+                    fileOperations.restoreAccess(context, filePath);
+                }
             } finally {
                 reentrantLock.unlock();
             }
@@ -721,9 +754,9 @@ public class FileOperations {
     public static void writeToTextFile(final Context context, final String filePath, final List<String> lines, final String tag) {
         Runnable runnable = () -> {
 
-            try {
+            reentrantLock.lock();
 
-                reentrantLock.lock();
+            try {
 
                 File f = null;
 
@@ -781,6 +814,11 @@ public class FileOperations {
                     } else {
                         throw new ClassCastException("Wrong File operations type. Choose text type.");
                     }
+                }
+
+                if (e.getMessage() != null && e.getMessage().contains("Permission denied")) {
+                    FileOperations fileOperations = new FileOperations();
+                    fileOperations.restoreAccess(context, filePath);
                 }
             } finally {
                 reentrantLock.unlock();
@@ -840,13 +878,34 @@ public class FileOperations {
                 for (String tmp; (tmp = br.readLine()) != null; ) {
                     lines.add(tmp.trim());
                 }
+            } catch (Exception ex) {
+                if (ex.getMessage() != null && ex.getMessage().contains("Permission denied")) {
+                    FileOperations fileOperations = new FileOperations();
+                    fileOperations.restoreAccess(context, filePath);
+
+                    try (FileInputStream fstream = new FileInputStream(filePath);
+                         BufferedReader br = new BufferedReader(new InputStreamReader(fstream))) {
+
+                        for (String tmp; (tmp = br.readLine()) != null; ) {
+                            lines.add(tmp.trim());
+                        }
+                    }
+
+                } else {
+                    throw new IllegalStateException("readTextFile synchronous input stream exception " + ex.getMessage() + " " + ex.getCause());
+                }
             }
 
         } catch (Exception e) {
             Log.e(LOG_TAG, "readTextFileSynchronous Exception " + e.getMessage() + " " + e.getCause());
-        }
 
-        reentrantLock.unlock();
+            if (e.getMessage() != null && e.getMessage().contains("Permission denied")) {
+                FileOperations fileOperations = new FileOperations();
+                fileOperations.restoreAccess(context, filePath);
+            }
+        } finally {
+            reentrantLock.unlock();
+        }
 
         return lines;
     }
@@ -898,9 +957,14 @@ public class FileOperations {
         } catch (Exception e) {
             Log.e(LOG_TAG, "writeTextFileSynchronous Exception " + e.getMessage() + " " + e.getCause());
             result = false;
-        }
 
-        reentrantLock.unlock();
+            if (e.getMessage() != null && e.getMessage().contains("Permission denied")) {
+                FileOperations fileOperations = new FileOperations();
+                fileOperations.restoreAccess(context, filePath);
+            }
+        } finally {
+            reentrantLock.unlock();
+        }
 
         return result;
     }
@@ -916,13 +980,13 @@ public class FileOperations {
             IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
             LocalBroadcastManager.getInstance(context).registerReceiver(br, intentFilterBckgIntSer);
 
-            String appUID = new PrefManager(context).getStrPref("appUID");
+            String appUID = String.valueOf(Process.myUid());
             PathVars pathVars = PathVars.getInstance(context);
-            String[] commands = {
+            List<String> commands = new ArrayList<>(Arrays.asList(
                     pathVars.getBusyboxPath()+ "chown -R " + appUID + "." + appUID + " " + filePath + " 2> /dev/null",
                     "restorecon " + filePath + " 2> /dev/null",
                     pathVars.getBusyboxPath() + "sleep 1 2> /dev/null"
-            };
+            ));
             RootCommands rootCommands = new RootCommands(commands);
             Intent intent = new Intent(context, RootExecService.class);
             intent.setAction(RootExecService.RUN_COMMAND);
@@ -936,21 +1000,25 @@ public class FileOperations {
 
     public static void setOnFileOperationCompleteListener(OnFileOperationsCompleteListener callback) {
         if (stackCallbacks == null)
-            stackCallbacks = new Stack<>();
+            stackCallbacks = new CopyOnWriteArrayList<>();
 
         if (FileOperations.callback != null)
-            stackCallbacks.push(FileOperations.callback);
+            stackCallbacks.add(FileOperations.callback);
 
         if (callback != null)
             FileOperations.callback = callback;
     }
 
-    public static void deleteOnFileOperationCompleteListener() {
+    public static void deleteOnFileOperationCompleteListener(OnFileOperationsCompleteListener callback) {
         if (stackCallbacks != null) {
-            if (stackCallbacks.empty()) {
-                callback = null;
-            } else {
-                callback = stackCallbacks.pop();
+            int lastIndexOfCallback = stackCallbacks.lastIndexOf(callback);
+
+            if (stackCallbacks.isEmpty()) {
+                FileOperations.callback = null;
+            } else if (callback == FileOperations.callback) {
+                FileOperations.callback = stackCallbacks.remove(stackCallbacks.size() - 1);
+            } else if (lastIndexOfCallback >= 0) {
+                stackCallbacks.remove(lastIndexOfCallback);
             }
         }
     }
@@ -958,8 +1026,8 @@ public class FileOperations {
     public static void removeAllOnFileOperationsListeners() {
         if (callback != null)
             callback = null;
-        if (stackCallbacks != null && !stackCallbacks.empty())
-            FileOperations.stackCallbacks.removeAllElements();
+        if (stackCallbacks != null && !stackCallbacks.isEmpty())
+            FileOperations.stackCallbacks.clear();
 
         new Thread(() -> {
             if (executorService != null && !executorService.isShutdown()) {

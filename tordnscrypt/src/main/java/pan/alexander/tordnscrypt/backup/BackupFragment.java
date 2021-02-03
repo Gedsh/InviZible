@@ -129,18 +129,15 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.btnRestoreBackup:
-                restoreHelper = new RestoreHelper(getActivity(), appDataDir, pathBackup);
-                restoreBackup();
-                break;
-            case R.id.btnSaveBackup:
-                backupHelper = new BackupHelper(getActivity(), appDataDir, pathBackup);
-                saveBackup();
-                break;
-            case R.id.etPathBackup:
-                selectBackupPath();
-                break;
+        int id = v.getId();
+        if (id == R.id.btnRestoreBackup) {
+            restoreHelper = new RestoreHelper(getActivity(), appDataDir, pathBackup);
+            restoreBackup();
+        } else if (id == R.id.btnSaveBackup) {
+            backupHelper = new BackupHelper(getActivity(), appDataDir, pathBackup);
+            saveBackup();
+        } else if (id == R.id.etPathBackup) {
+            selectBackupPath();
         }
 
     }
@@ -231,7 +228,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener, On
     public void onDestroy() {
         super.onDestroy();
 
-        FileOperations.deleteOnFileOperationCompleteListener();
+        FileOperations.deleteOnFileOperationCompleteListener(this);
     }
 
     @Override

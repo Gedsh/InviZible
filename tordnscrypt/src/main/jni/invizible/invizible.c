@@ -27,10 +27,15 @@
 
 // Global variables
 
-char socks5_addr[INET6_ADDRSTRLEN + 1];
-int socks5_port = 0;
-char socks5_username[127 + 1];
-char socks5_password[127 + 1];
+char tor_socks5_addr[INET6_ADDRSTRLEN + 1];
+int tor_socks5_port = 0;
+char tor_socks5_username[127 + 1];
+char tor_socks5_password[127 + 1];
+
+char proxy_socks5_addr[INET6_ADDRSTRLEN + 1];
+int proxy_socks5_port = 0;
+char proxy_socks5_username[127 + 1];
+char proxy_socks5_password[127 + 1];
 int own_uid = 0;
 int loglevel = ANDROID_LOG_WARN;
 bool compatibility_mode = false;
@@ -117,10 +122,15 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1init(
 
     loglevel = ANDROID_LOG_WARN;
 
-    *socks5_addr = 0;
-    socks5_port = 0;
-    *socks5_username = 0;
-    *socks5_password = 0;
+    *tor_socks5_addr = 0;
+    tor_socks5_port = 0;
+    *tor_socks5_username = 0;
+    *tor_socks5_password = 0;
+
+    *proxy_socks5_addr = 0;
+    proxy_socks5_port = 0;
+    *proxy_socks5_username = 0;
+    *proxy_socks5_password = 0;
 
     own_uid = getuid();
 
@@ -206,24 +216,56 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1get_1mtu(JNIEnv *env,
 }
 
 JNIEXPORT void JNICALL
-Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1socks5(JNIEnv *env, jobject instance,
-                                                                  jstring addr_,
-                                                                  jint port, jstring username_,
-                                                                  jstring password_) {
+Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1socks5_1for_1tor(JNIEnv *env,
+                                                                            jobject instance,
+                                                                            jstring addr_,
+                                                                            jint port,
+                                                                            jstring username_,
+                                                                            jstring password_) {
     const char *addr = (*env)->GetStringUTFChars(env, addr_, 0);
     const char *username = (*env)->GetStringUTFChars(env, username_, 0);
     const char *password = (*env)->GetStringUTFChars(env, password_, 0);
-    ng_add_alloc(addr, "addr");
-    ng_add_alloc(username, "username");
-    ng_add_alloc(password, "password");
+    ng_add_alloc(addr, "tor_addr");
+    ng_add_alloc(username, "tor_username");
+    ng_add_alloc(password, "tor_password");
 
-    strcpy(socks5_addr, addr);
-    socks5_port = port;
-    strcpy(socks5_username, username);
-    strcpy(socks5_password, password);
+    strcpy(tor_socks5_addr, addr);
+    tor_socks5_port = port;
+    strcpy(tor_socks5_username, username);
+    strcpy(tor_socks5_password, password);
 
-    log_android(ANDROID_LOG_WARN, "SOCKS5 %s:%d user=%s",
-                socks5_addr, socks5_port, socks5_username);
+    log_android(ANDROID_LOG_WARN, "TOR SOCKS5 %s:%d user=%s",
+                tor_socks5_addr, tor_socks5_port, tor_socks5_username);
+
+    (*env)->ReleaseStringUTFChars(env, addr_, addr);
+    (*env)->ReleaseStringUTFChars(env, username_, username);
+    (*env)->ReleaseStringUTFChars(env, password_, password);
+    ng_delete_alloc(addr, __FILE__, __LINE__);
+    ng_delete_alloc(username, __FILE__, __LINE__);
+    ng_delete_alloc(password, __FILE__, __LINE__);
+}
+
+JNIEXPORT void JNICALL
+Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1socks5_1for_1proxy(JNIEnv *env,
+                                                                              jobject instance,
+                                                                              jstring addr_,
+                                                                              jint port,
+                                                                              jstring username_,
+                                                                              jstring password_) {
+    const char *addr = (*env)->GetStringUTFChars(env, addr_, 0);
+    const char *username = (*env)->GetStringUTFChars(env, username_, 0);
+    const char *password = (*env)->GetStringUTFChars(env, password_, 0);
+    ng_add_alloc(addr, "proxy_addr");
+    ng_add_alloc(username, "proxy_username");
+    ng_add_alloc(password, "proxy_password");
+
+    strcpy(proxy_socks5_addr, addr);
+    proxy_socks5_port = port;
+    strcpy(proxy_socks5_username, username);
+    strcpy(proxy_socks5_password, password);
+
+    log_android(ANDROID_LOG_WARN, "PROXY SOCKS5 %s:%d user=%s",
+                proxy_socks5_addr, proxy_socks5_port, proxy_socks5_username);
 
     (*env)->ReleaseStringUTFChars(env, addr_, addr);
     (*env)->ReleaseStringUTFChars(env, username_, username);
@@ -273,7 +315,8 @@ Java_pan_alexander_tordnscrypt_vpn_Util_jni_1getprop(JNIEnv *env, jclass type, j
 }
 
 JNIEXPORT jboolean JNICALL
-Java_pan_alexander_tordnscrypt_vpn_Util_is_1numeric_1address(JNIEnv *env, jclass type, jstring ip_) {
+Java_pan_alexander_tordnscrypt_vpn_Util_is_1numeric_1address(JNIEnv *env, jclass type,
+                                                             jstring ip_) {
     jboolean numeric = 0;
     const char *ip = (*env)->GetStringUTFChars(env, ip_, 0);
     ng_add_alloc(ip, "ip");
@@ -572,7 +615,7 @@ jboolean is_domain_blocked(const struct arguments *args, const char *name) {
 
 static jmethodID midIsRedirectToTor = NULL;
 
-jboolean is_redirect_to_tor(const struct arguments *args, const int uid, const char *daddr) {
+jboolean is_redirect_to_tor(const struct arguments *args, const int uid, const char *daddr, const int dport) {
 #ifdef PROFILE_JNI
     float mselapsed;
     struct timeval start, end;
@@ -582,7 +625,7 @@ jboolean is_redirect_to_tor(const struct arguments *args, const int uid, const c
     jclass clsService = (*args->env)->GetObjectClass(args->env, args->instance);
     ng_add_alloc(clsService, "clsService");
 
-    const char *signature = "(ILjava/lang/String;)Z";
+    const char *signature = "(ILjava/lang/String;I)Z";
     if (midIsRedirectToTor == NULL)
         midIsRedirectToTor = jniGetMethodID(args->env, clsService, "isRedirectToTor", signature);
 
@@ -590,7 +633,7 @@ jboolean is_redirect_to_tor(const struct arguments *args, const int uid, const c
     ng_add_alloc(jdaddr, "jdaddr");
 
     jboolean jredirect_to_tor = (*args->env)->CallBooleanMethod(
-            args->env, args->instance, midIsRedirectToTor, uid, jdaddr);
+            args->env, args->instance, midIsRedirectToTor, uid, jdaddr, dport);
     jniCheckException(args->env);
 
     (*args->env)->DeleteLocalRef(args->env, jdaddr);
@@ -607,6 +650,45 @@ jboolean is_redirect_to_tor(const struct arguments *args, const int uid, const c
 #endif
 
     return jredirect_to_tor;
+}
+
+static jmethodID midIsRedirectToProxy = NULL;
+
+jboolean is_redirect_to_proxy(const struct arguments *args, const int uid, const char *daddr, const int dport) {
+#ifdef PROFILE_JNI
+    float mselapsed;
+    struct timeval start, end;
+    gettimeofday(&start, NULL);
+#endif
+
+    jclass clsService = (*args->env)->GetObjectClass(args->env, args->instance);
+    ng_add_alloc(clsService, "clsService");
+
+    const char *signature = "(ILjava/lang/String;I)Z";
+    if (midIsRedirectToProxy == NULL)
+        midIsRedirectToProxy = jniGetMethodID(args->env, clsService, "isRedirectToProxy", signature);
+
+    jstring jdaddr = (*args->env)->NewStringUTF(args->env, daddr);
+    ng_add_alloc(jdaddr, "jdaddr");
+
+    jboolean jredirect_to_proxy = (*args->env)->CallBooleanMethod(
+            args->env, args->instance, midIsRedirectToProxy, uid, jdaddr, dport);
+    jniCheckException(args->env);
+
+    (*args->env)->DeleteLocalRef(args->env, jdaddr);
+    (*args->env)->DeleteLocalRef(args->env, clsService);
+    ng_delete_alloc(jdaddr, __FILE__, __LINE__);
+    ng_delete_alloc(clsService, __FILE__, __LINE__);
+
+#ifdef PROFILE_JNI
+    gettimeofday(&end, NULL);
+    mselapsed = (end.tv_sec - start.tv_sec) * 1000.0 +
+                (end.tv_usec - start.tv_usec) / 1000.0;
+    if (mselapsed > PROFILE_JNI)
+        log_android(ANDROID_LOG_WARN, "is_redirect_to_tor %f", mselapsed);
+#endif
+
+    return jredirect_to_proxy;
 }
 
 static jmethodID midGetUidQ = NULL;
