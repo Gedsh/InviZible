@@ -28,6 +28,7 @@ public class LanguageList {
     private static String sStandardOptionLabel = STANDARD_OPTION_LABEL_DEFAULT;
     private static final String[] HUMAN_RAW = {
             null,
+            "Q2hpbmVzZSAo5Lit5paHKQ==",
             "RW5nbGlzaCAoRW5nbGlzaCk=",
             "RmlubmlzaCAoU3VvbWFsYWluZW4p",
             "RnJlbmNoIChGcmFuw6dhaXNlKQ==",
@@ -40,6 +41,7 @@ public class LanguageList {
     };
     private static final String[] MACHINE = {
             "",
+            "zh",
             "en",
             "fi",
             "fr",
