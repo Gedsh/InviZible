@@ -496,3 +496,13 @@
 * Added Japanese language.
 * Updated French language.
 * Minor fixes and optimizations.
+
+**InviZible Pro beta 1.2.2**
+* Improved app update feature.
+* Updated Purple I2P.
+* Updated Purple I2P default configuration.
+* Fixed "Clat" selection for use with Tor.
+* Explicitly set unmetered connection for Android Q.
+* Added Chinese translation.
+* Updated German translation.
+* Updated French translation.
