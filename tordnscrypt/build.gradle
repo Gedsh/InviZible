@@ -41,9 +41,9 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 30
-        versionCode 121
+        versionCode 122
 
-        resConfigs "en", "ru-rRU", "ru-rUA", "pl", "de", "fa", "fi", "in", "fr", "ja"
+        resConfigs "en", "ru-rRU", "ru-rUA", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh"
 
         externalNativeBuild {
             cmake {
