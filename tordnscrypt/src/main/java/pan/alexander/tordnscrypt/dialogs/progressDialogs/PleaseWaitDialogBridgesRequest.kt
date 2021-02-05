@@ -32,11 +32,12 @@ class PleaseWaitDialogBridgesRequest : ExtendedDialogFragment() {
 
     override fun assignBuilder(): AlertDialog.Builder? {
 
-        if (activity == null || requireActivity().isFinishing) {
+        val activity = activity;
+        if (activity == null || activity.isFinishing) {
             return null
         }
 
-        val builder = AlertDialog.Builder(requireActivity(), R.style.CustomAlertDialogTheme)
+        val builder = AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme)
         builder.setTitle(R.string.pref_fast_use_tor_bridges_request_dialog)
         builder.setMessage(R.string.please_wait)
         builder.setIcon(R.drawable.ic_visibility_off_black_24dp)
