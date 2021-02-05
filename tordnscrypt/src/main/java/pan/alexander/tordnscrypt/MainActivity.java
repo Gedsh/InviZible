@@ -22,7 +22,6 @@ import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -62,7 +61,6 @@ import android.view.animation.Animation;
 import android.view.animation.RotateAnimation;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.util.Locale;
@@ -112,7 +110,6 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 public class MainActivity extends LangAppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, ChangeModeInterface {
 
-    public static DialogInterface modernDialog = null;
     private static final int CODE_IS_AP_ON = 100;
     private static final int CODE_IS_VPN_ALLOWED = 110;
 
@@ -209,8 +206,6 @@ public class MainActivity extends LangAppCompatActivity
 
         checkUpdates();
 
-        showUpdateResultMessage();
-
         handleMitmAttackWarning();
 
         registerBroadcastReceiver();
@@ -288,8 +283,7 @@ public class MainActivity extends LangAppCompatActivity
         Intent intent = getIntent();
         if (Objects.equals(intent.getAction(), "check_update")) {
             if (topFragment != null) {
-                topFragment.checkNewVer();
-                modernDialog = modernProgressDialog();
+                topFragment.checkNewVer(this, true);
             }
 
             intent.setAction(null);
@@ -315,20 +309,6 @@ public class MainActivity extends LangAppCompatActivity
                 DialogFragment commandResult = NotificationDialogFragment.newInstance(siteFinal);
                 commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
             }, 1200);
-        }
-    }
-
-    public void showUpdateResultMessage() {
-
-        if (appVersion.equals("gp") || appVersion.equals("fd")) {
-            return;
-        }
-
-        String updateResultMessage = new PrefManager(this).getStrPref("UpdateResultMessage");
-        if (!updateResultMessage.isEmpty()) {
-            showUpdateMessage(updateResultMessage);
-
-            new PrefManager(this).setStrPref("UpdateResultMessage", "");
         }
     }
 
@@ -879,53 +859,6 @@ public class MainActivity extends LangAppCompatActivity
         return true;
     }
 
-
-    public void showUpdateMessage(final String message) {
-        if (modernDialog != null)
-            modernDialog.dismiss();
-        modernDialog = null;
-
-        if (isFinishing() || handler == null) {
-            return;
-        }
-
-        handler.postDelayed(() -> {
-            if (!isFinishing()) {
-                DialogFragment commandResult = NotificationDialogFragment.newInstance(message);
-                commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
-            }
-        }, 500);
-
-    }
-
-    public DialogInterface modernProgressDialog() {
-        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this, R.style.CustomAlertDialogTheme);
-        builder.setTitle(R.string.update_checking_title);
-        builder.setMessage(R.string.update_checking_message);
-        builder.setIcon(R.drawable.ic_visibility_off_black_24dp);
-        builder.setNegativeButton(R.string.cancel, (dialogInterface, i) -> {
-            if (modernDialog != null) {
-                modernDialog.dismiss();
-                modernDialog = null;
-
-                //////////////To STOP UPDATES CHECK/////////////////////////////////////////////////////
-                TopFragment topFragment = (TopFragment) getSupportFragmentManager().findFragmentByTag("topFragmentTAG");
-                if (topFragment != null && topFragment.updateCheck != null && topFragment.updateCheck.context != null) {
-                    topFragment.updateCheck.context = null;
-                }
-
-            }
-        });
-
-        ProgressBar progressBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-        progressBar.setBackgroundResource(R.drawable.background_10dp_padding);
-        progressBar.setIndeterminate(true);
-        builder.setView(progressBar);
-        builder.setCancelable(false);
-
-        return builder.show();
-    }
-
     private void startAppExitDetectService() {
 
         if (isFinishing() || handler == null) {
@@ -1092,11 +1025,6 @@ public class MainActivity extends LangAppCompatActivity
         if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
             scheduledFuture.cancel(false);
             scheduledFuture = null;
-        }
-
-        if (modernDialog != null) {
-            modernDialog.dismiss();
-            modernDialog = null;
         }
 
         if (viewPager != null) {

@@ -45,6 +45,7 @@ import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -54,9 +55,11 @@ import pan.alexander.tordnscrypt.dialogs.AgreementDialog;
 import pan.alexander.tordnscrypt.dialogs.AskAccelerateDevelop;
 import pan.alexander.tordnscrypt.dialogs.AskForceClose;
 import pan.alexander.tordnscrypt.dialogs.NewUpdateDialogFragment;
+import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.dialogs.SendCrashReport;
 import pan.alexander.tordnscrypt.dialogs.UpdateModulesDialogFragment;
+import pan.alexander.tordnscrypt.dialogs.progressDialogs.CheckUpdatesDialog;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.RootCheckingProgressDialog;
 import pan.alexander.tordnscrypt.installer.Installer;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
@@ -114,7 +117,8 @@ public class TopFragment extends Fragment {
     private OperationMode mode = UNDEFINED;
     private boolean runModulesWithRoot = false;
 
-    UpdateCheck updateCheck;
+    public CheckUpdatesDialog checkUpdatesDialog;
+    Future<?> updateCheckTask;
 
     private ScheduledFuture<?> scheduledFuture;
     private BroadcastReceiver br;
@@ -226,11 +230,6 @@ public class TopFragment extends Fragment {
 
         closePleaseWaitDialog();
 
-        if (updateCheck != null && updateCheck.context != null) {
-            updateCheck.context = null;
-            updateCheck = null;
-        }
-
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
         if (context != null && !modulesStatus.isUseModulesWithRoot()
@@ -263,6 +262,9 @@ public class TopFragment extends Fragment {
             rootChecker.topFragmentWeakReference = null;
             rootChecker = null;
         }
+
+        cancelCheckUpdatesTask();
+        dismissCheckUpdatesDialog();
 
         if (handler != null) {
             handler.removeCallbacksAndMessages(null);
@@ -429,6 +431,9 @@ public class TopFragment extends Fragment {
                         return;
                     }
 
+                    ////////////////////Show message about previous update attempt///////////////////////
+                    topFragment.showUpdateResultMessage(activity);
+
                     ////////////////////////////CHECK UPDATES///////////////////////////////////////////
                     topFragment.checkUpdates(activity);
 
@@ -453,16 +458,13 @@ public class TopFragment extends Fragment {
         }
 
         if (appVersion.endsWith("e")) {
-
-            Runnable performRegistration = () -> {
-                if (isAdded()) {
-                    Registration registration = new Registration(activity);
-                    registration.showDonateDialog();
-                }
-            };
-
             if (handler != null) {
-                handler.postDelayed(performRegistration, 5000);
+                handler.postDelayed(() -> {
+                    if (isAdded()) {
+                        Registration registration = new Registration(activity);
+                        registration.showDonateDialog();
+                    }
+                }, 5000);
             }
         } else if (appVersion.endsWith("p") && isAdded() && !accelerated) {
 
@@ -676,47 +678,45 @@ public class TopFragment extends Fragment {
                     if ((updateTimeCurrent - updateTimeLast > interval)
                             || (lastUpdateResult.isEmpty() && ((updateTimeCurrent - updateTimeLast) > 300000))
                             || lastUpdateResult.equals(getString(R.string.update_check_warning_menu)))
-                        checkNewVer();
+                        checkNewVer(context, false);
                 } else {
-                    checkNewVer();
+                    checkNewVer(context, false);
                 }
             }
         }
     }
 
-    public void checkNewVer() {
+    public void checkNewVer(Context context, boolean showProgressDialog) {
 
         if (appVersion.endsWith("p") || appVersion.startsWith("f")) {
             return;
         }
 
-        Runnable runnable = () -> {
-            Activity activity = getActivity();
-
-            if (activity == null || updateCheck != null) {
-                return;
-            }
-
-            new PrefManager(activity).setStrPref("LastUpdateResult", "");
-            new PrefManager(activity).setStrPref("updateTimeLast", String.valueOf(System.currentTimeMillis()));
-
-            updateCheck = new UpdateCheck(activity);
-            try {
-                updateCheck.requestUpdateData("https://invizible.net", appSign);
-            } catch (Exception e) {
-                if (activity instanceof MainActivity) {
-                    new PrefManager(activity).setStrPref("LastUpdateResult", getString(R.string.update_fault));
-                    if (MainActivity.modernDialog != null)
-                        ((MainActivity) activity).showUpdateMessage(getString(R.string.update_fault));
-                }
-                Log.e(LOG_TAG, "TopFragment Failed to requestUpdate() " + e.getMessage() + " " + e.getCause());
-            }
-        };
-
-        if (handler != null) {
-            handler.postDelayed(runnable, 1000);
+        if (context == null || updateCheckTask != null) {
+            return;
         }
 
+        new PrefManager(context).setStrPref("LastUpdateResult", "");
+        new PrefManager(context).setStrPref("updateTimeLast", String.valueOf(System.currentTimeMillis()));
+
+        try {
+            UpdateCheck updateCheck = new UpdateCheck(this);
+            updateCheckTask = updateCheck.requestUpdateData("https://invizible.net", appSign);
+            if (showProgressDialog) {
+                checkUpdatesDialog = new CheckUpdatesDialog();
+                checkUpdatesDialog.setCheckUpdatesTask(updateCheckTask);
+                checkUpdatesDialog.show(getParentFragmentManager(), "checkUpdatesDialog");
+            }
+        } catch (Exception e) {
+            Activity activity = getActivity();
+            if (activity instanceof MainActivity) {
+                if (checkUpdatesDialog != null && checkUpdatesDialog.isAdded()) {
+                    showUpdateMessage(activity, getString(R.string.update_fault));
+                }
+            }
+            new PrefManager(context).setStrPref("LastUpdateResult", getString(R.string.update_fault));
+            Log.e(LOG_TAG, "TopFragment Failed to requestUpdate() " + e.getMessage() + " " + e.getCause());
+        }
     }
 
     public void downloadUpdate(String fileName, String updateStr, String message, String hash) {
@@ -724,7 +724,8 @@ public class TopFragment extends Fragment {
         if (context == null)
             return;
 
-        closeMainActivityModernDialog();
+        cancelCheckUpdatesTask();
+        dismissCheckUpdatesDialog();
 
         new PrefManager(context).setStrPref("LastUpdateResult", context.getString(R.string.update_found));
 
@@ -734,14 +735,52 @@ public class TopFragment extends Fragment {
         }
     }
 
-    private void closeMainActivityModernDialog() {
-        try {
-            if (MainActivity.modernDialog != null) {
-                MainActivity.modernDialog.dismiss();
-                MainActivity.modernDialog = null;
-            }
-        } catch (Exception ignored) {
+    private void dismissCheckUpdatesDialog() {
+        if (checkUpdatesDialog != null && checkUpdatesDialog.isAdded()) {
+            checkUpdatesDialog.dismiss();
+            checkUpdatesDialog = null;
         }
+    }
+
+    private void cancelCheckUpdatesTask() {
+        if (updateCheckTask != null) {
+            if (!updateCheckTask.isDone()) {
+                updateCheckTask.cancel(true);
+            }
+            updateCheckTask = null;
+        }
+    }
+
+    public void showUpdateResultMessage(Activity activity) {
+
+        if (appVersion.equals("gp") || appVersion.equals("fd")) {
+            return;
+        }
+
+        String updateResultMessage = new PrefManager(activity).getStrPref("UpdateResultMessage");
+        if (!updateResultMessage.isEmpty()) {
+            showUpdateMessage(activity, updateResultMessage);
+
+            new PrefManager(activity).setStrPref("UpdateResultMessage", "");
+        }
+    }
+
+    public void showUpdateMessage(Activity activity, final String message) {
+        if (activity.isFinishing() || handler == null) {
+            return;
+        }
+
+        cancelCheckUpdatesTask();
+
+        handler.post(this::dismissCheckUpdatesDialog);
+
+        handler.postDelayed(() -> {
+            if (!activity.isFinishing()) {
+                DialogFragment commandResult = NotificationDialogFragment.newInstance(message);
+                commandResult.show(getParentFragmentManager(), "NotificationDialogFragment");
+            }
+        }, 500);
+
     }
 
     private static void startModulesStarterServiceIfStoppedBySystem(Context context) {
@@ -781,8 +820,8 @@ public class TopFragment extends Fragment {
             return;
         }
 
-        if (intent.getAction().equals(UpdateService.UPDATE_RESULT) && activity instanceof MainActivity) {
-            ((MainActivity) activity).showUpdateResultMessage();
+        if (intent.getAction().equals(UpdateService.UPDATE_RESULT)) {
+            showUpdateResultMessage(activity);
             refreshModulesVersions(activity);
         } else if (intent.getAction().equals(ModulesStarterHelper.ASK_FORCE_CLOSE)) {
             DialogFragment dialogFragment = AskForceClose.getInstance(intent.getStringExtra(ModulesStarterHelper.MODULE_NAME));
