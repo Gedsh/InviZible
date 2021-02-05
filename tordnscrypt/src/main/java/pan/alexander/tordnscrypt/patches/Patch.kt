@@ -124,7 +124,7 @@ class Patch(private val activity: Activity) {
 
     private fun updateITPDAddressBookDefaultUrl() {
         itpdConfigPatches.add(PatchLine("[addressbook]",
-                Regex("^defaulturl .+"),
+                Regex("defaulturl = http://joajgazyztfssty4w2on5oaqksz6tqoxbduy553y34mf4byv6gpq.b32.i2p/export/alive-hosts.txt"),
                 "defaulturl = http://shx5vqsw7usdaunyzr2qmes2fq37oumybpudrd4jjj4e4vk4uusa.b32.i2p/hosts.txt"))
     }
 }
