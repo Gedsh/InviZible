@@ -481,7 +481,7 @@
     <string name="firewall_user_apps">"Utilisateur"</string>
     <string name="firewall_sort_by_name">"Trier par nom"</string>
     <string name="firewall_sort_by_uid">"Trier par UID"</string>
-    <string name="firewall_switch">"Firewall On/Off"</string>
+    <string name="firewall_switch">"Activé/Désactivé le Pare-feu"</string>
     <string name="ask_save_changes">"Voulez-vous enregistrer les modifications?"</string>
     <string name="firewall_warning_enable_module">"Pour activer le pare-feu, vous devez démarrer au moins DNSCrypt ou Tor."</string>
     <string name="firewall_notification_allow_app_title">"%s est installé"</string>
@@ -511,4 +511,8 @@
     <string name="pref_common_dns_rebind_protection_summ">"Bloquer un site lorsqu'une attaque par rebondissement du DNS est détectée"</string>
     <string name="notification_dns_rebinding_title">"Rebondissements DNS"</string>
     <string name="notification_dns_rebinding_text">"Attaque potentielle par rebond DNS (DNS rebinding) détectée! Le site %s a été bloqué."</string>
+    <string name="areYouSure">"Êtes-vous sûr? Cette action ne pourra être annulée"</string>
+    <string name="btnResetSettings">"Réinitialiser les paramètres"</string>
+    <string name="backupSaved">"Sauvegarde enregistré"</string>
+    <string name="backupRestored">"Sauvegarde restauré"</string>
 </resources>
