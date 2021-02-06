@@ -7,15 +7,16 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 ############
 
 ndk_version=21.3.6528147
-obfs4proxy_version=obfs4proxy-0.0.11
-dnscryptproxy_version=2.0.44
+obfs4proxy_version=f638c33f6c6f697498150d5f0dfbf26453759262
+dnscryptproxy_version=2.0.45
 snowflake_version=7043a055f9fb0680281ecffd7d458a43f2ce65b5
 tor_openssl_version=OpenSSL_1_1_1h
 libevent_version=release-2.1.11-stable
 zstd_version=v1.4.5
 xz_version=v5.2.3
-tor_version=release-0.4.4
-i2pd_openssl_version=OpenSSL_1_1_1g
+tor_version=release-0.4.5
+i2pd_openssl_version=OpenSSL_1_1_1h
+miniupnpc_version=miniupnpc_2_1
 i2pd_version=2.35.0
 
 if [[ $# == 1 && $1 == "arm64" ]]
@@ -131,7 +132,7 @@ export EXTERNAL_ROOT=`pwd`
 pushd libs/
 git clone --single-branch --branch $i2pd_openssl_version https://github.com/openssl/openssl.git
 git clone https://github.com/moritz-wundke/Boost-for-Android.git
-git clone https://github.com/miniupnp/miniupnp.git
+git clone --single-branch --branch $miniupnpc_version https://github.com/miniupnp/miniupnp.git
 git clone https://github.com/PurpleI2P/android-ifaddrs.git
 popd
 
