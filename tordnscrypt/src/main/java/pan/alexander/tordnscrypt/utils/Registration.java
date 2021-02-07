@@ -23,7 +23,9 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+
 import androidx.appcompat.app.AlertDialog;
+
 import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -92,23 +94,20 @@ public class Registration {
         editText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
-        builder .setTitle(R.string.enter_code)
+        builder.setTitle(R.string.enter_code)
                 .setPositiveButton(R.string.ok, (dialog, which) -> {
                     if (activity.isFinishing()) {
-                        dialog.dismiss();
                         return;
                     }
 
-                    new PrefManager(activity).setStrPref("registrationCode",editText.getText().toString().trim());
+                    new PrefManager(activity).setStrPref("registrationCode", editText.getText().toString().trim());
 
                     wrongRegistrationCode = false;
 
-                    TopFragment topFragment = (TopFragment) ((MainActivity)activity).getSupportFragmentManager().findFragmentByTag("topFragmentTAG");
-                    if (topFragment!=null) {
-                        topFragment.checkNewVer();
-                        MainActivity.modernDialog = ((MainActivity)activity).modernProgressDialog();
+                    TopFragment topFragment = (TopFragment) ((MainActivity) activity).getSupportFragmentManager().findFragmentByTag("topFragmentTAG");
+                    if (topFragment != null) {
+                        topFragment.checkNewVer(activity.getApplicationContext(), true);
                     }
-                    dialog.dismiss();
                 })
                 .setNegativeButton(R.string.cancel, (dialog, id) -> dialog.dismiss())
                 .setCancelable(false)

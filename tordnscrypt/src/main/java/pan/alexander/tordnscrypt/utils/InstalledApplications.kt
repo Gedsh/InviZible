@@ -239,10 +239,11 @@ class InstalledApplications(private val context: Context, private val activeApps
         val media = getUidForName("media", 1013 + userId * 100_000)
         val vpn = getUidForName("vpn", 1016 + userId * 100_000)
         val drm = getUidForName("drm", 1019 + userId * 100_000)
-        val mdns = 1020 + userId * 100_000
+        val mdns = getUidForName("mdns", 1020 + userId * 100_000)
         val gps = getUidForName("gps", 1021 + userId * 100_000)
-        val dns = 1051 + userId * 100_000
+        val dns = getUidForName("dns", 1051 + userId * 100_000)
         val shell = getUidForName("shell", 2000 + userId * 100_000)
+        val clat = getUidForName("clat", 1029 + userId * 100_000)
         val specialDataApps = arrayListOf(
                 ApplicationData("Kernel", "UID -1", -1, defaultIcon, true, activeApps.contains("-1")),
                 ApplicationData("Root", "root", 0, defaultIcon, true, activeApps.contains("0")),
@@ -257,7 +258,7 @@ class InstalledApplications(private val context: Context, private val activeApps
         )
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            specialDataApps.add(ApplicationData("Clat", "clat", 1029, defaultIcon, system = true, active = false))
+            specialDataApps.add(ApplicationData("Clat", "clat", clat, defaultIcon, true, activeApps.contains(clat.toString())))
         }
 
         if (showSpecials) {
@@ -271,11 +272,17 @@ class InstalledApplications(private val context: Context, private val activeApps
     }
 
     private fun getUidForName(name: String, defaultValue: Int): Int {
-        var result = defaultValue
+        var uid = defaultValue
         try {
-            result = Process.getUidForName(name)
-        } catch (ignored: Exception) {
+            val result = Process.getUidForName(name)
+            if (result > 0) {
+                uid = result
+            } else {
+                Log.w(LOG_TAG, "No uid for $name, using default value $defaultValue")
+            }
+        } catch (e: Exception) {
+            Log.w(LOG_TAG, "No uid for $name, using default value $defaultValue")
         }
-        return result
+        return uid
     }
 }

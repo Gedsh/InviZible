@@ -497,4 +497,27 @@ WLAN aus- und kurz darauf wieder anschalten. Die Verwendung des derzeitigen Hots
     <string name="pref_fast_theme_titles_night_mode">"Nachtmodus"</string>
     <string name="pref_fast_theme_titles_auto_mode">"Automodus"</string>
     <string name="pref_fast_theme_titles_default_mode">"Defaultmodus"</string>
+    <string name="firewall_btnTopLanFirewall_tooltip">"Erlaube Verbindungen zum lokalen Netzwerk sowie Onion und I2P Seiten"</string>
+    <string name="firewall_btnTopWifiFirewall_tooltip">"Erlaube Verbindungen in WiFi Netzwerken"</string>
+    <string name="firewall_btnTopGsmFirewall_tooltip">"Erlaube Verbindungen in GSM Netzwerken"</string>
+    <string name="firewall_btnTopRoamingFirewall_tooltip">"Erlaube Verbindungen im Roaming Modus"</string>
+    <string name="firewall_btnTopVpnFirewall_tooltip">"Erlaube Verbindungen mit aktiviertem VPN"</string>
+    <string name="firewall_btnTopCheckAllFirewall_tooltip">"Alle auswählen"</string>
+    <string name="firewall_btnTopUnCheckAllFirewall_tooltip">"Alle abwählen"</string>
+    <string name="firewall_item_button_tooltip">"Grün - Erlauben, Weiss - Verweigern von Verbindungen"</string>
+    <string name="pref_firewall_title">"Firewall Einstellungen"</string>
+    <string name="pref_firewall_allow_internet_for_new_apps">"Erlaube Verbindungen für neue Apps"</string>
+    <string name="pref_firewall_allow_internet_for_new_apps_on_summ">"Erlaube Internet Verbindungen für neu installierte Apps"</string>
+    <string name="pref_firewall_allow_internet_for_new_apps_off_summ">"Blockiere Internet Verbindungen für neu installierte Apps"</string>
+    <string name="helper_dnscrypt_proxy_wifi">"Bitte deaktiviere den Proxy in den Android WiFi Netzwerkeinstellungen. Diese Option beeinträchtigt InviZible."</string>
+    <string name="helper_dnscrypt_proxy_gsm">"Bitte deaktiviere den Proxy in den Android GSM APN Einstellungen. Diese Option beeinträchtigt InviZible."</string>
+    <string name="notification_channel_auxiliary">"Hilfsbenachrichtigungen"</string>
+    <string name="pref_common_dns_rebind_protection">"DNS Rebinding Schutz"</string>
+    <string name="pref_common_dns_rebind_protection_summ">"Blockiere Seite wenn eine DNS Rebinding Attacke erkannt wird"</string>
+    <string name="notification_dns_rebinding_title">"DNS Rebinding"</string>
+    <string name="notification_dns_rebinding_text">"Potentielle DNS Rebinding Attacke erkannt! Seite %s wurde blockiert"</string>
+    <string name="areYouSure">"Bist du sicher? Diese Aktion kann nicht rückgängig gemacht werden!"</string>
+    <string name="btnResetSettings">"Einstellungen zurücksetzen"</string>
+    <string name="backupSaved">"Backup gespeichert"</string>
+    <string name="backupRestored">"Backup wiederhergestellt"</string>
 </resources>

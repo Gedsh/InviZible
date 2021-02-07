@@ -292,7 +292,7 @@ public class ServiceVPN extends VpnService {
         builder.setSession(getString(R.string.app_name));
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            builder.setMetered(Util.isMeteredNetwork(this));
+            builder.setMetered(false);
         }
 
 
