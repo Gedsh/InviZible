@@ -618,7 +618,7 @@ public class ServiceVPN extends VpnService {
             Log.e(LOG_TAG, "VPN Redirect Ports Parse Exception " + e.getMessage() + " " + e.getCause());
         }
 
-        boolean torReady = new PrefManager(this).getBoolPref("Tor Ready");
+        boolean torReady = modulesStatus.isTorReady();
         boolean useDefaultBridges = new PrefManager(this).getBoolPref("useDefaultBridges");
         boolean useOwnBridges = new PrefManager(this).getBoolPref("useOwnBridges");
         boolean bridgesSnowflakeDefault = new PrefManager(this).getStrPref("defaultBridgesObfs").equals(snowFlakeBridgesDefault);

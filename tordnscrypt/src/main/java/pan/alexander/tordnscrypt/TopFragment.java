@@ -83,6 +83,7 @@ import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
+import static pan.alexander.tordnscrypt.tor_fragment.TorFragmentPresenter.TOR_READY_PREF;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -105,6 +106,8 @@ public class TopFragment extends Fragment {
     public static String TOP_BROADCAST = "pan.alexander.tordnscrypt.action.TOP_BROADCAST";
     public static String wrongSign;
     public static String appSign;
+
+    private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
     private RootChecker rootChecker;
     private AlertDialog rootCheckingDialog;
@@ -195,7 +198,8 @@ public class TopFragment extends Fragment {
             rootIsAvailableSaved = rootIsAvailable = new PrefManager(context).getBoolPref("rootIsAvailable");
             runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
 
-            ModulesStatus.getInstance().setFixTTL(shPref.getBoolean("pref_common_fix_ttl", false));
+            modulesStatus.setFixTTL(shPref.getBoolean("pref_common_fix_ttl", false));
+            modulesStatus.setTorReady(new PrefManager(context).getBoolPref(TOR_READY_PREF));
 
             String operationMode = new PrefManager(context).getStrPref("OPERATION_MODE");
 
@@ -229,8 +233,6 @@ public class TopFragment extends Fragment {
         unRegisterReceiver(context);
 
         closePleaseWaitDialog();
-
-        ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
         if (context != null && !modulesStatus.isUseModulesWithRoot()
                 && (modulesStatus.getDnsCryptState() == RUNNING || modulesStatus.getDnsCryptState() == STOPPED)
@@ -485,7 +487,7 @@ public class TopFragment extends Fragment {
     }
 
     private void refreshModulesVersions(Context context) {
-        if (ModulesStatus.getInstance().isUseModulesWithRoot()) {
+        if (modulesStatus.isUseModulesWithRoot()) {
             Intent intent = new Intent(TOP_BROADCAST);
             LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
             Log.i(LOG_TAG, "TopFragment Send TOP_BROADCAST");
@@ -665,8 +667,8 @@ public class TopFragment extends Fragment {
 
         if (autoUpdate) {
             boolean throughTorUpdate = spref.getBoolean("pref_fast through_tor_update", false);
-            boolean torRunning = new PrefManager(context).getBoolPref("Tor Running");
-            boolean torReady = new PrefManager(context).getBoolPref("Tor Ready");
+            boolean torRunning = modulesStatus.getTorState() == RUNNING;
+            boolean torReady = modulesStatus.isTorReady();
             String lastUpdateResult = new PrefManager(context).getStrPref("LastUpdateResult");
             if (!throughTorUpdate || (torRunning && torReady)) {
                 long updateTimeCurrent = System.currentTimeMillis();

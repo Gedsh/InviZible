@@ -77,6 +77,8 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
     private final static int MAX_LINES_IN_LOG = 200;
 
+    public static final String DNSCRYPT_READY_PREF = "DNSCrypt Ready";
+
     private volatile boolean bound;
 
     private int displayLogPeriod = -1;

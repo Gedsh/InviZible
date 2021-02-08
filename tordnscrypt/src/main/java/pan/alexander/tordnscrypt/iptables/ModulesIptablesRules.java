@@ -22,8 +22,6 @@ package pan.alexander.tordnscrypt.iptables;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Handler;
-import android.os.Looper;
 import android.os.Process;
 import android.util.Log;
 
@@ -227,7 +225,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             }
         }
 
-        boolean torReady = new PrefManager(context).getBoolPref("Tor Ready");
+        boolean torReady = modulesStatus.isTorReady();
         boolean useDefaultBridges = new PrefManager(context).getBoolPref("useDefaultBridges");
         boolean useOwnBridges = new PrefManager(context).getBoolPref("useOwnBridges");
         boolean bridgesSnowflakeDefault = new PrefManager(context).getStrPref("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
@@ -727,10 +725,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             ));
         }
 
-        Looper looper = Looper.getMainLooper();
-        if (looper != null) {
-            new Handler(looper).postDelayed(() -> executeCommands(context, commands), 1000);
-        }
+        executeCommands(context, commands);
     }
 
     private String removeRedundantSymbols(StringBuilder stringBuilder) {

@@ -48,6 +48,7 @@ import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.modules.ModulesService.actionStopServiceForeground;
+import static pan.alexander.tordnscrypt.tor_fragment.TorFragmentPresenter.TOR_READY_PREF;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
@@ -155,7 +156,9 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                 shortenTooLongITPDLog();
             }
 
-            ModulesStatus.getInstance().setFixTTL(fixTTL);
+            ModulesStatus modulesStatus = ModulesStatus.getInstance();
+            modulesStatus.setFixTTL(fixTTL);
+            modulesStatus.setTorReady(new PrefManager(context).getBoolPref(TOR_READY_PREF));
 
             if (tethering_autostart) {
 
