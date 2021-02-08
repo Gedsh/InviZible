@@ -360,6 +360,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         view.setDNSCryptStatus(R.string.tvDNSStop, R.color.textModuleStatusColorStopped);
         view.setStartButtonText(R.string.btnDNSCryptStart);
         view.setDNSCryptLogViewText();
+
+        setDNSCryptReady(view.getFragmentActivity(), false);
     }
 
     @Override
@@ -433,6 +435,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                 view.setDNSCryptProgressBarIndeterminate(false);
             }
 
+            setDNSCryptReady(view.getFragmentActivity(), true);
             setDnsCryptRunning();
         }
     }
@@ -823,6 +826,16 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             serviceVPN = null;
             serviceConnection = null;
         }
+    }
+
+    private void setDNSCryptReady(Context context, boolean ready) {
+        if (context == null) {
+            return;
+        }
+
+        new PrefManager(context).setBoolPref(DNSCRYPT_READY_PREF, ready);
+
+        modulesStatus.setDnsCryptReady(ready);
     }
 
     public void startButtonOnClick(Context context) {

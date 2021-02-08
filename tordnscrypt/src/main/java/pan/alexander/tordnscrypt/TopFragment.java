@@ -81,6 +81,7 @@ import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
+import static pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptFragmentPresenter.DNSCRYPT_READY_PREF;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
 import static pan.alexander.tordnscrypt.tor_fragment.TorFragmentPresenter.TOR_READY_PREF;
@@ -200,6 +201,7 @@ public class TopFragment extends Fragment {
 
             modulesStatus.setFixTTL(shPref.getBoolean("pref_common_fix_ttl", false));
             modulesStatus.setTorReady(new PrefManager(context).getBoolPref(TOR_READY_PREF));
+            modulesStatus.setDnsCryptReady(new PrefManager(context).getBoolPref(DNSCRYPT_READY_PREF));
 
             String operationMode = new PrefManager(context).getStrPref("OPERATION_MODE");
 
