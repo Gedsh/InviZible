@@ -437,7 +437,7 @@ public class ServiceVPN extends VpnService {
         blockInternetWhenArpAttackDetected = prefs.getBoolean("pref_common_arp_block_internet", false);
         firewallEnabled = new PrefManager(this).getBoolPref("FirewallEnabled");
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
             compatibilityMode = true;
         } else {
             compatibilityMode = prefs.getBoolean("swCompatibilityMode", false);
