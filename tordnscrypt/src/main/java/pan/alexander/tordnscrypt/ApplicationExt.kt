@@ -25,6 +25,7 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat.getSystemService
 import pan.alexander.tordnscrypt.crash_handling.TopExceptionHandler
 import pan.alexander.tordnscrypt.language.Language
@@ -56,6 +57,10 @@ class ApplicationExt : Application() {
         }
 
         setExceptionHandler()
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            AppCompatDelegate.setCompatVectorFromResourcesEnabled(true)
+        }
     }
 
     @TargetApi(Build.VERSION_CODES.O)
