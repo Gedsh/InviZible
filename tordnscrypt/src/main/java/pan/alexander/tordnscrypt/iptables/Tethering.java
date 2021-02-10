@@ -833,8 +833,10 @@ public class Tethering {
                 iptables + "-t nat -I tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes(),
                 iptables + "-D tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j RETURN 2> /dev/null && "
                         + iptables + "-I tordnscrypt_forward -m state --state ESTABLISHED,RELATED -j ACCEPT 2> /dev/null || true",
-                iptables + "-D tordnscrypt_forward -o !" + vpnInterfaceName + " -j REJECT 2> /dev/null",
-                iptables + "-I tordnscrypt_forward -o !" + vpnInterfaceName + " -j REJECT 2> /dev/null",
+                iptables + "-D tordnscrypt_forward -o !" + vpnInterfaceName + " -j REJECT 2> /dev/null || "
+                        + iptables + "-D tordnscrypt_forward -o !tun0 -j REJECT 2> /dev/null || "
+                        + iptables + "-D tordnscrypt_forward -o !tun1 -j REJECT 2> /dev/null",
+                iptables + "-I tordnscrypt_forward -o !" + vpnInterfaceName + " -j REJECT",
                 iptables + "-D tordnscrypt_forward -p all -j ACCEPT 2> /dev/null || true",
                 iptables + "-A tordnscrypt_forward -p all -j ACCEPT 2> /dev/null",
                 iptables + "-I FORWARD -j tordnscrypt_forward 2> /dev/null",

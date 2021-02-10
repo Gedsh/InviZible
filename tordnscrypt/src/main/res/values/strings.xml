@@ -653,6 +653,7 @@
     <string name="enter_code">Enter Code</string>
     <string name="thanks_for_donate">InviZible Pro Project and its author express appreciation
         for the assistance. Would you like to download and upgrade to PRO? The update will continue in the background.</string>
+    <string name="thanks_for_donate_gp">InviZible Pro Project and its author express appreciation for the assistance!</string>
     <string name="pref_dnscrypt_relays_summ">Remote lists of available relays.</string>
 
     <string name="vpn_mode_active">VPN mode is active</string>

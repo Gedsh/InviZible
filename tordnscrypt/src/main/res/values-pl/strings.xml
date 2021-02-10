@@ -459,4 +459,5 @@
     <string name="pref_itpd_use_Socks_outproxy">SOCKS outproxy</string>
     <string name="pref_itpd_Socks_outproxy_address">SOCKS outproxy address</string>
     <string name="pref_itpd_Socks_outproxy_port">SOCKS outproxy port</string>
+    <string name="thanks_for_donate_gp">"Projekt InviZible Pro Project i jego Autor wyrazaja podziekowania za wsparcie."</string>
 </resources>

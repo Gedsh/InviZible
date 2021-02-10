@@ -34,10 +34,11 @@ public class LanguageList {
             "RnJlbmNoIChGcmFuw6dhaXNlKQ==",
             "R2VybWFuIChEZXV0c2NoZSk=",
             "SW5kb25lc2lhbiAoYmFoYXNhIEluZG9uZXNpYSk=",
-            "SmFwYW5lc2UgKOaXpeacrOS6uik=",
+            "SmFwYW5lc2UgKOaXpeacrOiqnik=",
             "UGVyc2lhbiAo2YHYp9ix2LPbjCk=",
             "UG9saXNoIChQb2xza2kp",
-            "UnVzc2lhbiAo0KDRg9GB0YHQutC40Lkp"
+            "UnVzc2lhbiAo0KDRg9GB0YHQutC40Lkp",
+            "U3BhbmlzaCAoRXNwYcOxb2xhKQ=="
     };
     private static final String[] MACHINE = {
             "",
@@ -50,7 +51,8 @@ public class LanguageList {
             "ja",
             "fa",
             "pl",
-            "ru"
+            "ru",
+            "es"
     };
     private static String[] mHuman;
 

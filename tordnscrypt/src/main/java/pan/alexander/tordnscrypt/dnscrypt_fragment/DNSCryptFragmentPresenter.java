@@ -77,6 +77,8 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallbacks {
     private final static int MAX_LINES_IN_LOG = 200;
 
+    public static final String DNSCRYPT_READY_PREF = "DNSCrypt Ready";
+
     private volatile boolean bound;
 
     private int displayLogPeriod = -1;
@@ -358,6 +360,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
         view.setDNSCryptStatus(R.string.tvDNSStop, R.color.textModuleStatusColorStopped);
         view.setStartButtonText(R.string.btnDNSCryptStart);
         view.setDNSCryptLogViewText();
+
+        setDNSCryptReady(view.getFragmentActivity(), false);
     }
 
     @Override
@@ -431,6 +435,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
                 view.setDNSCryptProgressBarIndeterminate(false);
             }
 
+            setDNSCryptReady(view.getFragmentActivity(), true);
             setDnsCryptRunning();
         }
     }
@@ -821,6 +826,16 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterCallb
             serviceVPN = null;
             serviceConnection = null;
         }
+    }
+
+    private void setDNSCryptReady(Context context, boolean ready) {
+        if (context == null) {
+            return;
+        }
+
+        new PrefManager(context).setBoolPref(DNSCRYPT_READY_PREF, ready);
+
+        modulesStatus.setDnsCryptReady(ready);
     }
 
     public void startButtonOnClick(Context context) {

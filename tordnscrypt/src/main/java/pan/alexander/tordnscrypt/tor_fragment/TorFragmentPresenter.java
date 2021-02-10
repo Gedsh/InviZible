@@ -87,6 +87,8 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
+    public static final String TOR_READY_PREF = "Tor Ready";
+
     public TorFragmentView view;
 
     private ScheduledFuture<?> scheduledFuture;
@@ -242,9 +244,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
         view.setStartButtonText(R.string.btnTorStart);
         view.setTorLogViewText();
 
-        if (context != null) {
-            new PrefManager(context).setBoolPref("Tor Ready", false);
-        }
+        setTorReady(context, false);
 
         showNewTorIdentityIcon(false);
     }
@@ -402,7 +402,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
                         if (previousLastLinesLength != lastLines.length() && torLogAutoScroll) {
 
-                            if (!new PrefManager(view.getFragmentActivity()).getBoolPref("Tor Ready")) {
+                            if (!isTorReady(view.getFragmentActivity())) {
                                 torStartedSuccessfully(view.getFragmentActivity(), lastLines);
                             }
 
@@ -442,7 +442,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
         int lastPersIndex = lastLines.lastIndexOf("%");
 
-        if (lastPersIndex < 16 || new PrefManager(context).getBoolPref("Tor Ready")) {
+        if (lastPersIndex < 16 || isTorReady(context)) {
             return;
         }
 
@@ -484,9 +484,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
 
             showNewTorIdentityIcon(true);
 
-            boolean torReady = new PrefManager(context).getBoolPref("Tor Ready");
-
-            if (!torReady) {
+            if (!isTorReady(context)) {
                 checkInternetAvailable();
             }
         }
@@ -601,6 +599,25 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
         if (jobScheduler != null) {
             jobScheduler.cancel(mJobId);
         }
+    }
+
+
+    private boolean isTorReady(Context context) {
+        if (context == null) {
+            return false;
+        }
+
+        return new PrefManager(context).getBoolPref(TOR_READY_PREF);
+    }
+
+    private void setTorReady(Context context, boolean ready) {
+        if (context == null) {
+            return;
+        }
+
+        new PrefManager(context).setBoolPref(TOR_READY_PREF, ready);
+
+        modulesStatus.setTorReady(ready);
     }
 
     public void startButtonOnClick(Context context) {
@@ -772,7 +789,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
                 boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
                         && !modulesStatus.isUseModulesWithRoot();
 
-                new PrefManager(context).setBoolPref("Tor Ready", true);
+                setTorReady(context, true);
 
                 if (useDefaultBridges && bridgesSnowflakeDefault || useOwnBridges && bridgesSnowflakeOwn) {
                     if (modulesStatus != null && modulesStatus.getMode() == ROOT_MODE) {
@@ -810,7 +827,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterCallbacks {
         });
 
         if (view != null && view.getFragmentActivity() != null
-                && !new PrefManager(view.getFragmentActivity()).getBoolPref("Tor Ready")) {
+                && !isTorReady(view.getFragmentActivity())) {
             CachedExecutor.INSTANCE.getExecutorService().submit(checkInetAvailableFutureTask);
         }
     }

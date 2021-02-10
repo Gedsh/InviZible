@@ -515,4 +515,5 @@
     <string name="btnResetSettings">"Réinitialiser les paramètres"</string>
     <string name="backupSaved">"Sauvegarde enregistré"</string>
     <string name="backupRestored">"Sauvegarde restauré"</string>
+    <string name="thanks_for_donate_gp">"Le Projet InviZible Pro et son auteur vous expriment leur reconnaissance pour l'assistance."</string>
 </resources>

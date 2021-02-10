@@ -266,7 +266,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
                                     if (activity != null) {
                                         activity.runOnUiThread(() -> {
 
-                                            String thanks = activity.getString(R.string.thanks_for_donate);
+                                            String thanks = activity.getString(R.string.thanks_for_donate_gp);
                                             if (!thanks.contains(".")) {
                                                 return;
                                             }
@@ -299,8 +299,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
                             notificationHelper.show(activity.getSupportFragmentManager(), NotificationHelper.TAG_HELPER);
                         }
                     }
-
-                    noPayment();
+                    payComplete();
                     return;
                 }
             } catch (Exception e) {

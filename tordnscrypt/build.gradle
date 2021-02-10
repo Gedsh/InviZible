@@ -43,7 +43,7 @@ android {
         targetSdkVersion 30
         versionCode 122
 
-        resConfigs "en", "ru-rRU", "ru-rUA", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh"
+        resConfigs "en", "ru-rRU", "ru-rUA", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es"
 
         externalNativeBuild {
             cmake {

@@ -334,6 +334,7 @@
     <string name="enter_code_button">Ввести код</string>
     <string name="donate_project">Проект InviZible Pro нуждается в Вашей помощи. Пожалуйста, посетите         страницу поддержки или введите уже полученный регистрационный код.</string>
     <string name="thanks_for_donate">Проект InviZible Pro и его автор благодарен за помощь. Загрузить и обновить до PRO? Обновление будет продолжено в фоновом режиме.</string>
+    <string name="thanks_for_donate_gp">Проект InviZible Pro и его автор благодарен за помощь!</string>
     <string name="enter_code">Введите код</string>
     <string name="update_over_five_times">Вы проверяли обновление InviZible Pro больше 5 раз в день. Пожалуйста, попробуйте позже.</string>
     <string name="update_over_three_activations">Похоже Вы уже активировали 3 копии InviZible Pro этим кодом. Если это не так, свяжитесь с разработчиком.</string>

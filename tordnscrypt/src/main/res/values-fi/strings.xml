@@ -179,7 +179,9 @@
         Kiinassa asuvien on ehkä käytettävä tätä numeroa 114.114.114.114:53."</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">"Älä koskaan anna dnscrypt-proxy:n yrittää käyttää järjestelmän DNS-asetuksia. Muuten käytä varaehtoista resolveria..."</string>
     <string name="pref_dnscrypt_filters_categ">"SUODATUKSET"</string>
+    <string name="pref_dnscrypt_forwarding_rules_categ">"Forwarding rules"</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Reititä tiettyjen verkkotunnusten kyselyt omistettuun palvelinjoukkoon."</string>
+    <string name="pref_dnscrypt_cloaking_rules_categ">"Cloaking rules"</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">"Naamiointi palauttaa tietyn nimen ennalta määritetyn osoitteen.
 
         Sen lisäksi, että se toimii HOSTS-tiedostona, se voi myös palauttaa IP-osoitteen toisella nimellä. Se tekee myös CNAME-tasoitusta"</string>
@@ -280,11 +282,13 @@
     <string name="pref_itpd_elgamal_summ">"Käytä ElGamalin esikomputoituja taulukoita."</string>
     <string name="pref_itpd_UPNP_summ">"Ota UPnP käyttöön tai poista se käytöstä."</string>
     <string name="pref_itpd_ntcp2_enabled">"ntcp2 käytössä"</string>
+    <string name="pref_itpd_reseeding">"Reseeding"</string>
     <string name="pref_itpd_reseeding_summ">"Varmista .su3-allekirjoitus."</string>
     <string name="pref_itpd_limits">"Rajat"</string>
     <string name="pref_itpd_limits_transittunnels_summ">"Ohita kauttakulun tunnelien enimmäismäärä. 2500 oletuksena."</string>
     <string name="pref_itpd_limits_openfiles_summ">"Rajoita avoimien tiedostokuvausten lukumäärä (0 - käytä järjestelmän rajaa)."</string>
     <string name="pref_itpd_limits_coresize_summ">"Ydintiedoston enimmäiskoko (kt) (0 - järjestelmän käyttöraja)."</string>
+    <string name="pref_itpd_addressbook">"Addressbook"</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">"Osoitekirjan (AddressBook) tilauksen URL-osoite alkuasetuksia varten."</string>
     <string name="pref_itpd_addressbook_subscriptions_summ">"Osoitekirjatilausten (AddressBook) URL-osoitteet."</string>
     <string name="pref_itpd_not_exist">"Preferenssiä ei ole i2pd.conf!"</string>
@@ -474,6 +478,7 @@
     <string name="firewall_user_apps">"User"</string>
     <string name="firewall_sort_by_name">"Sort by Name"</string>
     <string name="firewall_sort_by_uid">"Sort by UID"</string>
+    <string name="firewall_switch">"Firewall On/Off"</string>
     <string name="ask_save_changes">"Do you want to save the changes?"</string>
     <string name="firewall_warning_enable_module">"To activate the firewall, you should start at least DNSCrypt or Tor."</string>
     <string name="firewall_notification_allow_app_title">"%s is installed"</string>
@@ -484,4 +489,28 @@
     <string name="pref_fast_theme_titles_night_mode">"Night Mode"</string>
     <string name="pref_fast_theme_titles_auto_mode">"Auto"</string>
     <string name="pref_fast_theme_titles_default_mode">"System default"</string>
+    <string name="firewall_btnTopLanFirewall_tooltip">"Allow connections to local network, onion and i2p sites"</string>
+    <string name="firewall_btnTopWifiFirewall_tooltip">"Allow connections in WiFi networks"</string>
+    <string name="firewall_btnTopGsmFirewall_tooltip">"Allow connections in GSM networks"</string>
+    <string name="firewall_btnTopRoamingFirewall_tooltip">"Allow connections while roaming"</string>
+    <string name="firewall_btnTopVpnFirewall_tooltip">"Allow connections with VPN enabled"</string>
+    <string name="firewall_btnTopCheckAllFirewall_tooltip">"Select all"</string>
+    <string name="firewall_btnTopUnCheckAllFirewall_tooltip">"Unselect all"</string>
+    <string name="firewall_item_button_tooltip">"Green - allow, white - deny connections"</string>
+    <string name="pref_firewall_title">"Firewall Settings"</string>
+    <string name="pref_firewall_allow_internet_for_new_apps">"Allow connections for new apps"</string>
+    <string name="pref_firewall_allow_internet_for_new_apps_on_summ">"Internet connections for newly installed apps are allowed."</string>
+    <string name="pref_firewall_allow_internet_for_new_apps_off_summ">"Internet connections for newly installed applications are blocked."</string>
+    <string name="helper_dnscrypt_proxy_wifi">"Please disable proxy in Android WiFi network settings. This option interferes with InviZible."</string>
+    <string name="helper_dnscrypt_proxy_gsm">"Please disable proxy in Android Mobile network APN settings. This option interferes with InviZible."</string>
+    <string name="notification_channel_auxiliary">"Auxiliary notifications"</string>
+    <string name="pref_common_dns_rebind_protection">"DNS rebinding protection"</string>
+    <string name="pref_common_dns_rebind_protection_summ">"Block site when DNS rebinding attack is detected"</string>
+    <string name="notification_dns_rebinding_title">"DNS rebinding"</string>
+    <string name="notification_dns_rebinding_text">"Potential DNS Rebinding Attack Detected! Site %s has been blocked."</string>
+    <string name="areYouSure">"Are you sure? This action cannot be undone!"</string>
+    <string name="btnResetSettings">"Reset Settings"</string>
+    <string name="backupSaved">"Backup saved"</string>
+    <string name="backupRestored">"Backup restored"</string>
+    <string name="thanks_for_donate_gp">"InviZible Pro -projekti ja sen tekijä ilmaisee arvostustaan apuasi varten."</string>
 </resources>

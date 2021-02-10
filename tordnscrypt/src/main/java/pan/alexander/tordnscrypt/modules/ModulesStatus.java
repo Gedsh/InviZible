@@ -41,6 +41,9 @@ public final class ModulesStatus {
     private volatile boolean requestContextUIDUpdate;
     private volatile boolean fixTTL;
     private volatile OperationMode mode;
+    private volatile boolean systemDNSAllowed;
+    private volatile boolean dnsCryptReady;
+    private volatile boolean torReady;
 
     private static volatile ModulesStatus modulesStatus;
 
@@ -147,5 +150,29 @@ public final class ModulesStatus {
 
     public void setMode(OperationMode mode) {
         this.mode = mode;
+    }
+
+    public boolean isSystemDNSAllowed() {
+        return systemDNSAllowed;
+    }
+
+    public void setSystemDNSAllowed(boolean systemDNSAllowed) {
+        this.systemDNSAllowed = systemDNSAllowed;
+    }
+
+    public boolean isDnsCryptReady() {
+        return dnsCryptReady;
+    }
+
+    public void setDnsCryptReady(boolean dnsCryptReady) {
+        this.dnsCryptReady = dnsCryptReady;
+    }
+
+    public boolean isTorReady() {
+        return torReady;
+    }
+
+    public void setTorReady(boolean torReady) {
+        this.torReady = torReady;
     }
 }
