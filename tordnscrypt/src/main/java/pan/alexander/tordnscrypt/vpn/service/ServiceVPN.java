@@ -1092,7 +1092,7 @@ public class ServiceVPN extends VpnService {
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && last_network != network.hashCode()) {
                     AuxNotificationSender.INSTANCE.checkPrivateDNSAndProxy(
-                            ServiceVPN.this.getApplicationContext(), null
+                            ServiceVPN.this, null
                     );
                 }
 
@@ -1118,7 +1118,7 @@ public class ServiceVPN extends VpnService {
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                             AuxNotificationSender.INSTANCE.checkPrivateDNSAndProxy(
-                                    ServiceVPN.this.getApplicationContext(), linkProperties
+                                    ServiceVPN.this, linkProperties
                             );
                         }
 

@@ -203,7 +203,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && last_network != network.hashCode()) {
                     AuxNotificationSender.INSTANCE.checkPrivateDNSAndProxy(
-                            context.getApplicationContext(), null
+                            context, null
                     );
                 }
 
@@ -231,7 +231,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                         AuxNotificationSender.INSTANCE.checkPrivateDNSAndProxy(
-                                context.getApplicationContext(), linkProperties
+                                context, linkProperties
                         );
                     }
                 }

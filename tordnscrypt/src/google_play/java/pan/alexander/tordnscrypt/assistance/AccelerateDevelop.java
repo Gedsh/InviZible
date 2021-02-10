@@ -292,7 +292,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
 
                     if (activity != null) {
                         NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                context, context.getString(R.string.pending_purchase)
+                                context, activity.getString(R.string.pending_purchase)
                                         + " " + purchase.getSku()
                                         + " " + purchase.getOrderId(), "pending_purchase");
                         if (notificationHelper != null && !activity.isDestroyed()) {

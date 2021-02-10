@@ -83,7 +83,7 @@ class DownloadTask extends Thread {
     long startTime;
 
     DownloadTask(UpdateService updateService, Intent intent, int serviceStartId, int notificationId, long startTime) {
-        this.context = updateService.getApplicationContext();
+        this.context = updateService;
         this.updateService = updateService;
         this.intent = intent;
         this.serviceStartId = serviceStartId;

@@ -975,7 +975,7 @@ public class ModulesService extends Service {
         if (modulesStatus.getMode() == ROOT_MODE
                 && !modulesStatus.isUseModulesWithRoot()
                 && modulesBroadcastReceiver == null) {
-            modulesBroadcastReceiver = new ModulesBroadcastReceiver(this.getApplicationContext(), arpScanner);
+            modulesBroadcastReceiver = new ModulesBroadcastReceiver(this, arpScanner);
             modulesBroadcastReceiver.registerReceivers();
         } else if (modulesStatus.getMode() != ROOT_MODE
                 && modulesBroadcastReceiver != null) {
