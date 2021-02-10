@@ -200,7 +200,9 @@
 کاربران چینی ممکن است که از 114.114.114.114:53 در اینجا استفاده کنند."</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">"هرگز به پروکسی Dnscrypt اجازه ندهید تا از تنظیمات DNS سیستم استفاده کند. بی قید و شرط، از رفع اشکال‌کنندۀ مجدد پشتیبان استفاده کنید."</string>
     <string name="pref_dnscrypt_filters_categ">"فیلترها"</string>
+    <string name="pref_dnscrypt_forwarding_rules_categ">"Forwarding rules"</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"جست‌و‌جوهای مربوط به دامنه های خاص را به یک مجموعه اختصاصی از سرورها هدایت کنید."</string>
+    <string name="pref_dnscrypt_cloaking_rules_categ">"Cloaking rules"</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">"Cloaking یک آدرس از پیش تعریف شده برای یک نام خاص را برمی‌گرداند.
 علاوه بر اینکه به عنوان یک فایل HOSTS عمل می‌کند، می‌تواند آدرس IP یک نام متفاوت را نیز برگرداند. همچنین مسطح‌سازی CNAME را نیز انجام خواهد داد."</string>
     <string name="pref_dnscrypt_query_log_categ">"واقعه‌نگاری Query."</string>
@@ -302,18 +304,22 @@
     <string name="pref_itpd_elgamal_summ">"از جداول از پیش محاسبه شده ElGamal استفاده کنید."</string>
     <string name="pref_itpd_UPNP_summ">"فعال‌کردن یا غیرفعال‌کردن UPnP."</string>
     <string name="pref_itpd_ntcp2_enabled">"ntcp2 فعال شد"</string>
+
+    <!-- در حال تحقیق -->
+    <string name="pref_itpd_reseeding">"Reseeding"</string>
     <string name="pref_itpd_reseeding_summ">"امضای su3. را تأیید کنید."</string>
     <string name="pref_itpd_limits">"محدودیت‌ها"</string>
     <string name="pref_itpd_limits_transittunnels_summ">"حداکثر تعداد تونل‌های ترانزیت را نادیده بگیرید. 2500 به‌صورت پیش‌فرض."</string>
     <string name="pref_itpd_limits_openfiles_summ">"تعداد توصیف‌کننده‌های فایل باز (صفر - استفاده از محدودیت سیستم) محدود کنید."</string>
     <string name="pref_itpd_limits_coresize_summ">"حداکثر اندازه فایل اصلی در واحد Kb (صفر - استفاده از محدودیت سیستم)."</string>
+
+    <!-- دفترچه آدرس -->
+    <string name="pref_itpd_addressbook">"Addressbook"</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">"URL اشتراک کتابچه آدرس برای تنظیم اولیه."</string>
 
     <!-- های مشترک url دفترچه آدرس -->
     <string name="pref_itpd_addressbook_subscriptions_summ">"URLهای اشتراک کتابچه آدرس."</string>
     <string name="pref_itpd_not_exist">"اولویت در i2pd.conf وجود ندارد!"</string>
-
-    <!-- رویداد فعلی -->
     <string name="helper_dialog_title">"اطلاعات"</string>
     <string name="helper_dnscrypt_stopped">"به نظر می‌رسد DNSCrypt توسط سیستم اندرویدی اجباراً بسته شده است. اتصال اینترنتی شما بازیابی شد. تنظیمات دستگاه را بررسی کنید!"</string>
     <string name="helper_tor_stopped">"به نظر می‌رسد که TOR توسط سیستم اندرویدی اجباراً بسته شده است. اتصال اینترنتی شما بازیابی شد. تنظیمات دستگاه را بررسی کنید!"</string>
@@ -505,6 +511,7 @@ invizible.net/en/privacy
     <string name="firewall_user_apps">"User"</string>
     <string name="firewall_sort_by_name">"Sort by Name"</string>
     <string name="firewall_sort_by_uid">"Sort by UID"</string>
+    <string name="firewall_switch">"Firewall On/Off"</string>
     <string name="ask_save_changes">"Do you want to save the changes?"</string>
     <string name="firewall_warning_enable_module">"To activate the firewall, you should start at least DNSCrypt or Tor."</string>
     <string name="firewall_notification_allow_app_title">"%s is installed"</string>
@@ -515,4 +522,28 @@ invizible.net/en/privacy
     <string name="pref_fast_theme_titles_night_mode">"Night Mode"</string>
     <string name="pref_fast_theme_titles_auto_mode">"Auto"</string>
     <string name="pref_fast_theme_titles_default_mode">"System default"</string>
+    <string name="firewall_btnTopLanFirewall_tooltip">"Allow connections to local network, onion and i2p sites"</string>
+    <string name="firewall_btnTopWifiFirewall_tooltip">"Allow connections in WiFi networks"</string>
+    <string name="firewall_btnTopGsmFirewall_tooltip">"Allow connections in GSM networks"</string>
+    <string name="firewall_btnTopRoamingFirewall_tooltip">"Allow connections while roaming"</string>
+    <string name="firewall_btnTopVpnFirewall_tooltip">"Allow connections with VPN enabled"</string>
+    <string name="firewall_btnTopCheckAllFirewall_tooltip">"Select all"</string>
+    <string name="firewall_btnTopUnCheckAllFirewall_tooltip">"Unselect all"</string>
+    <string name="firewall_item_button_tooltip">"Green - allow, white - deny connections"</string>
+    <string name="pref_firewall_title">"Firewall Settings"</string>
+    <string name="pref_firewall_allow_internet_for_new_apps">"Allow connections for new apps"</string>
+    <string name="pref_firewall_allow_internet_for_new_apps_on_summ">"Internet connections for newly installed apps are allowed."</string>
+    <string name="pref_firewall_allow_internet_for_new_apps_off_summ">"Internet connections for newly installed applications are blocked."</string>
+    <string name="helper_dnscrypt_proxy_wifi">"Please disable proxy in Android WiFi network settings. This option interferes with InviZible."</string>
+    <string name="helper_dnscrypt_proxy_gsm">"Please disable proxy in Android Mobile network APN settings. This option interferes with InviZible."</string>
+    <string name="notification_channel_auxiliary">"Auxiliary notifications"</string>
+    <string name="pref_common_dns_rebind_protection">"DNS rebinding protection"</string>
+    <string name="pref_common_dns_rebind_protection_summ">"Block site when DNS rebinding attack is detected"</string>
+    <string name="notification_dns_rebinding_title">"DNS rebinding"</string>
+    <string name="notification_dns_rebinding_text">"Potential DNS Rebinding Attack Detected! Site %s has been blocked."</string>
+    <string name="areYouSure">"Are you sure? This action cannot be undone!"</string>
+    <string name="btnResetSettings">"Reset Settings"</string>
+    <string name="backupSaved">"Backup saved"</string>
+    <string name="backupRestored">"Backup restored"</string>
+    <string name="thanks_for_donate_gp">"InviZible Pro Project and its author express appreciation for the assistance."</string>
 </resources>

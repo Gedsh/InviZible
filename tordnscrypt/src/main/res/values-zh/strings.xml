@@ -489,4 +489,5 @@
     <string name="btnResetSettings">"重置设置"</string>
     <string name="backupSaved">"备份已保存："</string>
     <string name="backupRestored">"备份已恢复"</string>
+    <string name="thanks_for_donate_gp">"InviZible Pro 项目及其作者感谢您的帮助。"</string>
 </resources>

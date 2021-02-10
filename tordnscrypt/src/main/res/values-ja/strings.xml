@@ -479,4 +479,9 @@ These queries can reveal the presence of malware, broken/obsolete applications, 
     <string name="pref_common_dns_rebind_protection_summ">"Block site when DNS rebinding attack is detected"</string>
     <string name="notification_dns_rebinding_title">"DNS rebinding"</string>
     <string name="notification_dns_rebinding_text">"Potential DNS Rebinding Attack Detected! Site %s has been blocked."</string>
+    <string name="areYouSure">"Are you sure? This action cannot be undone!"</string>
+    <string name="btnResetSettings">"Reset Settings"</string>
+    <string name="backupSaved">"Backup saved"</string>
+    <string name="backupRestored">"Backup restored"</string>
+    <string name="thanks_for_donate_gp">"InviZible Pro Project and its author express appreciation for the assistance."</string>
 </resources>
