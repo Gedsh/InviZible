@@ -1,6 +1,6 @@
-<i>保护您的设备免受危险站点威胁，原理恼人的广告和跟踪，访问在您的国家被屏蔽的资源！</i>
+<i>保护您的设备免受危险站点威胁，远离恼人的广告和跟踪，访问在您的国家被屏蔽的资源！</i>
 
-<i>InviZible Pro</i> 包含众所周知的模块 <b>DNSCrypt, Tor, Purple I2P</b>。它们用于获得最大化的安全，隐私和舒适使用互联网。
+<i>InviZible Pro</i> 包含众所周知的模块 <b>DNSCrypt, Tor, Purple I2P</b>。它们用于实现最大化的安全，隐私并舒适地使用互联网。
 
 <i>InviZible Pro</i> 可以使用 root，如果您的设备拥有 root 权限，或使用本地 VPN 将互联网流量传入 Tor，DNSCrypt 和 I2P 网络。
 
@@ -16,11 +16,11 @@
 * 支持数据共享
 * Material design 主题
 
-只需打开 <i>InviZible Pro，</i> 您就会从普通用户变成隐身用户，难以发现，阻止，通过无处不在的广告强制推销无用产品和服务。
+只需打开 <i>InviZible Pro，</i> 您就会从普通用户变成隐身用户，难以被发现，被阻止，免受无处不在的广告强制推销无用产品和服务。
 
 然而，如果您想要完全控制此程序和您的互联网连接 - 没问题！我们提供大量简单和专业的设置。您可以灵活配置 <i>InviZible Pro</i> 及其模块 - <b>DNSCrypt，Tor 和 Purple I2P，</b>以满足大多数个性化需求。
 
-<i>InviZible Pro</i> 是一个一站式程序。安装后，您可以轻松删除您的所有 VPN 应用和广告屏蔽器。大多数情况下，<i>InviZible Pro</i> 比免费 VPN 效果更好，更稳定，更快速。不含广告，臃肿代码并且不监视用户。
+<i>InviZible Pro</i> 是一个一站式程序。安装后，您可以轻松删除您的所有 VPN 应用和广告屏蔽器。大多数情况下，<i>InviZible Pro</i> 比免费 VPN 效果更好，更稳定，更快速。不含广告及臃肿代码并且不监视用户。
 
 <i>InviZible Pro</i> 阻止 ipv6，因为此协议和 InviZible 应用存在一些安全问题。
 
