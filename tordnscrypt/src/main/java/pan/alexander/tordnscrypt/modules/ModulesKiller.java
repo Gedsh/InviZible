@@ -522,7 +522,7 @@ public class ModulesKiller {
         int attempts = 0;
         while (attempts < 3 && !result) {
             if (attempts < 2) {
-                result = killModule(modulePath, pid, thread, moduleStartedWithRoot, "", attempts + 1);
+                result = killModule(modulePath, pid, thread, moduleStartedWithRoot, "", attempts + 2);
             } else {
                 result = killModule(modulePath, pid, thread, moduleStartedWithRoot, "SIGKILL", attempts + 1);
             }
