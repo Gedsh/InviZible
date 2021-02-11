@@ -58,9 +58,11 @@ mkdir arm64-v8a armeabi-v7a
 # libobfs4proxy #
 #################
 
-git clone --single-branch --branch $obfs4proxy_version https://github.com/Yawning/obfs4
+git clone https://github.com/Yawning/obfs4
 
-pushd obfs4/obfs4proxy/
+pushd obfs4/
+git checkout -f $obfs4proxy_version -b $obfs4proxy_version
+cd obfs4proxy/
 go build -ldflags="-s -w" -o libobfs4proxy.so
 mv libobfs4proxy.so ${LIBS_ROOT}/${ABI}/libobfs4proxy.so
 popd
