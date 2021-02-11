@@ -25,7 +25,6 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Build;
 
-import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
 import pan.alexander.tordnscrypt.MainActivity;
@@ -42,7 +41,6 @@ class ServiceVPNNotification {
         this.notificationManager = notificationManager;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     void sendNotification(String Title, String Text) {
 
         if (serviceVPN == null || notificationManager == null) {
@@ -82,8 +80,11 @@ class ServiceVPNNotification {
                 .setPriority(Notification.PRIORITY_MIN)
                 .setOnlyAlertOnce(true)
                 .setChannelId(ANDROID_CHANNEL_ID)
-                .setCategory(Notification.CATEGORY_SERVICE)
                 .setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            builder.setCategory(Notification.CATEGORY_SERVICE);
+        }
 
         Notification notification = builder.build();
 

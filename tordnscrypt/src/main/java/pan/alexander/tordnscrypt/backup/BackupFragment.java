@@ -30,7 +30,6 @@ import android.os.Bundle;
 import android.os.Environment;
 
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.LinearLayoutCompat;
 import androidx.fragment.app.DialogFragment;
@@ -360,7 +359,6 @@ public class BackupFragment extends Fragment implements View.OnClickListener,
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     void onResultActivity(Context context, int requestCode, int resultCode, @Nullable Intent data) {
 
         try {

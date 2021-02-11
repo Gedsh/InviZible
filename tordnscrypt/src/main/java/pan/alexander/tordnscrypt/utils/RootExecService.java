@@ -302,7 +302,6 @@ public class RootExecService extends Service {
         sendNotification(getString(R.string.notification_temp_text), "");
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void sendNotification(String Title, String Text) {
 
         //These three lines makes Notification to open main activity after clicking on it
@@ -321,18 +320,17 @@ public class RootExecService extends Service {
         builder.setContentIntent(contentIntent)
                 .setOngoing(false)   //Can be swiped out
                 .setSmallIcon(iconResource)
-                //.setLargeIcon(BitmapFactory.decodeResource(res, R.drawable.large))   // большая картинка
-                //.setTicker(Ticker)
                 .setContentTitle(Title) //Заголовок
                 .setContentText(Text) // Текст уведомления
-                //.setWhen(System.currentTimeMillis())
-                //new experiment
                 .setPriority(Notification.PRIORITY_MIN)
                 .setOnlyAlertOnce(true)
                 .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
-                .setCategory(Notification.CATEGORY_PROGRESS)
                 .setChannelId(ROOT_CHANNEL_ID)
                 .setProgress(100, 100, true);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            builder.setCategory(Notification.CATEGORY_PROGRESS);
+        }
 
         Notification notification = builder.build();
 

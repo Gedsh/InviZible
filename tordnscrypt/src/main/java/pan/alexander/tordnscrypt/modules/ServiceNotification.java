@@ -26,7 +26,6 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Build;
 
-import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
 import pan.alexander.tordnscrypt.MainActivity;
@@ -45,7 +44,6 @@ public class ServiceNotification {
         this.startTime = startTime;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public synchronized void sendNotification(String Title, String Text) {
 
         if (service == null || notificationManager == null) {
@@ -75,8 +73,11 @@ public class ServiceNotification {
                 .setPriority(Notification.PRIORITY_MIN)
                 .setOnlyAlertOnce(true)
                 .setChannelId(ANDROID_CHANNEL_ID)
-                .setCategory(Notification.CATEGORY_SERVICE)
                 .setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            builder.setCategory(Notification.CATEGORY_SERVICE);
+        }
 
         if (startTime != 0) {
             builder.setWhen(startTime)
@@ -88,7 +89,6 @@ public class ServiceNotification {
         service.startForeground(DEFAULT_NOTIFICATION_ID, notification);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public void updateNotification(String Title, String Text) {
         if (service == null || notificationManager == null) {
             return;
@@ -114,8 +114,11 @@ public class ServiceNotification {
                 .setPriority(Notification.PRIORITY_MIN)
                 .setOnlyAlertOnce(true)
                 .setChannelId(ANDROID_CHANNEL_ID)
-                .setCategory(Notification.CATEGORY_SERVICE)
                 .setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            builder.setCategory(Notification.CATEGORY_SERVICE);
+        }
 
         if (startTime != 0) {
             builder.setWhen(startTime)

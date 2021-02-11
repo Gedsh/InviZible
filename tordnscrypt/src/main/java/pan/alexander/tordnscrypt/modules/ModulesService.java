@@ -29,7 +29,6 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
-import androidx.annotation.RequiresApi;
 import androidx.preference.PreferenceManager;
 
 import java.io.File;
@@ -164,7 +163,7 @@ public class ModulesService extends Service {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 

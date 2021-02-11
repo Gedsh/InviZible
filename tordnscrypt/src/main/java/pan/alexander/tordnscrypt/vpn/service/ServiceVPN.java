@@ -47,7 +47,6 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -1256,7 +1255,6 @@ public class ServiceVPN extends VpnService {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
