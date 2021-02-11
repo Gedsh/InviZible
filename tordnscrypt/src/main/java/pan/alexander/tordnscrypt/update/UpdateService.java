@@ -89,7 +89,6 @@ public class UpdateService extends Service {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getAction();
@@ -222,6 +221,7 @@ public class UpdateService extends Service {
                 .setWhen(startTime)
                 .setUsesChronometer(true)
                 .setChannelId(UPDATE_CHANNEL_ID)
+                .setPriority(Notification.PRIORITY_DEFAULT)
                 .setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
