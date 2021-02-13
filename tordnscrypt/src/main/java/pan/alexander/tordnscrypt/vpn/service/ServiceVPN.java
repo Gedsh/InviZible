@@ -510,7 +510,11 @@ public class ServiceVPN extends VpnService {
                     Log.i(LOG_TAG, "VPN Tunnel exited");
                     tunnelThread = null;
                 } catch (Exception e) {
-                    Toast.makeText(ServiceVPN.this, e.getMessage() + " " + e.getCause(), Toast.LENGTH_LONG).show();
+                    try {
+                        Toast.makeText(ServiceVPN.this, e.getMessage() + " " + e.getCause(), Toast.LENGTH_LONG).show();
+                    } catch (Exception ignored) {
+                    }
+
                     Log.e(LOG_TAG, "ServiceVPN startNative exception " + e.getMessage() + " " + e.getCause());
                 }
 
