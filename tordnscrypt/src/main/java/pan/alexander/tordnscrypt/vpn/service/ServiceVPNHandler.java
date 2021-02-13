@@ -270,7 +270,7 @@ public class ServiceVPNHandler extends Handler {
 
         serviceVPN.reloading = false;
 
-        arpScanner.reset(serviceVPN.last_connected || serviceVPN.last_connected_override);
+        arpScanner.reset(serviceVPN, serviceVPN.last_connected || serviceVPN.last_connected_override);
     }
 
     private void stop() {

@@ -1082,12 +1082,12 @@ public class ModulesService extends Service {
 
     private void startArpScanner() {
         arpScanner = ArpScanner.INSTANCE.getInstance(this, mHandler);
-        arpScanner.start();
+        arpScanner.start(this);
     }
 
     private void stopArpScanner() {
         if (arpScanner != null) {
-            arpScanner.stop();
+            arpScanner.stop(this);
         }
     }
 

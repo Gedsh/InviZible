@@ -470,13 +470,13 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
 
     private void resetArpScanner(boolean connectionAvailable) {
         if (arpScanner != null) {
-            arpScanner.reset(connectionAvailable);
+            arpScanner.reset(context, connectionAvailable);
         }
     }
 
     private void resetArpScanner() {
         if (arpScanner != null && context != null) {
-            arpScanner.reset(Util.isConnected(context));
+            arpScanner.reset(context, Util.isConnected(context));
         }
     }
 }
