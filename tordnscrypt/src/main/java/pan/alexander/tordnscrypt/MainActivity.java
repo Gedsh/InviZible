@@ -867,9 +867,13 @@ public class MainActivity extends LangAppCompatActivity
 
         handler.postDelayed(() -> {
             if (!isFinishing()) {
-                Intent intent = new Intent(this, AppExitDetectService.class);
-                startService(intent);
-                Log.i(LOG_TAG, "Start app exit detect service");
+                try {
+                    Intent intent = new Intent(this, AppExitDetectService.class);
+                    startService(intent);
+                    Log.i(LOG_TAG, "Start app exit detect service");
+                } catch (Exception e) {
+                    Log.i(LOG_TAG, "Start app exit detect service exception " + e.getMessage() + " " + e.getCause());
+                }
             }
         }, 1000);
     }
