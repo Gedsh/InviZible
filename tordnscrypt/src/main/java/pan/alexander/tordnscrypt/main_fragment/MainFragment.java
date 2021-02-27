@@ -139,20 +139,21 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
         pbTorMainFragment = view.findViewById(R.id.pbTorMainFragment);
         pbITPDMainFragment = view.findViewById(R.id.pbITPDMainFragment);
 
-        if (getActivity() == null) {
+        Context context = getActivity();
+        if (context == null) {
             return view;
         }
 
         orientationLandscape = Utils.INSTANCE.getScreenOrientation(getActivity()) == Configuration.ORIENTATION_LANDSCAPE;
 
-        boolean hideIp = new PrefManager(getActivity()).getBoolPref("HideIp");
-        boolean protectDns = new PrefManager(getActivity()).getBoolPref("ProtectDns");
-        boolean accessITP = new PrefManager(getActivity()).getBoolPref("AccessITP");
+        boolean hideIp = new PrefManager(context).getBoolPref("HideIp");
+        boolean protectDns = new PrefManager(context).getBoolPref("ProtectDns");
+        boolean accessITP = new PrefManager(context).getBoolPref("AccessITP");
 
         if (!hideIp && !protectDns && !accessITP) {
-            new PrefManager(getActivity()).setBoolPref("HideIp", true);
-            new PrefManager(getActivity()).setBoolPref("ProtectDns", true);
-            new PrefManager(getActivity()).setBoolPref("AccessITP", false);
+            new PrefManager(context).setBoolPref("HideIp", true);
+            new PrefManager(context).setBoolPref("ProtectDns", true);
+            new PrefManager(context).setBoolPref("AccessITP", false);
         } else {
             chbHideIpMainFragment.setChecked(hideIp);
             chbProtectDnsMainFragment.setChecked(protectDns);
@@ -170,45 +171,47 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     public void onStart() {
         super.onStart();
 
-        if (getActivity() == null || orientationLandscape) {
+        Context context = getActivity();
+        if (context == null || orientationLandscape) {
             return;
         }
 
-        initDNSCryptFragmentPresenter();
-        initTorFragmentPresenter();
-        initITPDFragmentPresenter();
+        initDNSCryptFragmentPresenter(context);
+        initTorFragmentPresenter(context);
+        initITPDFragmentPresenter(context);
 
-        dnsCryptFragmentPresenter.onStart(getActivity());
-        torFragmentPresenter.onStart(getActivity());
-        itpdFragmentPresenter.onStart(getActivity());
+        dnsCryptFragmentPresenter.onStart();
+        torFragmentPresenter.onStart();
+        itpdFragmentPresenter.onStart();
     }
 
     @Override
     public void onStop() {
         super.onStop();
 
-        if (getActivity() == null) {
+        Context context = getActivity();
+        if (context == null) {
             return;
         }
 
         try {
             if (dnsCryptFragmentReceiver != null) {
-                LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(dnsCryptFragmentReceiver);
+                LocalBroadcastManager.getInstance(context).unregisterReceiver(dnsCryptFragmentReceiver);
             }
 
             if (torFragmentReceiver != null) {
-                LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(torFragmentReceiver);
+                LocalBroadcastManager.getInstance(context).unregisterReceiver(torFragmentReceiver);
             }
 
             if (itpdFragmentReceiver != null) {
-                LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(itpdFragmentReceiver);
+                LocalBroadcastManager.getInstance(context).unregisterReceiver(itpdFragmentReceiver);
             }
         } catch (Exception e) {
             Log.e(LOG_TAG, "MainFragment onStop exception " + e.getMessage() + " " + e.getCause());
         }
 
         if (dnsCryptFragmentPresenter != null) {
-            dnsCryptFragmentPresenter.onStop(getActivity());
+            dnsCryptFragmentPresenter.onStop();
         }
         if (torFragmentPresenter != null) {
             torFragmentPresenter.onStop();
@@ -257,14 +260,12 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     @Override
     public void onClick(View v) {
 
-        Context context = null;
-        Activity activity = getActivity();
-        if (activity != null) {
-            context = activity.getApplicationContext();
+        Context context = getActivity();
+        if (context == null) {
+            return;
         }
 
-        if (context == null || activity.isFinishing()
-                || dnsCryptFragmentPresenter == null
+        if (dnsCryptFragmentPresenter == null
                 || torFragmentPresenter == null
                 || itpdFragmentPresenter == null
                 || orientationLandscape) {
@@ -277,7 +278,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
             return;
         }
 
-        if (isControlLocked(activity)) {
+        if (isControlLocked(getActivity())) {
             return;
         }
 
@@ -288,27 +289,27 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
                     && modulesStatus.getItpdState() == STOPPED) {
 
                 if (chbProtectDnsMainFragment.isChecked()) {
-                    dnsCryptFragmentPresenter.startButtonOnClick(activity);
+                    dnsCryptFragmentPresenter.startButtonOnClick();
                 }
 
                 if (chbHideIpMainFragment.isChecked()) {
-                    torFragmentPresenter.startButtonOnClick(activity);
+                    torFragmentPresenter.startButtonOnClick();
                 }
 
                 if (chbAccessITPMainFragment.isChecked()) {
-                    itpdFragmentPresenter.startButtonOnClick(activity);
+                    itpdFragmentPresenter.startButtonOnClick();
                 }
             } else {
                 if (modulesStatus.getDnsCryptState() != STOPPED) {
-                    dnsCryptFragmentPresenter.startButtonOnClick(activity);
+                    dnsCryptFragmentPresenter.startButtonOnClick();
                 }
 
                 if (modulesStatus.getTorState() != STOPPED) {
-                    torFragmentPresenter.startButtonOnClick(activity);
+                    torFragmentPresenter.startButtonOnClick();
                 }
 
                 if (modulesStatus.getItpdState() != STOPPED) {
-                    itpdFragmentPresenter.startButtonOnClick(activity);
+                    itpdFragmentPresenter.startButtonOnClick();
                 }
             }
         }
@@ -316,15 +317,13 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        Context context = null;
-        Activity activity = getActivity();
-        if (activity != null) {
-            context = activity.getApplicationContext();
+
+        Context context = getActivity();
+        if (context == null) {
+            return;
         }
 
-        if (context == null
-                || activity.isFinishing()
-                || buttonView == null
+        if (buttonView == null
                 || dnsCryptFragmentPresenter == null
                 || torFragmentPresenter == null
                 || itpdFragmentPresenter == null
@@ -332,7 +331,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
             return;
         }
 
-        if (isControlLocked(activity)) {
+        if (isControlLocked(getActivity())) {
             return;
         }
 
@@ -343,21 +342,21 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
             int id = buttonView.getId();
             if (id == R.id.chbProtectDnsMainFragment) {
                 if (modulesStatus.getDnsCryptState() != STOPPED && !isChecked) {
-                    dnsCryptFragmentPresenter.startButtonOnClick(activity);
+                    dnsCryptFragmentPresenter.startButtonOnClick();
                 } else if (modulesStatus.getDnsCryptState() == STOPPED && isChecked) {
-                    dnsCryptFragmentPresenter.startButtonOnClick(activity);
+                    dnsCryptFragmentPresenter.startButtonOnClick();
                 }
             } else if (id == R.id.chbHideIpMainFragment) {
                 if (modulesStatus.getTorState() != STOPPED && !isChecked) {
-                    torFragmentPresenter.startButtonOnClick(activity);
+                    torFragmentPresenter.startButtonOnClick();
                 } else if (modulesStatus.getTorState() == STOPPED && isChecked) {
-                    torFragmentPresenter.startButtonOnClick(activity);
+                    torFragmentPresenter.startButtonOnClick();
                 }
             } else if (id == R.id.chbAccessITPMainFragment) {
                 if (modulesStatus.getItpdState() != STOPPED && !isChecked) {
-                    itpdFragmentPresenter.startButtonOnClick(activity);
+                    itpdFragmentPresenter.startButtonOnClick();
                 } else if (modulesStatus.getItpdState() == STOPPED && isChecked) {
-                    itpdFragmentPresenter.startButtonOnClick(activity);
+                    itpdFragmentPresenter.startButtonOnClick();
                 }
             }
         }
@@ -374,7 +373,8 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
     private void refreshStartButtonText() {
 
-        if (getActivity() == null || orientationLandscape) {
+        Context context = getActivity();
+        if (context == null || orientationLandscape) {
             return;
         }
 
@@ -384,7 +384,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
                 && modulesStatus.getTorState() == STOPPED
                 && modulesStatus.getItpdState() == STOPPED) {
 
-            mainStartButtonDrawable = ResourcesCompat.getDrawable(getActivity().getResources(), R.drawable.button_main_selector, getActivity().getTheme());
+            mainStartButtonDrawable = ResourcesCompat.getDrawable(context.getResources(), R.drawable.button_main_selector, context.getTheme());
 
             btnStartMainFragment.setText(getText(R.string.main_fragment_button_start));
 
@@ -392,7 +392,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
         } else {
 
-            mainStartButtonDrawable = ResourcesCompat.getDrawable(getActivity().getResources(), R.drawable.button_main_selector_active, getActivity().getTheme());
+            mainStartButtonDrawable = ResourcesCompat.getDrawable(context.getResources(), R.drawable.button_main_selector_active, context.getTheme());
 
             btnStartMainFragment.setText(getText(R.string.main_fragment_button_stop));
 
@@ -419,17 +419,17 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
         }
     }
 
-    private void initDNSCryptFragmentPresenter() {
+    private void initDNSCryptFragmentPresenter(Context context) {
         dnsCryptFragmentPresenter = new DNSCryptFragmentPresenter(this);
 
         dnsCryptFragmentReceiver = new DNSCryptFragmentReceiver(this, dnsCryptFragmentPresenter);
 
-        if (getActivity() != null && !orientationLandscape) {
+        if (!orientationLandscape) {
             IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
             IntentFilter intentFilterTopFrg = new IntentFilter(TOP_BROADCAST);
 
-            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(dnsCryptFragmentReceiver, intentFilterBckgIntSer);
-            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(dnsCryptFragmentReceiver, intentFilterTopFrg);
+            LocalBroadcastManager.getInstance(context).registerReceiver(dnsCryptFragmentReceiver, intentFilterBckgIntSer);
+            LocalBroadcastManager.getInstance(context).registerReceiver(dnsCryptFragmentReceiver, intentFilterTopFrg);
         }
     }
 
@@ -460,9 +460,10 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     @SuppressLint({"SetTextI18n", "ClickableViewAccessibility"})
     @Override
     public void setDNSCryptLogViewText() {
-        if (getActivity() != null && tvDNSCryptLog == null && svDNSCryptLog == null && !orientationLandscape) {
-            tvDNSCryptLog = getActivity().findViewById(R.id.tvDNSCryptLog);
-            svDNSCryptLog = getActivity().findViewById(R.id.svDNSCryptLog);
+        Activity activity = getActivity();
+        if (activity != null && tvDNSCryptLog == null && svDNSCryptLog == null && !orientationLandscape) {
+            tvDNSCryptLog = activity.findViewById(R.id.tvDNSCryptLog);
+            svDNSCryptLog = activity.findViewById(R.id.svDNSCryptLog);
 
             if (svDNSCryptLog != null) {
                 svDNSCryptLog.setOnTouchListener(this);
@@ -485,9 +486,10 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public void setDNSCryptLogViewText(Spanned text) {
-        if (getActivity() != null && tvDNSCryptLog == null && svDNSCryptLog == null && !orientationLandscape) {
-            tvDNSCryptLog = getActivity().findViewById(R.id.tvDNSCryptLog);
-            svDNSCryptLog = getActivity().findViewById(R.id.svDNSCryptLog);
+        Activity activity = getActivity();
+        if (activity != null && tvDNSCryptLog == null && svDNSCryptLog == null && !orientationLandscape) {
+            tvDNSCryptLog = activity.findViewById(R.id.tvDNSCryptLog);
+            svDNSCryptLog = activity.findViewById(R.id.svDNSCryptLog);
 
             if (svDNSCryptLog != null) {
                 svDNSCryptLog.setOnTouchListener(this);
@@ -521,17 +523,17 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
         }
     }
 
-    private void initTorFragmentPresenter() {
+    private void initTorFragmentPresenter(Context context) {
         torFragmentPresenter = new TorFragmentPresenter(this);
 
         torFragmentReceiver = new TorFragmentReceiver(this, torFragmentPresenter);
 
-        if (getActivity() != null && !orientationLandscape) {
+        if (!orientationLandscape) {
             IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
             IntentFilter intentFilterTopFrg = new IntentFilter(TOP_BROADCAST);
 
-            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(torFragmentReceiver, intentFilterBckgIntSer);
-            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(torFragmentReceiver, intentFilterTopFrg);
+            LocalBroadcastManager.getInstance(context).registerReceiver(torFragmentReceiver, intentFilterBckgIntSer);
+            LocalBroadcastManager.getInstance(context).registerReceiver(torFragmentReceiver, intentFilterTopFrg);
         }
     }
 
@@ -573,9 +575,10 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     @SuppressLint({"SetTextI18n", "ClickableViewAccessibility"})
     @Override
     public void setTorLogViewText() {
-        if (getActivity() != null && tvTorLog == null && svTorLog == null && !orientationLandscape) {
-            tvTorLog = getActivity().findViewById(R.id.tvTorLog);
-            svTorLog = getActivity().findViewById(R.id.svTorLog);
+        Activity activity = getActivity();
+        if (activity != null && tvTorLog == null && svTorLog == null && !orientationLandscape) {
+            tvTorLog = activity.findViewById(R.id.tvTorLog);
+            svTorLog = activity.findViewById(R.id.svTorLog);
 
             if (svTorLog != null) {
                 svTorLog.setOnTouchListener(this);
@@ -598,9 +601,10 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public void setTorLogViewText(Spanned text) {
-        if (getActivity() != null && tvTorLog == null && svTorLog == null && !orientationLandscape) {
-            tvTorLog = getActivity().findViewById(R.id.tvTorLog);
-            svTorLog = getActivity().findViewById(R.id.svTorLog);
+        Activity activity = getActivity();
+        if (activity != null && tvTorLog == null && svTorLog == null && !orientationLandscape) {
+            tvTorLog = activity.findViewById(R.id.tvTorLog);
+            svTorLog = activity.findViewById(R.id.svTorLog);
 
             if (svTorLog != null) {
                 svTorLog.setOnTouchListener(this);
@@ -625,17 +629,17 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
         scrollToBottom(svTorLog);
     }
 
-    private void initITPDFragmentPresenter() {
+    private void initITPDFragmentPresenter(Context context) {
         itpdFragmentPresenter = new ITPDFragmentPresenter(this);
 
         itpdFragmentReceiver = new ITPDFragmentReceiver(this, itpdFragmentPresenter);
 
-        if (getActivity() != null && !orientationLandscape) {
+        if (!orientationLandscape) {
             IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
             IntentFilter intentFilterTopFrg = new IntentFilter(TOP_BROADCAST);
 
-            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(itpdFragmentReceiver, intentFilterBckgIntSer);
-            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(itpdFragmentReceiver, intentFilterTopFrg);
+            LocalBroadcastManager.getInstance(context).registerReceiver(itpdFragmentReceiver, intentFilterBckgIntSer);
+            LocalBroadcastManager.getInstance(context).registerReceiver(itpdFragmentReceiver, intentFilterTopFrg);
         }
     }
 
@@ -666,9 +670,10 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     @SuppressLint("SetTextI18n")
     @Override
     public void setITPDLogViewText() {
-        if (getActivity() != null && tvITPDLog == null && !orientationLandscape) {
-            tvITPDLog = getActivity().findViewById(R.id.tvITPDLog);
-            clITPDLog = getActivity().findViewById(R.id.clITPDLog);
+        Activity activity = getActivity();
+        if (activity != null && tvITPDLog == null && !orientationLandscape) {
+            tvITPDLog = activity.findViewById(R.id.tvITPDLog);
+            clITPDLog = activity.findViewById(R.id.clITPDLog);
         }
 
         if (tvITPDLog != null) {
@@ -689,9 +694,10 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
     @Override
     public void setITPDLogViewText(Spanned text) {
-        if (getActivity() != null && tvITPDLog == null && !orientationLandscape) {
-            tvITPDLog = getActivity().findViewById(R.id.tvITPDLog);
-            clITPDLog = getActivity().findViewById(R.id.clITPDLog);
+        Activity activity = getActivity();
+        if (activity != null && tvITPDLog == null && !orientationLandscape) {
+            tvITPDLog = activity.findViewById(R.id.tvITPDLog);
+            clITPDLog = activity.findViewById(R.id.clITPDLog);
         }
 
         if (tvITPDLog != null) {
@@ -713,9 +719,10 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public void setITPDInfoLogText() {
-        if (getActivity() != null && tvITPDInfoLog == null && svITPDLog == null && !orientationLandscape) {
-            tvITPDInfoLog = getActivity().findViewById(R.id.tvITPDinfoLog);
-            svITPDLog = getActivity().findViewById(R.id.svITPDLog);
+        Activity activity = getActivity();
+        if (activity != null && tvITPDInfoLog == null && svITPDLog == null && !orientationLandscape) {
+            tvITPDInfoLog = activity.findViewById(R.id.tvITPDinfoLog);
+            svITPDLog = activity.findViewById(R.id.svITPDLog);
 
             if (svITPDLog != null) {
                 svITPDLog.setOnTouchListener(this);
@@ -734,9 +741,10 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public void setITPDInfoLogText(Spanned text) {
-        if (getActivity() != null && tvITPDInfoLog == null && svITPDLog == null && !orientationLandscape) {
-            tvITPDInfoLog = getActivity().findViewById(R.id.tvITPDinfoLog);
-            svITPDLog = getActivity().findViewById(R.id.svITPDLog);
+        Activity activity = getActivity();
+        if (activity != null && tvITPDInfoLog == null && svITPDLog == null && !orientationLandscape) {
+            tvITPDInfoLog = activity.findViewById(R.id.tvITPDinfoLog);
+            svITPDLog = activity.findViewById(R.id.svITPDLog);
 
             if (svITPDLog != null) {
                 svITPDLog.setOnTouchListener(this);
@@ -787,12 +795,14 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
         }
 
         scrollView.post(() -> {
+            scrollView.computeScroll();
+
             int delta = 0;
 
-            int childIndex= scrollView.getChildCount() - 1;
+            int childIndex = scrollView.getChildCount() - 1;
 
             if (childIndex < 0) {
-              return;
+                return;
             }
 
             View lastChild = scrollView.getChildAt(childIndex);
@@ -843,9 +853,9 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
         return false;
     }
 
-    private boolean isControlLocked(Context context) {
-        if (context instanceof MainActivity && ((MainActivity) context).childLockActive) {
-            Toast.makeText(context, context.getText(R.string.action_mode_dialog_locked), Toast.LENGTH_LONG).show();
+    private boolean isControlLocked(Activity activity) {
+        if (activity instanceof MainActivity && ((MainActivity) activity).childLockActive) {
+            Toast.makeText(activity, activity.getText(R.string.action_mode_dialog_locked), Toast.LENGTH_LONG).show();
             return true;
         }
 

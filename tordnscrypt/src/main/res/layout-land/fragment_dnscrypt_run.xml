@@ -48,8 +48,7 @@
     <ScrollView
         android:id="@+id/svDNSCryptLog"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
+        android:layout_height="match_parent"
         android:background="@drawable/logs_scroll_view_selector">
 
         <androidx.appcompat.widget.LinearLayoutCompat

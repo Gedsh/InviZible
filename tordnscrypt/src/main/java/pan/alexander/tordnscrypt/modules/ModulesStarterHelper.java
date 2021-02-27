@@ -125,7 +125,7 @@ public class ModulesStarterHelper {
 
                 if (modulesStatus.getDnsCryptState() != STOPPING && modulesStatus.getDnsCryptState() != STOPPED) {
 
-                    if (appVersion.startsWith("b")) {
+                    if (appVersion.startsWith("b") && handler != null) {
                         handler.post(() -> Toast.makeText(service, "DNSCrypt Module Fault: "
                                 + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr()
                                 + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
@@ -199,7 +199,7 @@ public class ModulesStarterHelper {
                 }
 
                 if (modulesStatus.getTorState() != STOPPING && modulesStatus.getTorState() != STOPPED) {
-                    if (appVersion.startsWith("b")) {
+                    if (appVersion.startsWith("b") && handler != null) {
                         handler.post(() -> Toast.makeText(service, "Tor Module Fault: " + shellResult.exitCode
                                 + "\n\n ERR = " + shellResult.getStderr()
                                 + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
@@ -276,7 +276,7 @@ public class ModulesStarterHelper {
                 }
 
                 if (modulesStatus.getItpdState() != STOPPING && modulesStatus.getItpdState() != STOPPED) {
-                    if (appVersion.startsWith("b")) {
+                    if (appVersion.startsWith("b") && handler != null) {
                         handler.post(() -> Toast.makeText(service, "Purple I2P Module Fault: "
                                 + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr()
                                 + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());

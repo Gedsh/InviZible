@@ -21,6 +21,7 @@ package pan.alexander.tordnscrypt.dnscrypt_fragment;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.IntentFilter;
 import android.os.Bundle;
 
@@ -115,14 +116,16 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
 
         receiver = new DNSCryptFragmentReceiver(this, presenter);
 
-        if (getActivity() != null) {
+        Context context = getActivity();
+
+        if (context != null) {
             IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
             IntentFilter intentFilterTopFrg = new IntentFilter(TOP_BROADCAST);
 
-            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver, intentFilterBckgIntSer);
-            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver, intentFilterTopFrg);
+            LocalBroadcastManager.getInstance(context).registerReceiver(receiver, intentFilterBckgIntSer);
+            LocalBroadcastManager.getInstance(context).registerReceiver(receiver, intentFilterTopFrg);
 
-            presenter.onStart(getActivity());
+            presenter.onStart();
         }
 
     }
@@ -140,20 +143,21 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
     public void onStop() {
         super.onStop();
 
-        if (getActivity() == null) {
+        Context context = getActivity();
+        if (context == null) {
             return;
         }
 
         try {
             if (receiver != null) {
-                LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(receiver);
+                LocalBroadcastManager.getInstance(context).unregisterReceiver(receiver);
             }
         } catch (Exception e) {
             Log.e(LOG_TAG, "DNSCryptRunFragment onStop exception " + e.getMessage() + " " + e.getCause());
         }
 
         if (presenter != null) {
-            presenter.onStop(getActivity());
+            presenter.onStop();
         }
     }
 
@@ -175,7 +179,7 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.btnDNSCryptStart) {
-            presenter.startButtonOnClick(getActivity());
+            presenter.startButtonOnClick();
         }
     }
 
@@ -203,7 +207,7 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
     public void setDNSCryptProgressBarIndeterminate(boolean indeterminate) {
         if (!pbDNSCrypt.isIndeterminate() && indeterminate) {
             pbDNSCrypt.setIndeterminate(true);
-        } else if (pbDNSCrypt.isIndeterminate() && !indeterminate){
+        } else if (pbDNSCrypt.isIndeterminate() && !indeterminate) {
             pbDNSCrypt.setIndeterminate(false);
         }
     }
@@ -229,9 +233,10 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
         return getParentFragmentManager();
     }
 
-    public DNSCryptFragmentPresenterCallbacks getPresenter() {
-        if (presenter == null && getActivity() instanceof MainActivity && ((MainActivity)getActivity()).getMainFragment() != null) {
-            presenter = ((MainActivity)getActivity()).getMainFragment().getDnsCryptFragmentPresenter();
+    public DNSCryptFragmentPresenterInterface getPresenter() {
+        Activity activity = getActivity();
+        if (presenter == null && activity instanceof MainActivity && ((MainActivity) activity).getMainFragment() != null) {
+            presenter = ((MainActivity) activity).getMainFragment().getDnsCryptFragmentPresenter();
         }
 
         return presenter;
@@ -252,13 +257,15 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
         }
 
         svDNSCryptLog.post(() -> {
+            svDNSCryptLog.computeScroll();
+
             int delta = 0;
 
             if (svDNSCryptLog == null) {
                 return;
             }
 
-            int childIndex= svDNSCryptLog.getChildCount() - 1;
+            int childIndex = svDNSCryptLog.getChildCount() - 1;
 
             if (childIndex < 0) {
                 return;

@@ -30,7 +30,7 @@ import androidx.core.app.NotificationCompat;
 
 import pan.alexander.tordnscrypt.MainActivity;
 
-import static pan.alexander.tordnscrypt.ApplicationExtKt.ANDROID_CHANNEL_ID;
+import static pan.alexander.tordnscrypt.ApplicationBaseKt.ANDROID_CHANNEL_ID;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
 
 public class ServiceNotification {

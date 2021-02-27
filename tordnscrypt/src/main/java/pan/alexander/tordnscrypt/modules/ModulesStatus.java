@@ -44,6 +44,7 @@ public final class ModulesStatus {
     private volatile boolean systemDNSAllowed;
     private volatile boolean dnsCryptReady;
     private volatile boolean torReady;
+    private volatile boolean itpdReady;
 
     private static volatile ModulesStatus modulesStatus;
 
@@ -174,5 +175,13 @@ public final class ModulesStatus {
 
     public void setTorReady(boolean torReady) {
         this.torReady = torReady;
+    }
+
+    public boolean isItpdReady() {
+        return itpdReady;
+    }
+
+    public void setItpdReady(boolean itpdReady) {
+        this.itpdReady = itpdReady;
     }
 }

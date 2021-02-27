@@ -1,5 +1,3 @@
-package pan.alexander.tordnscrypt.dnscrypt_fragment
-
 /*
     This file is part of InviZible Pro.
 
@@ -17,16 +15,18 @@ package pan.alexander.tordnscrypt.dnscrypt_fragment
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
-*/
+ */
 
-class DNSQueryLogRecord(val qName: String = "",
-                        val aName:String = "",
-                        var cName:String = "",
-                        val hInfo:String = "",
-                        val rCode: Int = 0,
-                        val saddr:String = "",
-                        var daddr:String = "",
-                        var uid:Int = -1000) {
+package pan.alexander.tordnscrypt.domain.entities
+
+class ConnectionRecord(val qName: String = "",
+                       val aName:String = "",
+                       var cName:String = "",
+                       val hInfo:String = "",
+                       val rCode: Int = 0,
+                       val saddr:String = "",
+                       var daddr:String = "",
+                       var uid:Int = -1000) {
     var reverseDNS = ""
     var blocked = false
     var blockedByIpv6 = false
@@ -36,7 +36,7 @@ class DNSQueryLogRecord(val qName: String = "",
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as DNSQueryLogRecord
+        other as ConnectionRecord
 
         if (qName != other.qName) return false
         if (aName != other.aName) return false

@@ -28,12 +28,18 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
 
 import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
+import pan.alexander.tordnscrypt.domain.MainInteractor;
+import pan.alexander.tordnscrypt.domain.entities.LogDataModel;
+import pan.alexander.tordnscrypt.domain.log_reader.dnscrypt.OnDNSCryptLogUpdatedListener;
+import pan.alexander.tordnscrypt.domain.log_reader.itpd.OnITPDLogUpdatedListener;
+import pan.alexander.tordnscrypt.domain.log_reader.tor.OnTorLogUpdatedListener;
 import pan.alexander.tordnscrypt.iptables.IptablesRules;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -41,8 +47,6 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
-import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
-import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -51,7 +55,16 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
-public class ModulesStateLoop implements Runnable {
+public class ModulesStateLoop implements Runnable,
+        OnDNSCryptLogUpdatedListener, OnTorLogUpdatedListener, OnITPDLogUpdatedListener {
+    public static final String DNSCRYPT_READY_PREF = "DNSCrypt Ready";
+    public static final String TOR_READY_PREF = "Tor Ready";
+    public static final String ITPD_READY_PREF = "ITPD Ready";
+
+    private static final String SAVED_DNSCRYPT_STATE_PREF = "savedDNSCryptState";
+    private static final String SAVED_TOR_STATE_PREF = "savedTorState";
+    private static final String SAVED_ITPD_STATE_PREF = "savedITPDState";
+
     //Depends on timer, currently 10 sec
     private static final int STOP_COUNTER_DELAY = 10;
 
@@ -80,6 +93,8 @@ public class ModulesStateLoop implements Runnable {
 
     private int savedIptablesCommandsHash = 0;
 
+    private final MainInteractor mainInteractor;
+
     ModulesStateLoop(ModulesService modulesService) {
         //Delay in sec before service can stop
         stopCounter = STOP_COUNTER_DELAY;
@@ -95,6 +110,8 @@ public class ModulesStateLoop implements Runnable {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(modulesService);
 
         handler = new Handler(Looper.getMainLooper());
+
+        mainInteractor = new MainInteractor();
 
         restoreModulesSavedState();
     }
@@ -133,7 +150,7 @@ public class ModulesStateLoop implements Runnable {
 
             if (stopCounter <= 0) {
 
-                denySystemDNS(operationMode, dnsCryptState, torState, useModulesWithRoot);
+                denySystemDNS();
 
                 Log.i(LOG_TAG, "ModulesStateLoop stopCounter is zero. Stop service.");
                 modulesStatus.setContextUIDUpdateRequested(false);
@@ -144,26 +161,6 @@ public class ModulesStateLoop implements Runnable {
             Log.e(LOG_TAG, "ModulesStateLoop exception " + e.getMessage() + " " + e.getCause());
         }
 
-    }
-
-    private void denySystemDNS(OperationMode operationMode, ModuleState dnsCryptState,
-                               ModuleState torState, boolean useModulesWithRoot) {
-        if (operationMode != ROOT_MODE) {
-            return;
-        }
-
-        boolean useDefaultBridges = new PrefManager(modulesService).getBoolPref("useDefaultBridges");
-        boolean useOwnBridges = new PrefManager(modulesService).getBoolPref("useOwnBridges");
-        boolean bridgesSnowflakeDefault = new PrefManager(modulesService).getStrPref("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
-        boolean bridgesSnowflakeOwn = new PrefManager(modulesService).getStrPref("ownBridgesObfs").equals(snowFlakeBridgesOwn);
-        boolean dnsCryptSystemDNSAllowed = new PrefManager(modulesService).getBoolPref("DNSCryptSystemDNSAllowed");
-
-        if (dnsCryptSystemDNSAllowed
-                || (dnsCryptState == STOPPED && torState == RUNNING && useModulesWithRoot
-                && (useDefaultBridges && bridgesSnowflakeDefault || useOwnBridges && bridgesSnowflakeOwn))) {
-            new PrefManager(modulesService).setBoolPref("DNSCryptSystemDNSAllowed", false);
-            ModulesIptablesRules.denySystemDNS(modulesService);
-        }
     }
 
     private void updateModulesState(ModuleState dnsCryptState, ModuleState torState, ModuleState itpdState) {
@@ -234,14 +231,55 @@ public class ModulesStateLoop implements Runnable {
                 return;
             }
 
-            savedDNSCryptState = dnsCryptState;
-            new PrefManager(modulesService).setStrPref("savedDNSCryptState", dnsCryptState.toString());
+            if (savedDNSCryptState != dnsCryptState) {
 
-            savedTorState = torState;
-            new PrefManager(modulesService).setStrPref("savedTorState", torState.toString());
+               saveDNSCryptState(dnsCryptState);
 
-            savedItpdState = itpdState;
-            new PrefManager(modulesService).setStrPref("savedITPDState", itpdState.toString());
+                if (dnsCryptState == RUNNING) {
+                    if (mainInteractor != null) {
+                        mainInteractor.addOnDNSCryptLogUpdatedListener(this);
+                    }
+                } else {
+                    if (mainInteractor != null) {
+                        mainInteractor.removeOnDNSCryptLogUpdatedListener(this);
+                    }
+                    setDNSCryptReady(false);
+                    denySystemDNS();
+                }
+            }
+
+            if (savedTorState != torState) {
+
+                saveTorState(torState);
+
+                if (torState == RUNNING) {
+                    if (mainInteractor != null) {
+                        mainInteractor.addOnTorLogUpdatedListener(this);
+                    }
+                } else {
+                    if (mainInteractor != null) {
+                        mainInteractor.removeOnTorLogUpdatedListener(this);
+                    }
+                    setTorReady(false);
+                    denySystemDNS();
+                }
+            }
+
+            if (savedItpdState != itpdState) {
+                saveITPDState(itpdState);
+
+                if (itpdState == RUNNING) {
+                    if (mainInteractor != null) {
+                        mainInteractor.addOnITPDLogUpdatedListener(this);
+                    }
+                } else {
+                    if (mainInteractor != null) {
+                        mainInteractor.removeOnITPDLogUpdatedListener(this);
+                    }
+                    setITPDReady(false);
+                }
+            }
+
 
             if (modulesStatus.isIptablesRulesUpdateRequested()) {
                 modulesStatus.setIptablesRulesUpdateRequested(false);
@@ -277,7 +315,7 @@ public class ModulesStateLoop implements Runnable {
                 stopCounter = STOP_COUNTER_DELAY;
             }
 
-            if (modulesStatus.isFixTTL() && !modulesStatus.isUseModulesWithRoot() && (operationMode == ROOT_MODE)) {
+            if (isFixTTL()) {
                 if (((dnsCryptState == STOPPED && torState == STOPPED) || useModulesWithRoot) && vpnServiceEnabled) {
                     ServiceVPNHelper.stop("All modules stopped", modulesService);
                 } else if (vpnServiceEnabled
@@ -344,17 +382,17 @@ public class ModulesStateLoop implements Runnable {
     }
 
     private void restoreModulesSavedState() {
-        String savedDNSCryptStateStr = new PrefManager(modulesService).getStrPref("savedDNSCryptState");
+        String savedDNSCryptStateStr = new PrefManager(modulesService).getStrPref(SAVED_DNSCRYPT_STATE_PREF);
         if (!savedDNSCryptStateStr.isEmpty()) {
             savedDNSCryptState = ModuleState.valueOf(savedDNSCryptStateStr);
         }
 
-        String savedTorStateStr = new PrefManager(modulesService).getStrPref("savedTorState");
+        String savedTorStateStr = new PrefManager(modulesService).getStrPref(SAVED_TOR_STATE_PREF);
         if (!savedTorStateStr.isEmpty()) {
             savedTorState = ModuleState.valueOf(savedTorStateStr);
         }
 
-        String savedITPDStateStr = new PrefManager(modulesService).getStrPref("savedITPDState");
+        String savedITPDStateStr = new PrefManager(modulesService).getStrPref(SAVED_ITPD_STATE_PREF);
         if (!savedITPDStateStr.isEmpty()) {
             savedItpdState = ModuleState.valueOf(savedITPDStateStr);
         }
@@ -410,5 +448,97 @@ public class ModulesStateLoop implements Runnable {
         if (handler != null) {
             handler.removeCallbacksAndMessages(null);
         }
+    }
+
+    @Override
+    public void onDNSCryptLogUpdated(@NonNull LogDataModel dnsCryptLogData) {
+        if (dnsCryptLogData.getStartedSuccessfully()) {
+            setDNSCryptReady(true);
+            denySystemDNS();
+            if (mainInteractor != null) {
+                mainInteractor.removeOnDNSCryptLogUpdatedListener(this);
+            }
+        }
+    }
+
+    private void saveDNSCryptState(ModuleState dnsCryptState) {
+        savedDNSCryptState = dnsCryptState;
+        new PrefManager(modulesService).setStrPref(SAVED_DNSCRYPT_STATE_PREF, dnsCryptState.toString());
+    }
+
+    private void setDNSCryptReady(boolean ready) {
+        new PrefManager(modulesService).setBoolPref(DNSCRYPT_READY_PREF, ready);
+        modulesStatus.setDnsCryptReady(ready);
+
+        //If DNSCrypt is ready, app will use DNSCrypt DNS instead of Tor Exit node DNS in VPN mode
+        if (ready && modulesStatus.isTorReady() && (modulesStatus.getMode() == VPN_MODE || isFixTTL())) {
+            ServiceVPNHelper.reload("Use DNSCrypt DNS instead of Tor", modulesService);
+        }
+    }
+
+    @Override
+    public void onTorLogUpdated(@NonNull LogDataModel torLogData) {
+        if (torLogData.getStartedSuccessfully()) {
+            setTorReady(true);
+            denySystemDNS();
+            if (mainInteractor != null) {
+                mainInteractor.removeOnTorLogUpdatedListener(this);
+            }
+        }
+    }
+
+    private void saveTorState(ModuleState torState) {
+        savedTorState = torState;
+        new PrefManager(modulesService).setStrPref(SAVED_TOR_STATE_PREF, torState.toString());
+    }
+
+    private void setTorReady(boolean ready) {
+        new PrefManager(modulesService).setBoolPref(TOR_READY_PREF, ready);
+        modulesStatus.setTorReady(ready);
+    }
+
+    private synchronized void denySystemDNS() {
+
+        if (modulesStatus.isSystemDNSAllowed()) {
+            if (modulesStatus.getMode() == ROOT_MODE) {
+                modulesStatus.setSystemDNSAllowed(false);
+                ModulesIptablesRules.denySystemDNS(modulesService);
+            }
+
+            if (modulesStatus.getMode() == VPN_MODE || isFixTTL()) {
+                modulesStatus.setSystemDNSAllowed(false);
+                ServiceVPNHelper.reload("DNSCrypt Deny system DNS", modulesService);
+            }
+        }
+    }
+
+    @Override
+    public void onITPDLogUpdated(@NonNull LogDataModel itpdLogData) {
+        if (itpdLogData.getStartedSuccessfully()) {
+            setITPDReady(true);
+            if (mainInteractor != null) {
+                mainInteractor.removeOnITPDLogUpdatedListener(this);
+            }
+        }
+    }
+
+    private void saveITPDState(ModuleState itpdState) {
+        savedItpdState = itpdState;
+        new PrefManager(modulesService).setStrPref(SAVED_ITPD_STATE_PREF, itpdState.toString());
+    }
+
+    private void setITPDReady(boolean ready) {
+        new PrefManager(modulesService).setBoolPref(ITPD_READY_PREF, ready);
+        modulesStatus.setItpdReady(ready);
+    }
+
+    @Override
+    public boolean isActive() {
+        return ModulesService.serviceIsRunning;
+    }
+
+    private boolean isFixTTL() {
+        return modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
+                && !modulesStatus.isUseModulesWithRoot();
     }
 }

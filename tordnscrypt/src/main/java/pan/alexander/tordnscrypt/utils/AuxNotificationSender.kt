@@ -63,7 +63,7 @@ object AuxNotificationSender {
             }
 
 
-
+            // localLinkProperties.privateDnsServerName == null - Opportunistic mode ("Automatic")
             if (Util.isPrivateDns(context) || localLinkProperties?.isPrivateDnsActive == true) {
                 sendNotification(context,
                         context.getString(R.string.app_name),

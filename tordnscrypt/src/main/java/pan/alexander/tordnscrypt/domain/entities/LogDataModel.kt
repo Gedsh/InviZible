@@ -1,5 +1,3 @@
-package pan.alexander.tordnscrypt.dnscrypt_fragment;
-
 /*
     This file is part of InviZible Pro.
 
@@ -17,22 +15,14 @@ package pan.alexander.tordnscrypt.dnscrypt_fragment;
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
-*/
+ */
 
-import android.content.Context;
+package pan.alexander.tordnscrypt.domain.entities
 
-public interface DNSCryptFragmentPresenterCallbacks {
-    boolean isDNSCryptInstalled(Context context);
-    boolean isSavedDNSStatusRunning(Context context);
-    void saveDNSStatusRunning(Context context, boolean running);
-    void displayLog(int period);
-    void stopDisplayLog();
-    void refreshDNSCryptState(Context context);
-    void setDnsCryptSomethingWrong();
-    void setDnsCryptRunning();
-    void setDnsCryptStopped();
-    void setDnsCryptInstalling();
-    void setDnsCryptInstalled();
-    void setDNSCryptStartButtonEnabled(boolean enabled);
-    void setDNSCryptProgressBarIndeterminate(boolean indeterminate);
-}
+data class LogDataModel(
+    val startedSuccessfully: Boolean = false,
+    val startedWithError: Boolean = false,
+    val percents: Int = -1,
+    val lines: String = "",
+    private val linesNumber: Int = 0
+)

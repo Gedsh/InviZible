@@ -61,8 +61,7 @@
     <ScrollView
         android:id="@+id/svITPDLog"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
+        android:layout_height="match_parent"
         android:background="@drawable/logs_scroll_view_selector"
         android:nextFocusUp="@id/btnITPDStart"
         app:layout_constraintBottom_toTopOf="@+id/tvITPDLog"
@@ -81,6 +80,7 @@
                 android:layout_height="match_parent"
                 android:layout_marginBottom="8dp"
                 android:fontFamily="sans-serif-medium"
+                android:minHeight="56dp"
                 android:textIsSelectable="false"
                 android:textSize="@dimen/fragment_log_text_size"
                 android:typeface="monospace" />
