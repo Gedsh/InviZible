@@ -36,6 +36,7 @@ import android.net.NetworkRequest;
 import android.net.VpnService;
 import android.os.Binder;
 import android.os.Build;
+import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
@@ -69,7 +70,7 @@ import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.arp.DNSRebindProtection;
-import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSQueryLogRecord;
+import pan.alexander.tordnscrypt.domain.entities.ConnectionRecord;
 import pan.alexander.tordnscrypt.iptables.Tethering;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
@@ -97,8 +98,6 @@ import pan.alexander.tordnscrypt.vpn.Util;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
 import static pan.alexander.tordnscrypt.modules.ModulesService.actionStopServiceForeground;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
-import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
-import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
 import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_FOR_CLEARNET;
 import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_TO_UNLOCK;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -140,7 +139,7 @@ public class ServiceVPN extends VpnService {
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
 
     private final ReentrantReadWriteLock rrLock = new ReentrantReadWriteLock(true);
-    private final LinkedList<DNSQueryLogRecord> dnsQueryRawRecords = new LinkedList<>();
+    private final LinkedList<ConnectionRecord> dnsQueryRawRecords = new LinkedList<>();
 
     private volatile Looper commandLooper;
     private volatile ServiceVPNHandler commandHandler;
@@ -510,9 +509,10 @@ public class ServiceVPN extends VpnService {
                     Log.i(LOG_TAG, "VPN Tunnel exited");
                     tunnelThread = null;
                 } catch (Exception e) {
-                    try {
-                        Toast.makeText(ServiceVPN.this, e.getMessage() + " " + e.getCause(), Toast.LENGTH_LONG).show();
-                    } catch (Exception ignored) {
+                    Looper looper = Looper.getMainLooper();
+                    if (looper != null) {
+                        Handler handler = new Handler(looper);
+                        handler.post(() -> Toast.makeText(ServiceVPN.this, e.getMessage() + " " + e.getCause(), Toast.LENGTH_LONG).show());
                     }
 
                     Log.e(LOG_TAG, "ServiceVPN startNative exception " + e.getMessage() + " " + e.getCause());
@@ -621,14 +621,12 @@ public class ServiceVPN extends VpnService {
             Log.e(LOG_TAG, "VPN Redirect Ports Parse Exception " + e.getMessage() + " " + e.getCause());
         }
 
+        boolean dnsCryptReady = modulesStatus.isDnsCryptReady();
         boolean torReady = modulesStatus.isTorReady();
-        boolean useDefaultBridges = new PrefManager(this).getBoolPref("useDefaultBridges");
-        boolean useOwnBridges = new PrefManager(this).getBoolPref("useOwnBridges");
-        boolean bridgesSnowflakeDefault = new PrefManager(this).getStrPref("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
-        boolean bridgesSnowflakeOwn = new PrefManager(this).getStrPref("ownBridgesObfs").equals(snowFlakeBridgesOwn);
-        boolean dnsCryptSystemDNSAllowed = new PrefManager(this).getBoolPref("DNSCryptSystemDNSAllowed");
+        boolean systemDNSAllowed = modulesStatus.isSystemDNSAllowed();
 
-        if (dnsCryptState == RUNNING && !dnsCryptSystemDNSAllowed) {
+        //If Tor is ready and DNSCrypt is not, app will use Tor Exit node DNS in VPN mode
+        if (dnsCryptState == RUNNING && (dnsCryptReady || !systemDNSAllowed)) {
             addForwardPortRule(17, 53, "127.0.0.1", dnsCryptPort, ownUID);
             addForwardPortRule(6, 53, "127.0.0.1", dnsCryptPort, ownUID);
 
@@ -636,8 +634,7 @@ public class ServiceVPN extends VpnService {
                 addForwardAddressRule(17, "10.191.0.1", "127.0.0.1", itpdHttpPort, ownUID);
                 addForwardAddressRule(6, "10.191.0.1", "127.0.0.1", itpdHttpPort, ownUID);
             }
-        } else if (torState == RUNNING
-                && (torReady || !(useDefaultBridges && bridgesSnowflakeDefault || useOwnBridges && bridgesSnowflakeOwn))) {
+        } else if (torState == RUNNING && (torReady || !systemDNSAllowed)) {
             addForwardPortRule(17, 53, "127.0.0.1", torDNSPort, ownUID);
             addForwardPortRule(6, 53, "127.0.0.1", torDNSPort, ownUID);
         }
@@ -693,8 +690,8 @@ public class ServiceVPN extends VpnService {
 
             rrLock.writeLock().lockInterruptibly();
 
-            DNSQueryLogRecord lastRecord = dnsQueryRawRecords.isEmpty() ? null : dnsQueryRawRecords.getLast();
-            DNSQueryLogRecord newRecord = new DNSQueryLogRecord(rr.QName, rr.AName, rr.CName, rr.HInfo, rr.Rcode, "", rr.Resource, -1000);
+            ConnectionRecord lastRecord = dnsQueryRawRecords.isEmpty() ? null : dnsQueryRawRecords.getLast();
+            ConnectionRecord newRecord = new ConnectionRecord(rr.QName, rr.AName, rr.CName, rr.HInfo, rr.Rcode, "", rr.Resource, -1000);
 
             if (!newRecord.equals(lastRecord)) {
                 dnsQueryRawRecords.add(newRecord);
@@ -1451,7 +1448,7 @@ public class ServiceVPN extends VpnService {
         }
     }
 
-    public LinkedList<DNSQueryLogRecord> getDnsQueryRawRecords() {
+    public LinkedList<ConnectionRecord> getDnsQueryRawRecords() {
         return dnsQueryRawRecords;
     }
 
@@ -1493,8 +1490,8 @@ public class ServiceVPN extends VpnService {
             rrLock.writeLock().lockInterruptibly();
 
             if (uid != 0 || destinationPort != 53) {
-                DNSQueryLogRecord lastRecord = dnsQueryRawRecords.isEmpty() ? null : dnsQueryRawRecords.getLast();
-                DNSQueryLogRecord newRecord = new DNSQueryLogRecord("", "", "", "", 0, sourceAddres, destinationAddress, uid);
+                ConnectionRecord lastRecord = dnsQueryRawRecords.isEmpty() ? null : dnsQueryRawRecords.getLast();
+                ConnectionRecord newRecord = new ConnectionRecord("", "", "", "", 0, sourceAddres, destinationAddress, uid);
 
                 if (!newRecord.equals(lastRecord)) {
                     dnsQueryRawRecords.add(newRecord);
