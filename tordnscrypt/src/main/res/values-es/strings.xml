@@ -51,7 +51,7 @@
     <string name="drawer_menu_backup">"Copia y restauración"</string>
     <string name="drawer_menu_about">"Sobre"</string>
     <string name="drawer_menu_help">"Registros"</string>
-    <string name="drawer_menu_donate">"Donar"</string>
+    <string name="drawer_menu_donate">"Donaciones"</string>
     <string name="btnRestoreBackup">"Restaurar todo"</string>
     <string name="btnSaveBackup">"Guardar todo"</string>
     <string name="etPathBackup">"Ruta de carpeta:"</string>
@@ -62,7 +62,7 @@
     <string name="pref_fast_tor_autostart">"Arrancar Tor al inicio"</string>
     <string name="pref_fast_itpd_autostart">"Arrancar I2P al inicio"</string>
     <string name="pref_fast_autostart_delay">"Retraso"</string>
-    <string name="pref_fast_autostart_delay_summ">"Establecerá un retraso en segundos en el caso en que Inicio Automático no funcione"</string>
+    <string name="pref_fast_autostart_delay_summ">"Establece un retraso en segundos en el caso en que Inicio Automático no funcione"</string>
     <string name="pref_fast_dns_server">"Servidores DNSCrypt"</string>
     <string name="pref_fast_select_dns_server">"Seleccion de servidores DNSCrypt"</string>
     <string name="pref_fast_tor">"Configuración de Tor"</string>
@@ -186,7 +186,7 @@ De otra manera, por favor, deja el valor desactivado, ya que no mejorará el niv
 Con estas peticiones se puede descubrir la presencia de malware, aplicaciones defectuosas u obsoletas, y dispositivos revelando señales de presencia a terceros..."</string>
     <string name="pref_dnscrypt_nx_log">"Activar registro dudoso"</string>
     <string name="open_nx_log">"Abrir registro dudoso"</string>
-    <string name="pref_dnscrypt_blacklist_categ">"Bloqueo basado en patrones (Lista prohibida)."</string>
+    <string name="pref_dnscrypt_blacklist_categ">"Bloqueo basado en patrones (Lista de bloqueo)."</string>
     <string name="pref_dnscrypt_blacklist">"Lista de bloqueo"</string>
     <string name="pref_dnscrypt_blacklist_summ">"La lista de bloqueo se define por un patrón por línea"</string>
     <string name="pref_dnscrypt_ipblacklist_categ">"Bloqueo basado en patrones de direcciones IP (Lista de bloqueo de IPs)."</string>
@@ -219,9 +219,9 @@ Con estas peticiones se puede descubrir la presencia de malware, aplicaciones de
     <string name="pref_tor_exclude_nodes_summ">"Lista de países a evitar cuando se construye un circuito."</string>
     <string name="pref_tor_entry_nodes_summ">"Lista de países para usar como primer salto al construir circuitos."</string>
     <string name="pref_tor_strict_nodes_summ">"La opción Restringir Nodos (StrictNodes) obliga a tomar la directiva Nodos Excluidos (ExcludeNodes) como requisito a seguir para la construcción de los circuitos, incluso si resultase en una pérdida de la conectividad."</string>
-    <string name="pref_tor_fascist_firewall_summ">"Determina que Tor utilice exclusivamente conexiones a puertos OR en el valor 80 y 443 (por defecto), que pudieran permitan los cortafuegos restrictivos."</string>
+    <string name="pref_tor_fascist_firewall_summ">"Determina que Tor utilice exclusivamente conexiones a puertos OR en el valor 80 y 443 (por defecto), que pudieran permitir los cortafuegos restrictivos."</string>
     <string name="pref_tor_new_circuit_period_summ">"Número de segundos X a considerar cuando construir un nuevo circuito."</string>
-    <string name="pref_tor_max_circuit_dirtiness_summ">"Este valor indica el uso circuitos que fueron creados hasta un número X de segundos de vida exclusivamente."</string>
+    <string name="pref_tor_max_circuit_dirtiness_summ">"Este valor indica la reutilización de circuitos creados hasta un número X máximo de segundos de vida."</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">"Determina la separación obligatoria, en distintos circuitos, de conexiones hacia destinos que tengan direcciones IP demasiado cerca entre sí. Se considera que dos direcciones IP están demasiado cerca entre sí, si pertenecen al mismo rango de red /16."</string>
     <string name="pref_tor_enable_SOCKS_proxy">"Activar proxy SOCKS5"</string>
     <string name="pref_tor_SOCKS_port_summ">"Indica el puerto donde abrir el proxy SOCKS5."</string>
@@ -230,7 +230,7 @@ Con estas peticiones se puede descubrir la presencia de malware, aplicaciones de
     <string name="pref_tor_enable_transparent_proxy">"Activar proxy transparente"</string>
     <string name="pref_tor_trans_port_summ">"Indica el puerto donde abrir el proxy transparente."</string>
     <string name="pref_tor_enable_DNS">"Activar puerto DNS"</string>
-    <string name="pref_tor_DNS_port_summ">"Indica el puerto donde Tor abrirá un servidor de resolución DNS (UDP), habilitando resoluciones anónimas."</string>
+    <string name="pref_tor_DNS_port_summ">"Indica el puerto donde Tor abrirá un servidor de escucha para resolución de nombres (UDP), realizando dichas peticiones de forma anónima."</string>
     <string name="pref_tor_client_use_IPv4_summ">"Determina el uso de IPv4 al conectar al directorio de servidores y nodos de entrada."</string>
     <string name="pref_tor_client_use_IPv6_summ">"Determina el uso de IPv6 al conectar al directorio de servidores y nodos de entrada."</string>
     <string name="pref_tor_not_exist">"¡Ese ajuste no existe en .torrc!"</string>
@@ -350,10 +350,10 @@ Con estas peticiones se puede descubrir la presencia de malware, aplicaciones de
     <string name="buy_premium_gp">"InviZible Pro necesita de tu ayuda. Pulsa OK para comprar y obtener funciones exclusivas."</string>
     <string name="wrong_purchase_signature_gp">"Lo sentimos, pero no hemos podido verificar tu compra. Recibiras un reembolso en los próximos días (3 días, al menos)."</string>
     <string name="only_premium_feature">"Lo sentimos, pero esa función solo esta disponible en la versión exclusiva."</string>
-    <string name="agreement_text">"\tGracias por usar InviZible Pro. Esperamos que te sea de utilidad para mejorar tu privacidad y puedas confiar más y sentirte despreocupado en el uso de Internet, cómo fue, y como debería ser una verdadera red libre.
-\tInviZible Pro provee el acceso a los módulos de Tor, DNSCrypt e I2Pd de una manera sencilla e intuitiva de usar y configurar.
-\tInviZible Pro puede usar privilegios de SuperUsuario, en caso que tu dispositivo disponga de ellos, y le otorges su uso, o también puede crear una VPN local a tu dispositivo para redirigir el tráfico de Internet a través de la red de Tor, DNSCrypt e/o I2P.
-\tEsta aplicación está desarrollada y producida de forma independiente del software que producen, los proyectos de Tor®, DNSCrypt, e I2Pd, y por tanto, no dispone, o tiene, de garantía alguna y/o mantenimiento, ni soporte, de los proyectos ya mencionados, sobre calidad o aprobación, o cualquier otro resultado que pueda o pudiera entregar éste producto.
+    <string name="agreement_text">"\tGracias por usar InviZible Pro. Esperamos que te sea de utilidad para aumentar la privacidad en Internet y puedas sentir algo más de confianza en su uso, cómo una vez fue, y como debería ser una verdadera red libre.
+\tInviZible Pro provee acceso al software de Tor, DNSCrypt e I2Pd de una manera sencilla e intuitiva de usar y configurar.
+\tInviZible Pro puede usar privilegios de SuperUsuario, en caso de que tu dispositivo disponga de ellos, y, por supuesto, tú concedas el uso de los mismos, aunque también puede crear una VPN local, como alternativa, para tu dispositivo y redirigir el tráfico de Internet a través de la red de Tor, DNSCrypt y/o/e I2P.
+\tEsta aplicación está desarrollada y producida de forma independiente del software que producen los proyectos Tor®, DNSCrypt, e I2Pd, y, por tanto, no dispone, o tiene, de garantía alguna y/o mantenimiento, ni soporte, de los proyectos ya mencionados, sobre calidad o aprobación, o tampoco cualquier resultado que pudiese entregar éste producto respectivamente a dichos proyectos.
 \tInviZible Pro se distribuye con la esperanza de que sea útil, pero SIN NINGÚN TIPO DE GARANTÍA; incluso sin las garantías que impliquen o implacasen ser un producto COMERCIAL, o, SERVIR A ALGÚN PROPOSITO EN CONCRETO.
 \tTodos los derechos de autor reservados © 2019-2021
 \tLa comunidad de InviZible Pro, y su desarrollador, Garmatin Oleksandr
