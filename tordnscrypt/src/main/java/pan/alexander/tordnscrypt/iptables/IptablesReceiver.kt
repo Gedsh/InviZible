@@ -30,6 +30,7 @@ import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.utils.RootCommands
 import pan.alexander.tordnscrypt.utils.RootExecService.*
+import java.util.*
 
 class IptablesReceiver : BroadcastReceiver() {
 
@@ -65,6 +66,8 @@ class IptablesReceiver : BroadcastReceiver() {
             return
         }
 
+        val resultStr = result.toString().toLowerCase(Locale.ROOT)
+
         lastIptablesCommandsReturnError = true
 
         var handler: Handler? = null
@@ -75,10 +78,12 @@ class IptablesReceiver : BroadcastReceiver() {
             val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
             val showToastWithCommandsResultError = sharedPreferences.getBoolean("pref_common_show_help", false)
 
-            if (result.contains("unknown option \"-w\"")) {
+            if (resultStr.contains("unknown option \"-w\"")) {
                 sharedPreferences.edit().putString("pref_common_use_iptables", "2").apply()
                 it.postDelayed({ ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true) }, 1000)
-            } else if (result.contains(" -w ") || result.contains("Exit code=4")) {
+            } else if (resultStr.contains(" -w ")
+                || resultStr.contains("Exit code=4")
+                || resultStr.contains("try again")) {
                 it.postDelayed({ ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true) }, 5000)
             }
             if (showToastWithCommandsResultError) {
