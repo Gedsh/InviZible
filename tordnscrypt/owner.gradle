@@ -157,6 +157,8 @@ android {
         viewBinding true
     }
 
+    kotlinOptions.useIR = true
+
 }
 
 
