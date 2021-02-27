@@ -89,7 +89,6 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDRunFragment;
 import pan.alexander.tordnscrypt.tor_fragment.TorRunFragment;
 import pan.alexander.tordnscrypt.utils.ApManager;
-import pan.alexander.tordnscrypt.utils.AppExitDetectService;
 import pan.alexander.tordnscrypt.utils.ChangeModeInterface;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Registration;
@@ -192,8 +191,6 @@ public class MainActivity extends LangAppCompatActivity
         if (looper != null) {
             handler = new Handler(looper);
         }
-
-        startAppExitDetectService();
     }
 
     @Override
@@ -857,25 +854,6 @@ public class MainActivity extends LangAppCompatActivity
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
-    }
-
-    private void startAppExitDetectService() {
-
-        if (isFinishing() || handler == null) {
-            return;
-        }
-
-        handler.postDelayed(() -> {
-            if (!isFinishing()) {
-                try {
-                    Intent intent = new Intent(this, AppExitDetectService.class);
-                    startService(intent);
-                    Log.i(LOG_TAG, "Start app exit detect service");
-                } catch (Exception e) {
-                    Log.i(LOG_TAG, "Start app exit detect service exception " + e.getMessage() + " " + e.getCause());
-                }
-            }
-        }, 1000);
     }
 
     private void showInfoAboutRoot() {

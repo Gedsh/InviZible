@@ -71,8 +71,9 @@ import pan.alexander.tordnscrypt.patches.Patch;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.update.UpdateCheck;
 import pan.alexander.tordnscrypt.update.UpdateService;
+import pan.alexander.tordnscrypt.utils.AppExitDetectService;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.OwnFileReader;
+import pan.alexander.tordnscrypt.utils.FileShortener;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Registration;
 import pan.alexander.tordnscrypt.utils.RootExecService;
@@ -81,10 +82,11 @@ import pan.alexander.tordnscrypt.utils.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
-import static pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptFragmentPresenter.DNSCRYPT_READY_PREF;
+import static pan.alexander.tordnscrypt.modules.ModulesStateLoop.DNSCRYPT_READY_PREF;
+import static pan.alexander.tordnscrypt.modules.ModulesStateLoop.ITPD_READY_PREF;
+import static pan.alexander.tordnscrypt.modules.ModulesStateLoop.TOR_READY_PREF;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
-import static pan.alexander.tordnscrypt.tor_fragment.TorFragmentPresenter.TOR_READY_PREF;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -150,7 +152,7 @@ public class TopFragment extends Fragment {
     public TopFragment() {
     }
 
-    @SuppressWarnings("deprecation")
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -202,6 +204,7 @@ public class TopFragment extends Fragment {
             modulesStatus.setFixTTL(shPref.getBoolean("pref_common_fix_ttl", false));
             modulesStatus.setTorReady(new PrefManager(context).getBoolPref(TOR_READY_PREF));
             modulesStatus.setDnsCryptReady(new PrefManager(context).getBoolPref(DNSCRYPT_READY_PREF));
+            modulesStatus.setItpdReady(new PrefManager(context).getBoolPref(ITPD_READY_PREF));
 
             String operationMode = new PrefManager(context).getStrPref("OPERATION_MODE");
 
@@ -245,7 +248,6 @@ public class TopFragment extends Fragment {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -338,27 +340,27 @@ public class TopFragment extends Fragment {
 
             Context context = activity.getApplicationContext();
 
-           shortenTooLongSnowflakeLog(context);
+            shortenTooLongSnowflakeLog(context);
 
-           if (topFragment.handler != null) {
-               topFragment.handler.postDelayed(() -> {
+            if (topFragment.handler != null) {
+                topFragment.handler.postDelayed(() -> {
 
-                   if (activity.isFinishing()) {
-                       return;
-                   }
+                    if (activity.isFinishing()) {
+                        return;
+                    }
 
-                   if (!topFragment.runModulesWithRoot
-                           && haveModulesSavedStateRunning(context)
-                           && !isModulesStarterServiceRunning(context)) {
-                       startModulesStarterServiceIfStoppedBySystem(context);
-                       Log.e(LOG_TAG, "ModulesService stopped by system!");
-                   } else {
-                       ModulesAux.speedupModulesStateLoopTimer(context);
-                   }
-               }, 3000);
-           }
+                    if (!topFragment.runModulesWithRoot
+                            && haveModulesSavedStateRunning(context)
+                            && !isModulesStarterServiceRunning(context)) {
+                        startModulesStarterServiceIfStoppedBySystem(context);
+                        Log.e(LOG_TAG, "ModulesService stopped by system!");
+                    } else {
+                        ModulesAux.speedupModulesStateLoopTimer(context);
+                    }
+                }, 3000);
+            }
 
-
+            topFragment.startAppExitDetectService(context);
 
             try {
                 Verifier verifier = new Verifier(activity);
@@ -919,11 +921,20 @@ public class TopFragment extends Fragment {
 
             if (showHelperMessages && (bridgesSnowflakeDefault || bridgesSnowflakeOwn)) {
                 PathVars pathVars = PathVars.getInstance(context);
-                OwnFileReader snowflakeLog = new OwnFileReader(context, pathVars.getAppDataDir() + "/logs/Snowflake.log");
-                snowflakeLog.shortenTooTooLongFile();
+                FileShortener.shortenTooTooLongFile(pathVars.getAppDataDir() + "/logs/Snowflake.log");
             }
         } catch (Exception e) {
             Log.e(LOG_TAG, "TopFragment shortenTooLongSnowflakeLog exception " + e.getMessage() + " " + e.getCause());
+        }
+    }
+
+    private void startAppExitDetectService(Context context) {
+        try {
+            Intent intent = new Intent(context, AppExitDetectService.class);
+            context.startService(intent);
+            Log.i(LOG_TAG, "Start app exit detect service");
+        } catch (Exception e) {
+            Log.i(LOG_TAG, "Start app exit detect service exception " + e.getMessage() + " " + e.getCause());
         }
     }
 
