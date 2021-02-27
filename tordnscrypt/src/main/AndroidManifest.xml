@@ -42,7 +42,7 @@
         tools:ignore="ProtectedPermissions" />
 
     <application
-        android:name=".ApplicationExt"
+        android:name=".ApplicationBase"
         android:allowBackup="false"
         android:appCategory="productivity"
         android:banner="@drawable/banner_tv"
