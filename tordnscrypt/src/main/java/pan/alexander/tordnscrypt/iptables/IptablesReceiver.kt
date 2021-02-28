@@ -35,6 +35,7 @@ import java.util.*
 class IptablesReceiver : BroadcastReceiver() {
 
     var lastIptablesCommandsReturnError = false
+    var savedError = ""
 
     override fun onReceive(context: Context?, intent: Intent?) {
 
@@ -70,6 +71,14 @@ class IptablesReceiver : BroadcastReceiver() {
 
         lastIptablesCommandsReturnError = true
 
+        //Prevent cyclic iptables update
+        val removedDigits = resultStr.replace(Regex("\\d+"), "*")
+        if (removedDigits == savedError) {
+            return
+        }
+
+        savedError = removedDigits
+
         var handler: Handler? = null
         Looper.getMainLooper()?.let { handler = Handler(it) }
 
@@ -77,13 +86,15 @@ class IptablesReceiver : BroadcastReceiver() {
 
             val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
             val showToastWithCommandsResultError = sharedPreferences.getBoolean("pref_common_show_help", false)
+            val refreshRules = sharedPreferences.getBoolean("swRefreshRules", false)
 
             if (resultStr.contains("unknown option \"-w\"")) {
                 sharedPreferences.edit().putString("pref_common_use_iptables", "2").apply()
                 it.postDelayed({ ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true) }, 1000)
-            } else if (resultStr.contains(" -w ")
+            } else if (refreshRules
+                && (resultStr.contains(" -w ")
                 || resultStr.contains("Exit code=4")
-                || resultStr.contains("try again")) {
+                || resultStr.contains("try again"))) {
                 it.postDelayed({ ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true) }, 5000)
             }
             if (showToastWithCommandsResultError) {
