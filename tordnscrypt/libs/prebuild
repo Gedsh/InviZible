@@ -2,7 +2,6 @@
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
-ndk_version=21.3.6528147
 obfs4proxy_version=f638c33f6c6f697498150d5f0dfbf26453759262
 dnscryptproxy_version=2.0.45
 snowflake_version=7043a055f9fb0680281ecffd7d458a43f2ce65b5
