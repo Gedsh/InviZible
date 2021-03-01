@@ -6,19 +6,6 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 ## Config ##
 ############
 
-ndk_version=21.3.6528147
-obfs4proxy_version=f638c33f6c6f697498150d5f0dfbf26453759262
-dnscryptproxy_version=2.0.45
-snowflake_version=7043a055f9fb0680281ecffd7d458a43f2ce65b5
-tor_openssl_version=OpenSSL_1_1_1h
-libevent_version=release-2.1.11-stable
-zstd_version=v1.4.5
-xz_version=v5.2.3
-tor_version=release-0.4.5
-i2pd_openssl_version=OpenSSL_1_1_1h
-miniupnpc_version=miniupnpc_2_1
-i2pd_version=2.35.0
-
 if [[ $# == 1 && $1 == "arm64" ]]
 then
     ABI=arm64-v8a
@@ -58,8 +45,6 @@ mkdir arm64-v8a armeabi-v7a
 # libobfs4proxy #
 #################
 
-git clone --single-branch --branch $obfs4proxy_version https://github.com/Yawning/obfs4
-
 pushd obfs4/obfs4proxy/
 go build -ldflags="-s -w" -o libobfs4proxy.so
 mv libobfs4proxy.so ${LIBS_ROOT}/${ABI}/libobfs4proxy.so
@@ -68,8 +53,6 @@ popd
 #####################
 # libdnscrypt-proxy #
 #####################
-
-git clone --single-branch --branch $dnscryptproxy_version https://github.com/DNSCrypt/dnscrypt-proxy
 
 pushd dnscrypt-proxy/dnscrypt-proxy/
 go build -ldflags="-s -w" -o libdnscrypt-proxy.so
@@ -80,11 +63,7 @@ popd
 # libsnowflake #
 ################
 
-git clone https://github.com/keroserene/snowflake
-
-pushd snowflake/
-git checkout -f $snowflake_version -b $snowflake_version
-cd proxy/
+pushd snowflake/proxy/
 go build -ldflags="-s -w" -o libsnowflake.so
 mv libsnowflake.so ${LIBS_ROOT}/${ABI}/libsnowflake.so
 popd
@@ -94,13 +73,8 @@ popd
 ##########
 
 pushd ../../TorBuildScript/external/
-export EXTERNAL_ROOT=`pwd`
 
-git clone --single-branch --branch $tor_openssl_version https://github.com/openssl/openssl.git
-git clone --single-branch --branch $libevent_version https://github.com/libevent/libevent.git
-git clone --single-branch --branch $zstd_version https://github.com/facebook/zstd.git
-git clone --single-branch --branch $xz_version https://git.tukaani.org/xz.git
-git clone --single-branch --branch $tor_version https://git.torproject.org/tor.git
+export EXTERNAL_ROOT=`pwd`
 
 if [[ $ABI == arm64-v8a ]]
 then
@@ -126,18 +100,8 @@ popd
 ###########
 
 pushd ../../PurpleI2PBuildScript/external/
-mkdir -p libs
+
 export EXTERNAL_ROOT=`pwd`
-
-pushd libs/
-git clone --single-branch --branch $i2pd_openssl_version https://github.com/openssl/openssl.git
-git clone https://github.com/moritz-wundke/Boost-for-Android.git
-git clone --single-branch --branch $miniupnpc_version https://github.com/miniupnp/miniupnp.git
-git clone https://github.com/PurpleI2P/android-ifaddrs.git
-popd
-
-git clone --single-branch --branch $i2pd_version https://github.com/PurpleI2P/i2pd.git
-
 export TARGET_I2P_ABI=$ABI
 export APP_ABI=$ABI
 
