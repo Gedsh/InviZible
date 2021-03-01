@@ -15,7 +15,10 @@ i2pd_openssl_version=OpenSSL_1_1_1h
 miniupnpc_version=miniupnpc_2_1
 i2pd_version=2.35.0
 
-git clone --single-branch --branch $obfs4proxy_version https://github.com/Yawning/obfs4
+git clone https://github.com/Yawning/obfs4
+pushd obfs4
+git checkout -f $obfs4proxy_version -b $obfs4proxy_version
+popd
 
 git clone --single-branch --branch $dnscryptproxy_version https://github.com/DNSCrypt/dnscrypt-proxy
 
