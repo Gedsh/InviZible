@@ -54,7 +54,7 @@ mkdir arm64-v8a armeabi-v7a
 
 pushd obfs4/obfs4proxy/
 go build -ldflags="-s -w" -o libobfs4proxy.so
-mv libobfs4proxy.so ${LIBS_ROOT}/${ABI}/libobfs4proxy.so
+mv libobfs4proxy.so ${LIBS_ROOT}/${ABI}/libobfs4proxy.so || exit 1
 popd
 
 #####################
@@ -63,7 +63,7 @@ popd
 
 pushd dnscrypt-proxy/dnscrypt-proxy/
 go build -ldflags="-s -w" -o libdnscrypt-proxy.so
-mv libdnscrypt-proxy.so ${LIBS_ROOT}/${ABI}/libdnscrypt-proxy.so
+mv libdnscrypt-proxy.so ${LIBS_ROOT}/${ABI}/libdnscrypt-proxy.so || exit 1
 popd
 
 ################
@@ -72,7 +72,7 @@ popd
 
 pushd snowflake/proxy/
 go build -ldflags="-s -w" -o libsnowflake.so
-mv libsnowflake.so ${LIBS_ROOT}/${ABI}/libsnowflake.so
+mv libsnowflake.so ${LIBS_ROOT}/${ABI}/libsnowflake.so || exit 1
 popd
 
 ##########
@@ -98,7 +98,7 @@ else
     make showsetup
 fi
 
-mv ../tor-android-binary/src/main/libs/${APP_ABI}/libtor.so ${LIBS_ROOT}/${ABI}/libtor.so
+mv ../tor-android-binary/src/main/libs/${APP_ABI}/libtor.so ${LIBS_ROOT}/${ABI}/libtor.so || exit 1
 
 popd
 
@@ -127,6 +127,6 @@ else
     make showsetup
 fi
 
-mv ../i2pd-android-binary/src/main/libs/${APP_ABI}/libi2pd.so ${LIBS_ROOT}/${ABI}/libi2pd.so
+mv ../i2pd-android-binary/src/main/libs/${APP_ABI}/libi2pd.so ${LIBS_ROOT}/${ABI}/libi2pd.so || exit 1
 
 popd
