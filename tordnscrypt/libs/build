@@ -10,8 +10,6 @@ ndk_version=21.3.6528147
 if [[ -d "/opt/android-sdk/ndk/${ndk_version}" ]]
 then
     NDK="/opt/android-sdk/ndk/${ndk_version}"
-else
-    NDK=$ANDROID_NDK
 fi
 export ANDROID_NDK_HOME=$NDK
 export PATH="$PATH:$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin"
