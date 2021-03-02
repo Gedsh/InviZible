@@ -11,7 +11,7 @@ zstd_version=v1.4.5
 xz_version=v5.2.3
 tor_version=release-0.4.5
 i2pd_openssl_version=OpenSSL_1_1_1h
-miniupnpc_version=miniupnpc_2_1
+miniupnpc_version=miniupnpc_2_2_0
 i2pd_version=2.35.0
 
 git clone https://github.com/Yawning/obfs4
