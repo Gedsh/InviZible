@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.tor_fragment;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.IntentFilter;
 import android.os.Bundle;
 
@@ -112,14 +113,15 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
 
         receiver = new TorFragmentReceiver(this, presenter);
 
-        if (getActivity() != null) {
+        Context context = getActivity();
+        if (context != null) {
             IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
             IntentFilter intentFilterTopFrg = new IntentFilter(TopFragment.TOP_BROADCAST);
 
-            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver, intentFilterBckgIntSer);
-            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver, intentFilterTopFrg);
+            LocalBroadcastManager.getInstance(context).registerReceiver(receiver, intentFilterBckgIntSer);
+            LocalBroadcastManager.getInstance(context).registerReceiver(receiver, intentFilterTopFrg);
 
-            presenter.onStart(getActivity());
+            presenter.onStart();
         }
 
     }
@@ -138,8 +140,9 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
         super.onStop();
 
         try {
-            if (getActivity() != null && receiver != null) {
-                LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(receiver);
+            Context context = getActivity();
+            if (context != null && receiver != null) {
+                LocalBroadcastManager.getInstance(context).unregisterReceiver(receiver);
             }
         } catch (Exception e) {
             Log.e(LOG_TAG, "TorFragment onStop exception " + e.getMessage() + " " + e.getCause());
@@ -168,7 +171,7 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.btnTorStart) {
-            presenter.startButtonOnClick(getActivity());
+            presenter.startButtonOnClick();
         }
     }
 
@@ -202,7 +205,7 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
     public void setTorProgressBarIndeterminate(boolean indeterminate) {
         if (!pbTor.isIndeterminate() && indeterminate) {
             pbTor.setIndeterminate(true);
-        } else if (pbTor.isIndeterminate() && !indeterminate){
+        } else if (pbTor.isIndeterminate() && !indeterminate) {
             pbTor.setIndeterminate(false);
         }
     }
@@ -215,7 +218,7 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
     @Override
     @SuppressLint("SetTextI18n")
     public void setTorLogViewText() {
-        tvTorLog.setText(getText(R.string.tvDNSDefaultLog) + " " + TorVersion);
+        tvTorLog.setText(getText(R.string.tvTorDefaultLog) + " " + TorVersion);
     }
 
     @Override
@@ -253,9 +256,11 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
         return getParentFragmentManager();
     }
 
-    public TorFragmentPresenterCallbacks getPresenter() {
-        if (presenter == null && getActivity() instanceof MainActivity && ((MainActivity)getActivity()).getMainFragment() != null) {
-            presenter = ((MainActivity)getActivity()).getMainFragment().getTorFragmentPresenter();
+    public TorFragmentPresenterInterface getPresenter() {
+        Activity activity = getActivity();
+        if (presenter == null && activity instanceof MainActivity
+                && ((MainActivity) activity).getMainFragment() != null) {
+            presenter = ((MainActivity) activity).getMainFragment().getTorFragmentPresenter();
         }
 
         return presenter;
@@ -276,13 +281,15 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
         }
 
         svTorLog.post(() -> {
+            svTorLog.computeScroll();
+
             int delta = 0;
 
             if (svTorLog == null) {
                 return;
             }
 
-            int childIndex= svTorLog.getChildCount() - 1;
+            int childIndex = svTorLog.getChildCount() - 1;
 
             if (childIndex < 0) {
                 return;

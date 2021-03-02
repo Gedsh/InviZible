@@ -1,5 +1,3 @@
-package pan.alexander.tordnscrypt.dnscrypt_fragment
-
 /*
     This file is part of InviZible Pro.
 
@@ -17,13 +15,16 @@ package pan.alexander.tordnscrypt.dnscrypt_fragment
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
-*/
+ */
+
+package pan.alexander.tordnscrypt.domain.connection_records
 
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
 import android.util.Log
 import androidx.preference.PreferenceManager
+import pan.alexander.tordnscrypt.domain.entities.ConnectionRecord
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.firewall.APPS_ALLOW_GSM_PREF
 import pan.alexander.tordnscrypt.settings.firewall.APPS_ALLOW_LAN_PREF
@@ -40,7 +41,10 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPN
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Future
 
-class DNSQueryLogRecordsConverter(context: Context) {
+private const val REVERSE_LOOKUP_QUEUE_CAPACITY = 100
+private const val IP_TO_HOST_ADDRESS_MAP_SIZE = 500
+
+class ConnectionRecordsConverter(context: Context) {
 
     private val sharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
     private val blockIPv6: Boolean = sharedPreferences.getBoolean("block_ipv6", true)
@@ -51,10 +55,10 @@ class DNSQueryLogRecordsConverter(context: Context) {
     private val fixTTL = (modulesStatus.isFixTTL && modulesStatus.mode == OperationMode.ROOT_MODE
             && !modulesStatus.isUseModulesWithRoot)
 
-    private val dnsQueryLogRecords = ArrayList<DNSQueryLogRecord>()
-    private val dnsQueryLogRecordsSublist = ArrayList<DNSQueryLogRecord>()
-    private val reverseLookupQueue = ArrayBlockingQueue<String>(100, true)
-    private val ipToHostAddressMap = HashMap<String, String>()
+    private val dnsQueryLogRecords = ArrayList<ConnectionRecord>()
+    private val dnsQueryLogRecordsSublist = ArrayList<ConnectionRecord>()
+    private val reverseLookupQueue = ArrayBlockingQueue<String>(REVERSE_LOOKUP_QUEUE_CAPACITY, true)
+    private val ipToHostAddressMap = mutableMapOf<String, String>()
     private var futureTask: Future<*>? = null
 
     private val firewallEnabled = PrefManager(context).getBoolPref("FirewallEnabled")
@@ -82,7 +86,7 @@ class DNSQueryLogRecordsConverter(context: Context) {
         }
     }
 
-    fun convertRecords(dnsQueryRawRecords: ArrayList<DNSQueryLogRecord>): ArrayList<DNSQueryLogRecord> {
+    fun convertRecords(dnsQueryRawRecords: List<ConnectionRecord?>): List<ConnectionRecord> {
 
         dnsQueryLogRecords.clear()
 
@@ -93,7 +97,11 @@ class DNSQueryLogRecordsConverter(context: Context) {
         return dnsQueryLogRecords
     }
 
-    private fun addRecord(dnsQueryRawRecord: DNSQueryLogRecord) {
+    private fun addRecord(dnsQueryRawRecord: ConnectionRecord?) {
+
+        if (dnsQueryRawRecord == null) {
+            return
+        }
 
         if (dnsQueryLogRecords.isNotEmpty()) {
             if (dnsQueryRawRecord.uid != -1000) {
@@ -113,7 +121,7 @@ class DNSQueryLogRecordsConverter(context: Context) {
         dnsQueryLogRecords.add(dnsQueryRawRecord)
     }
 
-    private fun isIdenticalRecord(dnsQueryRawRecord: DNSQueryLogRecord): Boolean {
+    private fun isIdenticalRecord(dnsQueryRawRecord: ConnectionRecord): Boolean {
 
         for (i in dnsQueryLogRecords.size - 1 downTo 0) {
             val record = dnsQueryLogRecords[i]
@@ -136,8 +144,8 @@ class DNSQueryLogRecordsConverter(context: Context) {
         return false
     }
 
-    private fun addUID(dnsQueryRawRecord: DNSQueryLogRecord) {
-        var savedRecord: DNSQueryLogRecord? = null
+    private fun addUID(dnsQueryRawRecord: ConnectionRecord) {
+        var savedRecord: ConnectionRecord? = null
         dnsQueryLogRecordsSublist.clear()
 
         val uidBlocked = if (firewallEnabled) {
@@ -172,7 +180,7 @@ class DNSQueryLogRecordsConverter(context: Context) {
 
         if (savedRecord != null) {
 
-            val dnsQueryNewRecord = DNSQueryLogRecord(savedRecord.qName, savedRecord.aName, savedRecord.cName,
+            val dnsQueryNewRecord = ConnectionRecord(savedRecord.qName, savedRecord.aName, savedRecord.cName,
                     savedRecord.hInfo, -1, dnsQueryRawRecord.saddr, "", dnsQueryRawRecord.uid)
             dnsQueryNewRecord.blocked = uidBlocked
             dnsQueryNewRecord.unused = false
@@ -186,7 +194,7 @@ class DNSQueryLogRecordsConverter(context: Context) {
 
                 if (host == null) {
                     makeReverseLookup(dnsQueryRawRecord.daddr)
-                } else {
+                } else if (host != dnsQueryRawRecord.daddr) {
                     dnsQueryRawRecord.reverseDNS = host
                 }
             }
@@ -213,6 +221,10 @@ class DNSQueryLogRecordsConverter(context: Context) {
 
     private fun startReverseLookupQueue() {
 
+        if(futureTask?.isDone == false) {
+            return
+        }
+
         futureTask = CachedExecutor.getExecutorService().submit {
             try {
 
@@ -221,13 +233,13 @@ class DNSQueryLogRecordsConverter(context: Context) {
 
                     val host = getHostByIP(ip)
 
-                    if (host != ip) {
-                        if (ipToHostAddressMap.size > 500) {
-                            ipToHostAddressMap.clear()
-                        }
-
-                        ipToHostAddressMap[ip] = host
+                    if (ipToHostAddressMap.size > IP_TO_HOST_ADDRESS_MAP_SIZE) {
+                        val pairs = ipToHostAddressMap.toList()
+                        ipToHostAddressMap.clear()
+                        ipToHostAddressMap.plus(pairs.subList(pairs.size/2, pairs.size))
                     }
+
+                    ipToHostAddressMap[ip] = host
                 }
 
             } catch (ignored: InterruptedException) {
@@ -237,7 +249,7 @@ class DNSQueryLogRecordsConverter(context: Context) {
         }
     }
 
-    private fun setQueryBlocked(dnsQueryRawRecord: DNSQueryLogRecord): Boolean {
+    private fun setQueryBlocked(dnsQueryRawRecord: ConnectionRecord): Boolean {
 
         if (dnsQueryRawRecord.daddr == "0.0.0.0"
                 || dnsQueryRawRecord.daddr == "127.0.0.1"
@@ -266,7 +278,12 @@ class DNSQueryLogRecordsConverter(context: Context) {
     }
 
     fun onStop() {
-        futureTask?.let { if (!it.isCancelled) it.cancel(true) }
+        futureTask?.let {
+            if (!it.isDone) {
+                it.cancel(true)
+                futureTask = null
+            }
+        }
     }
 
     private fun isIpInLanRange(destAddress: String): Boolean {

@@ -21,10 +21,8 @@ package pan.alexander.tordnscrypt.modules
 
 import android.content.Context
 import android.net.TrafficStats
-import android.os.Build
 import android.os.Process
 import android.util.Log
-import androidx.annotation.RequiresApi
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
@@ -67,7 +65,6 @@ class UsageStatistic(private val context: Context) {
         startTime = System.currentTimeMillis()
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmOverloads
     fun startUpdate(period: Int = 3) {
 

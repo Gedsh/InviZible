@@ -37,7 +37,7 @@ import pan.alexander.tordnscrypt.language.Language;
 public abstract class LangAppCompatActivity extends AppCompatActivity {
 
     private final boolean DEVELOPER_MODE = false;
-    private ApplicationExt applicationExt;
+    private ApplicationBase applicationContext;
 
     @RequiresApi(api = Build.VERSION_CODES.P)
     @Override
@@ -63,8 +63,8 @@ public abstract class LangAppCompatActivity extends AppCompatActivity {
 
         Language.setFromPreference(this, "pref_fast_language");
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && getApplicationContext() instanceof  ApplicationExt) {
-            applicationExt = (ApplicationExt) getApplicationContext();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && getApplicationContext() instanceof ApplicationBase) {
+            applicationContext = (ApplicationBase) getApplicationContext();
         }
     }
 
@@ -72,8 +72,8 @@ public abstract class LangAppCompatActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        if (applicationExt != null) {
-            applicationExt.setCurrentActivity(new WeakReference<>(this));
+        if (applicationContext != null) {
+            applicationContext.setCurrentActivity(new WeakReference<>(this));
         }
     }
 
@@ -111,9 +111,9 @@ public abstract class LangAppCompatActivity extends AppCompatActivity {
     }
 
     private void clearCurrentActivity() {
-        if (applicationExt != null && applicationExt.getCurrentActivity() != null
-                && Objects.equals(applicationExt.getCurrentActivity().get(), this)) {
-            applicationExt.setCurrentActivity(null);
+        if (applicationContext != null && applicationContext.getCurrentActivity() != null
+                && Objects.equals(applicationContext.getCurrentActivity().get(), this)) {
+            applicationContext.setCurrentActivity(null);
         }
     }
 }

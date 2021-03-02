@@ -33,11 +33,11 @@ import java.util.Objects;
 
 public class ResourceRecord implements Serializable {
     public long Time;
-    public String QName;
-    public String AName;
-    public String CName;
-    public String HInfo;
-    public String Resource;
+    public String QName = "";
+    public String AName = "";
+    public String CName = "";
+    public String HInfo = "";
+    public String Resource = "";
     public int Rcode;
     private static final long serialVersionUID = 1L;
 

@@ -19,6 +19,7 @@ package pan.alexander.tordnscrypt.dnscrypt_fragment;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -52,7 +53,7 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
     private final DNSCryptFragmentView view;
-    private final DNSCryptFragmentPresenterCallbacks presenter;
+    private final DNSCryptFragmentPresenterInterface presenter;
 
     private String dnscryptPath;
     private String busyboxPath;
@@ -64,7 +65,10 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (view == null || presenter == null) {
+        if (view == null
+                || view.getFragmentActivity() == null
+                || view.getFragmentActivity().isFinishing()
+                || presenter == null) {
             return;
         }
 
@@ -112,11 +116,11 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
                         if (!modulesStatus.isUseModulesWithRoot()) {
 
-                            if (!presenter.isSavedDNSStatusRunning(context)) {
+                            if (!presenter.isSavedDNSStatusRunning()) {
                                 view.setDNSCryptLogViewText();
                             }
 
-                            presenter.refreshDNSCryptState(context);
+                            presenter.refreshDNSCryptState();
                         }
                     }
                 }
@@ -125,19 +129,19 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                         && sb.toString().contains("checkDNSRunning")) {
 
                     presenter.setDnsCryptRunning();
-                    presenter.saveDNSStatusRunning(context, true);
+                    presenter.saveDNSStatusRunning(true);
                     modulesStatus.setDnsCryptState(RUNNING);
-                    presenter.displayLog(5);
+                    presenter.displayLog(false);
 
                 } else if (!sb.toString().toLowerCase().contains(dnscryptPath.toLowerCase())
                         && sb.toString().contains("checkDNSRunning")) {
                     if (modulesStatus.getDnsCryptState() == STOPPED) {
-                        presenter.saveDNSStatusRunning(context, false);
+                        presenter.saveDNSStatusRunning(false);
                     }
                     presenter.stopDisplayLog();
                     presenter.setDnsCryptStopped();
                     modulesStatus.setDnsCryptState(STOPPED);
-                    presenter.refreshDNSCryptState(context);
+                    presenter.refreshDNSCryptState();
                 } else if (sb.toString().contains("Something went wrong!")) {
                     presenter.setDnsCryptSomethingWrong();
                     modulesStatus.setDnsCryptState(FAULT);
@@ -151,16 +155,21 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                 }
 
                 FragmentManager fragmentManager = view.getFragmentFragmentManager();
+                Activity activity = view.getFragmentActivity();
 
                 CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
                     try {
+                        if (activity == null || activity.isFinishing()) {
+                            return;
+                        }
+
                         Verifier verifier = new Verifier(context);
                         String appSignAlt = verifier.getApkSignature();
                         if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
 
                             if (fragmentManager != null) {
                                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                        context, context.getText(R.string.verifier_error).toString(), "15");
+                                        activity, context.getString(R.string.verifier_error), "15");
                                 if (notificationHelper != null) {
                                     notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
                                 }
@@ -170,7 +179,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                     } catch (Exception e) {
                         if (fragmentManager != null) {
                             NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                    context, context.getText(R.string.verifier_error).toString(), "18");
+                                    context, context.getString(R.string.verifier_error), "18");
                             if (notificationHelper != null) {
                                 notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
                             }
@@ -186,7 +195,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
     private void checkDNSVersionWithRoot(Context context) {
 
-        if (presenter.isDNSCryptInstalled(context)) {
+        if (presenter.isDNSCryptInstalled()) {
 
             List<String> commandsCheck = new ArrayList<>(Arrays.asList(
                     busyboxPath + "pgrep -l /libdnscrypt-proxy.so 2> /dev/null",

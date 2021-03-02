@@ -473,6 +473,7 @@ public class ModulesKiller {
         return shellResult;
     }
 
+    //kill default signal SIGTERM - 15, SIGKILL -9, SIGQUIT - 3
     private List<String> prepareKillCommands(String module, String pid, String signal, boolean killWithRoot) {
         List<String> result;
 
@@ -522,7 +523,7 @@ public class ModulesKiller {
         int attempts = 0;
         while (attempts < 3 && !result) {
             if (attempts < 2) {
-                result = killModule(modulePath, pid, thread, moduleStartedWithRoot, "", attempts + 1);
+                result = killModule(modulePath, pid, thread, moduleStartedWithRoot, "", attempts + 2);
             } else {
                 result = killModule(modulePath, pid, thread, moduleStartedWithRoot, "SIGKILL", attempts + 1);
             }

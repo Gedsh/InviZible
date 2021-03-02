@@ -67,8 +67,10 @@ private val macPattern = Pattern.compile("([0-9a-fA-F]{2}[:]){5}([0-9a-fA-F]{2})
 private val ethTablePattern = Pattern.compile("eth\\d lookup (\\w+)")
 private val defaultGatewayPattern = Pattern.compile("default via (([0-9*]{1,3}\\.){3}[0-9*]{1,3})")
 
-class ArpScanner private constructor(val context: Context,
-                                     handler: Handler?) : Shell.OnCommandResultListener {
+class ArpScanner private constructor(
+    context: Context,
+    handler: Handler?
+) : Shell.OnCommandResultListener {
 
     private var handler = handler
         set(value) {
@@ -82,8 +84,10 @@ class ArpScanner private constructor(val context: Context,
 
     @Volatile
     private var scheduledExecutorService: ScheduledExecutorService? = null
-    private val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-    private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    private val wifiManager =
+        context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+    private val notificationManager =
+        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     private var notSupportedCounter = 10
     private var notSupportedCounterFreeze = false
     private var sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
@@ -146,7 +150,7 @@ class ArpScanner private constructor(val context: Context,
         }
     }
 
-    fun start() {
+    fun start(context: Context) {
 
         if (!sharedPreferences.getBoolean("pref_common_arp_spoofing_detection", false)) {
             return
@@ -166,7 +170,7 @@ class ArpScanner private constructor(val context: Context,
             return
         }
 
-        pause(false, resetInternalValues = true)
+        pause(context, false, resetInternalValues = true)
 
         Log.i(LOG_TAG, "Start ArpScanner")
 
@@ -207,27 +211,36 @@ class ArpScanner private constructor(val context: Context,
                     }
 
                     if (wifiActive) {
-                        setDefaultWiFiGateway()
+                        setDefaultWiFiGateway(context)
                     } else if (ethernetActive) {
                         requestRuleTable()
                     } else if (!cellularActive && connectionAvailable) {
-                        setDefaultWiFiGateway()
+                        setDefaultWiFiGateway(context)
                     }
 
                     if (savedDefaultGateway.isNotEmpty() && defaultGateway.isNotEmpty()) {
 
                         if (savedDefaultGateway != defaultGateway) {
                             Log.e(LOG_TAG, "DHCPAttackDetected defaultGateway changed")
-                            Log.i(LOG_TAG, "Upstream Network Saved default Gateway:$savedDefaultGateway")
-                            Log.i(LOG_TAG, "Upstream Network Current default Gateway:$defaultGateway")
+                            Log.i(
+                                LOG_TAG,
+                                "Upstream Network Saved default Gateway:$savedDefaultGateway"
+                            )
+                            Log.i(
+                                LOG_TAG,
+                                "Upstream Network Current default Gateway:$defaultGateway"
+                            )
 
                             if (!dhcpGatewayAttackDetected) {
-                                sendNotification(context.getString(R.string.ask_force_close_title),
-                                        context.getString(R.string.notification_rogue_dhcp),
-                                        DHCP_NOTIFICATION_ID)
-                                makeToast(R.string.notification_rogue_dhcp)
-                                updateMainActivityIcons()
-                                reloadIptablesWithRootMode()
+                                sendNotification(
+                                    context,
+                                    context.getString(R.string.ask_force_close_title),
+                                    context.getString(R.string.notification_rogue_dhcp),
+                                    DHCP_NOTIFICATION_ID
+                                )
+                                makeToast(context, R.string.notification_rogue_dhcp)
+                                updateMainActivityIcons(context)
+                                reloadIptablesWithRootMode(context)
                             }
 
                             dhcpGatewayAttackDetected = true
@@ -235,8 +248,8 @@ class ArpScanner private constructor(val context: Context,
                             return@label
                         } else if (dhcpGatewayAttackDetected) {
                             dhcpGatewayAttackDetected = false
-                            updateMainActivityIcons()
-                            reloadIptablesWithRootMode()
+                            updateMainActivityIcons(context)
+                            reloadIptablesWithRootMode(context)
                         }
                     }
 
@@ -246,38 +259,50 @@ class ArpScanner private constructor(val context: Context,
 
                         if (gatewayMac != savedGatewayMac) {
                             Log.e(LOG_TAG, "ArpAttackDetected")
-                            Log.i(LOG_TAG, "Upstream Network Saved default Gateway:$savedDefaultGateway MAC:${savedGatewayMac}")
-                            Log.i(LOG_TAG, "Upstream Network Current default Gateway:$defaultGateway MAC:${gatewayMac}")
+                            Log.i(
+                                LOG_TAG,
+                                "Upstream Network Saved default Gateway:$savedDefaultGateway MAC:${savedGatewayMac}"
+                            )
+                            Log.i(
+                                LOG_TAG,
+                                "Upstream Network Current default Gateway:$defaultGateway MAC:${gatewayMac}"
+                            )
 
 
                             if (!arpAttackDetected) {
-                                sendNotification(context.getString(R.string.ask_force_close_title),
-                                        context.getString(R.string.notification_arp_spoofing),
-                                        ARP_NOTIFICATION_ID)
-                                makeToast(R.string.notification_arp_spoofing)
-                                updateMainActivityIcons()
-                                reloadIptablesWithRootMode()
+                                sendNotification(
+                                    context,
+                                    context.getString(R.string.ask_force_close_title),
+                                    context.getString(R.string.notification_arp_spoofing),
+                                    ARP_NOTIFICATION_ID
+                                )
+                                makeToast(context, R.string.notification_arp_spoofing)
+                                updateMainActivityIcons(context)
+                                reloadIptablesWithRootMode(context)
                             }
 
                             arpAttackDetected = true
 
                         } else if (arpAttackDetected) {
                             arpAttackDetected = false
-                            updateMainActivityIcons()
-                            reloadIptablesWithRootMode()
+                            updateMainActivityIcons(context)
+                            reloadIptablesWithRootMode(context)
                         }
                     }
 
                     if (notSupportedCounter == 0) {
-                        makeToast(R.string.toast_arp_detection_not_supported)
-                        stop()
+                        makeToast(context, R.string.toast_arp_detection_not_supported)
+                        stop(context)
                     }
 
                 } catch (e: Exception) {
                     if (defaultGateway.isNotEmpty()) {
                         resetInternalValues()
                     }
-                    Log.w(LOG_TAG, "ArpScanner executor exception! ${e.message}\n${e.cause}\n${e.stackTrace}")
+                    Log.w(
+                        LOG_TAG,
+                        "ArpScanner executor exception! ${e.message}\n${e.cause}\n${e.stackTrace}"
+                    )
                 }
             }
 
@@ -288,17 +313,21 @@ class ArpScanner private constructor(val context: Context,
         }, 1, 10, TimeUnit.SECONDS)
 
         if (!Util.isConnected(context) && !connectionAvailable) {
-            pause(true, resetInternalValues = true)
+            pause(context, true, resetInternalValues = true)
         }
     }
 
-    fun reset(connectionAvailable: Boolean) {
+    fun reset(context: Context, connectionAvailable: Boolean) {
 
         val attackDetected = arpAttackDetected || dhcpGatewayAttackDetected
 
         this.connectionAvailable = connectionAvailable
 
-        if (!sharedPreferences.getBoolean("pref_common_arp_spoofing_detection", false) && !attackDetected) {
+        if (!sharedPreferences.getBoolean(
+                "pref_common_arp_spoofing_detection",
+                false
+            ) && !attackDetected
+        ) {
             return
         }
 
@@ -308,7 +337,7 @@ class ArpScanner private constructor(val context: Context,
 
         if (connectionAvailable && (wifiActive || ethernetActive || !cellularActive)) {
             if (scheduledExecutorService?.isShutdown == false) {
-                pause(false, resetInternalValues = false)
+                pause(context, false, resetInternalValues = false)
 
                 if (!attackDetected) {
                     resetInternalValues()
@@ -316,10 +345,10 @@ class ArpScanner private constructor(val context: Context,
 
                 Log.i(LOG_TAG, "ArpScanner reset due to connectivity changed")
             } else {
-                start()
+                start(context)
             }
         } else {
-            pause(true, resetInternalValues = true)
+            pause(context, true, resetInternalValues = true)
         }
     }
 
@@ -343,7 +372,10 @@ class ArpScanner private constructor(val context: Context,
                 ethernetTable = ""
 
             } catch (e: Exception) {
-                Log.w(LOG_TAG, "ArpScanner resetInternalValues exception ${e.message}\n${e.cause}\n${e.stackTrace}")
+                Log.w(
+                    LOG_TAG,
+                    "ArpScanner resetInternalValues exception ${e.message}\n${e.cause}\n${e.stackTrace}"
+                )
             } finally {
                 if (reentrantLock.isLocked && reentrantLock.isHeldByCurrentThread) {
                     reentrantLock.unlock()
@@ -353,7 +385,7 @@ class ArpScanner private constructor(val context: Context,
 
     }
 
-    private fun pause(makePause: Boolean, resetInternalValues: Boolean) {
+    private fun pause(context: Context, makePause: Boolean, resetInternalValues: Boolean) {
         val attackDetected = arpAttackDetected || dhcpGatewayAttackDetected
 
         paused = makePause
@@ -362,7 +394,11 @@ class ArpScanner private constructor(val context: Context,
             resetInternalValues()
         }
 
-        if (!sharedPreferences.getBoolean("pref_common_arp_spoofing_detection", false) && !attackDetected) {
+        if (!sharedPreferences.getBoolean(
+                "pref_common_arp_spoofing_detection",
+                false
+            ) && !attackDetected
+        ) {
             return
         }
 
@@ -373,12 +409,12 @@ class ArpScanner private constructor(val context: Context,
         }
 
         if (attackDetected) {
-            updateMainActivityIcons()
-            reloadIptablesWithRootMode()
+            updateMainActivityIcons(context)
+            reloadIptablesWithRootMode(context)
         }
     }
 
-    fun stop() {
+    fun stop(context: Context) {
 
         try {
             reentrantLock.lockInterruptibly()
@@ -394,7 +430,7 @@ class ArpScanner private constructor(val context: Context,
             resetInternalValues()
 
             if (updateIcons) {
-                updateMainActivityIcons()
+                updateMainActivityIcons(context)
             }
 
             arpScanner = null
@@ -409,10 +445,11 @@ class ArpScanner private constructor(val context: Context,
 
     }
 
-    private fun setDefaultWiFiGateway() {
+    private fun setDefaultWiFiGateway(context: Context) {
         val dhcp = wifiManager.dhcpInfo ?: return
         var ipAddress = dhcp.gateway
-        ipAddress = if (ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN) Integer.reverseBytes(ipAddress) else ipAddress
+        ipAddress =
+            if (ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN) Integer.reverseBytes(ipAddress) else ipAddress
         val ipAddressByte = BigInteger.valueOf(ipAddress.toLong()).toByteArray()
         try {
             val myAddr = InetAddress.getByAddress(ipAddressByte)
@@ -426,7 +463,7 @@ class ArpScanner private constructor(val context: Context,
         } catch (e: Exception) {
 
             if (connectionAvailable && !cellularActive && !wifiActive && !ethernetActive) {
-                pause(true, resetInternalValues = true)
+                pause(context, true, resetInternalValues = true)
             } else {
 
                 if (defaultGateway.isNotEmpty()) {
@@ -466,8 +503,8 @@ class ArpScanner private constructor(val context: Context,
 
                         if (savedGatewayMac.isEmpty() && gatewayMac.isNotBlank()) {
                             val macStared = gatewayMac.substring(0..gatewayMac.length - 7)
-                                    .replace(Regex("\\w+?"), "*")
-                                    .plus(gatewayMac.substring(gatewayMac.length -6))
+                                .replace(Regex("\\w+?"), "*")
+                                .plus(gatewayMac.substring(gatewayMac.length - 6))
                             Log.i(LOG_TAG, "ArpScanner gatewayMac is $macStared")
                             savedGatewayMac = gatewayMac
                         }
@@ -499,9 +536,9 @@ class ArpScanner private constructor(val context: Context,
 
     private fun openSession(): Shell.Interactive? {
         return Shell.Builder()
-                .useSH()
-                .setWatchdogTimeout(5)
-                .open(this)
+            .useSH()
+            .setWatchdogTimeout(5)
+            .open(this)
     }
 
     override fun onCommandResult(commandCode: Int, exitCode: Int, output: MutableList<String>?) {
@@ -539,8 +576,8 @@ class ArpScanner private constructor(val context: Context,
 
                 if (savedGatewayMac.isEmpty() && gatewayMac.isNotBlank()) {
                     val macStared = gatewayMac.substring(0..gatewayMac.length - 7)
-                            .replace(Regex("\\w+?"), "*")
-                            .plus(gatewayMac.substring(gatewayMac.length -6))
+                        .replace(Regex("\\w+?"), "*")
+                        .plus(gatewayMac.substring(gatewayMac.length - 6))
                     Log.i(LOG_TAG, "ArpScanner gatewayMac is $macStared")
                     savedGatewayMac = gatewayMac
                 }
@@ -596,14 +633,21 @@ class ArpScanner private constructor(val context: Context,
                     }
 
                     if (ethernetTable.isNotEmpty()) {
-                        session?.addCommand(String.format(commandRouteShow, ethernetTable), ROUTE_SHOW, this)
+                        session?.addCommand(
+                            String.format(commandRouteShow, ethernetTable),
+                            ROUTE_SHOW,
+                            this
+                        )
                     }
 
                     break
                 }
             }
         } catch (e: java.lang.Exception) {
-            Log.e(LOG_TAG, "ArpScanner requestDefaultEthernetGateway(lines) exception ${e.message} ${e.cause}")
+            Log.e(
+                LOG_TAG,
+                "ArpScanner requestDefaultEthernetGateway(lines) exception ${e.message} ${e.cause}"
+            )
         }
     }
 
@@ -614,10 +658,17 @@ class ArpScanner private constructor(val context: Context,
             }
 
             if (ethernetTable.isNotEmpty()) {
-                session?.addCommand(String.format(commandRouteShow, ethernetTable), ROUTE_SHOW, this)
+                session?.addCommand(
+                    String.format(commandRouteShow, ethernetTable),
+                    ROUTE_SHOW,
+                    this
+                )
             }
         } catch (e: java.lang.Exception) {
-            Log.e(LOG_TAG, "ArpScanner requestDefaultEthernetGateway exception ${e.message} ${e.cause}")
+            Log.e(
+                LOG_TAG,
+                "ArpScanner requestDefaultEthernetGateway exception ${e.message} ${e.cause}"
+            )
         }
     }
 
@@ -674,32 +725,51 @@ class ArpScanner private constructor(val context: Context,
         return result
     }
 
-    private fun sendNotification(Title: String, Text: String, NOTIFICATION_ID: Int) {
+    private fun sendNotification(
+        context: Context,
+        title: String,
+        text: String,
+        NOTIFICATION_ID: Int
+    ) {
 
         //These three lines makes Notification to open main activity after clicking on it
         val notificationIntent = Intent(context, MainActivity::class.java)
         notificationIntent.action = Intent.ACTION_MAIN
         notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER)
         notificationIntent.putExtra(mitmAttackWarning, true)
-        val contentIntent = PendingIntent.getActivity(context.applicationContext, 111, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT)
-        var iconResource: Int = context.resources.getIdentifier("ic_arp_attack_notification", "drawable", context.packageName)
+        val contentIntent = PendingIntent.getActivity(
+            context.applicationContext,
+            111,
+            notificationIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        var iconResource: Int = context.resources.getIdentifier(
+            "ic_arp_attack_notification",
+            "drawable",
+            context.packageName
+        )
         if (iconResource == 0) {
             iconResource = android.R.drawable.ic_lock_power_off
         }
         val builder = NotificationCompat.Builder(context, AUX_CHANNEL_ID)
         @Suppress("DEPRECATION")
         builder.setContentIntent(contentIntent)
-                .setOngoing(false) //Can be swiped out
-                .setSmallIcon(iconResource)
-                .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.drawable.ic_arp_attack_notification))   // большая картинка
-                .setContentTitle(Title) //Заголовок
-                .setContentText(Text) // Текст уведомления
-                .setPriority(Notification.PRIORITY_HIGH)
-                .setOnlyAlertOnce(true)
-                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
-                .setAutoCancel(true)
-                .setVibrate(longArrayOf(1000))
-                .setChannelId(AUX_CHANNEL_ID)
+            .setOngoing(false) //Can be swiped out
+            .setSmallIcon(iconResource)
+            .setLargeIcon(
+                BitmapFactory.decodeResource(
+                    context.resources,
+                    R.drawable.ic_arp_attack_notification
+                )
+            )   // большая картинка
+            .setContentTitle(title) //Заголовок
+            .setContentText(text) // Текст уведомления
+            .setPriority(Notification.PRIORITY_HIGH)
+            .setOnlyAlertOnce(true)
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+            .setAutoCancel(true)
+            .setVibrate(longArrayOf(1000))
+            .setChannelId(AUX_CHANNEL_ID)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             builder.setCategory(Notification.CATEGORY_ALARM)
@@ -709,15 +779,17 @@ class ArpScanner private constructor(val context: Context,
         notificationManager.notify(NOTIFICATION_ID, notification)
     }
 
-    private fun updateMainActivityIcons() {
-        handler?.post { LocalBroadcastManager.getInstance(context).sendBroadcast(Intent(mitmAttackWarning)) }
+    private fun updateMainActivityIcons(context: Context) {
+        handler?.post {
+            LocalBroadcastManager.getInstance(context).sendBroadcast(Intent(mitmAttackWarning))
+        }
     }
 
-    private fun makeToast(message: Int) {
+    private fun makeToast(context: Context, message: Int) {
         handler?.post { Toast.makeText(context, message, Toast.LENGTH_LONG).show() }
     }
 
-    private fun reloadIptablesWithRootMode() {
+    private fun reloadIptablesWithRootMode(context: Context) {
         if (!sharedPreferences.getBoolean("pref_common_arp_block_internet", false)) {
             return
         }

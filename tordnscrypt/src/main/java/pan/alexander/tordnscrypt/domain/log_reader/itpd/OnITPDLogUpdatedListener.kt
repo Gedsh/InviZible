@@ -1,5 +1,3 @@
-package pan.alexander.tordnscrypt.itpd_fragment;
-
 /*
     This file is part of InviZible Pro.
 
@@ -17,22 +15,13 @@ package pan.alexander.tordnscrypt.itpd_fragment;
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
-*/
+ */
 
-import android.content.Context;
+package pan.alexander.tordnscrypt.domain.log_reader.itpd
 
-public interface ITPDFragmentPresenterCallbacks {
-    boolean isITPDInstalled(Context context);
-    boolean isSavedITPDStatusRunning(Context context);
-    void saveITPDStatusRunning(Context context, boolean running);
-    void displayLog(int period);
-    void stopDisplayLog();
-    void refreshITPDState(Context context);
-    void setITPDSomethingWrong();
-    void setITPDRunning();
-    void setITPDStopped();
-    void setITPDInstalling();
-    void setITPDInstalled();
-    void setITPDStartButtonEnabled(boolean enabled);
-    void setITPDProgressBarIndeterminate(boolean indeterminate);
+import pan.alexander.tordnscrypt.domain.entities.LogDataModel
+
+interface OnITPDLogUpdatedListener {
+    fun onITPDLogUpdated(itpdLogData: LogDataModel)
+    fun isActive(): Boolean
 }

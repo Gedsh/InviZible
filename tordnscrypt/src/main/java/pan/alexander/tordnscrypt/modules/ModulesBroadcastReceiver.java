@@ -203,7 +203,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && last_network != network.hashCode()) {
                     AuxNotificationSender.INSTANCE.checkPrivateDNSAndProxy(
-                            context.getApplicationContext(), null
+                            context, null
                     );
                 }
 
@@ -231,7 +231,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                         AuxNotificationSender.INSTANCE.checkPrivateDNSAndProxy(
-                                context.getApplicationContext(), linkProperties
+                                context, linkProperties
                         );
                     }
                 }
@@ -470,13 +470,13 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
 
     private void resetArpScanner(boolean connectionAvailable) {
         if (arpScanner != null) {
-            arpScanner.reset(connectionAvailable);
+            arpScanner.reset(context, connectionAvailable);
         }
     }
 
     private void resetArpScanner() {
         if (arpScanner != null && context != null) {
-            arpScanner.reset(Util.isConnected(context));
+            arpScanner.reset(context, Util.isConnected(context));
         }
     }
 }

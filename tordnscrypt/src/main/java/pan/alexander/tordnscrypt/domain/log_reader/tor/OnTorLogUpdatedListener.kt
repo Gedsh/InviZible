@@ -1,5 +1,3 @@
-package pan.alexander.tordnscrypt.tor_fragment;
-
 /*
     This file is part of InviZible Pro.
 
@@ -17,23 +15,13 @@ package pan.alexander.tordnscrypt.tor_fragment;
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
-*/
+ */
 
-import android.content.Context;
+package pan.alexander.tordnscrypt.domain.log_reader.tor
 
-public interface TorFragmentPresenterCallbacks {
-    boolean isTorInstalled(Context context);
-    boolean isSavedTorStatusRunning(Context context);
-    void saveTorStatusRunning(Context context, boolean running);
-    void displayLog(int period);
-    void stopDisplayLog();
-    void refreshTorState(Context context);
-    void setTorSomethingWrong();
-    void setTorRunning();
-    void setTorStopped(Context context);
-    void startRefreshTorUnlockIPs(Context context);
-    void setTorInstalling();
-    void setTorInstalled();
-    void setTorStartButtonEnabled(boolean enabled);
-    void setTorProgressBarIndeterminate(boolean indeterminate);
+import pan.alexander.tordnscrypt.domain.entities.LogDataModel
+
+interface OnTorLogUpdatedListener {
+    fun onTorLogUpdated(torLogData: LogDataModel)
+    fun isActive(): Boolean
 }

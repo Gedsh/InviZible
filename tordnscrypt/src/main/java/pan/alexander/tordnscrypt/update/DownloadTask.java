@@ -51,7 +51,7 @@ import java.util.zip.CRC32;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import pan.alexander.tordnscrypt.ApplicationExt;
+import pan.alexander.tordnscrypt.ApplicationBase;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
@@ -83,7 +83,7 @@ class DownloadTask extends Thread {
     long startTime;
 
     DownloadTask(UpdateService updateService, Intent intent, int serviceStartId, int notificationId, long startTime) {
-        this.context = updateService.getApplicationContext();
+        this.context = updateService;
         this.updateService = updateService;
         this.intent = intent;
         this.serviceStartId = serviceStartId;
@@ -227,7 +227,7 @@ class DownloadTask extends Thread {
                 output.write(data, 0, count);
             }
         } finally {
-            ((HttpsURLConnection) con).disconnect();
+            con.disconnect();
         }
 
         return outputFile;
@@ -235,10 +235,10 @@ class DownloadTask extends Thread {
 
     private boolean isActivityActive() {
         boolean isActivityActive = false;
-        if (context instanceof ApplicationExt) {
+        if (context instanceof ApplicationBase) {
 
-            ApplicationExt applicationExt = (ApplicationExt) context;
-            WeakReference<Activity> currentActivity = applicationExt.getCurrentActivity();
+            ApplicationBase applicationBase = (ApplicationBase) context;
+            WeakReference<Activity> currentActivity = applicationBase.getCurrentActivity();
             isActivityActive = currentActivity != null && currentActivity.get() != null
                     && !currentActivity.get().isFinishing();
         }

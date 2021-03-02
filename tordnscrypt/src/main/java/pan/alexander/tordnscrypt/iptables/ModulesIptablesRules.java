@@ -209,7 +209,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             blockHOTSPOT = "";
         }
 
-        boolean dnsCryptSystemDNSAllowed = new PrefManager(context).getBoolPref("DNSCryptSystemDNSAllowed");
+        boolean dnsCryptSystemDNSAllowed = modulesStatus.isSystemDNSAllowed();
 
         //These rules will be removed after DNSCrypt and Tor are bootstrapped
         String dnsCryptSystemDNSAllowedNat = "";

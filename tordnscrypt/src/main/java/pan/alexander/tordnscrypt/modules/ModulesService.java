@@ -29,7 +29,6 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
-import androidx.annotation.RequiresApi;
 import androidx.preference.PreferenceManager;
 
 import java.io.File;
@@ -107,7 +106,7 @@ public class ModulesService extends Service {
 
     ModulesBroadcastReceiver modulesBroadcastReceiver;
 
-    private final Handler mHandler = new Handler(Objects.requireNonNull(Looper.getMainLooper()));
+    private volatile Handler handler;
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
     private PathVars pathVars;
@@ -154,17 +153,13 @@ public class ModulesService extends Service {
 
         startArpScanner();
 
-        if (new PrefManager(this).getBoolPref("DNSCryptSystemDNSAllowed")) {
-            mHandler.postDelayed(() -> {
-                if (new PrefManager(this).getBoolPref("DNSCryptSystemDNSAllowed")) {
-                    new PrefManager(this).setBoolPref("DNSCryptSystemDNSAllowed", false);
-                    ModulesStatus.getInstance().setIptablesRulesUpdateRequested(this, true);
-                }
-            }, 10000);
+        Looper looper = Looper.getMainLooper();
+        if (looper != null) {
+            handler = new Handler(Looper.getMainLooper());
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
@@ -315,7 +310,7 @@ public class ModulesService extends Service {
                 cleanLogFileNoRootMethod(pathVars.getAppDataDir() + "/logs/DnsCrypt.log",
                         ModulesService.this.getResources().getString(R.string.tvDNSDefaultLog) + " " + DNSCryptVersion);
 
-                ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(ModulesService.this, mHandler, pathVars);
+                ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(ModulesService.this, handler, pathVars);
                 Thread dnsCryptThread = new Thread(modulesStarterHelper.getDNSCryptStarterRunnable());
                 dnsCryptThread.setName("DNSCryptThread");
                 dnsCryptThread.setDaemon(false);
@@ -330,7 +325,9 @@ public class ModulesService extends Service {
 
             } catch (Exception e) {
                 Log.e(LOG_TAG, "DnsCrypt was unable to start " + e.getMessage());
-                mHandler.post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
+                if (handler != null) {
+                    handler.post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
+                }
             }
 
         }).start();
@@ -434,7 +431,7 @@ public class ModulesService extends Service {
                 cleanLogFileNoRootMethod(pathVars.getAppDataDir() + "/logs/Tor.log",
                         ModulesService.this.getResources().getString(R.string.tvTorDefaultLog) + " " + TorVersion);
 
-                ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(ModulesService.this, mHandler, pathVars);
+                ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(ModulesService.this, handler, pathVars);
                 Thread torThread = new Thread(modulesStarterHelper.getTorStarterRunnable());
                 torThread.setName("TorThread");
                 torThread.setDaemon(false);
@@ -448,7 +445,9 @@ public class ModulesService extends Service {
                 changeTorStatus(torThread);
             } catch (Exception e) {
                 Log.e(LOG_TAG, "Tor was unable to startRefreshModulesStatus: " + e.getMessage());
-                mHandler.post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
+                if (handler != null) {
+                    handler.post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
+                }
             }
 
         }).start();
@@ -558,7 +557,7 @@ public class ModulesService extends Service {
 
                 cleanLogFileNoRootMethod(pathVars.getAppDataDir() + "/logs/i2pd.log", "");
 
-                ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(ModulesService.this, mHandler, pathVars);
+                ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(ModulesService.this, handler, pathVars);
                 Thread itpdThread = new Thread(modulesStarterHelper.getITPDStarterRunnable());
                 itpdThread.setName("ITPDThread");
                 itpdThread.setDaemon(false);
@@ -572,7 +571,9 @@ public class ModulesService extends Service {
                 changeITPDStatus(itpdThread);
             } catch (Exception e) {
                 Log.e(LOG_TAG, "I2PD was unable to startRefreshModulesStatus: " + e.getMessage());
-                mHandler.post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
+                if (handler != null) {
+                    handler.post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
+                }
             }
 
         }).start();
@@ -911,7 +912,9 @@ public class ModulesService extends Service {
 
         CachedExecutor.INSTANCE.stopExecutorService();
 
-        mHandler.removeCallbacksAndMessages(null);
+        if (handler != null) {
+            handler.removeCallbacksAndMessages(null);
+        }
 
         serviceIsRunning = false;
 
@@ -975,7 +978,7 @@ public class ModulesService extends Service {
         if (modulesStatus.getMode() == ROOT_MODE
                 && !modulesStatus.isUseModulesWithRoot()
                 && modulesBroadcastReceiver == null) {
-            modulesBroadcastReceiver = new ModulesBroadcastReceiver(this.getApplicationContext(), arpScanner);
+            modulesBroadcastReceiver = new ModulesBroadcastReceiver(this, arpScanner);
             modulesBroadcastReceiver.registerReceivers();
         } else if (modulesStatus.getMode() != ROOT_MODE
                 && modulesBroadcastReceiver != null) {
@@ -1082,13 +1085,13 @@ public class ModulesService extends Service {
     }
 
     private void startArpScanner() {
-        arpScanner = ArpScanner.INSTANCE.getInstance(this, mHandler);
-        arpScanner.start();
+        arpScanner = ArpScanner.INSTANCE.getInstance(this, handler);
+        arpScanner.start(this);
     }
 
     private void stopArpScanner() {
         if (arpScanner != null) {
-            arpScanner.stop();
+            arpScanner.stop(this);
         }
     }
 

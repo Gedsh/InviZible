@@ -110,7 +110,7 @@ class InstalledApplications(private val context: Context, private val activeApps
             installedApps.forEach { applicationInfo ->
                 application = userAppsMap[applicationInfo.uid]
 
-                val name = packageManager.getApplicationLabel(applicationInfo).toString()
+                val name = packageManager.getApplicationLabel(applicationInfo)?.toString() ?: "Undefined"
                 val icon = packageManager.getApplicationIcon(applicationInfo)
 
                 if (application == null) {

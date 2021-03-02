@@ -43,12 +43,12 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
 public class TorFragmentReceiver extends BroadcastReceiver {
     private final TorFragmentView view;
-    private final TorFragmentPresenterCallbacks presenter;
+    private final TorFragmentPresenterInterface presenter;
 
     private String torPath;
     private String busyboxPath;
 
-    public TorFragmentReceiver(TorFragmentView view, TorFragmentPresenterCallbacks presenter) {
+    public TorFragmentReceiver(TorFragmentView view, TorFragmentPresenterInterface presenter) {
         this.view = view;
         this.presenter = presenter;
     }
@@ -57,7 +57,10 @@ public class TorFragmentReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
 
-        if (view == null || presenter == null) {
+        if (view == null
+                || view.getFragmentActivity() == null
+                || view.getFragmentActivity().isFinishing()
+                || presenter == null) {
             return;
         }
 
@@ -103,11 +106,11 @@ public class TorFragmentReceiver extends BroadcastReceiver {
                             new PrefManager(context).setStrPref("TorVersion", TorVersion);
 
                             if (!modulesStatus.isUseModulesWithRoot()) {
-                                if (!presenter.isSavedTorStatusRunning(context)) {
+                                if (!presenter.isSavedTorStatusRunning()) {
                                     view.setTorLogViewText();
                                 }
 
-                                presenter.refreshTorState(context);
+                                presenter.refreshTorState();
                             }
                         }
                     }
@@ -116,21 +119,21 @@ public class TorFragmentReceiver extends BroadcastReceiver {
                 if (sb.toString().toLowerCase().contains(torPath.toLowerCase())
                         && sb.toString().contains("checkTrRunning")) {
 
-                    presenter.saveTorStatusRunning(context, true);
+                    presenter.saveTorStatusRunning(true);
                     modulesStatus.setTorState(RUNNING);
                     view.setStartButtonText(R.string.btnTorStop);
-                    presenter.startRefreshTorUnlockIPs(context);
-                    presenter.displayLog(5);
+                    presenter.startRefreshTorUnlockIPs();
+                    presenter.displayLog(false);
 
                 } else if (!sb.toString().toLowerCase().contains(torPath.toLowerCase())
                         && sb.toString().contains("checkTrRunning")) {
                     if (modulesStatus.getTorState() == STOPPED) {
-                        presenter.saveTorStatusRunning(context, false);
+                        presenter.saveTorStatusRunning(false);
                     }
                     presenter.stopDisplayLog();
-                    presenter.setTorStopped(context);
+                    presenter.setTorStopped();
                     modulesStatus.setTorState(STOPPED);
-                    presenter.refreshTorState(context);
+                    presenter.refreshTorState();
                     view.setTorProgressBarProgress(0);
                 } else if (sb.toString().contains("Something went wrong!")) {
                     presenter.setTorSomethingWrong();
@@ -151,7 +154,7 @@ public class TorFragmentReceiver extends BroadcastReceiver {
     }
 
     private void checkTorVersionWithRoot(Context context) {
-        if (context != null && presenter.isTorInstalled(context)) {
+        if (context != null && presenter.isTorInstalled()) {
 
             List<String> commandsCheck = new ArrayList<>(Arrays.asList(
                     busyboxPath + "pgrep -l /libtor.so 2> /dev/null",

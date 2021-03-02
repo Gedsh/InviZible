@@ -35,9 +35,13 @@ const val ANDROID_CHANNEL_ID = "InviZible"
 const val FIREWALL_CHANNEL_ID = "Firewall"
 const val AUX_CHANNEL_ID = "Auxiliary"
 
-class ApplicationExt : Application() {
+class ApplicationBase : Application() {
 
     var currentActivity: WeakReference<Activity>? = null
+
+    companion object {
+        var instance: ApplicationBase? = null
+    }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
@@ -47,6 +51,8 @@ class ApplicationExt : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        instance = this
 
         Language.setFromPreference(this, "pref_fast_language")
 

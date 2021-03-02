@@ -506,3 +506,12 @@
 * Added Chinese translation.
 * Updated German translation.
 * Updated French translation.
+
+**InviZible Pro beta 1.2.3**
+* Updated Tor to version 4.5.6.
+* Updated Purple I2P to version 2.36.0.
+* Updated snowflake.
+* Workaround to allow updates to be installed from a removable SD card.
+* Added Spanish translation.
+* Minor fixes and optimizations.
+* A lot of internal changes to start using a clean architecture.

@@ -21,8 +21,11 @@ package pan.alexander.tordnscrypt.itpd_fragment;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.IntentFilter;
+import android.graphics.Rect;
 import android.os.Bundle;
+
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -52,9 +55,6 @@ import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 
-/**
- * A simple {@link Fragment} subclass.
- */
 public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.OnClickListener,
         ViewTreeObserver.OnScrollChangedListener, View.OnTouchListener {
 
@@ -89,13 +89,16 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
 
         pbITPD = view.findViewById(R.id.pbITPD);
 
+        svITPDLog = view.findViewById(R.id.svITPDLog);
+        //Fix auto scrolling on launch
+        svITPDLog.postDelayed(() ->
+                svITPDLog.getViewTreeObserver().addOnScrollChangedListener(this),
+                3000);
+
         tvITPDLog = view.findViewById(R.id.tvITPDLog);
         tvITPDLog.setMovementMethod(ScrollingMovementMethod.getInstance());
 
         tvITPDinfoLog = view.findViewById(R.id.tvITPDinfoLog);
-
-        svITPDLog = view.findViewById(R.id.svITPDLog);
-        svITPDLog.getViewTreeObserver().addOnScrollChangedListener(this);
 
         tvITPDStatus = view.findViewById(R.id.tvI2PDStatus);
 
@@ -117,14 +120,15 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
 
         receiver = new ITPDFragmentReceiver(this, presenter);
 
-        if (getActivity() != null) {
+        Context context = getActivity();
+        if (context != null) {
             IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
             IntentFilter intentFilterTopFrg = new IntentFilter(TOP_BROADCAST);
 
-            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver, intentFilterBckgIntSer);
-            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver, intentFilterTopFrg);
+            LocalBroadcastManager.getInstance(context).registerReceiver(receiver, intentFilterBckgIntSer);
+            LocalBroadcastManager.getInstance(context).registerReceiver(receiver, intentFilterTopFrg);
 
-            presenter.onStart(getActivity());
+            presenter.onStart();
         }
 
     }
@@ -143,8 +147,9 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
         super.onStop();
 
         try {
-            if (getActivity() != null && receiver != null) {
-                LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(receiver);
+            Context context = getActivity();
+            if (context != null && receiver != null) {
+                LocalBroadcastManager.getInstance(context).unregisterReceiver(receiver);
             }
         } catch (Exception e) {
             Log.e(LOG_TAG, "ITPDRunFragment onStop exception " + e.getMessage() + " " + e.getCause());
@@ -175,7 +180,7 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.btnITPDStart) {
-            presenter.startButtonOnClick(getActivity());
+            presenter.startButtonOnClick();
         }
     }
 
@@ -203,7 +208,7 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
     public void setITPDProgressBarIndeterminate(boolean indeterminate) {
         if (!pbITPD.isIndeterminate() && indeterminate) {
             pbITPD.setIndeterminate(true);
-        } else if (pbITPD.isIndeterminate() && !indeterminate){
+        } else if (pbITPD.isIndeterminate() && !indeterminate) {
             pbITPD.setIndeterminate(false);
         }
     }
@@ -227,7 +232,25 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
 
     @Override
     public void setITPDInfoLogText(Spanned text) {
+
         tvITPDinfoLog.setText(text);
+
+        Rect hitRect = new Rect();
+        svITPDLog.getHitRect(hitRect);
+
+        if (hitRect.height() == 0) {
+            return;
+        }
+
+        if (hitRect.height() <= tvITPDinfoLog.getMinHeight()) {
+            if (svITPDLog.getVisibility() == View.VISIBLE) {
+                svITPDLog.setVisibility(View.INVISIBLE);
+            }
+        } else {
+            if (svITPDLog.getVisibility() == View.INVISIBLE) {
+                svITPDLog.setVisibility(View.VISIBLE);
+            }
+        }
     }
 
     @Override
@@ -264,9 +287,10 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
         return getParentFragmentManager();
     }
 
-    public ITPDFragmentPresenterCallbacks getPresenter() {
-        if (presenter == null && getActivity() instanceof MainActivity && ((MainActivity)getActivity()).getMainFragment() != null) {
-            presenter = ((MainActivity)getActivity()).getMainFragment().getITPDFragmentPresenter();
+    public ITPDFragmentPresenterInterface getPresenter() {
+        Activity activity = getActivity();
+        if (presenter == null && activity instanceof MainActivity && ((MainActivity) activity).getMainFragment() != null) {
+            presenter = ((MainActivity) activity).getMainFragment().getITPDFragmentPresenter();
         }
 
         return presenter;
@@ -274,7 +298,7 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
 
     @Override
     public void onScrollChanged() {
-        if (presenter != null && svITPDLog!= null) {
+        if (presenter != null && svITPDLog != null) {
             presenter.itpdLogAutoScrollingAllowed(!svITPDLog.canScrollVertically(1)
                     || !svITPDLog.canScrollVertically(-1));
         }
@@ -287,13 +311,15 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
         }
 
         svITPDLog.post(() -> {
+            svITPDLog.computeScroll();
+
             int delta = 0;
 
             if (svITPDLog == null) {
                 return;
             }
 
-            int childIndex= svITPDLog.getChildCount() - 1;
+            int childIndex = svITPDLog.getChildCount() - 1;
 
             if (childIndex < 0) {
                 return;

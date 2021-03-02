@@ -19,41 +19,39 @@ package pan.alexander.tordnscrypt.itpd_fragment;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
 import android.text.Html;
 import android.text.Spanned;
 import android.util.Log;
 import android.view.ScaleGestureDetector;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.Objects;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
+import pan.alexander.tordnscrypt.domain.entities.LogDataModel;
+import pan.alexander.tordnscrypt.domain.MainInteractor;
+import pan.alexander.tordnscrypt.domain.log_reader.itpd.OnITPDHtmlUpdatedListener;
+import pan.alexander.tordnscrypt.domain.log_reader.itpd.OnITPDLogUpdatedListener;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.OwnFileReader;
+import pan.alexander.tordnscrypt.utils.FileShortener;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
@@ -67,61 +65,60 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 
-public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
+public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
+        OnITPDLogUpdatedListener, OnITPDHtmlUpdatedListener {
 
     private boolean runI2PDWithRoot = false;
-    private int displayLogPeriod = -1;
 
+    private Context context;
     private ITPDFragmentView view;
-    private ScheduledFuture<?> scheduledFuture;
     private String appDataDir;
-    private volatile OwnFileReader logFile;
-    private ModulesStatus modulesStatus;
+    private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
     private ModuleState fixedModuleState;
     private boolean itpdLogAutoScroll = true;
     private ScaleGestureDetector scaleGestureDetector;
-    private Handler handler;
+
+    private MainInteractor mainInteractor;
+    private int previousLastLinesLength;
+    private boolean fixedITPDReady;
 
 
     public ITPDFragmentPresenter(ITPDFragmentView view) {
         this.view = view;
     }
 
-    public void onStart(Context context) {
-        if (context == null || view == null) {
+    public void onStart() {
+        if (!isActive()) {
             return;
         }
 
-        Looper looper = Looper.getMainLooper();
-        if (looper != null) {
-            handler = new Handler(looper);
-        }
+        context = view.getFragmentActivity();
 
         PathVars pathVars = PathVars.getInstance(context);
         appDataDir = pathVars.getAppDataDir();
 
-        modulesStatus = ModulesStatus.getInstance();
-
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
         runI2PDWithRoot = shPref.getBoolean("swUseModulesRoot", false);
 
-        logFile = new OwnFileReader(context, appDataDir + "/logs/i2pd.log");
-
-        if (isITPDInstalled(context)) {
+        if (isITPDInstalled()) {
             setITPDInstalled(true);
 
             if (modulesStatus.getItpdState() == STOPPING){
                 setITPDStopping();
 
-                displayLog(1);
-            } else if (isSavedITPDStatusRunning(context) || modulesStatus.getItpdState() == RUNNING) {
+                displayLog(true);
+            } else if (isSavedITPDStatusRunning() || modulesStatus.getItpdState() == RUNNING) {
                 setITPDRunning();
 
                 if (modulesStatus.getItpdState() != RESTARTING) {
                     modulesStatus.setItpdState(RUNNING);
                 }
 
-                displayLog(5);
+                if (modulesStatus.isItpdReady()) {
+                    setFixedReadyState(true);
+                }
+
+                displayLog(false);
             } else {
                 setITPDStopped();
                 modulesStatus.setItpdState(STOPPED);
@@ -130,7 +127,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
             setITPDInstalled(false);
         }
 
-        registerZoomGestureDetector(context);
+        registerZoomGestureDetector();
     }
 
     public void onStop() {
@@ -138,42 +135,31 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
         stopDisplayLog();
 
         view = null;
-
-        if (handler != null) {
-            handler.removeCallbacksAndMessages(null);
-            handler = null;
-        }
     }
 
     private void setITPDStarting() {
-        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
-            return;
+        if (isActive()) {
+            view.setITPDStatus(R.string.tvITPDStarting, R.color.textModuleStatusColorStarting);
         }
-
-        view.setITPDStatus(R.string.tvITPDStarting, R.color.textModuleStatusColorStarting);
     }
 
     @Override
     public void setITPDRunning() {
-        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
-            return;
+        if (isActive()) {
+            view.setITPDStatus(R.string.tvITPDRunning, R.color.textModuleStatusColorRunning);
+            view.setStartButtonText(R.string.btnITPDStop);
         }
-
-        view.setITPDStatus(R.string.tvITPDRunning, R.color.textModuleStatusColorRunning);
-        view.setStartButtonText(R.string.btnITPDStop);
     }
 
     private void setITPDStopping() {
-        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
-            return;
+        if (isActive()) {
+            view.setITPDStatus(R.string.tvITPDStopping, R.color.textModuleStatusColorStopping);
         }
-
-        view.setITPDStatus(R.string.tvITPDStopping, R.color.textModuleStatusColorStopping);
     }
 
     @Override
     public void setITPDStopped() {
-        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
+        if (!isActive()) {
             return;
         }
 
@@ -182,46 +168,40 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
         view.setITPDLogViewText();
 
         view.setITPDInfoLogText();
+
+        setFixedReadyState(false);
     }
 
     @Override
     public void setITPDInstalling() {
-        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
-            return;
+        if (isActive()) {
+            view.setITPDStatus(R.string.tvITPDInstalling, R.color.textModuleStatusColorInstalling);
         }
-
-        view.setITPDStatus(R.string.tvITPDInstalling, R.color.textModuleStatusColorInstalling);
     }
 
     @Override
     public void setITPDInstalled() {
-        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
-            return;
+        if (isActive()) {
+            view.setITPDStatus(R.string.tvITPDInstalled, R.color.textModuleStatusColorInstalled);
         }
-
-        view.setITPDStatus(R.string.tvITPDInstalled, R.color.textModuleStatusColorInstalled);
     }
 
     @Override
     public void setITPDStartButtonEnabled(boolean enabled) {
-        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
-            return;
+        if (isActive()) {
+            view.setITPDStartButtonEnabled(enabled);
         }
-
-        view.setITPDStartButtonEnabled(enabled);
     }
 
     @Override
     public void setITPDProgressBarIndeterminate(boolean indeterminate) {
-        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
-            return;
+        if (isActive()) {
+            view.setITPDProgressBarIndeterminate(indeterminate);
         }
-
-        view.setITPDProgressBarIndeterminate(indeterminate);
     }
 
     private void setITPDInstalled(boolean installed) {
-        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
+        if (!isActive()) {
             return;
         }
 
@@ -234,41 +214,31 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
     @Override
     public void setITPDSomethingWrong() {
-        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || modulesStatus == null) {
-            return;
-        }
-
-        view.setITPDStatus(R.string.wrong, R.color.textModuleStatusColorAlert);
-        modulesStatus.setItpdState(FAULT);
-    }
-
-    @Override
-    public boolean isITPDInstalled(Context context) {
-        if (context != null) {
-            return new PrefManager(context).getBoolPref("I2PD Installed");
-        }
-        return false;
-    }
-
-    @Override
-    public boolean isSavedITPDStatusRunning(Context context) {
-        if (context != null) {
-            return new PrefManager(context).getBoolPref("I2PD Running");
-        }
-        return false;
-    }
-
-    @Override
-    public void saveITPDStatusRunning(Context context, boolean running) {
-        if (context != null) {
-            new PrefManager(context).setBoolPref("I2PD Running", running);
+        if (isActive()) {
+            view.setITPDStatus(R.string.wrong, R.color.textModuleStatusColorAlert);
+            modulesStatus.setItpdState(FAULT);
         }
     }
 
     @Override
-    public void refreshITPDState(Context context) {
+    public boolean isITPDInstalled() {
+        return new PrefManager(context).getBoolPref("I2PD Installed");
+    }
 
-        if (context == null || modulesStatus == null || view == null) {
+    @Override
+    public boolean isSavedITPDStatusRunning() {
+        return new PrefManager(context).getBoolPref("I2PD Running");
+    }
+
+    @Override
+    public void saveITPDStatusRunning(boolean running) {
+        new PrefManager(context).setBoolPref("I2PD Running", running);
+    }
+
+    @Override
+    public void refreshITPDState() {
+
+        if (!isActive()) {
             return;
         }
 
@@ -281,7 +251,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
         if (currentModuleState == STARTING) {
 
-            displayLog(1);
+            displayLog(true);
 
         } else if (currentModuleState == RUNNING) {
 
@@ -289,7 +259,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
             view.setITPDStartButtonEnabled(true);
 
-            saveITPDStatusRunning(context, true);
+            saveITPDStatusRunning(true);
 
             view.setITPDProgressBarIndeterminate(false);
 
@@ -297,15 +267,15 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
 
             stopDisplayLog();
 
-            if (isSavedITPDStatusRunning(context)) {
-                setITPDStoppedBySystem(context);
+            if (isSavedITPDStatusRunning()) {
+                setITPDStoppedBySystem();
             } else {
                 setITPDStopped();
             }
 
 
 
-            saveITPDStatusRunning(context, false);
+            saveITPDStatusRunning(false);
 
             view.setITPDStartButtonEnabled(true);
         }
@@ -314,186 +284,63 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
     }
 
 
-    private void setITPDStoppedBySystem(Context context) {
+    private void setITPDStoppedBySystem() {
 
         setITPDStopped();
 
-        if (context != null && view != null && modulesStatus != null) {
+        if (isActive()) {
 
             modulesStatus.setItpdState(STOPPED);
 
             ModulesAux.requestModulesStatusUpdate(context);
 
-            if (view.getFragmentFragmentManager() != null && !view.getFragmentActivity().isFinishing()) {
+            FragmentManager fragmentManager = view.getFragmentFragmentManager();
+            if (fragmentManager != null) {
                 DialogFragment notification = NotificationDialogFragment.newInstance(R.string.helper_itpd_stopped);
-                notification.show(view.getFragmentFragmentManager(), "NotificationDialogFragment");
+                notification.show(fragmentManager, "NotificationDialogFragment");
             }
 
-            Log.e(LOG_TAG, context.getText(R.string.helper_itpd_stopped).toString());
+            Log.e(LOG_TAG, context.getString(R.string.helper_itpd_stopped));
         }
 
     }
 
     @Override
-    public synchronized void displayLog(int period) {
+    public synchronized void displayLog(boolean modulesStateChangingExpected) {
 
-        ScheduledExecutorService timer = TopFragment.getModulesLogsTimer();
-
-        if ((timer == null || timer.isShutdown()) && handler != null) {
-            handler.postDelayed(() -> {
-
-                if (view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isDestroyed()) {
-                    displayLog(period);
-                }
-
-            }, 1000);
-
-            return;
+        if (mainInteractor == null) {
+            mainInteractor = MainInteractor.Companion.getInstance();
         }
 
-        if (period == displayLogPeriod || timer == null) {
-            return;
-        }
+        mainInteractor.addOnITPDLogUpdatedListener(this);
+        mainInteractor.addOnITPDHtmlUpdatedListener(this);
 
-        displayLogPeriod = period;
-
-        if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
-            scheduledFuture.cancel(false);
-        }
-
-        scheduledFuture = timer.scheduleAtFixedRate(new Runnable() {
-            int loop = 0;
-            int previousLastLinesLength = 0;
-
-            @Override
-            public void run() {
-
-                try {
-                    if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || logFile == null) {
-                        return;
-                    }
-
-                    final String lastLines = logFile.readLastLines();
-
-                    final String htmlData = readITPDStatusFromHTML(view.getFragmentActivity());
-
-                    if (++loop > 30) {
-                        loop = 0;
-                        displayLog(10);
-                    }
-
-                    if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()
-                            || handler == null || lastLines == null || lastLines.isEmpty()) {
-                        return;
-                    }
-
-                    Spanned htmlLastLines = Html.fromHtml(lastLines);
-
-                    Spanned htmlDataLines;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        htmlDataLines = Html.fromHtml(htmlData, Html.FROM_HTML_MODE_LEGACY);
-                    } else {
-                        htmlDataLines = Html.fromHtml(htmlData);
-                    }
-
-                    handler.post(() -> {
-
-                        if (view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
-                            return;
-                        }
-
-                        if (previousLastLinesLength != lastLines.length() && htmlLastLines != null && itpdLogAutoScroll) {
-                            view.setITPDInfoLogText(htmlLastLines);
-                            view.scrollITPDLogViewToBottom();
-                            previousLastLinesLength = lastLines.length();
-                        }
-
-                        if (htmlDataLines != null) {
-                            view.setITPDLogViewText(htmlDataLines);
-                        }
-
-                        refreshITPDState(view.getFragmentActivity());
-                    });
-                } catch (Exception e) {
-                    Log.e(LOG_TAG, "ITPDFragmentPresenter timer run() exception " + e.getMessage() + " " + e.getCause());
-                }
-            }
-        }, 1, period, TimeUnit.SECONDS);
-
+        previousLastLinesLength = 0;
     }
 
     @Override
     public void stopDisplayLog() {
-        if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
-            scheduledFuture.cancel(false);
-
-            displayLogPeriod = -1;
+        if (mainInteractor != null) {
+            mainInteractor.removeOnITPDLogUpdatedListener(this);
+            mainInteractor.removeOnITPDHtmlUpdatedListener(this);
         }
     }
 
-    private String readITPDStatusFromHTML(Context context) {
-        String htmlData = context.getResources().getString(R.string.tvITPDDefaultLog) + " " + ITPDVersion;
-        try {
-            StringBuilder sb = new StringBuilder();
-
-            URL url = new URL("http://127.0.0.1:7070/");
-            HttpURLConnection huc = (HttpURLConnection) url.openConnection();
-            huc.setRequestMethod("GET");  //OR  huc.setRequestMethod ("HEAD");
-            huc.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 9.0.1; " +
-                    "Mi Mi) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Mobile Safari/537.36");
-            huc.setConnectTimeout(1000);
-            huc.connect();
-            int code = huc.getResponseCode();
-            if (code != HttpURLConnection.HTTP_OK) {
-                huc.disconnect();
-                return htmlData;
-            }
-
-
-            BufferedReader in;
-            in = new BufferedReader(
-                    new InputStreamReader(
-                            url.openStream()));
-
-            String inputLine;
-            while ((inputLine = in.readLine()) != null) {
-                if (inputLine.contains("<b>Network status:</b>") || inputLine.contains("<b>Tunnel creation success rate:</b>") ||
-                        inputLine.contains("<b>Received:</b> ") || inputLine.contains("<b>Sent:</b>") || inputLine.contains("<b>Transit:</b>") ||
-                        inputLine.contains("<b>Routers:</b>") || inputLine.contains("<b>Client Tunnels:</b>") || inputLine.contains("<b>Uptime:</b>")) {
-                    inputLine = inputLine.replace("<div class=\"content\">", "");
-                    inputLine = inputLine.replace("<br>", "<br />");
-                    sb.append(inputLine);
-                }
-            }
-            in.close();
-            huc.disconnect();
-            htmlData = sb.toString();
-            if (htmlData.contains("<br />")) {
-                htmlData = htmlData.substring(0, htmlData.lastIndexOf( "<br />"));
-            }
-
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "Unable to read I2PD html" + e.toString());
-        }
-
-        return htmlData;
-    }
-
-    public void startButtonOnClick(Context context) {
-        if (context == null || view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing() || modulesStatus == null) {
+    public void startButtonOnClick() {
+        if (!isActive()) {
             return;
         }
 
-        if (context instanceof MainActivity && ((MainActivity) context).childLockActive) {
-            Toast.makeText(context, context.getText(R.string.action_mode_dialog_locked), Toast.LENGTH_LONG).show();
+        Activity activity = view.getFragmentActivity();
+
+        if (activity instanceof MainActivity && ((MainActivity) activity).childLockActive) {
+            Toast.makeText(activity, activity.getText(R.string.action_mode_dialog_locked), Toast.LENGTH_LONG).show();
             return;
         }
 
         view.setITPDStartButtonEnabled(false);
 
-        if (!new PrefManager(Objects.requireNonNull(context)).getBoolPref("I2PD Running")
-                && new PrefManager(Objects.requireNonNull(context)).getBoolPref("Tor Running")
-                && !new PrefManager(context).getBoolPref("DNSCrypt Running")) {
+        if (modulesStatus.getItpdState() != RUNNING) {
 
             if (modulesStatus.isContextUIDUpdateRequested()) {
                 Toast.makeText(context, R.string.please_wait, Toast.LENGTH_SHORT).show();
@@ -501,99 +348,40 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
                 return;
             }
 
-            copyCertificatesNoRootMethod(context);
+            copyCertificatesNoRootMethod();
 
             setITPDStarting();
 
-            runITPD(context);
+            runITPD();
 
-            displayLog(1);
-        } else if (!new PrefManager(Objects.requireNonNull(context)).getBoolPref("I2PD Running") &&
-                !new PrefManager(context).getBoolPref("Tor Running")
-                && !new PrefManager(context).getBoolPref("DNSCrypt Running")) {
-
-            if (modulesStatus.isContextUIDUpdateRequested()) {
-                Toast.makeText(context, R.string.please_wait, Toast.LENGTH_SHORT).show();
-                view.setITPDStartButtonEnabled(true);
-                return;
-            }
-
-            copyCertificatesNoRootMethod(context);
-
-            setITPDStarting();
-
-            runITPD(context);
-
-            displayLog(1);
-        } else if (!new PrefManager(Objects.requireNonNull(context)).getBoolPref("I2PD Running") &&
-                !new PrefManager(context).getBoolPref("Tor Running")
-                && new PrefManager(context).getBoolPref("DNSCrypt Running")) {
-
-            if (modulesStatus.isContextUIDUpdateRequested()) {
-                Toast.makeText(context, R.string.please_wait, Toast.LENGTH_SHORT).show();
-                view.setITPDStartButtonEnabled(true);
-                return;
-            }
-
-            copyCertificatesNoRootMethod(context);
-
-            setITPDStarting();
-
-            runITPD(context);
-
-            displayLog(1);
-        } else if (!new PrefManager(Objects.requireNonNull(context)).getBoolPref("I2PD Running") &&
-                new PrefManager(context).getBoolPref("Tor Running")
-                && new PrefManager(context).getBoolPref("DNSCrypt Running")) {
-
-            if (modulesStatus.isContextUIDUpdateRequested()) {
-                Toast.makeText(context, R.string.please_wait, Toast.LENGTH_SHORT).show();
-                view.setITPDStartButtonEnabled(true);
-                return;
-            }
-
-            copyCertificatesNoRootMethod(context);
-
-            setITPDStarting();
-
-            runITPD(context);
-
-            displayLog(1);
-        } else if (new PrefManager(Objects.requireNonNull(context)).getBoolPref("I2PD Running")) {
+            displayLog(true);
+        } else if (modulesStatus.getItpdState() == RUNNING) {
 
             setITPDStopping();
 
-            stopITPD(context);
+            stopITPD();
 
-            OwnFileReader ofr = new OwnFileReader(context, appDataDir + "/logs/i2pd.log");
-
-            ofr.shortenTooTooLongFile();
+            FileShortener.shortenTooTooLongFile(appDataDir + "/logs/i2pd.log");
         }
 
         view.setITPDProgressBarIndeterminate(true);
     }
 
-    private void runITPD(Context context) {
-
-        if (context == null || view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
-            return;
+    private void runITPD() {
+        if (isActive()) {
+            ModulesRunner.runITPD(context);
         }
-
-        ModulesRunner.runITPD(context);
     }
 
-    private void stopITPD(Context context) {
-
-        if (context == null || view == null || view.getFragmentActivity() == null || view.getFragmentActivity().isFinishing()) {
-            return;
+    private void stopITPD() {
+        if (isActive()) {
+            ModulesKiller.stopITPD(context);
         }
-
-        ModulesKiller.stopITPD(context);
     }
 
-    private void copyCertificatesNoRootMethod(Context context) {
+    private void copyCertificatesNoRootMethod() {
 
-        if (context == null || runI2PDWithRoot) {
+        if (!isActive() || runI2PDWithRoot) {
             return;
         }
 
@@ -620,12 +408,12 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
         itpdLogAutoScroll = allowed;
     }
 
-    private void registerZoomGestureDetector(Context context) {
+    private void registerZoomGestureDetector() {
 
         scaleGestureDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.OnScaleGestureListener() {
             @Override
             public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
-                setLogsTextSize(context, scaleGestureDetector.getScaleFactor());
+                setLogsTextSize(scaleGestureDetector.getScaleFactor());
                 return true;
             }
 
@@ -640,7 +428,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
         });
     }
 
-    private void setLogsTextSize(Context context, float scale) {
+    private void setLogsTextSize(float scale) {
         float logsTextSizeMin = context.getResources().getDimension(R.dimen.fragment_log_text_size);
         float logsTextSize = (float) Math.max(logsTextSizeMin, Math.min(TopFragment.logsTextSize * scale, logsTextSizeMin * 1.5));
         TopFragment.logsTextSize = logsTextSize;
@@ -654,4 +442,73 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterCallbacks {
         return scaleGestureDetector;
     }
 
+    @Override
+    public void onITPDLogUpdated(@NonNull LogDataModel itpdLogData) {
+        final String lastLines = itpdLogData.getLines();
+
+        if (!isActive() || lastLines.isEmpty()) {
+            return;
+        }
+
+        Spanned htmlLastLines = Html.fromHtml(lastLines);
+
+        view.getFragmentActivity().runOnUiThread(() -> {
+
+            if (!isActive() || htmlLastLines == null) {
+                return;
+            }
+
+            if (previousLastLinesLength != lastLines.length() && itpdLogAutoScroll) {
+                view.setITPDInfoLogText(htmlLastLines);
+                view.scrollITPDLogViewToBottom();
+                previousLastLinesLength = lastLines.length();
+            }
+
+            if (itpdLogData.getStartedSuccessfully() && !fixedITPDReady) {
+                setFixedReadyState(true);
+            }
+
+            refreshITPDState();
+        });
+    }
+
+    @Override
+    public void onITPDHtmlUpdated(@NonNull LogDataModel itpdHtmlData) {
+        String htmlData = itpdHtmlData.getLines();
+
+        if (!isActive()) {
+            return;
+        }
+
+        if (htmlData.isEmpty()) {
+            htmlData = context.getResources().getString(R.string.tvITPDDefaultLog) + " " + ITPDVersion;
+        }
+
+        Spanned htmlDataLines;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            htmlDataLines = Html.fromHtml(htmlData, Html.FROM_HTML_MODE_LEGACY);
+        } else {
+            htmlDataLines = Html.fromHtml(htmlData);
+        }
+
+        view.getFragmentActivity().runOnUiThread(() -> {
+
+            if (!isActive()) {
+                return;
+            }
+
+            if (htmlDataLines != null) {
+                view.setITPDLogViewText(htmlDataLines);
+            }
+        });
+    }
+
+    @Override
+    public boolean isActive() {
+        return view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isFinishing();
+    }
+
+    public void setFixedReadyState(boolean ready) {
+        this.fixedITPDReady = ready;
+    }
 }

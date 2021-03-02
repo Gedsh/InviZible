@@ -43,12 +43,12 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
 public class ITPDFragmentReceiver extends BroadcastReceiver {
     private final ITPDFragmentView view;
-    private final ITPDFragmentPresenterCallbacks presenter;
+    private final ITPDFragmentPresenterInterface presenter;
 
     private String itpdPath;
     private String busyboxPath;
 
-    public ITPDFragmentReceiver(ITPDFragmentView view, ITPDFragmentPresenterCallbacks presenter) {
+    public ITPDFragmentReceiver(ITPDFragmentView view, ITPDFragmentPresenterInterface presenter) {
         this.view = view;
         this.presenter = presenter;
     }
@@ -56,7 +56,10 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
 
-        if (view == null || presenter == null) {
+        if (view == null
+                || view.getFragmentActivity() == null
+                || view.getFragmentActivity().isFinishing()
+                || presenter == null) {
             return;
         }
 
@@ -105,11 +108,11 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
 
                             if (!modulesStatus.isUseModulesWithRoot()) {
 
-                                if (!presenter.isSavedITPDStatusRunning(context)) {
+                                if (!presenter.isSavedITPDStatusRunning()) {
                                     view.setITPDLogViewText();
                                 }
 
-                                presenter.refreshITPDState(context);
+                                presenter.refreshITPDState();
                             }
                         }
                     }
@@ -119,19 +122,19 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
                         && sb.toString().contains("checkITPDRunning")) {
 
                     presenter.setITPDRunning();
-                    presenter.saveITPDStatusRunning(context, true);
+                    presenter.saveITPDStatusRunning(true);
                     modulesStatus.setItpdState(RUNNING);
-                    presenter.displayLog(5);
+                    presenter.displayLog(false);
 
                 } else if (!sb.toString().toLowerCase().contains(itpdPath.toLowerCase())
                         && sb.toString().contains("checkITPDRunning")) {
                     if (modulesStatus.getItpdState() == STOPPED) {
-                        presenter.saveITPDStatusRunning(context, false);
+                        presenter.saveITPDStatusRunning(false);
                     }
                     presenter.stopDisplayLog();
                     presenter.setITPDStopped();
                     modulesStatus.setItpdState(STOPPED);
-                    presenter.refreshITPDState(context);
+                    presenter.refreshITPDState();
                 } else if (sb.toString().contains("Something went wrong!")) {
                     presenter.setITPDSomethingWrong();
                 }
@@ -149,7 +152,7 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
     }
 
     private void checkITPDVersionWithRoot(Context context) {
-        if (context != null && presenter.isITPDInstalled(context)) {
+        if (context != null && presenter.isITPDInstalled()) {
             List<String> commandsCheck = new ArrayList<>(Arrays.asList(
                     busyboxPath + "pgrep -l /libi2pd.so 2> /dev/null",
                     busyboxPath + "echo 'checkITPDRunning' 2> /dev/null",
