@@ -1,6 +1,6 @@
 <i>Protect your device from dangerous sites, get rid of annoying ads and tracking, get access to blocked resources in your country!</i>
 
-<i>InviZible Pro</i> includes the well known modules <b>DNSCrypt, Tor and Purple I2P</b>. They are used to achieve maximum security, privacy and ease of use of the Internet.
+<i>InviZible Pro</i> includes the well known modules <b>DNSCrypt, Tor and Purple I2P</b>. These modules are used to achieve maximum security, privacy and ease of use of the Internet.
 
 <i>InviZible Pro</i> can use root, if your device has root privileges, or uses a local VPN to deliver Internet traffic to Tor, DNSCrypt and I2P networks.
 
@@ -16,11 +16,11 @@
 * Tethering supported
 * Material design theme
 
-Just start <i>InviZible Pro,</i> and you turn from a simple user to an invisible one, who is very difficult to find, block or impose on you unnecessary products and services in the form of ubiquitous advertising.
+Just start <i>InviZible Pro,</i> and you turn from a simple user to an invisible one, who is very difficult to find, block or impose unnecessary products and services in the form of ubiquitous advertising on.
 
 However, if you want to get full control over the program and your Internet connection - no problem! <i>InviZible Pro</i> provides access to a large number of both simple and professional settings. You can easily configure <i>InviZible Pro</i> itself, as well as its modules - <b>DNSCrypt, Tor and Purple I2P,</b> to satisfy the most non-standard requirements.
 
-<i>InviZible Pro</i> is an all-in-one program. After installing it, you can easily delete all your VPN applications and ad blockers. In most cases, <i>InviZible Pro</i> works better, is more stable, and faster than free VPNs. It does not contain ads, bloatware and does not spy upon its users.
+<i>InviZible Pro</i> is an all-in-one program. After installing it, you can easily delete all of your VPN applications and ad blockers. In most cases, <i>InviZible Pro</i> works better, is more stable, and faster than free VPNs. It does not contain ads, bloatware and does not spy upon its users.
 
 <i>InviZible Pro</i> blocks ipv6 due to some security issues with this protocol and the InviZible app.
 
