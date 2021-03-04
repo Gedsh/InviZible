@@ -41,34 +41,34 @@ They are used to achieve maximum security, privacy and comfortable use of the In
 * Provides access to the hidden anonymous network Invisible Internet and "i2p" sites
 * Open-source
 
-To start using **InviZible Pro**, it is enough to have an android phone.
+To start using **InviZible Pro**, all you need is an android phone.
 Just run all three modules and enjoy safe and comfortable Internet surfing. However,
 if you want to get full control over the application and your Internet connection - no problem!
-Provided access to a large number of both simple and professional settings.
+There is access to a large number of both simple and professional settings.
 You can flexibly configure **InviZible Pro** itself, as well as its modules - **DNSCrypt**,
 **Tor** and **Purple I2P**, to satisfy the most non-standard requirements.
 
 **InviZible Pro** is an all-in-one application. After installation, you can remove all of your VPN applications and ad blockers.
- In most cases, **InviZible Pro** works better, more stable, faster than free VPNs.
- It does not contain ads, bloatware code and does not spy upon the users.
+ In most cases, **InviZible Pro** works better, is more stable, and faster than free VPNs.
+ It does not contain any ads, bloatware and does not spy upon its users.
  
 ### Why InviZible Pro is better than other similar applications:
-* There are no analogs)))
+* There are no analogs))).
 * The only application that provides handy use of **DNSCrypt** on Android.
 * It is often more stable than the Orbot application, which also uses the Tor network.
-* Much more handy than the official **Purple I2P** client
+* Much more handy than the official **Purple I2P** client.
 * Allows you to easily and flexibly configure which sites and applications will open through **Tor**,
- for anonymity or bypassing blocks
+ for anonymity or bypassing blocks.
 * Can transform your phone, or Android TV set-top box into a secure Wi-Fi access point,
- which can be used by any phone, without root access
-* Optimized interface for set-top boxes
-* Replaces various VPNs and other tools to achieve privacy and anonymity
-* Successfully combines **DNSCrypt**, **Tor** and **Purple I2P** features
-* Free and open-source
+ which can be used by any phone, without root access.
+* Optimized interface for set-top boxes.
+* Replaces various VPNs and other tools to achieve privacy and anonymity.
+* Successfully combines **DNSCrypt**, **Tor** and **Purple I2P** features.
+* Free and open-source.
 
 ## Compatibility
 
-**InviZible Pro** can be used both with a rooted and non-rooted device.
+**InviZible Pro** can be used both with a rooted or non-rooted device.
 
 Please visit the [wiki](https://github.com/Gedsh/InviZible/wiki) to find out how to use it.
 
@@ -97,7 +97,7 @@ There is support for the latest version of **InviZible Pro** only.
 
 There is no support for things that are not directly related to **InviZible Pro**.
 
-There is no support for a building and developing things by yourself.
+There is no support for building and developing things by yourself.
 
 ## Contributing
 
