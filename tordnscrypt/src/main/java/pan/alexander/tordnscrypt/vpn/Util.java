@@ -32,6 +32,7 @@ import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import androidx.annotation.Keep;
 import androidx.core.net.ConnectivityManagerCompat;
 
 import java.io.File;
@@ -79,8 +80,10 @@ public class Util {
             "100.64.0.0/10"
             ));
 
+    @Keep
     private static native String jni_getprop(String name);
 
+    @Keep
     private static native boolean is_numeric_address(String ip);
 
     public static String getSelfVersionName(Context context) {

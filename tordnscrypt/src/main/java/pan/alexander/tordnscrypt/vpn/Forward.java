@@ -18,8 +18,10 @@ package pan.alexander.tordnscrypt.vpn;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 
+@Keep
 public class Forward {
     public int protocol;
     public String daddr;

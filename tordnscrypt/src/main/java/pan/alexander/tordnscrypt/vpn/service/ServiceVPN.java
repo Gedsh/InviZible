@@ -47,6 +47,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 
 import java.net.Inet4Address;
@@ -184,22 +185,31 @@ public class ServiceVPN extends VpnService {
 
     private final VPNBinder binder = new VPNBinder();
 
+    @Keep
     private native long jni_init(int sdk);
 
+    @Keep
     private native void jni_start(long context, int loglevel);
 
+    @Keep
     private native void jni_run(long context, int tun, boolean fwd53, int rcode, boolean compatibilityMode, boolean canFilterSynchronous);
 
+    @Keep
     private native void jni_stop(long context);
 
+    @Keep
     private native void jni_clear(long context);
 
+    @Keep
     private native int jni_get_mtu();
 
+    @Keep
     private native void jni_socks5_for_tor(String addr, int port, String username, String password);
 
+    @Keep
     private native void jni_socks5_for_proxy(String addr, int port, String username, String password);
 
+    @Keep
     private native void jni_done(long context);
 
     private static List<InetAddress> getDns(Context context) {
@@ -665,6 +675,7 @@ public class ServiceVPN extends VpnService {
     }
 
     // Called from native code
+    @Keep
     public void nativeExit(String reason) {
         Log.w(LOG_TAG, "VPN Native exit reason=" + reason);
         if (reason != null) {
@@ -674,16 +685,19 @@ public class ServiceVPN extends VpnService {
     }
 
     // Called from native code
+    @Keep
     public void nativeError(int error, String message) {
         Log.e(LOG_TAG, "VPN Native error " + error + ": " + message);
     }
 
     // Called from native code
+    @Keep
     public void logPacket(Packet packet) {
         //Log.i(LOG_TAG, "VPN Log packet " + packet.toString());
     }
 
     // Called from native code
+    @Keep
     public void dnsResolved(ResourceRecord rr) {
 
         try {
@@ -732,6 +746,7 @@ public class ServiceVPN extends VpnService {
     }
 
     // Called from native code
+    @Keep
     public boolean isDomainBlocked(String name) {
         //Log.i(LOG_TAG, " Ask domain is blocked " + name);
         try {
@@ -747,6 +762,7 @@ public class ServiceVPN extends VpnService {
     }
 
     // Called from native code
+    @Keep
     public boolean isRedirectToTor(int uid, String destAddress, int destPort) {
 
         if (uid == ownUID || destAddress.equals(itpdRedirectAddress) || destAddress.equals("127.0.0.1")
@@ -790,6 +806,7 @@ public class ServiceVPN extends VpnService {
     }
 
     // Called from native code
+    @Keep
     public boolean isRedirectToProxy(int uid, String destAddress, int destPort) {
         //Log.i(LOG_TAG, "Redirect to proxy " + uid + " " + destAddress + " " + redirect);
         if (uid == ownUID || destAddress.equals(itpdRedirectAddress) || destAddress.equals("127.0.0.1")
@@ -852,6 +869,7 @@ public class ServiceVPN extends VpnService {
     }
 
     // Called from native code
+    @Keep
     @TargetApi(Build.VERSION_CODES.Q)
     public int getUidQ(int version, int protocol, String saddr, int sport, String daddr, int dport) {
         if (protocol != 6 /* TCP */ && protocol != 17 /* UDP */)
@@ -870,6 +888,7 @@ public class ServiceVPN extends VpnService {
     }
 
     // Called from native code
+    @Keep
     public boolean protectSocket(int socket) {
         return protect(socket);
     }
@@ -882,6 +901,7 @@ public class ServiceVPN extends VpnService {
     }
 
     // Called from native code
+    @Keep
     public Allowed isAddressAllowed(Packet packet) {
 
         boolean torIsRunning = modulesStatus.getTorState() == RUNNING;
@@ -1010,6 +1030,7 @@ public class ServiceVPN extends VpnService {
     }
 
     // Called from native code
+    @Keep
     public void accountUsage(Usage usage) {
         //Log.i(LOG_TAG, usage.toString());
     }

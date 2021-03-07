@@ -18,12 +18,14 @@ package pan.alexander.tordnscrypt.vpn;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+@Keep
 public class Usage {
     public long Time;
     public int Version;

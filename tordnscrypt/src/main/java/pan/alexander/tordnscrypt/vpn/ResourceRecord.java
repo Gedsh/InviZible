@@ -18,6 +18,7 @@ package pan.alexander.tordnscrypt.vpn;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 
 import java.io.ByteArrayInputStream;
@@ -31,6 +32,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Objects;
 
+@Keep
 public class ResourceRecord implements Serializable {
     public long Time;
     public String QName = "";
