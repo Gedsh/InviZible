@@ -369,11 +369,9 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
             savedLogData = torLogData;
 
-            if (!fixedTorReady) {
-                torStartingSuccessfully(torLogData);
-            }
+            torStartingSuccessfully(torLogData);
 
-            if (torLogData.getStartedWithError() && !fixedTorError) {
+            if (torLogData.getStartedWithError()) {
                 torStartingWithError(torLogData);
             }
 
@@ -384,7 +382,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
     private void torStartingSuccessfully(LogDataModel logData) {
 
-        if (!isActive()) {
+        if (fixedTorReady || !isActive()) {
             return;
         }
 
@@ -423,7 +421,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
     }
 
     private void torStartingWithError(LogDataModel logData) {
-        if (!isActive()) {
+        if (fixedTorReady || fixedTorError || !isActive()) {
             return;
         }
 

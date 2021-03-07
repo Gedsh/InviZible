@@ -301,9 +301,9 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
             savedLogData = dnsCryptLogData;
 
-            if (dnsCryptLogData.getStartedSuccessfully() && !fixedDNSCryptReady) {
+            if (dnsCryptLogData.getStartedSuccessfully()) {
                 dnsCryptStartedSuccessfully();
-            } else if (dnsCryptLogData.getStartedWithError() && !fixedDNSCryptError) {
+            } else if (dnsCryptLogData.getStartedWithError()) {
                 dnsCryptStartedWithError(dnsCryptLogData);
             }
 
@@ -315,7 +315,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
     private void dnsCryptStartedSuccessfully() {
 
-        if (!isActive()) {
+        if (fixedDNSCryptReady || !isActive()) {
             return;
         }
 
@@ -333,7 +333,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
     }
 
     private void dnsCryptStartedWithError(LogDataModel logData) {
-        if (!isActive()) {
+        if (fixedDNSCryptError || !isActive()) {
             return;
         }
 
