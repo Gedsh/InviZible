@@ -19,7 +19,6 @@ package pan.alexander.tordnscrypt.dialogs;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -40,7 +39,6 @@ public class AgreementDialog {
             return null;
         }
 
-        @SuppressLint("InflateParams")
         View view = lInflater.inflate(R.layout.agreement_layout, null, false);
 
         if (view == null) {
@@ -57,6 +55,7 @@ public class AgreementDialog {
             dialog.dismiss();
         });
         alertDialog.setNegativeButton(R.string.disagree, ((dialog, id) -> System.exit(0)));
+
         return alertDialog;
     }
 }
