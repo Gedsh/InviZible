@@ -41,8 +41,9 @@ import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
+import pan.alexander.tordnscrypt.domain.ITPDInteractorInterface;
 import pan.alexander.tordnscrypt.domain.entities.LogDataModel;
-import pan.alexander.tordnscrypt.domain.MainInteractor;
+import pan.alexander.tordnscrypt.domain.LogReaderInteractors;
 import pan.alexander.tordnscrypt.domain.log_reader.itpd.OnITPDHtmlUpdatedListener;
 import pan.alexander.tordnscrypt.domain.log_reader.itpd.OnITPDLogUpdatedListener;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
@@ -78,7 +79,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
     private boolean itpdLogAutoScroll = true;
     private ScaleGestureDetector scaleGestureDetector;
 
-    private MainInteractor mainInteractor;
+    private ITPDInteractorInterface itpdInteractor;
     private int previousLastLinesLength;
     private boolean fixedITPDReady;
 
@@ -308,21 +309,21 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
     @Override
     public synchronized void displayLog(boolean modulesStateChangingExpected) {
 
-        if (mainInteractor == null) {
-            mainInteractor = MainInteractor.Companion.getInstance();
+        if (itpdInteractor == null) {
+            itpdInteractor = LogReaderInteractors.Companion.getInteractor();
         }
 
-        mainInteractor.addOnITPDLogUpdatedListener(this);
-        mainInteractor.addOnITPDHtmlUpdatedListener(this);
+        itpdInteractor.addOnITPDLogUpdatedListener(this);
+        itpdInteractor.addOnITPDHtmlUpdatedListener(this);
 
         previousLastLinesLength = 0;
     }
 
     @Override
     public void stopDisplayLog() {
-        if (mainInteractor != null) {
-            mainInteractor.removeOnITPDLogUpdatedListener(this);
-            mainInteractor.removeOnITPDHtmlUpdatedListener(this);
+        if (itpdInteractor != null) {
+            itpdInteractor.removeOnITPDLogUpdatedListener(this);
+            itpdInteractor.removeOnITPDHtmlUpdatedListener(this);
         }
     }
 

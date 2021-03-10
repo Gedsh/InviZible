@@ -44,9 +44,10 @@ import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.domain.CheckConnectionInteractor;
+import pan.alexander.tordnscrypt.domain.TorInteractorInterface;
 import pan.alexander.tordnscrypt.domain.check_connection.OnInternetConnectionCheckedListener;
 import pan.alexander.tordnscrypt.domain.entities.LogDataModel;
-import pan.alexander.tordnscrypt.domain.MainInteractor;
+import pan.alexander.tordnscrypt.domain.LogReaderInteractors;
 import pan.alexander.tordnscrypt.domain.log_reader.tor.OnTorLogUpdatedListener;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
@@ -88,7 +89,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
     private ScaleGestureDetector scaleGestureDetector;
 
-    private MainInteractor mainInteractor;
+    private TorInteractorInterface torInteractor;
     private LogDataModel savedLogData = null;
     private int savedLinesLength;
     private boolean fixedTorReady;
@@ -302,11 +303,11 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
     @Override
     public synchronized void displayLog(boolean modulesStateChangingExpected) {
 
-        if (mainInteractor == null) {
-            mainInteractor = MainInteractor.Companion.getInstance();
+        if (torInteractor == null) {
+            torInteractor = LogReaderInteractors.Companion.getInteractor();
         }
 
-        mainInteractor.addOnTorLogUpdatedListener(this);
+        torInteractor.addOnTorLogUpdatedListener(this);
 
         savedLogData = null;
 
@@ -320,8 +321,8 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
     @Override
     public void stopDisplayLog() {
-        if (mainInteractor != null) {
-            mainInteractor.removeOnTorLogUpdatedListener(this);
+        if (torInteractor != null) {
+            torInteractor.removeOnTorLogUpdatedListener(this);
         }
 
         savedLogData = null;

@@ -38,9 +38,11 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
+import pan.alexander.tordnscrypt.domain.ConnectionRecordsInteractorInterface;
+import pan.alexander.tordnscrypt.domain.DNSCryptInteractorInterface;
 import pan.alexander.tordnscrypt.domain.connection_records.OnConnectionRecordsUpdatedListener;
 import pan.alexander.tordnscrypt.domain.entities.LogDataModel;
-import pan.alexander.tordnscrypt.domain.MainInteractor;
+import pan.alexander.tordnscrypt.domain.LogReaderInteractors;
 import pan.alexander.tordnscrypt.domain.log_reader.dnscrypt.OnDNSCryptLogUpdatedListener;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
@@ -70,7 +72,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
     private ModuleState fixedModuleState;
     private boolean dnsCryptLogAutoScroll = true;
 
-    private MainInteractor mainInteractor;
+    private DNSCryptInteractorInterface dnsCryptInteractor;
+    private ConnectionRecordsInteractorInterface connectionRecordsInteractor;
     private LogDataModel savedLogData;
     private int savedLinesLength;
     private String savedConnectionRecords = "";
@@ -146,14 +149,18 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
     @Override
     public synchronized void displayLog(boolean modulesStateChangingExpected) {
 
-        if (mainInteractor == null) {
-            mainInteractor = MainInteractor.Companion.getInstance();
+        if (dnsCryptInteractor == null) {
+            dnsCryptInteractor = LogReaderInteractors.Companion.getInteractor();
         }
 
-        mainInteractor.addOnDNSCryptLogUpdatedListener(this);
+        if (connectionRecordsInteractor == null) {
+            connectionRecordsInteractor = LogReaderInteractors.Companion.getInteractor();
+        }
+
+        dnsCryptInteractor.addOnDNSCryptLogUpdatedListener(this);
 
         if (modulesStatus.getMode() == VPN_MODE || isFixTTL()) {
-            mainInteractor.addOnConnectionRecordsUpdatedListener(this);
+            connectionRecordsInteractor.addOnConnectionRecordsUpdatedListener(this);
         }
 
         savedLogData = null;
@@ -163,12 +170,13 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
     @Override
     public void stopDisplayLog() {
-        if (mainInteractor == null) {
-            return;
+        if (dnsCryptInteractor != null) {
+            dnsCryptInteractor.removeOnDNSCryptLogUpdatedListener(this);
         }
 
-        mainInteractor.removeOnDNSCryptLogUpdatedListener(this);
-        mainInteractor.removeOnConnectionRecordsUpdatedListener(this);
+        if (connectionRecordsInteractor != null) {
+            connectionRecordsInteractor.removeOnConnectionRecordsUpdatedListener(this);
+        }
 
         savedLogData = null;
 
@@ -381,8 +389,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             return;
         }
 
-        if (mainInteractor != null && modulesStatus.getDnsCryptState() == RESTARTING) {
-            mainInteractor.clearConnectionRecords();
+        if (connectionRecordsInteractor != null && modulesStatus.getDnsCryptState() == RESTARTING) {
+            connectionRecordsInteractor.clearConnectionRecords();
             return;
         }
 
@@ -506,8 +514,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             return;
         }
 
-        if (mainInteractor != null && (modulesStatus.getMode() == VPN_MODE || isFixTTL())) {
-            mainInteractor.clearConnectionRecords();
+        if (connectionRecordsInteractor != null && (modulesStatus.getMode() == VPN_MODE || isFixTTL())) {
+            connectionRecordsInteractor.clearConnectionRecords();
         }
 
         ModulesKiller.stopDNSCrypt(context);

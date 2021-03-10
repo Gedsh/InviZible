@@ -45,7 +45,12 @@ private const val TIMER_MAIN_PERIOD = 5L
 private const val COUNTER_STARTING = 30
 private const val COUNTER_STOPPING = 5
 
-class MainInteractor {
+class LogReaderInteractors private constructor() :
+    DNSCryptInteractorInterface,
+    TorInteractorInterface,
+    ITPDInteractorInterface,
+    ConnectionRecordsInteractorInterface {
+
     private val modulesStatus = ModulesStatus.getInstance()
 
     private val modulesLogRepository = ModulesLogRepositoryImpl()
@@ -65,69 +70,68 @@ class MainInteractor {
     private var counterStarting = COUNTER_STARTING
     private var counterStopping = COUNTER_STOPPING
 
-    companion object {
+    internal companion object {
         @Volatile
-        private var mainInteractor: MainInteractor? = null
+        private var logReaderInteractors: LogReaderInteractors? = null
 
-        fun getInstance(): MainInteractor {
-            if (mainInteractor == null) {
-                synchronized(MainInteractor::class.java) {
-                    if (mainInteractor == null) {
-                        mainInteractor = MainInteractor()
+        fun getInteractor(): LogReaderInteractors {
+            if (logReaderInteractors == null) {
+                synchronized(LogReaderInteractors::class.java) {
+                    if (logReaderInteractors == null) {
+                        logReaderInteractors = LogReaderInteractors()
                     }
                 }
             }
-            return mainInteractor ?: MainInteractor()
+            return logReaderInteractors ?: LogReaderInteractors()
         }
     }
 
-
-    fun addOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: OnDNSCryptLogUpdatedListener) {
+    override fun addOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: OnDNSCryptLogUpdatedListener) {
         dnsCryptInteractor.addListener(onDNSCryptLogUpdatedListener)
         startLogsParser()
     }
 
-    fun removeOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: OnDNSCryptLogUpdatedListener) {
+    override fun removeOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: OnDNSCryptLogUpdatedListener) {
         dnsCryptInteractor.removeListener(onDNSCryptLogUpdatedListener)
     }
 
-    fun addOnTorLogUpdatedListener(onTorLogUpdatedListener: OnTorLogUpdatedListener) {
+    override fun addOnTorLogUpdatedListener(onTorLogUpdatedListener: OnTorLogUpdatedListener) {
         torInteractor.addListener(onTorLogUpdatedListener)
         startLogsParser()
     }
 
-    fun removeOnTorLogUpdatedListener(onTorLogUpdatedListener: OnTorLogUpdatedListener) {
+    override fun removeOnTorLogUpdatedListener(onTorLogUpdatedListener: OnTorLogUpdatedListener) {
         torInteractor.removeListener(onTorLogUpdatedListener)
     }
 
-    fun addOnITPDLogUpdatedListener(onITPDLogUpdatedListener: OnITPDLogUpdatedListener) {
+    override fun addOnITPDLogUpdatedListener(onITPDLogUpdatedListener: OnITPDLogUpdatedListener) {
         itpdInteractor.addListener(onITPDLogUpdatedListener)
         startLogsParser()
     }
 
-    fun removeOnITPDLogUpdatedListener(onITPDLogUpdatedListener: OnITPDLogUpdatedListener) {
+    override fun removeOnITPDLogUpdatedListener(onITPDLogUpdatedListener: OnITPDLogUpdatedListener) {
         itpdInteractor.removeListener(onITPDLogUpdatedListener)
     }
 
-    fun addOnITPDHtmlUpdatedListener(onITPDHtmlUpdatedListener: OnITPDHtmlUpdatedListener) {
+    override fun addOnITPDHtmlUpdatedListener(onITPDHtmlUpdatedListener: OnITPDHtmlUpdatedListener) {
         itpdHtmlInteractor.addListener(onITPDHtmlUpdatedListener)
         startLogsParser()
     }
 
-    fun removeOnITPDHtmlUpdatedListener(onITPDHtmlUpdatedListener: OnITPDHtmlUpdatedListener) {
+    override fun removeOnITPDHtmlUpdatedListener(onITPDHtmlUpdatedListener: OnITPDHtmlUpdatedListener) {
         itpdHtmlInteractor.removeListener(onITPDHtmlUpdatedListener)
     }
 
-    fun addOnConnectionRecordsUpdatedListener(onConnectionRecordsUpdatedListener: OnConnectionRecordsUpdatedListener) {
+    override fun addOnConnectionRecordsUpdatedListener(onConnectionRecordsUpdatedListener: OnConnectionRecordsUpdatedListener) {
         connectionRecordsInteractor.addListener(onConnectionRecordsUpdatedListener)
         startLogsParser()
     }
 
-    fun removeOnConnectionRecordsUpdatedListener(onConnectionRecordsUpdatedListener: OnConnectionRecordsUpdatedListener) {
+    override fun removeOnConnectionRecordsUpdatedListener(onConnectionRecordsUpdatedListener: OnConnectionRecordsUpdatedListener) {
         connectionRecordsInteractor.removeListener(onConnectionRecordsUpdatedListener)
     }
 
-    fun clearConnectionRecords() {
+    override fun clearConnectionRecords() {
         connectionRecordsInteractor.clearConnectionRecords()
     }
 
@@ -165,7 +169,7 @@ class MainInteractor {
         timer?.stopExecutor()
         timer = null
         connectionRecordsInteractor.stopConverter(true)
-        mainInteractor = null
+        logReaderInteractors = null
 
         Log.i(LOG_TAG, "MainInteractor stopLogsParser")
     }

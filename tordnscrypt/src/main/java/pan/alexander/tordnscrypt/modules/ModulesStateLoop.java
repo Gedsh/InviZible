@@ -35,7 +35,10 @@ import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
-import pan.alexander.tordnscrypt.domain.MainInteractor;
+import pan.alexander.tordnscrypt.domain.DNSCryptInteractorInterface;
+import pan.alexander.tordnscrypt.domain.ITPDInteractorInterface;
+import pan.alexander.tordnscrypt.domain.LogReaderInteractors;
+import pan.alexander.tordnscrypt.domain.TorInteractorInterface;
 import pan.alexander.tordnscrypt.domain.entities.LogDataModel;
 import pan.alexander.tordnscrypt.domain.log_reader.dnscrypt.OnDNSCryptLogUpdatedListener;
 import pan.alexander.tordnscrypt.domain.log_reader.itpd.OnITPDLogUpdatedListener;
@@ -93,7 +96,9 @@ public class ModulesStateLoop implements Runnable,
 
     private int savedIptablesCommandsHash = 0;
 
-    private final MainInteractor mainInteractor;
+    private final DNSCryptInteractorInterface dnsCryptInteractor;
+    private final TorInteractorInterface torInteractor;
+    private final ITPDInteractorInterface itpdInteractor;
 
     ModulesStateLoop(ModulesService modulesService) {
         //Delay in sec before service can stop
@@ -111,7 +116,10 @@ public class ModulesStateLoop implements Runnable,
 
         handler = new Handler(Looper.getMainLooper());
 
-        mainInteractor = new MainInteractor();
+        LogReaderInteractors logReaderInteractors = LogReaderInteractors.Companion.getInteractor();
+        dnsCryptInteractor = logReaderInteractors;
+        torInteractor = logReaderInteractors;
+        itpdInteractor = logReaderInteractors;
 
         restoreModulesSavedState();
     }
@@ -236,12 +244,12 @@ public class ModulesStateLoop implements Runnable,
                saveDNSCryptState(dnsCryptState);
 
                 if (dnsCryptState == RUNNING) {
-                    if (mainInteractor != null) {
-                        mainInteractor.addOnDNSCryptLogUpdatedListener(this);
+                    if (dnsCryptInteractor != null) {
+                        dnsCryptInteractor.addOnDNSCryptLogUpdatedListener(this);
                     }
                 } else {
-                    if (mainInteractor != null) {
-                        mainInteractor.removeOnDNSCryptLogUpdatedListener(this);
+                    if (dnsCryptInteractor != null) {
+                        dnsCryptInteractor.removeOnDNSCryptLogUpdatedListener(this);
                     }
                     setDNSCryptReady(false);
                     denySystemDNS();
@@ -253,12 +261,12 @@ public class ModulesStateLoop implements Runnable,
                 saveTorState(torState);
 
                 if (torState == RUNNING) {
-                    if (mainInteractor != null) {
-                        mainInteractor.addOnTorLogUpdatedListener(this);
+                    if (torInteractor != null) {
+                        torInteractor.addOnTorLogUpdatedListener(this);
                     }
                 } else {
-                    if (mainInteractor != null) {
-                        mainInteractor.removeOnTorLogUpdatedListener(this);
+                    if (torInteractor != null) {
+                        torInteractor.removeOnTorLogUpdatedListener(this);
                     }
                     setTorReady(false);
                     denySystemDNS();
@@ -269,12 +277,12 @@ public class ModulesStateLoop implements Runnable,
                 saveITPDState(itpdState);
 
                 if (itpdState == RUNNING) {
-                    if (mainInteractor != null) {
-                        mainInteractor.addOnITPDLogUpdatedListener(this);
+                    if (itpdInteractor != null) {
+                        itpdInteractor.addOnITPDLogUpdatedListener(this);
                     }
                 } else {
-                    if (mainInteractor != null) {
-                        mainInteractor.removeOnITPDLogUpdatedListener(this);
+                    if (itpdInteractor != null) {
+                        itpdInteractor.removeOnITPDLogUpdatedListener(this);
                     }
                     setITPDReady(false);
                 }
@@ -455,8 +463,8 @@ public class ModulesStateLoop implements Runnable,
         if (dnsCryptLogData.getStartedSuccessfully()) {
             setDNSCryptReady(true);
             denySystemDNS();
-            if (mainInteractor != null) {
-                mainInteractor.removeOnDNSCryptLogUpdatedListener(this);
+            if (dnsCryptInteractor != null) {
+                dnsCryptInteractor.removeOnDNSCryptLogUpdatedListener(this);
             }
         }
     }
@@ -481,8 +489,8 @@ public class ModulesStateLoop implements Runnable,
         if (torLogData.getStartedSuccessfully()) {
             setTorReady(true);
             denySystemDNS();
-            if (mainInteractor != null) {
-                mainInteractor.removeOnTorLogUpdatedListener(this);
+            if (torInteractor != null) {
+                torInteractor.removeOnTorLogUpdatedListener(this);
             }
         }
     }
@@ -516,8 +524,8 @@ public class ModulesStateLoop implements Runnable,
     public void onITPDLogUpdated(@NonNull LogDataModel itpdLogData) {
         if (itpdLogData.getStartedSuccessfully()) {
             setITPDReady(true);
-            if (mainInteractor != null) {
-                mainInteractor.removeOnITPDLogUpdatedListener(this);
+            if (itpdInteractor != null) {
+                itpdInteractor.removeOnITPDLogUpdatedListener(this);
             }
         }
     }
