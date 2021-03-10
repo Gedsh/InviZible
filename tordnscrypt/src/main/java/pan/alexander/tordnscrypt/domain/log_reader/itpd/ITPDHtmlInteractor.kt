@@ -53,7 +53,7 @@ class ITPDHtmlInteractor(private val modulesLogRepository: ModulesLogRepository)
 
         val listeners = listeners.toHashSet()
 
-        for (listener in listeners) {
+        listeners.forEach { listener ->
             if (listener?.isActive() == true) {
                 itpdHtmlData?.let { listener.onITPDHtmlUpdated(it) }
             } else {

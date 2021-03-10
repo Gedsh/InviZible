@@ -53,7 +53,7 @@ class TorInteractor(private val modulesLogRepository: ModulesLogRepository) {
 
         val listeners = listeners.toHashSet()
 
-        for (listener in listeners) {
+        listeners.forEach { listener ->
             if (listener?.isActive() == true) {
                 torLogData?.let { listener.onTorLogUpdated(it) }
             } else {

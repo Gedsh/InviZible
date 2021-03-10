@@ -447,15 +447,19 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
     public void onITPDLogUpdated(@NonNull LogDataModel itpdLogData) {
         final String lastLines = itpdLogData.getLines();
 
-        if (!isActive() || lastLines.isEmpty()) {
+        if (lastLines.isEmpty()) {
             return;
         }
 
         Spanned htmlLastLines = Html.fromHtml(lastLines);
 
+        if (!isActive() || htmlLastLines == null) {
+            return;
+        }
+
         view.getFragmentActivity().runOnUiThread(() -> {
 
-            if (!isActive() || htmlLastLines == null) {
+            if (!isActive()) {
                 return;
             }
 
@@ -477,10 +481,6 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
     public void onITPDHtmlUpdated(@NonNull LogDataModel itpdHtmlData) {
         String htmlData = itpdHtmlData.getLines();
 
-        if (!isActive()) {
-            return;
-        }
-
         if (htmlData.isEmpty()) {
             htmlData = context.getResources().getString(R.string.tvITPDDefaultLog) + " " + ITPDVersion;
         }
@@ -490,6 +490,10 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
             htmlDataLines = Html.fromHtml(htmlData, Html.FROM_HTML_MODE_LEGACY);
         } else {
             htmlDataLines = Html.fromHtml(htmlData);
+        }
+
+        if (!isActive()) {
+            return;
         }
 
         view.getFragmentActivity().runOnUiThread(() -> {
@@ -505,8 +509,16 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
     }
 
     @Override
-    public boolean isActive() {
-        return view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isFinishing();
+    public synchronized boolean isActive() {
+
+        if (view != null) {
+            Activity activity = view.getFragmentActivity();
+            if (activity != null) {
+                return !activity.isFinishing();
+            }
+        }
+
+        return false;
     }
 
     public void setFixedReadyState(boolean ready) {

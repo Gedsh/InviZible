@@ -146,7 +146,7 @@ class LogReaderInteractors private constructor() :
                 return
             }
 
-            Log.i(LOG_TAG, "MainInteractor startLogsParser")
+            Log.i(LOG_TAG, "LogReaderInteractors startLogsParser")
 
             displayPeriod = period
 
@@ -157,7 +157,7 @@ class LogReaderInteractors private constructor() :
             timer?.execute { parseLogs() }
 
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "MainInteractor startLogsParser exception ${e.message} ${e.cause}")
+            Log.e(LOG_TAG, "LogReaderInteractors startLogsParser exception ${e.message} ${e.cause}")
         } finally {
             if (reentrantLock.isHeldByCurrentThread) {
                 reentrantLock.unlock()
@@ -171,7 +171,7 @@ class LogReaderInteractors private constructor() :
         connectionRecordsInteractor.stopConverter(true)
         logReaderInteractors = null
 
-        Log.i(LOG_TAG, "MainInteractor stopLogsParser")
+        Log.i(LOG_TAG, "LogReaderInteractors stopLogsParser")
     }
 
     private fun parseLogs() {
@@ -198,7 +198,7 @@ class LogReaderInteractors private constructor() :
                     dnsCryptInteractor.parseDNSCryptLog()
                 } catch (e: Exception) {
                     Log.e(
-                        LOG_TAG, "MainInteractor parseDNSCryptLog exception " +
+                        LOG_TAG, "LogReaderInteractors parseDNSCryptLog exception " +
                                 "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
                     )
                 }
@@ -208,7 +208,7 @@ class LogReaderInteractors private constructor() :
                     torInteractor.parseTorLog()
                 } catch (e: Exception) {
                     Log.e(
-                        LOG_TAG, "MainInteractor parseTorLog exception " +
+                        LOG_TAG, "LogReaderInteractors parseTorLog exception " +
                                 "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
                     )
                 }
@@ -218,7 +218,7 @@ class LogReaderInteractors private constructor() :
                     itpdInteractor.parseITPDLog()
                 } catch (e: Exception) {
                     Log.e(
-                        LOG_TAG, "MainInteractor parseITPDLog exception " +
+                        LOG_TAG, "LogReaderInteractors parseITPDLog exception " +
                                 "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
                     )
                 }
@@ -228,7 +228,7 @@ class LogReaderInteractors private constructor() :
                     itpdHtmlInteractor.parseITPDHTML()
                 } catch (e: Exception) {
                     Log.e(
-                        LOG_TAG, "MainInteractor parseITPDHTML exception " +
+                        LOG_TAG, "LogReaderInteractors parseITPDHTML exception " +
                                 "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
                     )
                 }
@@ -239,7 +239,7 @@ class LogReaderInteractors private constructor() :
                     connectionRecordsInteractor.convertRecords()
                 } catch (e: Exception) {
                     Log.e(
-                        LOG_TAG, "MainInteractor convertRecords exception " +
+                        LOG_TAG, "LogReaderInteractors convertRecords exception " +
                                 "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
                     )
                 }
@@ -259,7 +259,7 @@ class LogReaderInteractors private constructor() :
 
         } catch (e: Exception) {
             Log.e(
-                LOG_TAG, "MainInteractor parseLogs exception " +
+                LOG_TAG, "LogReaderInteractors parseLogs exception " +
                         "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
             )
         }

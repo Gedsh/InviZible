@@ -93,7 +93,7 @@ class ConnectionRecordsInteractor(private val connectionRecordsRepository: Conne
 
         val listeners = listeners.toHashSet()
 
-        for (listener in listeners) {
+        listeners.forEach { listener ->
             if (listener?.isActive() == true) {
                 listener.onConnectionRecordsUpdated(records)
             } else {
@@ -101,7 +101,6 @@ class ConnectionRecordsInteractor(private val connectionRecordsRepository: Conne
 
             }
         }
-
     }
 
     fun clearConnectionRecords() {

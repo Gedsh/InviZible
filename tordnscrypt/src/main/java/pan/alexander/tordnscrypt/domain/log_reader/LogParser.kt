@@ -20,7 +20,9 @@
 package pan.alexander.tordnscrypt.domain.log_reader
 
 import android.text.TextUtils
+import android.util.Log
 import pan.alexander.tordnscrypt.domain.entities.LogDataModel
+import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
 import java.lang.StringBuilder
 import java.util.*
 
@@ -31,36 +33,40 @@ abstract class LogParser {
     fun formatLines(lines: List<String>): String {
         val stringBuilder = StringBuilder()
 
-        for (line in lines) {
+        try {
+            for (line in lines) {
 
-            if (line.isBlank()) {
-                continue
-            }
+                if (line.isBlank()) {
+                    continue
+                }
 
-            //s = Html.escapeHtml(s);
-            var encodedLine = TextUtils.htmlEncode(line)
-            val encodedLineLowerCase = encodedLine.toLowerCase(Locale.ROOT)
+                //s = Html.escapeHtml(s);
+                var encodedLine = TextUtils.htmlEncode(line)
+                val encodedLineLowerCase = encodedLine.toLowerCase(Locale.ROOT)
 
-            if (encodedLineLowerCase.contains("[notice]") || encodedLineLowerCase.contains("/info")) {
-                encodedLine = "<font color=#808080>" + encodedLine.replace("[notice]", "")
-                    .replace("[NOTICE]", "") + "</font>"
-            } else if (encodedLineLowerCase.contains("[warn]") || encodedLineLowerCase.contains("/warn")) {
-                encodedLine = "<font color=#ffa500>$encodedLine</font>"
-            } else if (encodedLineLowerCase.contains("[warning]")) {
-                encodedLine = "<font color=#ffa500>$encodedLine</font>"
-            } else if (encodedLineLowerCase.contains("[error]") || encodedLineLowerCase.contains("/error")) {
-                encodedLine = "<font color=#f08080>$encodedLine</font>"
-            } else if (encodedLineLowerCase.contains("[critical]")) {
-                encodedLine = "<font color=#990000>$encodedLine</font>"
-            } else if (encodedLineLowerCase.contains("[fatal]")) {
-                encodedLine = "<font color=#990000>$encodedLine</font>"
-            } else if (encodedLineLowerCase.isNotEmpty()) {
-                encodedLine = "<font color=#6897bb>$encodedLine</font>"
+                if (encodedLineLowerCase.contains("[notice]") || encodedLineLowerCase.contains("/info")) {
+                    encodedLine = "<font color=#808080>" + encodedLine.replace("[notice]", "")
+                        .replace("[NOTICE]", "") + "</font>"
+                } else if (encodedLineLowerCase.contains("[warn]") || encodedLineLowerCase.contains("/warn")) {
+                    encodedLine = "<font color=#ffa500>$encodedLine</font>"
+                } else if (encodedLineLowerCase.contains("[warning]")) {
+                    encodedLine = "<font color=#ffa500>$encodedLine</font>"
+                } else if (encodedLineLowerCase.contains("[error]") || encodedLineLowerCase.contains("/error")) {
+                    encodedLine = "<font color=#f08080>$encodedLine</font>"
+                } else if (encodedLineLowerCase.contains("[critical]")) {
+                    encodedLine = "<font color=#990000>$encodedLine</font>"
+                } else if (encodedLineLowerCase.contains("[fatal]")) {
+                    encodedLine = "<font color=#990000>$encodedLine</font>"
+                } else if (encodedLineLowerCase.isNotEmpty()) {
+                    encodedLine = "<font color=#6897bb>$encodedLine</font>"
+                }
+                if (encodedLine.isNotBlank()) {
+                    stringBuilder.append(encodedLine)
+                    stringBuilder.append("<br />")
+                }
             }
-            if (encodedLine.isNotBlank()) {
-                stringBuilder.append(encodedLine)
-                stringBuilder.append("<br />")
-            }
+        } catch (e: Exception) {
+            Log.e(LOG_TAG, "LogParser formatLines exception ${e.message} ${e.cause}")
         }
 
         val lastBrIndex: Int = stringBuilder.lastIndexOf("<br />")

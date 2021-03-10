@@ -53,7 +53,7 @@ class ITPDInteractor(private val modulesLogRepository: ModulesLogRepository) {
 
         val listeners = listeners.toHashSet()
 
-        for (listener in listeners) {
+        listeners.forEach { listener ->
             if (listener?.isActive() == true) {
                 itpdLogData?.let { listener.onITPDLogUpdated(it) }
             } else {

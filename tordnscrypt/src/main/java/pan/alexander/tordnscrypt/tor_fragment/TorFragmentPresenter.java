@@ -345,15 +345,19 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
             return;
         }
 
-        if (!isActive() || lastLines.isEmpty()) {
+        if (lastLines.isEmpty()) {
             return;
         }
 
         Spanned htmlText = Html.fromHtml(lastLines);
 
+        if (!isActive() || htmlText == null) {
+            return;
+        }
+
         view.getFragmentActivity().runOnUiThread(() -> {
 
-            if (!isActive() || htmlText == null) {
+            if (!isActive()) {
                 return;
             }
 
@@ -702,8 +706,16 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
     }
 
     @Override
-    public boolean isActive() {
-        return view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isFinishing();
+    public synchronized boolean isActive() {
+
+        if (view != null) {
+            Activity activity = view.getFragmentActivity();
+            if (activity != null) {
+                return !activity.isFinishing();
+            }
+        }
+
+        return false;
     }
 
     private void allowSystemDNS() {

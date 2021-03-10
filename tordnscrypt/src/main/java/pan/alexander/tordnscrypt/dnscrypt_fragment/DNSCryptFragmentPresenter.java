@@ -278,7 +278,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             return;
         }
 
-        if (!isActive() || lastLines.isEmpty()) {
+        if (lastLines.isEmpty()) {
             return;
         }
 
@@ -289,9 +289,13 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             htmlLines = Html.fromHtml(dnsCryptLogData.getLines() + "<br />" + savedConnectionRecords);
         }
 
+        if (!isActive() || htmlLines == null) {
+            return;
+        }
+
         view.getFragmentActivity().runOnUiThread(() -> {
 
-            if (!isActive() || htmlLines == null) {
+            if (!isActive()) {
                 return;
             }
 
@@ -300,7 +304,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
                 view.setDNSCryptLogViewText(htmlLines);
                 view.scrollDNSCryptLogViewToBottom();
 
-                savedLinesLength = linesLength ;
+                savedLinesLength = linesLength;
             }
 
             if (dnsCryptLogData.equals(savedLogData)) {
@@ -363,20 +367,24 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
     @Override
     public void onConnectionRecordsUpdated(@NonNull String connectionRecords) {
-        displayDnsResponses(savedLogData.getLines(), connectionRecords);
+        String logLines = "";
+        if (savedLogData != null) {
+            logLines = savedLogData.getLines();
+        }
+        displayDnsResponses(logLines, connectionRecords);
     }
 
     private void displayDnsResponses(String savedLogLines, String connectionRecords) {
 
-        if (!isActive()) {
-            return;
-        }
-
         if (modulesStatus.getMode() != VPN_MODE && !isFixTTL()) {
-            if (!savedConnectionRecords.isEmpty() && isActive()) {
+            if (!savedConnectionRecords.isEmpty()) {
                 savedConnectionRecords = "";
 
                 Spanned htmlLines = Html.fromHtml(savedLogLines);
+
+                if (!isActive()) {
+                    return;
+                }
 
                 view.getFragmentActivity().runOnUiThread(() -> {
                     if (isActive() && htmlLines != null) {
@@ -402,22 +410,23 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             return;
         }
 
-        if (isActive()) {
+        Spanned htmlLines = Html.fromHtml(savedLogLines + "<br />" + connectionRecords);
 
-            Spanned htmlLines = Html.fromHtml(savedLogLines + "<br />" + connectionRecords);
-
-            view.getFragmentActivity().runOnUiThread(() -> {
-                if (isActive()) {
-                    if (htmlLines != null && dnsCryptLogAutoScroll) {
-                        view.setDNSCryptLogViewText(htmlLines);
-                        view.scrollDNSCryptLogViewToBottom();
-                        savedConnectionRecords = connectionRecords;
-                    }
-                } else {
-                    savedConnectionRecords = "";
-                }
-            });
+        if (!isActive()) {
+            return;
         }
+
+        view.getFragmentActivity().runOnUiThread(() -> {
+            if (isActive()) {
+                if (htmlLines != null && dnsCryptLogAutoScroll) {
+                    view.setDNSCryptLogViewText(htmlLines);
+                    view.scrollDNSCryptLogViewToBottom();
+                    savedConnectionRecords = connectionRecords;
+                }
+            } else {
+                savedConnectionRecords = "";
+            }
+        });
     }
 
     @Override
@@ -493,7 +502,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
     private void runDNSCrypt() {
         if (isActive()) {
-            if(!modulesStatus.isTorReady()) {
+            if (!modulesStatus.isTorReady()) {
                 allowSystemDNS();
             }
             ModulesRunner.runDNSCrypt(context);
@@ -520,7 +529,6 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
         ModulesKiller.stopDNSCrypt(context);
     }
-
 
 
     public void startButtonOnClick() {
@@ -599,8 +607,16 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
     }
 
     @Override
-    public boolean isActive() {
-        return view != null && view.getFragmentActivity() != null && !view.getFragmentActivity().isFinishing();
+    public synchronized boolean isActive() {
+
+        if (view != null) {
+            Activity activity = view.getFragmentActivity();
+            if (activity != null) {
+                return !activity.isFinishing();
+            }
+        }
+
+        return false;
     }
 
     private boolean isFixTTL() {

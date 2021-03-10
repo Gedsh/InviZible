@@ -53,7 +53,7 @@ class DNSCryptInteractor(private val modulesLogRepository: ModulesLogRepository)
 
         val listeners = listeners.toHashSet()
 
-        for (listener in listeners) {
+        listeners.forEach { listener ->
             if (listener?.isActive() == true) {
                 dnsCryptLogData?.let { listener.onDNSCryptLogUpdated(it) }
             } else {
