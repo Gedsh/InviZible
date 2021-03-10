@@ -65,9 +65,8 @@ import android.widget.Toast;
 
 import java.util.Locale;
 import java.util.Objects;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.arp.ArpScannerKt;
@@ -115,7 +114,7 @@ public class MainActivity extends LangAppCompatActivity
     public boolean childLockActive = false;
     public AccelerateDevelop accelerateDevelop;
     private volatile boolean vpnRequested;
-    private ScheduledFuture<?> scheduledFuture;
+    private Timer checkHotspotStateTimer;
     private Handler handler;
     private TopFragment topFragment;
     private DNSCryptRunFragment dNSCryptRunFragment;
@@ -660,30 +659,22 @@ public class MainActivity extends LangAppCompatActivity
 
     private void checkHotspotState() {
 
-        if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
-            scheduledFuture.cancel(false);
-        }
+        checkHotspotStateTimer = new Timer();
 
-        ScheduledExecutorService timer = TopFragment.getModulesLogsTimer();
-
-        if (timer == null || timer.isShutdown()) {
-            return;
-        }
-
-        scheduledFuture = timer.scheduleAtFixedRate(new Runnable() {
-
+        checkHotspotStateTimer.scheduleAtFixedRate(new TimerTask() {
             int loop = 0;
 
             @Override
             public void run() {
-
-                if (++loop > 3 && scheduledFuture != null && !scheduledFuture.isCancelled()) {
-                    scheduledFuture.cancel(false);
+                if (++loop > 3 && checkHotspotStateTimer != null) {
+                    checkHotspotStateTimer.cancel();
+                    checkHotspotStateTimer.purge();
+                    checkHotspotStateTimer = null;
                 }
 
                 runOnUiThread(() -> invalidateOptionsMenu());
             }
-        }, 3, 5, TimeUnit.SECONDS);
+        }, 3000, 5000);
     }
 
     @Override
@@ -1004,9 +995,10 @@ public class MainActivity extends LangAppCompatActivity
     public void onDestroy() {
         super.onDestroy();
 
-        if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
-            scheduledFuture.cancel(false);
-            scheduledFuture = null;
+        if (checkHotspotStateTimer != null) {
+            checkHotspotStateTimer.cancel();
+            checkHotspotStateTimer.purge();
+            checkHotspotStateTimer = null;
         }
 
         if (viewPager != null) {
