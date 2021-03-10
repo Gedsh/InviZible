@@ -93,8 +93,15 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
         tvDNSCryptLog = view.findViewById(R.id.tvDNSCryptLog);
 
         svDNSCryptLog = view.findViewById(R.id.svDNSCryptLog);
-        svDNSCryptLog.setOnTouchListener(this);
-        svDNSCryptLog.getViewTreeObserver().addOnScrollChangedListener(this);
+
+        if (svDNSCryptLog != null) {
+            svDNSCryptLog.setOnTouchListener(this);
+
+            ViewTreeObserver observer = svDNSCryptLog.getViewTreeObserver();
+            if (observer != null) {
+                observer.addOnScrollChangedListener(this);
+            }
+        }
 
         tvDNSStatus = view.findViewById(R.id.tvDNSStatus);
 
@@ -161,9 +168,19 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+
+        if (svDNSCryptLog != null) {
+            svDNSCryptLog.setOnTouchListener(null);
+
+            ViewTreeObserver observer = svDNSCryptLog.getViewTreeObserver();
+            if (observer != null) {
+                observer.addOnScrollChangedListener(null);
+            }
+        }
 
         btnDNSCryptStart = null;
         tvDNSStatus = null;
@@ -257,13 +274,14 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
         }
 
         svDNSCryptLog.post(() -> {
-            svDNSCryptLog.computeScroll();
-
-            int delta = 0;
 
             if (svDNSCryptLog == null) {
                 return;
             }
+
+            svDNSCryptLog.computeScroll();
+
+            int delta = 0;
 
             int childIndex = svDNSCryptLog.getChildCount() - 1;
 

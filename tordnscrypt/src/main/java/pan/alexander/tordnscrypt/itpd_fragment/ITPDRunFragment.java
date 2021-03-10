@@ -90,10 +90,21 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
         pbITPD = view.findViewById(R.id.pbITPD);
 
         svITPDLog = view.findViewById(R.id.svITPDLog);
+
         //Fix auto scrolling on launch
-        svITPDLog.postDelayed(() ->
-                svITPDLog.getViewTreeObserver().addOnScrollChangedListener(this),
-                3000);
+        if (svITPDLog != null) {
+            svITPDLog.postDelayed(() ->
+            {
+                if (svITPDLog != null) {
+                    ViewTreeObserver observer = svITPDLog.getViewTreeObserver();
+
+                    if (observer != null) {
+                        observer.addOnScrollChangedListener(this);
+                    }
+                }
+
+            }, 3000);
+        }
 
         tvITPDLog = view.findViewById(R.id.tvITPDLog);
         tvITPDLog.setMovementMethod(ScrollingMovementMethod.getInstance());
@@ -164,6 +175,14 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+
+        if (svITPDLog != null) {
+            ViewTreeObserver observer = svITPDLog.getViewTreeObserver();
+
+            if (observer != null) {
+                observer.addOnScrollChangedListener(null);
+            }
+        }
 
         btnITPDStart = null;
         tvITPDStatus = null;
@@ -311,13 +330,14 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
         }
 
         svITPDLog.post(() -> {
-            svITPDLog.computeScroll();
-
-            int delta = 0;
 
             if (svITPDLog == null) {
                 return;
             }
+
+            svITPDLog.computeScroll();
+
+            int delta = 0;
 
             int childIndex = svITPDLog.getChildCount() - 1;
 

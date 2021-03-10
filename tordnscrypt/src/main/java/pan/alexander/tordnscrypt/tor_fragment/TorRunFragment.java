@@ -90,8 +90,15 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
         tvTorLog = view.findViewById(R.id.tvTorLog);
 
         svTorLog = view.findViewById(R.id.svTorLog);
-        svTorLog.setOnTouchListener(this);
-        svTorLog.getViewTreeObserver().addOnScrollChangedListener(this);
+
+        if (svTorLog != null) {
+            svTorLog.setOnTouchListener(this);
+
+            ViewTreeObserver observer = svTorLog.getViewTreeObserver();
+            if (observer != null) {
+                observer.addOnScrollChangedListener(this);
+            }
+        }
 
         tvTorStatus = view.findViewById(R.id.tvTorStatus);
 
@@ -153,9 +160,19 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+
+        if (svTorLog != null) {
+            svTorLog.setOnTouchListener(null);
+
+            ViewTreeObserver observer = svTorLog.getViewTreeObserver();
+            if (observer != null) {
+                observer.addOnScrollChangedListener(null);
+            }
+        }
 
         btnTorStart = null;
         tvTorStatus = null;
@@ -281,13 +298,13 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
         }
 
         svTorLog.post(() -> {
-            svTorLog.computeScroll();
-
-            int delta = 0;
-
             if (svTorLog == null) {
                 return;
             }
+
+            svTorLog.computeScroll();
+
+            int delta = 0;
 
             int childIndex = svTorLog.getChildCount() - 1;
 
