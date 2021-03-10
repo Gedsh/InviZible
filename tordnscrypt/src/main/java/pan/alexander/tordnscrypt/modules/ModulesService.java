@@ -910,8 +910,6 @@ public class ModulesService extends Service {
 
         stopVPNServiceIfRunning();
 
-        CachedExecutor.INSTANCE.stopExecutorService();
-
         if (handler != null) {
             handler.removeCallbacksAndMessages(null);
         }
