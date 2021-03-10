@@ -221,9 +221,23 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+
+        if (svDNSCryptLog != null) {
+            svDNSCryptLog.setOnTouchListener(null);
+            svDNSCryptLog.getViewTreeObserver().addOnScrollChangedListener(null);
+        }
+        if (svTorLog != null) {
+            svTorLog.setOnTouchListener(null);
+            svTorLog.getViewTreeObserver().addOnScrollChangedListener(null);
+        }
+        if (svITPDLog != null) {
+            svITPDLog.setOnTouchListener(null);
+            svITPDLog.getViewTreeObserver().addOnScrollChangedListener(null);
+        }
 
         btnStartMainFragment = null;
         chbHideIpMainFragment = null;
@@ -795,6 +809,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
         }
 
         scrollView.post(() -> {
+
             scrollView.computeScroll();
 
             int delta = 0;
