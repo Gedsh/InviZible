@@ -132,7 +132,7 @@ public class TopFragment extends Fragment {
 
     private Handler handler;
 
-    private static volatile ScheduledExecutorService modulesLogsTimer;
+    private static volatile ScheduledExecutorService timer;
 
     public static float logsTextSize = 0f;
 
@@ -256,7 +256,7 @@ public class TopFragment extends Fragment {
 
         removeOnActivityChangeListener();
 
-        stopModulesLogsTimer();
+        stopTimer();
 
         if (rootChecker != null) {
 
@@ -308,8 +308,6 @@ public class TopFragment extends Fragment {
 
             CachedExecutor.INSTANCE.startExecutorService();
 
-            initModulesLogsTimer();
-
             try {
                 suAvailable = Shell.SU.available();
             } catch (Exception e) {
@@ -340,6 +338,8 @@ public class TopFragment extends Fragment {
 
             Context context = activity.getApplicationContext();
 
+            topFragment.startAppExitDetectService(context);
+
             shortenTooLongSnowflakeLog(context);
 
             if (topFragment.handler != null) {
@@ -359,8 +359,6 @@ public class TopFragment extends Fragment {
                     }
                 }, 3000);
             }
-
-            topFragment.startAppExitDetectService(context);
 
             try {
                 Verifier verifier = new Verifier(activity);
@@ -599,11 +597,11 @@ public class TopFragment extends Fragment {
 
         stopInstallationTimer();
 
-        if (modulesLogsTimer == null || modulesLogsTimer.isShutdown()) {
-            initModulesLogsTimer();
+        if (timer == null || timer.isShutdown()) {
+            initTimer();
         }
 
-        scheduledFuture = modulesLogsTimer.scheduleAtFixedRate(new Runnable() {
+        scheduledFuture = timer.scheduleAtFixedRate(new Runnable() {
             int loop = 0;
 
             @Override
@@ -894,21 +892,21 @@ public class TopFragment extends Fragment {
         }
     }
 
-    private static void initModulesLogsTimer() {
-        if (modulesLogsTimer == null || modulesLogsTimer.isShutdown()) {
-            modulesLogsTimer = Executors.newScheduledThreadPool(0);
+    private static void initTimer() {
+        if (timer == null || timer.isShutdown()) {
+            timer = Executors.newScheduledThreadPool(0);
         }
     }
 
     @Nullable
-    public static ScheduledExecutorService getModulesLogsTimer() {
-        return modulesLogsTimer;
+    public static ScheduledExecutorService getTimer() {
+        return timer;
     }
 
-    private void stopModulesLogsTimer() {
-        if (modulesLogsTimer != null && !modulesLogsTimer.isShutdown()) {
-            modulesLogsTimer.shutdownNow();
-            modulesLogsTimer = null;
+    private void stopTimer() {
+        if (timer != null && !timer.isShutdown()) {
+            timer.shutdownNow();
+            timer = null;
         }
     }
 
