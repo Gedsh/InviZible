@@ -515,3 +515,8 @@
 * Added Spanish translation.
 * Minor fixes and optimizations.
 * A lot of internal changes to start using a clean architecture.
+
+**InviZible Pro beta 1.2.4**
+* Updated Tor.
+* Fixed displaying an error message even if there were no connection problems.
+* Bugs fixes and stability improvements.

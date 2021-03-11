@@ -1,0 +1,4 @@
+**InviZible Pro beta 1.2.4**
+* Updated Tor.
+* Fixed displaying an error message even if there were no connection problems.
+* Bugs fixes and stability improvements.
