@@ -41,7 +41,7 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 30
-        versionCode 123
+        versionCode 124
 
         resConfigs "en", "ru-rRU", "ru-rUA", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es"
 
