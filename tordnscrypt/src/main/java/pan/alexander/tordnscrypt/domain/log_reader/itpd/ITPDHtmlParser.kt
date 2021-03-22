@@ -24,7 +24,7 @@ import pan.alexander.tordnscrypt.domain.ModulesLogRepository
 import java.util.*
 import java.util.regex.Pattern
 
-private val patternBootstrappedPercents = Pattern.compile("Tunnel creation success rate: +(\\d+)%")
+private val patternBootstrappedPercents = Pattern.compile("Tunnel creation success rate:.+(\\d+)%")
 
 class ITPDHtmlParser(val modulesLogRepository: ModulesLogRepository) {
     private var startedSuccessfully = false
@@ -44,21 +44,33 @@ class ITPDHtmlParser(val modulesLogRepository: ModulesLogRepository) {
         }
 
         if (!startedSuccessfully) {
+
+            var errorFound = false
+
             for (line in lines) {
                 val matcher = patternBootstrappedPercents.matcher(line)
 
                 if (matcher.find()) {
                     percentsSaved = matcher.group(1)?.toInt() ?: percentsSaved
+
+                    when (percentsSaved) {
+                        0 -> {
+                            startedSuccessfully = false
+                            startedWithError = errorFound
+                        }
+                        else -> {
+                            startedSuccessfully = true
+                            startedWithError = false
+                        }
+                    }
+
+                    break
                 } else if (line.contains("Network status")) {
                     if (line.toLowerCase(Locale.ROOT).contains("error")) {
                         startedSuccessfully = false
                         startedWithError = true
-                    } else {
-                        startedSuccessfully = true
-                        startedWithError = false
+                        errorFound = true
                     }
-
-                    break
                 }
             }
         }
@@ -66,7 +78,7 @@ class ITPDHtmlParser(val modulesLogRepository: ModulesLogRepository) {
         return LogDataModel(
             startedSuccessfully,
             startedWithError,
-            -1,
+            percentsSaved,
             formatLines(linesSaved),
             linesSaved.hashCode()
         )

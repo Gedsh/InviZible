@@ -104,26 +104,39 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
         if (isITPDInstalled()) {
             setITPDInstalled(true);
 
-            if (modulesStatus.getItpdState() == STOPPING){
-                setITPDStopping();
+            ModuleState currentModuleState = modulesStatus.getItpdState();
 
-                displayLog(true);
-            } else if (isSavedITPDStatusRunning() || modulesStatus.getItpdState() == RUNNING) {
-                setITPDRunning();
+            if (currentModuleState == RUNNING || ModulesAux.isITPDSavedStateRunning(context)) {
 
-                if (modulesStatus.getItpdState() != RESTARTING) {
-                    modulesStatus.setItpdState(RUNNING);
-                }
-
-                if (modulesStatus.isItpdReady()) {
+                if (isITPDReady()) {
+                    setITPDRunning();
+                    setITPDProgressBarIndeterminate(false);
                     setFixedReadyState(true);
+                } else {
+                    setITPDStarting();
+                    setITPDProgressBarIndeterminate(true);
                 }
 
-                displayLog(false);
+            } else if (currentModuleState == STARTING || currentModuleState == RESTARTING) {
+                setITPDStarting();
+                setITPDProgressBarIndeterminate(true);
+            } else if (currentModuleState == STOPPING) {
+                setITPDStopping();
+                setITPDProgressBarIndeterminate(true);
+            } else if (currentModuleState == FAULT) {
+                setITPDSomethingWrong();
+                setITPDProgressBarIndeterminate(false);
             } else {
+                setITPDProgressBarIndeterminate(false);
                 setITPDStopped();
                 modulesStatus.setItpdState(STOPPED);
             }
+
+            if (currentModuleState != STOPPED
+                    && currentModuleState != FAULT) {
+                displayLog();
+            }
+
         } else {
             setITPDInstalled(false);
         }
@@ -207,7 +220,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
         }
 
         if (installed) {
-            view.setITPDStartButtonEnabled(true);
+            setITPDStartButtonEnabled(true);
         } else {
             view.setITPDStatus(R.string.tvITPDNotInstalled, R.color.textModuleStatusColorAlert);
         }
@@ -227,16 +240,6 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
     }
 
     @Override
-    public boolean isSavedITPDStatusRunning() {
-        return new PrefManager(context).getBoolPref("I2PD Running");
-    }
-
-    @Override
-    public void saveITPDStatusRunning(boolean running) {
-        new PrefManager(context).setBoolPref("I2PD Running", running);
-    }
-
-    @Override
     public void refreshITPDState() {
 
         if (!isActive()) {
@@ -249,36 +252,38 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
             return;
         }
 
+        if (currentModuleState == RUNNING) {
 
-        if (currentModuleState == STARTING) {
+            if (isITPDReady()) {
+                setITPDRunning();
+                setITPDProgressBarIndeterminate(false);
+            } else {
+                setITPDStarting();
+                setITPDProgressBarIndeterminate(true);
+            }
 
-            displayLog(true);
+            setITPDStartButtonEnabled(true);
 
-        } else if (currentModuleState == RUNNING) {
+            ModulesAux.saveITPDStateRunning(context, true);
 
-            setITPDRunning();
-
-            view.setITPDStartButtonEnabled(true);
-
-            saveITPDStatusRunning(true);
-
-            view.setITPDProgressBarIndeterminate(false);
-
+            view.setStartButtonText(R.string.btnITPDStop);
+        } else if (currentModuleState == RESTARTING) {
+            setITPDStarting();
+            setITPDProgressBarIndeterminate(true);
         } else if (currentModuleState == STOPPED) {
-
             stopDisplayLog();
 
-            if (isSavedITPDStatusRunning()) {
+            if (ModulesAux.isITPDSavedStateRunning(context)) {
                 setITPDStoppedBySystem();
             } else {
                 setITPDStopped();
             }
 
+            setITPDProgressBarIndeterminate(false);
 
+            ModulesAux.saveITPDStateRunning(context, false);
 
-            saveITPDStatusRunning(false);
-
-            view.setITPDStartButtonEnabled(true);
+            setITPDStartButtonEnabled(true);
         }
 
         fixedModuleState = currentModuleState;
@@ -307,7 +312,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
     }
 
     @Override
-    public synchronized void displayLog(boolean modulesStateChangingExpected) {
+    public synchronized void displayLog() {
 
         if (itpdInteractor == null) {
             itpdInteractor = LogReaderInteractors.Companion.getInteractor();
@@ -327,6 +332,10 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
         }
     }
 
+    private boolean isITPDReady() {
+        return modulesStatus.isItpdReady();
+    }
+
     public void startButtonOnClick() {
         if (!isActive()) {
             return;
@@ -339,13 +348,13 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
             return;
         }
 
-        view.setITPDStartButtonEnabled(false);
+        setITPDStartButtonEnabled(false);
 
         if (modulesStatus.getItpdState() != RUNNING) {
 
             if (modulesStatus.isContextUIDUpdateRequested()) {
                 Toast.makeText(context, R.string.please_wait, Toast.LENGTH_SHORT).show();
-                view.setITPDStartButtonEnabled(true);
+                setITPDStartButtonEnabled(true);
                 return;
             }
 
@@ -355,7 +364,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
 
             runITPD();
 
-            displayLog(true);
+            displayLog();
         } else if (modulesStatus.getItpdState() == RUNNING) {
 
             setITPDStopping();
@@ -365,7 +374,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
             FileShortener.shortenTooTooLongFile(appDataDir + "/logs/i2pd.log");
         }
 
-        view.setITPDProgressBarIndeterminate(true);
+        setITPDProgressBarIndeterminate(true);
     }
 
     private void runITPD() {
@@ -468,12 +477,6 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
                 view.scrollITPDLogViewToBottom();
                 previousLastLinesLength = lastLines.length();
             }
-
-            if (itpdLogData.getStartedSuccessfully() && !fixedITPDReady) {
-                setFixedReadyState(true);
-            }
-
-            refreshITPDState();
         });
     }
 
@@ -505,6 +508,18 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
             if (htmlDataLines != null) {
                 view.setITPDLogViewText(htmlDataLines);
             }
+
+            if (fixedITPDReady && !isITPDReady()) {
+                setFixedReadyState(false);
+            }
+
+            if (itpdHtmlData.getStartedSuccessfully() && !fixedITPDReady) {
+                setFixedReadyState(true);
+                setITPDRunning();
+                setITPDProgressBarIndeterminate(false);
+            }
+
+            refreshITPDState();
         });
     }
 

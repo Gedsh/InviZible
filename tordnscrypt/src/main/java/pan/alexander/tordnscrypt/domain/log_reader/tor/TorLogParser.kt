@@ -24,6 +24,7 @@ import pan.alexander.tordnscrypt.domain.log_reader.LogParser
 import pan.alexander.tordnscrypt.domain.ModulesLogRepository
 import java.util.regex.Pattern
 
+private const val COUNT_DOWN_TIMER = 5
 private val patternBootstrappedPercents = Pattern.compile("Bootstrapped +(\\d+)%")
 
 class TorLogParser(private val modulesLogRepository: ModulesLogRepository) : LogParser() {
@@ -31,6 +32,7 @@ class TorLogParser(private val modulesLogRepository: ModulesLogRepository) : Log
     private var startedWithError = false
     private var percentsSaved = -1
     private var linesSaved = listOf<String>()
+    private var errorCountDownCounter = COUNT_DOWN_TIMER
 
     override fun parseLog(): LogDataModel {
 
@@ -53,12 +55,18 @@ class TorLogParser(private val modulesLogRepository: ModulesLogRepository) : Log
                     percentsSaved = matcher.group(1)?.toInt() ?: percentsSaved
 
                     if (percentsSaved == 100) {
+                        percentsSaved = -1
                         startedSuccessfully = true
                         startedWithError = false
+                        errorCountDownCounter = COUNT_DOWN_TIMER
                     } else if (!errorFound) {
                         startedWithError = false
                     }
 
+                    break
+                } else if (line.contains("Catching signal TERM")) {
+                    startedSuccessfully = false
+                    startedWithError = false
                     break
                 } else if (
                     line.contains("No running bridges")
@@ -66,9 +74,14 @@ class TorLogParser(private val modulesLogRepository: ModulesLogRepository) : Log
                     || line.contains("Problem bootstrapping")
                     || line.contains("Stuck at")
                 ) {
-                    startedSuccessfully = false
-                    startedWithError = true
-                    errorFound = true
+                    if (errorCountDownCounter <= 0) {
+                        startedSuccessfully = false
+                        startedWithError = true
+                        errorCountDownCounter = COUNT_DOWN_TIMER
+                        errorFound = true
+                    } else {
+                        errorCountDownCounter--
+                    }
                 }
 
             }

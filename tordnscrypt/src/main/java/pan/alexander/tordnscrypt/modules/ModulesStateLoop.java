@@ -41,7 +41,7 @@ import pan.alexander.tordnscrypt.domain.LogReaderInteractors;
 import pan.alexander.tordnscrypt.domain.TorInteractorInterface;
 import pan.alexander.tordnscrypt.domain.entities.LogDataModel;
 import pan.alexander.tordnscrypt.domain.log_reader.dnscrypt.OnDNSCryptLogUpdatedListener;
-import pan.alexander.tordnscrypt.domain.log_reader.itpd.OnITPDLogUpdatedListener;
+import pan.alexander.tordnscrypt.domain.log_reader.itpd.OnITPDHtmlUpdatedListener;
 import pan.alexander.tordnscrypt.domain.log_reader.tor.OnTorLogUpdatedListener;
 import pan.alexander.tordnscrypt.iptables.IptablesRules;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
@@ -52,6 +52,7 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
@@ -59,7 +60,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class ModulesStateLoop implements Runnable,
-        OnDNSCryptLogUpdatedListener, OnTorLogUpdatedListener, OnITPDLogUpdatedListener {
+        OnDNSCryptLogUpdatedListener, OnTorLogUpdatedListener, OnITPDHtmlUpdatedListener {
     public static final String DNSCRYPT_READY_PREF = "DNSCrypt Ready";
     public static final String TOR_READY_PREF = "Tor Ready";
     public static final String ITPD_READY_PREF = "ITPD Ready";
@@ -229,6 +230,28 @@ public class ModulesStateLoop implements Runnable,
             Log.i(LOG_TAG, "DNSCrypt is " + dnsCryptState +
                     " Tor is " + torState + " I2P is " + itpdState);
 
+            if (dnsCryptState == RESTARTING) {
+                setDNSCryptReady(false);
+
+                if (dnsCryptInteractor != null) {
+                    dnsCryptInteractor.addOnDNSCryptLogUpdatedListener(this);
+                }
+            }
+            if (torState == RESTARTING) {
+                setTorReady(false);
+
+                if (torInteractor != null) {
+                    torInteractor.addOnTorLogUpdatedListener(this);
+                }
+            }
+            if (itpdState == RESTARTING) {
+                setITPDReady(false);
+
+                if (itpdInteractor != null) {
+                    itpdInteractor.addOnITPDHtmlUpdatedListener(this);
+                }
+            }
+
             if (dnsCryptState != STOPPED && dnsCryptState != RUNNING) {
                 return;
             } else if (torState != STOPPED && torState != RUNNING) {
@@ -278,11 +301,11 @@ public class ModulesStateLoop implements Runnable,
 
                 if (itpdState == RUNNING) {
                     if (itpdInteractor != null) {
-                        itpdInteractor.addOnITPDLogUpdatedListener(this);
+                        itpdInteractor.addOnITPDHtmlUpdatedListener(this);
                     }
                 } else {
                     if (itpdInteractor != null) {
-                        itpdInteractor.removeOnITPDLogUpdatedListener(this);
+                        itpdInteractor.removeOnITPDHtmlUpdatedListener(this);
                     }
                     setITPDReady(false);
                 }
@@ -521,11 +544,11 @@ public class ModulesStateLoop implements Runnable,
     }
 
     @Override
-    public void onITPDLogUpdated(@NonNull LogDataModel itpdLogData) {
+    public void onITPDHtmlUpdated(@NonNull LogDataModel itpdLogData) {
         if (itpdLogData.getStartedSuccessfully()) {
             setITPDReady(true);
             if (itpdInteractor != null) {
-                itpdInteractor.removeOnITPDLogUpdatedListener(this);
+                itpdInteractor.removeOnITPDHtmlUpdatedListener(this);
             }
         }
     }

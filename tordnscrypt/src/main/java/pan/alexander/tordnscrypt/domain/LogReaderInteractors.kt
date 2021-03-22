@@ -202,6 +202,8 @@ class LogReaderInteractors private constructor() :
                                 "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
                     )
                 }
+            } else {
+                dnsCryptInteractor.resetParserState()
             }
             if (torInteractor.hasAnyListener()) {
                 try {
@@ -212,6 +214,8 @@ class LogReaderInteractors private constructor() :
                                 "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
                     )
                 }
+            } else {
+                torInteractor.resetParserState()
             }
             if (itpdInteractor.hasAnyListener()) {
                 try {
@@ -222,6 +226,8 @@ class LogReaderInteractors private constructor() :
                                 "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
                     )
                 }
+            } else {
+                itpdInteractor.resetParserState()
             }
             if (itpdHtmlInteractor.hasAnyListener()) {
                 try {
@@ -233,6 +239,8 @@ class LogReaderInteractors private constructor() :
                     )
                 }
 
+            } else {
+                itpdHtmlInteractor.resetParserState()
             }
             if (connectionRecordsInteractor.hasAnyListener()) {
                 try {

@@ -34,7 +34,10 @@ class DNSCryptInteractor(private val modulesLogRepository: ModulesLogRepository)
 
     fun removeListener(listener: OnDNSCryptLogUpdatedListener?) {
         listeners.remove(listener)
-        resetParserState()
+
+        if (listeners.isEmpty()) {
+            resetParserState()
+        }
     }
 
     fun hasAnyListener(): Boolean {
@@ -46,6 +49,8 @@ class DNSCryptInteractor(private val modulesLogRepository: ModulesLogRepository)
         if (listeners.isEmpty()) {
             return
         }
+
+        resetParserState()
 
         parser = parser ?: DNSCryptLogParser(modulesLogRepository)
 
@@ -62,8 +67,8 @@ class DNSCryptInteractor(private val modulesLogRepository: ModulesLogRepository)
         }
     }
 
-    private fun resetParserState() {
-        if (listeners.isEmpty() && modulesStatus.dnsCryptState != ModuleState.RUNNING) {
+    fun resetParserState() {
+        if (modulesStatus.dnsCryptState != ModuleState.RUNNING) {
             parser = null
         }
     }

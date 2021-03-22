@@ -34,7 +34,10 @@ class ITPDInteractor(private val modulesLogRepository: ModulesLogRepository) {
 
     fun removeListener(listener: OnITPDLogUpdatedListener?) {
         listeners.remove(listener)
-        resetParserState()
+
+        if (listeners.isEmpty()) {
+            resetParserState()
+        }
     }
 
     fun hasAnyListener(): Boolean {
@@ -46,6 +49,8 @@ class ITPDInteractor(private val modulesLogRepository: ModulesLogRepository) {
         if (listeners.isEmpty()) {
             return
         }
+
+        resetParserState()
 
         parser = parser ?: ITPDLogParser(modulesLogRepository)
 
@@ -62,8 +67,8 @@ class ITPDInteractor(private val modulesLogRepository: ModulesLogRepository) {
         }
     }
 
-    private fun resetParserState() {
-        if (listeners.isEmpty() && modulesStatus.dnsCryptState != ModuleState.RUNNING) {
+    fun resetParserState() {
+        if (modulesStatus.itpdState != ModuleState.RUNNING) {
             parser = null
         }
     }

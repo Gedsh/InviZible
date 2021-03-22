@@ -34,7 +34,10 @@ class TorInteractor(private val modulesLogRepository: ModulesLogRepository) {
 
     fun removeListener (listener: OnTorLogUpdatedListener?) {
         listeners.remove(listener)
-        resetParserState()
+
+        if (listeners.isEmpty()) {
+            resetParserState()
+        }
     }
 
     fun hasAnyListener(): Boolean {
@@ -46,6 +49,8 @@ class TorInteractor(private val modulesLogRepository: ModulesLogRepository) {
         if (listeners.isEmpty()) {
             return
         }
+
+        resetParserState()
 
         parser = parser ?: TorLogParser(modulesLogRepository)
 
@@ -62,8 +67,8 @@ class TorInteractor(private val modulesLogRepository: ModulesLogRepository) {
         }
     }
 
-    private fun resetParserState() {
-        if (listeners.isEmpty() && modulesStatus.torState != ModuleState.RUNNING) {
+    fun resetParserState() {
+        if (modulesStatus.torState != ModuleState.RUNNING) {
             parser = null
         }
     }

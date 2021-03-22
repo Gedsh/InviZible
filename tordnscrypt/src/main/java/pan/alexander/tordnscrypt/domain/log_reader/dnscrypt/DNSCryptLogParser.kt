@@ -23,11 +23,14 @@ import pan.alexander.tordnscrypt.domain.entities.LogDataModel
 import pan.alexander.tordnscrypt.domain.log_reader.LogParser
 import pan.alexander.tordnscrypt.domain.ModulesLogRepository
 
+private const val COUNT_DOWN_TIMER = 5
+
 class DNSCryptLogParser(private val modulesLogRepository: ModulesLogRepository) : LogParser() {
 
     private var startedSuccessfully = false
     private var startedWithError = false
     private var linesSaved = listOf<String>()
+    private var errorCountDownCounter = COUNT_DOWN_TIMER
 
     override fun parseLog(): LogDataModel {
         val lines = modulesLogRepository.getDNSCryptLog()
@@ -42,18 +45,26 @@ class DNSCryptLogParser(private val modulesLogRepository: ModulesLogRepository) 
                 if (line.contains("lowest initial latency")) {
                     startedSuccessfully = true
                     startedWithError = false
+                    errorCountDownCounter = COUNT_DOWN_TIMER
                     break
-                } else if (line.contains(" OK ")) {
+                } else if (line.contains(" OK ")
+                    || line.contains("Stopped.")) {
                     startedSuccessfully = false
                     startedWithError = false
                     break
                 } else if (line.contains("connect: connection refused")
-                    || line.contains("ERROR")
+                    || (line.contains("ERROR") && !line.contains("Unable to resolve"))
                     || line.contains("[CRITICAL]")
                     || line.contains("[FATAL]")
                 ) {
-                    startedSuccessfully = false
-                    startedWithError = true
+                    if (errorCountDownCounter <= 0) {
+                        startedSuccessfully = false
+                        startedWithError = true
+                        errorCountDownCounter = COUNT_DOWN_TIMER
+                    } else {
+                        errorCountDownCounter--
+                    }
+
                     break
                 }
             }

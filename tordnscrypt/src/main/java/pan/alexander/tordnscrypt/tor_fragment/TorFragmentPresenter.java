@@ -117,28 +117,38 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
         if (isTorInstalled()) {
             setTorInstalled(true);
 
-            if (modulesStatus.getTorState() == STOPPING) {
-                setTorStopping();
+            ModuleState currentModuleState = modulesStatus.getTorState();
 
-                displayLog(true);
-            } else if (isSavedTorStatusRunning() || modulesStatus.getTorState() == RUNNING) {
-                setTorRunning();
-
-                if (modulesStatus.getTorState() != RESTARTING) {
-                    modulesStatus.setTorState(RUNNING);
-                }
+            if (currentModuleState == RUNNING || ModulesAux.isTorSavedStateRunning(context)) {
 
                 if (isTorReady()) {
-                    view.setTorProgressBarIndeterminate(false);
-                    view.setTorProgressBarProgress(0);
+                    setTorRunning();
+                    setTorProgressBarIndeterminate(false);
                     setFixedReadyState(true);
                     setFixedErrorState(false);
+                } else {
+                    setTorStarting();
+                    setTorProgressBarIndeterminate(true);
                 }
 
-                displayLog(false);
+            } else if (currentModuleState == STARTING || currentModuleState == RESTARTING) {
+                setTorStarting();
+                setTorProgressBarIndeterminate(true);
+            } else if (currentModuleState == STOPPING) {
+                setTorStopping();
+                setTorProgressBarIndeterminate(true);
+            } else if (currentModuleState == FAULT) {
+                setTorSomethingWrong();
+                setTorProgressBarIndeterminate(false);
             } else {
+                setTorProgressBarIndeterminate(false);
                 setTorStopped();
                 modulesStatus.setTorState(STOPPED);
+            }
+
+            if (currentModuleState != STOPPED
+                    && currentModuleState != FAULT) {
+                displayLog();
             }
         } else {
             setTorInstalled(false);
@@ -164,7 +174,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
         }
 
         if (installed) {
-            view.setTorStartButtonEnabled(true);
+            setTorStartButtonEnabled(true);
         } else {
             view.setTorStatus(R.string.tvTorNotInstalled, R.color.textModuleStatusColorAlert);
         }
@@ -223,16 +233,6 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
     }
 
     @Override
-    public boolean isSavedTorStatusRunning() {
-        return new PrefManager(context).getBoolPref("Tor Running");
-    }
-
-    @Override
-    public void saveTorStatusRunning(boolean running) {
-        new PrefManager(context).setBoolPref("Tor Running", running);
-    }
-
-    @Override
     public void refreshTorState() {
 
         if (!isActive()) {
@@ -245,35 +245,40 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
             return;
         }
 
-        if (currentModuleState == STARTING) {
+        if (currentModuleState == RUNNING) {
 
-            displayLog(true);
-
-        } else if (currentModuleState == RUNNING) {
+            if (isTorReady()) {
+                setTorRunning();
+                setTorProgressBarIndeterminate(false);
+            } else {
+                setTorStarting();
+                setTorProgressBarIndeterminate(true);
+            }
 
             ServiceVPNHelper.prepareVPNServiceIfRequired(view.getFragmentActivity(), modulesStatus);
 
-            view.setTorStartButtonEnabled(true);
+            setTorStartButtonEnabled(true);
 
-            saveTorStatusRunning(true);
+            ModulesAux.saveTorStateRunning(context, true);
 
             view.setStartButtonText(R.string.btnTorStop);
-
+        } else if (currentModuleState == RESTARTING) {
+            setTorStarting();
+            setTorProgressBarIndeterminate(true);
         } else if (currentModuleState == STOPPED) {
-
             stopDisplayLog();
 
-            if (isSavedTorStatusRunning()) {
+            if (ModulesAux.isTorSavedStateRunning(context)) {
                 setTorStoppedBySystem();
             } else {
                 setTorStopped();
             }
 
-            view.setTorProgressBarIndeterminate(false);
+            setTorProgressBarIndeterminate(false);
 
-            saveTorStatusRunning(false);
+            ModulesAux.saveTorStateRunning(context, false);
 
-            view.setTorStartButtonEnabled(true);
+            setTorStartButtonEnabled(true);
         }
 
         fixedModuleState = currentModuleState;
@@ -301,7 +306,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
     }
 
     @Override
-    public synchronized void displayLog(boolean modulesStateChangingExpected) {
+    public synchronized void displayLog() {
 
         if (torInteractor == null) {
             torInteractor = LogReaderInteractors.Companion.getInteractor();
@@ -374,6 +379,10 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
             savedLogData = torLogData;
 
+            if (fixedTorReady && !isTorReady()) {
+                setFixedReadyState(false);
+            }
+
             torStartingSuccessfully(torLogData);
 
             if (torLogData.getStartedWithError()) {
@@ -403,21 +412,17 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
                 return;
             }
 
-            view.setTorProgressBarIndeterminate(false);
-
-            view.setTorProgressBarProgress(percents);
+            setTorProgressBarPercents(percents);
 
             setTorStarting(percents);
 
         } else if (modulesStatus.getTorState() == RUNNING) {
 
-            view.setTorProgressBarIndeterminate(false);
+            setTorProgressBarIndeterminate(false);
 
             setTorRunning();
 
-            displayLog(false);
-
-            view.setTorProgressBarProgress(0);
+            displayLog();
 
             showNewTorIdentityIcon(true);
 
@@ -559,7 +564,18 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
     public void setTorProgressBarIndeterminate(boolean indeterminate) {
         if (isActive()) {
             view.setTorProgressBarIndeterminate(indeterminate);
+
+            if (indeterminate) {
+                view.setTorProgressBarProgress(100);
+            } else {
+                view.setTorProgressBarProgress(0);
+            }
         }
+    }
+
+    private void setTorProgressBarPercents(int percents) {
+        view.setTorProgressBarIndeterminate(false);
+        view.setTorProgressBarProgress(percents);
     }
 
     private boolean isTorReady() {
@@ -580,7 +596,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
         }
 
 
-        view.setTorStartButtonEnabled(false);
+        setTorStartButtonEnabled(false);
 
         if (!isActive()) {
             return;
@@ -624,7 +640,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
             if (modulesStatus.isContextUIDUpdateRequested()) {
                 Toast.makeText(context, R.string.please_wait, Toast.LENGTH_SHORT).show();
-                view.setTorStartButtonEnabled(true);
+                setTorStartButtonEnabled(true);
                 return;
             }
 
@@ -632,7 +648,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
             runTor();
 
-            displayLog(true);
+            displayLog();
         } else if (modulesStatus.getTorState() == RUNNING) {
 
             stopRefreshTorUnlockIPs();
@@ -641,7 +657,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
             stopTor();
         }
 
-        view.setTorProgressBarIndeterminate(true);
+        setTorProgressBarIndeterminate(true);
 
     }
 
