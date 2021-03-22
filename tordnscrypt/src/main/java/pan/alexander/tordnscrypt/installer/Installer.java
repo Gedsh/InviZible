@@ -206,6 +206,9 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         Command command = new DNSCryptExtractCommand(activity, appDataDir);
         command.execute();
 
+        command = new BusybExtractCommand(activity, appDataDir);
+        command.execute();
+
         if (mainActivity != null) {
             mainActivity.runOnUiThread(installerUIChanger.dnsCryptProgressBarIndeterminate(false));
             mainActivity.runOnUiThread(installerUIChanger.setDnsCryptInstalledStatus());
