@@ -48,7 +48,7 @@ class ConnectionRecordsGetter {
 
         lockConnectionRawRecordsListForRead(true)
 
-        val rawRecords = serviceVPN?.dnsQueryRawRecords ?: emptyList<ConnectionRecord>()
+        val rawRecords = ArrayList<ConnectionRecord?>(serviceVPN?.dnsQueryRawRecords)
 
         lockConnectionRawRecordsListForRead(false)
 

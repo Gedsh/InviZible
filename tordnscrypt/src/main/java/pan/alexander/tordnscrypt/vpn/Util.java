@@ -378,7 +378,7 @@ public class Util {
         return (cm != null && ConnectivityManagerCompat.isActiveNetworkMetered(cm));
     }
 
-    public static boolean isIpInSubnet(final String ip, final String network) {
+    public synchronized static boolean isIpInSubnet(final String ip, final String network) {
         boolean result = false;
 
         try {
