@@ -165,38 +165,6 @@ public class TopFragment extends Fragment {
         Context context = getActivity();
 
         if (context != null) {
-            logsTextSize = new PrefManager(context).getFloatPref("LogsTextSize");
-        }
-
-        Looper looper = Looper.getMainLooper();
-        if (looper != null) {
-            handler = new Handler(looper);
-        }
-
-        rootChecker = new RootChecker(this);
-        rootChecker.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        registerReceiver();
-    }
-
-    @Override
-    public void onResume() {
-
-        super.onResume();
-
-        Context context = getActivity();
-
-        if (context != null) {
-
-            if (onActivityChangeListener != null && context instanceof MainActivity) {
-                onActivityChangeListener.onActivityChange((MainActivity) context);
-            }
-
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
             rootIsAvailableSaved = rootIsAvailable = new PrefManager(context).getBoolPref("rootIsAvailable");
             runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
@@ -215,6 +183,42 @@ public class TopFragment extends Fragment {
 
             if (PathVars.isModulesInstalled(context) && appVersion.endsWith("p")) {
                 checkAgreement(context);
+            }
+
+            logsTextSize = new PrefManager(context).getFloatPref("LogsTextSize");
+        }
+
+        Looper looper = Looper.getMainLooper();
+        if (looper != null) {
+            handler = new Handler(looper);
+        }
+
+        rootChecker = new RootChecker(this);
+        rootChecker.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        Context context = getActivity();
+        if (context != null) {
+            ModulesAux.speedupModulesStateLoopTimer(context);
+            registerReceiver(context);
+        }
+    }
+
+    @Override
+    public void onResume() {
+
+        super.onResume();
+
+        Context context = getActivity();
+
+        if (context != null) {
+
+            if (onActivityChangeListener != null && context instanceof MainActivity) {
+                onActivityChangeListener.onActivityChange((MainActivity) context);
             }
         }
     }
@@ -354,8 +358,6 @@ public class TopFragment extends Fragment {
                             && !isModulesStarterServiceRunning(context)) {
                         startModulesStarterServiceIfStoppedBySystem(context);
                         Log.e(LOG_TAG, "ModulesService stopped by system!");
-                    } else {
-                        ModulesAux.speedupModulesStateLoopTimer(context);
                     }
                 }, 3000);
             }
@@ -797,9 +799,9 @@ public class TopFragment extends Fragment {
 
     private static boolean haveModulesSavedStateRunning(Context context) {
 
-        boolean dnsCryptRunning = new PrefManager(context).getBoolPref("DNSCrypt Running");
-        boolean torRunning = new PrefManager(context).getBoolPref("Tor Running");
-        boolean itpdRunning = new PrefManager(context).getBoolPref("I2PD Running");
+        boolean dnsCryptRunning = ModulesAux.isDnsCryptSavedStateRunning(context);
+        boolean torRunning = ModulesAux.isTorSavedStateRunning(context);
+        boolean itpdRunning = ModulesAux.isITPDSavedStateRunning(context);
 
         return dnsCryptRunning || torRunning || itpdRunning;
     }
@@ -851,9 +853,7 @@ public class TopFragment extends Fragment {
         return intent.getIntExtra("Mark", 0) == RootExecService.TopFragmentMark;
     }
 
-    private void registerReceiver() {
-
-        Context context = getActivity();
+    private void registerReceiver(Context context) {
 
         if (context == null || br != null) {
             return;

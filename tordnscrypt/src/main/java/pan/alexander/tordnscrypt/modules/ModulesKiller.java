@@ -92,7 +92,7 @@ public class ModulesKiller {
     }
 
     private static void sendStopIntent(Context context, String action) {
-        ModulesServiceInteractor.INSTANCE.sendIntent(context, action);
+        ModulesActionSender.INSTANCE.sendIntent(context, action);
     }
 
     private void sendResultIntent(int moduleMark, String moduleKeyWord, String binaryPath) {
@@ -171,7 +171,7 @@ public class ModulesKiller {
                 if (moduleStartedWithRoot) {
                     if (!result) {
                         if (modulesStatus.getDnsCryptState() != RESTARTING) {
-                            new PrefManager(service).setBoolPref("DNSCrypt Running", true);
+                            ModulesAux.saveDNSCryptStateRunning(service, true);
                             sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, dnscryptPath);
                         }
 
@@ -181,7 +181,7 @@ public class ModulesKiller {
 
                     } else {
                         if (modulesStatus.getDnsCryptState() != RESTARTING) {
-                            new PrefManager(service).setBoolPref("DNSCrypt Running", false);
+                            ModulesAux.saveDNSCryptStateRunning(service, false);
                             modulesStatus.setDnsCryptState(STOPPED);
                             sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
                         }
@@ -190,7 +190,7 @@ public class ModulesKiller {
                     if (dnsCryptThread != null && dnsCryptThread.isAlive()) {
 
                         if (modulesStatus.getDnsCryptState() != RESTARTING) {
-                            new PrefManager(service).setBoolPref("DNSCrypt Running", true);
+                            ModulesAux.saveDNSCryptStateRunning(service, true);
                             sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, dnscryptPath);
                         }
 
@@ -200,7 +200,7 @@ public class ModulesKiller {
                     } else {
 
                         if (modulesStatus.getDnsCryptState() != RESTARTING) {
-                            new PrefManager(service).setBoolPref("DNSCrypt Running", false);
+                            ModulesAux.saveDNSCryptStateRunning(service, false);
                             modulesStatus.setDnsCryptState(STOPPED);
                             sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
                         }
@@ -254,7 +254,7 @@ public class ModulesKiller {
                     if (!result) {
                         if (modulesStatus.getTorState() != RESTARTING) {
                             sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, torPath);
-                            new PrefManager(service).setBoolPref("Tor Running", true);
+                            ModulesAux.saveTorStateRunning(service, true);
                         }
 
                         modulesStatus.setTorState(RUNNING);
@@ -263,7 +263,7 @@ public class ModulesKiller {
 
                     } else {
                         if (modulesStatus.getTorState() != RESTARTING) {
-                            new PrefManager(service).setBoolPref("Tor Running", false);
+                            ModulesAux.saveTorStateRunning(service, false);
                             modulesStatus.setTorState(STOPPED);
                             sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
                         }
@@ -272,7 +272,7 @@ public class ModulesKiller {
                     if (torThread != null && torThread.isAlive()) {
 
                         if (modulesStatus.getTorState() != RESTARTING) {
-                            new PrefManager(service).setBoolPref("Tor Running", true);
+                            ModulesAux.saveTorStateRunning(service, true);
                             sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, torPath);
                         }
 
@@ -282,7 +282,7 @@ public class ModulesKiller {
                     } else {
 
                         if (modulesStatus.getTorState() != RESTARTING) {
-                            new PrefManager(service).setBoolPref("Tor Running", false);
+                            ModulesAux.saveTorStateRunning(service, false);
                             modulesStatus.setTorState(STOPPED);
                             sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
                         }
@@ -333,7 +333,7 @@ public class ModulesKiller {
                 if (moduleStartedWithRoot) {
                     if (!result) {
                         if (modulesStatus.getItpdState() != RESTARTING) {
-                            new PrefManager(service).setBoolPref("I2PD Running", true);
+                            ModulesAux.saveITPDStateRunning(service, true);
                             sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, itpdPath);
                         }
 
@@ -343,7 +343,7 @@ public class ModulesKiller {
 
                     } else {
                         if (modulesStatus.getItpdState() != RESTARTING) {
-                            new PrefManager(service).setBoolPref("I2PD Running", false);
+                            ModulesAux.saveITPDStateRunning(service, false);
                             modulesStatus.setItpdState(STOPPED);
                             sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
                         }
@@ -354,7 +354,7 @@ public class ModulesKiller {
                 if (itpdThread != null && itpdThread.isAlive()) {
 
                     if (modulesStatus.getItpdState() != RESTARTING) {
-                        new PrefManager(service).setBoolPref("I2PD Running", true);
+                        ModulesAux.saveITPDStateRunning(service, true);
                         sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, itpdPath);
                     }
 
@@ -364,7 +364,7 @@ public class ModulesKiller {
                 } else {
 
                     if (modulesStatus.getItpdState() != RESTARTING) {
-                        new PrefManager(service).setBoolPref("I2PD Running", false);
+                        ModulesAux.saveITPDStateRunning(service, false);
                         modulesStatus.setItpdState(STOPPED);
                         sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
                     }

@@ -398,9 +398,9 @@ public class Installer implements TopFragment.OnActivityChangeListener {
     protected void stopAllRunningModulesWithRootCommand() {
         Log.i(LOG_TAG, "Installer: stopAllRunningModulesWithRootCommand");
 
-        new PrefManager(activity).setBoolPref("DNSCrypt Running", false);
-        new PrefManager(activity).setBoolPref("Tor Running", false);
-        new PrefManager(activity).setBoolPref("I2PD Running", false);
+        ModulesAux.saveDNSCryptStateRunning(activity, false);
+        ModulesAux.saveTorStateRunning(activity, false);
+        ModulesAux.saveITPDStateRunning(activity, false);
 
         String busyboxNative = "";
         if (new PrefManager(activity).getBoolPref("bbOK") && pathVars.getBusyboxPath().equals("busybox ")) {
@@ -445,9 +445,9 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
             while (counter > 0) {
                 if (activity != null
-                        && !isDnsCryptSavedStateRunning()
-                        && !isTorSavedStateRunning()
-                        && !isITPDSavedStateRunning()) {
+                        && !ModulesAux.isDnsCryptSavedStateRunning(activity)
+                        && !ModulesAux.isTorSavedStateRunning(activity)
+                        && !ModulesAux.isITPDSavedStateRunning(activity)) {
                     sendModulesStopResult("checkModulesRunning");
                     break;
                 } else {
@@ -532,17 +532,5 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         this.activity = mainActivity;
         this.mainActivity = mainActivity;
         installerUIChanger.setMainActivity(mainActivity);
-    }
-
-    private boolean isDnsCryptSavedStateRunning() {
-        return new PrefManager(activity).getBoolPref("DNSCrypt Running");
-    }
-
-    private boolean isTorSavedStateRunning() {
-        return new PrefManager(activity).getBoolPref("Tor Running");
-    }
-
-    private boolean isITPDSavedStateRunning() {
-        return new PrefManager(activity).getBoolPref("I2PD Running");
     }
 }

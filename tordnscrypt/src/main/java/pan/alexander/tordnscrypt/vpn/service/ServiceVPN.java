@@ -1463,6 +1463,14 @@ public class ServiceVPN extends VpnService {
         return binder;
     }
 
+    @Override
+    public boolean onUnbind(Intent intent) {
+
+        Log.i(LOG_TAG, "ServiceVPN onUnbind");
+
+        return super.onUnbind(intent);
+    }
+
     public class VPNBinder extends Binder {
         public ServiceVPN getService() {
             return ServiceVPN.this;

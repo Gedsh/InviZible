@@ -27,7 +27,7 @@ import pan.alexander.tordnscrypt.ApplicationBase
 import pan.alexander.tordnscrypt.utils.Utils.isShowNotification
 import java.lang.ref.WeakReference
 
-object ModulesServiceInteractor {
+object ModulesActionSender {
     fun sendIntent(context: Context, action: String) {
 
         val intent = Intent(context, ModulesService::class.java)

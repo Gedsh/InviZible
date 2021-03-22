@@ -22,11 +22,7 @@ package pan.alexander.tordnscrypt.tor_fragment;
 public interface TorFragmentPresenterInterface {
     boolean isTorInstalled();
 
-    boolean isSavedTorStatusRunning();
-
-    void saveTorStatusRunning(boolean running);
-
-    void displayLog(boolean modulesStateChangingExpected);
+    void displayLog();
 
     void stopDisplayLog();
 

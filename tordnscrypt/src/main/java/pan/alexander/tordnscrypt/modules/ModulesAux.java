@@ -33,6 +33,10 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class ModulesAux {
 
+    private static final String DNSCRYPT_RUNNING_PREF = "DNSCrypt Running";
+    private static final String TOR_RUNNING_PREF = "Tor Running";
+    private static final String ITPD_RUNNING_PREF = "I2PD Running";
+
     public static void switchModes(Context context, boolean rootIsAvailable, boolean runModulesWithRoot, OperationMode operationMode) {
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
@@ -54,10 +58,47 @@ public class ModulesAux {
 
     }
 
+    public static boolean isDnsCryptSavedStateRunning(Context context) {
+        synchronized (DNSCRYPT_RUNNING_PREF) {
+            return new PrefManager(context).getBoolPref(DNSCRYPT_RUNNING_PREF);
+        }
+    }
+
+    public static void saveDNSCryptStateRunning(Context context, boolean running) {
+        synchronized (DNSCRYPT_RUNNING_PREF) {
+            new PrefManager(context).setBoolPref(DNSCRYPT_RUNNING_PREF, running);
+        }
+    }
+
+    public static boolean isTorSavedStateRunning(Context context) {
+        synchronized (TOR_RUNNING_PREF) {
+            return new PrefManager(context).getBoolPref(TOR_RUNNING_PREF);
+        }
+    }
+
+
+    public static void saveTorStateRunning(Context context, boolean running) {
+        synchronized (TOR_RUNNING_PREF) {
+            new PrefManager(context).setBoolPref(TOR_RUNNING_PREF, running);
+        }
+    }
+
+    public static boolean isITPDSavedStateRunning(Context context) {
+        synchronized (ITPD_RUNNING_PREF) {
+            return new PrefManager(context).getBoolPref(ITPD_RUNNING_PREF);
+        }
+    }
+
+    public static void saveITPDStateRunning(Context context, boolean running) {
+        synchronized (ITPD_RUNNING_PREF) {
+            new PrefManager(context).setBoolPref(ITPD_RUNNING_PREF, running);
+        }
+    }
+
     public static void stopModulesIfRunning(Context context) {
-        boolean dnsCryptRunning = new PrefManager(context).getBoolPref("DNSCrypt Running");
-        boolean torRunning = new PrefManager(context).getBoolPref("Tor Running");
-        boolean itpdRunning = new PrefManager(context).getBoolPref("I2PD Running");
+        boolean dnsCryptRunning = isDnsCryptSavedStateRunning(context);
+        boolean torRunning = isTorSavedStateRunning(context);
+        boolean itpdRunning = isITPDSavedStateRunning(context);
 
         if (dnsCryptRunning) {
             ModulesKiller.stopDNSCrypt(context);
@@ -73,34 +114,34 @@ public class ModulesAux {
     }
 
     public static void requestModulesStatusUpdate(Context context) {
-        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.actionUpdateModulesStatus);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesService.actionUpdateModulesStatus);
     }
 
     public static void recoverService(Context context) {
-        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.actionRecoverService);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesService.actionRecoverService);
     }
 
     public static void speedupModulesStateLoopTimer(Context context) {
-        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.speedupLoop);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesService.speedupLoop);
     }
 
     public static void slowdownModulesStateLoopTimer(Context context) {
-        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.slowdownLoop);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesService.slowdownLoop);
     }
 
     public static void makeModulesStateExtraLoop(Context context) {
-        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.extraLoop);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesService.extraLoop);
     }
 
     public static void startArpDetection(Context context) {
-        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.startArpScanner);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesService.startArpScanner);
     }
 
     public static void stopArpDetection(Context context) {
-        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.stopArpScanner);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesService.stopArpScanner);
     }
 
     public static void clearIptablesCommandsSavedHash(Context context) {
-        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.clearIptablesCommandsHash);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesService.clearIptablesCommandsHash);
     }
 }

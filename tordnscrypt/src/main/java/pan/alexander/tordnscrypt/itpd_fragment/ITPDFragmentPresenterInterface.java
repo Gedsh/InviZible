@@ -22,11 +22,7 @@ package pan.alexander.tordnscrypt.itpd_fragment;
 public interface ITPDFragmentPresenterInterface {
     boolean isITPDInstalled();
 
-    boolean isSavedITPDStatusRunning();
-
-    void saveITPDStatusRunning(boolean running);
-
-    void displayLog(boolean modulesStateChangingExpected);
+    void displayLog();
 
     void stopDisplayLog();
 

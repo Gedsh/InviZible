@@ -130,9 +130,9 @@ public class BootCompleteReceiver extends BroadcastReceiver {
             boolean autoStartTor = shPref.getBoolean("swAutostartTor", false);
             boolean autoStartITPD = shPref.getBoolean("swAutostartITPD", false);
 
-            boolean savedDNSCryptStateRunning = new PrefManager(context).getBoolPref("DNSCrypt Running");
-            boolean savedTorStateRunning = new PrefManager(context).getBoolPref("Tor Running");
-            boolean savedITPDStateRunning = new PrefManager(context).getBoolPref("I2PD Running");
+            boolean savedDNSCryptStateRunning = ModulesAux.isDnsCryptSavedStateRunning(context);
+            boolean savedTorStateRunning = ModulesAux.isTorSavedStateRunning(context);
+            boolean savedITPDStateRunning = ModulesAux.isITPDSavedStateRunning(context);
 
             if (action.equalsIgnoreCase(MY_PACKAGE_REPLACED) || action.equalsIgnoreCase(ALWAYS_ON_VPN)) {
                 autoStartDNSCrypt = savedDNSCryptStateRunning;
@@ -281,21 +281,21 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         if (autoStartDNSCrypt) {
             runDNSCrypt();
             ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
-        } else if (isDnsCryptSavedStateRunning()) {
+        } else if (ModulesAux.isDnsCryptSavedStateRunning(context)) {
             stopDNSCrypt();
         }
 
         if (autoStartTor) {
             runTor();
             ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
-        } else if (isTorSavedStateRunning()){
+        } else if (ModulesAux.isTorSavedStateRunning(context)){
             stopTor();
         }
 
         if (autoStartITPD) {
             runITPD();
             ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
-        } else if (isITPDSavedStateRunning()){
+        } else if (ModulesAux.isITPDSavedStateRunning(context)){
             stopITPD();
         }
 
@@ -304,9 +304,9 @@ public class BootCompleteReceiver extends BroadcastReceiver {
     }
 
     private void saveModulesStateRunning(boolean saveDNSCryptRunning, boolean saveTorRunning, boolean saveITPDRunning) {
-        new PrefManager(context).setBoolPref("DNSCrypt Running", saveDNSCryptRunning);
-        new PrefManager(context).setBoolPref("Tor Running", saveTorRunning);
-        new PrefManager(context).setBoolPref("I2PD Running", saveITPDRunning);
+        ModulesAux.saveDNSCryptStateRunning(context, saveDNSCryptRunning);
+        ModulesAux.saveTorStateRunning(context, saveTorRunning);
+        ModulesAux.saveITPDStateRunning(context, saveITPDRunning);
     }
 
     private void runDNSCrypt() {
@@ -331,18 +331,6 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
     private void stopITPD() {
         ModulesKiller.stopITPD(context);
-    }
-
-    private boolean isDnsCryptSavedStateRunning() {
-        return new PrefManager(context).getBoolPref("DNSCrypt Running");
-    }
-
-    private boolean isTorSavedStateRunning() {
-        return new PrefManager(context).getBoolPref("Tor Running");
-    }
-
-    private boolean isITPDSavedStateRunning() {
-        return new PrefManager(context).getBoolPref("I2PD Running");
     }
 
     private void startRefreshTorUnlockIPs(Context context) {

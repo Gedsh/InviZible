@@ -37,9 +37,9 @@ import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 
@@ -232,7 +232,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
 
         FileOperations.writeToTextFile(context, appDataDir + "/app_data/i2pd/i2pd.conf", itpd_conf, SettingsActivity.itpd_conf_tag);
 
-        boolean itpdRunning = new PrefManager(context).getBoolPref("I2PD Running");
+        boolean itpdRunning = ModulesAux.isITPDSavedStateRunning(context);
 
         if (itpdRunning) {
             ModulesRestarter.restartITPD(context);

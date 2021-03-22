@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import pan.alexander.tordnscrypt.TopFragment;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -108,7 +109,7 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
 
                             if (!modulesStatus.isUseModulesWithRoot()) {
 
-                                if (!presenter.isSavedITPDStatusRunning()) {
+                                if (!ModulesAux.isITPDSavedStateRunning(context)) {
                                     view.setITPDLogViewText();
                                 }
 
@@ -122,14 +123,14 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
                         && sb.toString().contains("checkITPDRunning")) {
 
                     presenter.setITPDRunning();
-                    presenter.saveITPDStatusRunning(true);
+                    ModulesAux.saveITPDStateRunning(context, true);
                     modulesStatus.setItpdState(RUNNING);
-                    presenter.displayLog(false);
+                    presenter.displayLog();
 
                 } else if (!sb.toString().toLowerCase().contains(itpdPath.toLowerCase())
                         && sb.toString().contains("checkITPDRunning")) {
                     if (modulesStatus.getItpdState() == STOPPED) {
-                        presenter.saveITPDStatusRunning(false);
+                        ModulesAux.saveITPDStateRunning(context, false);
                     }
                     presenter.stopDisplayLog();
                     presenter.setITPDStopped();

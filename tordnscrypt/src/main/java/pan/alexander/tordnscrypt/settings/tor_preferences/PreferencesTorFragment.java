@@ -18,6 +18,7 @@ package pan.alexander.tordnscrypt.settings.tor_preferences;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -38,6 +39,7 @@ import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.ConfigEditorFragment;
@@ -167,13 +169,14 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
     public void onResume() {
         super.onResume();
 
-        if (getActivity() == null) {
+        Activity activity = getActivity();
+        if (activity == null) {
             return;
         }
 
-        getActivity().setTitle(R.string.drawer_menu_TorSettings);
+        activity.setTitle(R.string.drawer_menu_TorSettings);
 
-        PathVars pathVars = PathVars.getInstance(getActivity());
+        PathVars pathVars = PathVars.getInstance(activity);
         appDataDir = pathVars.getAppDataDir();
 
         isChanged = false;
@@ -190,7 +193,13 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
     public void onStop() {
         super.onStop();
 
-        if (getActivity() == null || key_tor == null || val_tor == null || key_tor_orig == null || val_tor_orig == null) {
+        Context context = getActivity();
+        if (context == null) {
+            return;
+        }
+
+        if (key_tor == null || val_tor == null
+                || key_tor_orig == null || val_tor_orig == null) {
             return;
         }
 
@@ -239,15 +248,17 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
         }
 
-        if (!isChanged || getActivity() == null) return;
+        if (!isChanged) {
+            return;
+        }
 
-        FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/tor.conf", tor_conf, SettingsActivity.tor_conf_tag);
+        FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/tor.conf", tor_conf, SettingsActivity.tor_conf_tag);
 
-        boolean torRunning = new PrefManager(getActivity()).getBoolPref("Tor Running");
+        boolean torRunning = ModulesAux.isTorSavedStateRunning(context);
 
         if (torRunning) {
-            ModulesRestarter.restartTor(getActivity());
-            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(getActivity(), true);
+            ModulesRestarter.restartTor(context);
+            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
         }
 
     }
@@ -255,11 +266,12 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
 
-        if (getActivity() == null || key_tor == null || val_tor == null) {
+        Context context = getActivity();
+        if (context == null || key_tor == null || val_tor == null) {
             return false;
         }
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         boolean isolateDestAddress = sharedPreferences.getBoolean("pref_tor_isolate_dest_address", false);
         boolean isolateDestPort = sharedPreferences.getBoolean("pref_tor_isolate_dest_port", false);
         boolean allowTorTethering = sharedPreferences.getBoolean("pref_common_tor_tethering", false);
@@ -333,7 +345,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 return false;
             }
 
-            ModifyForwardingRules modifyForwardingRules = new ModifyForwardingRules(getActivity(),
+            ModifyForwardingRules modifyForwardingRules = new ModifyForwardingRules(context,
                     "onion 127.0.0.1:" + newValue.toString().trim());
             CachedExecutor.INSTANCE.getExecutorService().execute(modifyForwardingRules.getRunnable());
         } else if (Objects.equals(preference.getKey(), "pref_tor_snowflake_stun")) {
@@ -342,8 +354,8 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 return false;
             }
 
-            if (key_tor.contains("ClientTransportPlugin") && getActivity() != null) {
-                boolean saveExtendedLogs = new PrefManager(getActivity()).getBoolPref("swRootCommandsLog");
+            if (key_tor.contains("ClientTransportPlugin")) {
+                boolean saveExtendedLogs = new PrefManager(context).getBoolPref("swRootCommandsLog");
                 String saveLogsString = "";
                 if (saveExtendedLogs) {
                     saveLogsString = " -log " + appDataDir + "/logs/Snowflake.log";
@@ -433,7 +445,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             val_tor.set(key_tor.indexOf(preference.getKey()), newValue.toString());
             return true;
         } else {
-            Toast.makeText(getActivity(), R.string.pref_tor_not_exist, Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, R.string.pref_tor_not_exist, Toast.LENGTH_SHORT).show();
         }
 
 
@@ -473,30 +485,30 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
     @Override
     public boolean onPreferenceClick(Preference preference) {
-        if (getActivity() == null || !isAdded()) {
+        Context context = getActivity();
+        if (context == null || !isAdded()) {
             return false;
         }
 
         if ("cleanTorFolder".equals(preference.getKey())) {
 
             if (ModulesStatus.getInstance().getTorState() != STOPPED) {
-                Toast.makeText(getActivity(), R.string.btnTorStop, Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, R.string.btnTorStop, Toast.LENGTH_SHORT).show();
                 return true;
             }
 
             CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
-                boolean successfully = false;
-                if (getActivity() != null) {
-                    successfully = FileOperations.deleteDirSynchronous(getActivity(), appDataDir + "/tor_data");
+                Activity activity = getActivity();
+                if (activity == null) {
+                    return;
                 }
 
-                if (getActivity() != null) {
-                    if (successfully) {
-                        getActivity().runOnUiThread(() -> Toast.makeText(getActivity(), R.string.done, Toast.LENGTH_SHORT).show());
-                    } else {
-                        getActivity().runOnUiThread(() -> Toast.makeText(getActivity(), R.string.wrong, Toast.LENGTH_SHORT).show());
-                    }
+                boolean successfully = FileOperations.deleteDirSynchronous(activity, appDataDir + "/tor_data");
 
+                if (successfully) {
+                    activity.runOnUiThread(() -> Toast.makeText(activity, R.string.done, Toast.LENGTH_SHORT).show());
+                } else {
+                    activity.runOnUiThread(() -> Toast.makeText(activity, R.string.wrong, Toast.LENGTH_SHORT).show());
                 }
             });
 

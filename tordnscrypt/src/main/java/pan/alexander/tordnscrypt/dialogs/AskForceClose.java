@@ -29,12 +29,12 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -131,8 +131,8 @@ public class AskForceClose extends ExtendedDialogFragment {
     }
 
     private void saveModulesAreStopped(Context context) {
-        new PrefManager(context).setBoolPref("DNSCrypt Running", false);
-        new PrefManager(context).setBoolPref("Tor Running", false);
-        new PrefManager(context).setBoolPref("I2PD Running", false);
+        ModulesAux.saveDNSCryptStateRunning(context, false);
+        ModulesAux.saveTorStateRunning(context, false);
+        ModulesAux.saveITPDStateRunning(context, false);
     }
 }

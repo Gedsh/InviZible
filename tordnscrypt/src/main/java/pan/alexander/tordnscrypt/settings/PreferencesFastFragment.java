@@ -51,6 +51,7 @@ import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.language.Language;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.GetIPsJobService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -350,7 +351,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                     if (jobScheduler != null) {
                         jobScheduler.schedule(getIPsJobBuilder.build());
                     }
-                } else if (!new PrefManager(context).getBoolPref("Tor Running")) {
+                } else if (!ModulesAux.isTorSavedStateRunning(context)) {
                     JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
                     if (jobScheduler != null) {
                         jobScheduler.cancel(mJobId);
@@ -383,8 +384,8 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
                 return true;
             case "pref_fast_block_http":
-                if (new PrefManager(context).getBoolPref("DNSCrypt Running")
-                        || new PrefManager(context).getBoolPref("Tor Running")) {
+                if (ModulesAux.isDnsCryptSavedStateRunning(context)
+                        || ModulesAux.isTorSavedStateRunning(context)) {
                     ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
                 }
                 return true;

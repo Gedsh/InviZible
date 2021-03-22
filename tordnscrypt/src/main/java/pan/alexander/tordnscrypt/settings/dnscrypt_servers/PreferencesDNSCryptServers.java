@@ -52,6 +52,7 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.AddDNSCryptServerDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.dnscrypt_relays.DNSServerRelays;
@@ -540,7 +541,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
     private void restartDNSCryptIfRunning(Context context) {
 
-        boolean dnsCryptRunning = new PrefManager(context).getBoolPref("DNSCrypt Running");
+        boolean dnsCryptRunning = ModulesAux.isDnsCryptSavedStateRunning(context);
 
         if (dnsCryptRunning) {
             ModulesRestarter.restartDNSCrypt(context);

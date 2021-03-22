@@ -22,11 +22,7 @@ package pan.alexander.tordnscrypt.dnscrypt_fragment;
 public interface DNSCryptFragmentPresenterInterface {
     boolean isDNSCryptInstalled();
 
-    boolean isSavedDNSStatusRunning();
-
-    void saveDNSStatusRunning(boolean running);
-
-    void displayLog(boolean modulesStateChangingExpected);
+    void displayLog();
 
     void stopDisplayLog();
 

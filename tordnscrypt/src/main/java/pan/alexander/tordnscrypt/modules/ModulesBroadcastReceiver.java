@@ -353,9 +353,9 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
     }
 
     private void powerOFFDetected() {
-        new PrefManager(context).setBoolPref("DNSCrypt Running", false);
-        new PrefManager(context).setBoolPref("Tor Running", false);
-        new PrefManager(context).setBoolPref("I2PD Running", false);
+        ModulesAux.saveDNSCryptStateRunning(context, false);
+        ModulesAux.saveTorStateRunning(context, false);
+        ModulesAux.saveITPDStateRunning(context, false);
 
         ModulesAux.stopModulesIfRunning(context);
     }

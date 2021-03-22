@@ -35,7 +35,8 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class ModulesRestarter {
     public static void restartDNSCrypt(Context context) {
-        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.actionRestartDnsCrypt);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesService.actionRestartDnsCrypt);
+        ModulesAux.speedupModulesStateLoopTimer(context);
     }
 
     public static void restartTor(Context context) {
@@ -45,17 +46,20 @@ public class ModulesRestarter {
         if (useDefaultBridges || useOwnBridges) {
             restartTorFull(context);
         } else {
-            ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.actionRestartTor);
+            ModulesActionSender.INSTANCE.sendIntent(context, ModulesService.actionRestartTor);
+            ModulesAux.speedupModulesStateLoopTimer(context);
         }
 
     }
 
     public static void restartTorFull(Context context) {
-        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.actionRestartTorFull);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesService.actionRestartTorFull);
+        ModulesAux.speedupModulesStateLoopTimer(context);
     }
 
     public static void restartITPD(Context context) {
-        ModulesServiceInteractor.INSTANCE.sendIntent(context, ModulesService.actionRestartITPD);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesService.actionRestartITPD);
+        ModulesAux.speedupModulesStateLoopTimer(context);
     }
 
     Runnable getTorRestarterRunnable(Context context) {

@@ -20,6 +20,7 @@ package pan.alexander.tordnscrypt.dialogs;
 */
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Handler;
@@ -34,9 +35,9 @@ import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
-import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 public class DialogSaveConfigChanges extends ExtendedDialogFragment {
@@ -51,7 +52,8 @@ public class DialogSaveConfigChanges extends ExtendedDialogFragment {
 
     @Override
     public AlertDialog.Builder assignBuilder() {
-        if (getActivity() == null) {
+        Activity activity = getActivity();
+        if (activity == null) {
             return null;
         }
 
@@ -61,7 +63,7 @@ public class DialogSaveConfigChanges extends ExtendedDialogFragment {
             moduleName = getArguments().getString("moduleName");
         }
 
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
 
         alertDialog.setTitle(R.string.warning);
         alertDialog.setMessage(R.string.config_changes_dialog_message);
@@ -69,7 +71,7 @@ public class DialogSaveConfigChanges extends ExtendedDialogFragment {
         alertDialog.setPositiveButton(R.string.save_changes, (dialog, id) -> {
             if (filePath != null && fileText != null) {
                 List<String> lines = Arrays.asList(fileText.split("\n"));
-                FileOperations.writeToTextFile(getActivity(), filePath, lines, "ignored");
+                FileOperations.writeToTextFile(activity, filePath, lines, "ignored");
                 restartModuleIfRequired();
 
                 Looper looper = Looper.getMainLooper();
@@ -78,9 +80,7 @@ public class DialogSaveConfigChanges extends ExtendedDialogFragment {
                     handler = new Handler(looper);
                 }
 
-                Activity activity = getActivity();
-
-                if (handler != null && activity != null) {
+                if (handler != null) {
                     handler.postDelayed(() -> reopenSettings(activity), 300);
                 }
             }
@@ -92,28 +92,30 @@ public class DialogSaveConfigChanges extends ExtendedDialogFragment {
     }
 
     private void restartModuleIfRequired() {
-        if (getActivity() == null) {
+
+        Context context = getActivity();
+        if (context == null) {
             return;
         }
 
-        boolean dnsCryptRunning = new PrefManager(getActivity()).getBoolPref("DNSCrypt Running");
-        boolean torRunning = new PrefManager(getActivity()).getBoolPref("Tor Running");
-        boolean itpdRunning = new PrefManager(getActivity()).getBoolPref("I2PD Running");
+        boolean dnsCryptRunning = ModulesAux.isDnsCryptSavedStateRunning(context);
+        boolean torRunning = ModulesAux.isTorSavedStateRunning(context);
+        boolean itpdRunning = ModulesAux.isITPDSavedStateRunning(context);
 
         if (dnsCryptRunning && "DNSCrypt".equals(moduleName)) {
-            ModulesRestarter.restartDNSCrypt(getActivity());
+            ModulesRestarter.restartDNSCrypt(context);
         } else if (torRunning && "Tor".equals(moduleName)) {
-            ModulesRestarter.restartTor(getActivity());
+            ModulesRestarter.restartTor(context);
         } else if (itpdRunning && "ITPD".equals(moduleName)) {
-            ModulesRestarter.restartITPD(getActivity());
+            ModulesRestarter.restartITPD(context);
 
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
             boolean torTethering = sharedPreferences.getBoolean("pref_common_tor_tethering", false) && torRunning;
             boolean itpdTethering = sharedPreferences.getBoolean("pref_common_itpd_tethering", false);
             boolean routeAllThroughTorTether = sharedPreferences.getBoolean("pref_common_tor_route_all", false);
 
             if (torTethering && routeAllThroughTorTether && itpdTethering) {
-                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(getActivity(), true);
+                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
             }
         }
     }

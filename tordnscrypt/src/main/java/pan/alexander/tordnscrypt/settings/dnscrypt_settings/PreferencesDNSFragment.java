@@ -48,12 +48,12 @@ import java.util.Objects;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.ImportRulesDialog;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.ConfigEditorFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.DNSCryptRulesVariant;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
@@ -264,7 +264,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
         FileOperations.writeToTextFile(context, appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml", dnscrypt_proxy_toml, SettingsActivity.dnscrypt_proxy_toml_tag);
 
-        boolean dnsCryptRunning = new PrefManager(context).getBoolPref("DNSCrypt Running");
+        boolean dnsCryptRunning = ModulesAux.isDnsCryptSavedStateRunning(context);
 
         if (dnsCryptRunning) {
             ModulesRestarter.restartDNSCrypt(context);

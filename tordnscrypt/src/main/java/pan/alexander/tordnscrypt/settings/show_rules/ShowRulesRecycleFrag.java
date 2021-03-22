@@ -55,9 +55,9 @@ import java.util.List;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
-import pan.alexander.tordnscrypt.utils.PrefManager;
 
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
@@ -191,8 +191,8 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
             FileOperations.writeToTextFile(context, file_path, rules_file, SettingsActivity.rules_tag);
         }
 
-        boolean dnsCryptRunning = new PrefManager(context).getBoolPref("DNSCrypt Running");
-        boolean itpdRunning = new PrefManager(context).getBoolPref("I2PD Running");
+        boolean dnsCryptRunning = ModulesAux.isDnsCryptSavedStateRunning(context);
+        boolean itpdRunning = ModulesAux.isITPDSavedStateRunning(context);
 
         if (itpdRunning && file_path.contains("subscriptions")) {
             ModulesRestarter.restartITPD(context);

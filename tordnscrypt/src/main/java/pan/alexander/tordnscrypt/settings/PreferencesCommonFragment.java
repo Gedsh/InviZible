@@ -325,13 +325,13 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                     prefTorSiteUnlockTether.setEnabled(!Boolean.parseBoolean(newValue.toString()));
                 }
 
-                if (new PrefManager(context).getBoolPref("Tor Running")) {
+                if (ModulesAux.isTorSavedStateRunning(context)) {
                     ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
                 }
                 break;
             case "pref_common_block_http":
-                if (new PrefManager(context).getBoolPref("DNSCrypt Running")
-                        || new PrefManager(context).getBoolPref("Tor Running")) {
+                if (ModulesAux.isDnsCryptSavedStateRunning(context)
+                        || ModulesAux.isTorSavedStateRunning(context)) {
                     ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
                 }
                 break;
@@ -487,7 +487,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         FileOperations.writeToTextFile(context, torConfPath, torConf, "ignored");
 
-        if (new PrefManager(context).getBoolPref("Tor Running")) {
+        if (ModulesAux.isTorSavedStateRunning(context)) {
             ModulesRestarter.restartTor(context);
             ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
         }
@@ -544,7 +544,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         FileOperations.writeToTextFile(context, itpdConfPath, itpdConf, "ignored");
 
-        if (new PrefManager(context).getBoolPref("I2PD Running")) {
+        if (ModulesAux.isITPDSavedStateRunning(context)) {
             ModulesRestarter.restartITPD(context);
             ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
         }

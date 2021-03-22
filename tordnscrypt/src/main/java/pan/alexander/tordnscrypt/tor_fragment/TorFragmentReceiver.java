@@ -30,6 +30,7 @@ import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -106,7 +107,7 @@ public class TorFragmentReceiver extends BroadcastReceiver {
                             new PrefManager(context).setStrPref("TorVersion", TorVersion);
 
                             if (!modulesStatus.isUseModulesWithRoot()) {
-                                if (!presenter.isSavedTorStatusRunning()) {
+                                if (!ModulesAux.isTorSavedStateRunning(context)) {
                                     view.setTorLogViewText();
                                 }
 
@@ -119,16 +120,16 @@ public class TorFragmentReceiver extends BroadcastReceiver {
                 if (sb.toString().toLowerCase().contains(torPath.toLowerCase())
                         && sb.toString().contains("checkTrRunning")) {
 
-                    presenter.saveTorStatusRunning(true);
+                    ModulesAux.saveTorStateRunning(context, true);
                     modulesStatus.setTorState(RUNNING);
                     view.setStartButtonText(R.string.btnTorStop);
                     presenter.startRefreshTorUnlockIPs();
-                    presenter.displayLog(false);
+                    presenter.displayLog();
 
                 } else if (!sb.toString().toLowerCase().contains(torPath.toLowerCase())
                         && sb.toString().contains("checkTrRunning")) {
                     if (modulesStatus.getTorState() == STOPPED) {
-                        presenter.saveTorStatusRunning(false);
+                        ModulesAux.saveTorStateRunning(context, false);
                     }
                     presenter.stopDisplayLog();
                     presenter.setTorStopped();

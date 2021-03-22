@@ -33,6 +33,7 @@ import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
@@ -116,7 +117,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
                         if (!modulesStatus.isUseModulesWithRoot()) {
 
-                            if (!presenter.isSavedDNSStatusRunning()) {
+                            if (!ModulesAux.isDnsCryptSavedStateRunning(context)) {
                                 view.setDNSCryptLogViewText();
                             }
 
@@ -129,14 +130,14 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                         && sb.toString().contains("checkDNSRunning")) {
 
                     presenter.setDnsCryptRunning();
-                    presenter.saveDNSStatusRunning(true);
+                    ModulesAux.saveDNSCryptStateRunning(context, true);
                     modulesStatus.setDnsCryptState(RUNNING);
-                    presenter.displayLog(false);
+                    presenter.displayLog();
 
                 } else if (!sb.toString().toLowerCase().contains(dnscryptPath.toLowerCase())
                         && sb.toString().contains("checkDNSRunning")) {
                     if (modulesStatus.getDnsCryptState() == STOPPED) {
-                        presenter.saveDNSStatusRunning(false);
+                        ModulesAux.saveDNSCryptStateRunning(context, false);
                     }
                     presenter.stopDisplayLog();
                     presenter.setDnsCryptStopped();

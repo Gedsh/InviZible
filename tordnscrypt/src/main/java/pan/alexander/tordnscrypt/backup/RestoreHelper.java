@@ -47,6 +47,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.patches.Patch;
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
@@ -257,9 +258,9 @@ class RestoreHelper extends Installer {
     }
 
     private void refreshInstallationParameters() {
-        new PrefManager(activity).setBoolPref("DNSCrypt Running", false);
-        new PrefManager(activity).setBoolPref("Tor Running", false);
-        new PrefManager(activity).setBoolPref("I2PD Running", false);
+        ModulesAux.saveDNSCryptStateRunning(activity, false);
+        ModulesAux.saveTorStateRunning(activity, false);
+        ModulesAux.saveITPDStateRunning(activity, false);
 
         new PrefManager(activity).setSetStrPref(APPS_NEWLY_INSTALLED, Collections.emptySet());
     }
