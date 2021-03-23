@@ -520,3 +520,10 @@
 * Updated Tor.
 * Fixed displaying an error message even if there were no connection problems.
 * Bugs fixes and stability improvements.
+
+**InviZible Pro beta 1.2.5**
+* Updated Tor to version 4.5.7.
+* Updated Purple I2P to version 2.37.0.
+* Improved user interface interactivity.
+* Provided a universal (armv7a and arm64) build for the f-droid version.
+* Minor fixes and optimizations.
