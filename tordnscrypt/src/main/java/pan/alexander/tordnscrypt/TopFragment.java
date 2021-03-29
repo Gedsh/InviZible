@@ -369,7 +369,7 @@ public class TopFragment extends Fragment {
                 verifier.encryptStr(TOP_BROADCAST, appSign, appSignAlt);
                 wrongSign = topFragment.getString(R.string.encoded).trim();
                 if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
-                    if (topFragment.isAdded()) {
+                    if (topFragment.isAdded() && !topFragment.isStateSaved()) {
                         NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                                 activity, topFragment.getString(R.string.verifier_error), "1112");
                         if (notificationHelper != null) {
@@ -382,7 +382,7 @@ public class TopFragment extends Fragment {
                 if (topFragment.isAdded()) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             activity, topFragment.getString(R.string.verifier_error), "2235");
-                    if (notificationHelper != null) {
+                    if (notificationHelper != null && !topFragment.isStateSaved()) {
                         notificationHelper.show(topFragment.getParentFragmentManager(), NotificationHelper.TAG_HELPER);
                     }
                 }
@@ -459,14 +459,14 @@ public class TopFragment extends Fragment {
 
     private void showDonDialog(Activity activity) {
 
-        if (activity == null || activity.isFinishing()) {
+        if (activity == null || activity.isFinishing() || isStateSaved()) {
             return;
         }
 
         if (appVersion.endsWith("e")) {
             if (handler != null) {
                 handler.postDelayed(() -> {
-                    if (isAdded()) {
+                    if (isAdded() && !isStateSaved()) {
                         Registration registration = new Registration(activity);
                         registration.showDonateDialog();
                     }
@@ -481,7 +481,7 @@ public class TopFragment extends Fragment {
             if (handler != null) {
                 handler.postDelayed(() -> {
                     DialogFragment accelerateDevelop = AskAccelerateDevelop.getInstance();
-                    if (isAdded() && !accelerated) {
+                    if (isAdded() && !isStateSaved() && !accelerated) {
                         accelerateDevelop.show(getParentFragmentManager(), "accelerateDevelop");
                     }
                 }, 5000);
@@ -518,7 +518,7 @@ public class TopFragment extends Fragment {
                     || currentTorVersion < Integer.parseInt(TorVersion.replaceAll("\\D+", ""))
                     || currentITPDVersion < Integer.parseInt(ITPDVersion.replaceAll("\\D+", "")))
                     && !new PrefManager(context).getBoolPref("UpdateNotAllowed"))) {
-                if (isAdded()) {
+                if (isAdded() && !isStateSaved()) {
                     DialogFragment updateCore = UpdateModulesDialogFragment.getInstance();
                     updateCore.show(getParentFragmentManager(), "UpdateModulesDialogFragment");
                 }
@@ -646,7 +646,7 @@ public class TopFragment extends Fragment {
         String crash = new PrefManager(activity).getStrPref("CrashReport");
         if (!crash.isEmpty()) {
             SendCrashReport crashReport = SendCrashReport.Companion.getCrashReportDialog(activity);
-            if (crashReport != null && isAdded()) {
+            if (crashReport != null && isAdded() && !isStateSaved()) {
                 crashReport.show(getParentFragmentManager(), "SendCrashReport");
             }
             return true;
@@ -698,7 +698,7 @@ public class TopFragment extends Fragment {
             return;
         }
 
-        if (context == null || updateCheckTask != null) {
+        if (context == null || updateCheckTask != null || isStateSaved()) {
             return;
         }
 
@@ -708,7 +708,7 @@ public class TopFragment extends Fragment {
         try {
             UpdateCheck updateCheck = new UpdateCheck(this);
             updateCheckTask = updateCheck.requestUpdateData("https://invizible.net", appSign);
-            if (showProgressDialog) {
+            if (showProgressDialog && !isStateSaved()) {
                 checkUpdatesDialog = new CheckUpdatesDialog();
                 checkUpdatesDialog.setCheckUpdatesTask(updateCheckTask);
                 checkUpdatesDialog.show(getParentFragmentManager(), "checkUpdatesDialog");
@@ -716,7 +716,7 @@ public class TopFragment extends Fragment {
         } catch (Exception e) {
             Activity activity = getActivity();
             if (activity instanceof MainActivity) {
-                if (checkUpdatesDialog != null && checkUpdatesDialog.isAdded()) {
+                if (checkUpdatesDialog != null && checkUpdatesDialog.isAdded() && !isStateSaved()) {
                     showUpdateMessage(activity, getString(R.string.update_fault));
                 }
             }
@@ -735,7 +735,7 @@ public class TopFragment extends Fragment {
 
         new PrefManager(context).setStrPref("LastUpdateResult", context.getString(R.string.update_found));
 
-        if (isAdded()) {
+        if (isAdded() && !isStateSaved()) {
             DialogFragment newUpdateDialogFragment = NewUpdateDialogFragment.newInstance(message, updateStr, fileName, hash);
             newUpdateDialogFragment.show(getParentFragmentManager(), NewUpdateDialogFragment.TAG_NOT_FRAG);
         }
@@ -772,7 +772,7 @@ public class TopFragment extends Fragment {
     }
 
     public void showUpdateMessage(Activity activity, final String message) {
-        if (activity.isFinishing() || handler == null) {
+        if (activity.isFinishing() || handler == null || isStateSaved()) {
             return;
         }
 
@@ -781,7 +781,7 @@ public class TopFragment extends Fragment {
         handler.post(this::dismissCheckUpdatesDialog);
 
         handler.postDelayed(() -> {
-            if (!activity.isFinishing()) {
+            if (!activity.isFinishing() && !isStateSaved()) {
                 DialogFragment commandResult = NotificationDialogFragment.newInstance(message);
                 commandResult.show(getParentFragmentManager(), "NotificationDialogFragment");
             }
@@ -822,7 +822,9 @@ public class TopFragment extends Fragment {
 
         Activity activity = getActivity();
 
-        if (activity == null || intent.getAction() == null || !isBroadcastMatch(intent) || !isAdded()) {
+        if (activity == null || intent.getAction() == null
+                || !isBroadcastMatch(intent)
+                || !isAdded() || isStateSaved()) {
             return;
         }
 
@@ -886,7 +888,7 @@ public class TopFragment extends Fragment {
     private void checkAgreement(Context context) {
         if (!new PrefManager(context).getBoolPref("Agreement")) {
             AlertDialog.Builder agreementDialogBuilder = AgreementDialog.getDialogBuilder(context);
-            if (agreementDialogBuilder != null) {
+            if (agreementDialogBuilder != null && !isStateSaved()) {
                 agreementDialogBuilder.show();
             }
         }
