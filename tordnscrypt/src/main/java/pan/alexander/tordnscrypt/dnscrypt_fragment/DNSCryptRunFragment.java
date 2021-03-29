@@ -178,7 +178,7 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
 
             ViewTreeObserver observer = svDNSCryptLog.getViewTreeObserver();
             if (observer != null) {
-                observer.addOnScrollChangedListener(null);
+                observer.removeOnScrollChangedListener(this);
             }
         }
 

@@ -170,7 +170,7 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
 
             ViewTreeObserver observer = svTorLog.getViewTreeObserver();
             if (observer != null) {
-                observer.addOnScrollChangedListener(null);
+                observer.removeOnScrollChangedListener(this);
             }
         }
 

@@ -228,15 +228,15 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
         if (svDNSCryptLog != null) {
             svDNSCryptLog.setOnTouchListener(null);
-            svDNSCryptLog.getViewTreeObserver().addOnScrollChangedListener(null);
+            svDNSCryptLog.getViewTreeObserver().removeOnScrollChangedListener(this);
         }
         if (svTorLog != null) {
             svTorLog.setOnTouchListener(null);
-            svTorLog.getViewTreeObserver().addOnScrollChangedListener(null);
+            svTorLog.getViewTreeObserver().removeOnScrollChangedListener(this);
         }
         if (svITPDLog != null) {
             svITPDLog.setOnTouchListener(null);
-            svITPDLog.getViewTreeObserver().addOnScrollChangedListener(null);
+            svITPDLog.getViewTreeObserver().removeOnScrollChangedListener(this);
         }
 
         btnStartMainFragment = null;

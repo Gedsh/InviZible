@@ -172,15 +172,18 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
 
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void onDestroyView() {
         super.onDestroyView();
 
         if (svITPDLog != null) {
+            svITPDLog.setOnTouchListener(null);
+
             ViewTreeObserver observer = svITPDLog.getViewTreeObserver();
 
             if (observer != null) {
-                observer.addOnScrollChangedListener(null);
+                observer.removeOnScrollChangedListener(this);
             }
         }
 
