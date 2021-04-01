@@ -235,9 +235,9 @@ class DownloadTask extends Thread {
 
     private boolean isActivityActive() {
         boolean isActivityActive = false;
-        if (context instanceof ApplicationBase) {
+        if (context.getApplicationContext() instanceof ApplicationBase) {
 
-            ApplicationBase applicationBase = (ApplicationBase) context;
+            ApplicationBase applicationBase = (ApplicationBase) context.getApplicationContext();
             WeakReference<Activity> currentActivity = applicationBase.getCurrentActivity();
             isActivityActive = currentActivity != null && currentActivity.get() != null
                     && !currentActivity.get().isFinishing();
