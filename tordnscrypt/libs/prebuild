@@ -4,7 +4,7 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 obfs4proxy_version=f638c33f6c6f697498150d5f0dfbf26453759262
 dnscryptproxy_version=2.0.45
-snowflake_version=7043a055f9fb0680281ecffd7d458a43f2ce65b5
+snowflake_version=196c230ac7e6e2d6be7c00d2c3f90e11d23b21b7
 tor_openssl_version=OpenSSL_1_1_1h
 libevent_version=release-2.1.11-stable
 zstd_version=v1.4.5
@@ -12,7 +12,7 @@ xz_version=v5.2.3
 tor_version=release-0.4.5
 i2pd_openssl_version=OpenSSL_1_1_1h
 miniupnpc_version=miniupnpc_2_2_0
-i2pd_version=2.35.0
+i2pd_version=2.37.0
 
 git clone https://github.com/Yawning/obfs4
 pushd obfs4
@@ -21,7 +21,7 @@ popd
 
 git clone --single-branch --branch $dnscryptproxy_version https://github.com/DNSCrypt/dnscrypt-proxy
 
-git clone https://github.com/keroserene/snowflake
+git clone https://git.torproject.org/pluggable-transports/snowflake.git
 pushd snowflake/
 git checkout -f $snowflake_version -b $snowflake_version
 popd
