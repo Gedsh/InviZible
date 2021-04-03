@@ -47,6 +47,30 @@ class ConnectionRecordsInteractor(private val connectionRecordsRepository: Conne
     }
 
     fun convertRecords() {
+        try {
+            convert()
+        } catch (e: Exception) {
+            Log.e(
+                LOG_TAG, "ConnectionRecordsInteractor convertRecords exception " +
+                        "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
+            )
+        }
+    }
+
+    fun clearConnectionRecords() {
+        connectionRecordsRepository.clearConnectionRawRecords()
+    }
+
+    fun stopConverter(forceStop: Boolean = false) {
+        if (listeners.isEmpty() || forceStop) {
+            connectionRecordsRepository.connectionRawRecordsNoMoreRequired()
+            converter?.onStop()
+            converter = null
+            parser = null
+        }
+    }
+
+    private fun convert() {
         val context = applicationContext
 
         if (context == null || listeners.isEmpty()) {
@@ -100,19 +124,6 @@ class ConnectionRecordsInteractor(private val connectionRecordsRepository: Conne
                 listener?.let { removeListener(it) }
 
             }
-        }
-    }
-
-    fun clearConnectionRecords() {
-        connectionRecordsRepository.clearConnectionRawRecords()
-    }
-
-    fun stopConverter(forceStop: Boolean = false) {
-        if (listeners.isEmpty() || forceStop) {
-            connectionRecordsRepository.connectionRawRecordsNoMoreRequired()
-            converter?.onStop()
-            converter = null
-            parser = null
         }
     }
 }

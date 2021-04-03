@@ -20,12 +20,12 @@
 package pan.alexander.tordnscrypt.domain.log_reader.dnscrypt
 
 import pan.alexander.tordnscrypt.domain.entities.LogDataModel
-import pan.alexander.tordnscrypt.domain.log_reader.LogParser
+import pan.alexander.tordnscrypt.domain.log_reader.AbstractLogParser
 import pan.alexander.tordnscrypt.domain.ModulesLogRepository
 
 private const val COUNT_DOWN_TIMER = 5
 
-class DNSCryptLogParser(private val modulesLogRepository: ModulesLogRepository) : LogParser() {
+class DNSCryptLogParser(private val modulesLogRepository: ModulesLogRepository) : AbstractLogParser() {
 
     private var startedSuccessfully = false
     private var startedWithError = false

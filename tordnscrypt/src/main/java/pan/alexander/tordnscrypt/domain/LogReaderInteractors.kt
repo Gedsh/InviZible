@@ -19,12 +19,11 @@
 
 package pan.alexander.tordnscrypt.domain
 
-import android.util.Log
 import pan.alexander.tordnscrypt.data.ConnectionRecordsRepositoryImpl
 import pan.alexander.tordnscrypt.data.ModulesLogRepositoryImpl
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsInteractor
 import pan.alexander.tordnscrypt.domain.connection_records.OnConnectionRecordsUpdatedListener
-import pan.alexander.tordnscrypt.domain.log_reader.ScheduledExecutor
+import pan.alexander.tordnscrypt.domain.log_reader.LogReaderLoop
 import pan.alexander.tordnscrypt.domain.log_reader.dnscrypt.DNSCryptInteractor
 import pan.alexander.tordnscrypt.domain.log_reader.dnscrypt.OnDNSCryptLogUpdatedListener
 import pan.alexander.tordnscrypt.domain.log_reader.itpd.ITPDHtmlInteractor
@@ -33,17 +32,6 @@ import pan.alexander.tordnscrypt.domain.log_reader.itpd.OnITPDHtmlUpdatedListene
 import pan.alexander.tordnscrypt.domain.log_reader.itpd.OnITPDLogUpdatedListener
 import pan.alexander.tordnscrypt.domain.log_reader.tor.OnTorLogUpdatedListener
 import pan.alexander.tordnscrypt.domain.log_reader.tor.TorInteractor
-import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
-import pan.alexander.tordnscrypt.utils.enums.ModuleState
-import java.lang.Exception
-import java.util.concurrent.locks.ReentrantLock
-
-private const val TIMER_INITIAL_DELAY = 1L
-private const val TIMER_INITIAL_PERIOD = 1L
-private const val TIMER_MAIN_PERIOD = 5L
-private const val COUNTER_STARTING = 30
-private const val COUNTER_STOPPING = 5
 
 class LogReaderInteractors private constructor() :
     DNSCryptInteractorInterface,
@@ -51,13 +39,8 @@ class LogReaderInteractors private constructor() :
     ITPDInteractorInterface,
     ConnectionRecordsInteractorInterface {
 
-    private val modulesStatus = ModulesStatus.getInstance()
-
     private val modulesLogRepository = ModulesLogRepositoryImpl()
     private val connectionsRepository = ConnectionRecordsRepositoryImpl()
-
-    private var timer: ScheduledExecutor? = null
-    private var displayPeriod: Long = 0
 
     private val dnsCryptInteractor = DNSCryptInteractor(modulesLogRepository)
     private val torInteractor = TorInteractor(modulesLogRepository)
@@ -65,14 +48,17 @@ class LogReaderInteractors private constructor() :
     private val itpdHtmlInteractor = ITPDHtmlInteractor(modulesLogRepository)
     private val connectionRecordsInteractor = ConnectionRecordsInteractor(connectionsRepository)
 
-    private val reentrantLock = ReentrantLock()
+    private val logReaderLoop = LogReaderLoop(
+        dnsCryptInteractor,
+        torInteractor,
+        itpdInteractor,
+        itpdHtmlInteractor,
+        connectionRecordsInteractor
+    )
 
-    private var counterStarting = COUNTER_STARTING
-    private var counterStopping = COUNTER_STOPPING
-
-    internal companion object {
+    companion object {
         @Volatile
-        private var logReaderInteractors: LogReaderInteractors? = null
+        var logReaderInteractors: LogReaderInteractors? = null
 
         fun getInteractor(): LogReaderInteractors {
             if (logReaderInteractors == null) {
@@ -88,7 +74,7 @@ class LogReaderInteractors private constructor() :
 
     override fun addOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: OnDNSCryptLogUpdatedListener) {
         dnsCryptInteractor.addListener(onDNSCryptLogUpdatedListener)
-        startLogsParser()
+        logReaderLoop.startLogsParser()
     }
 
     override fun removeOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: OnDNSCryptLogUpdatedListener) {
@@ -97,7 +83,7 @@ class LogReaderInteractors private constructor() :
 
     override fun addOnTorLogUpdatedListener(onTorLogUpdatedListener: OnTorLogUpdatedListener) {
         torInteractor.addListener(onTorLogUpdatedListener)
-        startLogsParser()
+        logReaderLoop.startLogsParser()
     }
 
     override fun removeOnTorLogUpdatedListener(onTorLogUpdatedListener: OnTorLogUpdatedListener) {
@@ -106,7 +92,7 @@ class LogReaderInteractors private constructor() :
 
     override fun addOnITPDLogUpdatedListener(onITPDLogUpdatedListener: OnITPDLogUpdatedListener) {
         itpdInteractor.addListener(onITPDLogUpdatedListener)
-        startLogsParser()
+        logReaderLoop.startLogsParser()
     }
 
     override fun removeOnITPDLogUpdatedListener(onITPDLogUpdatedListener: OnITPDLogUpdatedListener) {
@@ -115,7 +101,7 @@ class LogReaderInteractors private constructor() :
 
     override fun addOnITPDHtmlUpdatedListener(onITPDHtmlUpdatedListener: OnITPDHtmlUpdatedListener) {
         itpdHtmlInteractor.addListener(onITPDHtmlUpdatedListener)
-        startLogsParser()
+        logReaderLoop.startLogsParser()
     }
 
     override fun removeOnITPDHtmlUpdatedListener(onITPDHtmlUpdatedListener: OnITPDHtmlUpdatedListener) {
@@ -124,7 +110,7 @@ class LogReaderInteractors private constructor() :
 
     override fun addOnConnectionRecordsUpdatedListener(onConnectionRecordsUpdatedListener: OnConnectionRecordsUpdatedListener) {
         connectionRecordsInteractor.addListener(onConnectionRecordsUpdatedListener)
-        startLogsParser()
+        logReaderLoop.startLogsParser()
     }
 
     override fun removeOnConnectionRecordsUpdatedListener(onConnectionRecordsUpdatedListener: OnConnectionRecordsUpdatedListener) {
@@ -133,155 +119,5 @@ class LogReaderInteractors private constructor() :
 
     override fun clearConnectionRecords() {
         connectionRecordsInteractor.clearConnectionRecords()
-    }
-
-    private fun startLogsParser(period: Long = TIMER_INITIAL_PERIOD) {
-
-        if (!reentrantLock.tryLock()) {
-            return
-        }
-
-        try {
-            if (timer?.isLooping() == true && period == displayPeriod) {
-                return
-            }
-
-            Log.i(LOG_TAG, "LogReaderInteractors startLogsParser")
-
-            displayPeriod = period
-
-            timer?.stopExecutor()
-
-            timer = ScheduledExecutor(TIMER_INITIAL_DELAY, period)
-
-            timer?.execute { parseLogs() }
-
-        } catch (e: Exception) {
-            Log.e(LOG_TAG, "LogReaderInteractors startLogsParser exception ${e.message} ${e.cause}")
-        } finally {
-            if (reentrantLock.isHeldByCurrentThread) {
-                reentrantLock.unlock()
-            }
-        }
-    }
-
-    private fun stopLogsParser() {
-        timer?.stopExecutor()
-        timer = null
-        connectionRecordsInteractor.stopConverter(true)
-        logReaderInteractors = null
-
-        Log.i(LOG_TAG, "LogReaderInteractors stopLogsParser")
-    }
-
-    private fun parseLogs() {
-        try {
-
-            if (!dnsCryptInteractor.hasAnyListener()
-                && !torInteractor.hasAnyListener()
-                && !itpdInteractor.hasAnyListener()
-                && !itpdHtmlInteractor.hasAnyListener()
-                && !connectionRecordsInteractor.hasAnyListener()
-            ) {
-                counterStopping--
-            } else {
-                counterStopping = COUNTER_STOPPING
-            }
-
-            if (counterStopping <= 0) {
-                stopLogsParser()
-                return
-            }
-
-            if (dnsCryptInteractor.hasAnyListener()) {
-                try {
-                    dnsCryptInteractor.parseDNSCryptLog()
-                } catch (e: Exception) {
-                    Log.e(
-                        LOG_TAG, "LogReaderInteractors parseDNSCryptLog exception " +
-                                "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
-                    )
-                }
-            } else {
-                dnsCryptInteractor.resetParserState()
-            }
-            if (torInteractor.hasAnyListener()) {
-                try {
-                    torInteractor.parseTorLog()
-                } catch (e: Exception) {
-                    Log.e(
-                        LOG_TAG, "LogReaderInteractors parseTorLog exception " +
-                                "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
-                    )
-                }
-            } else {
-                torInteractor.resetParserState()
-            }
-            if (itpdInteractor.hasAnyListener()) {
-                try {
-                    itpdInteractor.parseITPDLog()
-                } catch (e: Exception) {
-                    Log.e(
-                        LOG_TAG, "LogReaderInteractors parseITPDLog exception " +
-                                "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
-                    )
-                }
-            } else {
-                itpdInteractor.resetParserState()
-            }
-            if (itpdHtmlInteractor.hasAnyListener()) {
-                try {
-                    itpdHtmlInteractor.parseITPDHTML()
-                } catch (e: Exception) {
-                    Log.e(
-                        LOG_TAG, "LogReaderInteractors parseITPDHTML exception " +
-                                "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
-                    )
-                }
-
-            } else {
-                itpdHtmlInteractor.resetParserState()
-            }
-            if (connectionRecordsInteractor.hasAnyListener()) {
-                try {
-                    connectionRecordsInteractor.convertRecords()
-                } catch (e: Exception) {
-                    Log.e(
-                        LOG_TAG, "LogReaderInteractors convertRecords exception " +
-                                "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
-                    )
-                }
-
-            }
-
-            if (isModulesStateNotChanging()) {
-                counterStarting--
-            } else {
-                counterStarting = COUNTER_STARTING
-            }
-
-            if (counterStarting == 0) {
-                startLogsParser(TIMER_MAIN_PERIOD)
-                counterStarting = COUNTER_STARTING
-            }
-
-        } catch (e: Exception) {
-            Log.e(
-                LOG_TAG, "LogReaderInteractors parseLogs exception " +
-                        "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
-            )
-        }
-    }
-
-    private fun isModulesStateNotChanging(): Boolean {
-        return (modulesStatus.dnsCryptState == ModuleState.STOPPED ||
-                modulesStatus.dnsCryptState == ModuleState.FAULT ||
-                modulesStatus.dnsCryptState == ModuleState.RUNNING && modulesStatus.isDnsCryptReady)
-                && (modulesStatus.torState == ModuleState.STOPPED ||
-                modulesStatus.torState == ModuleState.FAULT ||
-                modulesStatus.torState == ModuleState.RUNNING && modulesStatus.isTorReady)
-                && (modulesStatus.itpdState == ModuleState.STOPPED ||
-                modulesStatus.itpdState == ModuleState.FAULT ||
-                modulesStatus.itpdState == ModuleState.RUNNING && modulesStatus.isItpdReady)
     }
 }

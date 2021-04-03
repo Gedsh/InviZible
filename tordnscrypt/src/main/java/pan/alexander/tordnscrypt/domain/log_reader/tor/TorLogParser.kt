@@ -20,14 +20,14 @@
 package pan.alexander.tordnscrypt.domain.log_reader.tor
 
 import pan.alexander.tordnscrypt.domain.entities.LogDataModel
-import pan.alexander.tordnscrypt.domain.log_reader.LogParser
+import pan.alexander.tordnscrypt.domain.log_reader.AbstractLogParser
 import pan.alexander.tordnscrypt.domain.ModulesLogRepository
 import java.util.regex.Pattern
 
 private const val COUNT_DOWN_TIMER = 5
 private val patternBootstrappedPercents = Pattern.compile("Bootstrapped +(\\d+)%")
 
-class TorLogParser(private val modulesLogRepository: ModulesLogRepository) : LogParser() {
+class TorLogParser(private val modulesLogRepository: ModulesLogRepository) : AbstractLogParser() {
     private var startedSuccessfully = false
     private var startedWithError = false
     private var percentsSaved = -1

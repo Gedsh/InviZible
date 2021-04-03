@@ -26,7 +26,7 @@ import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
 import java.lang.StringBuilder
 import java.util.*
 
-abstract class LogParser {
+abstract class AbstractLogParser {
 
     abstract fun parseLog(): LogDataModel
 

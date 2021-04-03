@@ -19,9 +19,12 @@
 
 package pan.alexander.tordnscrypt.domain.log_reader.dnscrypt
 
+import android.util.Log
 import pan.alexander.tordnscrypt.domain.ModulesLogRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
+import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
+import java.lang.Exception
 
 class DNSCryptInteractor(private val modulesLogRepository: ModulesLogRepository) {
     private val listeners: HashSet<OnDNSCryptLogUpdatedListener?> = HashSet()
@@ -45,7 +48,23 @@ class DNSCryptInteractor(private val modulesLogRepository: ModulesLogRepository)
     }
 
     fun parseDNSCryptLog() {
+        try {
+            parseLog()
+        } catch (e: Exception) {
+            Log.e(
+                LOG_TAG, "DNSCryptInteractor parseDNSCryptLog exception " +
+                        "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
+            )
+        }
+    }
 
+    fun resetParserState() {
+        if (modulesStatus.dnsCryptState != ModuleState.RUNNING) {
+            parser = null
+        }
+    }
+
+    private fun parseLog() {
         if (listeners.isEmpty()) {
             return
         }
@@ -64,12 +83,6 @@ class DNSCryptInteractor(private val modulesLogRepository: ModulesLogRepository)
             } else {
                 listener?.let { removeListener(it) }
             }
-        }
-    }
-
-    fun resetParserState() {
-        if (modulesStatus.dnsCryptState != ModuleState.RUNNING) {
-            parser = null
         }
     }
 }

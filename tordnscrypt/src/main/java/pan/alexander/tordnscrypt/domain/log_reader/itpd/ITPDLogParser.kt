@@ -20,10 +20,10 @@
 package pan.alexander.tordnscrypt.domain.log_reader.itpd
 
 import pan.alexander.tordnscrypt.domain.entities.LogDataModel
-import pan.alexander.tordnscrypt.domain.log_reader.LogParser
+import pan.alexander.tordnscrypt.domain.log_reader.AbstractLogParser
 import pan.alexander.tordnscrypt.domain.ModulesLogRepository
 
-class ITPDLogParser(private val modulesLogRepository: ModulesLogRepository) : LogParser() {
+class ITPDLogParser(private val modulesLogRepository: ModulesLogRepository) : AbstractLogParser() {
     private var startedSuccessfully = false
     private var startedWithError = false
     private var linesSaved = listOf<String>()
