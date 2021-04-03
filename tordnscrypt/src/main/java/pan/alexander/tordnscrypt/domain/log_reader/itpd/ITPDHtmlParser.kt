@@ -24,7 +24,7 @@ import pan.alexander.tordnscrypt.domain.ModulesLogRepository
 import java.util.*
 import java.util.regex.Pattern
 
-private val patternBootstrappedPercents = Pattern.compile("Tunnel creation success rate:.+(\\d+)%")
+private val patternBootstrappedPercents = Pattern.compile("Tunnel creation success rate:\\D+(\\d+)%")
 
 class ITPDHtmlParser(val modulesLogRepository: ModulesLogRepository) {
     private var startedSuccessfully = false
