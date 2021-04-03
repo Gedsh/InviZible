@@ -64,7 +64,7 @@ class LogReaderLoop(
             return
         }
 
-        Log.i(LOG_TAG, "LogReaderLoop startLogsParser")
+        Log.i(LOG_TAG, "LogReaderLoop startLogsParser, period $period sec")
 
         displayPeriod = period
 

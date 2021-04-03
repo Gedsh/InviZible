@@ -70,13 +70,13 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
     private DNSCryptFragmentView view;
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
     private ModuleState fixedModuleState;
-    private boolean dnsCryptLogAutoScroll = true;
+    private volatile boolean dnsCryptLogAutoScroll = true;
 
     private DNSCryptInteractorInterface dnsCryptInteractor;
     private ConnectionRecordsInteractorInterface connectionRecordsInteractor;
-    private LogDataModel savedLogData;
-    private int savedLinesLength;
-    private String savedConnectionRecords = "";
+    private volatile LogDataModel savedLogData;
+    private volatile int savedLinesLength;
+    private volatile String savedConnectionRecords = "";
     private boolean fixedDNSCryptReady;
     private boolean fixedDNSCryptError;
 
@@ -315,7 +315,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
             savedLogData = dnsCryptLogData;
 
-            if (fixedDNSCryptReady && !isDNSCryptReady()) {
+            if (isFixedReadyState() && !isDNSCryptReady()) {
                 setFixedReadyState(false);
             }
 
@@ -333,7 +333,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
     private void dnsCryptStartedSuccessfully() {
 
-        if (fixedDNSCryptReady || !isActive()) {
+        if (isFixedReadyState() || !isActive()) {
             return;
         }
 
@@ -351,7 +351,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
     }
 
     private void dnsCryptStartedWithError(LogDataModel logData) {
-        if (fixedDNSCryptError || !isActive()) {
+        if (isFixedErrorState() || !isActive()) {
             return;
         }
 
@@ -448,7 +448,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             return;
         }
 
-        if (currentModuleState == RUNNING) {
+        if (currentModuleState == RUNNING || currentModuleState == STARTING) {
 
             if (isDNSCryptReady()) {
                 setDnsCryptRunning();
@@ -456,6 +456,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             } else {
                 setDnsCryptStarting();
                 setDNSCryptProgressBarIndeterminate(true);
+                setFixedReadyState(false);
             }
 
             ServiceVPNHelper.prepareVPNServiceIfRequired(view.getFragmentActivity(), modulesStatus);
@@ -468,6 +469,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
         }  else if (currentModuleState == RESTARTING) {
             setDnsCryptStarting();
             setDNSCryptProgressBarIndeterminate(true);
+            setFixedReadyState(false);
         } else if (currentModuleState == STOPPED) {
 
             stopDisplayLog();
@@ -637,11 +639,19 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
                 && !modulesStatus.isUseModulesWithRoot();
     }
 
-    private void setFixedReadyState(boolean ready) {
+    private synchronized boolean isFixedReadyState() {
+        return fixedDNSCryptReady;
+    }
+
+    private synchronized void setFixedReadyState(boolean ready) {
         fixedDNSCryptReady = ready;
     }
 
-    private void setFixedErrorState(boolean error) {
+    private synchronized boolean isFixedErrorState() {
+        return fixedDNSCryptError;
+    }
+
+    private synchronized void setFixedErrorState(boolean error) {
         fixedDNSCryptError = error;
     }
 }

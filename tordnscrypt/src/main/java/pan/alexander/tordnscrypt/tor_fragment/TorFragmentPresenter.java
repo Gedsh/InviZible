@@ -90,8 +90,8 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
     private ScaleGestureDetector scaleGestureDetector;
 
     private TorInteractorInterface torInteractor;
-    private LogDataModel savedLogData = null;
-    private int savedLinesLength;
+    private volatile LogDataModel savedLogData = null;
+    private volatile int savedLinesLength;
     private boolean fixedTorReady;
     private boolean fixedTorError;
 
@@ -245,7 +245,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
             return;
         }
 
-        if (currentModuleState == RUNNING) {
+        if (currentModuleState == RUNNING || currentModuleState == STARTING) {
 
             if (isTorReady()) {
                 setTorRunning();
@@ -253,6 +253,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
             } else {
                 setTorStarting();
                 setTorProgressBarIndeterminate(true);
+                setFixedReadyState(false);
             }
 
             ServiceVPNHelper.prepareVPNServiceIfRequired(view.getFragmentActivity(), modulesStatus);
@@ -265,6 +266,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
         } else if (currentModuleState == RESTARTING) {
             setTorStarting();
             setTorProgressBarIndeterminate(true);
+            setFixedReadyState(false);
         } else if (currentModuleState == STOPPED) {
             stopDisplayLog();
 
@@ -379,7 +381,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
             savedLogData = torLogData;
 
-            if (fixedTorReady && !isTorReady()) {
+            if (isFixedReadyState() && !isTorReady()) {
                 setFixedReadyState(false);
             }
 
@@ -396,7 +398,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
     private void torStartingSuccessfully(LogDataModel logData) {
 
-        if (fixedTorReady || !isActive()) {
+        if (isFixedReadyState() || !isActive()) {
             return;
         }
 
@@ -431,7 +433,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
     }
 
     private void torStartingWithError(LogDataModel logData) {
-        if (fixedTorReady || fixedTorError || !isActive()) {
+        if (isFixedReadyState() || isFixedErrorState() || !isActive()) {
             return;
         }
 
@@ -743,11 +745,19 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
         }
     }
 
-    public void setFixedReadyState(boolean ready) {
+    private synchronized boolean isFixedReadyState() {
+        return fixedTorReady;
+    }
+
+    private synchronized void setFixedReadyState(boolean ready) {
         this.fixedTorReady = ready;
     }
 
-    public void setFixedErrorState(boolean error) {
+    private synchronized boolean isFixedErrorState() {
+        return fixedTorError;
+    }
+
+    private synchronized void setFixedErrorState(boolean error) {
         this.fixedTorError = error;
     }
 }

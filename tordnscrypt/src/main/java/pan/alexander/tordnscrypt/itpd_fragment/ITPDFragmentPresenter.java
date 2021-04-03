@@ -76,11 +76,11 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
     private String appDataDir;
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
     private ModuleState fixedModuleState;
-    private boolean itpdLogAutoScroll = true;
+    private volatile boolean itpdLogAutoScroll = true;
     private ScaleGestureDetector scaleGestureDetector;
 
     private ITPDInteractorInterface itpdInteractor;
-    private int previousLastLinesLength;
+    private volatile int previousLastLinesLength;
     private boolean fixedITPDReady;
 
 
@@ -252,7 +252,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
             return;
         }
 
-        if (currentModuleState == RUNNING) {
+        if (currentModuleState == RUNNING || currentModuleState == STARTING) {
 
             if (isITPDReady()) {
                 setITPDRunning();
@@ -260,6 +260,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
             } else {
                 setITPDStarting();
                 setITPDProgressBarIndeterminate(true);
+                setFixedReadyState(false);
             }
 
             setITPDStartButtonEnabled(true);
@@ -270,6 +271,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
         } else if (currentModuleState == RESTARTING) {
             setITPDStarting();
             setITPDProgressBarIndeterminate(true);
+            setFixedReadyState(false);
         } else if (currentModuleState == STOPPED) {
             stopDisplayLog();
 
@@ -509,11 +511,11 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
                 view.setITPDLogViewText(htmlDataLines);
             }
 
-            if (fixedITPDReady && !isITPDReady()) {
+            if (isFixedReadyState() && !isITPDReady()) {
                 setFixedReadyState(false);
             }
 
-            if (itpdHtmlData.getStartedSuccessfully() && !fixedITPDReady) {
+            if (itpdHtmlData.getStartedSuccessfully() && !isFixedReadyState()) {
                 setFixedReadyState(true);
                 setITPDRunning();
                 setITPDProgressBarIndeterminate(false);
@@ -536,7 +538,11 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
         return false;
     }
 
-    public void setFixedReadyState(boolean ready) {
+    private synchronized boolean isFixedReadyState() {
+        return fixedITPDReady;
+    }
+
+    private synchronized void setFixedReadyState(boolean ready) {
         this.fixedITPDReady = ready;
     }
 }
