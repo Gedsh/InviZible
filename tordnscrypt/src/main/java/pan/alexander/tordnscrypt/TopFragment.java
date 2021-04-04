@@ -233,22 +233,22 @@ public class TopFragment extends Fragment {
     public void onStop() {
         super.onStop();
 
-        Context context = getActivity();
+        Activity activity = getActivity();
 
-        if (context != null) {
-            new PrefManager(context).setFloatPref("LogsTextSize", logsTextSize);
+        if (activity != null) {
+            new PrefManager(activity).setFloatPref("LogsTextSize", logsTextSize);
         }
 
-        unRegisterReceiver(context);
+        unRegisterReceiver(activity);
 
         closePleaseWaitDialog();
 
-        if (context != null && !modulesStatus.isUseModulesWithRoot()
+        if (activity != null && activity.isFinishing() && !modulesStatus.isUseModulesWithRoot()
                 && (modulesStatus.getDnsCryptState() == RUNNING || modulesStatus.getDnsCryptState() == STOPPED)
                 && (modulesStatus.getTorState() == RUNNING || modulesStatus.getTorState() == STOPPED)
                 && (modulesStatus.getItpdState() == RUNNING || modulesStatus.getItpdState() == STOPPED)
                 && !(modulesStatus.getDnsCryptState() == STOPPED && modulesStatus.getTorState() == STOPPED && modulesStatus.getItpdState() == STOPPED)) {
-            ModulesAux.slowdownModulesStateLoopTimer(context);
+            ModulesAux.slowdownModulesStateLoopTimer(activity);
         }
     }
 
