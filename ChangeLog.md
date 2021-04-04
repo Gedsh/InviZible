@@ -527,3 +527,9 @@
 * Improved user interface interactivity.
 * Provided a universal (armv7a and arm64) build for the f-droid version.
 * Minor fixes and optimizations.
+
+**InviZible Pro beta 1.2.6**
+* Implemented the "Clean module folder" feature for DNSCrypt.
+* Fixed modules(Tor, DNSCrypt, I2P) show starting, even if they are truly running.
+* Fixed "Route All through Tor" when using hotspot and only Tor is running
+* Minor fixes and optimizations.

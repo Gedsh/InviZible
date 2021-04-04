@@ -1,0 +1,5 @@
+**InviZible Pro beta 1.2.6**
+* Implemented the "Clean module folder" feature for DNSCrypt.
+* Fixed modules(Tor, DNSCrypt, I2P) show starting, even if they are truly running.
+* Fixed "Route All through Tor" when using hotspot and only Tor is running
+* Minor fixes and optimizations.
