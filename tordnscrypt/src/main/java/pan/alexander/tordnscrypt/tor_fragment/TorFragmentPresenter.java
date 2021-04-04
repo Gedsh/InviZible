@@ -158,7 +158,14 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
     }
 
     public void onStop() {
-        stopDisplayLog();
+
+        if (view == null) {
+            return;
+        }
+
+        if (view.getFragmentActivity().isFinishing()) {
+            stopDisplayLog();
+        }
 
         view = null;
     }
@@ -247,13 +254,12 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
         if (currentModuleState == RUNNING || currentModuleState == STARTING) {
 
-            if (isTorReady()) {
+            if (isFixedReadyState()) {
                 setTorRunning();
                 setTorProgressBarIndeterminate(false);
             } else {
                 setTorStarting();
                 setTorProgressBarIndeterminate(true);
-                setFixedReadyState(false);
             }
 
             ServiceVPNHelper.prepareVPNServiceIfRequired(view.getFragmentActivity(), modulesStatus);
@@ -267,6 +273,9 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
             setTorStarting();
             setTorProgressBarIndeterminate(true);
             setFixedReadyState(false);
+        } else if (currentModuleState == STOPPING) {
+            setTorStopping();
+            setTorProgressBarIndeterminate(true);
         } else if (currentModuleState == STOPPED) {
             stopDisplayLog();
 

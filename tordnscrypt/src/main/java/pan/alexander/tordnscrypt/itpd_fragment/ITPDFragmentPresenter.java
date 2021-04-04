@@ -146,7 +146,13 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
 
     public void onStop() {
 
-        stopDisplayLog();
+        if (view == null) {
+            return;
+        }
+
+        if (view.getFragmentActivity().isFinishing()) {
+            stopDisplayLog();
+        }
 
         view = null;
     }
@@ -254,13 +260,12 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
 
         if (currentModuleState == RUNNING || currentModuleState == STARTING) {
 
-            if (isITPDReady()) {
+            if (isFixedReadyState()) {
                 setITPDRunning();
                 setITPDProgressBarIndeterminate(false);
             } else {
                 setITPDStarting();
                 setITPDProgressBarIndeterminate(true);
-                setFixedReadyState(false);
             }
 
             setITPDStartButtonEnabled(true);
@@ -272,6 +277,9 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
             setITPDStarting();
             setITPDProgressBarIndeterminate(true);
             setFixedReadyState(false);
+        } else if (currentModuleState == STOPPING) {
+            setITPDStopping();
+            setITPDProgressBarIndeterminate(true);
         } else if (currentModuleState == STOPPED) {
             stopDisplayLog();
 

@@ -139,7 +139,15 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
     }
 
     public void onStop() {
-        stopDisplayLog();
+
+        if (view == null) {
+            return;
+        }
+
+        if (view.getFragmentActivity().isFinishing()) {
+            stopDisplayLog();
+        }
+
         view = null;
     }
 
@@ -450,13 +458,12 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
         if (currentModuleState == RUNNING || currentModuleState == STARTING) {
 
-            if (isDNSCryptReady()) {
+            if (isFixedReadyState()) {
                 setDnsCryptRunning();
                 setDNSCryptProgressBarIndeterminate(false);
             } else {
                 setDnsCryptStarting();
                 setDNSCryptProgressBarIndeterminate(true);
-                setFixedReadyState(false);
             }
 
             ServiceVPNHelper.prepareVPNServiceIfRequired(view.getFragmentActivity(), modulesStatus);
@@ -466,10 +473,13 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             ModulesAux.saveDNSCryptStateRunning(context, true);
 
             view.setStartButtonText(R.string.btnDNSCryptStop);
-        }  else if (currentModuleState == RESTARTING) {
+        } else if (currentModuleState == RESTARTING) {
             setDnsCryptStarting();
             setDNSCryptProgressBarIndeterminate(true);
             setFixedReadyState(false);
+        } else if (currentModuleState == STOPPING) {
+            setDnsCryptStopping();
+            setDNSCryptProgressBarIndeterminate(true);
         } else if (currentModuleState == STOPPED) {
 
             stopDisplayLog();
