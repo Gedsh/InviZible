@@ -562,7 +562,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             }
 
 
-            List<String> commandsTether = tethering.activateTethering(true);
+            List<String> commandsTether = tethering.activateTethering(false);
             if (commandsTether.size() > 0)
                 commands.addAll(commandsTether);
         } else if (itpdState == RUNNING) {
