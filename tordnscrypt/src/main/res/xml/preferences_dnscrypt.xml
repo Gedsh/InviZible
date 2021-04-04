@@ -325,5 +325,9 @@
             android:title="@string/pref_dnscrypt_edit_toml"
             android:summary="@string/pref_advanced">
         </Preference>
+        <Preference
+            android:key="cleanDNSCryptFolder"
+            android:title="@string/pref_tor_clean_module_folder">
+        </Preference>
     </PreferenceCategory>
 </androidx.preference.PreferenceScreen>

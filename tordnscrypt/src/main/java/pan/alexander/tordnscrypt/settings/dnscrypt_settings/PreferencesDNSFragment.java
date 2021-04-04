@@ -61,6 +61,7 @@ import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 import static android.provider.DocumentsContract.EXTRA_INITIAL_URI;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 public class PreferencesDNSFragment extends PreferenceFragmentCompat
@@ -133,6 +134,11 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             editDNSTomlDirectly.setOnPreferenceClickListener(this);
         } else if (!appVersion.startsWith("g")) {
             Log.e(LOG_TAG, "PreferencesDNSFragment preference is null exception");
+        }
+
+        Preference cleanDNSCryptFolder = findPreference("cleanDNSCryptFolder");
+        if (cleanDNSCryptFolder != null) {
+            cleanDNSCryptFolder.setOnPreferenceClickListener(this);
         }
 
         if (ModulesStatus.getInstance().isUseModulesWithRoot()) {
@@ -401,34 +407,34 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
     @Override
     public boolean onPreferenceClick(Preference preference) {
         Activity activity = getActivity();
-        if (activity == null) {
+        if (activity == null || !isAdded()) {
             return false;
         }
 
-        if ("editDNSTomlDirectly".equals(preference.getKey()) && isAdded()) {
+        if ("editDNSTomlDirectly".equals(preference.getKey())) {
             ConfigEditorFragment.openEditorFragment(getParentFragmentManager(), "dnscrypt-proxy.toml");
             return true;
-        } else if (Objects.equals(preference.getKey().trim(), "erase_blacklist") && isAdded()) {
+        } else if (Objects.equals(preference.getKey().trim(), "erase_blacklist")) {
             showAreYouSureDialog(activity, R.string.pref_dnscrypt_erase_blacklist, () ->
                     eraseRules(activity, DNSCryptRulesVariant.BLACKLIST_HOSTS, "remote_blacklist"));
             return true;
-        } else if (Objects.equals(preference.getKey().trim(), "erase_whitelist") && isAdded()) {
+        } else if (Objects.equals(preference.getKey().trim(), "erase_whitelist")) {
             showAreYouSureDialog(activity, R.string.pref_dnscrypt_erase_whitelist, () ->
                     eraseRules(activity, DNSCryptRulesVariant.WHITELIST_HOSTS, "remote_whitelist"));
             return true;
-        } else if (Objects.equals(preference.getKey().trim(), "erase_ipblacklist") && isAdded()) {
+        } else if (Objects.equals(preference.getKey().trim(), "erase_ipblacklist")) {
             showAreYouSureDialog(activity, R.string.pref_dnscrypt_erase_ipblacklist, () ->
                     eraseRules(activity, DNSCryptRulesVariant.BLACKLIST_IPS, "remote_ipblacklist"));
             return true;
-        } else if (Objects.equals(preference.getKey().trim(), "erase_forwarding_rules") && isAdded()) {
+        } else if (Objects.equals(preference.getKey().trim(), "erase_forwarding_rules")) {
             showAreYouSureDialog(activity, R.string.pref_dnscrypt_erase_forwarding_rules, () ->
                     eraseRules(activity, DNSCryptRulesVariant.FORWARDING, "remote_forwarding_rules"));
             return true;
-        } else if (Objects.equals(preference.getKey().trim(), "erase_cloaking_rules") && isAdded()) {
+        } else if (Objects.equals(preference.getKey().trim(), "erase_cloaking_rules")) {
             showAreYouSureDialog(activity, R.string.pref_dnscrypt_erase_cloaking_rules, () ->
                     eraseRules(activity, DNSCryptRulesVariant.CLOAKING, "remote_cloaking_rules"));
             return true;
-        } else if (Objects.equals(preference.getKey().trim(), "local_blacklist") && isAdded()) {
+        } else if (Objects.equals(preference.getKey().trim(), "local_blacklist")) {
 
             if (rootDirAccessible) {
                 FilePickerDialog dialog = new FilePickerDialog(activity, getFilePickerProperties(activity));
@@ -439,7 +445,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             }
 
             return true;
-        } else if (Objects.equals(preference.getKey().trim(), "local_whitelist") && isAdded()) {
+        } else if (Objects.equals(preference.getKey().trim(), "local_whitelist")) {
 
             if (rootDirAccessible) {
                 FilePickerDialog dialog = new FilePickerDialog(activity, getFilePickerProperties(activity));
@@ -450,7 +456,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             }
 
             return true;
-        } else if (Objects.equals(preference.getKey().trim(), "local_ipblacklist") && isAdded()) {
+        } else if (Objects.equals(preference.getKey().trim(), "local_ipblacklist")) {
 
             if (rootDirAccessible) {
                 FilePickerDialog dialog = new FilePickerDialog(activity, getFilePickerProperties(activity));
@@ -461,7 +467,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             }
 
             return true;
-        } else if (Objects.equals(preference.getKey().trim(), "local_forwarding_rules") && isAdded()) {
+        } else if (Objects.equals(preference.getKey().trim(), "local_forwarding_rules")) {
 
             if (rootDirAccessible) {
                 FilePickerDialog dialog = new FilePickerDialog(activity, getFilePickerProperties(activity));
@@ -472,7 +478,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             }
 
             return true;
-        } else if (Objects.equals(preference.getKey().trim(), "local_cloaking_rules") && isAdded()) {
+        } else if (Objects.equals(preference.getKey().trim(), "local_cloaking_rules")) {
 
             if (rootDirAccessible) {
                 FilePickerDialog dialog = new FilePickerDialog(activity, getFilePickerProperties(activity));
@@ -483,6 +489,8 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             }
 
             return true;
+        } else if ("cleanDNSCryptFolder".equals(preference.getKey().trim())) {
+            cleanModuleFolder(activity);
         }
 
         return false;
@@ -597,5 +605,35 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         properties.extensions = new String[]{"txt"};
 
         return properties;
+    }
+
+    private void cleanModuleFolder(Context context) {
+        if (ModulesStatus.getInstance().getDnsCryptState() != STOPPED) {
+            Toast.makeText(context, R.string.btnDNSCryptStop, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+
+            boolean successfully1 = !FileOperations.deleteFileSynchronous(context, appDataDir
+                    + "/app_data/dnscrypt-proxy", "public-resolvers.md");
+            boolean successfully2 = !FileOperations.deleteFileSynchronous(context, appDataDir
+                    + "/app_data/dnscrypt-proxy", "public-resolvers.md.minisig");
+            boolean successfully3 = !FileOperations.deleteFileSynchronous(context, appDataDir
+                    + "/app_data/dnscrypt-proxy", "relays.md");
+            boolean successfully4 = !FileOperations.deleteFileSynchronous(context, appDataDir
+                    + "/app_data/dnscrypt-proxy", "relays.md.minisig");
+
+            Activity activity = getActivity();
+            if (activity == null) {
+                return;
+            }
+
+            if (successfully1 || successfully2 || successfully3 || successfully4) {
+                activity.runOnUiThread(() -> Toast.makeText(activity, R.string.done, Toast.LENGTH_SHORT).show());
+            } else {
+                activity.runOnUiThread(() -> Toast.makeText(activity, R.string.wrong, Toast.LENGTH_SHORT).show());
+            }
+        });
     }
 }
