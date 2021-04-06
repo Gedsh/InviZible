@@ -1,0 +1,4 @@
+**InviZible Pro beta 1.2.7**
+* Fixed "Run modules with Root" option (Do not enable it unless you really need to).
+* Optimized memory usage.
+* Minor fixes and optimizations.
