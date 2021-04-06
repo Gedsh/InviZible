@@ -21,6 +21,8 @@ package pan.alexander.tordnscrypt.dialogs;
 
 import android.app.Dialog;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -33,6 +35,9 @@ import androidx.fragment.app.FragmentTransaction;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public abstract class ExtendedDialogFragment extends DialogFragment {
+
+    private Handler handler = new Handler(Looper.getMainLooper());
+    private int waitForCloseCounter = 3;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -50,6 +55,17 @@ public abstract class ExtendedDialogFragment extends DialogFragment {
         }
 
         super.onDestroyView();
+    }
+
+    @Override
+    public void onDestroy() {
+
+        if (handler != null) {
+            handler.removeCallbacksAndMessages(null);
+            handler = null;
+        }
+
+        super.onDestroy();
     }
 
     @NonNull
@@ -72,6 +88,20 @@ public abstract class ExtendedDialogFragment extends DialogFragment {
             ft.commitAllowingStateLoss();
         } catch (IllegalStateException e) {
             Log.w(LOG_TAG, "ExtendedDialogFragment Exception " + e.getMessage() + " " + e.getCause());
+        }
+    }
+
+    @Override
+    public void dismiss() {
+        if (isStateSaved()) {
+            if (waitForCloseCounter > 0 && handler != null) {
+                handler.postDelayed(this::dismiss, 100);
+                waitForCloseCounter--;
+            } else {
+                super.dismissAllowingStateLoss();
+            }
+        } else {
+            super.dismiss();
         }
     }
 
