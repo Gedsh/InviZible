@@ -234,16 +234,40 @@ public class TopFragment extends Fragment {
         super.onStop();
 
         Activity activity = getActivity();
-
-        if (activity != null) {
-            new PrefManager(activity).setFloatPref("LogsTextSize", logsTextSize);
+        if (activity == null) {
+            return;
         }
+
+        saveLogsTextSize(activity);
 
         unRegisterReceiver(activity);
 
         closePleaseWaitDialog();
 
-        if (activity != null && activity.isFinishing() && !modulesStatus.isUseModulesWithRoot()
+        slowDownModulesStateTimerIfRequired(activity);
+
+        if (!activity.isChangingConfigurations()) {
+            stopInstallationTimer();
+
+            removeOnActivityChangeListener();
+
+            stopTimer();
+
+            cancelRootChecker();
+
+            cancelCheckUpdatesTask();
+            dismissCheckUpdatesDialog();
+
+            cancelHandlerTasks();
+        }
+    }
+
+    private void saveLogsTextSize(Context context) {
+        new PrefManager(context).setFloatPref("LogsTextSize", logsTextSize);
+    }
+
+    private void slowDownModulesStateTimerIfRequired(Activity activity) {
+        if (!activity.isChangingConfigurations() && !modulesStatus.isUseModulesWithRoot()
                 && (modulesStatus.getDnsCryptState() == RUNNING || modulesStatus.getDnsCryptState() == STOPPED)
                 && (modulesStatus.getTorState() == RUNNING || modulesStatus.getTorState() == STOPPED)
                 && (modulesStatus.getItpdState() == RUNNING || modulesStatus.getItpdState() == STOPPED)
@@ -252,16 +276,7 @@ public class TopFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-
-        stopInstallationTimer();
-
-        removeOnActivityChangeListener();
-
-        stopTimer();
-
+    private void cancelRootChecker() {
         if (rootChecker != null) {
 
             if (!rootChecker.isCancelled()) {
@@ -272,10 +287,9 @@ public class TopFragment extends Fragment {
             rootChecker.topFragmentWeakReference = null;
             rootChecker = null;
         }
+    }
 
-        cancelCheckUpdatesTask();
-        dismissCheckUpdatesDialog();
-
+    private void cancelHandlerTasks() {
         if (handler != null) {
             handler.removeCallbacksAndMessages(null);
             handler = null;
@@ -631,6 +645,7 @@ public class TopFragment extends Fragment {
     private void stopInstallationTimer() {
         if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
             scheduledFuture.cancel(false);
+            scheduledFuture = null;
         }
     }
 
