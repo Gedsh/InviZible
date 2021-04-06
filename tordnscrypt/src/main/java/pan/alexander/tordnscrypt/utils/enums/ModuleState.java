@@ -24,5 +24,6 @@ public enum ModuleState {
     RUNNING,
     STOPPING,
     STOPPED,
-    FAULT
+    FAULT,
+    UNDEFINED
 }

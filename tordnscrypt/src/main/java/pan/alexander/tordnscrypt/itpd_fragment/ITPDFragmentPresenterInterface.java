@@ -30,8 +30,6 @@ public interface ITPDFragmentPresenterInterface {
 
     void setITPDSomethingWrong();
 
-    void setITPDRunning();
-
     void setITPDStopped();
 
     void setITPDInstalling();

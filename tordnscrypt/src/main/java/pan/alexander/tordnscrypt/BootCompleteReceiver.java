@@ -18,7 +18,6 @@ package pan.alexander.tordnscrypt;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -40,7 +39,6 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
 import pan.alexander.tordnscrypt.utils.ApManager;
 import pan.alexander.tordnscrypt.utils.FileShortener;
-import pan.alexander.tordnscrypt.utils.GetIPsJobService;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
@@ -49,6 +47,7 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.modules.ModulesService.actionStopServiceForeground;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
@@ -56,11 +55,9 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 public class BootCompleteReceiver extends BroadcastReceiver {
     public static final String ALWAYS_ON_VPN = "pan.alexander.tordnscrypt.ALWAYS_ON_VPN";
     public static final String SHELL_SCRIPT_CONTROL = "pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL";
-    private final int mJobId = PreferencesFastFragment.mJobId;
 
     private Context context;
     private String appDataDir;
-    private int refreshPeriodHours = 12;
 
     @Override
     public void onReceive(final Context context, Intent intent) {
@@ -78,15 +75,6 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         final boolean tethering_autostart;
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        String refreshPeriod = shPref.getString("pref_fast_site_refresh_interval", "12");
-        if (refreshPeriod != null && !refreshPeriod.isEmpty()) {
-            try {
-                refreshPeriodHours = Integer.parseInt(refreshPeriod.replaceAll("\\D+", ""));
-            } catch (Exception e) {
-                Log.w(LOG_TAG, "BootCompleteReceiver parse refreshPeriodHours exception " + e.getMessage() + " " + e.getCause());
-            }
-        }
-
 
         String action = intent.getAction();
 
@@ -175,50 +163,24 @@ public class BootCompleteReceiver extends BroadcastReceiver {
             }
 
             if (autoStartDNSCrypt && autoStartTor && autoStartITPD) {
-
                 startStopRestartModules(true, true, true);
-
-                startRefreshTorUnlockIPs(context);
-
             } else if (autoStartDNSCrypt && autoStartTor) {
-
                 startStopRestartModules(true, true, false);
-
-                startRefreshTorUnlockIPs(context);
-
             } else if (autoStartDNSCrypt && !autoStartITPD) {
-
                 startStopRestartModules(true, false, false);
-
                 stopRefreshTorUnlockIPs(context);
-
             } else if (!autoStartDNSCrypt && autoStartTor && !autoStartITPD) {
-
                 startStopRestartModules(false, true, false);
-
-                startRefreshTorUnlockIPs(context);
-
             } else if (!autoStartDNSCrypt && !autoStartTor && autoStartITPD) {
-
                 startStopRestartModules(false, false, true);
-
                 stopRefreshTorUnlockIPs(context);
-
             } else if (!autoStartDNSCrypt && autoStartTor) {
-
                 startStopRestartModules(false, true, true);
-
-                startRefreshTorUnlockIPs(context);
-
             } else if (autoStartDNSCrypt) {
-
                 startStopRestartModules(true, false, true);
-
                 stopRefreshTorUnlockIPs(context);
-
             } else {
                 startStopRestartModules(false, false, false);
-
                 stopRefreshTorUnlockIPs(context);
             }
 
@@ -278,25 +240,33 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
     private void startStopRestartModules(boolean autoStartDNSCrypt, boolean autoStartTor, boolean autoStartITPD) {
 
+        ModulesStatus modulesStatus = ModulesStatus.getInstance();
+
         if (autoStartDNSCrypt) {
             runDNSCrypt();
-            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
+            modulesStatus.setIptablesRulesUpdateRequested(true);
         } else if (ModulesAux.isDnsCryptSavedStateRunning(context)) {
             stopDNSCrypt();
+        } else {
+            modulesStatus.setDnsCryptState(STOPPED);
         }
 
         if (autoStartTor) {
             runTor();
-            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
+            modulesStatus.setIptablesRulesUpdateRequested(true);
         } else if (ModulesAux.isTorSavedStateRunning(context)){
             stopTor();
+        } else {
+            modulesStatus.setTorState(STOPPED);
         }
 
         if (autoStartITPD) {
             runITPD();
-            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(true);
+            modulesStatus.setIptablesRulesUpdateRequested(true);
         } else if (ModulesAux.isITPDSavedStateRunning(context)){
             stopITPD();
+        } else {
+            modulesStatus.setItpdState(STOPPED);
         }
 
         saveModulesStateRunning(autoStartDNSCrypt, autoStartTor, autoStartITPD);
@@ -333,29 +303,13 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         ModulesKiller.stopITPD(context);
     }
 
-    private void startRefreshTorUnlockIPs(Context context) {
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP || refreshPeriodHours == 0) {
-            return;
-        }
-        ComponentName jobService = new ComponentName(context, GetIPsJobService.class);
-        JobInfo.Builder getIPsJobBuilder = new JobInfo.Builder(mJobId, jobService);
-        getIPsJobBuilder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
-        getIPsJobBuilder.setPeriodic(refreshPeriodHours * 60 * 60 * 1000);
-
-        JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
-
-        if (jobScheduler != null) {
-            jobScheduler.schedule(getIPsJobBuilder.build());
-        }
-    }
-
     private void stopRefreshTorUnlockIPs(Context context) {
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP) {
             return;
         }
         JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
         if (jobScheduler != null) {
-            jobScheduler.cancel(mJobId);
+            jobScheduler.cancel(PreferencesFastFragment.mJobId);
         }
     }
 

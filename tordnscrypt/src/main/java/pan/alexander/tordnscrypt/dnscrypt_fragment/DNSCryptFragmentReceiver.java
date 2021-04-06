@@ -128,12 +128,8 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
                 if (sb.toString().toLowerCase().contains(dnscryptPath.toLowerCase())
                         && sb.toString().contains("checkDNSRunning")) {
-
-                    presenter.setDnsCryptRunning();
-                    ModulesAux.saveDNSCryptStateRunning(context, true);
                     modulesStatus.setDnsCryptState(RUNNING);
                     presenter.displayLog();
-
                 } else if (!sb.toString().toLowerCase().contains(dnscryptPath.toLowerCase())
                         && sb.toString().contains("checkDNSRunning")) {
                     if (modulesStatus.getDnsCryptState() == STOPPED) {

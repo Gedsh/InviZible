@@ -72,6 +72,7 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 public class TorFragmentPresenter implements TorFragmentPresenterInterface,
         OnTorLogUpdatedListener, OnInternetConnectionCheckedListener {
@@ -163,8 +164,18 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
             return;
         }
 
-        if (view.getFragmentActivity().isFinishing()) {
+        if (!view.getFragmentActivity().isChangingConfigurations()) {
             stopDisplayLog();
+
+            fixedModuleState = STOPPED;
+            torLogAutoScroll = true;
+            scaleGestureDetector = null;
+            torInteractor = null;
+            savedLogData = null;
+            savedLinesLength = 0;
+            fixedTorReady = false;
+            fixedTorError = false;
+            checkConnectionInteractor = null;
         }
 
         view = null;
@@ -199,8 +210,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
         }
     }
 
-    @Override
-    public void setTorRunning() {
+    private void setTorRunning() {
         if (isActive()) {
             view.setTorStatus(R.string.tvTorRunning, R.color.textModuleStatusColorRunning);
             view.setStartButtonText(R.string.btnTorStop);
@@ -390,7 +400,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
             savedLogData = torLogData;
 
-            if (isFixedReadyState() && !isTorReady()) {
+            if (isFixedReadyState() && !isTorReady() && !isUseModulesWithRoot()) {
                 setFixedReadyState(false);
             }
 
@@ -514,8 +524,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
         }
     }
 
-    @Override
-    public void startRefreshTorUnlockIPs() {
+    private void startRefreshTorUnlockIPs() {
         if (!isActive()) {
             return;
         }
@@ -768,5 +777,9 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
     private synchronized void setFixedErrorState(boolean error) {
         this.fixedTorError = error;
+    }
+
+    private boolean isUseModulesWithRoot() {
+        return modulesStatus.isUseModulesWithRoot() && modulesStatus.getMode() == ROOT_MODE;
     }
 }

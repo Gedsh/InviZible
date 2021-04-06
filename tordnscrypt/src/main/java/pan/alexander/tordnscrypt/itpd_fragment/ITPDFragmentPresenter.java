@@ -65,6 +65,7 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
         OnITPDLogUpdatedListener, OnITPDHtmlUpdatedListener {
@@ -75,7 +76,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
     private ITPDFragmentView view;
     private String appDataDir;
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
-    private ModuleState fixedModuleState;
+    private ModuleState fixedModuleState = STOPPED;
     private volatile boolean itpdLogAutoScroll = true;
     private ScaleGestureDetector scaleGestureDetector;
 
@@ -95,8 +96,10 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
 
         context = view.getFragmentActivity();
 
-        PathVars pathVars = PathVars.getInstance(context);
-        appDataDir = pathVars.getAppDataDir();
+        if (appDataDir == null) {
+            PathVars pathVars = PathVars.getInstance(context);
+            appDataDir = pathVars.getAppDataDir();
+        }
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
         runI2PDWithRoot = shPref.getBoolean("swUseModulesRoot", false);
@@ -150,8 +153,15 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
             return;
         }
 
-        if (view.getFragmentActivity().isFinishing()) {
+        if (!view.getFragmentActivity().isChangingConfigurations()) {
             stopDisplayLog();
+
+            fixedModuleState = STOPPED;
+            itpdLogAutoScroll = true;
+            scaleGestureDetector = null;
+            itpdInteractor = null;
+            previousLastLinesLength = 0;
+            fixedITPDReady = false;
         }
 
         view = null;
@@ -163,8 +173,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
         }
     }
 
-    @Override
-    public void setITPDRunning() {
+    private void setITPDRunning() {
         if (isActive()) {
             view.setITPDStatus(R.string.tvITPDRunning, R.color.textModuleStatusColorRunning);
             view.setStartButtonText(R.string.btnITPDStop);
@@ -519,7 +528,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
                 view.setITPDLogViewText(htmlDataLines);
             }
 
-            if (isFixedReadyState() && !isITPDReady()) {
+            if (isFixedReadyState() && !isITPDReady() && !isUseModulesWithRoot()) {
                 setFixedReadyState(false);
             }
 
@@ -552,5 +561,9 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
 
     private synchronized void setFixedReadyState(boolean ready) {
         this.fixedITPDReady = ready;
+    }
+
+    private boolean isUseModulesWithRoot() {
+        return modulesStatus.isUseModulesWithRoot() && modulesStatus.getMode() == ROOT_MODE;
     }
 }

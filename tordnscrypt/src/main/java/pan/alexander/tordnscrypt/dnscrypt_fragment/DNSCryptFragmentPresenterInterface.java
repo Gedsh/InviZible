@@ -30,8 +30,6 @@ public interface DNSCryptFragmentPresenterInterface {
 
     void setDnsCryptSomethingWrong();
 
-    void setDnsCryptRunning();
-
     void setDnsCryptStopped();
 
     void setDnsCryptInstalling();

@@ -121,12 +121,8 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
 
                 if (sb.toString().toLowerCase().contains(itpdPath.toLowerCase())
                         && sb.toString().contains("checkITPDRunning")) {
-
-                    presenter.setITPDRunning();
-                    ModulesAux.saveITPDStateRunning(context, true);
                     modulesStatus.setItpdState(RUNNING);
                     presenter.displayLog();
-
                 } else if (!sb.toString().toLowerCase().contains(itpdPath.toLowerCase())
                         && sb.toString().contains("checkITPDRunning")) {
                     if (modulesStatus.getItpdState() == STOPPED) {

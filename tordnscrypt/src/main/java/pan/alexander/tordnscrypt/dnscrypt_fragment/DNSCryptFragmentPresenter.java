@@ -69,7 +69,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
     private DNSCryptFragmentView view;
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
-    private ModuleState fixedModuleState;
+    private ModuleState fixedModuleState = STOPPED;
     private volatile boolean dnsCryptLogAutoScroll = true;
 
     private DNSCryptInteractorInterface dnsCryptInteractor;
@@ -144,8 +144,18 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             return;
         }
 
-        if (view.getFragmentActivity().isFinishing()) {
+        if (!view.getFragmentActivity().isChangingConfigurations()) {
             stopDisplayLog();
+
+            dnsCryptLogAutoScroll = true;
+            fixedModuleState = STOPPED;
+            dnsCryptInteractor = null;
+            connectionRecordsInteractor = null;
+            savedLogData = null;
+            savedLinesLength = 0;
+            savedConnectionRecords = "";
+            fixedDNSCryptReady = false;
+            fixedDNSCryptError = false;
         }
 
         view = null;
@@ -199,8 +209,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
         }
     }
 
-    @Override
-    public void setDnsCryptRunning() {
+    private void setDnsCryptRunning() {
         if (!isActive()) {
             return;
         }
@@ -323,7 +332,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
             savedLogData = dnsCryptLogData;
 
-            if (isFixedReadyState() && !isDNSCryptReady()) {
+            if (isFixedReadyState() && !isDNSCryptReady() && !isUseModulesWithRoot()) {
                 setFixedReadyState(false);
             }
 
@@ -348,9 +357,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
         if (modulesStatus.getDnsCryptState() == STARTING
                 || modulesStatus.getDnsCryptState() == RUNNING) {
 
-            if (!modulesStatus.isUseModulesWithRoot()) {
-                setDNSCryptProgressBarIndeterminate(false);
-            }
+            setDNSCryptProgressBarIndeterminate(false);
 
             setFixedReadyState(true);
             setFixedErrorState(false);
@@ -663,5 +670,9 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
     private synchronized void setFixedErrorState(boolean error) {
         fixedDNSCryptError = error;
+    }
+
+    private boolean isUseModulesWithRoot() {
+        return modulesStatus.isUseModulesWithRoot() && modulesStatus.getMode() == ROOT_MODE;
     }
 }

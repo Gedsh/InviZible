@@ -26,13 +26,13 @@ import androidx.annotation.NonNull;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
-import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UNDEFINED;
 
 public final class ModulesStatus {
 
-    private volatile ModuleState dnsCryptState = STOPPED;
-    private volatile ModuleState torState = STOPPED;
-    private volatile ModuleState itpdState = STOPPED;
+    private volatile ModuleState dnsCryptState = UNDEFINED;
+    private volatile ModuleState torState = UNDEFINED;
+    private volatile ModuleState itpdState = UNDEFINED;
 
     private volatile boolean rootAvailable = false;
     private volatile boolean useModulesWithRoot;

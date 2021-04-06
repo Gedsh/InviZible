@@ -30,11 +30,7 @@ public interface TorFragmentPresenterInterface {
 
     void setTorSomethingWrong();
 
-    void setTorRunning();
-
     void setTorStopped();
-
-    void startRefreshTorUnlockIPs();
 
     void setTorInstalling();
 

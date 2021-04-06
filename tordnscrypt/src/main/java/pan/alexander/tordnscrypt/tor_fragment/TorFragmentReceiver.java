@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
@@ -122,8 +121,6 @@ public class TorFragmentReceiver extends BroadcastReceiver {
 
                     ModulesAux.saveTorStateRunning(context, true);
                     modulesStatus.setTorState(RUNNING);
-                    view.setStartButtonText(R.string.btnTorStop);
-                    presenter.startRefreshTorUnlockIPs();
                     presenter.displayLog();
 
                 } else if (!sb.toString().toLowerCase().contains(torPath.toLowerCase())

@@ -380,6 +380,12 @@ public class ModulesStateLoop implements Runnable,
                 return;
             } else if (modulesStatus.isContextUIDUpdateRequested()) {
                 return;
+            } else if (dnsCryptState == RUNNING && !modulesStatus.isDnsCryptReady()) {
+                return;
+            } else if (torState == RUNNING && !modulesStatus.isTorReady()) {
+                return;
+            } else if (itpdState == RUNNING && !modulesStatus.isItpdReady()) {
+                return;
             }
 
             stopCounter--;
