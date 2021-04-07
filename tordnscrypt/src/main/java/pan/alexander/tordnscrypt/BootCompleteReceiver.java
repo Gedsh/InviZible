@@ -42,10 +42,14 @@ import pan.alexander.tordnscrypt.utils.FileShortener;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
+import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.modules.ModulesService.actionStopServiceForeground;
+import static pan.alexander.tordnscrypt.modules.ModulesStateLoop.SAVED_DNSCRYPT_STATE_PREF;
+import static pan.alexander.tordnscrypt.modules.ModulesStateLoop.SAVED_ITPD_STATE_PREF;
+import static pan.alexander.tordnscrypt.modules.ModulesStateLoop.SAVED_TOR_STATE_PREF;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -133,6 +137,8 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
                 Log.i(LOG_TAG, "SHELL_SCRIPT_CONTROL start: " +
                         "DNSCrypt " + autoStartDNSCrypt + " Tor " + autoStartTor + " ITPD " + autoStartITPD);
+            } else {
+                resetModulesSavedState(context);
             }
 
             if (savedDNSCryptStateRunning || savedTorStateRunning || savedITPDStateRunning) {
@@ -277,6 +283,12 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         ModulesAux.saveDNSCryptStateRunning(context, saveDNSCryptRunning);
         ModulesAux.saveTorStateRunning(context, saveTorRunning);
         ModulesAux.saveITPDStateRunning(context, saveITPDRunning);
+    }
+
+    private void resetModulesSavedState(Context context) {
+        new PrefManager(context).setStrPref(SAVED_DNSCRYPT_STATE_PREF, ModuleState.UNDEFINED.toString());
+        new PrefManager(context).setStrPref(SAVED_TOR_STATE_PREF, ModuleState.UNDEFINED.toString());
+        new PrefManager(context).setStrPref(SAVED_ITPD_STATE_PREF, ModuleState.UNDEFINED.toString());
     }
 
     private void runDNSCrypt() {
