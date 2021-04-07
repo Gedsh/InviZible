@@ -538,3 +538,6 @@
 * Fixed "Run modules with Root" option (Do not enable it unless you really need to).
 * Optimized memory usage.
 * Minor fixes and optimizations.
+
+**InviZible Pro beta 1.2.8**
+* Fixed bugs related to the user interface and auto-start.
