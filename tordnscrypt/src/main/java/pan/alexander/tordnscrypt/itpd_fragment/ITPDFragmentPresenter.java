@@ -65,6 +65,7 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
@@ -129,10 +130,10 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
             } else if (currentModuleState == FAULT) {
                 setITPDSomethingWrong();
                 setITPDProgressBarIndeterminate(false);
-            } else {
+            } else if (currentModuleState == STOPPED) {
                 setITPDProgressBarIndeterminate(false);
                 setITPDStopped();
-                modulesStatus.setItpdState(STOPPED);
+                //modulesStatus.setItpdState(STOPPED);
             }
 
             if (currentModuleState != STOPPED
@@ -371,7 +372,8 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
 
         if (modulesStatus.getItpdState() != RUNNING) {
 
-            if (modulesStatus.isContextUIDUpdateRequested()) {
+            if (modulesStatus.isContextUIDUpdateRequested()
+                    || modulesStatus.getItpdState() == UNDEFINED) {
                 Toast.makeText(context, R.string.please_wait, Toast.LENGTH_SHORT).show();
                 setITPDStartButtonEnabled(true);
                 return;

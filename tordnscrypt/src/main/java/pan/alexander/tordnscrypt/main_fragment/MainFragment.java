@@ -78,6 +78,7 @@ import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UNDEFINED;
 
 public class MainFragment extends Fragment implements DNSCryptFragmentView, TorFragmentView, ITPDFragmentView,
         View.OnClickListener, CompoundButton.OnCheckedChangeListener, ViewTreeObserver.OnScrollChangedListener,
@@ -394,9 +395,9 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
         Drawable mainStartButtonDrawable;
 
-        if (modulesStatus.getDnsCryptState() == STOPPED
-                && modulesStatus.getTorState() == STOPPED
-                && modulesStatus.getItpdState() == STOPPED) {
+        if (modulesStatus.getDnsCryptState() == STOPPED || modulesStatus.getDnsCryptState() == UNDEFINED
+                && modulesStatus.getTorState() == STOPPED || modulesStatus.getTorState() == UNDEFINED
+                && modulesStatus.getItpdState() == STOPPED || modulesStatus.getItpdState() == UNDEFINED) {
 
             mainStartButtonDrawable = ResourcesCompat.getDrawable(context.getResources(), R.drawable.button_main_selector, context.getTheme());
 

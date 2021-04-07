@@ -55,6 +55,7 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
@@ -65,9 +66,9 @@ public class ModulesStateLoop implements Runnable,
     public static final String TOR_READY_PREF = "Tor Ready";
     public static final String ITPD_READY_PREF = "ITPD Ready";
 
-    private static final String SAVED_DNSCRYPT_STATE_PREF = "savedDNSCryptState";
-    private static final String SAVED_TOR_STATE_PREF = "savedTorState";
-    private static final String SAVED_ITPD_STATE_PREF = "savedITPDState";
+    public static final String SAVED_DNSCRYPT_STATE_PREF = "savedDNSCryptState";
+    public static final String SAVED_TOR_STATE_PREF = "savedTorState";
+    public static final String SAVED_ITPD_STATE_PREF = "savedITPDState";
 
     //Depends on timer, currently 10 sec
     private static final int STOP_COUNTER_DELAY = 10;
@@ -87,9 +88,9 @@ public class ModulesStateLoop implements Runnable,
     private static Thread torThread;
     private static Thread itpdThread;
 
-    private ModuleState savedDNSCryptState;
-    private ModuleState savedTorState;
-    private ModuleState savedItpdState;
+    private ModuleState savedDNSCryptState = UNDEFINED;
+    private ModuleState savedTorState = UNDEFINED;
+    private ModuleState savedItpdState = UNDEFINED;
 
     private final SharedPreferences sharedPreferences;
 
@@ -134,27 +135,37 @@ public class ModulesStateLoop implements Runnable,
                 return;
             }
 
-            ModuleState dnsCryptState = modulesStatus.getDnsCryptState();
-            ModuleState torState = modulesStatus.getTorState();
-            ModuleState itpdState = modulesStatus.getItpdState();
-
             OperationMode operationMode = modulesStatus.getMode();
 
             boolean rootIsAvailable = modulesStatus.isRootAvailable();
             boolean useModulesWithRoot = modulesStatus.isUseModulesWithRoot();
             boolean contextUIDUpdateRequested = modulesStatus.isContextUIDUpdateRequested();
 
-
-            if (!useModulesWithRoot) {
-                updateModulesState(dnsCryptState, torState, itpdState);
+            if (!(useModulesWithRoot && operationMode == ROOT_MODE)) {
+                updateModulesState(
+                        modulesStatus.getDnsCryptState(),
+                        modulesStatus.getTorState(),
+                        modulesStatus.getItpdState()
+                );
             }
 
             updateFixTTLRules();
 
-            updateIptablesRules(dnsCryptState, torState, itpdState, operationMode, rootIsAvailable, useModulesWithRoot);
+            updateIptablesRules(
+                    modulesStatus.getDnsCryptState(),
+                    modulesStatus.getTorState(),
+                    modulesStatus.getItpdState(),
+                    operationMode,
+                    rootIsAvailable,
+                    useModulesWithRoot
+            );
 
             if (contextUIDUpdateRequested) {
-                updateContextUID(dnsCryptState, torState, itpdState);
+                updateContextUID(
+                        modulesStatus.getDnsCryptState(),
+                        modulesStatus.getTorState(),
+                        modulesStatus.getItpdState()
+                );
             }
 
             if (stopCounter <= 0) {
@@ -166,7 +177,9 @@ public class ModulesStateLoop implements Runnable,
                 safeStopModulesService();
             }
         } catch (Exception e) {
-            Toast.makeText(modulesService, R.string.wrong, Toast.LENGTH_SHORT).show();
+            if (handler != null) {
+                handler.post(() -> Toast.makeText(modulesService, R.string.wrong, Toast.LENGTH_SHORT).show());
+            }
             Log.e(LOG_TAG, "ModulesStateLoop exception " + e.getMessage() + " " + e.getCause());
         }
 
@@ -174,34 +187,34 @@ public class ModulesStateLoop implements Runnable,
 
     private void updateModulesState(ModuleState dnsCryptState, ModuleState torState, ModuleState itpdState) {
         if (dnsCryptThread != null && dnsCryptThread.isAlive()) {
-            if (dnsCryptState == STOPPED) {
+            if (dnsCryptState == STOPPED || dnsCryptState == UNDEFINED) {
                 modulesStatus.setDnsCryptState(ModuleState.RUNNING);
                 stopCounter = STOP_COUNTER_DELAY;
             }
         } else {
-            if (dnsCryptState == RUNNING) {
+            if (dnsCryptState == RUNNING || dnsCryptState == UNDEFINED) {
                 modulesStatus.setDnsCryptState(STOPPED);
             }
         }
 
         if (torThread != null && torThread.isAlive()) {
-            if (torState == STOPPED) {
+            if (torState == STOPPED || torState == UNDEFINED) {
                 modulesStatus.setTorState(ModuleState.RUNNING);
                 stopCounter = STOP_COUNTER_DELAY;
             }
         } else {
-            if (torState == RUNNING) {
+            if (torState == RUNNING || torState == UNDEFINED) {
                 modulesStatus.setTorState(STOPPED);
             }
         }
 
         if (itpdThread != null && itpdThread.isAlive()) {
-            if (itpdState == STOPPED) {
+            if (itpdState == STOPPED || itpdState == UNDEFINED) {
                 modulesStatus.setItpdState(ModuleState.RUNNING);
                 stopCounter = STOP_COUNTER_DELAY;
             }
         } else {
-            if (itpdState == RUNNING) {
+            if (itpdState == RUNNING || itpdState == UNDEFINED) {
                 modulesStatus.setItpdState(STOPPED);
             }
         }
@@ -221,14 +234,22 @@ public class ModulesStateLoop implements Runnable,
     private void updateIptablesRules(ModuleState dnsCryptState, ModuleState torState,
                                      ModuleState itpdState, OperationMode operationMode,
                                      boolean rootIsAvailable, boolean useModulesWithRoot) {
+        /* For testing purposes
+        Log.i(LOG_TAG, String.format("DNSCrypt is %s Tor is %s I2P is %s\n" +
+                        "Operation mode %s Use modules with Root %s " +
+                        "dnsReady %s torReady %s i2pReady %s",
+                dnsCryptState, torState, itpdState,
+                operationMode, useModulesWithRoot,
+                modulesStatus.isDnsCryptReady(), modulesStatus.isTorReady(), modulesStatus.isItpdReady()));*/
 
         if (dnsCryptState != savedDNSCryptState
                 || torState != savedTorState
                 || itpdState != savedItpdState
                 || modulesStatus.isIptablesRulesUpdateRequested()) {
-
-            Log.i(LOG_TAG, "DNSCrypt is " + dnsCryptState +
-                    " Tor is " + torState + " I2P is " + itpdState);
+            Log.i(LOG_TAG, String.format("DNSCrypt is %s Tor is %s I2P is %s\n" +
+                            "Operation mode %s Use modules with Root %s",
+                    dnsCryptState, torState, itpdState,
+                    operationMode, useModulesWithRoot));
 
             if (dnsCryptState == RESTARTING) {
                 setDNSCryptReady(false);
@@ -264,7 +285,7 @@ public class ModulesStateLoop implements Runnable,
 
             if (savedDNSCryptState != dnsCryptState) {
 
-               saveDNSCryptState(dnsCryptState);
+                saveDNSCryptState(dnsCryptState);
 
                 if (dnsCryptState == RUNNING) {
                     if (dnsCryptInteractor != null) {

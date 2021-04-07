@@ -91,6 +91,7 @@ import pan.alexander.tordnscrypt.utils.ApManager;
 import pan.alexander.tordnscrypt.utils.ChangeModeInterface;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.Registration;
+import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
@@ -535,7 +536,8 @@ public class MainActivity extends LangAppCompatActivity
             return;
         }
 
-        newIdentityMenuItem.setVisible(modulesStatus.getTorState() != STOPPED);
+        newIdentityMenuItem.setVisible(modulesStatus.getTorState() != STOPPED
+                && modulesStatus.getTorState() != ModuleState.UNDEFINED);
     }
 
     public void showNewTorIdentityIcon(boolean show) {
@@ -982,9 +984,9 @@ public class MainActivity extends LangAppCompatActivity
         super.onStop();
 
         if (ModulesService.serviceIsRunning && modulesStatus.getMode() == VPN_MODE
-                && (modulesStatus.getDnsCryptState() == STOPPED || modulesStatus.getDnsCryptState() == FAULT)
-                && (modulesStatus.getTorState() == STOPPED || modulesStatus.getTorState() == FAULT)
-                && (modulesStatus.getItpdState() == STOPPED || modulesStatus.getItpdState() == FAULT)) {
+                && (modulesStatus.getDnsCryptState() == STOPPED || modulesStatus.getDnsCryptState() == FAULT || modulesStatus.getDnsCryptState() == ModuleState.UNDEFINED)
+                && (modulesStatus.getTorState() == STOPPED || modulesStatus.getTorState() == FAULT || modulesStatus.getTorState() == ModuleState.UNDEFINED)
+                && (modulesStatus.getItpdState() == STOPPED || modulesStatus.getItpdState() == FAULT || modulesStatus.getItpdState() == ModuleState.UNDEFINED)) {
             Intent intent = new Intent(this, ModulesService.class);
             intent.setAction(ModulesService.actionStopService);
             startService(intent);

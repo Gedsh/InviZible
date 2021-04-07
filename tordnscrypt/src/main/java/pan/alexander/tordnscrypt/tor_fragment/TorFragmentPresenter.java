@@ -72,6 +72,7 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 public class TorFragmentPresenter implements TorFragmentPresenterInterface,
@@ -141,10 +142,10 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
             } else if (currentModuleState == FAULT) {
                 setTorSomethingWrong();
                 setTorProgressBarIndeterminate(false);
-            } else {
+            } else if (currentModuleState == STOPPED) {
                 setTorProgressBarIndeterminate(false);
                 setTorStopped();
-                modulesStatus.setTorState(STOPPED);
+                //modulesStatus.setTorState(STOPPED);
             }
 
             if (currentModuleState != STOPPED
@@ -658,7 +659,8 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
         if (modulesStatus.getTorState() != RUNNING) {
 
-            if (modulesStatus.isContextUIDUpdateRequested()) {
+            if (modulesStatus.isContextUIDUpdateRequested()
+                    || modulesStatus.getTorState() == UNDEFINED) {
                 Toast.makeText(context, R.string.please_wait, Toast.LENGTH_SHORT).show();
                 setTorStartButtonEnabled(true);
                 return;

@@ -59,6 +59,7 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
@@ -120,10 +121,10 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             } else if (currentModuleState == FAULT) {
                 setDnsCryptSomethingWrong();
                 setDNSCryptProgressBarIndeterminate(false);
-            } else {
+            } else if (currentModuleState == STOPPED) {
                 setDNSCryptProgressBarIndeterminate(false);
                 setDnsCryptStopped();
-                modulesStatus.setDnsCryptState(STOPPED);
+                //modulesStatus.setDnsCryptState(STOPPED);
             }
 
             if (currentModuleState != STOPPED
@@ -581,7 +582,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
         if (modulesStatus.getDnsCryptState() != RUNNING) {
 
-            if (modulesStatus.isContextUIDUpdateRequested()) {
+            if (modulesStatus.isContextUIDUpdateRequested()
+                    || modulesStatus.getDnsCryptState() == UNDEFINED) {
                 Toast.makeText(context, R.string.please_wait, Toast.LENGTH_SHORT).show();
                 setDNSCryptStartButtonEnabled(true);
                 return;

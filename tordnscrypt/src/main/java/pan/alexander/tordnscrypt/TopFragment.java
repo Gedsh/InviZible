@@ -79,6 +79,7 @@ import pan.alexander.tordnscrypt.utils.Registration;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.Verifier;
+import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
@@ -90,6 +91,7 @@ import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridg
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 
 
@@ -226,7 +228,26 @@ public class TopFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+
+        if (savedInstanceState != null) {
+            startRootCheckerTasksIfStateLeavesUndefined();
+        }
+
         return inflater.inflate(R.layout.fragment_top, container, false);
+    }
+
+    private void startRootCheckerTasksIfStateLeavesUndefined() {
+        if (modulesStatus.getDnsCryptState() == ModuleState.UNDEFINED
+                || modulesStatus.getTorState() == ModuleState.UNDEFINED
+                || modulesStatus.getItpdState() == ModuleState.UNDEFINED) {
+            //Return if the task is still executing
+            if (rootChecker != null) {
+                return;
+            }
+
+            rootChecker = new RootChecker(this);
+            rootChecker.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }
     }
 
     @Override
@@ -505,7 +526,7 @@ public class TopFragment extends Fragment {
     }
 
     private void refreshModulesVersions(Context context) {
-        if (modulesStatus.isUseModulesWithRoot()) {
+        if (modulesStatus.isUseModulesWithRoot() && modulesStatus.getMode() == ROOT_MODE) {
             Intent intent = new Intent(TOP_BROADCAST);
             LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
             Log.i(LOG_TAG, "TopFragment Send TOP_BROADCAST");

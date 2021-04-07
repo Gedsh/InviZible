@@ -40,9 +40,9 @@ class Patch(private val activity: Activity) {
 
     fun checkPatches() {
 
-        if (modulesStatus.dnsCryptState != ModuleState.STOPPED && modulesStatus.dnsCryptState != ModuleState.RUNNING
-                || modulesStatus.torState != ModuleState.STOPPED && modulesStatus.torState != ModuleState.RUNNING
-                || modulesStatus.itpdState != ModuleState.STOPPED && modulesStatus.itpdState != ModuleState.RUNNING
+        if (modulesStatus.dnsCryptState != ModuleState.STOPPED && modulesStatus.dnsCryptState != ModuleState.RUNNING && modulesStatus.dnsCryptState != ModuleState.UNDEFINED
+            || modulesStatus.torState != ModuleState.STOPPED && modulesStatus.torState != ModuleState.RUNNING && modulesStatus.torState != ModuleState.UNDEFINED
+                || modulesStatus.itpdState != ModuleState.STOPPED && modulesStatus.itpdState != ModuleState.RUNNING && modulesStatus.itpdState != ModuleState.UNDEFINED
                 || modulesStatus.isUseModulesWithRoot) {
             return
         }
