@@ -69,6 +69,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
     private var handler: Handler? = null
     private var futureTask: Future<*>? = null
     private var firewallAdapter: RecyclerView.Adapter<FirewallAdapter.FirewallViewHolder>? = null
+    private var lastVisibleAdapterPosition: Int = 0
 
     var firewallSwitch: SwitchCompat? = null
 
@@ -190,6 +191,10 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
             updateTopIcons(context)
             firewallAdapter?.notifyDataSetChanged()
         }
+
+        if (lastVisibleAdapterPosition > 0 && appsListComplete) {
+            (binding.rvFirewallApps.layoutManager as LinearLayoutManager).scrollToPosition(lastVisibleAdapterPosition)
+        }
     }
 
     override fun onPause() {
@@ -199,6 +204,9 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
 
             binding.pbFirewallApp.isIndeterminate = true
             binding.pbFirewallApp.visibility = View.VISIBLE
+
+            lastVisibleAdapterPosition =
+                (binding.rvFirewallApps.layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition()
         }
     }
 

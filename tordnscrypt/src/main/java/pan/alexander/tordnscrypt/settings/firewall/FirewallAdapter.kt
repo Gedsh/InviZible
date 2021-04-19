@@ -243,7 +243,7 @@ class FirewallAdapter(private val firewallFragment: FirewallFragment) :
 
         override fun onClick(v: View?) {
             val id = v?.id
-            val position = adapterPosition
+            val position = bindingAdapterPosition
 
             if (id == null || position < 0 || position > itemCount - 1
                     || !firewallFragment.appsListComplete) {
