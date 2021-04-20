@@ -439,12 +439,26 @@ jobject jniNewObject(JNIEnv *env, jclass cls, jmethodID constructor, const char 
     return object;
 }
 
+static jmethodID midGetMessage = NULL;
+
 int jniCheckException(JNIEnv *env) {
     jthrowable ex = (*env)->ExceptionOccurred(env);
     if (ex) {
         (*env)->ExceptionDescribe(env);
         (*env)->ExceptionClear(env);
+
+        jclass clazz = (*env)->GetObjectClass(env, ex);
+        const char *signature = "()Ljava/lang/String;";
+        if (midGetMessage == NULL)
+            midGetMessage = jniGetMethodID(env, clazz, "getMessage", signature);
+        jstring message = (jstring)(*env)->CallObjectMethod(env, ex, midGetMessage);
+        const char *exception = (*env)->GetStringUTFChars(env, message, NULL);
+        log_android(ANDROID_LOG_ERROR, "JNI Exception %s", exception);
+        (*env)->ReleaseStringUTFChars(env, message, exception);
+        (*env)->DeleteLocalRef(env, message);
+        (*env)->DeleteLocalRef(env, clazz);
         (*env)->DeleteLocalRef(env, ex);
+
         ng_delete_alloc(ex, __FILE__, __LINE__);
         return 1;
     }
@@ -760,9 +774,9 @@ struct allowed *is_address_allowed(const struct arguments *args, jobject jpacket
     jobject jallowed = (*args->env)->CallObjectMethod(
             args->env, args->instance, midIsAddressAllowed, jpacket);
     ng_add_alloc(jallowed, "jallowed");
-    jniCheckException(args->env);
+    int exceptionOccurred = jniCheckException(args->env);
 
-    if (jallowed != NULL) {
+    if (jallowed != NULL && exceptionOccurred == 0) {
         if (fidRaddr == NULL) {
             const char *string = "Ljava/lang/String;";
             fidRaddr = jniGetFieldID(args->env, clsAllowed, "raddr", string);
@@ -802,7 +816,7 @@ struct allowed *is_address_allowed(const struct arguments *args, jobject jpacket
         log_android(ANDROID_LOG_WARN, "is_address_allowed %f", mselapsed);
 #endif
 
-    return (jallowed == NULL ? NULL : &allowed);
+    return (jallowed == NULL || exceptionOccurred > 0 ? NULL : &allowed);
 }
 
 jmethodID midInitPacket = NULL;
