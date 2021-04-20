@@ -115,6 +115,9 @@ public class ServiceVPN extends VpnService {
         }
     }
 
+    private static String vpnDns1 = "9.9.9.9";
+    private static final String vpnDns2 = "116.202.176.26";
+
     final static int linesInDNSQueryRawRecords = 500;
 
     static final String EXTRA_COMMAND = "Command";
@@ -220,8 +223,7 @@ public class ServiceVPN extends VpnService {
         // Get custom DNS servers
         SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
         boolean ip6 = prefs.getBoolean("ipv6", false);
-        String vpnDns1 = PathVars.getInstance(context).getDNSCryptFallbackRes();
-        String vpnDns2 = prefs.getString("dns2", "116.202.176.26");
+        vpnDns1 = PathVars.getInstance(context).getDNSCryptFallbackRes();
         Log.i(LOG_TAG, "VPN DNS system=" + TextUtils.join(",", sysDns) + " config=" + vpnDns1 + "," + vpnDns2);
 
         if (vpnDns1 != null)
@@ -996,28 +998,19 @@ public class ServiceVPN extends VpnService {
         Allowed allowed = null;
         if (packet.allowed) {
             if (packet.uid == ownUID
-                    || compatibilityMode && packet.uid == ApplicationData.SPECIAL_UID_KERNEL && !fixTTLForPacket
-                    || packet.dport != 53 && !packet.daddr.equals(itpdRedirectAddress)) {
+                    || compatibilityMode && isPacketAllowedForCompatibilityMode(packet, fixTTLForPacket)) {
                 allowed = new Allowed();
             } else if (mapForwardPort.containsKey(packet.dport)) {
                 Forward fwd = mapForwardPort.get(packet.dport);
                 if (fwd != null) {
-                    if (fwd.ruid == packet.uid) {
-                        allowed = new Allowed();
-                    } else {
-                        allowed = new Allowed(fwd.raddr, fwd.rport);
-                        packet.data = "> " + fwd.raddr + "/" + fwd.rport;
-                    }
+                    allowed = new Allowed(fwd.raddr, fwd.rport);
+                    packet.data = "> " + fwd.raddr + "/" + fwd.rport;
                 }
             } else if (mapForwardAddress.containsKey(packet.daddr)) {
                 Forward fwd = mapForwardAddress.get(packet.daddr);
                 if (fwd != null) {
-                    if (fwd.ruid == packet.uid) {
-                        allowed = new Allowed();
-                    } else {
-                        allowed = new Allowed(fwd.raddr, fwd.rport);
-                        packet.data = "> " + fwd.raddr + "/" + fwd.rport;
-                    }
+                    allowed = new Allowed(fwd.raddr, fwd.rport);
+                    packet.data = "> " + fwd.raddr + "/" + fwd.rport;
                 }
             } else {
                 allowed = new Allowed();
@@ -1027,6 +1020,24 @@ public class ServiceVPN extends VpnService {
         lock.readLock().unlock();
 
         return allowed;
+    }
+
+    private boolean isPacketAllowedForCompatibilityMode(Packet packet, boolean fixTTLForPacket) {
+        ModuleState dnsCryptState = modulesStatus.getDnsCryptState();
+        ModuleState torState = modulesStatus.getTorState();
+        boolean dnsCryptReady = modulesStatus.isDnsCryptReady();
+        boolean torReady = modulesStatus.isTorReady();
+        boolean systemDNSAllowed = modulesStatus.isSystemDNSAllowed();
+
+        if (packet.uid == ApplicationData.SPECIAL_UID_KERNEL && !fixTTLForPacket
+                && (packet.dport != 53 && packet.dport != 0
+                || systemDNSAllowed && (dnsCryptState == RUNNING && !dnsCryptReady
+                || torState == RUNNING && !torReady))) {
+            Log.i(LOG_TAG, "Packet will not be redirected due to compatibility mode " + packet);
+            return true;
+        }
+
+        return false;
     }
 
     // Called from native code
