@@ -161,6 +161,14 @@ int has_udp_session(const struct arguments *args, const uint8_t *pkt, const uint
     if (ntohs(udphdr->dest) == 53)
         return !args->fwd53;
 
+    char dest[INET6_ADDRSTRLEN + 1];
+    if (version == 4) {
+        inet_ntop(AF_INET, &ip4->daddr, dest, sizeof(dest));
+        if (strcmp(dest, "10.191.0.1") == 0) {
+            return false;
+        }
+    }
+
     // Search session
     struct ng_session *cur = args->ctx->ng_session;
     while (cur != NULL &&

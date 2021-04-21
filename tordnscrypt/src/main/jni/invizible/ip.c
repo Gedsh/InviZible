@@ -310,9 +310,12 @@ void handle_ip(const struct arguments *args,
     // Check if allowed
     int allowed = 0;
     struct allowed *redirect = NULL;
-    if (protocol == IPPROTO_UDP && has_udp_session(args, pkt, payload))
+    if (protocol == IPPROTO_UDP
+        && has_udp_session(args, pkt, payload))
         allowed = 1; // could be a lingering/blocked session
-    else if (protocol == IPPROTO_TCP && (!syn || (!args->fwd53 && uid == 0 && dport == 53)))
+    else if (protocol == IPPROTO_TCP
+             && (!syn || (!args->fwd53 && uid == 0 && dport == 53))
+             && strcmp(dest, "10.191.0.1") != 0)
         allowed = 1; // assume existing session
     else {
         jobject objPacket = create_packet(
@@ -321,6 +324,13 @@ void handle_ip(const struct arguments *args,
         allowed = (redirect != NULL);
         if (redirect != NULL && (*redirect->raddr == 0 || redirect->rport == 0))
             redirect = NULL;
+    }
+
+    if (args->fwd53 && dport == 53 && uid != own_uid
+        && (redirect == NULL || *redirect->raddr == 0 || redirect->rport == 0)) {
+        allowed = 0;
+        log_android(ANDROID_LOG_ERROR, "Direct DNS connection for v%d p%d %s/%u syn %d not allowed",
+                    version, protocol, dest, dport, syn);
     }
 
     // Handle allowed traffic
