@@ -541,3 +541,12 @@
 
 **InviZible Pro beta 1.2.8**
 * Fixed bugs related to the user interface and auto-start.
+
+**InviZible Pro beta 1.2.9**
+* Improved DNS handling.
+* Using better compiler optimizations.
+* Updated Tor.
+* Updated Purple I2P.
+* Updated obfs4proxy.
+* Updated snowflake.
+* Fixed firewall sliding back to top when restoring an app from recent apps.
