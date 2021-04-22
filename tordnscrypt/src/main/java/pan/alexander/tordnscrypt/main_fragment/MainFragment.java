@@ -395,9 +395,9 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
         Drawable mainStartButtonDrawable;
 
-        if (modulesStatus.getDnsCryptState() == STOPPED || modulesStatus.getDnsCryptState() == UNDEFINED
-                && modulesStatus.getTorState() == STOPPED || modulesStatus.getTorState() == UNDEFINED
-                && modulesStatus.getItpdState() == STOPPED || modulesStatus.getItpdState() == UNDEFINED) {
+        if ((modulesStatus.getDnsCryptState() == STOPPED || modulesStatus.getDnsCryptState() == UNDEFINED)
+                && (modulesStatus.getTorState() == STOPPED || modulesStatus.getTorState() == UNDEFINED)
+                && (modulesStatus.getItpdState() == STOPPED || modulesStatus.getItpdState() == UNDEFINED)) {
 
             mainStartButtonDrawable = ResourcesCompat.getDrawable(context.getResources(), R.drawable.button_main_selector, context.getTheme());
 
