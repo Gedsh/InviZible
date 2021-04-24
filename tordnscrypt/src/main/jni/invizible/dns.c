@@ -105,6 +105,7 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
         uint16_t qclass;
         char qname[DNS_QNAME_MAX + 1];
         char cname[DNS_QNAME_MAX + 1];
+        const char* SPACE_SYMBOL = (const char *) &" ";
 
         for (int q = 0; q < 1; q++) {
             off = get_qname(data, *datalen, (uint16_t) off, name);
@@ -127,8 +128,8 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
         }
 
         if (acount == 0 || rcode != 0) {
-            dns_resolved(args, qname, name, (const char *) &"", (const char *) &"",
-                         (const char *) &"", rcode);
+            dns_resolved(args, qname, name, SPACE_SYMBOL, SPACE_SYMBOL,
+                         SPACE_SYMBOL, rcode);
             return;
         }
 
@@ -159,7 +160,7 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
                                 return;
                         }
 
-                        dns_resolved(args, qname, name, (const char *) &"", (const char *) &"",
+                        dns_resolved(args, qname, name, SPACE_SYMBOL, SPACE_SYMBOL,
                                      rd, rcode);
                         log_android(ANDROID_LOG_DEBUG,
                                     "DNS answer %d qname %s qtype %d rcode %d data %s",
@@ -167,18 +168,18 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
 
                     } else if (qclass == DNS_QCLASS_IN && qtype == DNS_QTYPE_CNAME) {
                         get_qname(data, *datalen, (uint16_t) off, cname);
-                        dns_resolved(args, qname, name, cname, (const char *) &"",
-                                     (const char *) &"", rcode);
+                        dns_resolved(args, qname, name, cname, SPACE_SYMBOL,
+                                     SPACE_SYMBOL, rcode);
                         log_android(ANDROID_LOG_DEBUG,
                                     "DNS answer %d qname %s cname %s qclass %d qtype %d rcode %d length %d",
                                     a, name, cname, qclass, qtype, rcode, rdlength);
                     } else if (qclass == DNS_QCLASS_IN && qtype == DNS_QTYPE_HINFO) {
-                        char *hinfo;
-                        hinfo = (char *) ng_malloc(rdlength, "hinfo");
+                        char *hinfo = (char *) ng_malloc(rdlength, "hinfo");
+                        memset(hinfo, '\0', rdlength);
                         if (rdlength > 1) {
                             hinfo = memcpy(hinfo, data + off + 1, (size_t) (rdlength - 1));
-                            dns_resolved(args, qname, name, (const char *) &"", hinfo,
-                                         (const char *) &"", rcode);
+                            dns_resolved(args, qname, name, SPACE_SYMBOL, hinfo,
+                                         SPACE_SYMBOL, rcode);
                             log_android(ANDROID_LOG_DEBUG,
                                         "DNS answer %d qname %s hinfo %s",
                                         a, name, hinfo);

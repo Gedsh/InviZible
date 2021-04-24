@@ -448,17 +448,20 @@ int jniCheckException(JNIEnv *env) {
         (*env)->ExceptionClear(env);
 
         jclass clazz = (*env)->GetObjectClass(env, ex);
+        ng_add_alloc(clazz, "clsException");
         const char *signature = "()Ljava/lang/String;";
         if (midGetMessage == NULL)
             midGetMessage = jniGetMethodID(env, clazz, "getMessage", signature);
-        jstring message = (jstring)(*env)->CallObjectMethod(env, ex, midGetMessage);
+        jstring message = (jstring) (*env)->CallObjectMethod(env, ex, midGetMessage);
+        ng_add_alloc(message, "exceptionMessage");
         const char *exception = (*env)->GetStringUTFChars(env, message, NULL);
         log_android(ANDROID_LOG_ERROR, "JNI Exception %s", exception);
         (*env)->ReleaseStringUTFChars(env, message, exception);
         (*env)->DeleteLocalRef(env, message);
         (*env)->DeleteLocalRef(env, clazz);
         (*env)->DeleteLocalRef(env, ex);
-
+        ng_delete_alloc(message, __FILE__, __LINE__);
+        ng_delete_alloc(clazz, __FILE__, __LINE__);
         ng_delete_alloc(ex, __FILE__, __LINE__);
         return 1;
     }
@@ -508,8 +511,9 @@ jfieldID fidHInfo = NULL;
 jfieldID fidResource = NULL;
 jfieldID fidRcode = NULL;
 
-void dns_resolved(const struct arguments *args, const char *qname, const char *aname,
-                  const char *cname, const char *hinfo, const char *resource, int rcode) {
+void dns_resolved(const struct arguments *args,
+                  const char *qname, const char *aname, const char *cname,
+                  const char *hinfo, const char *resource, int rcode) {
 #ifdef PROFILE_JNI
     float mselapsed;
     struct timeval start, end;
@@ -629,7 +633,8 @@ jboolean is_domain_blocked(const struct arguments *args, const char *name) {
 
 static jmethodID midIsRedirectToTor = NULL;
 
-jboolean is_redirect_to_tor(const struct arguments *args, const int uid, const char *daddr, const int dport) {
+jboolean is_redirect_to_tor(const struct arguments *args, const int uid, const char *daddr,
+                            const int dport) {
 #ifdef PROFILE_JNI
     float mselapsed;
     struct timeval start, end;
@@ -668,7 +673,8 @@ jboolean is_redirect_to_tor(const struct arguments *args, const int uid, const c
 
 static jmethodID midIsRedirectToProxy = NULL;
 
-jboolean is_redirect_to_proxy(const struct arguments *args, const int uid, const char *daddr, const int dport) {
+jboolean is_redirect_to_proxy(const struct arguments *args, const int uid, const char *daddr,
+                              const int dport) {
 #ifdef PROFILE_JNI
     float mselapsed;
     struct timeval start, end;
@@ -680,7 +686,8 @@ jboolean is_redirect_to_proxy(const struct arguments *args, const int uid, const
 
     const char *signature = "(ILjava/lang/String;I)Z";
     if (midIsRedirectToProxy == NULL)
-        midIsRedirectToProxy = jniGetMethodID(args->env, clsService, "isRedirectToProxy", signature);
+        midIsRedirectToProxy = jniGetMethodID(args->env, clsService, "isRedirectToProxy",
+                                              signature);
 
     jstring jdaddr = (*args->env)->NewStringUTF(args->env, daddr);
     ng_add_alloc(jdaddr, "jdaddr");
