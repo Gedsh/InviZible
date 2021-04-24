@@ -30,11 +30,12 @@ import pan.alexander.tordnscrypt.domain.entities.ConnectionRecord
 import pan.alexander.tordnscrypt.utils.RootExecService
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPN
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPN.VPNBinder
+import java.lang.ref.WeakReference
 
 class ConnectionRecordsGetter {
     private val applicationContext = ApplicationBase.instance?.applicationContext
     @Volatile private var serviceConnection: ServiceConnection? = null
-    @Volatile private var serviceVPN: ServiceVPN? = null
+    @Volatile private var serviceVPN: WeakReference<ServiceVPN?>? = null
     @Volatile private var bound = false
 
     fun getConnectionRawRecords(): List<ConnectionRecord?> {
@@ -48,7 +49,7 @@ class ConnectionRecordsGetter {
 
         lockConnectionRawRecordsListForRead(true)
 
-        val rawRecords = ArrayList<ConnectionRecord?>(serviceVPN?.dnsQueryRawRecords)
+        val rawRecords = ArrayList<ConnectionRecord?>(serviceVPN?.get()?.dnsQueryRawRecords)
 
         lockConnectionRawRecordsListForRead(false)
 
@@ -56,7 +57,7 @@ class ConnectionRecordsGetter {
     }
 
     fun clearConnectionRawRecords() {
-        serviceVPN?.clearDnsQueryRawRecords()
+        serviceVPN?.get()?.clearDnsQueryRawRecords()
     }
 
     fun connectionRawRecordsNoMoreRequired() {
@@ -64,7 +65,7 @@ class ConnectionRecordsGetter {
     }
 
     private fun lockConnectionRawRecordsListForRead(lock: Boolean) {
-        serviceVPN?.lockDnsQueryRawRecordsListForRead(lock)
+        serviceVPN?.get()?.lockDnsQueryRawRecordsListForRead(lock)
     }
 
     @Synchronized
@@ -72,7 +73,7 @@ class ConnectionRecordsGetter {
         serviceConnection = object : ServiceConnection {
             override fun onServiceConnected(name: ComponentName, service: IBinder) {
                 if (service is VPNBinder) {
-                    serviceVPN = service.service
+                    serviceVPN = WeakReference(service.service)
                     bound = true
                 }
             }
@@ -104,5 +105,6 @@ class ConnectionRecordsGetter {
             serviceVPN = null
             serviceConnection = null
         }
+
     }
 }
