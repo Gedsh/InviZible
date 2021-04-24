@@ -96,6 +96,8 @@ import pan.alexander.tordnscrypt.vpn.Rule;
 import pan.alexander.tordnscrypt.vpn.Usage;
 import pan.alexander.tordnscrypt.vpn.Util;
 
+import static java.net.IDN.ALLOW_UNASSIGNED;
+import static java.net.IDN.toUnicode;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
 import static pan.alexander.tordnscrypt.modules.ModulesService.actionStopServiceForeground;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
@@ -707,7 +709,17 @@ public class ServiceVPN extends VpnService {
             rrLock.writeLock().lockInterruptibly();
 
             ConnectionRecord lastRecord = dnsQueryRawRecords.isEmpty() ? null : dnsQueryRawRecords.getLast();
-            ConnectionRecord newRecord = new ConnectionRecord(rr.QName, rr.AName, rr.CName, rr.HInfo, rr.Rcode, "", rr.Resource, -1000);
+            ConnectionRecord newRecord = new ConnectionRecord
+                    (
+                            rr.QName != null ? toUnicode(rr.QName.trim(), ALLOW_UNASSIGNED) : "",
+                            rr.AName != null ? toUnicode(rr.AName.trim(), ALLOW_UNASSIGNED) : "",
+                            rr.CName != null ? toUnicode(rr.CName.trim(), ALLOW_UNASSIGNED) : "",
+                            rr.HInfo != null ? rr.HInfo.trim() : "",
+                            rr.Rcode,
+                            "",
+                            rr.Resource != null ? rr.Resource.trim() : "",
+                            -1000
+                    );
 
             if (!newRecord.equals(lastRecord)) {
                 dnsQueryRawRecords.add(newRecord);
@@ -717,9 +729,12 @@ public class ServiceVPN extends VpnService {
                 }
             }
 
-            if (dnsRebindProtection) {
-                String qname = rr.QName.trim();
-                String destAddress = rr.Resource.trim();
+            String qname = rr.QName;
+            String destAddress = rr.Resource;
+
+            if (dnsRebindProtection && qname != null && destAddress != null) {
+                qname = qname.trim();
+                destAddress = destAddress.trim();
 
                 if (!qname.isEmpty() && !destAddress.isEmpty()
                         && !qname.endsWith(".onion")
@@ -751,9 +766,13 @@ public class ServiceVPN extends VpnService {
     @Keep
     public boolean isDomainBlocked(String name) {
         //Log.i(LOG_TAG, " Ask domain is blocked " + name);
+
+        if (name == null) {
+            return true;
+        }
+
         try {
             if (dnsRebindProtection && dnsRebindHosts.contains(name)) {
-                Log.w(LOG_TAG, "ServiseVPN domain is blocked due to DNS rebind suspicion " + name);
                 return true;
             }
         } catch (Exception e) {
@@ -766,6 +785,10 @@ public class ServiceVPN extends VpnService {
     // Called from native code
     @Keep
     public boolean isRedirectToTor(int uid, String destAddress, int destPort) {
+
+        if (destAddress == null) {
+            return false;
+        }
 
         if (uid == ownUID || destAddress.equals(itpdRedirectAddress) || destAddress.equals("127.0.0.1")
                 || fixTTL || (compatibilityMode && uid == ApplicationData.SPECIAL_UID_KERNEL)) {
@@ -811,6 +834,11 @@ public class ServiceVPN extends VpnService {
     @Keep
     public boolean isRedirectToProxy(int uid, String destAddress, int destPort) {
         //Log.i(LOG_TAG, "Redirect to proxy " + uid + " " + destAddress + " " + redirect);
+
+        if (destAddress == null) {
+            return false;
+        }
+
         if (uid == ownUID || destAddress.equals(itpdRedirectAddress) || destAddress.equals("127.0.0.1")
                 || (fixTTL && !useProxy) || (compatibilityMode && uid == ApplicationData.SPECIAL_UID_KERNEL)) {
             return false;
@@ -874,6 +902,10 @@ public class ServiceVPN extends VpnService {
     @Keep
     @TargetApi(Build.VERSION_CODES.Q)
     public int getUidQ(int version, int protocol, String saddr, int sport, String daddr, int dport) {
+        if (saddr == null || daddr == null) {
+            return Process.INVALID_UID;
+        }
+
         if (protocol != 6 /* TCP */ && protocol != 17 /* UDP */)
             return Process.INVALID_UID;
 
@@ -905,6 +937,10 @@ public class ServiceVPN extends VpnService {
     // Called from native code
     @Keep
     public Allowed isAddressAllowed(Packet packet) {
+
+        if (packet.saddr == null || packet.daddr == null) {
+            return null;
+        }
 
         boolean torIsRunning = modulesStatus.getTorState() == RUNNING;
 
