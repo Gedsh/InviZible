@@ -18,6 +18,7 @@ package pan.alexander.tordnscrypt.dialogs;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
@@ -40,18 +41,17 @@ public class NotificationHelper extends ExtendedDialogFragment {
     @Override
     public AlertDialog.Builder assignBuilder() {
 
-        if (getActivity() == null) {
+        Activity activity = getActivity();
+        if (activity == null) {
             return null;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
         builder.setMessage(message)
                 .setTitle(R.string.helper_dialog_title)
                 .setPositiveButton(R.string.ok, (dialog, which) -> notificationHelper = null)
                 .setNegativeButton(R.string.dont_show, (dialog, id) -> {
-                    if (getActivity() != null) {
-                        new PrefManager(getActivity()).setBoolPref("helper_no_show_" + tag, true);
-                    }
+                    new PrefManager(activity).setBoolPref("helper_no_show_" + tag, true);
                     notificationHelper = null;
                     dismiss();
                 });
@@ -59,7 +59,6 @@ public class NotificationHelper extends ExtendedDialogFragment {
         return builder;
     }
 
-    @SuppressWarnings("CatchMayIgnoreException")
     public static NotificationHelper setHelperMessage(Context context, String message, String preferenceTag) {
 
         try {
@@ -74,12 +73,16 @@ public class NotificationHelper extends ExtendedDialogFragment {
                 return notificationHelper;
             }
         } catch (Exception e) {
-            if (e.getMessage() != null) {
-                Log.e(LOG_TAG, e.getMessage());
-            }
+            Log.e(LOG_TAG, "NotificationHelper exception " + e.getMessage() + " " + e.getCause());
         }
 
         return null;
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        notificationHelper = null;
+    }
 }
