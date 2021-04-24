@@ -550,3 +550,9 @@
 * Updated obfs4proxy.
 * Updated snowflake.
 * Fixed firewall sliding back to top when restoring an app from recent apps.
+
+**InviZible Pro beta 1.3.0**
+* Fixed - START button does not change its state when only Tor or I2P is running.
+* Implemented non ASCII DNS handling.
+* Updated Purple I2P.
+* Minor bug fixes and optimizations.
