@@ -29,6 +29,9 @@ public class AccelerateDevelop {
     public AccelerateDevelop(MainActivity activity) {
     }
 
+    public void removeActivity() {
+    }
+
     public void initBilling() {
     }
 

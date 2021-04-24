@@ -69,7 +69,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
 
     public static volatile boolean accelerated = true;
 
-    private final MainActivity activity;
+    private MainActivity activity;
     private final Context context;
     private final ReentrantLock lock = new ReentrantLock();
     private BillingClient mBillingClient;
@@ -83,6 +83,10 @@ public class AccelerateDevelop implements BillingClientStateListener {
         this.context = activity.getApplicationContext();
         this.signedData = new PrefManager(activity).getStrPref("gpData");
         this.signature = new PrefManager(activity).getStrPref("gpSign");
+    }
+
+    public void removeActivity() {
+        this.activity = null;
     }
 
     public void initBilling() {
@@ -106,7 +110,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
 
             SkuDetails skuDetails = mSkuDetailsMap.get(skuId);
 
-            if (skuDetails != null) {
+            if (skuDetails != null && activity != null) {
 
                 Log.i(LOG_TAG, "Launch billing");
 

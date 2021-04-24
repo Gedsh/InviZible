@@ -977,6 +977,12 @@ public class MainActivity extends LangAppCompatActivity
         super.onPause();
 
         unregisterBroadcastReceiver();
+
+        if (accelerateDevelop != null) {
+            accelerateDevelop.removeActivity();
+            accelerateDevelop = null;
+        }
+
     }
 
     @Override
@@ -1011,10 +1017,6 @@ public class MainActivity extends LangAppCompatActivity
         if (handler != null) {
             handler.removeCallbacksAndMessages(null);
             handler = null;
-        }
-
-        if (accelerateDevelop != null) {
-            accelerateDevelop = null;
         }
 
         topFragment = null;
