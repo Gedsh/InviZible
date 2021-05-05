@@ -63,7 +63,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import pan.alexander.tordnscrypt.BootCompleteReceiver;
@@ -117,8 +117,8 @@ public class ServiceVPN extends VpnService {
         }
     }
 
-    private static String vpnDns1 = "9.9.9.9";
-    private static final String vpnDns2 = "116.202.176.26";
+    private static final int dnsOverTlsPort = 853;
+    private boolean ignoreSystemDNS = false;
 
     final static int linesInDNSQueryRawRecords = 500;
 
@@ -170,7 +170,7 @@ public class ServiceVPN extends VpnService {
     private final Set<String> dnsRebindHosts = new HashSet<>();
     private boolean lan = false;
     private boolean firewallEnabled;
-    public static CopyOnWriteArrayList<String> vpnDNS;
+    public static ConcurrentSkipListSet<String> vpnDnsSet;
 
     private boolean useProxy = false;
     private Set<String> setBypassProxy;
@@ -218,7 +218,20 @@ public class ServiceVPN extends VpnService {
     private native void jni_done(long context);
 
     private static List<InetAddress> getDns(Context context) {
-        vpnDNS = new CopyOnWriteArrayList<>();
+        String vpnDns1;
+        String vpnDns2 = "116.202.176.26";//libre DNS
+
+        String quadDNS41 = "9.9.9.9";
+        String quadDNS42 = "149.112.112.112";
+        String quadDNS61 = "2620:fe::fe";
+        String quadDNS62 = "2620:fe::9";
+        String gDNS41 = "8.8.8.8";
+        String gDNS42 = "8.8.4.4";
+        String gDNS61 = "2001:4860:4860::8888";
+        String gDNS62 = "2001:4860:4860::8844";
+
+        vpnDnsSet = new ConcurrentSkipListSet<>();
+
         List<InetAddress> listDns = new ArrayList<>();
         List<String> sysDns = Util.getDefaultDNS(context);
 
@@ -228,31 +241,65 @@ public class ServiceVPN extends VpnService {
         vpnDns1 = PathVars.getInstance(context).getDNSCryptFallbackRes();
         Log.i(LOG_TAG, "VPN DNS system=" + TextUtils.join(",", sysDns) + " config=" + vpnDns1 + "," + vpnDns2);
 
-        if (vpnDns1 != null)
+        if (vpnDns1 != null) {
             try {
                 InetAddress dns = InetAddress.getByName(vpnDns1);
                 if (!(dns.isLoopbackAddress() || dns.isAnyLocalAddress()) &&
                         (ip6 || dns instanceof Inet4Address)) {
                     listDns.add(dns);
-                    vpnDNS.add(vpnDns1);
+                    vpnDnsSet.add(vpnDns1);
                 }
             } catch (Throwable ignored) {
             }
+        }
 
-        if (vpnDns2 != null)
+        if (vpnDns2 != null) {
             try {
                 InetAddress dns = InetAddress.getByName(vpnDns2);
                 if (!(dns.isLoopbackAddress() || dns.isAnyLocalAddress()) &&
                         (ip6 || dns instanceof Inet4Address)) {
                     listDns.add(dns);
-                    vpnDNS.add(vpnDns2);
+                    vpnDnsSet.add(vpnDns2);
                 }
             } catch (Throwable ex) {
                 Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
             }
+        }
 
-        if (listDns.size() == 2)
+        if (vpnDns1 == null) {
+            vpnDns1 = quadDNS41;
+        }
+
+        vpnDnsSet.add(gDNS41);
+        vpnDnsSet.add(gDNS42);
+        vpnDnsSet.add(gDNS61);
+        vpnDnsSet.add(gDNS62);
+
+        if (vpnDns1.equals(quadDNS41) || vpnDns1.equals(quadDNS42)) {
+            vpnDnsSet.add(quadDNS41);
+            vpnDnsSet.add(quadDNS42);
+            vpnDnsSet.add(quadDNS61);
+            vpnDnsSet.add(quadDNS62);
+        } else {
+            try {
+                InetAddress addressOfDns = InetAddress.getByName(vpnDns1);
+                String name = addressOfDns.getCanonicalHostName();
+                InetAddress[] addressesForName = InetAddress.getAllByName(name);
+                for (InetAddress address: addressesForName) {
+                    String addressStr = address.getHostAddress();
+                    if (addressStr != null) {
+                        vpnDnsSet.add(addressStr);
+                    }
+                }
+                Log.i(LOG_TAG, "ServiceVPN vpnDnsSet " + vpnDnsSet);
+            } catch (Exception e) {
+                Log.w(LOG_TAG, "ServiceVPN getDns exception " + e.getMessage() + " " + e.getCause());
+            }
+        }
+
+        if (listDns.size() == 2) {
             return listDns;
+        }
 
         for (String def_dns : sysDns)
             try {
@@ -261,7 +308,7 @@ public class ServiceVPN extends VpnService {
                         !(ddns.isLoopbackAddress() || ddns.isAnyLocalAddress()) &&
                         (ip6 || ddns instanceof Inet4Address)) {
                     listDns.add(ddns);
-                    vpnDNS.add(def_dns);
+                    vpnDnsSet.add(def_dns);
                 }
             } catch (Throwable ex) {
                 Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
@@ -270,13 +317,11 @@ public class ServiceVPN extends VpnService {
         // Always set DNS servers
         if (listDns.size() == 0)
             try {
-                listDns.add(InetAddress.getByName("8.8.8.8"));
-                listDns.add(InetAddress.getByName("8.8.4.4"));
-                vpnDNS.add("8.8.8.8");
-                vpnDNS.add("8.8.4.4");
+                listDns.add(InetAddress.getByName(gDNS41));
+                listDns.add(InetAddress.getByName(gDNS42));
                 if (ip6) {
-                    listDns.add(InetAddress.getByName("2001:4860:4860::8888"));
-                    listDns.add(InetAddress.getByName("2001:4860:4860::8844"));
+                    listDns.add(InetAddress.getByName(gDNS61));
+                    listDns.add(InetAddress.getByName(gDNS62));
                 }
             } catch (Throwable ex) {
                 Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
@@ -448,6 +493,7 @@ public class ServiceVPN extends VpnService {
         dnsRebindProtection = prefs.getBoolean("pref_common_dns_rebind_protection", false);
         blockInternetWhenArpAttackDetected = prefs.getBoolean("pref_common_arp_block_internet", false);
         firewallEnabled = new PrefManager(this).getBoolPref("FirewallEnabled");
+        ignoreSystemDNS = prefs.getBoolean("ignore_system_dns", false);
 
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
             compatibilityMode = true;
@@ -969,6 +1015,10 @@ public class ServiceVPN extends VpnService {
         // https://android.googlesource.com/platform/system/core/+/master/include/private/android_filesystem_config.h
         if ((!canFilter) && isSupported(packet.protocol)) {
             packet.allowed = true;
+        } else if (packet.dport == dnsOverTlsPort && ignoreSystemDNS) {
+            Log.w(LOG_TAG, "Block DNS over TLS " + packet);
+        } else if ((vpnDnsSet.contains(packet.daddr) && packet.dport != 53) && ignoreSystemDNS) {
+            Log.w(LOG_TAG, "Block DNS over HTTPS " + packet);
         } else if ((packet.uid == ownUID || compatibilityMode && packet.uid == ApplicationData.SPECIAL_UID_KERNEL && !fixTTLForPacket)
                 && isSupported(packet.protocol)) {
             // Allow self
@@ -1436,7 +1486,6 @@ public class ServiceVPN extends VpnService {
 
     @Override
     public void onDestroy() {
-        //synchronized (this) {
 
         Log.i(LOG_TAG, "VPN Destroy");
         commandLooper.quit();
@@ -1481,7 +1530,6 @@ public class ServiceVPN extends VpnService {
             jni_done(jni_context);
             jni_context = 0;
         }
-        //}
 
         super.onDestroy();
     }

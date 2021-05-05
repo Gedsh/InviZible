@@ -50,7 +50,7 @@ class ConnectionRecordsConverter(context: Context) {
     private val blockIPv6: Boolean = sharedPreferences.getBoolean("block_ipv6", true)
     private var compatibilityMode = sharedPreferences.getBoolean("swCompatibilityMode", false)
     private val meteredNetwork = Util.isMeteredNetwork(context)
-    private val vpnDNS = ServiceVPN.vpnDNS
+    private val vpnDNS = ServiceVPN.vpnDnsSet
     private val modulesStatus = ModulesStatus.getInstance()
     private val fixTTL = (modulesStatus.isFixTTL && modulesStatus.mode == OperationMode.ROOT_MODE
             && !modulesStatus.isUseModulesWithRoot)
