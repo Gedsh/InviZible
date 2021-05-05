@@ -556,3 +556,10 @@
 * Implemented non ASCII DNS handling.
 * Updated Purple I2P.
 * Minor bug fixes and optimizations.
+
+**InviZible Pro beta 1.3.1**
+* Always use a full Tor restart when pressing the new identity button, which previously only happened with Tor bridges.
+* Fixed DNS leak when Android private DNS is in automatic mode.
+* Updated Tor.
+* Updated Snowflake.
+* Fixed UPNP for Purple I2P.
