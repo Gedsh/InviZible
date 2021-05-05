@@ -103,7 +103,7 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
                     }
                 }
 
-            }, 3000);
+            }, 5000);
         }
 
         tvITPDLog = view.findViewById(R.id.tvITPDLog);
