@@ -11,7 +11,7 @@ zstd_version=v1.4.5
 xz_version=v5.2.3
 tor_version=release-0.4.5
 i2pd_openssl_version=OpenSSL_1_1_1k
-miniupnpc_version=miniupnpc_2_2_0
+miniupnpc_version=c2818392e12f42901ab5abf145f43d69825a38c9
 i2pd_version=2.37.0
 
 git clone https://github.com/Yawning/obfs4
@@ -39,7 +39,10 @@ mkdir -p libs
 pushd libs/
 git clone --single-branch --branch $i2pd_openssl_version https://github.com/openssl/openssl.git
 git clone https://github.com/moritz-wundke/Boost-for-Android.git
-git clone --single-branch --branch $miniupnpc_version https://github.com/miniupnp/miniupnp.git
+git clone https://github.com/miniupnp/miniupnp.git
+pushd miniupnp/
+git checkout -f $miniupnpc_version -b $miniupnpc_version
+popd
 git clone https://github.com/PurpleI2P/android-ifaddrs.git
 popd
 git clone --single-branch --branch $i2pd_version https://github.com/PurpleI2P/i2pd.git
