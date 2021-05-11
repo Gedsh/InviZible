@@ -399,8 +399,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     stunServers.deleteCharAt(stunServers.lastIndexOf(","));
 
                     clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
-                            + snowflakePath + " -url https://snowflake-broker.azureedge.net/" +
-                            " -front ajax.aspnetcdn.com -ice " + stunServers.toString() + " -max 3" + saveLogsString;
+                            + snowflakePath + " -url https://snowflake-broker.torproject.net.global.prod.fastly.net/" +
+                            " -front cdn.sstatic.net -ice " + stunServers.toString() + " -max 3" + saveLogsString;
                 } else {
                     clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
                             + obfsPath;
