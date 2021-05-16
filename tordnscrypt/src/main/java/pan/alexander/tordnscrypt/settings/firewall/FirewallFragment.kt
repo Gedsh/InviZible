@@ -50,6 +50,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.Comparator
 
 
 const val APPS_ALLOW_LAN_PREF = "appsAllowLan"
@@ -107,6 +108,9 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
 
     var firewallEnabled = false
 
+    private var comparatorWithName: Comparator<AppFirewall>? = null
+
+    private var comparatorWithUID: Comparator<AppFirewall>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -119,6 +123,8 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         }
 
         firewallEnabled = PrefManager(context).getBoolPref("FirewallEnabled")
+
+        initComparators()
     }
 
     @SuppressLint("ResourceType")
@@ -223,6 +229,25 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         handler?.removeCallbacksAndMessages(null)
     }
 
+    private fun initComparators() {
+
+        val rootMode = modulesStatus.mode == OperationMode.ROOT_MODE
+
+        comparatorWithName = compareBy({!(it.allowLan
+                || it.allowWifi
+                || it.allowGsm
+                || it.allowRoaming
+                || it.allowVPN && rootMode)},
+            { it.applicationData.names.first() })
+
+        comparatorWithUID = compareBy({!(it.allowLan
+                || it.allowWifi
+                || it.allowGsm
+                || it.allowRoaming
+                || it.allowVPN && rootMode)},
+            { it.applicationData.uid })
+    }
+
     private fun getDeviceApps(context: Context) {
 
         if (appsList.isNotEmpty()) {
@@ -318,6 +343,8 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
 
                             if (binding.chipFirewallSortUid.isChecked) {
                                 sortByUid()
+                            } else {
+                                sortByName()
                             }
 
                             if (binding.chipFirewallSystem.isChecked) {
@@ -593,8 +620,8 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
             return
         }
 
-        appsList.sortListBy { it.applicationData.names.first() }
-        savedAppsListWhenSearch?.sortListBy { it.applicationData.names.first() }
+        comparatorWithName?.let { appsList.sortListWith(it) }
+        comparatorWithName?.let { savedAppsListWhenSearch?.sortListWith(it) }
     }
 
     private fun sortByUid() {
@@ -602,14 +629,24 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
             return
         }
 
-        appsList.sortListBy { it.applicationData.uid }
-        savedAppsListWhenSearch?.sortListBy { it.applicationData.uid }
+        comparatorWithUID?.let { appsList.sortListWith(it) }
+        comparatorWithUID?.let { savedAppsListWhenSearch?.sortListWith(it) }
     }
 
+    @SuppressLint("unused")
     private inline fun <T, R : Comparable<R>> CopyOnWriteArrayList<T>.sortListBy(crossinline selector: (T) -> R?) {
         if (size > 1) {
             val list = ArrayList(this)
             list.sortBy(selector)
+            clear()
+            addAll(list)
+        }
+    }
+
+    private fun <T> CopyOnWriteArrayList<T>.sortListWith(comparator: Comparator<T>) {
+        if (size > 1) {
+            val list = ArrayList(this)
+            list.sortWith(comparator)
             clear()
             addAll(list)
         }
@@ -682,7 +719,8 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         appsList.clear()
 
         savedAppsListWhenSearch?.forEach { savedApp ->
-            if (savedApp.applicationData.toString().toLowerCase(Locale.ROOT).contains(text.toLowerCase(Locale.ROOT).trim())) {
+            if (savedApp.applicationData.toString().lowercase(Locale.ROOT)
+                    .contains(text.lowercase(Locale.ROOT).trim())) {
                 if (allAppsSelected
                         || systemAppsSelected && savedApp.applicationData.system
                         || userAppsSelected && !savedApp.applicationData.system) {
@@ -736,8 +774,8 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
                     appsList.add(savedApp)
                 } else {
                     searchText?.let {
-                        if (savedApp.applicationData.toString().toLowerCase(Locale.ROOT)
-                                        .contains(it.toLowerCase(Locale.ROOT).trim())) {
+                        if (savedApp.applicationData.toString().lowercase(Locale.ROOT)
+                                        .contains(it.lowercase(Locale.ROOT).trim())) {
                             appsList.add(savedApp)
                         }
                     }
@@ -767,8 +805,8 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
                     appsList.add(savedApp)
                 } else {
                     searchText?.let {
-                        if (savedApp.applicationData.toString().toLowerCase(Locale.ROOT)
-                                        .contains(it.toLowerCase(Locale.ROOT).trim())) {
+                        if (savedApp.applicationData.toString().lowercase(Locale.ROOT)
+                                        .contains(it.lowercase(Locale.ROOT).trim())) {
                             appsList.add(savedApp)
                         }
                     }
