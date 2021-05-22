@@ -1,0 +1,2 @@
+**InviZible Pro beta 1.3.3**
+* Revert back to Tor 4.5.x versions so that v2 onion services can be used.

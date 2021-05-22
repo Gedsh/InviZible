@@ -569,3 +569,6 @@
 * Updated Tor to version 4.6.3.
 * Updated Purple I2P to version 2.38.0.
 * Switch snowflake front domain and host to fastly CDN.
+
+**InviZible Pro beta 1.3.3**
+* Revert back to Tor 4.5.x versions so that v2 onion services can be used.
