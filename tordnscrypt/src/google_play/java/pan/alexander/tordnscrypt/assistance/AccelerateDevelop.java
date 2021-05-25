@@ -35,10 +35,13 @@ import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingResult;
 import com.android.billingclient.api.Purchase;
+import com.android.billingclient.api.PurchasesResponseListener;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.SkuDetails;
 import com.android.billingclient.api.SkuDetailsParams;
 import com.android.billingclient.api.SkuDetailsResponseListener;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.security.Key;
 import java.security.KeyFactory;
@@ -137,18 +140,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
             Log.i(LOG_TAG, "Billing setup is finished");
             //below you can query information about products and purchase
             querySkuDetails(); //query for products
-            List<Purchase> purchasesList = queryPurchases(); //query for purchases
-
-            //if the purchase has already been made to give the goods
-            if (purchasesList != null) {
-                handlePurchases(purchasesList);
-            } else if (!signedData.isEmpty() && !signature.isEmpty() && verifyValidSignature(signedData, signature)) {
-                Log.w(LOG_TAG, "Purchases list is null but saved signature is correct. Allowing...");
-                payComplete();
-            } else {
-                Log.w(LOG_TAG, "Purchases list is null. Skipping...");
-                noPayment();
-            }
+            queryPurchases(); //query for purchases
         }
     }
 
@@ -200,9 +192,22 @@ public class AccelerateDevelop implements BillingClientStateListener {
         });
     }
 
-    private List<Purchase> queryPurchases() {
-        Purchase.PurchasesResult purchasesResult = mBillingClient.queryPurchases(BillingClient.SkuType.INAPP);
-        return purchasesResult.getPurchasesList();
+    private void queryPurchases() {
+        mBillingClient.queryPurchasesAsync(BillingClient.SkuType.INAPP, new PurchasesResponseListener() {
+            @Override
+            public void onQueryPurchasesResponse(@NonNull @NotNull BillingResult billingResult, @NonNull @NotNull List<Purchase> purchasesList) {
+                //if the purchase has already been made to give the goods
+                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                    handlePurchases(purchasesList);
+                } else if (!signedData.isEmpty() && !signature.isEmpty() && verifyValidSignature(signedData, signature)) {
+                    Log.w(LOG_TAG, "Query purchases fault: "+ billingResult.getDebugMessage() + " But saved signature is correct. Allowing...");
+                    payComplete();
+                } else {
+                    Log.w(LOG_TAG, "Query purchases fault: " + billingResult.getDebugMessage() + " Skipping...");
+                    noPayment();
+                }
+            }
+        });
     }
 
     private void handlePurchases(@NonNull List<Purchase> purchasesList) {
@@ -235,11 +240,11 @@ public class AccelerateDevelop implements BillingClientStateListener {
                     continue;
                 }
 
-                String purchaseId = purchase.getSku();
+                List<String> purchaseIds = purchase.getSkus();
                 int purchaseState = purchase.getPurchaseState();
                 boolean acknowledged = purchase.isAcknowledged();
 
-                if(TextUtils.equals(mSkuId, purchaseId) && purchaseState == Purchase.PurchaseState.PURCHASED) {
+                if (purchaseIds.contains(mSkuId) && purchaseState == Purchase.PurchaseState.PURCHASED) {
 
                     if (!verifyValidSignature(purchase.getOriginalJson(), purchase.getSignature())) {
                         if (!acknowledged && activity != null) {
@@ -265,7 +270,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
                             @Override
                             public void onAcknowledgePurchaseResponse(@NonNull BillingResult billingResult) {
                                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                                    Log.i(LOG_TAG, "Purchase is acknowledged " + purchase.getSku());
+                                    Log.i(LOG_TAG, "Purchase is acknowledged " + purchase.getSkus());
 
                                     if (activity != null) {
                                         activity.runOnUiThread(() -> {
@@ -283,7 +288,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
                                         });
                                     }
                                 } else {
-                                    Log.i(LOG_TAG, "Purchase is not acknowledged " + purchase.getSku() + " " + billingResult.getDebugMessage());
+                                    Log.i(LOG_TAG, "Purchase is not acknowledged " + purchase.getSkus() + " " + billingResult.getDebugMessage());
                                 }
                             }
                         });
@@ -291,13 +296,13 @@ public class AccelerateDevelop implements BillingClientStateListener {
 
                     payComplete();
                     return;
-                } else if (TextUtils.equals(mSkuId, purchaseId) && purchaseState == Purchase.PurchaseState.PENDING) {
-                    Log.i(LOG_TAG, "Purchase is pending " + purchase.getSku());
+                } else if (purchaseIds.contains(mSkuId) && purchaseState == Purchase.PurchaseState.PENDING) {
+                    Log.i(LOG_TAG, "Purchase is pending " + purchase.getSkus());
 
                     if (activity != null) {
                         NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                                 context, activity.getString(R.string.pending_purchase)
-                                        + " " + purchase.getSku()
+                                        + " " + TextUtils.join(", ", purchase.getSkus())
                                         + " " + purchase.getOrderId(), "pending_purchase");
                         if (notificationHelper != null && !activity.isDestroyed()) {
                             notificationHelper.show(activity.getSupportFragmentManager(), NotificationHelper.TAG_HELPER);
@@ -330,12 +335,12 @@ public class AccelerateDevelop implements BillingClientStateListener {
                         Log.w(LOG_TAG, "BillingService connection failed. Skipping...");
                         noPayment();
                     }
-
-                    lock.unlock();
                 }
             } catch (Exception e) {
                 Log.e(LOG_TAG, "AccelerateDevelop startBillingConnection Exception "
                         + e.getMessage() + " " + e.getCause() + " " + Arrays.toString(e.getStackTrace()));
+            } finally {
+                lock.unlock();
             }
         });
     }
@@ -350,7 +355,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
             sig.initVerify(pkey);
             sig.update(signedData.getBytes());
 
-            if(sig.verify(Base64.decode(signature, Base64.DEFAULT))) {
+            if (sig.verify(Base64.decode(signature, Base64.DEFAULT))) {
                 result = true;
             } else {
                 Log.e(LOG_TAG, "AccelerateDevelop signature is wrong " + signature);
@@ -382,7 +387,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
         return result;
     }
 
-    private PublicKey getAPKKey() throws Exception{
+    private PublicKey getAPKKey() throws Exception {
         byte[] decodedKey = Base64.decode(context.getString(R.string.gp_property), Base64.DEFAULT);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         return keyFactory.generatePublic(new X509EncodedKeySpec(decodedKey));
