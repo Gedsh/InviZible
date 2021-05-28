@@ -85,7 +85,7 @@
     <string name="pref_fast_site_refresh_interval">"Intervalo de atualização"</string>
     <string name="pref_fast_site_refresh_interval_summ">"Período em horas para atualizar os IPs dos websites; Para o Android 5.1 e superior. Coloque 0 para parar a atualização."</string>
     <string name="pref_fast_use_tor_bridges">"Pontes"</string>
-    <string name="pref_fast_use_tor_bridges_summ">"Use isso se você não consegue se conectar a rede Tor"</string>
+    <string name="pref_fast_use_tor_bridges_summ">"Use isso se você não conseguir se conectar a rede Tor"</string>
     <string name="pref_fast_use_tor_bridges_no">"Não usar Pontes"</string>
     <string name="pref_fast_use_tor_bridges_default">"Usar lista de Pontes padrão"</string>
     <string name="pref_fast_use_tor_bridges_own">"Usar minha própria lista de Pontes"</string>
@@ -127,7 +127,7 @@
     <string name="pref_common_show_help">"Mensagens de ajuda"</string>
     <string name="pref_common_show_help_summ">"Sempre mostrar mensagens de ajuda"</string>
     <string name="pref_common_notification_helper">"
-Por favor, exclua o InviZible Pro da optimização da bateria de androd. Caso contrário, o andróide parará DNSCrypt, Tor ou I2P em qualquer momento. Em sistemas especiais, como o MIUI, foram necessários alguns passos adicionais, para excluir o InviZible Pro da optimização da bateria (por exemplo, Apps e notificações-&gt;Acesso especial a apps-&gt;Otimização de Bateria). Selecione InviZible Pro e o remova da otimização de bateria."</string>
+Por favor, exclua o InviZible Pro da optimização da bateria de androd. Caso contrário, o android parará DNSCrypt, Tor ou I2P em qualquer momento. Em sistemas especiais, como o MIUI, foram necessários alguns passos adicionais, para excluir o InviZible Pro da optimização da bateria (por exemplo, Apps e notificações-&gt;Acesso especial a apps-&gt;Otimização de Bateria). Selecione InviZible Pro e o remova da otimização de bateria."</string>
     <string name="pref_common_use_busybox">"Selecionar BusyBox"</string>
     <string name="pref_common_categ_hotspot">"HOTSPOT-Experimental"</string>
 
@@ -183,8 +183,12 @@ Caso contrário, deixe como false, pois isso não melhora a segurança (dnscrypt
     <string name="pref_dnscrypt_proxy">"Porta de Proxy"</string>
     <string name="pref_dnscrypt_other_categ">"Outras configurações"</string>
     <string name="pref_dnscrypt_fallback_resolver_summ">"Resolvedor substituto. Este é um resolvedor DNS normal, não criptografado, que só será usado para consultas únicas ao recuperar a lista inicial de resolvedores e somente se a configuração DNS do sistema não funcionar. Nunca será usado se as listas já tiverem sido armazenadas em cache. Pessoas na China podem precisar usar 114.114.114.114:53 aqui."</string>
+
+    <!-- Nunca deixar o dnscrypt-proxy tentar utilizar as definições DNS do sistema. Utilizar incondicionalmente o resolvedor de falhas. -->
     <string name="pref_dnscrypt_ignore_system_dns_summ">"Nunca deixe dnscrypt-proxy tentar usar as configurações de DNS do sistema. Use incondicionalmente o resolvedor de fallback."</string>
     <string name="pref_dnscrypt_filters_categ">"FILTROS"</string>
+
+    <!-- Regras de encaminhamento -->
     <string name="pref_dnscrypt_forwarding_rules_categ">"Forwarding rules"</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Roteie as consultas de domínios específicos para um conjunto dedicado de servidores."</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">"Cloaking rules"</string>
