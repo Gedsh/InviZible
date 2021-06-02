@@ -170,7 +170,7 @@
         Эти запросы могут показать наличие вредоносов или неправильных приложений.
         А также передачу информации о их наличии третьей стороне.</string>
     <string name="pref_dnscrypt_nx_log">Включить лог</string>
-    <string name="open_nx_log">Окрыть лог запросов</string>
+    <string name="open_nx_log">Открыть лог запросов</string>
     <string name="pref_dnscrypt_blacklist_categ">Черный список сайтов</string>
     <string name="pref_dnscrypt_blacklist">Черный список</string>
     <string name="pref_dnscrypt_blacklist_summ">Черный список формируется одним сайтом в строчке</string>
