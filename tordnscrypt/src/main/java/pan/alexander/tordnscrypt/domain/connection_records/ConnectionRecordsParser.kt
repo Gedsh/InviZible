@@ -112,16 +112,16 @@ class ConnectionRecordsParser(private val applicationContext: Context) {
             }
 
             if (record.aName.trim().isNotEmpty()) {
-                lines.append(record.aName.toLowerCase(Locale.ROOT))
+                lines.append(record.aName.lowercase(Locale.ROOT))
                 if (record.blocked && record.blockedByIpv6) {
                     lines.append(" ipv6")
                 }
             } else if (record.qName.trim().isNotEmpty()) {
-                lines.append(record.qName.toLowerCase(Locale.ROOT))
+                lines.append(record.qName.lowercase(Locale.ROOT))
             }
 
             if (record.cName.trim().isNotEmpty() && record.uid == -1000) {
-                lines.append(" -> ").append(record.cName.toLowerCase(Locale.ROOT))
+                lines.append(" -> ").append(record.cName.lowercase(Locale.ROOT))
             }
             if (record.daddr.trim().isNotEmpty()
                 && (!record.daddr.contains("0.0.0.0")

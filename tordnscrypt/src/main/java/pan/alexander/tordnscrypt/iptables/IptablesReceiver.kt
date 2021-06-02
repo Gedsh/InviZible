@@ -35,7 +35,7 @@ import java.util.*
 class IptablesReceiver : BroadcastReceiver() {
 
     var lastIptablesCommandsReturnError = false
-    var savedError = ""
+    private var savedError = ""
 
     override fun onReceive(context: Context?, intent: Intent?) {
 
@@ -67,7 +67,7 @@ class IptablesReceiver : BroadcastReceiver() {
             return
         }
 
-        val resultStr = result.toString().toLowerCase(Locale.ROOT)
+        val resultStr = result.toString().lowercase(Locale.ROOT)
 
         lastIptablesCommandsReturnError = true
 

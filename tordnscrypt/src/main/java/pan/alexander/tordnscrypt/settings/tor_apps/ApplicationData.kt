@@ -66,7 +66,8 @@ data class ApplicationData(private val name: String = "",
         } else if (active && !other.active) {
             -1
         } else {
-            names.first().toLowerCase(Locale.getDefault()).compareTo(other.names.first().toLowerCase(Locale.getDefault()))
+            names.first().lowercase(Locale.getDefault()).compareTo(other.names.first()
+                .lowercase(Locale.getDefault()))
         }
     }
 

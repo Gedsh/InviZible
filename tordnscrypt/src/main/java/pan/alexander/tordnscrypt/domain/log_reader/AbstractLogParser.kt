@@ -42,7 +42,7 @@ abstract class AbstractLogParser {
 
                 //s = Html.escapeHtml(s);
                 var encodedLine = TextUtils.htmlEncode(line)
-                val encodedLineLowerCase = encodedLine.toLowerCase(Locale.ROOT)
+                val encodedLineLowerCase = encodedLine.lowercase(Locale.ROOT)
 
                 if (encodedLineLowerCase.contains("[notice]") || encodedLineLowerCase.contains("/info")) {
                     encodedLine = "<font color=#808080>" + encodedLine.replace("[notice]", "")

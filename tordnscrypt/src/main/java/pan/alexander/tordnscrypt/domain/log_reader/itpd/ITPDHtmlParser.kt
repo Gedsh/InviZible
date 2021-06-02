@@ -66,7 +66,7 @@ class ITPDHtmlParser(val modulesLogRepository: ModulesLogRepository) {
 
                     break
                 } else if (line.contains("Network status")) {
-                    if (line.toLowerCase(Locale.ROOT).contains("error")) {
+                    if (line.lowercase(Locale.ROOT).contains("error")) {
                         startedSuccessfully = false
                         startedWithError = true
                         errorFound = true
