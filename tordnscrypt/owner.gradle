@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
-def keystorePropertiesFile = file("/usr/local/KStore/keystore.properties")
+def keystorePropertiesFile = file("/home/alexander/.local/KStore/keystore.properties")
 def keystoreProperties = new Properties()
 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
@@ -13,14 +13,14 @@ android {
 
     signingConfigs {
         stablesign {
-            storeFile file("/usr/local/KStore/pan_alexander.jks")
+            storeFile file("/home/alexander/.local/KStore/pan_alexander.jks")
             storePassword keystoreProperties['storePassword']
             keyAlias keystoreProperties['keySAlias']
             keyPassword keystoreProperties['keySPassword']
         }
 
         betasign {
-            storeFile file("/usr/local/KStore/pan_alexander.jks")
+            storeFile file("/home/alexander/.local/KStore/pan_alexander.jks")
             storePassword keystoreProperties['storePassword']
             keyAlias keystoreProperties['keyBAlias']
             keyPassword keystoreProperties['keyBPassword']
@@ -151,7 +151,7 @@ android {
         }
     }
 
-    ndkVersion '23.0.7196353 rc2'
+    ndkVersion '23.0.7344513 rc4'
 
     buildFeatures {
         viewBinding true
