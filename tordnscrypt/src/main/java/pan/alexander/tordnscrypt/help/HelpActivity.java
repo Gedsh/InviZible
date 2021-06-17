@@ -225,6 +225,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                 busyboxPath + "mkdir -m 655 -p logs_dir 2> /dev/null",
                 busyboxPath + "cp -R " + appDataDir + "/logs" + " logs_dir 2> /dev/null",
                 "logcat -d | grep " + pid + " > logs_dir/logcat.log 2> /dev/null",
+                "ifconfig > logs_dir/ifconfig.log 2> /dev/null",
                 iptables + "-L -v > logs_dir/filter.log 2> /dev/null",
                 iptables + "-t nat -L -v > logs_dir/nat.log 2> /dev/null",
                 iptables + "-t mangle -L -v > logs_dir/mangle.log 2> /dev/null",

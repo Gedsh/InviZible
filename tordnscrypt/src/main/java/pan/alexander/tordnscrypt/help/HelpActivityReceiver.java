@@ -23,7 +23,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
+
 import androidx.fragment.app.DialogFragment;
+
 import android.util.Log;
 import android.widget.Toast;
 
@@ -34,6 +36,7 @@ import java.io.InputStreamReader;
 import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.iptables.Tethering;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
@@ -103,7 +106,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
         try {
             ZipFileManager zipFileManager = new ZipFileManager(cacheDir + "/logs/InvizibleLogs.txt");
             zipFileManager.createZip(context, cacheDir + "/logs_dir");
-            FileOperations.deleteDirSynchronous(context,cacheDir + "/logs_dir");
+            FileOperations.deleteDirSynchronous(context, cacheDir + "/logs_dir");
         } catch (Exception e) {
             Log.e(LOG_TAG, "Create zip file for first method failed  " + e.getMessage() + " " + e.getCause());
         }
@@ -124,26 +127,12 @@ public class HelpActivityReceiver extends BroadcastReceiver {
             FileOperations.copyFolderSynchronous(context, appDataDir + "/logs", logsDirPath);
             FileOperations.copyFolderSynchronous(context, appDataDir + "/shared_prefs", logsDirPath);
 
-            Process process = Runtime.getRuntime().exec("logcat -d");
-            StringBuilder log = new StringBuilder();
-            try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = bufferedReader.readLine()) != null) {
-                    log.append(line);
-                    log.append(System.lineSeparator());
-                }
-            }
+            saveLogcat(logsDirPath);
 
-            try (FileWriter out = new FileWriter(logsDirPath + "/logcat.log")) {
-                out.write(log.toString());
-            }
+            saveDeviceInfo(logsDirPath);
 
-            process.destroy();
-
-            try (FileWriter out = new FileWriter(logsDirPath + "/device_info.log")) {
-                if (info != null) {
-                    out.write(info);
-                }
+            if (Tethering.apIsOn || Tethering.usbTetherOn) {
+                trySaveIfconfig(logsDirPath);
             }
 
             saveLogsMethodOne(context);
@@ -152,6 +141,58 @@ public class HelpActivityReceiver extends BroadcastReceiver {
             Log.e(LOG_TAG, "Collect logs alternative method fault " + e.getMessage() + " " + e.getCause());
             showSomethingWrongToast(context);
         }
+    }
+
+    private void saveLogcat(String logsDirPath) throws Exception {
+        Process process = Runtime.getRuntime().exec("logcat -d");
+        StringBuilder log = new StringBuilder();
+        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                log.append(line);
+                log.append(System.lineSeparator());
+            }
+        }
+
+        try (FileWriter out = new FileWriter(logsDirPath + "/logcat.log")) {
+            out.write(log.toString());
+        }
+
+        process.destroy();
+    }
+
+    private void saveDeviceInfo(String logsDirPath) throws Exception {
+        try (FileWriter out = new FileWriter(logsDirPath + "/device_info.log")) {
+            if (info != null) {
+                out.write(info);
+            }
+        }
+    }
+
+    private void trySaveIfconfig(String logsDirPath) {
+        try {
+            saveIfconfig(logsDirPath);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "Collect ifconfig alternative method fault " + e.getMessage() + " " + e.getCause());
+        }
+    }
+
+    private void saveIfconfig(String logsDirPath) throws Exception {
+        Process process = Runtime.getRuntime().exec("ifconfig");
+        StringBuilder log = new StringBuilder();
+        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                log.append(line);
+                log.append(System.lineSeparator());
+            }
+        }
+
+        try (FileWriter out = new FileWriter(logsDirPath + "/ifconfig.log")) {
+            out.write(log.toString());
+        }
+
+        process.destroy();
     }
 
     private void deleteRootExecLog(Context context) {
