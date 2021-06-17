@@ -60,6 +60,7 @@ const val APPS_ALLOW_ROAMING = "appsAllowRoaming"
 const val APPS_ALLOW_VPN = "appsAllowVpn"
 const val APPS_NEWLY_INSTALLED = "appsNewlyInstalled"
 
+@SuppressLint("NotifyDataSetChanged")
 class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, View.OnClickListener,
         SearchView.OnQueryTextListener, ChipGroup.OnCheckedChangeListener, CompoundButton.OnCheckedChangeListener {
 
