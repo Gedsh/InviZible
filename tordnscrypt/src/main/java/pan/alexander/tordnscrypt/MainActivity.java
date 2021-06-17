@@ -90,7 +90,9 @@ import pan.alexander.tordnscrypt.tor_fragment.TorRunFragment;
 import pan.alexander.tordnscrypt.utils.ApManager;
 import pan.alexander.tordnscrypt.utils.ChangeModeInterface;
 import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.Preferences;
 import pan.alexander.tordnscrypt.utils.Registration;
+import pan.alexander.tordnscrypt.utils.enums.AccessPointState;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
@@ -488,23 +490,23 @@ public class MainActivity extends LangAppCompatActivity
         ApManager apManager = new ApManager(this);
         int apState = apManager.isApOn();
 
-        if (apState == ApManager.apStateON) {
+        if (apState == AccessPointState.STATE_ON) {
 
             menu.findItem(R.id.item_hotspot).setIcon(R.drawable.ic_wifi_tethering_green_24dp);
 
-            if (!new PrefManager(this).getBoolPref("APisON")) {
+            if (!new PrefManager(this).getBoolPref(Preferences.WIFI_ACCESS_POINT_IS_ON)) {
 
-                new PrefManager(this).setBoolPref("APisON", true);
+                new PrefManager(this).setBoolPref(Preferences.WIFI_ACCESS_POINT_IS_ON, true);
 
                 modulesStatus.setIptablesRulesUpdateRequested(true);
                 ModulesAux.requestModulesStatusUpdate(this);
 
             }
 
-        } else if (apState == ApManager.apStateOFF) {
+        } else if (apState == AccessPointState.STATE_OFF) {
             menu.findItem(R.id.item_hotspot).setIcon(R.drawable.ic_portable_wifi_off_white_24dp);
-            if (new PrefManager(this).getBoolPref("APisON")) {
-                new PrefManager(this).setBoolPref("APisON", false);
+            if (new PrefManager(this).getBoolPref(Preferences.WIFI_ACCESS_POINT_IS_ON)) {
+                new PrefManager(this).setBoolPref(Preferences.WIFI_ACCESS_POINT_IS_ON, false);
 
                 modulesStatus.setIptablesRulesUpdateRequested(true);
                 ModulesAux.requestModulesStatusUpdate(this);

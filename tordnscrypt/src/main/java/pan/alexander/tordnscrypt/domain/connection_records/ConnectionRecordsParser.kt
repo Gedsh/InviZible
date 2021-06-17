@@ -25,7 +25,9 @@ import pan.alexander.tordnscrypt.TopFragment
 import pan.alexander.tordnscrypt.domain.entities.ConnectionRecord
 import pan.alexander.tordnscrypt.iptables.Tethering
 import pan.alexander.tordnscrypt.modules.ModulesStatus
+import pan.alexander.tordnscrypt.utils.Constants
 import pan.alexander.tordnscrypt.utils.PrefManager
+import pan.alexander.tordnscrypt.utils.Preferences
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHandler
 import java.util.*
@@ -37,15 +39,27 @@ class ConnectionRecordsParser(private val applicationContext: Context) {
     private val modulesStatus = ModulesStatus.getInstance()
     private val sharedPreferences =
         PreferenceManager.getDefaultSharedPreferences(applicationContext)
-    private val apIsOn = PrefManager(applicationContext).getBoolPref("APisON")
+    private val apIsOn = PrefManager(applicationContext).getBoolPref(Preferences.WIFI_ACCESS_POINT_IS_ON)
     private val localEthernetDeviceAddress =
-        sharedPreferences.getString("pref_common_local_eth_device_addr", "192.168.0.100")
-            ?: "192.168.0.100"
+        sharedPreferences.getString("pref_common_local_eth_device_addr", Constants.STANDARD_ADDRESS_LOCAL_PC)
+            ?: Constants.STANDARD_ADDRESS_LOCAL_PC
 
     fun formatLines(connectionRecords: List<ConnectionRecord>): String {
 
         val fixTTL =
             modulesStatus.isFixTTL && modulesStatus.mode == OperationMode.ROOT_MODE && !modulesStatus.isUseModulesWithRoot
+
+        val apAddresses = if (Tethering.wifiAPAddressesRange.lastIndexOf(".") > 0) {
+            Tethering.wifiAPAddressesRange.substring(0, Tethering.wifiAPAddressesRange.lastIndexOf("."))
+        } else {
+            Constants.STANDARD_AP_INTERFACE_RANGE
+        }
+
+        val usbAddresses = if (Tethering.usbModemAddressesRange.lastIndexOf(".") > 0) {
+            Tethering.usbModemAddressesRange.substring(0, Tethering.usbModemAddressesRange.lastIndexOf("."))
+        } else {
+            Constants.STANDARD_USB_MODEM_INTERFACE_RANGE
+        }
 
         val lines = StringBuilder()
 
@@ -94,9 +108,9 @@ class ConnectionRecordsParser(private val applicationContext: Context) {
                     appName =
                         applicationContext.packageManager.getNameForUid(record.uid) ?: "Undefined"
                 }
-                if (apIsOn && fixTTL && record.saddr.contains("192.168.43.")) {
+                if (apIsOn && fixTTL && record.saddr.contains(apAddresses)) {
                     lines.append("<b>").append("WiFi").append("</b>").append(" -> ")
-                } else if (Tethering.usbTetherOn && fixTTL && record.saddr.contains("192.168.42.")) {
+                } else if (Tethering.usbTetherOn && fixTTL && record.saddr.contains(usbAddresses)) {
                     lines.append("<b>").append("USB").append("</b>").append(" -> ")
                 } else if (Tethering.ethernetOn && fixTTL && record.saddr.contains(
                         localEthernetDeviceAddress

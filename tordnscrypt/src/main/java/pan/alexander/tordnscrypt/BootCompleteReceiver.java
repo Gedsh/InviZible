@@ -42,6 +42,7 @@ import pan.alexander.tordnscrypt.utils.FileShortener;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
+import pan.alexander.tordnscrypt.utils.Preferences;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
@@ -101,8 +102,8 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                 return;
             }
 
-            new PrefManager(context).setBoolPref("APisON", false);
-            new PrefManager(context).setBoolPref("ModemIsON", false);
+            new PrefManager(context).setBoolPref(Preferences.WIFI_ACCESS_POINT_IS_ON, false);
+            new PrefManager(context).setBoolPref(Preferences.USB_MODEM_IS_ON, false);
 
             tethering_autostart = shPref.getBoolean("pref_common_tethering_autostart", false);
 
@@ -227,7 +228,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
     private void startHOTSPOT() {
 
-        new PrefManager(context).setBoolPref("APisON", true);
+        new PrefManager(context).setBoolPref(Preferences.WIFI_ACCESS_POINT_IS_ON, true);
 
         ApManager apManager = new ApManager(context);
         if (!apManager.configApState()) {

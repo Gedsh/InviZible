@@ -37,6 +37,7 @@ import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.Preferences;
 import pan.alexander.tordnscrypt.utils.RootCommands;
 import pan.alexander.tordnscrypt.utils.RootExecService;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
@@ -79,8 +80,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         routeAllThroughTor = shPref.getBoolean("pref_fast_all_through_tor", true);
         lan = shPref.getBoolean("Allow LAN", false);
         blockHttp = shPref.getBoolean("pref_fast_block_http", false);
-        apIsOn = new PrefManager(context).getBoolPref("APisON");
-        modemIsOn = new PrefManager(context).getBoolPref("ModemIsON");
+        apIsOn = new PrefManager(context).getBoolPref(Preferences.WIFI_ACCESS_POINT_IS_ON);
+        modemIsOn = new PrefManager(context).getBoolPref(Preferences.USB_MODEM_IS_ON);
         Set<String> unlockApps = new PrefManager(context).getSetStrPref(UNLOCK_APPS);
         Set<String> unlockIPs = new PrefManager(context).getSetStrPref(IPS_TO_UNLOCK);
         Set<String> clearnetApps = new PrefManager(context).getSetStrPref(CLEARNET_APPS);

@@ -20,50 +20,46 @@ package pan.alexander.tordnscrypt.iptables;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
 
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
 
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.Constants;
+import pan.alexander.tordnscrypt.utils.InternetSharingChecker;
 import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.Preferences;
 import pan.alexander.tordnscrypt.vpn.Util;
 
 import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_FOR_CLEARNET_TETHER;
 import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_TO_UNLOCK_TETHER;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 public class Tethering {
     private final Context context;
 
+    public static volatile boolean apIsOn = false;
     public static volatile boolean usbTetherOn = false;
     public static volatile boolean ethernetOn = false;
 
-    static final String wifiAPAddressesRange = "192.168.43.0/24";
-    static final String usbModemAddressesRange = "192.168.42.0/24";
-    private static final String addressVPN = "10.1.10.1";
-    public static String addressLocalPC = "192.168.0.100";
+    public static volatile String wifiAPAddressesRange = "192.168.43.0/24";
+    public static volatile String usbModemAddressesRange = "192.168.42.0/24";
+    public static String addressLocalPC = Constants.STANDARD_ADDRESS_LOCAL_PC;
 
-    static String vpnInterfaceName = "tun0";
-    static String wifiAPInterfaceName = "wlan0";
-    static String usbModemInterfaceName = "rndis0";
-    private static String ethernetInterfaceName = "eth0";
+    static String vpnInterfaceName = Constants.STANDARD_VPN_INTERFACE_NAME;
+    static String wifiAPInterfaceName = Constants.STANDARD_WIFI_INTERFACE_NAME;
+    static String usbModemInterfaceName = Constants.STANDARD_USB_MODEM_INTERFACE_NAME;
+    private static String ethernetInterfaceName = Constants.STANDARD_ETHERNET_INTERFACE_NAME;
 
     private final PathVars pathVars;
     private String iptables = "iptables ";
-    private boolean apIsOn = false;
 
     Tethering(Context context) {
         this.context = context;
@@ -92,10 +88,10 @@ public class Tethering {
         boolean itpdTethering = shPref.getBoolean("pref_common_itpd_tethering", false) && itpdRunning;
         boolean routeAllThroughTorTether = shPref.getBoolean("pref_common_tor_route_all", false);
         boolean blockHotspotHttp = shPref.getBoolean("pref_common_block_http", false);
-        addressLocalPC = shPref.getString("pref_common_local_eth_device_addr", "192.168.0.100");
+        addressLocalPC = shPref.getString("pref_common_local_eth_device_addr", Constants.STANDARD_ADDRESS_LOCAL_PC);
         boolean lan = shPref.getBoolean("Allow LAN", false);
         boolean ttlFix = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE) && !modulesStatus.isUseModulesWithRoot();
-        apIsOn = new PrefManager(context).getBoolPref("APisON");
+        apIsOn = new PrefManager(context).getBoolPref(Preferences.WIFI_ACCESS_POINT_IS_ON);
         Set<String> ipsToUnlockTether = new PrefManager(context).getSetStrPref(IPS_TO_UNLOCK_TETHER);
         Set<String> ipsForClearNetTether = new PrefManager(context).getSetStrPref(IPS_FOR_CLEARNET_TETHER);
 
@@ -105,7 +101,7 @@ public class Tethering {
         String bypassLanForward = "";
         if (lan) {
             StringBuilder nonTorRanges = new StringBuilder();
-            for (String address: Util.nonTorList) {
+            for (String address : Util.nonTorList) {
                 nonTorRanges.append(address).append(" ");
             }
             nonTorRanges.deleteCharAt(nonTorRanges.lastIndexOf(" "));
@@ -135,7 +131,7 @@ public class Tethering {
             StringBuilder torSitesBypassPreroutingBuilder = new StringBuilder();
             StringBuilder torSitesBypassForwardBuilder = new StringBuilder();
 
-            for (String ipForClearNetTether: ipsForClearNetTether) {
+            for (String ipForClearNetTether : ipsForClearNetTether) {
                 torSitesBypassPreroutingBuilder.append(iptables).append("-t nat -A tordnscrypt_prerouting -p all -d ").append(ipForClearNetTether).append(" -j ACCEPT; ");
                 torSitesBypassForwardBuilder.append(iptables).append("-A tordnscrypt_forward -p all -d ").append(ipForClearNetTether).append(" -j ACCEPT; ");
             }
@@ -155,7 +151,7 @@ public class Tethering {
             StringBuilder torSitesRejectNonTCPForwardUSBModemBuilder = new StringBuilder();
             StringBuilder torSitesRejectNonTCPForwardEthernetBuilder = new StringBuilder();
 
-            for (String ipToUnlockTether: ipsToUnlockTether) {
+            for (String ipToUnlockTether : ipsToUnlockTether) {
                 torSitesRedirectPreroutingWiFiBuilder.append(iptables).append("-t nat -A tordnscrypt_prerouting -i ").append(wifiAPInterfaceName).append(" -p tcp -d ").append(ipToUnlockTether).append(" -j REDIRECT --to-port ").append(pathVars.getTorTransPort()).append(" || true; ");
                 torSitesRedirectPreroutingUSBModemBuilder.append(iptables).append("-t nat -A tordnscrypt_prerouting -i ").append(usbModemInterfaceName).append(" -p tcp -d ").append(ipToUnlockTether).append(" -j REDIRECT --to-port ").append(pathVars.getTorTransPort()).append(" || true; ");
                 torSitesRedirectPreroutingEthernetBuilder.append(iptables).append("-t nat -A tordnscrypt_prerouting -i ").append(ethernetInterfaceName).append(" -p tcp -d ").append(ipToUnlockTether).append(" -j REDIRECT --to-port ").append(pathVars.getTorTransPort()).append(" || true; ");
@@ -330,7 +326,7 @@ public class Tethering {
                         iptables + "-t nat -A tordnscrypt_prerouting -p udp -m udp --dport " + pathVars.getTorSOCKSPort() + " -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_prerouting -p tcp -m tcp --dport " + pathVars.getITPDSOCKSPort() + " -j ACCEPT",
                         iptables + "-t nat -A tordnscrypt_prerouting -p udp -m udp --dport " + pathVars.getITPDSOCKSPort() + " -j ACCEPT"
-                        ));
+                ));
 
                 List<String> tetheringCommandsPart2 = new ArrayList<>(Arrays.asList(
                         iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp -j REDIRECT --to-ports " + pathVars.getTorTransPort() + " || true",
@@ -665,7 +661,7 @@ public class Tethering {
                         iptables + "-F tordnscrypt_forward 2> /dev/null",
                         iptables + "-t nat -D PREROUTING -j tordnscrypt_prerouting 2> /dev/null || true",
                         iptables + "-D FORWARD -j tordnscrypt_forward 2> /dev/null || true"
-                        ));
+                ));
 
                 if (ttlFixed) {
                     tetheringCommands.addAll(unfixTTLCommands());
@@ -687,8 +683,9 @@ public class Tethering {
         }
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        addressLocalPC = sharedPreferences.getString("pref_common_local_eth_device_addr", "192.168.0.100");
-        apIsOn = new PrefManager(context).getBoolPref("APisON");
+        addressLocalPC = sharedPreferences.getString("pref_common_local_eth_device_addr",
+                Constants.STANDARD_ADDRESS_LOCAL_PC);
+        apIsOn = new PrefManager(context).getBoolPref(Preferences.WIFI_ACCESS_POINT_IS_ON);
 
         setInterfaceNames();
 
@@ -713,90 +710,17 @@ public class Tethering {
     }
 
     void setInterfaceNames() {
-        final String addressesRangeUSB = "192.168.42.";
-        final String addressesRangeWiFi = "192.168.43.";
-
-        usbTetherOn = false;
-        ethernetOn = false;
-
-        try {
-            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
-                 en.hasMoreElements(); ) {
-
-                NetworkInterface intf = en.nextElement();
-
-                if (intf.isLoopback()) {
-                    continue;
-                }
-                if (intf.isVirtual()) {
-                    continue;
-                }
-                if (!intf.isUp()) {
-                    continue;
-                }
-
-                setVpnInterfaceName(intf);
-
-                if (intf.isPointToPoint()) {
-                    continue;
-                }
-                if (intf.getHardwareAddress() == null) {
-                    continue;
-                }
-
-                if (intf.getName().replaceAll("\\d+", "").equalsIgnoreCase("eth")) {
-                    ethernetOn = true;
-                    ethernetInterfaceName = intf.getName();
-                    Log.i(LOG_TAG, "LAN interface name " + ethernetInterfaceName);
-                }
-
-                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses();
-                     enumIpAddr.hasMoreElements(); ) {
-                    InetAddress inetAddress = enumIpAddr.nextElement();
-                    String hostAddress = inetAddress.getHostAddress();
-
-                    if (hostAddress.contains(addressesRangeWiFi)) {
-                        this.apIsOn = true;
-                        wifiAPInterfaceName = intf.getName();
-                        Log.i(LOG_TAG, "WiFi AP interface name " + wifiAPInterfaceName);
-                    }
-
-                    if (hostAddress.contains(addressesRangeUSB)) {
-                        usbTetherOn = true;
-                        usbModemInterfaceName = intf.getName();
-                        Log.i(LOG_TAG, "USB Modem interface name " + usbModemInterfaceName);
-                    }
-                }
-            }
-        } catch (SocketException e) {
-            Log.e(LOG_TAG, "Tethering SocketException " + e.getMessage() + " " + e.getCause());
-        }
-
-        if (usbTetherOn && !new PrefManager(context).getBoolPref("ModemIsON")) {
-            new PrefManager(context).setBoolPref("ModemIsON", true);
-            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
-        } else if (!usbTetherOn && new PrefManager(context).getBoolPref("ModemIsON")) {
-            new PrefManager(context).setBoolPref("ModemIsON", false);
-            ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
-        }
-    }
-
-    private void setVpnInterfaceName(NetworkInterface intf) throws SocketException {
-
-        if (!intf.isPointToPoint()) {
-            return;
-        }
-
-        for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses();
-             enumIpAddr.hasMoreElements(); ) {
-            InetAddress inetAddress = enumIpAddr.nextElement();
-            String hostAddress = inetAddress.getHostAddress();
-
-            if (hostAddress.contains(addressVPN)) {
-                vpnInterfaceName = intf.getName();
-                Log.i(LOG_TAG, "VPN interface name " + vpnInterfaceName);
-            }
-        }
+        InternetSharingChecker checker = new InternetSharingChecker();
+        checker.updateData();
+        apIsOn = checker.isApOn();
+        usbTetherOn = checker.isUsbTetherOn();
+        ethernetOn = checker.isEthernetOn();
+        wifiAPAddressesRange = checker.getWifiAPAddressesRange();
+        usbModemAddressesRange = checker.getUsbModemAddressesRange();
+        vpnInterfaceName = checker.getVpnInterfaceName();
+        wifiAPInterfaceName = checker.getWifiAPInterfaceName();
+        usbModemInterfaceName = checker.getUsbModemInterfaceName();
+        ethernetInterfaceName = checker.getEthernetInterfaceName();
     }
 
     List<String> fixTTLCommands() {
@@ -872,7 +796,7 @@ public class Tethering {
                     "ip rule delete from " + wifiAPAddressesRange + " lookup 63 2> /dev/null || true",
                     "ip rule delete from " + usbModemAddressesRange + " lookup 62 2> /dev/null || true",
                     "ip rule delete from " + addressLocalPC + " lookup 64 2> /dev/null || true"
-                    ));
+            ));
         } else {
             commands = new ArrayList<>(Arrays.asList(
                     "ip rule delete from " + wifiAPAddressesRange + " lookup 63 2> /dev/null || true",

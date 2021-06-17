@@ -83,7 +83,9 @@ import pan.alexander.tordnscrypt.settings.firewall.FirewallNotification;
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData;
 import pan.alexander.tordnscrypt.utils.AuxNotificationSender;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.Constants;
 import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.Preferences;
 import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.VPNCommand;
@@ -338,8 +340,8 @@ public class ServiceVPN extends VpnService {
         boolean ip6 = true;
         boolean subnet = prefs.getBoolean("VPN subnet", true);
         lan = prefs.getBoolean("Allow LAN", false);
-        boolean apIsOn = new PrefManager(this).getBoolPref("APisON");
-        boolean modemIsOn = new PrefManager(this).getBoolPref("ModemIsON");
+        boolean apIsOn = new PrefManager(this).getBoolPref(Preferences.WIFI_ACCESS_POINT_IS_ON);
+        boolean modemIsOn = new PrefManager(this).getBoolPref(Preferences.USB_MODEM_IS_ON);
         useProxy = prefs.getBoolean("swUseProxy", false);
 
         boolean torIsRunning = modulesStatus.getTorState() == RUNNING;
@@ -962,8 +964,6 @@ public class ServiceVPN extends VpnService {
         InetSocketAddress local = new InetSocketAddress(saddr, sport);
         InetSocketAddress remote = new InetSocketAddress(daddr, dport);
 
-        //Log.i(LOG_TAG, "VPN Get uid local=" + local + " remote=" + remote);
-        //Log.i(LOG_TAG, "VPN Get uid=" + uid);
         return cm.getConnectionOwnerUid(protocol, local, remote);
     }
 
@@ -990,9 +990,22 @@ public class ServiceVPN extends VpnService {
 
         boolean torIsRunning = modulesStatus.getTorState() == RUNNING;
 
+        String apAddresses = Constants.STANDARD_AP_INTERFACE_RANGE;
+        if (Tethering.wifiAPAddressesRange.contains(".")) {
+            apAddresses = Tethering.wifiAPAddressesRange
+                    .substring(0, Tethering.wifiAPAddressesRange.lastIndexOf("."));
+        }
+
+        String usbModemAddresses = Constants.STANDARD_USB_MODEM_INTERFACE_RANGE;
+        if (Tethering.usbModemAddressesRange.contains(".")) {
+            usbModemAddresses = Tethering.usbModemAddressesRange
+                    .substring(0, Tethering.usbModemAddressesRange.lastIndexOf("."));
+        }
+
         boolean fixTTLForPacket = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
                 && !modulesStatus.isUseModulesWithRoot()
-                && (packet.saddr.matches("^192\\.168\\.(42|43)\\.\\d+")
+                && (Tethering.apIsOn && packet.saddr.contains(apAddresses)
+                || Tethering.usbTetherOn && packet.saddr.contains(usbModemAddresses)
                 || Tethering.ethernetOn && packet.saddr.contains(Tethering.addressLocalPC));
 
         if (packet.uid != ownUID) {
@@ -1044,12 +1057,7 @@ public class ServiceVPN extends VpnService {
                 && !Util.isIpInSubnet(packet.daddr, torVirtualAddressNetwork)
                 && !packet.daddr.equals(itpdRedirectAddress)) {
             Log.w(LOG_TAG, "Block http " + packet);
-        } /*else if (packet.uid < 2000 &&
-                !last_connected && !last_connected_override && isSupported(packet.protocol)) {
-            // Allow system applications in disconnected state
-            packet.allowed = true;
-            Log.w(LOG_TAG, "Allowing disconnected system " + packet);
-        }*/ else if (packet.uid <= 2000 &&
+        } else if (packet.uid <= 2000 &&
                 (!routeAllThroughTor || torTethering || fixTTLForPacket || compatibilityMode) &&
                 !mapUidKnown.containsKey(packet.uid)
                 && (fixTTL || !torIsRunning && !useProxy || packet.protocol == 6 && packet.dport == 53)

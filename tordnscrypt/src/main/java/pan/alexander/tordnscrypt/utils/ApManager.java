@@ -33,12 +33,9 @@ import androidx.annotation.RequiresApi;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.util.Enumeration;
 
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.utils.enums.AccessPointState;
 
 import static android.content.Context.CONNECTIVITY_SERVICE;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
@@ -46,20 +43,15 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 @SuppressLint("PrivateApi")
 public class ApManager {
     private final Context context;
-    public final static int apStateON = 100;
-    public final static int apStateOFF = 200;
-    public final static int apStateUnknown = 300;
     private static Object mReservation;
 
-    @SuppressLint("WifiManagerPotentialLeak")
     public ApManager(Context context) {
-        this.context = context;
-
+        this.context = context.getApplicationContext();
     }
 
     //check whether wifi hotspot on or off
     public int isApOn() {
-        int result = apStateUnknown;
+        int result = AccessPointState.STATE_UNKNOWN;
 
         try {
             WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -72,9 +64,9 @@ public class ApManager {
             if (method != null) {
                 Object on = method.invoke(wifiManager);
                 if (on != null && (Boolean) on) {
-                    result = apStateON;
+                    result = AccessPointState.STATE_ON;
                 } else {
-                    result = apStateOFF;
+                    result = AccessPointState.STATE_OFF;
                 }
             }
         } catch (Exception e) {
@@ -85,51 +77,14 @@ public class ApManager {
     }
 
     public int confirmApState() {
-        final String addressesRangeWiFi = "192.168.43.";
-        int result = apStateUnknown;
+        InternetSharingChecker checker = new InternetSharingChecker();
+        checker.updateData();
 
-        try {
-            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
-                 en.hasMoreElements(); ) {
-
-                NetworkInterface intf = en.nextElement();
-
-                if (intf.isLoopback()) {
-                    continue;
-                }
-                if (intf.isVirtual()) {
-                    continue;
-                }
-                if (!intf.isUp()) {
-                    continue;
-                }
-
-                if (intf.isPointToPoint()) {
-                    continue;
-                }
-                if (intf.getHardwareAddress() == null) {
-                    continue;
-                }
-
-                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses();
-                     enumIpAddr.hasMoreElements(); ) {
-                    InetAddress inetAddress = enumIpAddr.nextElement();
-                    String hostAddress = inetAddress.getHostAddress();
-
-                    if (hostAddress.contains(addressesRangeWiFi)) {
-                        result = apStateON;
-                    }
-                }
-            }
-
-            if (result == apStateUnknown) {
-                result = apStateOFF;
-            }
-        } catch (SocketException e) {
-            Log.e(LOG_TAG, "ApManager SocketException " + e.getMessage() + " " + e.getCause());
+        if (checker.isApOn()) {
+            return AccessPointState.STATE_ON;
+        } else {
+            return AccessPointState.STATE_OFF;
         }
-
-        return result;
     }
 
     // toggle wifi hotspot on or off
@@ -139,7 +94,7 @@ public class ApManager {
         try {
             WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             // if WiFi is on, turn it off
-            if (isApOn() == apStateON) {
+            if (isApOn() == AccessPointState.STATE_ON) {
                 if (wifiManager != null) {
                     wifiManager.setWifiEnabled(false);
                 }
@@ -169,9 +124,9 @@ public class ApManager {
                 WifiConfiguration netConfig = (WifiConfiguration) wifiApConfigurationMethod.invoke(wifiManager);
                 Method method = wifiManager.getClass().getMethod("setWifiApEnabled", WifiConfiguration.class, boolean.class);
                 int apState = isApOn();
-                if (apState == apStateON) {
+                if (apState == AccessPointState.STATE_ON) {
                     method.invoke(wifiManager, netConfig, false);
-                } else if (apState == apStateOFF) {
+                } else if (apState == AccessPointState.STATE_OFF) {
                     method.invoke(wifiManager, netConfig, true);
                 }
                 result = true;
@@ -193,13 +148,14 @@ public class ApManager {
                     (CONNECTIVITY_SERVICE);
 
             int apState = isApOn();
-            if (apState == apStateOFF) {
+            if (apState == AccessPointState.STATE_OFF) {
+                @SuppressLint("SoonBlockedPrivateApi")
                 Field internalConnectivityManagerField = ConnectivityManager.class.getDeclaredField("mService");
                 internalConnectivityManagerField.setAccessible(true);
 
                 callStartTethering(internalConnectivityManagerField.get(connectivityManager));
 
-            } else if (apState == apStateON) {
+            } else if (apState == AccessPointState.STATE_ON) {
                 Method stopTetheringMethod = connectivityClass.getDeclaredMethod("stopTethering", int.class);
                 stopTetheringMethod.invoke(connectivityManager, 0);
             }
@@ -220,7 +176,7 @@ public class ApManager {
 
         try {
             int apState = isApOn();
-            if (apState == apStateOFF) {
+            if (apState == AccessPointState.STATE_OFF) {
                 WifiManager manager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
                 if (manager != null) {
@@ -246,7 +202,7 @@ public class ApManager {
                         }
                     }, new Handler());
                 }
-            } else if (apState == apStateON) {
+            } else if (apState == AccessPointState.STATE_ON) {
                 if (mReservation instanceof WifiManager.LocalOnlyHotspotReservation) {
                     ((WifiManager.LocalOnlyHotspotReservation) mReservation).close();
                     mReservation = null;
