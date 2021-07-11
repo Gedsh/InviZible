@@ -31,6 +31,7 @@ import java.util.Objects;
 
 import pan.alexander.tordnscrypt.utils.PrefManager;
 
+import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 
 public class PathVars {
@@ -59,10 +60,6 @@ public class PathVars {
         }
 
         String nativeLibPath = context.getApplicationInfo().nativeLibraryDir;
-
-        /*if (!isModulesInstalled(context) || new PrefManager(context).getStrPref("appUID").isEmpty()) {
-            saveAppUID(context);
-        }*/
 
         bbOK = new PrefManager(context).getBoolPref("bbOK");
 
@@ -226,9 +223,9 @@ public class PathVars {
     }
 
     public String getDNSCryptFallbackRes() {
-        String dnsCryptFallbackResolver = preferences.getString("fallback_resolver", "9.9.9.9");
+        String dnsCryptFallbackResolver = preferences.getString("fallback_resolvers", QUAD_DNS_41);
         if (dnsCryptFallbackResolver == null) {
-            dnsCryptFallbackResolver = "9.9.9.9";
+            dnsCryptFallbackResolver = QUAD_DNS_41;
         }
         if (dnsCryptFallbackResolver.contains(":")) {
             dnsCryptFallbackResolver = dnsCryptFallbackResolver.substring(0, dnsCryptFallbackResolver.indexOf(":"));

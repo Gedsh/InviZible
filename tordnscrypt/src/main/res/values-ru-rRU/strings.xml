@@ -154,10 +154,10 @@
     <string name="pref_dnscrypt_other_categ">Другие настройки</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">Не позволять dnscrypt-proxy использовать системные настройки DNS.
         Использовать сервер для восстановления…</string>
-    <string name="pref_dnscrypt_fallback_resolver_summ">Сервер для восстановления.\n Это обычный сервер,
+    <string name="pref_dnscrypt_fallback_resolver_summ">Сервер для начальной загрузки.\nЭто обычный сервер,
         который не поддерживает шифрование. Используется только для скачивания списка серверов,
         которые поддерживают шифрование, если системный DNS сервер не работает. Он никогда не используется,
-        если загружен список серверов, которые поддерживают шифрование. В Китае можно использовать 114.114.114.114 </string>
+        если загружен список серверов, которые поддерживают шифрование.</string>
     <string name="pref_dnscrypt_filters_categ">ФИЛЬТРЫ</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">Перенаправить запросы к выбраным сайтам на определенные сервера.</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking возвращает предопределенные адреса для

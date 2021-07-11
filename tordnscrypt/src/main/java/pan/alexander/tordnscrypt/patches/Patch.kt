@@ -21,9 +21,11 @@ package pan.alexander.tordnscrypt.patches
 
 import android.app.Activity
 import android.util.Log
+import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.BuildConfig
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.utils.CachedExecutor
+import pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41
 import pan.alexander.tordnscrypt.utils.PrefManager
 import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
@@ -60,6 +62,7 @@ class Patch(private val activity: Activity) {
                         changeV2DNSCryptUpdateSourcesToV3()
                         replaceBlackNames()
                         updateITPDAddressBookDefaultUrl()
+                        fallbackResolverToFallbackResolvers()
 
                         if (dnsCryptConfigPatches.isNotEmpty()) {
                             configUtil.patchDNSCryptConfig(dnsCryptConfigPatches)
@@ -127,4 +130,12 @@ class Patch(private val activity: Activity) {
                 Regex("defaulturl = http://joajgazyztfssty4w2on5oaqksz6tqoxbduy553y34mf4byv6gpq.b32.i2p/export/alive-hosts.txt"),
                 "defaulturl = http://shx5vqsw7usdaunyzr2qmes2fq37oumybpudrd4jjj4e4vk4uusa.b32.i2p/hosts.txt"))
     }
+
+    private fun fallbackResolverToFallbackResolvers() {
+        val fallbackResolverPreference = PreferenceManager.getDefaultSharedPreferences(activity)
+            .getString("fallback_resolver", QUAD_DNS_41)?.trim() ?: QUAD_DNS_41
+        dnsCryptConfigPatches.add(PatchLine("",
+            Regex("fallback_resolver =.+"), "fallback_resolvers = [$fallbackResolverPreference]"))
+    }
+
 }

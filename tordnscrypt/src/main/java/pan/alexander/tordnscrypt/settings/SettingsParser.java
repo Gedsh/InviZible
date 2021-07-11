@@ -88,7 +88,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     } else if (val.contains("'") && val.contains(":")) {
                         val = val.substring(val.indexOf(":") + 1, val.indexOf("'", 3)).trim();
                     }
-                } else if (key.equals("fallback_resolver")) {
+                } else if (key.equals("fallback_resolvers")) {
                     if (val.contains("\"") && val.contains(":")) {
                         val = val.substring(val.indexOf("\"") + 1, val.indexOf(":")).trim();
                     } else if (val.contains("'") && val.contains(":")) {

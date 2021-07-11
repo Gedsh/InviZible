@@ -97,7 +97,7 @@
         <EditTextPreference
             android:id="@+id/fallback_resolver"
             android:defaultValue="9.9.9.9"
-            android:key="fallback_resolver"
+            android:key="fallback_resolvers"
             android:selectAllOnFocus="false"
             android:singleLine="false"
             android:summary="@string/pref_dnscrypt_fallback_resolver_summ"

@@ -311,12 +311,11 @@
     <string name="pref_dnscrypt_proxy">proxy_port</string>
 
     <string name="pref_dnscrypt_other_categ">Other Settings.</string>
-    <string name="pref_dnscrypt_fallback_resolver_summ">Fallback resolver.
+    <string name="pref_dnscrypt_fallback_resolver_summ">Bootstrap resolver.
         This is a normal, non-encrypted DNS resolver, that will be only used for one-shot queries
         when retrieving the initial resolvers list, and only if the system DNS configuration doesn\'t work.
-        It will never be used if lists have already been cached.
-        People in China may need to use 114.114.114.114:53 here.</string>
-    <string name="pref_dnscrypt_fallback_resolver" translatable="false">fallback_resolver</string>
+        It will never be used if lists have already been cached.</string>
+    <string name="pref_dnscrypt_fallback_resolver" translatable="false">bootstrap_resolvers</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">Never let dnscrypt-proxy try to use the system DNS settings. Unconditionally use the fallback resolver..</string>
     <string name="pref_dnscrypt_ignore_system_dns" translatable="false">ignore_system_dns</string>
 

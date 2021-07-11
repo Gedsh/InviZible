@@ -60,6 +60,7 @@ import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
 
 import static android.provider.DocumentsContract.EXTRA_INITIAL_URI;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
+import static pan.alexander.tordnscrypt.utils.Preferences.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -74,6 +75,8 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
     public static final int PICK_FORWARDING = 1004;
     public static final int PICK_CLOAKING = 1005;
 
+    private final static String ipv4Regex = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+
     private ArrayList<String> key_toml;
     private ArrayList<String> val_toml;
     private ArrayList<String> key_toml_orig;
@@ -82,6 +85,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
     private boolean isChanged = false;
     private boolean rootDirAccessible;
 
+    @SuppressWarnings("deprecation")
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,8 +112,8 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         preferences.add(findPreference("force_tcp"));
         preferences.add(findPreference("Enable proxy"));
         preferences.add(findPreference("proxy_port"));
-        preferences.add(findPreference("fallback_resolver"));
-        preferences.add(findPreference("ignore_system_dns"));
+        preferences.add(findPreference("fallback_resolvers"));
+        preferences.add(findPreference(IGNORE_SYSTEM_DNS));
         preferences.add(findPreference("Enable Query logging"));
         preferences.add(findPreference("ignored_qtypes"));
         preferences.add(findPreference("Enable Suspicious logging"));
@@ -288,6 +292,9 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         }
 
         try {
+            boolean invalidFallbackResolver = !newValue.toString().matches(ipv4Regex)
+                    || newValue.toString().equals("127.0.0.1") || newValue.toString().equals("0.0.0.0");
+
             if (Objects.equals(preference.getKey(), "listen_port")) {
                 boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
                         && ModulesStatus.getInstance().isUseModulesWithRoot();
@@ -298,15 +305,15 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                 String val = "['127.0.0.1:" + newValue.toString() + "']";
                 val_toml.set(key_toml.indexOf("listen_addresses"), val);
                 return true;
-            } else if (Objects.equals(preference.getKey(), "fallback_resolver")) {
+            } else if (Objects.equals(preference.getKey(), "fallback_resolvers")) {
 
-                if (!newValue.toString().matches("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
-                        || newValue.toString().equals("127.0.0.1") || newValue.toString().equals("0.0.0.0")) {
+                if (invalidFallbackResolver) {
                     return false;
                 }
 
-                String val = "'" + newValue.toString() + ":53'";
-                val_toml.set(key_toml.indexOf("fallback_resolver"), val);
+                String val = "['" + newValue.toString() + ":53']";
+                val_toml.set(key_toml.indexOf("fallback_resolvers"), val);
+                val = "'" + newValue.toString() + ":53'";
                 if (key_toml.indexOf("netprobe_address") > 0) {
                     val_toml.set(key_toml.indexOf("netprobe_address"), val);
                 }
