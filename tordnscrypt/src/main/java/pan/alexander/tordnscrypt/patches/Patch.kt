@@ -132,10 +132,16 @@ class Patch(private val activity: Activity) {
     }
 
     private fun fallbackResolverToFallbackResolvers() {
+        val ipRegex = Regex("((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)")
         val fallbackResolverPreference = PreferenceManager.getDefaultSharedPreferences(activity)
             .getString("fallback_resolver", QUAD_DNS_41)?.trim() ?: QUAD_DNS_41
+        val matcher = ipRegex.toPattern().matcher(fallbackResolverPreference)
+        var fallbackResolver = QUAD_DNS_41
+        if (matcher.find()) {
+            fallbackResolver = matcher.group()
+        }
         dnsCryptConfigPatches.add(PatchLine("",
-            Regex("fallback_resolver =.+"), "fallback_resolvers = [$fallbackResolverPreference]"))
+            Regex("fallback_resolver =.+"), "fallback_resolvers = ['$fallbackResolver:53']"))
     }
 
 }

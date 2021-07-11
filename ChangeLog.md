@@ -581,6 +581,6 @@
 * Restart InviZible when Tor fails in the background.
 * Attempt to fix wifi access point on android 11.
 * Updated firewall view.
-* Updated Spanish translation
+* Updated Spanish translation.
 * Updated Portuguese-BR translation.
 * Minor bug fixes and optimizations.
