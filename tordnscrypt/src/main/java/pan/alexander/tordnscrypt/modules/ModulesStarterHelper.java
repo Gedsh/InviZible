@@ -19,6 +19,7 @@ package pan.alexander.tordnscrypt.modules;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
@@ -30,10 +31,12 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.jrummyapps.android.shell.CommandResult;
 import com.jrummyapps.android.shell.Shell;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import pan.alexander.tordnscrypt.ApplicationBase;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.RootCommands;
@@ -50,6 +53,7 @@ import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.RootExecService.TopFragmentMark;
 import static pan.alexander.tordnscrypt.utils.RootExecService.TorRunFragmentMark;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 
@@ -208,7 +212,7 @@ public class ModulesStarterHelper {
                     sendAskForceCloseBroadcast(service, "Tor");
 
                     //Try to update Selinux context and UID once again
-                    if (shellResult.exitCode == 1) {
+                    if (shellResult.exitCode == 1 && modulesStatus.isRootAvailable()) {
                         modulesStatus.setContextUIDUpdateRequested(true);
                         ModulesAux.makeModulesStateExtraLoop(service);
                     }
@@ -216,6 +220,10 @@ public class ModulesStarterHelper {
 
                 Log.e(LOG_TAG, "Error Tor: " + shellResult.exitCode
                         + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
+
+                if (!isActivityActive() && modulesStatus.getTorState() == RUNNING) {
+                    System.exit(0);
+                }
 
                 modulesStatus.setTorState(STOPPED);
 
@@ -226,6 +234,26 @@ public class ModulesStarterHelper {
 
             Thread.currentThread().interrupt();
         };
+    }
+
+    private boolean isActivityActive() {
+
+        ApplicationBase applicationBase = ApplicationBase.Companion.getInstance();
+        if (applicationBase == null) {
+            return false;
+        }
+
+        WeakReference<Activity> activityWeakReference = applicationBase.getCurrentActivity();
+        if (activityWeakReference == null) {
+            return false;
+        }
+
+        Activity activity = activityWeakReference.get();
+        if (activity == null) {
+            return false;
+        }
+
+        return !activity.isFinishing();
     }
 
     Runnable getITPDStarterRunnable() {
@@ -325,7 +353,7 @@ public class ModulesStarterHelper {
 
         for (int i = 0; i < lines.size(); i++) {
             if (lines.get(i).contains("Schedulers")) {
-               return;
+                return;
             } else if (lines.get(i).contains("ClientOnly")) {
                 indexOfClientOnly = i;
             }
