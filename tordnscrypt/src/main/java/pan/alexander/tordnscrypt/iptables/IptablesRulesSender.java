@@ -46,6 +46,7 @@ abstract class IptablesRulesSender implements IptablesRules {
     IptablesReceiver receiver;
     boolean routeAllThroughTor;
     boolean blockHttp;
+    boolean ignoreSystemDNS;
     boolean apIsOn;
     boolean modemIsOn;
     boolean lan;

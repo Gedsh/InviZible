@@ -39,6 +39,7 @@ import pan.alexander.tordnscrypt.vpn.Util;
 
 import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_FOR_CLEARNET_TETHER;
 import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_TO_UNLOCK_TETHER;
+import static pan.alexander.tordnscrypt.utils.Constants.HTTP_PORT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
@@ -179,14 +180,14 @@ public class Tethering {
         String blockHttpRulePreroutingTCPeth = "";
         String blockHttpRulePreroutingUDPeth = "";
         if (blockHotspotHttp) {
-            blockHttpRuleForwardTCP = iptables + "-A tordnscrypt_forward -p tcp --dport 80 -j REJECT";
-            blockHttpRuleForwardUDP = iptables + "-A tordnscrypt_forward -p udp --dport 80 -j REJECT";
-            blockHttpRulePreroutingTCPwifi = iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp ! -d " + wifiAPAddressesRange + " --dport 80 -j RETURN || true";
-            blockHttpRulePreroutingUDPwifi = iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p udp ! -d " + wifiAPAddressesRange + " --dport 80 -j RETURN || true";
-            blockHttpRulePreroutingTCPusb = iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p tcp ! -d " + usbModemAddressesRange + " --dport 80 -j RETURN || true";
-            blockHttpRulePreroutingUDPusb = iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p udp ! -d " + usbModemAddressesRange + " --dport 80 -j RETURN || true";
-            blockHttpRulePreroutingTCPeth = iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p tcp ! -d " + addressLocalPC + " --dport 80 -j RETURN || true";
-            blockHttpRulePreroutingUDPeth = iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p udp ! -d " + addressLocalPC + " --dport 80 -j RETURN || true";
+            blockHttpRuleForwardTCP = iptables + "-A tordnscrypt_forward -p tcp --dport " + HTTP_PORT + " -j REJECT";
+            blockHttpRuleForwardUDP = iptables + "-A tordnscrypt_forward -p udp --dport " + HTTP_PORT + " -j REJECT";
+            blockHttpRulePreroutingTCPwifi = iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p tcp ! -d " + wifiAPAddressesRange + " --dport " + HTTP_PORT + " -j RETURN || true";
+            blockHttpRulePreroutingUDPwifi = iptables + "-t nat -A tordnscrypt_prerouting -i " + wifiAPInterfaceName + " -p udp ! -d " + wifiAPAddressesRange + " --dport " + HTTP_PORT + " -j RETURN || true";
+            blockHttpRulePreroutingTCPusb = iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p tcp ! -d " + usbModemAddressesRange + " --dport " + HTTP_PORT + " -j RETURN || true";
+            blockHttpRulePreroutingUDPusb = iptables + "-t nat -A tordnscrypt_prerouting -i " + usbModemInterfaceName + " -p udp ! -d " + usbModemAddressesRange + " --dport " + HTTP_PORT + " -j RETURN || true";
+            blockHttpRulePreroutingTCPeth = iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p tcp ! -d " + addressLocalPC + " --dport " + HTTP_PORT + " -j RETURN || true";
+            blockHttpRulePreroutingUDPeth = iptables + "-t nat -A tordnscrypt_prerouting -i " + ethernetInterfaceName + " -p udp ! -d " + addressLocalPC + " --dport " + HTTP_PORT + " -j RETURN || true";
         }
 
 
