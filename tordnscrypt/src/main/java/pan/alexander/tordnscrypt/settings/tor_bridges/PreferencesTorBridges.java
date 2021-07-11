@@ -400,7 +400,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
                     clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
                             + snowflakePath + " -url https://snowflake-broker.torproject.net.global.prod.fastly.net/" +
-                            " -front cdn.sstatic.net -ice " + stunServers.toString() + " -max 3" + saveLogsString;
+                            " -front cdn.sstatic.net -ice " + stunServers.toString() + " -max 1" + saveLogsString;
                 } else {
                     clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
                             + obfsPath;
