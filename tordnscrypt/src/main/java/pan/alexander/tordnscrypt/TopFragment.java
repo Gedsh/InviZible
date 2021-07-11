@@ -460,9 +460,10 @@ public class TopFragment extends Fragment {
                     topFragment.actionModulesNotInstalled(activity);
                 } else {
 
-                    if (topFragment.coreUpdateReady(activity)) {
-                        return;
-                    }
+                    //Currently not used
+                    //if (topFragment.coreUpdateReady(activity)) {
+                    //    return;
+                    //}
 
                     topFragment.refreshModulesVersions(activity);
 
