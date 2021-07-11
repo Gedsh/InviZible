@@ -52,6 +52,7 @@ import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
+import static pan.alexander.tordnscrypt.utils.Preferences.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
@@ -543,7 +544,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 
         if ((!modulesStatus.isRootAvailable() || !modulesStatus.isUseModulesWithRoot())
-                && !sharedPreferences.getBoolean("ignore_system_dns", false)) {
+                && !sharedPreferences.getBoolean(IGNORE_SYSTEM_DNS, false)) {
             modulesStatus.setSystemDNSAllowed(true);
         }
     }

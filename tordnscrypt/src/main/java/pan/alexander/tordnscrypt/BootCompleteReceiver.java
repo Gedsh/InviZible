@@ -51,6 +51,7 @@ import static pan.alexander.tordnscrypt.modules.ModulesService.actionStopService
 import static pan.alexander.tordnscrypt.modules.ModulesStateLoop.SAVED_DNSCRYPT_STATE_PREF;
 import static pan.alexander.tordnscrypt.modules.ModulesStateLoop.SAVED_ITPD_STATE_PREF;
 import static pan.alexander.tordnscrypt.modules.ModulesStateLoop.SAVED_TOR_STATE_PREF;
+import static pan.alexander.tordnscrypt.utils.Preferences.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -163,7 +164,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
             }
 
             if (autoStartDNSCrypt && !runModulesWithRoot
-                    && !shPref.getBoolean("ignore_system_dns", false)
+                    && !shPref.getBoolean(IGNORE_SYSTEM_DNS, false)
                     && !action.equalsIgnoreCase(MY_PACKAGE_REPLACED)
                     && !action.equals(SHELL_SCRIPT_CONTROL)) {
                 modulesStatus.setSystemDNSAllowed(true);

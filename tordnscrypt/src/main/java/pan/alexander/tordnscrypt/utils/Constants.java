@@ -21,4 +21,20 @@ public interface Constants {
             "v4-rmnet+", "seth_w+", "v4-rmnet_data+", "rmnet_ipa+", "rmnet_data+", "r_rmnet_data+"};
 
     String[] STANDARD_USB_INTERFACE_TETHER_NAMES = {"bt-pan", "usb+", "rndis+", "rmnet_usb+"};
+
+    int HTTP_PORT = 80;
+
+    int DNS_OVER_TLS_PORT = 853;
+
+    String VPN_DNS_2 = "89.233.43.71";//blog.uncensoreddns.org
+
+    String G_DNG_41 = "8.8.8.8";
+    String G_DNS_42 = "8.8.4.4";
+    String G_DNS_61 = "2001:4860:4860::8888";
+    String G_DNS_62 = "2001:4860:4860::8844";
+
+    String QUAD_DNS_41 = "9.9.9.9";
+    String QUAD_DNS_42 = "149.112.112.112";
+    String QUAD_DNS_61 = "2620:fe::fe";
+    String QUAD_DNS_62 = "2620:fe::9";
 }
