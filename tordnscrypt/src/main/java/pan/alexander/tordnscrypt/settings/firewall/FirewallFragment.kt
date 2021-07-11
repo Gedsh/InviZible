@@ -28,6 +28,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.CompoundButton
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.SwitchCompat
@@ -62,7 +63,8 @@ const val APPS_NEWLY_INSTALLED = "appsNewlyInstalled"
 
 @SuppressLint("NotifyDataSetChanged")
 class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, View.OnClickListener,
-        SearchView.OnQueryTextListener, ChipGroup.OnCheckedChangeListener, CompoundButton.OnCheckedChangeListener {
+    SearchView.OnQueryTextListener, ChipGroup.OnCheckedChangeListener,
+    CompoundButton.OnCheckedChangeListener {
 
     private var _binding: FragmentFirewallBinding? = null
     private val binding get() = _binding!!
@@ -113,6 +115,12 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
 
     private var comparatorWithUID: Comparator<AppFirewall>? = null
 
+    companion object {
+        const val appIconScale = 1.2f
+        const val buttonsInRow = 4
+    }
+
+    @Suppress("deprecation")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -129,17 +137,23 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
     }
 
     @SuppressLint("ResourceType")
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         val context = activity ?: return null
 
         _binding = FragmentFirewallBinding.inflate(inflater, container, false)
+
+        addOnGlobalLayoutListener()
 
         if (firewallEnabled) {
             enableFirewall(context)
         } else {
             disableFirewall()
         }
+
+        binding.rvFirewallApps.setHasFixedSize(true)
 
         binding.btnTopLanFirewall.setOnClickListener(this)
         binding.btnTopWifiFirewall.setOnClickListener(this)
@@ -171,6 +185,23 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         return binding.root
     }
 
+    private fun addOnGlobalLayoutListener() {
+        binding.btnTopLanFirewall.let { button ->
+            button.viewTreeObserver.addOnGlobalLayoutListener(object :
+                ViewTreeObserver.OnGlobalLayoutListener {
+                override fun onGlobalLayout() {
+                    button.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                    binding.imgAppIconFirewallFragment.let {
+                        it.layoutParams.width =
+                            (button.width * buttonsInRow / (buttonsInRow + 1) * appIconScale).toInt()
+                        it.requestLayout()
+                    }
+                }
+
+            })
+        }
+    }
+
     override fun onResume() {
         super.onResume()
 
@@ -200,7 +231,9 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         }
 
         if (lastVisibleAdapterPosition > 0 && appsListComplete) {
-            (binding.rvFirewallApps.layoutManager as LinearLayoutManager).scrollToPosition(lastVisibleAdapterPosition)
+            (binding.rvFirewallApps.layoutManager as LinearLayoutManager).scrollToPosition(
+                lastVisibleAdapterPosition
+            )
         }
     }
 
@@ -234,18 +267,22 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
 
         val rootMode = modulesStatus.mode == OperationMode.ROOT_MODE
 
-        comparatorWithName = compareBy({!(it.allowLan
-                || it.allowWifi
-                || it.allowGsm
-                || it.allowRoaming
-                || it.allowVPN && rootMode)},
+        comparatorWithName = compareBy({
+            !(it.allowLan
+                    || it.allowWifi
+                    || it.allowGsm
+                    || it.allowRoaming
+                    || it.allowVPN && rootMode)
+        },
             { it.applicationData.names.first() })
 
-        comparatorWithUID = compareBy({!(it.allowLan
-                || it.allowWifi
-                || it.allowGsm
-                || it.allowRoaming
-                || it.allowVPN && rootMode)},
+        comparatorWithUID = compareBy({
+            !(it.allowLan
+                    || it.allowWifi
+                    || it.allowGsm
+                    || it.allowRoaming
+                    || it.allowVPN && rootMode)
+        },
             { it.applicationData.uid })
     }
 
@@ -277,13 +314,44 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
                         PrefManager(context).setBoolPref("FirewallWasStarted", true)
                     }
 
-                    appsAllowLan.addAll(stringSetToIntSet(PrefManager(context).getSetStrPref(APPS_ALLOW_LAN_PREF)))
-                    appsAllowWifi.addAll(stringSetToIntSet(PrefManager(context).getSetStrPref(APPS_ALLOW_WIFI_PREF)))
-                    appsAllowGsm.addAll(stringSetToIntSet(PrefManager(context).getSetStrPref(APPS_ALLOW_GSM_PREF)))
-                    appsAllowRoaming.addAll(stringSetToIntSet(PrefManager(context).getSetStrPref(APPS_ALLOW_ROAMING)))
-                    appsAllowVpn.addAll(stringSetToIntSet(PrefManager(context).getSetStrPref(APPS_ALLOW_VPN)))
+                    appsAllowLan.addAll(
+                        stringSetToIntSet(
+                            PrefManager(context).getSetStrPref(
+                                APPS_ALLOW_LAN_PREF
+                            )
+                        )
+                    )
+                    appsAllowWifi.addAll(
+                        stringSetToIntSet(
+                            PrefManager(context).getSetStrPref(
+                                APPS_ALLOW_WIFI_PREF
+                            )
+                        )
+                    )
+                    appsAllowGsm.addAll(
+                        stringSetToIntSet(
+                            PrefManager(context).getSetStrPref(
+                                APPS_ALLOW_GSM_PREF
+                            )
+                        )
+                    )
+                    appsAllowRoaming.addAll(
+                        stringSetToIntSet(
+                            PrefManager(context).getSetStrPref(
+                                APPS_ALLOW_ROAMING
+                            )
+                        )
+                    )
+                    appsAllowVpn.addAll(
+                        stringSetToIntSet(
+                            PrefManager(context).getSetStrPref(
+                                APPS_ALLOW_VPN
+                            )
+                        )
+                    )
 
-                    val appsNewlyInstalled = stringSetToIntSet(PrefManager(context).getSetStrPref(APPS_NEWLY_INSTALLED))
+                    val appsNewlyInstalled =
+                        stringSetToIntSet(PrefManager(context).getSetStrPref(APPS_NEWLY_INSTALLED))
 
                     val installedApplications = InstalledApplications(context, setOf())
                     installedApplications.setOnAppAddListener(this@FirewallFragment)
@@ -301,21 +369,27 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
                         val uid = applicationData.uid
 
                         if (appsNewlyInstalled.contains(uid)) {
-                            appsList.add(0, AppFirewall(
+                            appsList.add(
+                                0, AppFirewall(
                                     applicationData,
                                     appsAllowLan.contains(uid),
                                     appsAllowWifi.contains(uid),
                                     appsAllowGsm.contains(uid),
                                     appsAllowRoaming.contains(uid),
-                                    appsAllowVpn.contains(uid)))
+                                    appsAllowVpn.contains(uid)
+                                )
+                            )
                         } else {
-                            appsList.add(AppFirewall(
+                            appsList.add(
+                                AppFirewall(
                                     applicationData,
                                     appsAllowLan.contains(uid),
                                     appsAllowWifi.contains(uid),
                                     appsAllowGsm.contains(uid),
                                     appsAllowRoaming.contains(uid),
-                                    appsAllowVpn.contains(uid)))
+                                    appsAllowVpn.contains(uid)
+                                )
+                            )
                         }
                     }
 
@@ -355,7 +429,8 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
                             }
 
                             if (allowLanForAll || allowWifiForAll || allowGsmForAll
-                                    || allowRoamingForAll || allowVPNForAll) {
+                                || allowRoamingForAll || allowVPNForAll
+                            ) {
                                 updateTopIcons(context)
                             }
 
@@ -366,7 +441,12 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
 
             } catch (e: Exception) {
                 appsListComplete = true
-                Log.e(LOG_TAG, "FirewallFragment getDeviceApps exception ${e.message} ${e.cause} ${Arrays.toString(e.stackTrace)}")
+                Log.e(
+                    LOG_TAG,
+                    "FirewallFragment getDeviceApps exception ${e.message} ${e.cause} ${
+                        Arrays.toString(e.stackTrace)
+                    }"
+                )
             } finally {
                 if (reentrantLock.isLocked) {
                     reentrantLock.unlock()
@@ -381,14 +461,16 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         }
 
         val uid = application.uid
-        appsList.add(0,
-                AppFirewall(
-                        application,
-                        appsAllowLan.contains(uid),
-                        appsAllowWifi.contains(uid),
-                        appsAllowGsm.contains(uid),
-                        appsAllowRoaming.contains(uid),
-                        appsAllowVpn.contains(uid))
+        appsList.add(
+            0,
+            AppFirewall(
+                application,
+                appsAllowLan.contains(uid),
+                appsAllowWifi.contains(uid),
+                appsAllowGsm.contains(uid),
+                appsAllowRoaming.contains(uid),
+                appsAllowVpn.contains(uid)
+            )
         )
 
         handler?.post {
@@ -516,19 +598,34 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
 
         var iptablesUpdateRequired = false
 
-        if (appsAllowLanToSave.size != appsAllowLan.size || !appsAllowLanToSave.containsAll(appsAllowLan)) {
+        if (appsAllowLanToSave.size != appsAllowLan.size || !appsAllowLanToSave.containsAll(
+                appsAllowLan
+            )
+        ) {
             iptablesUpdateRequired = true
         }
-        if (appsAllowWifiToSave.size != appsAllowWifi.size || !appsAllowWifiToSave.containsAll(appsAllowWifi)) {
+        if (appsAllowWifiToSave.size != appsAllowWifi.size || !appsAllowWifiToSave.containsAll(
+                appsAllowWifi
+            )
+        ) {
             iptablesUpdateRequired = true
         }
-        if (appsAllowGsmToSave.size != appsAllowGsm.size || !appsAllowGsmToSave.containsAll(appsAllowGsm)) {
+        if (appsAllowGsmToSave.size != appsAllowGsm.size || !appsAllowGsmToSave.containsAll(
+                appsAllowGsm
+            )
+        ) {
             iptablesUpdateRequired = true
         }
-        if (appsAllowRoamingToSave.size != appsAllowRoaming.size || !appsAllowRoamingToSave.containsAll(appsAllowRoaming)) {
+        if (appsAllowRoamingToSave.size != appsAllowRoaming.size || !appsAllowRoamingToSave.containsAll(
+                appsAllowRoaming
+            )
+        ) {
             iptablesUpdateRequired = true
         }
-        if (appsAllowVpnToSave.size != appsAllowVpn.size || !appsAllowVpnToSave.containsAll(appsAllowVpn)) {
+        if (appsAllowVpnToSave.size != appsAllowVpn.size || !appsAllowVpnToSave.containsAll(
+                appsAllowVpn
+            )
+        ) {
             iptablesUpdateRequired = true
         }
 
@@ -573,27 +670,48 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
 
         var iptablesUpdateRequired = false
 
-        if (appsAllowLanToSave.size != appsAllowLan.size || !appsAllowLanToSave.containsAll(appsAllowLan)) {
+        if (appsAllowLanToSave.size != appsAllowLan.size || !appsAllowLanToSave.containsAll(
+                appsAllowLan
+            )
+        ) {
             appsAllowLan = appsAllowLanToSave
             PrefManager(context).setSetStrPref(APPS_ALLOW_LAN_PREF, intSetToStringSet(appsAllowLan))
             iptablesUpdateRequired = true
         }
-        if (appsAllowWifiToSave.size != appsAllowWifi.size || !appsAllowWifiToSave.containsAll(appsAllowWifi)) {
+        if (appsAllowWifiToSave.size != appsAllowWifi.size || !appsAllowWifiToSave.containsAll(
+                appsAllowWifi
+            )
+        ) {
             appsAllowWifi = appsAllowWifiToSave
-            PrefManager(context).setSetStrPref(APPS_ALLOW_WIFI_PREF, intSetToStringSet(appsAllowWifi))
+            PrefManager(context).setSetStrPref(
+                APPS_ALLOW_WIFI_PREF,
+                intSetToStringSet(appsAllowWifi)
+            )
             iptablesUpdateRequired = true
         }
-        if (appsAllowGsmToSave.size != appsAllowGsm.size || !appsAllowGsmToSave.containsAll(appsAllowGsm)) {
+        if (appsAllowGsmToSave.size != appsAllowGsm.size || !appsAllowGsmToSave.containsAll(
+                appsAllowGsm
+            )
+        ) {
             appsAllowGsm = appsAllowGsmToSave
             PrefManager(context).setSetStrPref(APPS_ALLOW_GSM_PREF, intSetToStringSet(appsAllowGsm))
             iptablesUpdateRequired = true
         }
-        if (appsAllowRoamingToSave.size != appsAllowRoaming.size || !appsAllowRoamingToSave.containsAll(appsAllowRoaming)) {
+        if (appsAllowRoamingToSave.size != appsAllowRoaming.size || !appsAllowRoamingToSave.containsAll(
+                appsAllowRoaming
+            )
+        ) {
             appsAllowRoaming = appsAllowRoamingToSave
-            PrefManager(context).setSetStrPref(APPS_ALLOW_ROAMING, intSetToStringSet(appsAllowRoaming))
+            PrefManager(context).setSetStrPref(
+                APPS_ALLOW_ROAMING,
+                intSetToStringSet(appsAllowRoaming)
+            )
             iptablesUpdateRequired = true
         }
-        if (appsAllowVpnToSave.size != appsAllowVpn.size || !appsAllowVpnToSave.containsAll(appsAllowVpn)) {
+        if (appsAllowVpnToSave.size != appsAllowVpn.size || !appsAllowVpnToSave.containsAll(
+                appsAllowVpn
+            )
+        ) {
             appsAllowVpn = appsAllowVpnToSave
             PrefManager(context).setSetStrPref(APPS_ALLOW_VPN, intSetToStringSet(appsAllowVpn))
             iptablesUpdateRequired = true
@@ -721,10 +839,12 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
 
         savedAppsListWhenSearch?.forEach { savedApp ->
             if (savedApp.applicationData.toString().lowercase(Locale.ROOT)
-                    .contains(text.lowercase(Locale.ROOT).trim())) {
+                    .contains(text.lowercase(Locale.ROOT).trim())
+            ) {
                 if (allAppsSelected
-                        || systemAppsSelected && savedApp.applicationData.system
-                        || userAppsSelected && !savedApp.applicationData.system) {
+                    || systemAppsSelected && savedApp.applicationData.system
+                    || userAppsSelected && !savedApp.applicationData.system
+                ) {
                     appsList.add(savedApp)
                 }
 
@@ -776,7 +896,8 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
                 } else {
                     searchText?.let {
                         if (savedApp.applicationData.toString().lowercase(Locale.ROOT)
-                                        .contains(it.lowercase(Locale.ROOT).trim())) {
+                                .contains(it.lowercase(Locale.ROOT).trim())
+                        ) {
                             appsList.add(savedApp)
                         }
                     }
@@ -807,7 +928,8 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
                 } else {
                     searchText?.let {
                         if (savedApp.applicationData.toString().lowercase(Locale.ROOT)
-                                        .contains(it.lowercase(Locale.ROOT).trim())) {
+                                .contains(it.lowercase(Locale.ROOT).trim())
+                        ) {
                             appsList.add(savedApp)
                         }
                     }
@@ -873,7 +995,8 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         }
 
         val icFirewallLan = ContextCompat.getDrawable(context, R.drawable.ic_firewall_lan)
-        val icFirewallLanGreen = ContextCompat.getDrawable(context, R.drawable.ic_firewall_lan_green)
+        val icFirewallLanGreen =
+            ContextCompat.getDrawable(context, R.drawable.ic_firewall_lan_green)
 
         if (allowLanForAll) {
             binding.btnTopLanFirewall.setImageDrawable(icFirewallLanGreen)
@@ -910,7 +1033,8 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         }
 
         val icFirewallWifi = ContextCompat.getDrawable(context, R.drawable.ic_firewall_wifi_24)
-        val icFirewallWifiGreen = ContextCompat.getDrawable(context, R.drawable.ic_firewall_wifi_green_24)
+        val icFirewallWifiGreen =
+            ContextCompat.getDrawable(context, R.drawable.ic_firewall_wifi_green_24)
 
         if (allowWifiForAll) {
             binding.btnTopWifiFirewall.setImageDrawable(icFirewallWifiGreen)
@@ -947,7 +1071,8 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         }
 
         val icFirewallGsm = ContextCompat.getDrawable(context, R.drawable.ic_firewall_gsm_24)
-        val icFirewallGsmGreen = ContextCompat.getDrawable(context, R.drawable.ic_firewall_gsm_green_24)
+        val icFirewallGsmGreen =
+            ContextCompat.getDrawable(context, R.drawable.ic_firewall_gsm_green_24)
 
         if (allowGsmForAll) {
             binding.btnTopGsmFirewall.setImageDrawable(icFirewallGsmGreen)
@@ -983,8 +1108,10 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
             return
         }
 
-        val icFirewallRoaming = ContextCompat.getDrawable(context, R.drawable.ic_firewall_roaming_24)
-        val icFirewallRoamingGreen = ContextCompat.getDrawable(context, R.drawable.ic_firewall_roaming_green_24)
+        val icFirewallRoaming =
+            ContextCompat.getDrawable(context, R.drawable.ic_firewall_roaming_24)
+        val icFirewallRoamingGreen =
+            ContextCompat.getDrawable(context, R.drawable.ic_firewall_roaming_green_24)
 
         if (allowRoamingForAll) {
             binding.btnTopRoamingFirewall.setImageDrawable(icFirewallRoamingGreen)
@@ -1021,7 +1148,8 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         }
 
         val icFirewallVpn = ContextCompat.getDrawable(context, R.drawable.ic_firewall_vpn_key_24)
-        val icFirewallVpnGreen = ContextCompat.getDrawable(context, R.drawable.ic_firewall_vpn_key_green_24)
+        val icFirewallVpnGreen =
+            ContextCompat.getDrawable(context, R.drawable.ic_firewall_vpn_key_green_24)
 
         if (allowVPNForAll) {
             binding.btnTopVpnFirewall.setImageDrawable(icFirewallVpnGreen)
