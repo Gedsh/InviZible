@@ -56,8 +56,10 @@ object AuxNotificationSender {
             var localLinkProperties = linkProperties
 
             if (localLinkProperties == null) {
-                val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-                localLinkProperties = connectivityManager.getLinkProperties(connectivityManager.activeNetwork)
+                val connectivityManager =
+                    context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+                localLinkProperties =
+                    connectivityManager.getLinkProperties(connectivityManager.activeNetwork)
 
                 Log.i(LOG_TAG, "LinkProperties $localLinkProperties")
             }
@@ -65,37 +67,49 @@ object AuxNotificationSender {
 
             // localLinkProperties.privateDnsServerName == null - Opportunistic mode ("Automatic")
             if (Util.isPrivateDns(context) || localLinkProperties?.isPrivateDnsActive == true) {
-                sendNotification(context,
-                        context.getString(R.string.app_name),
-                        context.getString(R.string.helper_dnscrypt_private_dns),
-                        DISABLE_PRIVATE_DNS_NOTIFICATION)
+                sendNotification(
+                    context,
+                    context.getString(R.string.app_name),
+                    context.getString(R.string.helper_dnscrypt_private_dns),
+                    DISABLE_PRIVATE_DNS_NOTIFICATION
+                )
             }
 
             if (localLinkProperties?.httpProxy != null) {
 
                 if (Util.isWifiActive(context)) {
-                    sendNotification(context,
-                            context.getString(R.string.app_name),
-                            context.getString(R.string.helper_dnscrypt_proxy_wifi),
-                            DISABLE_PROXY_NOTIFICATION)
+                    sendNotification(
+                        context,
+                        context.getString(R.string.app_name),
+                        context.getString(R.string.helper_dnscrypt_proxy_wifi),
+                        DISABLE_PROXY_NOTIFICATION
+                    )
                 } else if (Util.isCellularActive(context)) {
-                    sendNotification(context,
-                            context.getString(R.string.app_name),
-                            context.getString(R.string.helper_dnscrypt_proxy_gsm),
-                            DISABLE_PROXY_NOTIFICATION)
+                    sendNotification(
+                        context,
+                        context.getString(R.string.app_name),
+                        context.getString(R.string.helper_dnscrypt_proxy_gsm),
+                        DISABLE_PROXY_NOTIFICATION
+                    )
                 }
 
             }
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "AuxNotificationSender checkPrivateDNSAndProxy exception ${e.message} ${e.cause}")
+            Log.e(
+                LOG_TAG,
+                "AuxNotificationSender checkPrivateDNSAndProxy exception ${e.message} ${e.cause}"
+            )
         }
     }
 
-    private fun sendNotification(context: Context,
-                                 title: String,
-                                 text: String,
-                                 NOTIFICATION_ID: Int) {
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    private fun sendNotification(
+        context: Context,
+        title: String,
+        text: String,
+        NOTIFICATION_ID: Int
+    ) {
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         var notificationIntent = Intent(Settings.ACTION_WIRELESS_SETTINGS)
 
@@ -104,26 +118,48 @@ object AuxNotificationSender {
             notificationIntent = Intent(context, MainActivity::class.java)
         }
 
-        val contentIntent = PendingIntent.getActivity(context.applicationContext, 165, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT)
-        var iconResource: Int = context.resources.getIdentifier("ic_aux_notification", "drawable", context.packageName)
+        val contentIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.getActivity(
+                context.applicationContext,
+                165,
+                notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        } else {
+            @Suppress("UnspecifiedImmutableFlag")
+            PendingIntent.getActivity(
+                context.applicationContext,
+                165,
+                notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        }
+
+        var iconResource: Int =
+            context.resources.getIdentifier("ic_aux_notification", "drawable", context.packageName)
         if (iconResource == 0) {
             iconResource = android.R.drawable.ic_dialog_alert
         }
         val builder = NotificationCompat.Builder(context, AUX_CHANNEL_ID)
         @Suppress("DEPRECATION")
         builder.setContentIntent(contentIntent)
-                .setOngoing(false) //Can be swiped out
-                .setSmallIcon(iconResource)
-                .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.drawable.ic_aux_notification))   // большая картинка
-                .setContentTitle(title) //Заголовок
-                .setContentText(text) // Текст уведомления
-                .setStyle(NotificationCompat.BigTextStyle().bigText(text))
-                .setPriority(Notification.PRIORITY_HIGH)
-                .setOnlyAlertOnce(true)
-                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
-                .setAutoCancel(true)
-                .setLights(Color.YELLOW, 1000, 1000)
-                .setChannelId(AUX_CHANNEL_ID)
+            .setOngoing(false) //Can be swiped out
+            .setSmallIcon(iconResource)
+            .setLargeIcon(
+                BitmapFactory.decodeResource(
+                    context.resources,
+                    R.drawable.ic_aux_notification
+                )
+            )
+            .setContentTitle(title)
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setPriority(Notification.PRIORITY_HIGH)
+            .setOnlyAlertOnce(true)
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+            .setAutoCancel(true)
+            .setLights(Color.YELLOW, 1000, 1000)
+            .setChannelId(AUX_CHANNEL_ID)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             builder.setCategory(Notification.CATEGORY_ALARM)

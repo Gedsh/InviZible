@@ -731,18 +731,27 @@ class ArpScanner private constructor(
         text: String,
         NOTIFICATION_ID: Int
     ) {
-
-        //These three lines makes Notification to open main activity after clicking on it
         val notificationIntent = Intent(context, MainActivity::class.java)
         notificationIntent.action = Intent.ACTION_MAIN
         notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER)
         notificationIntent.putExtra(mitmAttackWarning, true)
-        val contentIntent = PendingIntent.getActivity(
-            context.applicationContext,
-            111,
-            notificationIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT
-        )
+
+        val contentIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.getActivity(
+                context.applicationContext,
+                111,
+                notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        } else {
+            @Suppress("UnspecifiedImmutableFlag")
+            PendingIntent.getActivity(
+                context.applicationContext,
+                111,
+                notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        }
         var iconResource: Int = context.resources.getIdentifier(
             "ic_arp_attack_notification",
             "drawable",
@@ -754,7 +763,7 @@ class ArpScanner private constructor(
         val builder = NotificationCompat.Builder(context, AUX_CHANNEL_ID)
         @Suppress("DEPRECATION")
         builder.setContentIntent(contentIntent)
-            .setOngoing(false) //Can be swiped out
+            .setOngoing(false)
             .setSmallIcon(iconResource)
             .setLargeIcon(
                 BitmapFactory.decodeResource(
@@ -762,8 +771,8 @@ class ArpScanner private constructor(
                     R.drawable.ic_arp_attack_notification
                 )
             )   // большая картинка
-            .setContentTitle(title) //Заголовок
-            .setContentText(text) // Текст уведомления
+            .setContentTitle(title)
+            .setContentText(text)
             .setPriority(Notification.PRIORITY_HIGH)
             .setOnlyAlertOnce(true)
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)

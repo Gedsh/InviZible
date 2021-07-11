@@ -105,6 +105,17 @@ import static pan.alexander.tordnscrypt.modules.ModulesService.actionStopService
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
 import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_FOR_CLEARNET;
 import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_TO_UNLOCK;
+import static pan.alexander.tordnscrypt.utils.Constants.DNS_OVER_TLS_PORT;
+import static pan.alexander.tordnscrypt.utils.Constants.G_DNG_41;
+import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_42;
+import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_61;
+import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_62;
+import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
+import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_42;
+import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_61;
+import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_62;
+import static pan.alexander.tordnscrypt.utils.Constants.VPN_DNS_2;
+import static pan.alexander.tordnscrypt.utils.Preferences.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -119,7 +130,6 @@ public class ServiceVPN extends VpnService {
         }
     }
 
-    private static final int dnsOverTlsPort = 853;
     private boolean ignoreSystemDNS = false;
 
     final static int linesInDNSQueryRawRecords = 500;
@@ -221,16 +231,6 @@ public class ServiceVPN extends VpnService {
 
     private static List<InetAddress> getDns(Context context) {
         String vpnDns1;
-        String vpnDns2 = "116.202.176.26";//libre DNS
-
-        String quadDNS41 = "9.9.9.9";
-        String quadDNS42 = "149.112.112.112";
-        String quadDNS61 = "2620:fe::fe";
-        String quadDNS62 = "2620:fe::9";
-        String gDNS41 = "8.8.8.8";
-        String gDNS42 = "8.8.4.4";
-        String gDNS61 = "2001:4860:4860::8888";
-        String gDNS62 = "2001:4860:4860::8844";
 
         vpnDnsSet = new ConcurrentSkipListSet<>();
 
@@ -241,7 +241,7 @@ public class ServiceVPN extends VpnService {
         SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
         boolean ip6 = prefs.getBoolean("ipv6", false);
         vpnDns1 = PathVars.getInstance(context).getDNSCryptFallbackRes();
-        Log.i(LOG_TAG, "VPN DNS system=" + TextUtils.join(",", sysDns) + " config=" + vpnDns1 + "," + vpnDns2);
+        Log.i(LOG_TAG, "VPN DNS system=" + TextUtils.join(",", sysDns) + " config=" + vpnDns1 + "," + VPN_DNS_2);
 
         if (vpnDns1 != null) {
             try {
@@ -255,13 +255,13 @@ public class ServiceVPN extends VpnService {
             }
         }
 
-        if (vpnDns2 != null) {
+        if (VPN_DNS_2 != null) {
             try {
-                InetAddress dns = InetAddress.getByName(vpnDns2);
+                InetAddress dns = InetAddress.getByName(VPN_DNS_2);
                 if (!(dns.isLoopbackAddress() || dns.isAnyLocalAddress()) &&
                         (ip6 || dns instanceof Inet4Address)) {
                     listDns.add(dns);
-                    vpnDnsSet.add(vpnDns2);
+                    vpnDnsSet.add(VPN_DNS_2);
                 }
             } catch (Throwable ex) {
                 Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
@@ -269,25 +269,25 @@ public class ServiceVPN extends VpnService {
         }
 
         if (vpnDns1 == null) {
-            vpnDns1 = quadDNS41;
+            vpnDns1 = QUAD_DNS_41;
         }
 
-        vpnDnsSet.add(gDNS41);
-        vpnDnsSet.add(gDNS42);
-        vpnDnsSet.add(gDNS61);
-        vpnDnsSet.add(gDNS62);
+        vpnDnsSet.add(G_DNG_41);
+        vpnDnsSet.add(G_DNS_42);
+        vpnDnsSet.add(G_DNS_61);
+        vpnDnsSet.add(G_DNS_62);
 
-        if (vpnDns1.equals(quadDNS41) || vpnDns1.equals(quadDNS42)) {
-            vpnDnsSet.add(quadDNS41);
-            vpnDnsSet.add(quadDNS42);
-            vpnDnsSet.add(quadDNS61);
-            vpnDnsSet.add(quadDNS62);
+        if (vpnDns1.equals(QUAD_DNS_41) || vpnDns1.equals(QUAD_DNS_42)) {
+            vpnDnsSet.add(QUAD_DNS_41);
+            vpnDnsSet.add(QUAD_DNS_42);
+            vpnDnsSet.add(QUAD_DNS_61);
+            vpnDnsSet.add(QUAD_DNS_62);
         } else {
             try {
                 InetAddress addressOfDns = InetAddress.getByName(vpnDns1);
                 String name = addressOfDns.getCanonicalHostName();
                 InetAddress[] addressesForName = InetAddress.getAllByName(name);
-                for (InetAddress address: addressesForName) {
+                for (InetAddress address : addressesForName) {
                     String addressStr = address.getHostAddress();
                     if (addressStr != null) {
                         vpnDnsSet.add(addressStr);
@@ -319,11 +319,11 @@ public class ServiceVPN extends VpnService {
         // Always set DNS servers
         if (listDns.size() == 0)
             try {
-                listDns.add(InetAddress.getByName(gDNS41));
-                listDns.add(InetAddress.getByName(gDNS42));
+                listDns.add(InetAddress.getByName(G_DNG_41));
+                listDns.add(InetAddress.getByName(G_DNS_42));
                 if (ip6) {
-                    listDns.add(InetAddress.getByName(gDNS61));
-                    listDns.add(InetAddress.getByName(gDNS62));
+                    listDns.add(InetAddress.getByName(G_DNS_61));
+                    listDns.add(InetAddress.getByName(G_DNS_62));
                 }
             } catch (Throwable ex) {
                 Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
@@ -334,6 +334,7 @@ public class ServiceVPN extends VpnService {
         return listDns;
     }
 
+    @SuppressLint("UnspecifiedImmutableFlag")
     BuilderVPN getBuilder(List<String> listAllowed, List<Rule> listRule) {
         SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
         //boolean ip6 = prefs.getBoolean("ipv6", true);
@@ -474,7 +475,22 @@ public class ServiceVPN extends VpnService {
 
         // Build configure intent
         Intent configure = new Intent(this, MainActivity.class);
-        PendingIntent pi = PendingIntent.getActivity(this, 0, configure, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pi;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            pi = PendingIntent.getActivity(
+                    this,
+                    0,
+                    configure,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
+        } else {
+            pi = PendingIntent.getActivity(
+                    this,
+                    0,
+                    configure,
+                    PendingIntent.FLAG_UPDATE_CURRENT
+            );
+        }
         builder.setConfigureIntent(pi);
 
         return builder;
@@ -495,7 +511,7 @@ public class ServiceVPN extends VpnService {
         dnsRebindProtection = prefs.getBoolean("pref_common_dns_rebind_protection", false);
         blockInternetWhenArpAttackDetected = prefs.getBoolean("pref_common_arp_block_internet", false);
         firewallEnabled = new PrefManager(this).getBoolPref("FirewallEnabled");
-        ignoreSystemDNS = prefs.getBoolean("ignore_system_dns", false);
+        ignoreSystemDNS = prefs.getBoolean(IGNORE_SYSTEM_DNS, false);
 
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
             compatibilityMode = true;
@@ -1028,7 +1044,7 @@ public class ServiceVPN extends VpnService {
         // https://android.googlesource.com/platform/system/core/+/master/include/private/android_filesystem_config.h
         if ((!canFilter) && isSupported(packet.protocol)) {
             packet.allowed = true;
-        } else if (packet.dport == dnsOverTlsPort && ignoreSystemDNS) {
+        } else if (packet.dport == DNS_OVER_TLS_PORT && ignoreSystemDNS) {
             Log.w(LOG_TAG, "Block DNS over TLS " + packet);
         } else if ((vpnDnsSet.contains(packet.daddr) && packet.dport != 53) && ignoreSystemDNS) {
             Log.w(LOG_TAG, "Block DNS over HTTPS " + packet);

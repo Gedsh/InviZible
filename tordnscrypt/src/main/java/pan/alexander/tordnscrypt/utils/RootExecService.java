@@ -18,6 +18,7 @@ package pan.alexander.tordnscrypt.utils;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -166,7 +167,7 @@ public class RootExecService extends Service {
 
         int exitCode = execWithSU(runCommands, result, error);
 
-        if (!error.isEmpty() || exitCode != 0)  {
+        if (!error.isEmpty() || exitCode != 0) {
 
             String exitCodeStr = "";
             if (exitCode != 0) {
@@ -302,26 +303,45 @@ public class RootExecService extends Service {
         sendNotification(getString(R.string.notification_temp_text), "");
     }
 
+    @SuppressLint("UnspecifiedImmutableFlag")
     private void sendNotification(String Title, String Text) {
 
-        //These three lines makes Notification to open main activity after clicking on it
         Intent notificationIntent = new Intent(this, MainActivity.class);
         notificationIntent.setAction(Intent.ACTION_MAIN);
         notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
 
-        PendingIntent contentIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent contentIntent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            contentIntent = PendingIntent.getActivity(
+                    getApplicationContext(),
+                    0,
+                    notificationIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
+        } else {
+            contentIntent = PendingIntent.getActivity(
+                    getApplicationContext(),
+                    0,
+                    notificationIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT
+            );
+        }
 
-        int iconResource = getResources().getIdentifier("ic_service_notification", "drawable", getPackageName());
+        int iconResource = getResources().getIdentifier(
+                "ic_service_notification",
+                "drawable",
+                getPackageName()
+        );
         if (iconResource == 0) {
             iconResource = android.R.drawable.ic_menu_view;
         }
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ROOT_CHANNEL_ID);
         builder.setContentIntent(contentIntent)
-                .setOngoing(false)   //Can be swiped out
+                .setOngoing(false)
                 .setSmallIcon(iconResource)
-                .setContentTitle(Title) //Заголовок
-                .setContentText(Text) // Текст уведомления
+                .setContentTitle(Title)
+                .setContentText(Text)
                 .setPriority(Notification.PRIORITY_MIN)
                 .setOnlyAlertOnce(true)
                 .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)

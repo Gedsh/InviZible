@@ -19,6 +19,7 @@ package pan.alexander.tordnscrypt.modules;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -44,6 +45,7 @@ public class ServiceNotification {
         this.startTime = startTime;
     }
 
+    @SuppressLint("UnspecifiedImmutableFlag")
     public synchronized void sendNotification(String Title, String Text) {
 
         if (service == null || notificationManager == null) {
@@ -57,7 +59,20 @@ public class ServiceNotification {
         notificationIntent.setAction(Intent.ACTION_MAIN);
         notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
 
-        PendingIntent contentIntent = PendingIntent.getActivity(service.getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent contentIntent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            contentIntent = PendingIntent.getActivity(
+                    service.getApplicationContext(),
+                    0,
+                    notificationIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        } else {
+            contentIntent = PendingIntent.getActivity(
+                    service.getApplicationContext(),
+                    0,
+                    notificationIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT);
+        }
 
         int iconResource = service.getResources().getIdentifier("ic_service_notification", "drawable", service.getPackageName());
         if (iconResource == 0) {
@@ -89,6 +104,7 @@ public class ServiceNotification {
         service.startForeground(DEFAULT_NOTIFICATION_ID, notification);
     }
 
+    @SuppressLint("UnspecifiedImmutableFlag")
     public void updateNotification(String Title, String Text) {
         if (service == null || notificationManager == null) {
             return;
@@ -98,7 +114,20 @@ public class ServiceNotification {
         notificationIntent.setAction(Intent.ACTION_MAIN);
         notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
 
-        PendingIntent contentIntent = PendingIntent.getActivity(service.getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent contentIntent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            contentIntent = PendingIntent.getActivity(
+                    service.getApplicationContext(),
+                    0,
+                    notificationIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        } else {
+            contentIntent = PendingIntent.getActivity(
+                    service.getApplicationContext(),
+                    0,
+                    notificationIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT);
+        }
 
         int iconResource = service.getResources().getIdentifier("ic_service_notification", "drawable", service.getPackageName());
         if (iconResource == 0) {

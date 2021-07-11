@@ -18,6 +18,7 @@ package pan.alexander.tordnscrypt.update;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -195,6 +196,7 @@ public class UpdateService extends Service {
         notificationManager.createNotificationChannel(notificationChannel);
     }
 
+    @SuppressLint("UnspecifiedImmutableFlag")
     void sendNotification(int serviceStartId, int notificationId, long startTime, String Ticker, String Title, String Text) {
 
         Intent notificationIntent = new Intent(this, MainActivity.class);
@@ -204,11 +206,39 @@ public class UpdateService extends Service {
         Intent stopDownloadIntent = new Intent(this, UpdateService.class);
         stopDownloadIntent.setAction(STOP_DOWNLOAD_ACTION);
         stopDownloadIntent.putExtra("ServiceStartId", serviceStartId);
-        PendingIntent stopDownloadPendingIntent = PendingIntent.getService(this,
-                notificationId, stopDownloadIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent stopDownloadPendingIntent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            stopDownloadPendingIntent = PendingIntent.getService(
+                    this,
+                    notificationId,
+                    stopDownloadIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
+        } else {
+            stopDownloadPendingIntent = PendingIntent.getService(
+                    this,
+                    notificationId,
+                    stopDownloadIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT
+            );
+        }
 
-        PendingIntent contentIntent = PendingIntent.getActivity(this,
-                0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent contentIntent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            contentIntent = PendingIntent.getActivity(
+                    this,
+                    0,
+                    notificationIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
+        } else {
+            contentIntent = PendingIntent.getActivity(
+                    this,
+                    0,
+                    notificationIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT
+            );
+        }
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, UPDATE_CHANNEL_ID);
         builder.setContentIntent(contentIntent)

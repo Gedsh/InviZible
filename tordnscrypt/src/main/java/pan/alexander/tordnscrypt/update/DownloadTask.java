@@ -19,6 +19,7 @@ package pan.alexander.tordnscrypt.update;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -124,7 +125,7 @@ class DownloadTask extends Thread {
                         //Required for androidQ because even if the service is in the foreground we cannot start an activity if no activity is visible
                         new PrefManager(context).setStrPref("RequiredAppUpdateForQ", outputFile.getCanonicalPath());
                     } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                       installApkForNougatAndHigher(outputFile);
+                        installApkForNougatAndHigher(outputFile);
                     } else {
                         installApkLowerNougat(outputFile);
                     }
@@ -204,8 +205,8 @@ class DownloadTask extends Thread {
 
         long fileLength = con.getContentLength();
 
-        try(InputStream input = new BufferedInputStream(con.getInputStream());
-            OutputStream output = new FileOutputStream(path, true)) {
+        try (InputStream input = new BufferedInputStream(con.getInputStream());
+             OutputStream output = new FileOutputStream(path, true)) {
             byte[] data = new byte[1024];
             int count;
             int percent = 0;
@@ -234,15 +235,23 @@ class DownloadTask extends Thread {
     }
 
     private boolean isActivityActive() {
-        boolean isActivityActive = false;
-        if (context.getApplicationContext() instanceof ApplicationBase) {
 
-            ApplicationBase applicationBase = (ApplicationBase) context.getApplicationContext();
-            WeakReference<Activity> currentActivity = applicationBase.getCurrentActivity();
-            isActivityActive = currentActivity != null && currentActivity.get() != null
-                    && !currentActivity.get().isFinishing();
+        ApplicationBase applicationBase = ApplicationBase.Companion.getInstance();
+        if (applicationBase == null) {
+            return false;
         }
-        return isActivityActive;
+
+        WeakReference<Activity> activityWeakReference = applicationBase.getCurrentActivity();
+        if (activityWeakReference == null) {
+            return false;
+        }
+
+        Activity activity = activityWeakReference.get();
+        if (activity == null) {
+            return false;
+        }
+
+        return !activity.isFinishing();
     }
 
     private void installApkForNougatAndHigher(File outputFile) {
@@ -309,8 +318,8 @@ class DownloadTask extends Thread {
     private String crc32(File file) {
         CRC32 crc = new CRC32();
 
-        try(InputStream is = new FileInputStream(file);
-            ByteArrayOutputStream bout = new ByteArrayOutputStream()) {
+        try (InputStream is = new FileInputStream(file);
+             ByteArrayOutputStream bout = new ByteArrayOutputStream()) {
             byte[] readBuffer = new byte[4 * 1024];
             int read;
             while ((read = is.read(readBuffer)) != -1) {
@@ -327,6 +336,7 @@ class DownloadTask extends Thread {
         return null;
     }
 
+    @SuppressLint("UnspecifiedImmutableFlag")
     private void updateNotification(String fileToDownload, int percent) {
         String ticker = context.getString(R.string.update_notification);
         String text = context.getString(R.string.update_notification) +
@@ -339,11 +349,39 @@ class DownloadTask extends Thread {
         Intent stopDownloadIntent = new Intent(updateService, UpdateService.class);
         stopDownloadIntent.setAction(STOP_DOWNLOAD_ACTION);
         stopDownloadIntent.putExtra("ServiceStartId", serviceStartId);
-        PendingIntent stopDownloadPendingIntent = PendingIntent.getService(updateService,
-                notificationId, stopDownloadIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        PendingIntent contentIntent = PendingIntent.getActivity(updateService,
-                0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent stopDownloadPendingIntent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            stopDownloadPendingIntent = PendingIntent.getService(
+                    updateService,
+                    notificationId,
+                    stopDownloadIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        } else {
+            stopDownloadPendingIntent = PendingIntent.getService(
+                    updateService,
+                    notificationId,
+                    stopDownloadIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT
+            );
+        }
+
+        PendingIntent contentIntent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            contentIntent = PendingIntent.getActivity(
+                    updateService,
+                    0,
+                    notificationIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
+        } else {
+            contentIntent = PendingIntent.getActivity(
+                    updateService,
+                    0,
+                    notificationIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT
+            );
+        }
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(updateService, UPDATE_CHANNEL_ID);
         builder.setContentIntent(contentIntent)
