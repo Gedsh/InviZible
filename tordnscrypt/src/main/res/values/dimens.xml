@@ -14,6 +14,12 @@
     <dimen name="fragment_log_text_size">12sp</dimen>
     <dimen name="fragment_file_log_text_size">15sp</dimen>
     <dimen name="fragment_country_select_text_size">17sp</dimen>
-    <fraction name="firewall_item_vertical_guideline">0.5</fraction>
-    <dimen name="firewall_text_size">42px</dimen>
+    <!-- Firewall-->
+    <dimen name="firewall_app_icon_size">40dp</dimen>
+    <dimen name="firewall_button_size">32dp</dimen>
+    <dimen name="firewall_views_margin">2dp</dimen>
+    <dimen name="firewall_buttons_padding">2dp</dimen>
+    <dimen name="firewall_item_app_name_margin">4dp</dimen>
+    <dimen name="firewall_chip_group_padding">4dp</dimen>
+    <dimen name="firewall_progress_bar_margin">10dp</dimen>
 </resources>

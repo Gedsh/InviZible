@@ -4,5 +4,4 @@
     <dimen name="run_btns_top_margin">4dp</dimen>
     <dimen name="run_btns_min_width">40dip</dimen>
     <dimen name="status_text_margin">4dp</dimen>
-    <fraction name="firewall_item_vertical_guideline">0.3</fraction>
 </resources>

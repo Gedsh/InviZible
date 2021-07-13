@@ -28,7 +28,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import android.widget.CompoundButton
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.SwitchCompat
@@ -115,11 +114,6 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
 
     private var comparatorWithUID: Comparator<AppFirewall>? = null
 
-    companion object {
-        const val appIconScale = 1.2f
-        const val buttonsInRow = 4
-    }
-
     @Suppress("deprecation")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -144,8 +138,6 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         val context = activity ?: return null
 
         _binding = FragmentFirewallBinding.inflate(inflater, container, false)
-
-        addOnGlobalLayoutListener()
 
         if (firewallEnabled) {
             enableFirewall(context)
@@ -183,23 +175,6 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         }
 
         return binding.root
-    }
-
-    private fun addOnGlobalLayoutListener() {
-        binding.btnTopLanFirewall.let { button ->
-            button.viewTreeObserver.addOnGlobalLayoutListener(object :
-                ViewTreeObserver.OnGlobalLayoutListener {
-                override fun onGlobalLayout() {
-                    button.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                    binding.imgAppIconFirewallFragment.let {
-                        it.layoutParams.width =
-                            (button.width * buttonsInRow / (buttonsInRow + 1) * appIconScale).toInt()
-                        it.requestLayout()
-                    }
-                }
-
-            })
-        }
     }
 
     override fun onResume() {

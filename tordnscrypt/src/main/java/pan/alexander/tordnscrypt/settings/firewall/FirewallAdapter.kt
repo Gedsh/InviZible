@@ -26,7 +26,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
@@ -34,8 +33,6 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.settings.firewall.FirewallFragment.Companion.appIconScale
-import pan.alexander.tordnscrypt.settings.firewall.FirewallFragment.Companion.buttonsInRow
 import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 
@@ -44,48 +41,16 @@ class FirewallAdapter(private val firewallFragment: FirewallFragment) :
 
     private var context = firewallFragment.requireContext()
 
-    private var imageButtonWidth = 0
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FirewallViewHolder {
         val itemView =
-            LayoutInflater.from(parent.context).inflate(R.layout.item_firewall_adv, parent, false)
+            LayoutInflater.from(parent.context).inflate(R.layout.item_firewall, parent, false)
 
         val modulesStatus = ModulesStatus.getInstance()
         if (modulesStatus.mode == OperationMode.VPN_MODE) {
             itemView.findViewById<ImageButton>(R.id.btnVpnFirewall).visibility = View.GONE
         }
 
-        if (imageButtonWidth == 0) {
-            addOnGlobalLayoutListener(itemView)
-        } else {
-            itemView.findViewById<ImageView>(R.id.imgAppIconFirewall).let {
-                it.layoutParams.width = (imageButtonWidth * appIconScale).toInt()
-                it.layoutParams.height = (imageButtonWidth * appIconScale).toInt()
-                it.requestLayout()
-            }
-        }
-
         return FirewallViewHolder(itemView)
-    }
-
-    private fun addOnGlobalLayoutListener(itemView: View) {
-        itemView.findViewById<ImageButton>(R.id.btnLanFirewall).let { button ->
-            button.viewTreeObserver.addOnGlobalLayoutListener(object :
-                ViewTreeObserver.OnGlobalLayoutListener {
-                override fun onGlobalLayout() {
-                    button.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                    itemView.findViewById<ImageView>(R.id.imgAppIconFirewall).let {
-                        imageButtonWidth = button.height * buttonsInRow / (buttonsInRow + 1)
-                        it.layoutParams.width =
-                            (imageButtonWidth * appIconScale).toInt()
-                        it.layoutParams.height =
-                            (imageButtonWidth * appIconScale).toInt()
-                        it.requestLayout()
-                    }
-                }
-
-            })
-        }
     }
 
     override fun onBindViewHolder(holder: FirewallViewHolder, position: Int) {
