@@ -112,7 +112,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         preferences.add(findPreference("force_tcp"));
         preferences.add(findPreference("Enable proxy"));
         preferences.add(findPreference("proxy_port"));
-        preferences.add(findPreference("fallback_resolvers"));
+        preferences.add(findPreference("bootstrap_resolvers"));
         preferences.add(findPreference(IGNORE_SYSTEM_DNS));
         preferences.add(findPreference("Enable Query logging"));
         preferences.add(findPreference("ignored_qtypes"));
@@ -305,14 +305,14 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                 String val = "['127.0.0.1:" + newValue.toString() + "']";
                 val_toml.set(key_toml.indexOf("listen_addresses"), val);
                 return true;
-            } else if (Objects.equals(preference.getKey(), "fallback_resolvers")) {
+            } else if (Objects.equals(preference.getKey(), "bootstrap_resolvers")) {
 
                 if (invalidFallbackResolver) {
                     return false;
                 }
 
                 String val = "['" + newValue.toString() + ":53']";
-                val_toml.set(key_toml.indexOf("fallback_resolvers"), val);
+                val_toml.set(key_toml.indexOf("bootstrap_resolvers"), val);
                 val = "'" + newValue.toString() + ":53'";
                 if (key_toml.indexOf("netprobe_address") > 0) {
                     val_toml.set(key_toml.indexOf("netprobe_address"), val);

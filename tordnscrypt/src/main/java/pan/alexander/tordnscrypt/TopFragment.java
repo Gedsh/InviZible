@@ -159,6 +159,7 @@ public class TopFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        //noinspection deprecation
         setRetainInstance(true);
 
         appVersion = getString(R.string.appVersion);
@@ -481,10 +482,6 @@ public class TopFragment extends Fragment {
 
                     /////////////////////////////DONATION////////////////////////////////////////////
                     topFragment.showDonDialog(activity);
-
-                    ////////////////////////////PATCH CONFIG of the MODULES if NECESSARY///////////////
-                    Patch patch = new Patch(activity);
-                    patch.checkPatches();
                 }
 
             } catch (Exception e) {

@@ -28,6 +28,8 @@ import androidx.preference.PreferenceManager;
 
 import java.io.File;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import pan.alexander.tordnscrypt.utils.PrefManager;
 
@@ -223,14 +225,22 @@ public class PathVars {
     }
 
     public String getDNSCryptFallbackRes() {
-        String dnsCryptFallbackResolver = preferences.getString("fallback_resolvers", QUAD_DNS_41);
+
+        Pattern pattern =
+                Pattern.compile("((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)");
+
+        String dnsCryptFallbackResolver = preferences.getString("bootstrap_resolvers", QUAD_DNS_41);
         if (dnsCryptFallbackResolver == null) {
             dnsCryptFallbackResolver = QUAD_DNS_41;
         }
-        if (dnsCryptFallbackResolver.contains(":")) {
-            dnsCryptFallbackResolver = dnsCryptFallbackResolver.substring(0, dnsCryptFallbackResolver.indexOf(":"));
+
+        Matcher matcher = pattern.matcher(dnsCryptFallbackResolver);
+        String fallbackResolver = QUAD_DNS_41;
+        if (matcher.find()) {
+            fallbackResolver = matcher.group();
         }
-        return dnsCryptFallbackResolver;
+
+        return fallbackResolver;
     }
 
     public String getTorDNSPort() {

@@ -48,6 +48,7 @@ import java.util.concurrent.TimeUnit;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
+import pan.alexander.tordnscrypt.patches.Patch;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.PrefManager;
@@ -285,6 +286,8 @@ public class ModulesService extends Service {
 
         new Thread(() -> {
 
+            checkModulesConfigPatches();
+
             if (!modulesStatus.isUseModulesWithRoot()) {
                 Thread previousDnsCryptThread = modulesKiller.getDnsCryptThread();
 
@@ -405,6 +408,8 @@ public class ModulesService extends Service {
         }
 
         new Thread(() -> {
+
+            checkModulesConfigPatches();
 
             if (!modulesStatus.isUseModulesWithRoot()) {
                 Thread previousTorThread = modulesKiller.getTorThread();
@@ -532,6 +537,8 @@ public class ModulesService extends Service {
         }
 
         new Thread(() -> {
+
+            checkModulesConfigPatches();
 
             if (!modulesStatus.isUseModulesWithRoot()) {
                 Thread previousITPDThread = modulesKiller.getItpdThread();
@@ -1097,5 +1104,10 @@ public class ModulesService extends Service {
         if (checkModulesStateTask != null) {
             checkModulesStateTask.clearIptablesCommandHash();
         }
+    }
+
+    private void checkModulesConfigPatches() {
+        Patch patch = new Patch(this);
+        patch.checkPatches();
     }
 }
