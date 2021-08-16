@@ -67,7 +67,6 @@ class Patch(private val context: Context) {
                 replaceBlackNames()
                 updateITPDAddressBookDefaultUrl()
                 fallbackResolverToBootstrapResolvers()
-                fallbackResolversToBootstrapResolvers()
 
                 if (dnsCryptConfigPatches.isNotEmpty()) {
                     configUtil.patchDNSCryptConfig(dnsCryptConfigPatches)
@@ -179,55 +178,46 @@ class Patch(private val context: Context) {
     }
 
     private fun fallbackResolverToBootstrapResolvers() {
-        val bootstrapResolverPreference = PreferenceManager.getDefaultSharedPreferences(context)
-            .getString("bootstrap_resolvers", "")?.trim() ?: ""
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
 
-        if (bootstrapResolverPreference.isNotBlank()) {
+        if (sharedPreferences.contains("bootstrap_resolvers")) {
             return
         }
 
         val ipRegex =
             Regex("((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)")
-        val fallbackResolverPreference = PreferenceManager.getDefaultSharedPreferences(context)
-            .getString("fallback_resolver", QUAD_DNS_41)?.trim() ?: QUAD_DNS_41
-        val matcher = ipRegex.toPattern().matcher(fallbackResolverPreference)
+
+
         var fallbackResolver = QUAD_DNS_41
-        if (matcher.find()) {
-            fallbackResolver = matcher.group()
+        if (sharedPreferences.contains("fallback_resolvers")) {
+            val fallbackResolversPreference = sharedPreferences
+                .getString("fallback_resolvers", QUAD_DNS_41)?.trim() ?: QUAD_DNS_41
+            val matcher = ipRegex.toPattern().matcher(fallbackResolversPreference)
+            if (matcher.find()) {
+                fallbackResolver = matcher.group()
+            }
+            PreferenceManager.getDefaultSharedPreferences(context).edit()
+                .putString("bootstrap_resolvers", fallbackResolver)
+                .apply()
+        } else if (sharedPreferences.contains("fallback_resolver")) {
+            val fallbackResolverPreference = sharedPreferences
+                .getString("fallback_resolver", QUAD_DNS_41)?.trim() ?: QUAD_DNS_41
+            val matcher = ipRegex.toPattern().matcher(fallbackResolverPreference)
+
+            if (matcher.find()) {
+                fallbackResolver = matcher.group()
+            }
+            PreferenceManager.getDefaultSharedPreferences(context).edit()
+                .putString("bootstrap_resolvers", fallbackResolver)
+                .apply()
         }
-        PreferenceManager.getDefaultSharedPreferences(context).edit()
-            .putString("bootstrap_resolvers", fallbackResolver)
-            .apply()
+
         dnsCryptConfigPatches.add(
             PatchLine(
                 "",
                 Regex("fallback_resolver =.+"), "bootstrap_resolvers = ['$fallbackResolver:53']"
             )
         )
-    }
-
-    private fun fallbackResolversToBootstrapResolvers() {
-        val bootstrapResolverPreference = PreferenceManager.getDefaultSharedPreferences(context)
-            .getString("bootstrap_resolvers", "")?.trim() ?: ""
-
-        if (bootstrapResolverPreference.isNotBlank()) {
-            return
-        }
-
-        val ipRegex =
-            Regex("((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)")
-        val fallbackResolverPreference = PreferenceManager.getDefaultSharedPreferences(context)
-            .getString("fallback_resolvers", QUAD_DNS_41)?.trim() ?: QUAD_DNS_41
-        val matcher = ipRegex.toPattern().matcher(fallbackResolverPreference)
-        var fallbackResolver = QUAD_DNS_41
-        if (matcher.find()) {
-            fallbackResolver = matcher.group()
-        }
-        if (fallbackResolver != fallbackResolverPreference) {
-            PreferenceManager.getDefaultSharedPreferences(context).edit()
-                .putString("bootstrap_resolvers", fallbackResolver)
-                .apply()
-        }
         dnsCryptConfigPatches.add(
             PatchLine(
                 "",
