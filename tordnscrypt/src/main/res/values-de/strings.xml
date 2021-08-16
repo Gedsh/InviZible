@@ -520,5 +520,5 @@ WLAN aus- und kurz darauf wieder anschalten. Die Verwendung des derzeitigen Hots
     <string name="btnResetSettings">"Einstellungen zurücksetzen"</string>
     <string name="backupSaved">"Backup gespeichert"</string>
     <string name="backupRestored">"Backup wiederhergestellt"</string>
-    <string name="thanks_for_donate_gp">"InviZible Pro Project und sein Entwickler möchten sich für deine Unterstützung bedanken."</string>
+    <string name="thanks_for_donate_gp">"Das InviZible Pro Projekt und sein Entwickler möchten sich für deine Unterstützung bedanken."</string>
 </resources>
