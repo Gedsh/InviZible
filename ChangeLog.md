@@ -584,3 +584,11 @@
 * Updated Spanish translation.
 * Updated Portuguese-BR translation.
 * Minor bug fixes and optimizations.
+
+**InviZible Pro beta 1.3.5**
+* Updated DNSCrypt to version 2.1.0.
+* Updated Tor to version 4.5.10.
+* Updated Tor Snowflake bridge to version 1.1.0.
+* Updated Purple I2P.
+* Updated firewall view.
+* Updated Polish translation.
