@@ -37,22 +37,26 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.ConfigEditorFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.tor_countries.CountrySelectFragment;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
+
+import javax.inject.Inject;
 
 
 public class PreferencesTorFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener {
@@ -69,10 +73,13 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
     public String excludeExitNodes;
     public String exitNodes;
     private boolean isChanged;
-
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        App.instance.daggerComponent.inject(this);
+
         super.onCreate(savedInstanceState);
 
         setRetainInstance(true);
@@ -128,8 +135,8 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
 
         Preference entryNodesPref = findPreference("EntryNodes");
-        boolean useDefaultBridges = new PrefManager(context).getBoolPref("useDefaultBridges");
-        boolean useOwnBridges = new PrefManager(context).getBoolPref("useOwnBridges");
+        boolean useDefaultBridges = preferenceRepository.get().getBoolPreference("useDefaultBridges");
+        boolean useOwnBridges = preferenceRepository.get().getBoolPreference("useOwnBridges");
         boolean entryNodesActive = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("EntryNodes", false);
         if (entryNodesPref != null) {
             if (useDefaultBridges || useOwnBridges) {
@@ -252,9 +259,9 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             return;
         }
 
-        FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/tor.conf", tor_conf, SettingsActivity.tor_conf_tag);
+        FileManager.writeToTextFile(context, appDataDir + "/app_data/tor/tor.conf", tor_conf, SettingsActivity.tor_conf_tag);
 
-        boolean torRunning = ModulesAux.isTorSavedStateRunning(context);
+        boolean torRunning = ModulesAux.isTorSavedStateRunning();
 
         if (torRunning) {
             ModulesRestarter.restartTor(context);
@@ -355,7 +362,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             }
 
             if (key_tor.contains("ClientTransportPlugin")) {
-                boolean saveExtendedLogs = new PrefManager(context).getBoolPref("swRootCommandsLog");
+                boolean saveExtendedLogs = preferenceRepository.get().getBoolPreference("swRootCommandsLog");
                 String saveLogsString = "";
                 if (saveExtendedLogs) {
                     saveLogsString = " -log " + appDataDir + "/logs/Snowflake.log";
@@ -503,7 +510,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                     return;
                 }
 
-                boolean successfully = FileOperations.deleteDirSynchronous(activity, appDataDir + "/tor_data");
+                boolean successfully = FileManager.deleteDirSynchronous(activity, appDataDir + "/tor_data");
 
                 if (successfully) {
                     activity.runOnUiThread(() -> Toast.makeText(activity, R.string.done, Toast.LENGTH_SHORT).show());

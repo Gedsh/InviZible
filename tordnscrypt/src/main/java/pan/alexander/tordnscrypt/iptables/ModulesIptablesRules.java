@@ -33,15 +33,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.Preferences;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
+import pan.alexander.tordnscrypt.utils.root.RootCommands;
+import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
-import pan.alexander.tordnscrypt.vpn.Util;
+import pan.alexander.tordnscrypt.vpn.NetworkUtils;
 
 import static pan.alexander.tordnscrypt.iptables.Tethering.usbModemAddressesRange;
 import static pan.alexander.tordnscrypt.iptables.Tethering.vpnInterfaceName;
@@ -57,8 +59,8 @@ import static pan.alexander.tordnscrypt.utils.Constants.DNS_OVER_TLS_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNG_41;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_42;
 import static pan.alexander.tordnscrypt.utils.Constants.HTTP_PORT;
-import static pan.alexander.tordnscrypt.utils.Preferences.IGNORE_SYSTEM_DNS;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -68,9 +70,12 @@ public class ModulesIptablesRules extends IptablesRulesSender {
     String iptables = "iptables ";
     String ip6tables = "ip6tables ";
     String busybox = "busybox ";
+    private final Lazy<PreferenceRepository> preferenceRepository;
 
     public ModulesIptablesRules(Context context) {
         super(context);
+
+        preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     @Override
@@ -81,18 +86,19 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         busybox = pathVars.getBusyboxPath();
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
+        PreferenceRepository preferences = preferenceRepository.get();
         runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
         routeAllThroughTor = shPref.getBoolean("pref_fast_all_through_tor", true);
         lan = shPref.getBoolean("Allow LAN", false);
         blockHttp = shPref.getBoolean("pref_fast_block_http", false);
         ignoreSystemDNS = shPref.getBoolean(IGNORE_SYSTEM_DNS, false);
-        apIsOn = new PrefManager(context).getBoolPref(Preferences.WIFI_ACCESS_POINT_IS_ON);
-        modemIsOn = new PrefManager(context).getBoolPref(Preferences.USB_MODEM_IS_ON);
-        Set<String> unlockApps = new PrefManager(context).getSetStrPref(UNLOCK_APPS);
-        Set<String> unlockIPs = new PrefManager(context).getSetStrPref(IPS_TO_UNLOCK);
-        Set<String> clearnetApps = new PrefManager(context).getSetStrPref(CLEARNET_APPS);
-        Set<String> clearnetIPs = new PrefManager(context).getSetStrPref(IPS_FOR_CLEARNET);
-        Set<String> clearnetAppsForProxy = new PrefManager(context).getSetStrPref(CLEARNET_APPS_FOR_PROXY);
+        apIsOn = preferences.getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON);
+        modemIsOn = preferences.getBoolPreference(PreferenceKeys.USB_MODEM_IS_ON);
+        Set<String> unlockApps = preferences.getStringSetPreference(UNLOCK_APPS);
+        Set<String> unlockIPs = preferences.getStringSetPreference(IPS_TO_UNLOCK);
+        Set<String> clearnetApps = preferences.getStringSetPreference(CLEARNET_APPS);
+        Set<String> clearnetIPs = preferences.getStringSetPreference(IPS_FOR_CLEARNET);
+        Set<String> clearnetAppsForProxy = preferences.getStringSetPreference(CLEARNET_APPS_FOR_PROXY);
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
         boolean ttlFix = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE) && !modulesStatus.isUseModulesWithRoot();
@@ -113,7 +119,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         String bypassLanFilter = "";
         if (lan) {
             StringBuilder nonTorRanges = new StringBuilder();
-            for (String address : Util.nonTorList) {
+            for (String address : NetworkUtils.nonTorList) {
                 nonTorRanges.append(address).append(" ");
             }
             nonTorRanges.deleteCharAt(nonTorRanges.lastIndexOf(" "));
@@ -246,10 +252,10 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         }
 
         boolean torReady = modulesStatus.isTorReady();
-        boolean useDefaultBridges = new PrefManager(context).getBoolPref("useDefaultBridges");
-        boolean useOwnBridges = new PrefManager(context).getBoolPref("useOwnBridges");
-        boolean bridgesSnowflakeDefault = new PrefManager(context).getStrPref("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
-        boolean bridgesSnowflakeOwn = new PrefManager(context).getStrPref("ownBridgesObfs").equals(snowFlakeBridgesOwn);
+        boolean useDefaultBridges = preferences.getBoolPreference("useDefaultBridges");
+        boolean useOwnBridges = preferences.getBoolPreference("useOwnBridges");
+        boolean bridgesSnowflakeDefault = preferences.getStringPreference("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
+        boolean bridgesSnowflakeOwn = preferences.getStringPreference("ownBridgesObfs").equals(snowFlakeBridgesOwn);
 
         String torSystemDNSAllowedNat = "";
         String torSystemDNSAllowedFilter = "";

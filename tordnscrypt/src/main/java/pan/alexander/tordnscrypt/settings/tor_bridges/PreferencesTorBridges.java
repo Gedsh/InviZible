@@ -61,26 +61,28 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.dialogs.UpdateDefaultBridgesDialog;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.Verifier;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.BridgeType;
 import pan.alexander.tordnscrypt.utils.enums.BridgesSelector;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
-import pan.alexander.tordnscrypt.utils.file_operations.OnTextFileOperationsCompleteListener;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
+import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.meek_lite;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.vanilla;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.obfs3;
@@ -90,6 +92,8 @@ import static pan.alexander.tordnscrypt.utils.enums.BridgeType.snowflake;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.undefined;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
+
+import javax.inject.Inject;
 
 
 public class PreferencesTorBridges extends Fragment implements View.OnClickListener,
@@ -130,6 +134,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     private BridgesSelector savedBridgesSelector;
     private Future<?> verifyDefaultBridgesTask;
     private Handler handler;
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
 
 
     public PreferencesTorBridges() {
@@ -137,6 +143,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        App.instance.daggerComponent.inject(this);
+
         super.onCreate(savedInstanceState);
 
         setRetainInstance(true);
@@ -199,9 +207,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(activity);
         rvBridges.setLayoutManager(mLayoutManager);
 
-        FileOperations.setOnFileOperationCompleteListener(this);
+        FileManager.setOnFileOperationCompleteListener(this);
 
-        FileOperations.readTextFile(activity, appDataDir + "/app_data/tor/tor.conf", torConfTag);
+        FileManager.readTextFile(activity, appDataDir + "/app_data/tor/tor.conf", torConfTag);
 
         return view;
     }
@@ -216,11 +224,13 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             return;
         }
 
-        if (!new PrefManager(context).getStrPref("defaultBridgesObfs").isEmpty())
-            spDefaultBridges.setSelection(Integer.parseInt(new PrefManager(context).getStrPref("defaultBridgesObfs")));
+        PreferenceRepository preferences = preferenceRepository.get();
 
-        if (!new PrefManager(context).getStrPref("ownBridgesObfs").isEmpty())
-            spOwnBridges.setSelection(Integer.parseInt(new PrefManager(context).getStrPref("ownBridgesObfs")));
+        if (!preferences.getStringPreference("defaultBridgesObfs").isEmpty())
+            spDefaultBridges.setSelection(Integer.parseInt(preferences.getStringPreference("defaultBridgesObfs")));
+
+        if (!preferences.getStringPreference("ownBridgesObfs").isEmpty())
+            spOwnBridges.setSelection(Integer.parseInt(preferences.getStringPreference("ownBridgesObfs")));
 
 
         Activity activity = getActivity();
@@ -229,9 +239,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             rvBridges.setAdapter(bridgeAdapter);
         }
 
-        boolean useNoBridges = new PrefManager(context).getBoolPref("useNoBridges");
-        boolean useDefaultBridges = new PrefManager(context).getBoolPref("useDefaultBridges");
-        boolean useOwnBridges = new PrefManager(context).getBoolPref("useOwnBridges");
+        boolean useNoBridges = preferences.getBoolPreference("useNoBridges");
+        boolean useDefaultBridges = preferences.getBoolPreference("useDefaultBridges");
+        boolean useOwnBridges = preferences.getBoolPreference("useOwnBridges");
 
         if (!useNoBridges && !useDefaultBridges && !useOwnBridges) {
             tvBridgesListEmpty.setVisibility(View.GONE);
@@ -240,17 +250,17 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             noBridgesOperation();
             savedBridgesSelector = BridgesSelector.NO_BRIDGES;
         } else if (useDefaultBridges) {
-            FileOperations.readTextFile(context, currentBridgesFilePath, defaultBridgesOperationTag);
+            FileManager.readTextFile(context, currentBridgesFilePath, defaultBridgesOperationTag);
             rbDefaultBridges.setChecked(true);
             savedBridgesSelector = BridgesSelector.DEFAULT_BRIDGES;
         } else {
             currentBridgesFilePath = bridgesCustomFilePath;
-            FileOperations.readTextFile(context, currentBridgesFilePath, ownBridgesOperationTag);
+            FileManager.readTextFile(context, currentBridgesFilePath, ownBridgesOperationTag);
             rbOwnBridges.setChecked(true);
             savedBridgesSelector = BridgesSelector.OWN_BRIDGES;
         }
 
-        if (!new PrefManager(context).getBoolPref("doNotShowNewDefaultBridgesDialog")) {
+        if (!preferences.getBoolPreference("doNotShowNewDefaultBridgesDialog")) {
             verifyDefaultBridgesTask = verifyNewDefaultBridgesExist(context, useDefaultBridges);
         }
 
@@ -434,7 +444,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             return;
         }
 
-        FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/tor.conf", torConfCleaned, "ignored");
+        FileManager.writeToTextFile(context, appDataDir + "/app_data/tor/tor.conf", torConfCleaned, "ignored");
 
         ///////////////////////Tor restart/////////////////////////////////////////////
         boolean torRunning = ModulesStatus.getInstance().getTorState() == RUNNING;
@@ -450,7 +460,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     public void onDestroyView() {
         super.onDestroyView();
 
-        FileOperations.deleteOnFileOperationCompleteListener(this);
+        FileManager.deleteOnFileOperationCompleteListener(this);
 
         rbNoBridges.setOnCheckedChangeListener(null);
         rbNoBridges = null;
@@ -494,7 +504,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     public void onClick(View view) {
         int id = view.getId();
         if (id == R.id.btnAddBridges) {
-            FileOperations.readTextFile(getActivity(), appDataDir + "/app_data/tor/bridges_custom.lst", addBridgesTag);
+            FileManager.readTextFile(getActivity(), appDataDir + "/app_data/tor/bridges_custom.lst", addBridgesTag);
         } else if (id == R.id.btnRequestBridges) {
             GetNewBridges getNewBridges = new GetNewBridges(new WeakReference<>((SettingsActivity) getActivity()));
             getNewBridges.selectTransport();
@@ -571,13 +581,13 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
                 Collections.sort(bridgesListNew);
                 currentBridgesFilePath = bridgesCustomFilePath;
-                FileOperations.writeToTextFile(getActivity(), currentBridgesFilePath, bridgesListNew, "ignored");
+                FileManager.writeToTextFile(getActivity(), currentBridgesFilePath, bridgesListNew, "ignored");
 
                 if (getActivity() == null || getActivity().isFinishing()) {
                     return;
                 }
 
-                boolean useOwnBridges = new PrefManager(getActivity()).getBoolPref("useOwnBridges");
+                boolean useOwnBridges = preferenceRepository.get().getBoolPreference("useOwnBridges");
                 if (useOwnBridges) {
                     ownBridgesOperation(bridgesListNew);
                 } else {
@@ -613,7 +623,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
             Collections.sort(bridgesListNew);
             currentBridgesFilePath = bridgesCustomFilePath;
-            FileOperations.writeToTextFile(getActivity(), currentBridgesFilePath, bridgesListNew, "ignored");
+            FileManager.writeToTextFile(getActivity(), currentBridgesFilePath, bridgesListNew, "ignored");
 
             if (!bridgesToAdd.isEmpty()) {
                 if (bridgesToAdd.contains("obfs4")) {
@@ -660,7 +670,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 return;
             }
 
-            boolean useOwnBridges = new PrefManager(getActivity()).getBoolPref("useOwnBridges");
+            boolean useOwnBridges = preferenceRepository.get().getBoolPreference("useOwnBridges");
 
             if (!useOwnBridges) {
                 currentBridges.clear();
@@ -674,7 +684,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         currentBridgesFilePath = bridgesCustomFilePath;
 
-        FileOperations.readTextFile(getActivity(), currentBridgesFilePath, addRequestedBridgesTag);
+        FileManager.readTextFile(getActivity(), currentBridgesFilePath, addRequestedBridgesTag);
     }
 
     private void noBridgesOperation() {
@@ -953,7 +963,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
                 currentBridgesFilePath = bridgesDefaultFilePath;
 
-                FileOperations.readTextFile(context, currentBridgesFilePath, defaultBridgesOperationTag);
+                FileManager.readTextFile(context, currentBridgesFilePath, defaultBridgesOperationTag);
             }
         } else if (id == R.id.rbOwnBridges) {
             if (newValue) {
@@ -962,7 +972,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
                 currentBridgesFilePath = bridgesCustomFilePath;
 
-                FileOperations.readTextFile(context, currentBridgesFilePath, ownBridgesOperationTag);
+                FileManager.readTextFile(context, currentBridgesFilePath, ownBridgesOperationTag);
             }
         }
     }
@@ -979,16 +989,16 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         int id = adapterView.getId();
 
         if (id == R.id.spDefaultBridges) {
-            new PrefManager(context).setStrPref("defaultBridgesObfs", String.valueOf(i));
+            preferenceRepository.get().setStringPreference("defaultBridgesObfs", String.valueOf(i));
             if (rbDefaultBridges.isChecked()) {
                 currentBridgesFilePath = bridgesDefaultFilePath;
-                FileOperations.readTextFile(context, currentBridgesFilePath, defaultBridgesOperationTag);
+                FileManager.readTextFile(context, currentBridgesFilePath, defaultBridgesOperationTag);
             }
         } else if (id == R.id.spOwnBridges) {
-            new PrefManager(context).setStrPref("ownBridgesObfs", String.valueOf(i));
+            preferenceRepository.get().setStringPreference("ownBridgesObfs", String.valueOf(i));
             if (rbOwnBridges.isChecked()) {
                 currentBridgesFilePath = bridgesCustomFilePath;
-                FileOperations.readTextFile(context, currentBridgesFilePath, ownBridgesOperationTag);
+                FileManager.readTextFile(context, currentBridgesFilePath, ownBridgesOperationTag);
             }
         }
     }
@@ -1002,8 +1012,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                                         boolean useNoBridges,
                                         boolean useDefaultBridges,
                                         boolean useOwnBridges) {
-        new PrefManager(context).setBoolPref("useNoBridges", useNoBridges);
-        new PrefManager(context).setBoolPref("useDefaultBridges", useDefaultBridges);
-        new PrefManager(context).setBoolPref("useOwnBridges", useOwnBridges);
+        preferenceRepository.get().setBoolPreference("useNoBridges", useNoBridges);
+        preferenceRepository.get().setBoolPreference("useDefaultBridges", useDefaultBridges);
+        preferenceRepository.get().setBoolPreference("useOwnBridges", useOwnBridges);
     }
 }

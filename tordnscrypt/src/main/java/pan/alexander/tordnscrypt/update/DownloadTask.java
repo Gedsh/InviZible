@@ -52,20 +52,21 @@ import java.util.zip.CRC32;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import pan.alexander.tordnscrypt.ApplicationBase;
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.update.UpdateService.STOP_DOWNLOAD_ACTION;
 import static pan.alexander.tordnscrypt.update.UpdateService.UPDATE_CHANNEL_ID;
 import static pan.alexander.tordnscrypt.update.UpdateService.UPDATE_CHANNEL_NOTIFICATION_ID;
 import static pan.alexander.tordnscrypt.update.UpdateService.UPDATE_RESULT;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
-import static pan.alexander.tordnscrypt.utils.RootExecService.TopFragmentMark;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.TopFragmentMark;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 
 class DownloadTask extends Thread {
@@ -83,6 +84,8 @@ class DownloadTask extends Thread {
     int notificationId;
     long startTime;
 
+    private final Lazy<PreferenceRepository> preferenceRepository;
+
     DownloadTask(UpdateService updateService, Intent intent, int serviceStartId, int notificationId, long startTime) {
         this.context = updateService;
         this.updateService = updateService;
@@ -91,6 +94,7 @@ class DownloadTask extends Thread {
         this.notificationId = notificationId;
         this.startTime = startTime;
         this.cacheDir = PathVars.getInstance(updateService).getCacheDirPath(updateService);
+        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     @Override
@@ -98,6 +102,7 @@ class DownloadTask extends Thread {
         String urlToDownload = intent.getStringExtra("url");
         String fileToDownload = intent.getStringExtra("file");
         String hash = intent.getStringExtra("hash");
+        PreferenceRepository preferences = preferenceRepository.get();
 
         try {
 
@@ -113,7 +118,7 @@ class DownloadTask extends Thread {
 
             if (checkSum) {
 
-                new PrefManager(context).setStrPref("LastUpdateResult",
+                preferences.setStringPreference("LastUpdateResult",
                         context.getString(R.string.update_installed));
 
                 if (fileToDownload.contains("InviZible")) {
@@ -123,7 +128,7 @@ class DownloadTask extends Thread {
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !activityActive) {
                         //Required for androidQ because even if the service is in the foreground we cannot start an activity if no activity is visible
-                        new PrefManager(context).setStrPref("RequiredAppUpdateForQ", outputFile.getCanonicalPath());
+                        preferences.setStringPreference("RequiredAppUpdateForQ", outputFile.getCanonicalPath());
                     } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         installApkForNougatAndHigher(outputFile);
                     } else {
@@ -134,15 +139,15 @@ class DownloadTask extends Thread {
                 }
 
             } else {
-                new PrefManager(context).setStrPref("LastUpdateResult", context.getString(R.string.update_fault));
-                new PrefManager(context).setStrPref("UpdateResultMessage", context.getString(R.string.update_fault));
-                FileOperations.deleteFile(context, cacheDir, fileToDownload, "ignored");
+                preferences.setStringPreference("LastUpdateResult", context.getString(R.string.update_fault));
+                preferences.setStringPreference("UpdateResultMessage", context.getString(R.string.update_fault));
+                FileManager.deleteFile(context, cacheDir, fileToDownload, "ignored");
                 Log.e(LOG_TAG, "UpdateService file hashes mismatch " + fileToDownload);
             }
 
         } catch (Exception e) {
-            new PrefManager(context).setStrPref("LastUpdateResult", context.getString(R.string.update_fault));
-            new PrefManager(context).setStrPref("UpdateResultMessage", context.getString(R.string.update_fault));
+            preferences.setStringPreference("LastUpdateResult", context.getString(R.string.update_fault));
+            preferences.setStringPreference("UpdateResultMessage", context.getString(R.string.update_fault));
             Log.e(LOG_TAG, "UpdateService failed to download file " + urlToDownload + " " + e.getMessage());
         } finally {
             updateService.sparseArray.delete(serviceStartId);
@@ -236,12 +241,9 @@ class DownloadTask extends Thread {
 
     private boolean isActivityActive() {
 
-        ApplicationBase applicationBase = ApplicationBase.Companion.getInstance();
-        if (applicationBase == null) {
-            return false;
-        }
+        App app = App.Companion.getInstance();
 
-        WeakReference<Activity> activityWeakReference = applicationBase.getCurrentActivity();
+        WeakReference<Activity> activityWeakReference = app.getCurrentActivity();
         if (activityWeakReference == null) {
             return false;
         }

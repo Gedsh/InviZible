@@ -33,9 +33,11 @@ import androidx.appcompat.app.AlertDialog;
 import java.util.ArrayList;
 import java.util.Set;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 
 public class DialogEditHostIP extends DialogHostIP {
     private final Context context;
@@ -44,6 +46,7 @@ public class DialogEditHostIP extends DialogHostIP {
     private final String unlockHostsStr;
     private final String unlockIPsStr;
     private final int position;
+    private final Lazy<PreferenceRepository> preferenceRepository;
 
     public DialogEditHostIP(Context context, @NonNull UnlockTorIpsFrag unlockTorIpsFrag, int themeResId, int position) {
         super(context, unlockTorIpsFrag, themeResId);
@@ -53,6 +56,7 @@ public class DialogEditHostIP extends DialogHostIP {
         this.unlockHostsStr = unlockTorIpsFrag.unlockHostsStr;
         this.unlockIPsStr = unlockTorIpsFrag.unlockIPsStr;
         this.position = position;
+        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     @NonNull
@@ -117,10 +121,10 @@ public class DialogEditHostIP extends DialogHostIP {
 
         HostIP hostIP = new HostIP(host, context.getString(R.string.please_wait), true, false, true);
         unlockHostIP.set(position, hostIP);
-        Set<String> hostsSet = new PrefManager(context).getSetStrPref(unlockHostsStr);
+        Set<String> hostsSet = preferenceRepository.get().getStringSetPreference(unlockHostsStr);
         hostsSet.remove(oldHost);
         hostsSet.add(host);
-        new PrefManager(context).setSetStrPref(unlockHostsStr, hostsSet);
+        preferenceRepository.get().setStringSetPreference(unlockHostsStr, hostsSet);
 
         return hostIP;
     }
@@ -129,10 +133,10 @@ public class DialogEditHostIP extends DialogHostIP {
 
         HostIP hostIP = new HostIP(context.getString(R.string.please_wait), ip, false, true, true);
         unlockHostIP.set(position, hostIP);
-        Set<String> ipsSet = new PrefManager(context).getSetStrPref(unlockIPsStr);
+        Set<String> ipsSet = preferenceRepository.get().getStringSetPreference(unlockIPsStr);
         ipsSet.remove(oldIP);
         ipsSet.add(ip);
-        new PrefManager(context).setSetStrPref(unlockIPsStr, ipsSet);
+        preferenceRepository.get().setStringSetPreference(unlockIPsStr, ipsSet);
 
         return hostIP;
     }

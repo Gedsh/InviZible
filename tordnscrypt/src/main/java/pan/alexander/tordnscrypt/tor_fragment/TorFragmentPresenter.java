@@ -38,35 +38,37 @@ import androidx.preference.PreferenceManager;
 
 import java.util.Arrays;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
-import pan.alexander.tordnscrypt.domain.CheckConnectionInteractor;
-import pan.alexander.tordnscrypt.domain.TorInteractorInterface;
-import pan.alexander.tordnscrypt.domain.check_connection.OnInternetConnectionCheckedListener;
-import pan.alexander.tordnscrypt.domain.entities.LogDataModel;
-import pan.alexander.tordnscrypt.domain.LogReaderInteractors;
+import pan.alexander.tordnscrypt.domain.connection_checker.CheckConnectionInteractor;
+import pan.alexander.tordnscrypt.domain.log_reader.TorInteractorInterface;
+import pan.alexander.tordnscrypt.domain.connection_checker.OnInternetConnectionCheckedListener;
+import pan.alexander.tordnscrypt.domain.log_reader.LogDataModel;
+import pan.alexander.tordnscrypt.domain.log_reader.LogReaderInteractors;
 import pan.alexander.tordnscrypt.domain.log_reader.tor.OnTorLogUpdatedListener;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.GetIPsJobService;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.TorRefreshIPsWork;
-import pan.alexander.tordnscrypt.utils.Verifier;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.web.GetIPsJobService;
+import pan.alexander.tordnscrypt.utils.web.TorRefreshIPsWork;
+import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
-import static pan.alexander.tordnscrypt.utils.Preferences.IGNORE_SYSTEM_DNS;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -99,9 +101,11 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
     private boolean fixedTorError;
 
     private CheckConnectionInteractor checkConnectionInteractor;
+    private final Lazy<PreferenceRepository> preferenceRepository;
 
     public TorFragmentPresenter(TorFragmentView view) {
         this.view = view;
+        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     public void onStart() {
@@ -122,7 +126,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
             ModuleState currentModuleState = modulesStatus.getTorState();
 
-            if (currentModuleState == RUNNING || ModulesAux.isTorSavedStateRunning(context)) {
+            if (currentModuleState == RUNNING || ModulesAux.isTorSavedStateRunning()) {
 
                 if (isTorReady()) {
                     setTorRunning();
@@ -185,7 +189,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
     @Override
     public boolean isTorInstalled() {
-        return new PrefManager(context).getBoolPref("Tor Installed");
+        return preferenceRepository.get().getBoolPreference("Tor Installed");
     }
 
     private void setTorInstalled(boolean installed) {
@@ -278,7 +282,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
             setTorStartButtonEnabled(true);
 
-            ModulesAux.saveTorStateRunning(context, true);
+            ModulesAux.saveTorStateRunning(true);
 
             view.setStartButtonText(R.string.btnTorStop);
         } else if (currentModuleState == RESTARTING) {
@@ -291,7 +295,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
         } else if (currentModuleState == STOPPED) {
             stopDisplayLog();
 
-            if (ModulesAux.isTorSavedStateRunning(context)) {
+            if (ModulesAux.isTorSavedStateRunning()) {
                 setTorStoppedBySystem();
             } else {
                 setTorStopped();
@@ -299,7 +303,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
             setTorProgressBarIndeterminate(false);
 
-            ModulesAux.saveTorStateRunning(context, false);
+            ModulesAux.saveTorStateRunning(false);
 
             setTorStartButtonEnabled(true);
         }
@@ -513,7 +517,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
         boolean autoUpdate = sharedPreferences.getBoolean("pref_fast_auto_update", true)
                 && !appVersion.startsWith("l") && !appVersion.endsWith("p") && !appVersion.startsWith("f");
 
-        String lastUpdateResult = new PrefManager(context).getStrPref("LastUpdateResult");
+        String lastUpdateResult = preferenceRepository.get().getStringPreference("LastUpdateResult");
 
         if (autoUpdate &&
                 (throughTorUpdate || lastUpdateResult.isEmpty()
@@ -539,7 +543,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
             JobInfo.Builder getIPsJobBuilder;
             getIPsJobBuilder = new JobInfo.Builder(mJobId, jobService);
             getIPsJobBuilder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
-            getIPsJobBuilder.setPeriodic(refreshPeriodHours * 60 * 60 * 1000);
+            getIPsJobBuilder.setPeriodic((long) refreshPeriodHours * 60 * 60 * 1000);
 
             JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
 

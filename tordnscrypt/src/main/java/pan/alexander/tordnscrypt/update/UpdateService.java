@@ -40,10 +40,14 @@ import android.util.SparseArray;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.inject.Inject;
+
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.WakeLocksManager;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
+import pan.alexander.tordnscrypt.utils.wakelock.WakeLocksManager;
 
 public class UpdateService extends Service {
 
@@ -59,6 +63,8 @@ public class UpdateService extends Service {
     NotificationManager notificationManager;
     volatile SparseArray<DownloadTask> sparseArray;
     private WakeLocksManager wakeLocksManager = WakeLocksManager.getInstance();
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
 
     public UpdateService() {
     }
@@ -70,6 +76,8 @@ public class UpdateService extends Service {
 
     @Override
     public void onCreate() {
+        App.instance.daggerComponent.inject(this);
+
         super.onCreate();
 
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
@@ -160,11 +168,11 @@ public class UpdateService extends Service {
     private void installationRequestAction() {
         sendNotification(0, currentNotificationId.get(), System.currentTimeMillis(), getString(R.string.app_name), getString(R.string.app_name), "");
 
-        String path = new PrefManager(this).getStrPref("RequiredAppUpdateForQ");
+        String path = preferenceRepository.get().getStringPreference("RequiredAppUpdateForQ");
 
         if (!path.isEmpty()) {
 
-            new PrefManager(this).setStrPref("RequiredAppUpdateForQ", "");
+            preferenceRepository.get().setStringPreference("RequiredAppUpdateForQ", "");
 
             File file = new File(path);
 

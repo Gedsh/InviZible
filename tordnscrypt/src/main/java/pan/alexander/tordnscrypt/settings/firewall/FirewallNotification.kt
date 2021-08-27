@@ -34,12 +34,12 @@ import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.preference.PreferenceManager
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.FIREWALL_CHANNEL_ID
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.SettingsActivity
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.PrefManager
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 
 const val ALLOW_ACTION = "pan.alexander.tordnscrypt.ALLOW_APP_FOR_FIREWALL"
 const val DENY_ACTION = "pan.alexander.tordnscrypt.DENY_APP_FOR_FIREWALL"
@@ -49,6 +49,7 @@ const val EXTRA_UID = "pan.alexander.tordnscrypt.EXTRA_UID"
 class FirewallNotification : BroadcastReceiver() {
 
     private val modulesStatus = ModulesStatus.getInstance()
+    private val preferenceRepository = App.instance.daggerComponent.getPreferenceRepository()
     private var notificationStartId = 102130
     private var newAppsAreAllowed = false
 
@@ -73,7 +74,7 @@ class FirewallNotification : BroadcastReceiver() {
 
     override fun onReceive(context: Context?, intent: Intent?) {
 
-        if (context == null || !PrefManager(context).getBoolPref("FirewallEnabled")) {
+        if (context == null || !preferenceRepository.get().getBoolPreference("FirewallEnabled")) {
             return
         }
 
@@ -175,10 +176,12 @@ class FirewallNotification : BroadcastReceiver() {
 
         sendNotification(context, uid, notificationStartId + uid, message, title, message)
 
-        val appsNewlyInstalled = PrefManager(context).getSetStrPref(APPS_NEWLY_INSTALLED)
-        PrefManager(context).setSetStrPref(
-            APPS_NEWLY_INSTALLED,
-            appsNewlyInstalled.apply { add(uid.toString()) })
+        val preferences = preferenceRepository.get()
+
+        val appsNewlyInstalled = preferences.getStringSetPreference(APPS_NEWLY_INSTALLED)
+        preferences.setStringSetPreference(APPS_NEWLY_INSTALLED, appsNewlyInstalled.apply {
+            add(uid.toString())
+        })
 
         if (newAppsAreAllowed) {
             addFirewallRule(context, uid)
@@ -201,27 +204,30 @@ class FirewallNotification : BroadcastReceiver() {
 
     private fun addFirewallRule(context: Context?, uid: Int) {
         if (uid > 0) {
-            val appsAllowLan = PrefManager(context).getSetStrPref(APPS_ALLOW_LAN_PREF)
-            val appsAllowWifi = PrefManager(context).getSetStrPref(APPS_ALLOW_WIFI_PREF)
-            val appsAllowGsm = PrefManager(context).getSetStrPref(APPS_ALLOW_GSM_PREF)
-            val appsAllowRoaming = PrefManager(context).getSetStrPref(APPS_ALLOW_ROAMING)
-            val appsAllowVpn = PrefManager(context).getSetStrPref(APPS_ALLOW_VPN)
+
+            val preferences = preferenceRepository.get()
+
+            val appsAllowLan = preferences.getStringSetPreference(APPS_ALLOW_LAN_PREF)
+            val appsAllowWifi = preferences.getStringSetPreference(APPS_ALLOW_WIFI_PREF)
+            val appsAllowGsm = preferences.getStringSetPreference(APPS_ALLOW_GSM_PREF)
+            val appsAllowRoaming =preferences.getStringSetPreference(APPS_ALLOW_ROAMING)
+            val appsAllowVpn = preferences.getStringSetPreference(APPS_ALLOW_VPN)
 
 
-            PrefManager(context).setSetStrPref(
+            preferences.setStringSetPreference(
                 APPS_ALLOW_LAN_PREF,
                 appsAllowLan.apply { add(uid.toString()) })
-            PrefManager(context).setSetStrPref(
+            preferences.setStringSetPreference(
                 APPS_ALLOW_WIFI_PREF,
                 appsAllowWifi.apply { add(uid.toString()) })
-            PrefManager(context).setSetStrPref(
+            preferences.setStringSetPreference(
                 APPS_ALLOW_GSM_PREF,
                 appsAllowGsm.apply { add(uid.toString()) })
-            PrefManager(context).setSetStrPref(
+            preferences.setStringSetPreference(
                 APPS_ALLOW_ROAMING,
                 appsAllowRoaming.apply { add(uid.toString()) })
             if (modulesStatus.isRootAvailable) {
-                PrefManager(context).setSetStrPref(
+                preferences.setStringSetPreference(
                     APPS_ALLOW_VPN,
                     appsAllowVpn.apply { add(uid.toString()) })
             }
@@ -236,27 +242,30 @@ class FirewallNotification : BroadcastReceiver() {
 
     private fun removeFirewallRule(context: Context?, uid: Int) {
         if (uid > 0) {
-            val appsAllowLan = PrefManager(context).getSetStrPref(APPS_ALLOW_LAN_PREF)
-            val appsAllowWifi = PrefManager(context).getSetStrPref(APPS_ALLOW_WIFI_PREF)
-            val appsAllowGsm = PrefManager(context).getSetStrPref(APPS_ALLOW_GSM_PREF)
-            val appsAllowRoaming = PrefManager(context).getSetStrPref(APPS_ALLOW_ROAMING)
-            val appsAllowVpn = PrefManager(context).getSetStrPref(APPS_ALLOW_VPN)
+
+            val preferences = preferenceRepository.get()
+
+            val appsAllowLan = preferences.getStringSetPreference(APPS_ALLOW_LAN_PREF)
+            val appsAllowWifi = preferences.getStringSetPreference(APPS_ALLOW_WIFI_PREF)
+            val appsAllowGsm = preferences.getStringSetPreference(APPS_ALLOW_GSM_PREF)
+            val appsAllowRoaming = preferences.getStringSetPreference(APPS_ALLOW_ROAMING)
+            val appsAllowVpn = preferences.getStringSetPreference(APPS_ALLOW_VPN)
 
 
-            PrefManager(context).setSetStrPref(
+            preferences.setStringSetPreference(
                 APPS_ALLOW_LAN_PREF,
                 appsAllowLan.apply { remove(uid.toString()) })
-            PrefManager(context).setSetStrPref(
+            preferences.setStringSetPreference(
                 APPS_ALLOW_WIFI_PREF,
                 appsAllowWifi.apply { remove(uid.toString()) })
-            PrefManager(context).setSetStrPref(
+            preferences.setStringSetPreference(
                 APPS_ALLOW_GSM_PREF,
                 appsAllowGsm.apply { remove(uid.toString()) })
-            PrefManager(context).setSetStrPref(
+            preferences.setStringSetPreference(
                 APPS_ALLOW_ROAMING,
                 appsAllowRoaming.apply { remove(uid.toString()) })
             if (modulesStatus.isRootAvailable) {
-                PrefManager(context).setSetStrPref(
+                preferences.setStringSetPreference(
                     APPS_ALLOW_VPN,
                     appsAllowVpn.apply { remove(uid.toString()) })
             }

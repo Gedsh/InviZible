@@ -33,24 +33,26 @@ import androidx.preference.PreferenceManager;
 
 import java.util.List;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
-import pan.alexander.tordnscrypt.domain.DNSCryptInteractorInterface;
-import pan.alexander.tordnscrypt.domain.ITPDInteractorInterface;
-import pan.alexander.tordnscrypt.domain.LogReaderInteractors;
-import pan.alexander.tordnscrypt.domain.TorInteractorInterface;
-import pan.alexander.tordnscrypt.domain.entities.LogDataModel;
+import pan.alexander.tordnscrypt.domain.log_reader.DNSCryptInteractorInterface;
+import pan.alexander.tordnscrypt.domain.log_reader.ITPDInteractorInterface;
+import pan.alexander.tordnscrypt.domain.log_reader.LogReaderInteractors;
+import pan.alexander.tordnscrypt.domain.log_reader.TorInteractorInterface;
+import pan.alexander.tordnscrypt.domain.log_reader.LogDataModel;
 import pan.alexander.tordnscrypt.domain.log_reader.dnscrypt.OnDNSCryptLogUpdatedListener;
 import pan.alexander.tordnscrypt.domain.log_reader.itpd.OnITPDHtmlUpdatedListener;
 import pan.alexander.tordnscrypt.domain.log_reader.tor.OnTorLogUpdatedListener;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.iptables.IptablesRules;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
-import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -101,6 +103,7 @@ public class ModulesStateLoop implements Runnable,
     private final DNSCryptInteractorInterface dnsCryptInteractor;
     private final TorInteractorInterface torInteractor;
     private final ITPDInteractorInterface itpdInteractor;
+    private final Lazy<PreferenceRepository> preferenceRepository;
 
     ModulesStateLoop(ModulesService modulesService) {
         //Delay in sec before service can stop
@@ -122,6 +125,8 @@ public class ModulesStateLoop implements Runnable,
         dnsCryptInteractor = logReaderInteractors;
         torInteractor = logReaderInteractors;
         itpdInteractor = logReaderInteractors;
+
+        preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
 
         restoreModulesSavedState();
     }
@@ -440,17 +445,17 @@ public class ModulesStateLoop implements Runnable,
     }
 
     private void restoreModulesSavedState() {
-        String savedDNSCryptStateStr = new PrefManager(modulesService).getStrPref(SAVED_DNSCRYPT_STATE_PREF);
+        String savedDNSCryptStateStr = preferenceRepository.get().getStringPreference(SAVED_DNSCRYPT_STATE_PREF);
         if (!savedDNSCryptStateStr.isEmpty()) {
             savedDNSCryptState = ModuleState.valueOf(savedDNSCryptStateStr);
         }
 
-        String savedTorStateStr = new PrefManager(modulesService).getStrPref(SAVED_TOR_STATE_PREF);
+        String savedTorStateStr = preferenceRepository.get().getStringPreference(SAVED_TOR_STATE_PREF);
         if (!savedTorStateStr.isEmpty()) {
             savedTorState = ModuleState.valueOf(savedTorStateStr);
         }
 
-        String savedITPDStateStr = new PrefManager(modulesService).getStrPref(SAVED_ITPD_STATE_PREF);
+        String savedITPDStateStr = preferenceRepository.get().getStringPreference(SAVED_ITPD_STATE_PREF);
         if (!savedITPDStateStr.isEmpty()) {
             savedItpdState = ModuleState.valueOf(savedITPDStateStr);
         }
@@ -521,11 +526,11 @@ public class ModulesStateLoop implements Runnable,
 
     private void saveDNSCryptState(ModuleState dnsCryptState) {
         savedDNSCryptState = dnsCryptState;
-        new PrefManager(modulesService).setStrPref(SAVED_DNSCRYPT_STATE_PREF, dnsCryptState.toString());
+        preferenceRepository.get().setStringPreference(SAVED_DNSCRYPT_STATE_PREF, dnsCryptState.toString());
     }
 
     private void setDNSCryptReady(boolean ready) {
-        new PrefManager(modulesService).setBoolPref(DNSCRYPT_READY_PREF, ready);
+        preferenceRepository.get().setBoolPreference(DNSCRYPT_READY_PREF, ready);
         modulesStatus.setDnsCryptReady(ready);
 
         //If DNSCrypt is ready, app will use DNSCrypt DNS instead of Tor Exit node DNS in VPN mode
@@ -547,11 +552,11 @@ public class ModulesStateLoop implements Runnable,
 
     private void saveTorState(ModuleState torState) {
         savedTorState = torState;
-        new PrefManager(modulesService).setStrPref(SAVED_TOR_STATE_PREF, torState.toString());
+        preferenceRepository.get().setStringPreference(SAVED_TOR_STATE_PREF, torState.toString());
     }
 
     private void setTorReady(boolean ready) {
-        new PrefManager(modulesService).setBoolPref(TOR_READY_PREF, ready);
+        preferenceRepository.get().setBoolPreference(TOR_READY_PREF, ready);
         modulesStatus.setTorReady(ready);
     }
 
@@ -582,11 +587,11 @@ public class ModulesStateLoop implements Runnable,
 
     private void saveITPDState(ModuleState itpdState) {
         savedItpdState = itpdState;
-        new PrefManager(modulesService).setStrPref(SAVED_ITPD_STATE_PREF, itpdState.toString());
+        preferenceRepository.get().setStringPreference(SAVED_ITPD_STATE_PREF, itpdState.toString());
     }
 
     private void setITPDReady(boolean ready) {
-        new PrefManager(modulesService).setBoolPref(ITPD_READY_PREF, ready);
+        preferenceRepository.get().setBoolPreference(ITPD_READY_PREF, ready);
         modulesStatus.setItpdReady(ready);
     }
 

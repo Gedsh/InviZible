@@ -27,14 +27,14 @@ import android.util.Log;
 import androidx.preference.PreferenceManager;
 
 import java.io.File;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.App;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class PathVars {
     private static volatile PathVars pathVars;
@@ -49,7 +49,6 @@ public class PathVars {
     private final String snowflakePath;
     private final boolean bbOK;
 
-
     @SuppressLint("SdCardPath")
     private PathVars(Context context) {
 
@@ -63,7 +62,7 @@ public class PathVars {
 
         String nativeLibPath = context.getApplicationInfo().nativeLibraryDir;
 
-        bbOK = new PrefManager(context).getBoolPref("bbOK");
+        bbOK = App.instance.daggerComponent.getPreferenceRepository().get().getBoolPreference("bbOK");
 
         dnscryptPath = nativeLibPath + "/libdnscrypt-proxy.so";
         torPath = nativeLibPath + "/libtor.so";
@@ -166,10 +165,11 @@ public class PathVars {
         return path;
     }
 
-    public static boolean isModulesInstalled(Context context) {
-        return new PrefManager(Objects.requireNonNull(context)).getBoolPref("DNSCrypt Installed")
-                && new PrefManager(Objects.requireNonNull(context)).getBoolPref("Tor Installed")
-                && new PrefManager(Objects.requireNonNull(context)).getBoolPref("I2PD Installed");
+    public static boolean isModulesInstalled() {
+        PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
+        return preferences.getBoolPreference("DNSCrypt Installed")
+                && preferences.getBoolPreference("Tor Installed")
+                && preferences.getBoolPreference("I2PD Installed");
     }
 
     public String getRejectAddress() {

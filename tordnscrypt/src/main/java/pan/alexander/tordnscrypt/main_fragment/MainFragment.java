@@ -53,8 +53,11 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.TopFragment;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDFragmentPresenter;
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDFragmentReceiver;
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDFragmentView;
@@ -67,22 +70,26 @@ import pan.alexander.tordnscrypt.tor_fragment.TorFragmentPresenter;
 import pan.alexander.tordnscrypt.tor_fragment.TorFragmentReceiver;
 import pan.alexander.tordnscrypt.tor_fragment.TorFragmentView;
 import pan.alexander.tordnscrypt.utils.Utils;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.utils.root.RootExecService;
 
 import static android.util.TypedValue.COMPLEX_UNIT_PX;
 import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
 import static pan.alexander.tordnscrypt.TopFragment.ITPDVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UNDEFINED;
 
+import javax.inject.Inject;
+
 public class MainFragment extends Fragment implements DNSCryptFragmentView, TorFragmentView, ITPDFragmentView,
         View.OnClickListener, CompoundButton.OnCheckedChangeListener, ViewTreeObserver.OnScrollChangedListener,
         View.OnTouchListener {
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
+
     private Button btnStartMainFragment;
     private CheckBox chbHideIpMainFragment;
     private CheckBox chbProtectDnsMainFragment;
@@ -119,6 +126,13 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     private boolean orientationLandscape;
 
     @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        App.instance.daggerComponent.inject(this);
+
+        super.onCreate(savedInstanceState);
+    }
+
+    @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.main_fragment, container, false);
@@ -145,16 +159,18 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
             return view;
         }
 
+        PreferenceRepository preferences = preferenceRepository.get();
+
         orientationLandscape = Utils.INSTANCE.getScreenOrientation(getActivity()) == Configuration.ORIENTATION_LANDSCAPE;
 
-        boolean hideIp = new PrefManager(context).getBoolPref("HideIp");
-        boolean protectDns = new PrefManager(context).getBoolPref("ProtectDns");
-        boolean accessITP = new PrefManager(context).getBoolPref("AccessITP");
+        boolean hideIp = preferences.getBoolPreference("HideIp");
+        boolean protectDns = preferences.getBoolPreference("ProtectDns");
+        boolean accessITP = preferences.getBoolPreference("AccessITP");
 
         if (!hideIp && !protectDns && !accessITP) {
-            new PrefManager(context).setBoolPref("HideIp", true);
-            new PrefManager(context).setBoolPref("ProtectDns", true);
-            new PrefManager(context).setBoolPref("AccessITP", false);
+            preferences.setBoolPreference("HideIp", true);
+            preferences.setBoolPreference("ProtectDns", true);
+            preferences.setBoolPreference("AccessITP", false);
         } else {
             chbHideIpMainFragment.setChecked(hideIp);
             chbProtectDnsMainFragment.setChecked(protectDns);
@@ -376,13 +392,15 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
             }
         }
 
+        PreferenceRepository preferences = preferenceRepository.get();
+
         int id = buttonView.getId();
         if (id == R.id.chbProtectDnsMainFragment) {
-            new PrefManager(context).setBoolPref("ProtectDns", isChecked);
+            preferences.setBoolPreference("ProtectDns", isChecked);
         } else if (id == R.id.chbHideIpMainFragment) {
-            new PrefManager(context).setBoolPref("HideIp", isChecked);
+            preferences.setBoolPreference("HideIp", isChecked);
         } else if (id == R.id.chbAccessITPMainFragment) {
-            new PrefManager(context).setBoolPref("AccessITP", isChecked);
+            preferences.setBoolPreference("AccessITP", isChecked);
         }
     }
 
@@ -850,21 +868,21 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
     private boolean isDNSCryptInstalled(Context context) {
         if (context != null) {
-            return new PrefManager(context).getBoolPref("DNSCrypt Installed");
+            return preferenceRepository.get().getBoolPreference("DNSCrypt Installed");
         }
         return false;
     }
 
     private boolean isTorInstalled(Context context) {
         if (context != null) {
-            return new PrefManager(context).getBoolPref("Tor Installed");
+            return preferenceRepository.get().getBoolPreference("Tor Installed");
         }
         return false;
     }
 
     private boolean isITPDInstalled(Context context) {
         if (context != null) {
-            return new PrefManager(context).getBoolPref("I2PD Installed");
+            return preferenceRepository.get().getBoolPreference("I2PD Installed");
         }
         return false;
     }

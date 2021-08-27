@@ -24,18 +24,22 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import androidx.preference.PreferenceManager
+import dagger.Lazy
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
+import pan.alexander.tordnscrypt.di.SharedPreferencesModule
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.installer.Installer
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.CachedExecutor
-import pan.alexander.tordnscrypt.utils.PrefManager
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.lang.ref.WeakReference
 
 class ResetHelper(activity: Activity, backupFragment: BackupFragment) : Installer(activity) {
 
     private var activityWeakReference: WeakReference<Activity> = WeakReference(activity)
     private val backupFragmentWeakReference: WeakReference<BackupFragment> = WeakReference(backupFragment)
+    private val preferenceRepository: Lazy<PreferenceRepository> = App.instance.daggerComponent.getPreferenceRepository()
 
     fun resetSettings() {
         CachedExecutor.getExecutorService().submit {
@@ -69,7 +73,8 @@ class ResetHelper(activity: Activity, backupFragment: BackupFragment) : Installe
                 val code = saveSomeOldInfo(activityWeakReference.get())
                 val defaultSharedPref = PreferenceManager.getDefaultSharedPreferences(activityWeakReference.get())
                 resetSharedPreferences(defaultSharedPref)
-                val sharedPreferences = activityWeakReference.get()?.getSharedPreferences(PrefManager.getPrefName(), Context.MODE_PRIVATE)
+                val sharedPreferences = activityWeakReference.get()?.getSharedPreferences(
+                    SharedPreferencesModule.APP_PREFERENCES_NAME, Context.MODE_PRIVATE)
                 resetSharedPreferences(sharedPreferences)
                 restoreOldInfo(activityWeakReference.get(), code)
 
@@ -92,14 +97,14 @@ class ResetHelper(activity: Activity, backupFragment: BackupFragment) : Installe
     private fun saveSomeOldInfo(context: Context?): String? {
         var code: String? = ""
         if (context?.getString(R.string.appVersion)?.endsWith("o") == true) {
-            code = PrefManager(context).getStrPref("registrationCode")
+            code = preferenceRepository.get().getStringPreference("registrationCode")
         }
         return code
     }
 
     private fun restoreOldInfo(context: Context?, code: String?) {
         if (code?.isNotEmpty() == true) {
-            context?.let { PrefManager(it).setStrPref("registrationCode", code) }
+            context?.let { preferenceRepository.get().setStringPreference("registrationCode", code) }
         }
     }
 

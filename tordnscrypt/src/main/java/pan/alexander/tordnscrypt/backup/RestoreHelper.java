@@ -46,22 +46,25 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.di.SharedPreferencesModule;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.patches.Patch;
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.InstalledApplications;
-import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.installer.Installer;
 
 import static pan.alexander.tordnscrypt.backup.BackupFragment.CODE_READ;
 import static pan.alexander.tordnscrypt.backup.BackupFragment.TAGS_TO_CONVERT;
 import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_NEWLY_INSTALLED;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 class RestoreHelper extends Installer {
     private final List<String> requiredFiles = Arrays.asList(
@@ -83,6 +86,7 @@ class RestoreHelper extends Installer {
     private final String appDataDir;
     private final String cacheDir;
     private String pathBackup;
+    private final Lazy<PreferenceRepository> preferenceRepository;
 
     RestoreHelper(Activity activity, String appDataDir, String cacheDir, String pathBackup) {
         super(activity);
@@ -91,6 +95,7 @@ class RestoreHelper extends Installer {
         this.appDataDir = appDataDir;
         this.cacheDir = cacheDir;
         this.pathBackup = pathBackup;
+        preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     void restoreAll(InputStream inputStream, boolean logsDirAccessible) {
@@ -136,13 +141,13 @@ class RestoreHelper extends Installer {
                 String code = saveSomeOldInfo();
                 restoreSharedPreferencesFromFile(defaultSharedPref, appDataDir + "/defaultSharedPref");
 
-                SharedPreferences sharedPreferences = activity.getSharedPreferences(PrefManager.getPrefName(), Context.MODE_PRIVATE);
+                SharedPreferences sharedPreferences = activity.getSharedPreferences(SharedPreferencesModule.APP_PREFERENCES_NAME, Context.MODE_PRIVATE);
                 restoreSharedPreferencesFromFile(sharedPreferences, appDataDir + "/sharedPreferences");
 
                 convertSharedPreferencesPackageNamesToUIDs(activity);
 
-                FileOperations.deleteFile(activity, appDataDir, "defaultSharedPref", "defaultSharedPref");
-                FileOperations.deleteFile(activity, appDataDir, "sharedPreferences", "sharedPreferences");
+                FileManager.deleteFile(activity, appDataDir, "defaultSharedPref", "defaultSharedPref");
+                FileManager.deleteFile(activity, appDataDir, "sharedPreferences", "sharedPreferences");
 
                 refreshInstallationParameters();
 
@@ -246,23 +251,23 @@ class RestoreHelper extends Installer {
     private String saveSomeOldInfo() {
         String code = "";
         if (activity.getString(R.string.appVersion).endsWith("o")) {
-            code = new PrefManager(activity).getStrPref("registrationCode");
+            code = preferenceRepository.get().getStringPreference("registrationCode");
         }
         return code;
     }
 
     private void restoreOldInfo(String code) {
         if (!code.isEmpty()) {
-            new PrefManager(activity).setStrPref("registrationCode", code);
+            preferenceRepository.get().setStringPreference("registrationCode", code);
         }
     }
 
     private void refreshInstallationParameters() {
-        ModulesAux.saveDNSCryptStateRunning(activity, false);
-        ModulesAux.saveTorStateRunning(activity, false);
-        ModulesAux.saveITPDStateRunning(activity, false);
+        ModulesAux.saveDNSCryptStateRunning(false);
+        ModulesAux.saveTorStateRunning(false);
+        ModulesAux.saveITPDStateRunning(false);
 
-        new PrefManager(activity).setSetStrPref(APPS_NEWLY_INSTALLED, Collections.emptySet());
+        preferenceRepository.get().setStringSetPreference(APPS_NEWLY_INSTALLED, Collections.emptySet());
     }
 
     private void extractBackup() throws Exception {
@@ -309,8 +314,8 @@ class RestoreHelper extends Installer {
     }
 
     private void convertSharedPreferencesPackageNamesToUIDs(Context context) {
-        InstalledApplications installedApplications = new InstalledApplications(context, Collections.emptySet());
-        List<ApplicationData> applications = installedApplications.getInstalledApps(false);
+        InstalledApplicationsManager installedApplicationsManager = new InstalledApplicationsManager(context, Collections.emptySet());
+        List<ApplicationData> applications = installedApplicationsManager.getInstalledApps(false);
 
         for (String tag: TAGS_TO_CONVERT) {
             convertPackageNamesToUIDs(applications, tag);
@@ -318,7 +323,7 @@ class RestoreHelper extends Installer {
     }
 
     private void convertPackageNamesToUIDs(List<ApplicationData> applications, String tag) {
-        Set<String> savedPackageNames = new PrefManager(activity).getSetStrPref(tag + "Backup");
+        Set<String> savedPackageNames = preferenceRepository.get().getStringSetPreference(tag + "Backup");
         Set<String> uIDsToSave = new HashSet<>();
 
         for (String savedPackage: savedPackageNames) {
@@ -341,8 +346,8 @@ class RestoreHelper extends Installer {
             }
         }
 
-        new PrefManager(activity).setSetStrPref(tag, uIDsToSave);
-        new PrefManager(activity).setSetStrPref(tag + "Backup", Collections.emptySet());
+        preferenceRepository.get().setStringSetPreference(tag, uIDsToSave);
+        preferenceRepository.get().setStringSetPreference(tag + "Backup", Collections.emptySet());
     }
 
     void setPathBackup(String pathBackup) {

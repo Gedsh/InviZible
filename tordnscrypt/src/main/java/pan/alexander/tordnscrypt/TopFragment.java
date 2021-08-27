@@ -50,6 +50,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import dagger.Lazy;
 import eu.chainfire.libsuperuser.Shell;
 import pan.alexander.tordnscrypt.dialogs.AgreementDialog;
 import pan.alexander.tordnscrypt.dialogs.AskAccelerateDevelop;
@@ -61,24 +62,23 @@ import pan.alexander.tordnscrypt.dialogs.SendCrashReport;
 import pan.alexander.tordnscrypt.dialogs.UpdateModulesDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.CheckUpdatesDialog;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.RootCheckingProgressDialog;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.installer.Installer;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStarterHelper;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.modules.ModulesVersions;
-import pan.alexander.tordnscrypt.patches.Patch;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.update.UpdateCheck;
 import pan.alexander.tordnscrypt.update.UpdateService;
-import pan.alexander.tordnscrypt.utils.AppExitDetectService;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.FileShortener;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.Registration;
-import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.utils.appexit.AppExitDetectService;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.filemanager.FileShortener;
+import pan.alexander.tordnscrypt.dialogs.Registration;
+import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.utils.Utils;
-import pan.alexander.tordnscrypt.utils.Verifier;
+import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
@@ -88,11 +88,13 @@ import static pan.alexander.tordnscrypt.modules.ModulesStateLoop.ITPD_READY_PREF
 import static pan.alexander.tordnscrypt.modules.ModulesStateLoop.TOR_READY_PREF;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
+
+import javax.inject.Inject;
 
 
 public class TopFragment extends Fragment {
@@ -112,6 +114,8 @@ public class TopFragment extends Fragment {
     public static String wrongSign;
     public static String appSign;
 
+
+
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
     private RootChecker rootChecker;
@@ -121,6 +125,9 @@ public class TopFragment extends Fragment {
     private static String suVersion = "";
     private static List<String> suResult = null;
     private static List<String> bbResult = null;
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
 
     private OperationMode mode = UNDEFINED;
     private boolean runModulesWithRoot = false;
@@ -157,6 +164,8 @@ public class TopFragment extends Fragment {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        App.instance.daggerComponent.inject(this);
+
         super.onCreate(savedInstanceState);
 
         //noinspection deprecation
@@ -169,26 +178,27 @@ public class TopFragment extends Fragment {
 
         if (context != null) {
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-            rootIsAvailableSaved = rootIsAvailable = new PrefManager(context).getBoolPref("rootIsAvailable");
+            PreferenceRepository preferences = preferenceRepository.get();
+            rootIsAvailableSaved = rootIsAvailable = preferences.getBoolPreference("rootIsAvailable");
             runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
 
             modulesStatus.setFixTTL(shPref.getBoolean("pref_common_fix_ttl", false));
-            modulesStatus.setTorReady(new PrefManager(context).getBoolPref(TOR_READY_PREF));
-            modulesStatus.setDnsCryptReady(new PrefManager(context).getBoolPref(DNSCRYPT_READY_PREF));
-            modulesStatus.setItpdReady(new PrefManager(context).getBoolPref(ITPD_READY_PREF));
+            modulesStatus.setTorReady(preferences.getBoolPreference(TOR_READY_PREF));
+            modulesStatus.setDnsCryptReady(preferences.getBoolPreference(DNSCRYPT_READY_PREF));
+            modulesStatus.setItpdReady(preferences.getBoolPreference(ITPD_READY_PREF));
 
-            String operationMode = new PrefManager(context).getStrPref("OPERATION_MODE");
+            String operationMode = preferences.getStringPreference("OPERATION_MODE");
 
             if (!operationMode.isEmpty()) {
                 mode = OperationMode.valueOf(operationMode);
-                ModulesAux.switchModes(context, rootIsAvailable, runModulesWithRoot, mode);
+                ModulesAux.switchModes(rootIsAvailable, runModulesWithRoot, mode);
             }
 
-            if (PathVars.isModulesInstalled(context) && appVersion.endsWith("p")) {
+            if (PathVars.isModulesInstalled() && appVersion.endsWith("p")) {
                 checkAgreement(context);
             }
 
-            logsTextSize = new PrefManager(context).getFloatPref("LogsTextSize");
+            logsTextSize = preferences.getFloatPreference("LogsTextSize");
         }
 
         Looper looper = Looper.getMainLooper();
@@ -260,7 +270,7 @@ public class TopFragment extends Fragment {
             return;
         }
 
-        saveLogsTextSize(activity);
+        saveLogsTextSize();
 
         unRegisterReceiver(activity);
 
@@ -284,8 +294,8 @@ public class TopFragment extends Fragment {
         }
     }
 
-    private void saveLogsTextSize(Context context) {
-        new PrefManager(context).setFloatPref("LogsTextSize", logsTextSize);
+    private void saveLogsTextSize() {
+        preferenceRepository.get().setFloatPreference("LogsTextSize", logsTextSize);
     }
 
     private void slowDownModulesStateTimerIfRequired(Activity activity) {
@@ -380,7 +390,9 @@ public class TopFragment extends Fragment {
 
             topFragment.startAppExitDetectService(context);
 
-            shortenTooLongSnowflakeLog(context);
+            PreferenceRepository preferences = topFragment.preferenceRepository.get();
+
+            shortenTooLongSnowflakeLog(context, preferences);
 
             if (topFragment.handler != null) {
                 topFragment.handler.postDelayed(() -> {
@@ -390,7 +402,7 @@ public class TopFragment extends Fragment {
                     }
 
                     if (!topFragment.runModulesWithRoot
-                            && haveModulesSavedStateRunning(context)
+                            && haveModulesSavedStateRunning()
                             && !isModulesStarterServiceRunning(context)) {
                         startModulesStarterServiceIfStoppedBySystem(context);
                         Log.e(LOG_TAG, "ModulesService stopped by system!");
@@ -448,16 +460,16 @@ public class TopFragment extends Fragment {
 
             try {
 
-                topFragment.setSUInfo(activity, suResult, suVersion);
-                topFragment.setBBinfo(activity, bbResult);
+                topFragment.setSUInfo(suResult, suVersion);
+                topFragment.setBBinfo(bbResult);
 
                 if (topFragment.rootIsAvailable != topFragment.rootIsAvailableSaved || topFragment.mode == UNDEFINED) {
-                    ModulesAux.switchModes(activity, topFragment.rootIsAvailable, topFragment.runModulesWithRoot, topFragment.mode);
+                    ModulesAux.switchModes(topFragment.rootIsAvailable, topFragment.runModulesWithRoot, topFragment.mode);
 
                     activity.invalidateOptionsMenu();
                 }
 
-                if (!PathVars.isModulesInstalled(activity)) {
+                if (!PathVars.isModulesInstalled()) {
                     topFragment.actionModulesNotInstalled(activity);
                 } else {
 
@@ -507,7 +519,7 @@ public class TopFragment extends Fragment {
             }
         } else if (appVersion.endsWith("p") && isAdded() && !accelerated) {
 
-            if (!new PrefManager(activity).getBoolPref("Agreement")) {
+            if (!preferenceRepository.get().getBoolPreference("Agreement")) {
                 return;
             }
 
@@ -539,9 +551,11 @@ public class TopFragment extends Fragment {
             return false;
         }
 
-        String currentDNSCryptVersionStr = new PrefManager(context).getStrPref("DNSCryptVersion");
-        String currentTorVersionStr = new PrefManager(context).getStrPref("TorVersion");
-        String currentITPDVersionStr = new PrefManager(context).getStrPref("ITPDVersion");
+        final PreferenceRepository preferences = preferenceRepository.get();
+
+        String currentDNSCryptVersionStr = preferences.getStringPreference("DNSCryptVersion");
+        String currentTorVersionStr = preferences.getStringPreference("TorVersion");
+        String currentITPDVersionStr = preferences.getStringPreference("ITPDVersion");
         if (!(currentDNSCryptVersionStr.isEmpty() && currentTorVersionStr.isEmpty() && currentITPDVersionStr.isEmpty())) {
             int currentDNSCryptVersion = Integer.parseInt(currentDNSCryptVersionStr.replaceAll("\\D+", ""));
             int currentTorVersion = Integer.parseInt(currentTorVersionStr.replaceAll("\\D+", ""));
@@ -550,7 +564,7 @@ public class TopFragment extends Fragment {
             if (((currentDNSCryptVersion < Integer.parseInt(DNSCryptVersion.replaceAll("\\D+", ""))
                     || currentTorVersion < Integer.parseInt(TorVersion.replaceAll("\\D+", ""))
                     || currentITPDVersion < Integer.parseInt(ITPDVersion.replaceAll("\\D+", "")))
-                    && !new PrefManager(context).getBoolPref("UpdateNotAllowed"))) {
+                    && !preferences.getBoolPreference("UpdateNotAllowed"))) {
                 if (isAdded() && !isStateSaved()) {
                     DialogFragment updateCore = UpdateModulesDialogFragment.getInstance();
                     updateCore.show(getParentFragmentManager(), "UpdateModulesDialogFragment");
@@ -572,10 +586,11 @@ public class TopFragment extends Fragment {
         PreferenceManager.setDefaultValues(context, R.xml.preferences_i2pd, true);
 
         //For core update purposes
-        new PrefManager(context).setStrPref("DNSCryptVersion", DNSCryptVersion);
-        new PrefManager(context).setStrPref("TorVersion", TorVersion);
-        new PrefManager(context).setStrPref("ITPDVersion", ITPDVersion);
-        new PrefManager(context).setStrPref("DNSCrypt Servers", "");
+        final PreferenceRepository preferences = preferenceRepository.get();
+        preferences.setStringPreference("DNSCryptVersion", DNSCryptVersion);
+        preferences.setStringPreference("TorVersion", TorVersion);
+        preferences.setStringPreference("ITPDVersion", ITPDVersion);
+        preferences.setStringPreference("DNSCrypt Servers", "");
         SharedPreferences sPref = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = sPref.edit();
         editor.putBoolean("pref_common_tor_tethering", false);
@@ -585,14 +600,17 @@ public class TopFragment extends Fragment {
         startInstallation();
     }
 
-    private void setSUInfo(Context context, List<String> fSuResult, String fSuVersion) {
+    private void setSUInfo(List<String> fSuResult, String fSuVersion) {
+
+        final PreferenceRepository preferences = preferenceRepository.get();
 
         if (fSuResult != null && fSuResult.size() != 0
                 && fSuResult.toString().toLowerCase().contains("uid=0")
                 && fSuResult.toString().toLowerCase().contains("gid=0")) {
 
             rootIsAvailable = true;
-            new PrefManager(context).setBoolPref("rootIsAvailable", true);
+
+            preferences.setBoolPreference("rootIsAvailable", true);
 
             if (fSuVersion != null && fSuVersion.length() != 0) {
                 verSU = "Root is available." + (char) 10 +
@@ -606,23 +624,25 @@ public class TopFragment extends Fragment {
             Log.i(LOG_TAG, verSU);
         } else {
             rootIsAvailable = false;
-            new PrefManager(context).setBoolPref("rootIsAvailable", false);
+            preferences.setBoolPreference("rootIsAvailable", false);
         }
     }
 
-    private void setBBinfo(Context context, List<String> fBbResult) {
+    private void setBBinfo(List<String> fBbResult) {
+
+        final PreferenceRepository preferences = preferenceRepository.get();
 
         if (fBbResult != null && fBbResult.size() != 0) {
             verBB = fBbResult.get(0);
         } else {
-            new PrefManager(context).setBoolPref("bbOK", false);
+            preferences.setBoolPreference("bbOK", false);
             return;
         }
 
         if (verBB.toLowerCase().contains("not found")) {
-            new PrefManager(context).setBoolPref("bbOK", false);
+            preferences.setBoolPreference("bbOK", false);
         } else {
-            new PrefManager(context).setBoolPref("bbOK", true);
+            preferences.setBoolPreference("bbOK", true);
 
             Log.i(LOG_TAG, "BusyBox is available " + verBB);
         }
@@ -677,7 +697,7 @@ public class TopFragment extends Fragment {
             return false;
         }
 
-        String crash = new PrefManager(activity).getStrPref("CrashReport");
+        String crash = preferenceRepository.get().getStringPreference("CrashReport");
         if (!crash.isEmpty()) {
             SendCrashReport crashReport = SendCrashReport.Companion.getCrashReportDialog(activity);
             if (crashReport != null && isAdded() && !isStateSaved()) {
@@ -692,8 +712,9 @@ public class TopFragment extends Fragment {
     public void checkUpdates(Context context) {
 
         SharedPreferences spref = PreferenceManager.getDefaultSharedPreferences(context);
+        PreferenceRepository preferences = preferenceRepository.get();
 
-        if (!new PrefManager(context).getStrPref("RequiredAppUpdateForQ").isEmpty()) {
+        if (!preferences.getStringPreference("RequiredAppUpdateForQ").isEmpty()) {
             Intent intent = new Intent(context, UpdateService.class);
             intent.setAction(UpdateService.INSTALLATION_REQUEST_ACTION);
             context.startService(intent);
@@ -707,10 +728,10 @@ public class TopFragment extends Fragment {
             boolean throughTorUpdate = spref.getBoolean("pref_fast through_tor_update", false);
             boolean torRunning = modulesStatus.getTorState() == RUNNING;
             boolean torReady = modulesStatus.isTorReady();
-            String lastUpdateResult = new PrefManager(context).getStrPref("LastUpdateResult");
+            String lastUpdateResult = preferences.getStringPreference("LastUpdateResult");
             if (!throughTorUpdate || (torRunning && torReady)) {
                 long updateTimeCurrent = System.currentTimeMillis();
-                String updateTimeLastStr = new PrefManager(context).getStrPref("updateTimeLast");
+                String updateTimeLastStr = preferences.getStringPreference("updateTimeLast");
                 if (!updateTimeLastStr.isEmpty()) {
                     long updateTimeLast = Long.parseLong(updateTimeLastStr);
                     final int UPDATES_CHECK_INTERVAL_HOURS = 24;
@@ -736,8 +757,9 @@ public class TopFragment extends Fragment {
             return;
         }
 
-        new PrefManager(context).setStrPref("LastUpdateResult", "");
-        new PrefManager(context).setStrPref("updateTimeLast", String.valueOf(System.currentTimeMillis()));
+        PreferenceRepository preferences = preferenceRepository.get();
+        preferences.setStringPreference("LastUpdateResult", "");
+        preferences.setStringPreference("updateTimeLast", String.valueOf(System.currentTimeMillis()));
 
         try {
             UpdateCheck updateCheck = new UpdateCheck(this);
@@ -754,7 +776,7 @@ public class TopFragment extends Fragment {
                     showUpdateMessage(activity, getString(R.string.update_fault));
                 }
             }
-            new PrefManager(context).setStrPref("LastUpdateResult", getString(R.string.update_fault));
+            preferences.setStringPreference("LastUpdateResult", getString(R.string.update_fault));
             Log.e(LOG_TAG, "TopFragment Failed to requestUpdate() " + e.getMessage() + " " + e.getCause());
         }
     }
@@ -767,7 +789,7 @@ public class TopFragment extends Fragment {
         cancelCheckUpdatesTask();
         dismissCheckUpdatesDialog();
 
-        new PrefManager(context).setStrPref("LastUpdateResult", context.getString(R.string.update_found));
+        preferenceRepository.get().setStringPreference("LastUpdateResult", context.getString(R.string.update_found));
 
         if (isAdded() && !isStateSaved()) {
             DialogFragment newUpdateDialogFragment = NewUpdateDialogFragment.newInstance(message, updateStr, fileName, hash);
@@ -797,11 +819,12 @@ public class TopFragment extends Fragment {
             return;
         }
 
-        String updateResultMessage = new PrefManager(activity).getStrPref("UpdateResultMessage");
+        PreferenceRepository preferences = preferenceRepository.get();
+        String updateResultMessage = preferences.getStringPreference("UpdateResultMessage");
         if (!updateResultMessage.isEmpty()) {
             showUpdateMessage(activity, updateResultMessage);
 
-            new PrefManager(activity).setStrPref("UpdateResultMessage", "");
+            preferences.setStringPreference("UpdateResultMessage", "");
         }
     }
 
@@ -831,11 +854,11 @@ public class TopFragment extends Fragment {
         return Utils.INSTANCE.isServiceRunning(context, ModulesService.class);
     }
 
-    private static boolean haveModulesSavedStateRunning(Context context) {
+    private static boolean haveModulesSavedStateRunning() {
 
-        boolean dnsCryptRunning = ModulesAux.isDnsCryptSavedStateRunning(context);
-        boolean torRunning = ModulesAux.isTorSavedStateRunning(context);
-        boolean itpdRunning = ModulesAux.isITPDSavedStateRunning(context);
+        boolean dnsCryptRunning = ModulesAux.isDnsCryptSavedStateRunning();
+        boolean torRunning = ModulesAux.isTorSavedStateRunning();
+        boolean itpdRunning = ModulesAux.isITPDSavedStateRunning();
 
         return dnsCryptRunning || torRunning || itpdRunning;
     }
@@ -920,7 +943,7 @@ public class TopFragment extends Fragment {
     }
 
     private void checkAgreement(Context context) {
-        if (!new PrefManager(context).getBoolPref("Agreement")) {
+        if (!preferenceRepository.get().getBoolPreference("Agreement")) {
             AlertDialog.Builder agreementDialogBuilder = AgreementDialog.getDialogBuilder(context);
             if (agreementDialogBuilder != null && !isStateSaved()) {
                 agreementDialogBuilder.show();
@@ -946,10 +969,10 @@ public class TopFragment extends Fragment {
         }
     }
 
-    private static void shortenTooLongSnowflakeLog(Context context) {
+    private static void shortenTooLongSnowflakeLog(Context context, PreferenceRepository preferences) {
         try {
-            boolean bridgesSnowflakeDefault = new PrefManager(context).getStrPref("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
-            boolean bridgesSnowflakeOwn = new PrefManager(context).getStrPref("ownBridgesObfs").equals(snowFlakeBridgesOwn);
+            boolean bridgesSnowflakeDefault = preferences.getStringPreference("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
+            boolean bridgesSnowflakeOwn = preferences.getStringPreference("ownBridgesObfs").equals(snowFlakeBridgesOwn);
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
             boolean showHelperMessages = shPref.getBoolean("pref_common_show_help", false);
 

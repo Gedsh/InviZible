@@ -28,16 +28,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.TopFragment;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.utils.root.RootCommands;
+import pan.alexander.tordnscrypt.utils.root.RootExecService;
 
 import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
@@ -47,10 +49,12 @@ public class TorFragmentReceiver extends BroadcastReceiver {
 
     private String torPath;
     private String busyboxPath;
+    private final Lazy<PreferenceRepository> preferenceRepository;
 
     public TorFragmentReceiver(TorFragmentView view, TorFragmentPresenterInterface presenter) {
         this.view = view;
         this.presenter = presenter;
+        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
 
@@ -103,10 +107,10 @@ public class TorFragmentReceiver extends BroadcastReceiver {
                         String[] verArr = strArr[1].trim().split(" ");
                         if (verArr.length > 2 && verArr[1].contains("version")) {
                             TorVersion = verArr[2].trim();
-                            new PrefManager(context).setStrPref("TorVersion", TorVersion);
+                            preferenceRepository.get().setStringPreference("TorVersion", TorVersion);
 
                             if (!modulesStatus.isUseModulesWithRoot()) {
-                                if (!ModulesAux.isTorSavedStateRunning(context)) {
+                                if (!ModulesAux.isTorSavedStateRunning()) {
                                     view.setTorLogViewText();
                                 }
 
@@ -119,14 +123,14 @@ public class TorFragmentReceiver extends BroadcastReceiver {
                 if (sb.toString().toLowerCase().contains(torPath.toLowerCase())
                         && sb.toString().contains("checkTrRunning")) {
 
-                    ModulesAux.saveTorStateRunning(context, true);
+                    ModulesAux.saveTorStateRunning(true);
                     modulesStatus.setTorState(RUNNING);
                     presenter.displayLog();
 
                 } else if (!sb.toString().toLowerCase().contains(torPath.toLowerCase())
                         && sb.toString().contains("checkTrRunning")) {
                     if (modulesStatus.getTorState() == STOPPED) {
-                        ModulesAux.saveTorStateRunning(context, false);
+                        ModulesAux.saveTorStateRunning(false);
                     }
                     presenter.stopDisplayLog();
                     presenter.setTorStopped();

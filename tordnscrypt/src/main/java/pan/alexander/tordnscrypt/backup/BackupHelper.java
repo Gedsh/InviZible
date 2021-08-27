@@ -46,29 +46,35 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.di.SharedPreferencesModule;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.InstalledApplications;
-import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager;
 import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.backup.BackupFragment.CODE_WRITE;
 import static pan.alexander.tordnscrypt.backup.BackupFragment.TAGS_TO_CONVERT;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 class BackupHelper {
     private Activity activity;
     private String pathBackup;
     private final String appDataDir;
     private final String cacheDir;
+    private final Lazy<PreferenceRepository> preferenceRepository;
 
     BackupHelper(Activity activity, String appDataDir, String cacheDir, String pathBackup) {
         this.activity = activity;
         this.appDataDir = appDataDir;
         this.cacheDir = cacheDir;
         this.pathBackup = pathBackup;
+        preferenceRepository = App.Companion.getInstance()
+                .daggerComponent.getPreferenceRepository();
     }
 
     void saveAll(boolean logsDirAccessible) {
@@ -80,10 +86,10 @@ class BackupHelper {
                 SharedPreferences defaultSharedPref = PreferenceManager.getDefaultSharedPreferences(activity);
                 saveSharedPreferencesToFile(defaultSharedPref, cacheDir + "/defaultSharedPref");
 
-                SharedPreferences sharedPreferences = activity.getSharedPreferences(PrefManager.getPrefName(), Context.MODE_PRIVATE);
+                SharedPreferences sharedPreferences = activity.getSharedPreferences(SharedPreferencesModule.APP_PREFERENCES_NAME, Context.MODE_PRIVATE);
                 saveSharedPreferencesToFile(sharedPreferences, cacheDir + "/sharedPreferences");
 
-                clearSharesPreferencesBackupData(activity);
+                clearSharedPreferencesBackupData();
 
                 compressAllToZip(cacheDir + "/InvizibleBackup.zip",
                         appDataDir + "/app_bin", appDataDir + "/app_data",
@@ -100,14 +106,14 @@ class BackupHelper {
                     saveFileWithSAF();
                 }
 
-                FileOperations.deleteFile(activity, cacheDir, "/defaultSharedPref", "ignored");
-                FileOperations.deleteFile(activity, cacheDir, "/sharedPreferences", "ignored");
+                FileManager.deleteFile(activity, cacheDir, "/defaultSharedPref", "ignored");
+                FileManager.deleteFile(activity, cacheDir, "/sharedPreferences", "ignored");
             } catch (Exception e) {
                 Log.e(LOG_TAG, "BackupHelper saveAllToInternalDir fault " + e.getMessage() + " " + e.getCause());
 
                 showError();
 
-                FileOperations.deleteFile(activity, cacheDir, "/InvizibleBackup.zip", "ignored");
+                FileManager.deleteFile(activity, cacheDir, "/InvizibleBackup.zip", "ignored");
             }
         });
     }
@@ -126,7 +132,7 @@ class BackupHelper {
     }
 
     void saveFile() {
-        FileOperations.moveBinaryFile(activity, cacheDir, "InvizibleBackup.zip", pathBackup, "InvizibleBackup.zip");
+        FileManager.moveBinaryFile(activity, cacheDir, "InvizibleBackup.zip", pathBackup, "InvizibleBackup.zip");
     }
 
     void saveFileWithSAF() {
@@ -164,7 +170,7 @@ class BackupHelper {
 
                 showError();
 
-                FileOperations.deleteFile(activity, cacheDir, "/InvizibleBackup.zip", "ignored");
+                FileManager.deleteFile(activity, cacheDir, "/InvizibleBackup.zip", "ignored");
             } finally {
                 try {
                     outputStream.close();
@@ -193,19 +199,19 @@ class BackupHelper {
     }
 
     private void convertSharedPreferencesUIDsToPackageNames(Context context) {
-        InstalledApplications installedApplications = new InstalledApplications(context, Collections.emptySet());
-        List<ApplicationData> applications = installedApplications.getInstalledApps(false);
+        InstalledApplicationsManager installedApplicationsManager = new InstalledApplicationsManager(context, Collections.emptySet());
+        List<ApplicationData> applications = installedApplicationsManager.getInstalledApps(false);
 
-        for (String tag: TAGS_TO_CONVERT) {
+        for (String tag : TAGS_TO_CONVERT) {
             convertUIDsToPackageNames(applications, tag);
         }
     }
 
     private void convertUIDsToPackageNames(List<ApplicationData> applications, String tag) {
-        Set<String> savedUIDs = new PrefManager(activity).getSetStrPref(tag);
+        Set<String> savedUIDs = preferenceRepository.get().getStringSetPreference(tag);
         Set<String> packagesToSave = new HashSet<>();
 
-        for (String savedUIDStr: savedUIDs) {
+        for (String savedUIDStr : savedUIDs) {
 
             int savedUID = 0;
             if (savedUIDStr.matches("^-?\\d+$")) {
@@ -217,12 +223,12 @@ class BackupHelper {
                 continue;
             }
 
-            for (ApplicationData applicationData: applications) {
+            for (ApplicationData applicationData : applications) {
                 if (applicationData.getUid() == savedUID) {
                     String pack = applicationData.getPack();
                     ConcurrentSkipListSet<String> names = applicationData.getNames();
                     if (!names.isEmpty() && names.first().contains("(M)")) {
-                        pack +="(M)";
+                        pack += "(M)";
                     }
                     packagesToSave.add(pack);
                     break;
@@ -230,12 +236,12 @@ class BackupHelper {
             }
         }
 
-        new PrefManager(activity).setSetStrPref(tag + "Backup", packagesToSave);
+        preferenceRepository.get().setStringSetPreference(tag + "Backup", packagesToSave);
     }
 
-    private void clearSharesPreferencesBackupData(Context context) {
-        for (String tag: TAGS_TO_CONVERT) {
-            new PrefManager(context).setSetStrPref(tag + "Backup", Collections.emptySet());
+    private void clearSharedPreferencesBackupData() {
+        for (String tag : TAGS_TO_CONVERT) {
+            preferenceRepository.get().setStringSetPreference(tag + "Backup", Collections.emptySet());
         }
     }
 

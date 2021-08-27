@@ -47,21 +47,25 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.language.Language;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
-import pan.alexander.tordnscrypt.utils.GetIPsJobService;
-import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.web.GetIPsJobService;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
+
+import javax.inject.Inject;
 
 
 public class PreferencesFastFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
@@ -69,6 +73,8 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
     private Handler handler;
     public static final int mJobId = 1;
     private int refreshPeriodHours = 12;
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -77,6 +83,8 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         setRetainInstance(true);
 
         addPreferencesFromResource(R.xml.preferences_fast);
+
+        App.instance.daggerComponent.inject(this);
     }
 
     @Override
@@ -95,7 +103,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
         getActivity().setTitle(R.string.drawer_menu_fastSettings);
 
-        setDnsCryptServersSumm(new PrefManager(requireActivity()).getStrPref("DNSCrypt Servers"));
+        setDnsCryptServersSumm(preferenceRepository.get().getStringPreference("DNSCrypt Servers"));
 
         Preference swAutostartTor = findPreference("swAutostartTor");
         if (swAutostartTor != null) {
@@ -163,7 +171,8 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         if (handler != null && context != null) {
             handler.postDelayed(() -> {
                 if (getActivity() != null && !getActivity().isFinishing()) {
-                    setDnsCryptServersSumm(new PrefManager(context).getStrPref("DNSCrypt Servers"));
+                    setDnsCryptServersSumm(preferenceRepository.get()
+                            .getStringPreference("DNSCrypt Servers"));
                 }
             }, 1000);
         }
@@ -187,8 +196,8 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
         Activity activity = getActivity();
 
-        String updateTimeLastStr = new PrefManager(context).getStrPref("updateTimeLast");
-        String lastUpdateResult = new PrefManager(context).getStrPref("LastUpdateResult");
+        String updateTimeLastStr = preferenceRepository.get().getStringPreference("updateTimeLast");
+        String lastUpdateResult = preferenceRepository.get().getStringPreference("LastUpdateResult");
         final Preference prefLastUpdate = findPreference("pref_fast_chek_update");
         if (prefLastUpdate == null)
             return;
@@ -203,7 +212,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
             prefLastUpdate.setSummary(getString(R.string.update_last_check) + " "
                     + dateString + " " + timeString + System.lineSeparator() + lastUpdateResult);
         } else if (lastUpdateResult.equals(getString(R.string.update_fault))
-                && new PrefManager(context).getStrPref("updateTimeLast").isEmpty()
+                && preferenceRepository.get().getStringPreference("updateTimeLast").isEmpty()
                 && appVersion.startsWith("p")) {
             Preference pref_fast_auto_update = findPreference("pref_fast_auto_update");
             if (pref_fast_auto_update != null) {
@@ -301,7 +310,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         activity.overridePendingTransition(0, 0);
         startActivity(intent);
 
-        new PrefManager(activity).setBoolPref("refresh_main_activity", true);
+        preferenceRepository.get().setBoolPreference("refresh_main_activity", true);
     }
 
     @Override
@@ -344,14 +353,14 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                     ComponentName jobService = new ComponentName(context, GetIPsJobService.class);
                     JobInfo.Builder getIPsJobBuilder = new JobInfo.Builder(mJobId, jobService);
                     getIPsJobBuilder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
-                    getIPsJobBuilder.setPeriodic(refreshPeriodHours * 60 * 60 * 1000);
+                    getIPsJobBuilder.setPeriodic((long) refreshPeriodHours * 60 * 60 * 1000);
 
                     JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
 
                     if (jobScheduler != null) {
                         jobScheduler.schedule(getIPsJobBuilder.build());
                     }
-                } else if (!ModulesAux.isTorSavedStateRunning(context)) {
+                } else if (!ModulesAux.isTorSavedStateRunning()) {
                     JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
                     if (jobScheduler != null) {
                         jobScheduler.cancel(mJobId);
@@ -384,8 +393,8 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
                 return true;
             case "pref_fast_block_http":
-                if (ModulesAux.isDnsCryptSavedStateRunning(context)
-                        || ModulesAux.isTorSavedStateRunning(context)) {
+                if (ModulesAux.isDnsCryptSavedStateRunning()
+                        || ModulesAux.isTorSavedStateRunning()) {
                     ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
                 }
                 return true;

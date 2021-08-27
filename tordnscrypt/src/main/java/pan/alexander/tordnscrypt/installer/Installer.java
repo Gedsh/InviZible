@@ -36,23 +36,25 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.modules.ModulesVersions;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.RootExecService;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.root.RootCommands;
+import pan.alexander.tordnscrypt.utils.root.RootExecService;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
-import static pan.alexander.tordnscrypt.utils.RootExecService.COMMAND_RESULT;
-import static pan.alexander.tordnscrypt.utils.RootExecService.InstallerMark;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.InstallerMark;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class Installer implements TopFragment.OnActivityChangeListener {
     private Activity activity;
@@ -65,6 +67,8 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
     private InstallerUIChanger installerUIChanger;
 
+    private final Lazy<PreferenceRepository> preferenceRepository;
+
     public Installer(Activity activity) {
         this.activity = activity;
 
@@ -76,7 +80,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             installerUIChanger = new InstallerUIChanger(mainActivity);
         }
 
-
+        preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     public void installModules() {
@@ -255,13 +259,13 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         }
 
         if (installed) {
-            new PrefManager(activity).setBoolPref("DNSCrypt Installed", true);
-            new PrefManager(activity).setBoolPref("Tor Installed", true);
-            new PrefManager(activity).setBoolPref("I2PD Installed", true);
+            preferenceRepository.get().setBoolPreference("DNSCrypt Installed", true);
+            preferenceRepository.get().setBoolPreference("Tor Installed", true);
+            preferenceRepository.get().setBoolPreference("I2PD Installed", true);
         } else {
-            new PrefManager(activity).setBoolPref("DNSCrypt Installed", false);
-            new PrefManager(activity).setBoolPref("Tor Installed", false);
-            new PrefManager(activity).setBoolPref("I2PD Installed", false);
+            preferenceRepository.get().setBoolPreference("DNSCrypt Installed", false);
+            preferenceRepository.get().setBoolPreference("Tor Installed", false);
+            preferenceRepository.get().setBoolPreference("I2PD Installed", false);
         }
 
     }
@@ -295,21 +299,21 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
 
         if (app_bin.isDirectory()) {
-            if (!FileOperations.deleteDirSynchronous(activity, app_bin.getAbsolutePath())) {
+            if (!FileManager.deleteDirSynchronous(activity, app_bin.getAbsolutePath())) {
                 throw new IllegalStateException(app_bin.getAbsolutePath() + " delete failed");
             }
         } else if (app_bin.isFile()) {
-            if (FileOperations.deleteFileSynchronous(activity, app_bin.getParent(), app_bin.getName())) {
+            if (FileManager.deleteFileSynchronous(activity, app_bin.getParent(), app_bin.getName())) {
                 throw new IllegalStateException(app_bin.getAbsolutePath() + " delete failed");
             }
         }
 
         if (app_data.isDirectory()) {
-            if (!FileOperations.deleteDirSynchronous(activity, app_data.getAbsolutePath())) {
+            if (!FileManager.deleteDirSynchronous(activity, app_data.getAbsolutePath())) {
                 throw new IllegalStateException(app_data.getAbsolutePath() + " delete failed");
             }
         } else if (app_data.isFile()) {
-            if (FileOperations.deleteFileSynchronous(activity, app_data.getParent(), app_data.getName())) {
+            if (FileManager.deleteFileSynchronous(activity, app_data.getParent(), app_data.getName())) {
                 throw new IllegalStateException(app_data.getAbsolutePath() + " delete failed");
             }
         }
@@ -328,9 +332,9 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         String dnsTomlPath = appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml";
         String torConfPath = appDataDir + "/app_data/tor/tor.conf";
         String itpdConfPath = appDataDir + "/app_data/i2pd/i2pd.conf";
-        fixAppDirLinesList(dnsTomlPath, FileOperations.readTextFileSynchronous(activity, dnsTomlPath));
-        fixAppDirLinesList(torConfPath, FileOperations.readTextFileSynchronous(activity, torConfPath));
-        fixAppDirLinesList(itpdConfPath, FileOperations.readTextFileSynchronous(activity, itpdConfPath));
+        fixAppDirLinesList(dnsTomlPath, FileManager.readTextFileSynchronous(activity, dnsTomlPath));
+        fixAppDirLinesList(torConfPath, FileManager.readTextFileSynchronous(activity, torConfPath));
+        fixAppDirLinesList(itpdConfPath, FileManager.readTextFileSynchronous(activity, itpdConfPath));
 
         Log.i(LOG_TAG, "Installer: correctAppDir OK");
     }
@@ -350,11 +354,11 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             if (activity != null
                     && activity.getText(R.string.package_name).toString().contains(".gp")
                     && path.contains("dnscrypt-proxy.toml")
-                    && !PathVars.isModulesInstalled(activity)) {
+                    && !PathVars.isModulesInstalled()) {
                 lines = prepareDNSCryptForGP(lines);
             }
 
-            FileOperations.writeTextFileSynchronous(activity, path, lines);
+            FileManager.writeTextFileSynchronous(activity, path, lines);
         } else {
             throw new IllegalStateException("correctAppDir readTextFile return null " + path);
         }
@@ -401,12 +405,12 @@ public class Installer implements TopFragment.OnActivityChangeListener {
     protected void stopAllRunningModulesWithRootCommand() {
         Log.i(LOG_TAG, "Installer: stopAllRunningModulesWithRootCommand");
 
-        ModulesAux.saveDNSCryptStateRunning(activity, false);
-        ModulesAux.saveTorStateRunning(activity, false);
-        ModulesAux.saveITPDStateRunning(activity, false);
+        ModulesAux.saveDNSCryptStateRunning(false);
+        ModulesAux.saveTorStateRunning(false);
+        ModulesAux.saveITPDStateRunning(false);
 
         String busyboxNative = "";
-        if (new PrefManager(activity).getBoolPref("bbOK") && pathVars.getBusyboxPath().equals("busybox ")) {
+        if (preferenceRepository.get().getBoolPreference("bbOK") && pathVars.getBusyboxPath().equals("busybox ")) {
             busyboxNative = "busybox ";
         }
 
@@ -448,9 +452,9 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
             while (counter > 0) {
                 if (activity != null
-                        && !ModulesAux.isDnsCryptSavedStateRunning(activity)
-                        && !ModulesAux.isTorSavedStateRunning(activity)
-                        && !ModulesAux.isITPDSavedStateRunning(activity)) {
+                        && !ModulesAux.isDnsCryptSavedStateRunning()
+                        && !ModulesAux.isTorSavedStateRunning()
+                        && !ModulesAux.isITPDSavedStateRunning()) {
                     sendModulesStopResult("checkModulesRunning");
                     break;
                 } else {
@@ -503,7 +507,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             ModulesVersions.getInstance().refreshVersions(activity);
         }
 
-        new PrefManager(activity).setBoolPref("refresh_main_activity", true);
+        preferenceRepository.get().setBoolPreference("refresh_main_activity", true);
     }
 
     protected void registerReceiver(Activity activity) {

@@ -39,21 +39,23 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt;
-import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.VPNCommand;
 import pan.alexander.tordnscrypt.vpn.Rule;
-import pan.alexander.tordnscrypt.vpn.Util;
+import pan.alexander.tordnscrypt.vpn.NetworkUtils;
 
 import static android.content.Context.CONNECTIVITY_SERVICE;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPN.EXTRA_COMMAND;
@@ -66,10 +68,12 @@ public class ServiceVPNHandler extends Handler {
     private final ServiceVPN serviceVPN;
     private ServiceVPN.Builder last_builder = null;
     private ArpScanner arpScanner;
+    private final Lazy<PreferenceRepository> preferenceRepositoryLazy;
 
     private ServiceVPNHandler(Looper looper, ServiceVPN serviceVPN) {
         super(looper);
         this.serviceVPN = serviceVPN;
+        preferenceRepositoryLazy = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     static ServiceVPNHandler getInstance(Looper looper, ServiceVPN serviceVPN) {
@@ -288,25 +292,27 @@ public class ServiceVPNHandler extends Handler {
         List<String> listAllowed = new ArrayList<>();
 
         // Update connected state
-        serviceVPN.last_connected = Util.isConnected(serviceVPN);
+        serviceVPN.last_connected = NetworkUtils.isConnected(serviceVPN);
 
         //Request disconnected state confirmation in case of Always on VPN is enabled
         if (!serviceVPN.last_connected) {
-            Util.isConnectedAsynchronousConfirmation(serviceVPN);
+            NetworkUtils.isConnectedAsynchronousConfirmation(serviceVPN);
         }
 
         if (serviceVPN.last_connected || serviceVPN.last_connected_override) {
 
-            if (!new PrefManager(serviceVPN).getBoolPref("FirewallEnabled")) {
+            PreferenceRepository preferences = preferenceRepositoryLazy.get();
+
+            if (!preferences.getBoolPreference("FirewallEnabled")) {
                 for (Rule rule: listRule) {
                     listAllowed.add(String.valueOf(rule.uid));
                 }
-            } else if (Util.isWifiActive(serviceVPN) || Util.isEthernetActive(serviceVPN)) {
-                listAllowed.addAll(new PrefManager(serviceVPN).getSetStrPref(FirewallFragmentKt.APPS_ALLOW_WIFI_PREF));
-            } else if (Util.isCellularActive(serviceVPN)) {
-                listAllowed.addAll(new PrefManager(serviceVPN).getSetStrPref(FirewallFragmentKt.APPS_ALLOW_GSM_PREF));
-            } else if (Util.isRoaming(serviceVPN)) {
-                listAllowed.addAll(new PrefManager(serviceVPN).getSetStrPref(FirewallFragmentKt.APPS_ALLOW_ROAMING));
+            } else if (NetworkUtils.isWifiActive(serviceVPN) || NetworkUtils.isEthernetActive(serviceVPN)) {
+                listAllowed.addAll(preferences.getStringSetPreference(FirewallFragmentKt.APPS_ALLOW_WIFI_PREF));
+            } else if (NetworkUtils.isCellularActive(serviceVPN)) {
+                listAllowed.addAll(preferences.getStringSetPreference(FirewallFragmentKt.APPS_ALLOW_GSM_PREF));
+            } else if (NetworkUtils.isRoaming(serviceVPN)) {
+                listAllowed.addAll(preferences.getStringSetPreference(FirewallFragmentKt.APPS_ALLOW_ROAMING));
             }
         }
 

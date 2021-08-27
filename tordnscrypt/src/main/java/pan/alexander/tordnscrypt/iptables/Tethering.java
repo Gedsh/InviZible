@@ -29,13 +29,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.Constants;
-import pan.alexander.tordnscrypt.utils.InternetSharingChecker;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.Preferences;
-import pan.alexander.tordnscrypt.vpn.Util;
+import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
+import pan.alexander.tordnscrypt.vpn.NetworkUtils;
 
 import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_FOR_CLEARNET_TETHER;
 import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_TO_UNLOCK_TETHER;
@@ -61,10 +63,12 @@ public class Tethering {
 
     private final PathVars pathVars;
     private String iptables = "iptables ";
+    private final Lazy<PreferenceRepository> preferenceRepository;
 
     Tethering(Context context) {
         this.context = context;
         pathVars = PathVars.getInstance(context);
+        preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     @NonNull
@@ -85,6 +89,7 @@ public class Tethering {
 
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
+        PreferenceRepository preferences = preferenceRepository.get();
         boolean torTethering = shPref.getBoolean("pref_common_tor_tethering", false) && torRunning;
         boolean itpdTethering = shPref.getBoolean("pref_common_itpd_tethering", false) && itpdRunning;
         boolean routeAllThroughTorTether = shPref.getBoolean("pref_common_tor_route_all", false);
@@ -92,9 +97,9 @@ public class Tethering {
         addressLocalPC = shPref.getString("pref_common_local_eth_device_addr", Constants.STANDARD_ADDRESS_LOCAL_PC);
         boolean lan = shPref.getBoolean("Allow LAN", false);
         boolean ttlFix = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE) && !modulesStatus.isUseModulesWithRoot();
-        apIsOn = new PrefManager(context).getBoolPref(Preferences.WIFI_ACCESS_POINT_IS_ON);
-        Set<String> ipsToUnlockTether = new PrefManager(context).getSetStrPref(IPS_TO_UNLOCK_TETHER);
-        Set<String> ipsForClearNetTether = new PrefManager(context).getSetStrPref(IPS_FOR_CLEARNET_TETHER);
+        apIsOn = preferences.getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON);
+        Set<String> ipsToUnlockTether = preferences.getStringSetPreference(IPS_TO_UNLOCK_TETHER);
+        Set<String> ipsForClearNetTether = preferences.getStringSetPreference(IPS_FOR_CLEARNET_TETHER);
 
         setInterfaceNames();
 
@@ -102,7 +107,7 @@ public class Tethering {
         String bypassLanForward = "";
         if (lan) {
             StringBuilder nonTorRanges = new StringBuilder();
-            for (String address : Util.nonTorList) {
+            for (String address : NetworkUtils.nonTorList) {
                 nonTorRanges.append(address).append(" ");
             }
             nonTorRanges.deleteCharAt(nonTorRanges.lastIndexOf(" "));
@@ -192,8 +197,8 @@ public class Tethering {
 
 
         List<String> bypassITPDTunnelPorts = new ArrayList<>();
-        Set<String> ports = new PrefManager(context).getSetStrPref("ITPDTunnelsPorts");
-        if (ports != null && ports.size() > 0) {
+        Set<String> ports = preferences.getStringSetPreference("ITPDTunnelsPorts");
+        if (ports.size() > 0) {
             for (String port : ports) {
                 if (!port.isEmpty()) {
                     bypassITPDTunnelPorts.add(iptables + "-t nat -A tordnscrypt_prerouting -p tcp -m tcp --dport " + port + " -j ACCEPT");
@@ -203,8 +208,8 @@ public class Tethering {
         }
 
         List<String> tetheringCommands = new ArrayList<>();
-        boolean tetherIptablesRulesIsClean = new PrefManager(context).getBoolPref("TetherIptablesRulesIsClean");
-        boolean ttlFixed = new PrefManager(context).getBoolPref("TTLisFixed");
+        boolean tetherIptablesRulesIsClean = preferences.getBoolPreference("TetherIptablesRulesIsClean");
+        boolean ttlFixed = preferences.getBoolPreference("TTLisFixed");
 
         if (!torTethering && !itpdTethering && ((!apIsOn && !usbTetherOn && !ethernetOn) || !dnsCryptRunning)) {
 
@@ -212,7 +217,7 @@ public class Tethering {
                 return tetheringCommands;
             }
 
-            new PrefManager(context).setBoolPref("TetherIptablesRulesIsClean", true);
+            preferences.setBoolPreference("TetherIptablesRulesIsClean", true);
 
             tetheringCommands = new ArrayList<>(Arrays.asList(
                     ip6tables + "-D INPUT -j DROP 2> /dev/null || true",
@@ -231,7 +236,7 @@ public class Tethering {
 
         } else if (!privacyMode) {
 
-            new PrefManager(context).setBoolPref("TetherIptablesRulesIsClean", false);
+            preferences.setBoolPreference("TetherIptablesRulesIsClean", false);
 
             if (!torTethering && !itpdTethering) {
                 tetheringCommands = new ArrayList<>(Arrays.asList(
@@ -583,7 +588,7 @@ public class Tethering {
             }
         } else {
 
-            new PrefManager(context).setBoolPref("TetherIptablesRulesIsClean", false);
+            preferences.setBoolPreference("TetherIptablesRulesIsClean", false);
 
             if (torTethering) {
                 tetheringCommands = new ArrayList<>(Arrays.asList(
@@ -651,7 +656,7 @@ public class Tethering {
                     return tetheringCommands;
                 }
 
-                new PrefManager(context).setBoolPref("TetherIptablesRulesIsClean", true);
+                preferences.setBoolPreference("TetherIptablesRulesIsClean", true);
 
                 tetheringCommands = new ArrayList<>(Arrays.asList(
                         ip6tables + "-D INPUT -j DROP 2> /dev/null || true",
@@ -677,7 +682,8 @@ public class Tethering {
 
     List<String> fastUpdate() {
         List<String> tetheringCommands = new ArrayList<>();
-        boolean tetherIptablesRulesIsClean = new PrefManager(context).getBoolPref("TetherIptablesRulesIsClean");
+        boolean tetherIptablesRulesIsClean = preferenceRepository.get()
+                .getBoolPreference("TetherIptablesRulesIsClean");
 
         if (tetherIptablesRulesIsClean) {
             return tetheringCommands;
@@ -686,7 +692,7 @@ public class Tethering {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         addressLocalPC = sharedPreferences.getString("pref_common_local_eth_device_addr",
                 Constants.STANDARD_ADDRESS_LOCAL_PC);
-        apIsOn = new PrefManager(context).getBoolPref(Preferences.WIFI_ACCESS_POINT_IS_ON);
+        apIsOn = preferenceRepository.get().getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON);
 
         setInterfaceNames();
 
@@ -725,7 +731,7 @@ public class Tethering {
     }
 
     List<String> fixTTLCommands() {
-        new PrefManager(context).setBoolPref("TTLisFixed", true);
+        preferenceRepository.get().setBoolPreference("TTLisFixed", true);
 
         List<String> commands = new ArrayList<>(Arrays.asList(
                 iptables + "-I FORWARD -j DROP",
@@ -788,7 +794,7 @@ public class Tethering {
     }
 
     private List<String> unfixTTLCommands() {
-        new PrefManager(context).setBoolPref("TTLisFixed", false);
+        preferenceRepository.get().setBoolPreference("TTLisFixed", false);
 
         List<String> commands;
 

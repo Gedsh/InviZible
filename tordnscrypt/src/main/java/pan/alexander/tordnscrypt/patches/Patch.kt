@@ -20,13 +20,14 @@ package pan.alexander.tordnscrypt.patches
 */
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.annotation.WorkerThread
 import androidx.preference.PreferenceManager
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.BuildConfig
 import pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41
-import pan.alexander.tordnscrypt.utils.PrefManager
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.lang.Exception
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -42,6 +43,8 @@ class Patch(private val context: Context) {
     private val torConfigPatches = mutableListOf<PatchLine>()
     private val itpdConfigPatches = mutableListOf<PatchLine>()
 
+    private val preferenceRepository = App.instance.daggerComponent.getPreferenceRepository()
+
     @WorkerThread
     fun checkPatches() {
 
@@ -56,7 +59,7 @@ class Patch(private val context: Context) {
 
     private fun tryCheckPatches() {
         val currentVersion = BuildConfig.VERSION_CODE
-        val currentVersionSaved = PrefManager(context).getIntPref(SAVED_VERSION_CODE)
+        val currentVersionSaved = preferenceRepository.get().getIntPreference(SAVED_VERSION_CODE)
 
         if (currentVersionSaved != 0 && currentVersion > currentVersionSaved) {
             try {
@@ -82,7 +85,7 @@ class Patch(private val context: Context) {
 
                 configUtil.updateTorGeoip()
 
-                PrefManager(context).setIntPref(SAVED_VERSION_CODE, currentVersion)
+                preferenceRepository.get().setIntPreference(SAVED_VERSION_CODE, currentVersion)
             } catch (e: Exception) {
                 Log.e(
                     LOG_TAG,
@@ -91,7 +94,8 @@ class Patch(private val context: Context) {
             }
 
         } else if (currentVersionSaved == 0) {
-            PrefManager(context).setIntPref(SAVED_VERSION_CODE, currentVersion)
+            preferenceRepository.get()
+                .setIntPreference(SAVED_VERSION_CODE, currentVersion)
         }
     }
 
@@ -179,37 +183,24 @@ class Patch(private val context: Context) {
 
     private fun fallbackResolverToBootstrapResolvers() {
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
-
-        if (sharedPreferences.contains("bootstrap_resolvers")) {
-            return
-        }
-
-        val ipRegex =
-            Regex("((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)")
-
-
         var fallbackResolver = QUAD_DNS_41
-        if (sharedPreferences.contains("fallback_resolvers")) {
-            val fallbackResolversPreference = sharedPreferences
-                .getString("fallback_resolvers", QUAD_DNS_41)?.trim() ?: QUAD_DNS_41
-            val matcher = ipRegex.toPattern().matcher(fallbackResolversPreference)
-            if (matcher.find()) {
-                fallbackResolver = matcher.group()
-            }
-            PreferenceManager.getDefaultSharedPreferences(context).edit()
-                .putString("bootstrap_resolvers", fallbackResolver)
-                .apply()
-        } else if (sharedPreferences.contains("fallback_resolver")) {
-            val fallbackResolverPreference = sharedPreferences
-                .getString("fallback_resolver", QUAD_DNS_41)?.trim() ?: QUAD_DNS_41
-            val matcher = ipRegex.toPattern().matcher(fallbackResolverPreference)
 
-            if (matcher.find()) {
-                fallbackResolver = matcher.group()
+        when {
+            sharedPreferences.contains("bootstrap_resolvers") -> {
+                fallbackResolver = extractResolverIp(sharedPreferences, "bootstrap_resolvers")
             }
-            PreferenceManager.getDefaultSharedPreferences(context).edit()
-                .putString("bootstrap_resolvers", fallbackResolver)
-                .apply()
+            sharedPreferences.contains("fallback_resolvers") -> {
+                fallbackResolver = extractResolverIp(sharedPreferences, "fallback_resolvers")
+                sharedPreferences.edit()
+                    .putString("bootstrap_resolvers", fallbackResolver)
+                    .apply()
+            }
+            sharedPreferences.contains("fallback_resolver") -> {
+                fallbackResolver = extractResolverIp(sharedPreferences, "fallback_resolver")
+                sharedPreferences.edit()
+                    .putString("bootstrap_resolvers", fallbackResolver)
+                    .apply()
+            }
         }
 
         dnsCryptConfigPatches.add(
@@ -224,6 +215,22 @@ class Patch(private val context: Context) {
                 Regex("fallback_resolvers =.+"), "bootstrap_resolvers = ['$fallbackResolver:53']"
             )
         )
+    }
+
+    private fun extractResolverIp(
+        sharedPreferences: SharedPreferences,
+        preferenceKey: String,
+    ): String {
+        val defaultValue = QUAD_DNS_41
+        val ipRegex =
+            Regex("((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)")
+        val fallbackResolversPreference = sharedPreferences
+            .getString(preferenceKey, defaultValue)?.trim() ?: defaultValue
+        val matcher = ipRegex.toPattern().matcher(fallbackResolversPreference)
+        if (matcher.find()) {
+            return matcher.group()
+        }
+        return defaultValue
     }
 
 }

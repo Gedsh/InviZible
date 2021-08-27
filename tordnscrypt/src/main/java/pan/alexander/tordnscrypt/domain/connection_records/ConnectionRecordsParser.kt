@@ -21,13 +21,12 @@ package pan.alexander.tordnscrypt.domain.connection_records
 
 import android.content.Context
 import androidx.preference.PreferenceManager
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.TopFragment
-import pan.alexander.tordnscrypt.domain.entities.ConnectionRecord
 import pan.alexander.tordnscrypt.iptables.Tethering
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.utils.Constants
-import pan.alexander.tordnscrypt.utils.PrefManager
-import pan.alexander.tordnscrypt.utils.Preferences
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHandler
 import java.util.*
@@ -39,7 +38,8 @@ class ConnectionRecordsParser(private val applicationContext: Context) {
     private val modulesStatus = ModulesStatus.getInstance()
     private val sharedPreferences =
         PreferenceManager.getDefaultSharedPreferences(applicationContext)
-    private val apIsOn = PrefManager(applicationContext).getBoolPref(Preferences.WIFI_ACCESS_POINT_IS_ON)
+    private val apIsOn = App.instance.daggerComponent.getPreferenceRepository().get()
+        .getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON)
     private val localEthernetDeviceAddress =
         sharedPreferences.getString("pref_common_local_eth_device_addr", Constants.STANDARD_ADDRESS_LOCAL_PC)
             ?: Constants.STANDARD_ADDRESS_LOCAL_PC

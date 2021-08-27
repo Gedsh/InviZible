@@ -42,15 +42,17 @@ import java.net.InetAddress;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
-import pan.alexander.tordnscrypt.utils.AuxNotificationSender;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.InternetSharingChecker;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.Preferences;
-import pan.alexander.tordnscrypt.vpn.Util;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
+import pan.alexander.tordnscrypt.utils.privatedns.PrivateDnsProxyManager;
+import pan.alexander.tordnscrypt.vpn.NetworkUtils;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 public class ModulesBroadcastReceiver extends BroadcastReceiver {
@@ -68,10 +70,12 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
     private static final String shutdownFilterAction = "android.intent.action.ACTION_SHUTDOWN";
     private static final String powerOFFFilterAction = "android.intent.action.QUICKBOOT_POWEROFF";
     private final ArpScanner arpScanner;
+    private final Lazy<PreferenceRepository> preferenceRepository;
 
     public ModulesBroadcastReceiver(Context context, ArpScanner arpScanner) {
         this.context = context;
         this.arpScanner = arpScanner;
+        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     @Override
@@ -203,7 +207,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
                 resetArpScanner(true);
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && last_network != network.hashCode()) {
-                    AuxNotificationSender.INSTANCE.checkPrivateDNSAndProxy(
+                    PrivateDnsProxyManager.INSTANCE.checkPrivateDNSAndProxy(
                             context, null
                     );
                 }
@@ -231,7 +235,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
                     resetArpScanner();
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                        AuxNotificationSender.INSTANCE.checkPrivateDNSAndProxy(
+                        PrivateDnsProxyManager.INSTANCE.checkPrivateDNSAndProxy(
                                 context, linkProperties
                         );
                     }
@@ -324,19 +328,21 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
                 Log.e(LOG_TAG, "ModulesBroadcastReceiver checkInternetSharingState exception", e);
             }
 
-            if (wifiAccessPointOn && !new PrefManager(context).getBoolPref(Preferences.WIFI_ACCESS_POINT_IS_ON)) {
-                new PrefManager(context).setBoolPref(Preferences.WIFI_ACCESS_POINT_IS_ON, true);
+            PreferenceRepository preferences = preferenceRepository.get();
+
+            if (wifiAccessPointOn && !preferences.getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON)) {
+                preferences.setBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON, true);
                 modulesStatus.setIptablesRulesUpdateRequested(context, true);
-            } else if (!wifiAccessPointOn && new PrefManager(context).getBoolPref(Preferences.WIFI_ACCESS_POINT_IS_ON)) {
-                new PrefManager(context).setBoolPref(Preferences.WIFI_ACCESS_POINT_IS_ON, false);
+            } else if (!wifiAccessPointOn && preferences.getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON)) {
+                preferences.setBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON, false);
                 modulesStatus.setIptablesRulesUpdateRequested(context, true);
             }
 
-            if (usbTetherOn && !new PrefManager(context).getBoolPref(Preferences.USB_MODEM_IS_ON)) {
-                new PrefManager(context).setBoolPref(Preferences.USB_MODEM_IS_ON, true);
+            if (usbTetherOn && !preferences.getBoolPreference(PreferenceKeys.USB_MODEM_IS_ON)) {
+                preferences.setBoolPreference(PreferenceKeys.USB_MODEM_IS_ON, true);
                 ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
-            } else if (!usbTetherOn && new PrefManager(context).getBoolPref(Preferences.USB_MODEM_IS_ON)) {
-                new PrefManager(context).setBoolPref(Preferences.USB_MODEM_IS_ON, false);
+            } else if (!usbTetherOn && preferences.getBoolPreference(PreferenceKeys.USB_MODEM_IS_ON)) {
+                preferences.setBoolPreference(PreferenceKeys.USB_MODEM_IS_ON, false);
                 ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
             }
 
@@ -347,9 +353,9 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
     }
 
     private void powerOFFDetected() {
-        ModulesAux.saveDNSCryptStateRunning(context, false);
-        ModulesAux.saveTorStateRunning(context, false);
-        ModulesAux.saveITPDStateRunning(context, false);
+        ModulesAux.saveDNSCryptStateRunning(false);
+        ModulesAux.saveTorStateRunning(false);
+        ModulesAux.saveITPDStateRunning(false);
 
         ModulesAux.stopModulesIfRunning(context);
     }
@@ -410,7 +416,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
 
     private void resetArpScanner() {
         if (arpScanner != null && context != null) {
-            arpScanner.reset(context, Util.isConnected(context));
+            arpScanner.reset(context, NetworkUtils.isConnected(context));
         }
     }
 }

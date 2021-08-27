@@ -35,16 +35,18 @@ import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.util.Objects;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.iptables.Tethering;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.root.RootCommands;
+import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class HelpActivityReceiver extends BroadcastReceiver {
     private final Handler mHandler;
@@ -53,12 +55,14 @@ public class HelpActivityReceiver extends BroadcastReceiver {
     private String info;
     private String pathToSaveLogs;
     private DialogFragment progressDialog;
+    private final Lazy<PreferenceRepository> preferenceRepository;
 
     public HelpActivityReceiver(Handler mHandler, String appDataDir, String cacheDir, String pathToSaveLogs) {
         this.mHandler = mHandler;
         this.appDataDir = appDataDir;
         this.cacheDir = cacheDir;
         this.pathToSaveLogs = pathToSaveLogs;
+        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     @Override
@@ -92,7 +96,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
             }
 
             if (isLogsExist()) {
-                FileOperations.moveBinaryFile(context, cacheDir
+                FileManager.moveBinaryFile(context, cacheDir
                         + "/logs", "InvizibleLogs.txt", pathToSaveLogs, "InvizibleLogs.txt");
             } else {
                 closeProgressDialog();
@@ -106,7 +110,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
         try {
             ZipFileManager zipFileManager = new ZipFileManager(cacheDir + "/logs/InvizibleLogs.txt");
             zipFileManager.createZip(context, cacheDir + "/logs_dir");
-            FileOperations.deleteDirSynchronous(context, cacheDir + "/logs_dir");
+            FileManager.deleteDirSynchronous(context, cacheDir + "/logs_dir");
         } catch (Exception e) {
             Log.e(LOG_TAG, "Create zip file for first method failed  " + e.getMessage() + " " + e.getCause());
         }
@@ -124,8 +128,8 @@ public class HelpActivityReceiver extends BroadcastReceiver {
         }
 
         try {
-            FileOperations.copyFolderSynchronous(context, appDataDir + "/logs", logsDirPath);
-            FileOperations.copyFolderSynchronous(context, appDataDir + "/shared_prefs", logsDirPath);
+            FileManager.copyFolderSynchronous(context, appDataDir + "/logs", logsDirPath);
+            FileManager.copyFolderSynchronous(context, appDataDir + "/shared_prefs", logsDirPath);
 
             saveLogcat(logsDirPath);
 
@@ -197,8 +201,9 @@ public class HelpActivityReceiver extends BroadcastReceiver {
 
     private void deleteRootExecLog(Context context) {
         File file = new File(appDataDir + "/logs/RootExec.log");
-        if (new PrefManager(context).getBoolPref("swRootCommandsLog") && file.isFile()) {
-            FileOperations.deleteFileSynchronous(context, appDataDir + "/logs", "RootExec.log");
+        if (preferenceRepository.get()
+                .getBoolPreference("swRootCommandsLog") && file.isFile()) {
+            FileManager.deleteFileSynchronous(context, appDataDir + "/logs", "RootExec.log");
         }
     }
 

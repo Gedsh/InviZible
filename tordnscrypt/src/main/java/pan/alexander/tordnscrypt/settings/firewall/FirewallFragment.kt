@@ -36,20 +36,22 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.chip.ChipGroup
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.databinding.FragmentFirewallBinding
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
-import pan.alexander.tordnscrypt.utils.CachedExecutor.getExecutorService
-import pan.alexander.tordnscrypt.utils.InstalledApplications
-import pan.alexander.tordnscrypt.utils.PrefManager
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor.getExecutorService
+import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
+import javax.inject.Inject
 import kotlin.Comparator
 
 
@@ -61,9 +63,13 @@ const val APPS_ALLOW_VPN = "appsAllowVpn"
 const val APPS_NEWLY_INSTALLED = "appsNewlyInstalled"
 
 @SuppressLint("NotifyDataSetChanged")
-class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, View.OnClickListener,
+class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListener,
+    View.OnClickListener,
     SearchView.OnQueryTextListener, ChipGroup.OnCheckedChangeListener,
     CompoundButton.OnCheckedChangeListener {
+
+    @Inject
+    lateinit var preferenceRepository: dagger.Lazy<PreferenceRepository>
 
     private var _binding: FragmentFirewallBinding? = null
     private val binding get() = _binding!!
@@ -116,6 +122,8 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
 
     @Suppress("deprecation")
     override fun onCreate(savedInstanceState: Bundle?) {
+        App.instance.daggerComponent.inject(this)
+
         super.onCreate(savedInstanceState)
 
         retainInstance = true
@@ -125,7 +133,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
             handler = Handler(looper)
         }
 
-        firewallEnabled = PrefManager(context).getBoolPref("FirewallEnabled")
+        firewallEnabled = preferenceRepository.get().getBoolPreference("FirewallEnabled")
 
         initComparators()
     }
@@ -284,51 +292,45 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
                         }
                     }
 
-                    val firewallFirstStart = !PrefManager(context).getBoolPref("FirewallWasStarted")
+                    val preferences = preferenceRepository.get()
+
+                    val firewallFirstStart = !preferences.getBoolPreference("FirewallWasStarted")
                     if (firewallFirstStart) {
-                        PrefManager(context).setBoolPref("FirewallWasStarted", true)
+                        preferences.setBoolPreference("FirewallWasStarted", true)
                     }
 
                     appsAllowLan.addAll(
                         stringSetToIntSet(
-                            PrefManager(context).getSetStrPref(
-                                APPS_ALLOW_LAN_PREF
-                            )
+                            preferences.getStringSetPreference(APPS_ALLOW_LAN_PREF)
                         )
                     )
                     appsAllowWifi.addAll(
                         stringSetToIntSet(
-                            PrefManager(context).getSetStrPref(
-                                APPS_ALLOW_WIFI_PREF
-                            )
+                            preferences.getStringSetPreference(APPS_ALLOW_WIFI_PREF)
                         )
                     )
                     appsAllowGsm.addAll(
                         stringSetToIntSet(
-                            PrefManager(context).getSetStrPref(
-                                APPS_ALLOW_GSM_PREF
-                            )
+                            preferences.getStringSetPreference(APPS_ALLOW_GSM_PREF)
                         )
                     )
                     appsAllowRoaming.addAll(
                         stringSetToIntSet(
-                            PrefManager(context).getSetStrPref(
-                                APPS_ALLOW_ROAMING
-                            )
+                            preferences.getStringSetPreference(APPS_ALLOW_ROAMING)
                         )
                     )
                     appsAllowVpn.addAll(
                         stringSetToIntSet(
-                            PrefManager(context).getSetStrPref(
-                                APPS_ALLOW_VPN
-                            )
+                            preferences.getStringSetPreference(APPS_ALLOW_VPN)
                         )
                     )
 
                     val appsNewlyInstalled =
-                        stringSetToIntSet(PrefManager(context).getSetStrPref(APPS_NEWLY_INSTALLED))
+                        stringSetToIntSet(
+                            preferences.getStringSetPreference(APPS_NEWLY_INSTALLED)
+                        )
 
-                    val installedApplications = InstalledApplications(context, setOf())
+                    val installedApplications = InstalledApplicationsManager(context, setOf())
                     installedApplications.setOnAppAddListener(this@FirewallFragment)
                     val installedApps = installedApplications.getInstalledApps(true)
 
@@ -368,7 +370,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
                         }
                     }
 
-                    PrefManager(context).setSetStrPref(APPS_NEWLY_INSTALLED, setOf())
+                    preferences.setStringSetPreference(APPS_NEWLY_INSTALLED, setOf())
 
                     val appListSize = appsList.size
                     allowLanForAll = appsAllowLan.size == appListSize
@@ -644,13 +646,15 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
         }
 
         var iptablesUpdateRequired = false
+        val preferences = preferenceRepository.get()
+
 
         if (appsAllowLanToSave.size != appsAllowLan.size || !appsAllowLanToSave.containsAll(
                 appsAllowLan
             )
         ) {
             appsAllowLan = appsAllowLanToSave
-            PrefManager(context).setSetStrPref(APPS_ALLOW_LAN_PREF, intSetToStringSet(appsAllowLan))
+            preferences.setStringSetPreference(APPS_ALLOW_LAN_PREF, intSetToStringSet(appsAllowLan))
             iptablesUpdateRequired = true
         }
         if (appsAllowWifiToSave.size != appsAllowWifi.size || !appsAllowWifiToSave.containsAll(
@@ -658,7 +662,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
             )
         ) {
             appsAllowWifi = appsAllowWifiToSave
-            PrefManager(context).setSetStrPref(
+            preferences.setStringSetPreference(
                 APPS_ALLOW_WIFI_PREF,
                 intSetToStringSet(appsAllowWifi)
             )
@@ -669,7 +673,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
             )
         ) {
             appsAllowGsm = appsAllowGsmToSave
-            PrefManager(context).setSetStrPref(APPS_ALLOW_GSM_PREF, intSetToStringSet(appsAllowGsm))
+            preferences.setStringSetPreference(APPS_ALLOW_GSM_PREF, intSetToStringSet(appsAllowGsm))
             iptablesUpdateRequired = true
         }
         if (appsAllowRoamingToSave.size != appsAllowRoaming.size || !appsAllowRoamingToSave.containsAll(
@@ -677,7 +681,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
             )
         ) {
             appsAllowRoaming = appsAllowRoamingToSave
-            PrefManager(context).setSetStrPref(
+            preferences.setStringSetPreference(
                 APPS_ALLOW_ROAMING,
                 intSetToStringSet(appsAllowRoaming)
             )
@@ -688,7 +692,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
             )
         ) {
             appsAllowVpn = appsAllowVpnToSave
-            PrefManager(context).setSetStrPref(APPS_ALLOW_VPN, intSetToStringSet(appsAllowVpn))
+            preferences.setStringSetPreference(APPS_ALLOW_VPN, intSetToStringSet(appsAllowVpn))
             iptablesUpdateRequired = true
         }
 
@@ -748,7 +752,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
 
     private fun enableFirewall(context: Context) {
         firewallEnabled = true
-        PrefManager(context).setBoolPref("FirewallEnabled", true)
+        preferenceRepository.get().setBoolPreference("FirewallEnabled", true)
 
         binding.llFirewallPower.visibility = View.GONE
         binding.llFirewallTop.visibility = View.VISIBLE
@@ -764,7 +768,7 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
 
     private fun disableFirewall() {
         firewallEnabled = false
-        PrefManager(context).setBoolPref("FirewallEnabled", false)
+        preferenceRepository.get().setBoolPreference("FirewallEnabled", false)
 
         binding.llFirewallPower.visibility = View.VISIBLE
         binding.llFirewallTop.visibility = View.GONE
@@ -1175,12 +1179,14 @@ class FirewallFragment : Fragment(), InstalledApplications.OnAppAddListener, Vie
             appsAllowVpn.add(uid)
         }
 
-        PrefManager(context).setSetStrPref(APPS_ALLOW_LAN_PREF, intSetToStringSet(appsAllowLan))
-        PrefManager(context).setSetStrPref(APPS_ALLOW_WIFI_PREF, intSetToStringSet(appsAllowWifi))
-        PrefManager(context).setSetStrPref(APPS_ALLOW_GSM_PREF, intSetToStringSet(appsAllowGsm))
-        PrefManager(context).setSetStrPref(APPS_ALLOW_ROAMING, intSetToStringSet(appsAllowRoaming))
+        val preferences = preferenceRepository.get()
+
+        preferences.setStringSetPreference(APPS_ALLOW_LAN_PREF, intSetToStringSet(appsAllowLan))
+        preferences.setStringSetPreference(APPS_ALLOW_WIFI_PREF, intSetToStringSet(appsAllowWifi))
+        preferences.setStringSetPreference(APPS_ALLOW_GSM_PREF, intSetToStringSet(appsAllowGsm))
+        preferences.setStringSetPreference(APPS_ALLOW_ROAMING, intSetToStringSet(appsAllowRoaming))
         if (modulesStatus.isRootAvailable) {
-            PrefManager(context).setSetStrPref(APPS_ALLOW_VPN, intSetToStringSet(appsAllowVpn))
+            preferences.setStringSetPreference(APPS_ALLOW_VPN, intSetToStringSet(appsAllowVpn))
         }
     }
 }

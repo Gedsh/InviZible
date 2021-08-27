@@ -43,25 +43,29 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
-import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.utils.enums.BridgeType;
 import pan.alexander.tordnscrypt.utils.enums.BridgesSelector;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder> {
     private final SettingsActivity activity;
     private final FragmentManager fragmentManager;
     private final LayoutInflater lInflater;
     private final PreferencesBridges preferencesBridges;
+    private final Lazy<PreferenceRepository> preferenceRepository;
 
     BridgeAdapter(SettingsActivity activity, FragmentManager fragmentManager, PreferencesBridges preferencesBridges) {
         this.activity = activity;
         this.fragmentManager = fragmentManager;
         this.preferencesBridges = preferencesBridges;
         this.lInflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     @NonNull
@@ -144,9 +148,9 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
 
             if (isChecked) {
 
-                boolean useNoBridges = new PrefManager(activity).getBoolPref("useNoBridges");
-                boolean useDefaultBridges = new PrefManager(activity).getBoolPref("useDefaultBridges");
-                boolean useOwnBridges = new PrefManager(activity).getBoolPref("useOwnBridges");
+                boolean useNoBridges = preferenceRepository.get().getBoolPreference("useNoBridges");
+                boolean useDefaultBridges = preferenceRepository.get().getBoolPreference("useDefaultBridges");
+                boolean useOwnBridges = preferenceRepository.get().getBoolPreference("useOwnBridges");
 
                 BridgesSelector currentBridgesSelector;
                 if (!useNoBridges && !useDefaultBridges && !useOwnBridges) {
@@ -239,7 +243,7 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
             tmpList.addAll(preferencesBridges.getAnotherBridges());
             Collections.sort(tmpList);
             if (bridges_file_path != null)
-                FileOperations.writeToTextFile(activity, bridges_file_path, tmpList, "ignored");
+                FileManager.writeToTextFile(activity, bridges_file_path, tmpList, "ignored");
         });
         builder.setNegativeButton(activity.getText(R.string.cancel), (dialog, i) -> dialog.cancel());
         builder.show();
@@ -273,7 +277,7 @@ class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder>
         tmpList.addAll(preferencesBridges.getAnotherBridges());
         Collections.sort(tmpList);
         if (bridges_file_path != null)
-            FileOperations.writeToTextFile(activity, bridges_file_path, tmpList, "ignored");
+            FileManager.writeToTextFile(activity, bridges_file_path, tmpList, "ignored");
     }
 
     private void setCurrentBridgesType(BridgeType type) {

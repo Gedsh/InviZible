@@ -36,22 +36,23 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import pan.alexander.tordnscrypt.ApplicationBase;
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.utils.root.RootCommands;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DNSCRYPT_KEYWORD;
 import static pan.alexander.tordnscrypt.modules.ModulesService.ITPD_KEYWORD;
 import static pan.alexander.tordnscrypt.modules.ModulesService.TOR_KEYWORD;
-import static pan.alexander.tordnscrypt.utils.RootExecService.COMMAND_RESULT;
-import static pan.alexander.tordnscrypt.utils.RootExecService.DNSCryptRunFragmentMark;
-import static pan.alexander.tordnscrypt.utils.RootExecService.I2PDRunFragmentMark;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
-import static pan.alexander.tordnscrypt.utils.RootExecService.TopFragmentMark;
-import static pan.alexander.tordnscrypt.utils.RootExecService.TorRunFragmentMark;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.DNSCryptRunFragmentMark;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.I2PDRunFragmentMark;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.TopFragmentMark;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.TorRunFragmentMark;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -73,6 +74,7 @@ public class ModulesStarterHelper {
     private final String itpdPath;
 
     private final ModulesStatus modulesStatus;
+    private final Lazy<PreferenceRepository> preferenceRepository;
 
     ModulesStarterHelper(ModulesService service, Handler handler, PathVars pathVars) {
         this.service = service;
@@ -85,6 +87,7 @@ public class ModulesStarterHelper {
         obfsPath = pathVars.getObfsPath();
         itpdPath = pathVars.getITPDPath();
         this.modulesStatus = ModulesStatus.getInstance();
+        preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     Runnable getDNSCryptStarterRunnable() {
@@ -105,7 +108,7 @@ public class ModulesStarterHelper {
 
                 shellResult = Shell.SU.run(dnsCmdString, waitString, checkIfModuleRunning);
 
-                new PrefManager(service).setBoolPref("DNSCryptStartedWithRoot", true);
+                preferenceRepository.get().setBoolPreference("DNSCryptStartedWithRoot", true);
 
                 if (shellResult.getStdout().contains(dnscryptPath)) {
                     sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, dnscryptPath);
@@ -116,7 +119,7 @@ public class ModulesStarterHelper {
             } else {
                 dnsCmdString = dnscryptPath + " -config " + appDataDir
                         + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml -pidfile " + appDataDir + "/dnscrypt-proxy.pid";
-                new PrefManager(service).setBoolPref("DNSCryptStartedWithRoot", false);
+                preferenceRepository.get().setBoolPreference("DNSCryptStartedWithRoot", false);
 
                 shellResult = new ProcessStarter().startProcess(dnsCmdString);
             }
@@ -173,7 +176,7 @@ public class ModulesStarterHelper {
 
                 shellResult = Shell.SU.run(torCmdString, waitString, checkIfModuleRunning);
 
-                new PrefManager(service).setBoolPref("TorStartedWithRoot", true);
+                preferenceRepository.get().setBoolPreference("TorStartedWithRoot", true);
 
                 if (shellResult.getStdout().contains(torPath)) {
                     sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, torPath);
@@ -191,7 +194,7 @@ public class ModulesStarterHelper {
 
                 torCmdString = torPath + " -f "
                         + appDataDir + "/app_data/tor/tor.conf -pidfile " + appDataDir + "/tor.pid";
-                new PrefManager(service).setBoolPref("TorStartedWithRoot", false);
+                preferenceRepository.get().setBoolPreference("TorStartedWithRoot", false);
 
                 shellResult = new ProcessStarter().startProcess(torCmdString);
             }
@@ -238,12 +241,9 @@ public class ModulesStarterHelper {
 
     private boolean isActivityActive() {
 
-        ApplicationBase applicationBase = ApplicationBase.Companion.getInstance();
-        if (applicationBase == null) {
-            return false;
-        }
+        App app = App.Companion.getInstance();
 
-        WeakReference<Activity> activityWeakReference = applicationBase.getCurrentActivity();
+        WeakReference<Activity> activityWeakReference = app.getCurrentActivity();
         if (activityWeakReference == null) {
             return false;
         }
@@ -279,7 +279,7 @@ public class ModulesStarterHelper {
 
                 shellResult = Shell.SU.run(itpdCmdString, waitString, checkIfModuleRunning);
 
-                new PrefManager(service).setBoolPref("ITPDStartedWithRoot", true);
+                preferenceRepository.get().setBoolPreference("ITPDStartedWithRoot", true);
 
                 if (shellResult.getStdout().contains(itpdPath)) {
                     sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, itpdPath);
@@ -292,7 +292,7 @@ public class ModulesStarterHelper {
                 itpdCmdString = itpdPath + " --conf " + appDataDir
                         + "/app_data/i2pd/i2pd.conf --datadir " + appDataDir
                         + "/i2pd_data --pidfile " + appDataDir + "/i2pd.pid";
-                new PrefManager(service).setBoolPref("ITPDStartedWithRoot", false);
+                preferenceRepository.get().setBoolPreference("ITPDStartedWithRoot", false);
 
                 shellResult = new ProcessStarter().startProcess(itpdCmdString);
             }
@@ -329,16 +329,16 @@ public class ModulesStarterHelper {
 
     private List<String> correctTorConfRunAsDaemon(Context context, boolean runAsDaemon) {
 
-        List<String> lines = FileOperations.readTextFileSynchronous(context, torConfPath);
+        List<String> lines = FileManager.readTextFileSynchronous(context, torConfPath);
 
         for (int i = 0; i < lines.size(); i++) {
             if (lines.get(i).contains("RunAsDaemon")) {
                 if (runAsDaemon && lines.get(i).contains("0")) {
                     lines.set(i, "RunAsDaemon 1");
-                    FileOperations.writeTextFileSynchronous(context, torConfPath, lines);
+                    FileManager.writeTextFileSynchronous(context, torConfPath, lines);
                 } else if (!runAsDaemon && lines.get(i).contains("1")) {
                     lines.set(i, "RunAsDaemon 0");
-                    FileOperations.writeTextFileSynchronous(context, torConfPath, lines);
+                    FileManager.writeTextFileSynchronous(context, torConfPath, lines);
                 }
                 return lines;
             }
@@ -361,20 +361,21 @@ public class ModulesStarterHelper {
 
         if (indexOfClientOnly > 0) {
             lines.add(indexOfClientOnly, "Schedulers Vanilla");
-            FileOperations.writeTextFileSynchronous(service, torConfPath, lines);
+            FileManager.writeTextFileSynchronous(service, torConfPath, lines);
         }
     }
 
     private void correctObfsModulePath(List<String> lines) {
-        String savedObfsBinaryPath = new PrefManager(service).getStrPref("ObfsBinaryPath").trim();
+        PreferenceRepository preferences = preferenceRepository.get();
+        String savedObfsBinaryPath = preferences.getStringPreference("ObfsBinaryPath").trim();
         String currentObfsBinaryPath = obfsPath;
 
         if (!savedObfsBinaryPath.equals(currentObfsBinaryPath)) {
 
-            new PrefManager(service).setStrPref("ObfsBinaryPath", currentObfsBinaryPath);
+            preferences.setStringPreference("ObfsBinaryPath", currentObfsBinaryPath);
 
-            boolean useDefaultBridges = new PrefManager(service).getBoolPref("useDefaultBridges");
-            boolean useOwnBridges = new PrefManager(service).getBoolPref("useOwnBridges");
+            boolean useDefaultBridges = preferences.getBoolPreference("useDefaultBridges");
+            boolean useOwnBridges = preferences.getBoolPreference("useOwnBridges");
 
             if (useDefaultBridges || useOwnBridges) {
 
@@ -390,7 +391,7 @@ public class ModulesStarterHelper {
                     }
                 }
 
-                FileOperations.writeTextFileSynchronous(service, torConfPath, lines);
+                FileManager.writeTextFileSynchronous(service, torConfPath, lines);
 
                 Log.i(LOG_TAG, "ModulesService Tor Obfs module path is corrected");
             }
@@ -399,16 +400,16 @@ public class ModulesStarterHelper {
 
     private void correctITPDConfRunAsDaemon(Context context, String appDataDir, boolean runAsDaemon) {
         String path = appDataDir + "/app_data/i2pd/i2pd.conf";
-        List<String> lines = FileOperations.readTextFileSynchronous(context, path);
+        List<String> lines = FileManager.readTextFileSynchronous(context, path);
 
         for (int i = 0; i < lines.size(); i++) {
             if (lines.get(i).contains("daemon")) {
                 if (runAsDaemon && lines.get(i).contains("false")) {
                     lines.set(i, "daemon = true");
-                    FileOperations.writeTextFileSynchronous(context, path, lines);
+                    FileManager.writeTextFileSynchronous(context, path, lines);
                 } else if (!runAsDaemon && lines.get(i).contains("true")) {
                     lines.set(i, "daemon = false");
-                    FileOperations.writeTextFileSynchronous(context, path, lines);
+                    FileManager.writeTextFileSynchronous(context, path, lines);
                 }
                 return;
             }
