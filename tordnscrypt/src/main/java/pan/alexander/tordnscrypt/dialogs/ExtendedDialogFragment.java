@@ -32,7 +32,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public abstract class ExtendedDialogFragment extends DialogFragment {
 

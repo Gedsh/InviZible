@@ -53,15 +53,15 @@ import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.ConfigEditorFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.DNSCryptRulesVariant;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static android.provider.DocumentsContract.EXTRA_INITIAL_URI;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
-import static pan.alexander.tordnscrypt.utils.Preferences.IGNORE_SYSTEM_DNS;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
@@ -272,9 +272,9 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
         if (!isChanged) return;
 
-        FileOperations.writeToTextFile(context, appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml", dnscrypt_proxy_toml, SettingsActivity.dnscrypt_proxy_toml_tag);
+        FileManager.writeToTextFile(context, appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml", dnscrypt_proxy_toml, SettingsActivity.dnscrypt_proxy_toml_tag);
 
-        boolean dnsCryptRunning = ModulesAux.isDnsCryptSavedStateRunning(context);
+        boolean dnsCryptRunning = ModulesAux.isDnsCryptSavedStateRunning();
 
         if (dnsCryptRunning) {
             ModulesRestarter.restartDNSCrypt(context);
@@ -622,13 +622,13 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
         CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
 
-            boolean successfully1 = !FileOperations.deleteFileSynchronous(context, appDataDir
+            boolean successfully1 = !FileManager.deleteFileSynchronous(context, appDataDir
                     + "/app_data/dnscrypt-proxy", "public-resolvers.md");
-            boolean successfully2 = !FileOperations.deleteFileSynchronous(context, appDataDir
+            boolean successfully2 = !FileManager.deleteFileSynchronous(context, appDataDir
                     + "/app_data/dnscrypt-proxy", "public-resolvers.md.minisig");
-            boolean successfully3 = !FileOperations.deleteFileSynchronous(context, appDataDir
+            boolean successfully3 = !FileManager.deleteFileSynchronous(context, appDataDir
                     + "/app_data/dnscrypt-proxy", "relays.md");
-            boolean successfully4 = !FileOperations.deleteFileSynchronous(context, appDataDir
+            boolean successfully4 = !FileManager.deleteFileSynchronous(context, appDataDir
                     + "/app_data/dnscrypt-proxy", "relays.md.minisig");
 
             Activity activity = getActivity();

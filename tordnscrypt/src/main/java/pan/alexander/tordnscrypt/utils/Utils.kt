@@ -29,7 +29,7 @@ import android.util.Log
 import android.view.Display
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.modules.ModulesService
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.io.File
 import java.io.PrintWriter
 import java.net.Inet4Address

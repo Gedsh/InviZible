@@ -40,10 +40,10 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
-import pan.alexander.tordnscrypt.utils.file_operations.OnTextFileOperationsCompleteListener;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
+import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -90,12 +90,12 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
             return;
         }
 
-        FileOperations.setOnFileOperationCompleteListener(this);
+        FileManager.setOnFileOperationCompleteListener(this);
 
         PathVars pathVars = PathVars.getInstance(activity);
 
         if (dnsRelayItems.isEmpty()) {
-            FileOperations.readTextFile(activity, pathVars.getAppDataDir() + "/app_data/dnscrypt-proxy/relays.md", "relays.md");
+            FileManager.readTextFile(activity, pathVars.getAppDataDir() + "/app_data/dnscrypt-proxy/relays.md", "relays.md");
         }
 
         activity.setTitle(R.string.pref_dnscrypt_relays_title);
@@ -127,7 +127,7 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
     public void onPause() {
         super.onPause();
 
-        FileOperations.deleteOnFileOperationCompleteListener(this);
+        FileManager.deleteOnFileOperationCompleteListener(this);
     }
 
     @Override

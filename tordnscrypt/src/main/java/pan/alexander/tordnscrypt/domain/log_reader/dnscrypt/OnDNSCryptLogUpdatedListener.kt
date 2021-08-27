@@ -19,7 +19,7 @@
 
 package pan.alexander.tordnscrypt.domain.log_reader.dnscrypt
 
-import pan.alexander.tordnscrypt.domain.entities.LogDataModel
+import pan.alexander.tordnscrypt.domain.log_reader.LogDataModel
 
 interface OnDNSCryptLogUpdatedListener {
     fun onDNSCryptLogUpdated(dnsCryptLogData: LogDataModel)

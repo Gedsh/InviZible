@@ -28,8 +28,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.utils.root.RootCommands;
+import pan.alexander.tordnscrypt.utils.root.RootExecService;
 
 class ContextUIDUpdater {
     private final Context context;

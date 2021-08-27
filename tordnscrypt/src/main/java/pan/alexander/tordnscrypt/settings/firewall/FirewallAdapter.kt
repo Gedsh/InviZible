@@ -33,7 +33,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 
 class FirewallAdapter(private val firewallFragment: FirewallFragment) :

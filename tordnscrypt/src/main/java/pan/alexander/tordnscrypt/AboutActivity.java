@@ -33,7 +33,7 @@ import java.io.InputStream;
 import java.text.DateFormat;
 import java.util.Date;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class AboutActivity extends LangAppCompatActivity implements View.OnClickListener {
 

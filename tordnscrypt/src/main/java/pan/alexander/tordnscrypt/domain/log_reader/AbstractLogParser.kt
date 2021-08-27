@@ -21,8 +21,7 @@ package pan.alexander.tordnscrypt.domain.log_reader
 
 import android.text.TextUtils
 import android.util.Log
-import pan.alexander.tordnscrypt.domain.entities.LogDataModel
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.lang.StringBuilder
 import java.util.*
 

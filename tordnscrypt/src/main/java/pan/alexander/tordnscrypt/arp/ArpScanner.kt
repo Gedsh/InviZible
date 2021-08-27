@@ -37,10 +37,10 @@ import pan.alexander.tordnscrypt.AUX_CHANNEL_ID
 import pan.alexander.tordnscrypt.MainActivity
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.CachedExecutor
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
-import pan.alexander.tordnscrypt.vpn.Util
+import pan.alexander.tordnscrypt.vpn.NetworkUtils
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
@@ -156,9 +156,9 @@ class ArpScanner private constructor(
             return
         }
 
-        cellularActive = Util.isCellularActive(context)
-        wifiActive = Util.isWifiActive(context)
-        ethernetActive = Util.isEthernetActive(context)
+        cellularActive = NetworkUtils.isCellularActive(context)
+        wifiActive = NetworkUtils.isWifiActive(context)
+        ethernetActive = NetworkUtils.isEthernetActive(context)
 
         if (!wifiActive && !ethernetActive && (cellularActive || !connectionAvailable)) {
             return
@@ -312,7 +312,7 @@ class ArpScanner private constructor(
 
         }, 1, 10, TimeUnit.SECONDS)
 
-        if (!Util.isConnected(context) && !connectionAvailable) {
+        if (!NetworkUtils.isConnected(context) && !connectionAvailable) {
             pause(context, true, resetInternalValues = true)
         }
     }
@@ -331,9 +331,9 @@ class ArpScanner private constructor(
             return
         }
 
-        cellularActive = Util.isCellularActive(context)
-        wifiActive = Util.isWifiActive(context)
-        ethernetActive = Util.isEthernetActive(context)
+        cellularActive = NetworkUtils.isCellularActive(context)
+        wifiActive = NetworkUtils.isWifiActive(context)
+        ethernetActive = NetworkUtils.isEthernetActive(context)
 
         if (connectionAvailable && (wifiActive || ethernetActive || !cellularActive)) {
             if (scheduledExecutorService?.isShutdown == false) {

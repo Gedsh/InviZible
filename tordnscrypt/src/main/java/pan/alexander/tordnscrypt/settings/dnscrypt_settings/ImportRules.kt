@@ -25,8 +25,8 @@ import android.util.Log
 import pan.alexander.tordnscrypt.modules.ModulesRestarter
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
-import pan.alexander.tordnscrypt.utils.WakeLocksManager
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.wakelock.WakeLocksManager
 import pan.alexander.tordnscrypt.utils.enums.DNSCryptRulesVariant
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import java.io.BufferedReader

@@ -37,7 +37,7 @@ import pan.alexander.tordnscrypt.language.Language;
 public abstract class LangAppCompatActivity extends AppCompatActivity {
 
     private final boolean DEVELOPER_MODE = false;
-    private ApplicationBase applicationContext;
+    private App applicationContext;
 
     @RequiresApi(api = Build.VERSION_CODES.P)
     @Override
@@ -63,8 +63,8 @@ public abstract class LangAppCompatActivity extends AppCompatActivity {
 
         Language.setFromPreference(this, "pref_fast_language");
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && getApplicationContext() instanceof ApplicationBase) {
-            applicationContext = (ApplicationBase) getApplicationContext();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && getApplicationContext() instanceof App) {
+            applicationContext = (App) getApplicationContext();
         }
     }
 

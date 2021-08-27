@@ -22,7 +22,7 @@ package pan.alexander.tordnscrypt.patches
 import android.content.Context
 import android.util.Log
 import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream

@@ -24,10 +24,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.utils.root.RootCommands;
+import pan.alexander.tordnscrypt.utils.root.RootExecService;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class InstallerReceiver extends BroadcastReceiver {
 

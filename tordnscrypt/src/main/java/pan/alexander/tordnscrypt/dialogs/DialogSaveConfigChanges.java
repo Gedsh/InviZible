@@ -38,7 +38,7 @@ import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 public class DialogSaveConfigChanges extends ExtendedDialogFragment {
 
@@ -71,7 +71,7 @@ public class DialogSaveConfigChanges extends ExtendedDialogFragment {
         alertDialog.setPositiveButton(R.string.save_changes, (dialog, id) -> {
             if (filePath != null && fileText != null) {
                 List<String> lines = Arrays.asList(fileText.split("\n"));
-                FileOperations.writeToTextFile(activity, filePath, lines, "ignored");
+                FileManager.writeToTextFile(activity, filePath, lines, "ignored");
                 restartModuleIfRequired();
 
                 Looper looper = Looper.getMainLooper();
@@ -98,9 +98,9 @@ public class DialogSaveConfigChanges extends ExtendedDialogFragment {
             return;
         }
 
-        boolean dnsCryptRunning = ModulesAux.isDnsCryptSavedStateRunning(context);
-        boolean torRunning = ModulesAux.isTorSavedStateRunning(context);
-        boolean itpdRunning = ModulesAux.isITPDSavedStateRunning(context);
+        boolean dnsCryptRunning = ModulesAux.isDnsCryptSavedStateRunning();
+        boolean torRunning = ModulesAux.isTorSavedStateRunning();
+        boolean itpdRunning = ModulesAux.isITPDSavedStateRunning();
 
         if (dnsCryptRunning && "DNSCrypt".equals(moduleName)) {
             ModulesRestarter.restartDNSCrypt(context);

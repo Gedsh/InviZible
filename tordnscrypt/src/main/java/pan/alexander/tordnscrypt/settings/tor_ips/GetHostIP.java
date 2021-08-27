@@ -28,7 +28,7 @@ import java.util.Arrays;
 
 import pan.alexander.tordnscrypt.R;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 class GetHostIP implements Runnable {
 

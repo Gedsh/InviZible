@@ -19,7 +19,7 @@
 
 package pan.alexander.tordnscrypt.domain.log_reader.itpd
 
-import pan.alexander.tordnscrypt.domain.entities.LogDataModel
+import pan.alexander.tordnscrypt.domain.log_reader.LogDataModel
 
 interface OnITPDLogUpdatedListener {
     fun onITPDLogUpdated(itpdLogData: LogDataModel)

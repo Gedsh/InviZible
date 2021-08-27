@@ -56,10 +56,10 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 
 public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListener {
@@ -188,11 +188,11 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
             original_rules.clear();
             original_rules.addAll(rules_file_new);
 
-            FileOperations.writeToTextFile(context, file_path, rules_file, SettingsActivity.rules_tag);
+            FileManager.writeToTextFile(context, file_path, rules_file, SettingsActivity.rules_tag);
         }
 
-        boolean dnsCryptRunning = ModulesAux.isDnsCryptSavedStateRunning(context);
-        boolean itpdRunning = ModulesAux.isITPDSavedStateRunning(context);
+        boolean dnsCryptRunning = ModulesAux.isDnsCryptSavedStateRunning();
+        boolean itpdRunning = ModulesAux.isITPDSavedStateRunning();
 
         if (itpdRunning && file_path.contains("subscriptions")) {
             ModulesRestarter.restartITPD(context);

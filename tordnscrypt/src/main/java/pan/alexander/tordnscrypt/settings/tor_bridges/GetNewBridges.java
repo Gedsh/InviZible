@@ -51,10 +51,10 @@ import pan.alexander.tordnscrypt.dialogs.ShowBridgesDialog;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitDialogBridgesRequest;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.WakeLocksManager;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.wakelock.WakeLocksManager;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 
 @SuppressWarnings("BusyWait")

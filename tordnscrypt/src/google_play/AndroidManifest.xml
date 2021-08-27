@@ -56,7 +56,7 @@
     <uses-permission android:name="com.android.vending.BILLING" />
 
     <application
-        android:name=".ApplicationBase"
+        android:name=".App"
         android:allowBackup="false"
         android:appCategory="productivity"
         android:banner="@drawable/banner_tv"
@@ -72,7 +72,7 @@
         tools:targetApi="q">
 
         <service
-            android:name=".utils.AppExitDetectService"
+            android:name=".utils.appexit.AppExitDetectService"
             android:enabled="true"
             android:exported="false"
             android:stopWithTask="true" />
@@ -84,7 +84,7 @@
         <activity android:name=".help.HelpActivity" />
 
         <service
-            android:name=".utils.RootExecService"
+            android:name=".utils.root.RootExecService"
             android:enabled="true"
             android:exported="false" />
         <service
@@ -147,7 +147,7 @@
         <activity android:name=".AboutActivity" />
 
         <service
-            android:name=".utils.GetIPsJobService"
+            android:name=".utils.web.GetIPsJobService"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BIND_JOB_SERVICE" />

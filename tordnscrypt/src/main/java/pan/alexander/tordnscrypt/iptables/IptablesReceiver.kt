@@ -28,8 +28,8 @@ import android.util.Log
 import android.widget.Toast
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.RootCommands
-import pan.alexander.tordnscrypt.utils.RootExecService.*
+import pan.alexander.tordnscrypt.utils.root.RootCommands
+import pan.alexander.tordnscrypt.utils.root.RootExecService.*
 import java.util.*
 
 class IptablesReceiver : BroadcastReceiver() {

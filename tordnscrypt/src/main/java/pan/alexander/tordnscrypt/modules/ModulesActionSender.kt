@@ -23,7 +23,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import pan.alexander.tordnscrypt.ApplicationBase
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.utils.Utils.isShowNotification
 import java.lang.ref.WeakReference
 
@@ -37,8 +37,8 @@ object ModulesActionSender {
             intent.putExtra("showNotification", true)
 
             var isActivityActive = false
-            if (context.applicationContext is ApplicationBase) {
-                val applicationExt = context.applicationContext as ApplicationBase
+            if (context.applicationContext is App) {
+                val applicationExt = context.applicationContext as App
                 val currentActivity: WeakReference<Activity>? = applicationExt.currentActivity
                 isActivityActive = currentActivity?.get()?.isFinishing == false
             }

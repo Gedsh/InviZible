@@ -24,9 +24,9 @@ import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.modules.ModulesRestarter
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.utils.CachedExecutor
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager
 import java.net.*
 
 object ProxyHelper {
@@ -109,7 +109,7 @@ object ProxyHelper {
             return
         }
 
-        val dnsCryptProxyToml = FileOperations.readTextFileSynchronous(context, dnsCryptConfPath)
+        val dnsCryptProxyToml = FileManager.readTextFileSynchronous(context, dnsCryptConfPath)
         for (i in dnsCryptProxyToml.indices) {
             val line = dnsCryptProxyToml[i]
             if (line.contains("proxy = ")) {
@@ -124,7 +124,7 @@ object ProxyHelper {
                 dnsCryptProxyToml[i] = "force_tcp = false"
             }
         }
-        FileOperations.writeTextFileSynchronous(context, dnsCryptConfPath, dnsCryptProxyToml)
+        FileManager.writeTextFileSynchronous(context, dnsCryptConfPath, dnsCryptProxyToml)
     }
 
     private fun mangeTorProxy(context: Context?, torConfPath: String?, address: String, enable: Boolean) {
@@ -135,7 +135,7 @@ object ProxyHelper {
 
         var clientOnlyLinePosition = -1
         var socksProxyLineExist = false
-        val torConf = FileOperations.readTextFileSynchronous(context, torConfPath)
+        val torConf = FileManager.readTextFileSynchronous(context, torConfPath)
         val torConfToSave = mutableListOf<String>()
         for (i in torConf.indices) {
             var line = torConf[i]
@@ -157,7 +157,7 @@ object ProxyHelper {
         if (enable && !socksProxyLineExist && clientOnlyLinePosition >= 0) {
             torConfToSave.add(clientOnlyLinePosition, "Socks5Proxy $address")
         }
-        FileOperations.writeTextFileSynchronous(context, torConfPath, torConfToSave)
+        FileManager.writeTextFileSynchronous(context, torConfPath, torConfToSave)
     }
 
     private fun manageITPDProxy(context: Context?, itpdConfPath: String?, address: String, enable: Boolean) {
@@ -165,7 +165,7 @@ object ProxyHelper {
             return
         }
 
-        val itpdConf = FileOperations.readTextFileSynchronous(context, itpdConfPath)
+        val itpdConf = FileManager.readTextFileSynchronous(context, itpdConfPath)
         for (i in itpdConf.indices) {
             val line = itpdConf[i]
             if (line.contains("ntcpproxy")) {
@@ -182,6 +182,6 @@ object ProxyHelper {
                 }
             }
         }
-        FileOperations.writeTextFileSynchronous(context, itpdConfPath, itpdConf)
+        FileManager.writeTextFileSynchronous(context, itpdConfPath, itpdConf)
     }
 }

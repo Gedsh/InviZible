@@ -24,7 +24,7 @@ import android.net.TrafficStats
 import android.os.Process
 import android.util.Log
 import pan.alexander.tordnscrypt.R
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import java.text.CharacterIterator
@@ -42,7 +42,7 @@ var startTime = 0L
 
 class UsageStatistic(private val context: Context) {
 
-    var serviceNotification: ServiceNotification? = null
+    var serviceNotification: ModulesServiceNotificationManager? = null
 
     private var timer: ScheduledExecutorService? = null
     private val modulesStatus = ModulesStatus.getInstance()

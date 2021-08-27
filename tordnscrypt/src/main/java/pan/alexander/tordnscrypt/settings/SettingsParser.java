@@ -41,11 +41,11 @@ import pan.alexander.tordnscrypt.settings.dnscrypt_settings.PreferencesDNSFragme
 import pan.alexander.tordnscrypt.settings.show_rules.ShowRulesRecycleFrag;
 import pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
-import pan.alexander.tordnscrypt.utils.file_operations.OnTextFileOperationsCompleteListener;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
+import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.writeToTextFile;
 
@@ -583,7 +583,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
         PathVars pathVars = PathVars.getInstance(settingsActivity);
         appDataDir = pathVars.getAppDataDir();
 
-        FileOperations.setOnFileOperationCompleteListener(this);
+        FileManager.setOnFileOperationCompleteListener(this);
     }
 
     public void deactivateSettingsParser() {
@@ -591,7 +591,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
             bundleForReadPublicResolversMdFunction.clear();
         }
 
-        FileOperations.deleteOnFileOperationCompleteListener(this);
+        FileManager.deleteOnFileOperationCompleteListener(this);
     }
 
     @Override

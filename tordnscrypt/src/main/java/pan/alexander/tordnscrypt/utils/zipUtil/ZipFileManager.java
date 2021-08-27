@@ -36,9 +36,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class ZipFileManager {
     private String zipFile;
@@ -182,8 +182,8 @@ public class ZipFileManager {
             f = new File(path);
         } catch (Exception e) {
             Log.w(LOG_TAG, "ZipFileManager File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
-            FileOperations fileOperations = new FileOperations();
-            fileOperations.restoreAccess(context, path);
+            FileManager fileManager = new FileManager();
+            fileManager.restoreAccess(context, path);
         }
 
         if (f == null) {
@@ -195,8 +195,8 @@ public class ZipFileManager {
                 Log.i(LOG_TAG, "ZipFileManager take " + path + " success");
             } else {
                 Log.w(LOG_TAG, "ZipFileManager take " + path + " warning");
-                FileOperations fileOperations = new FileOperations();
-                fileOperations.restoreAccess(context, path);
+                FileManager fileManager = new FileManager();
+                fileManager.restoreAccess(context, path);
                 if (f.setReadable(true, false)) {
                     Log.i(LOG_TAG, "ZipFileManager take " + path + " success");
                 } else {

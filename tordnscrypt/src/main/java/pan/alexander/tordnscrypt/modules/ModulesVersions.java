@@ -34,14 +34,14 @@ import java.util.Collections;
 import java.util.List;
 
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.RootCommands;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.root.RootCommands;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.COMMAND_RESULT;
-import static pan.alexander.tordnscrypt.utils.RootExecService.DNSCryptRunFragmentMark;
-import static pan.alexander.tordnscrypt.utils.RootExecService.I2PDRunFragmentMark;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
-import static pan.alexander.tordnscrypt.utils.RootExecService.TorRunFragmentMark;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.DNSCryptRunFragmentMark;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.I2PDRunFragmentMark;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.TorRunFragmentMark;
 
 public class ModulesVersions {
     private static volatile ModulesVersions holder;

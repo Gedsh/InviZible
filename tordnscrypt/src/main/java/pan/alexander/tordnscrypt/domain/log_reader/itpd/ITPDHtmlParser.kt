@@ -19,8 +19,8 @@
 
 package pan.alexander.tordnscrypt.domain.log_reader.itpd
 
-import pan.alexander.tordnscrypt.domain.entities.LogDataModel
-import pan.alexander.tordnscrypt.domain.ModulesLogRepository
+import pan.alexander.tordnscrypt.domain.log_reader.LogDataModel
+import pan.alexander.tordnscrypt.domain.log_reader.ModulesLogRepository
 import java.util.*
 import java.util.regex.Pattern
 

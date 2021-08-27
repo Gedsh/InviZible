@@ -56,12 +56,12 @@ import java.util.concurrent.TimeUnit;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
-import pan.alexander.tordnscrypt.utils.file_operations.ExternalStoragePermissions;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
-import pan.alexander.tordnscrypt.utils.file_operations.OnBinaryFileOperationsCompleteListener;
+import pan.alexander.tordnscrypt.utils.filemanager.ExternalStoragePermissions;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
+import pan.alexander.tordnscrypt.utils.filemanager.OnBinaryFileOperationsCompleteListener;
 
 import static android.app.Activity.RESULT_OK;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
@@ -72,7 +72,7 @@ import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APP
 import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_ALLOW_WIFI_PREF;
 import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.CLEARNET_APPS;
 import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.UNLOCK_APPS;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.deleteFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
 
@@ -117,7 +117,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener,
 
         setRetainInstance(true);
 
-        FileOperations.setOnFileOperationCompleteListener(this);
+        FileManager.setOnFileOperationCompleteListener(this);
     }
 
     @Override
@@ -334,7 +334,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener,
     public void onDestroy() {
         super.onDestroy();
 
-        FileOperations.deleteOnFileOperationCompleteListener(this);
+        FileManager.deleteOnFileOperationCompleteListener(this);
 
         progress = null;
     }

@@ -40,9 +40,9 @@ import java.util.Collections;
 import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -105,7 +105,7 @@ public class ShowLogFragment extends Fragment implements View.OnClickListener, S
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.floatingBtnClearLog) {
-            FileOperations.writeToTextFile(getActivity(), file_path, Collections.singletonList(""), "ignored");
+            FileManager.writeToTextFile(getActivity(), file_path, Collections.singletonList(""), "ignored");
             tvLogFile.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
             tvLogFile.setText(R.string.dnscrypt_empty_log);
         }

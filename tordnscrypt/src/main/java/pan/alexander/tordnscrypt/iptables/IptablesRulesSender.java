@@ -28,10 +28,10 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import java.util.List;
 
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.utils.root.RootCommands;
+import pan.alexander.tordnscrypt.utils.root.RootExecService;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.COMMAND_RESULT;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT;
 
 abstract class IptablesRulesSender implements IptablesRules {
     private static boolean receiverIsRegistered;
