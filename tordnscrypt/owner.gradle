@@ -1,5 +1,8 @@
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'kotlin-kapt'
+}
 
 def keystorePropertiesFile = file("/home/alexander/.local/KStore/keystore.properties")
 def keystoreProperties = new Properties()
@@ -185,6 +188,9 @@ dependencies {
     implementation 'eu.chainfire:libsuperuser:1.1.0.+'
     implementation 'com.jrummyapps:android-shell:1.0.1'
     implementation "androidx.core:core-ktx:1.6.0"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation project(':filepicker')
+
+    //DI
+    implementation "com.google.dagger:dagger:$dagger_version"
+    kapt "com.google.dagger:dagger-compiler:$dagger_version"
 }
