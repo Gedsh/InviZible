@@ -23,7 +23,7 @@ import android.os.Bundle
 import androidx.preference.PreferenceFragmentCompat
 import pan.alexander.tordnscrypt.R
 
-class PreferencesFirewallFragment : PreferenceFragmentCompat() {
+class FirewallPreferencesFragment : PreferenceFragmentCompat() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

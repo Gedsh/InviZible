@@ -26,7 +26,7 @@ import java.lang.Exception
 import kotlin.collections.HashSet
 
 class ConnectionRecordsInteractor(private val connectionRecordsRepository: ConnectionRecordsRepository) {
-    private val applicationContext = App.instance?.applicationContext
+    private val applicationContext = App.instance.applicationContext
     private val listeners: HashSet<OnConnectionRecordsUpdatedListener?> = HashSet()
     private var converter: ConnectionRecordsConverter? = null
     private var parser: ConnectionRecordsParser? = null

@@ -53,7 +53,7 @@ import pan.alexander.tordnscrypt.settings.PreferencesCommonFragment;
 import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
 import pan.alexander.tordnscrypt.settings.dnscrypt_settings.PreferencesDNSFragment;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallFragment;
-import pan.alexander.tordnscrypt.settings.firewall.PreferencesFirewallFragment;
+import pan.alexander.tordnscrypt.settings.firewall.FirewallPreferencesFragment;
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges;
 import pan.alexander.tordnscrypt.settings.SettingsParser;
 import pan.alexander.tordnscrypt.settings.ShowLogFragment;
@@ -229,7 +229,7 @@ public class SettingsActivity extends LangAppCompatActivity {
             fSupportTrans.replace(android.R.id.content, unlockTorAppsFragment);
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "firewall_pref")) {
-            fSupportTrans.replace(android.R.id.content, new PreferencesFirewallFragment(), "PreferencesFirewallFragment");
+            fSupportTrans.replace(android.R.id.content, new FirewallPreferencesFragment(), "PreferencesFirewallFragment");
             fSupportTrans.commit();
         }
 

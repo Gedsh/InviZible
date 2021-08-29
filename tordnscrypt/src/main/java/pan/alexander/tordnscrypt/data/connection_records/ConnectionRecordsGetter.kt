@@ -33,7 +33,7 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPN.VPNBinder
 import java.lang.ref.WeakReference
 
 class ConnectionRecordsGetter {
-    private val applicationContext = App.instance?.applicationContext
+    private val applicationContext = App.instance.applicationContext
     @Volatile private var serviceConnection: ServiceConnection? = null
     @Volatile private var serviceVPN: WeakReference<ServiceVPN?>? = null
     @Volatile private var bound = false

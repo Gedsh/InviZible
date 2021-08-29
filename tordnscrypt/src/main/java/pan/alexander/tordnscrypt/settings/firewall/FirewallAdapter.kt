@@ -65,30 +65,30 @@ class FirewallAdapter(private val firewallFragment: FirewallFragment) :
         return firewallFragment.appsList.size
     }
 
-    fun getItem(position: Int): AppFirewall {
+    fun getItem(position: Int): FirewallAppModel {
         return firewallFragment.appsList[position]
     }
 
     private fun setItem(
         position: Int,
-        appFirewall: AppFirewall
+        firewallAppModel: FirewallAppModel
     ) {
-        firewallFragment.appsList[position] = appFirewall
+        firewallFragment.appsList[position] = firewallAppModel
 
-        val uid = appFirewall.applicationData.uid
+        val uid = firewallAppModel.applicationData.uid
         run label@{
             firewallFragment.savedAppsListWhenSearch?.forEachIndexed { index, savedApp ->
                 if (savedApp.applicationData.uid == uid) {
-                    firewallFragment.savedAppsListWhenSearch?.set(index, appFirewall)
+                    firewallFragment.savedAppsListWhenSearch?.set(index, firewallAppModel)
                     return@label
                 }
             }
         }
     }
 
-    private fun allowLan(position: Int, appFirewall: AppFirewall, allow: Boolean) {
-        appFirewall.allowLan = allow
-        setItem(position, appFirewall)
+    private fun allowLan(position: Int, firewallAppModel: FirewallAppModel, allow: Boolean) {
+        firewallAppModel.allowLan = allow
+        setItem(position, firewallAppModel)
 
         if (firewallFragment.allowLanForAll) {
             firewallFragment.allowLanForAll = false
@@ -99,9 +99,9 @@ class FirewallAdapter(private val firewallFragment: FirewallFragment) :
         }
     }
 
-    private fun allowWifi(position: Int, appFirewall: AppFirewall, allow: Boolean) {
-        appFirewall.allowWifi = allow
-        setItem(position, appFirewall)
+    private fun allowWifi(position: Int, firewallAppModel: FirewallAppModel, allow: Boolean) {
+        firewallAppModel.allowWifi = allow
+        setItem(position, firewallAppModel)
 
         if (firewallFragment.allowWifiForAll) {
             firewallFragment.allowWifiForAll = false
@@ -112,9 +112,9 @@ class FirewallAdapter(private val firewallFragment: FirewallFragment) :
         }
     }
 
-    private fun allowGsm(position: Int, appFirewall: AppFirewall, allow: Boolean) {
-        appFirewall.allowGsm = allow
-        setItem(position, appFirewall)
+    private fun allowGsm(position: Int, firewallAppModel: FirewallAppModel, allow: Boolean) {
+        firewallAppModel.allowGsm = allow
+        setItem(position, firewallAppModel)
 
         if (firewallFragment.allowGsmForAll) {
             firewallFragment.allowGsmForAll = false
@@ -125,9 +125,9 @@ class FirewallAdapter(private val firewallFragment: FirewallFragment) :
         }
     }
 
-    private fun allowRoaming(position: Int, appFirewall: AppFirewall, allow: Boolean) {
-        appFirewall.allowRoaming = allow
-        setItem(position, appFirewall)
+    private fun allowRoaming(position: Int, firewallAppModel: FirewallAppModel, allow: Boolean) {
+        firewallAppModel.allowRoaming = allow
+        setItem(position, firewallAppModel)
 
         if (firewallFragment.allowRoamingForAll) {
             firewallFragment.allowRoamingForAll = false
@@ -138,9 +138,9 @@ class FirewallAdapter(private val firewallFragment: FirewallFragment) :
         }
     }
 
-    private fun allowVpn(position: Int, appFirewall: AppFirewall, allow: Boolean) {
-        appFirewall.allowVPN = allow
-        setItem(position, appFirewall)
+    private fun allowVpn(position: Int, firewallAppModel: FirewallAppModel, allow: Boolean) {
+        firewallAppModel.allowVPN = allow
+        setItem(position, firewallAppModel)
 
         if (firewallFragment.allowVPNForAll) {
             firewallFragment.allowVPNForAll = false

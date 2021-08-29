@@ -21,9 +21,9 @@ package pan.alexander.tordnscrypt.settings.firewall
 
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
 
-data class AppFirewall(val applicationData: ApplicationData,
-                       var allowLan: Boolean,
-                       var allowWifi: Boolean,
-                       var allowGsm: Boolean,
-                       var allowRoaming: Boolean,
-                       var allowVPN: Boolean)
+data class FirewallAppModel(val applicationData: ApplicationData,
+                            var allowLan: Boolean,
+                            var allowWifi: Boolean,
+                            var allowGsm: Boolean,
+                            var allowRoaming: Boolean,
+                            var allowVPN: Boolean)
