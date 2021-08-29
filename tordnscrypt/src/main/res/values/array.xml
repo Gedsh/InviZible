@@ -43,7 +43,6 @@
         <item>Bonaire</item>
         <item>Bosnia and Herzegovina</item>
         <item>Botswana</item>
-        <item>Bouvet Island</item>
         <item>Brazil</item>
         <item>British Indian Ocean Territory</item>
         <item>Brunei Darussalam</item>
@@ -59,8 +58,6 @@
         <item>Chad</item>
         <item>Chile</item>
         <item>China</item>
-        <item>Christmas Island</item>
-        <item>Cocos (Keeling) Islands</item>
         <item>Colombia</item>
         <item>Comoros</item>
         <item>Congo</item>
@@ -91,7 +88,6 @@
         <item>France</item>
         <item>French Guiana</item>
         <item>French Polynesia</item>
-        <item>French Southern Territories</item>
         <item>Gabon</item>
         <item>Gambia</item>
         <item>Georgia</item>
@@ -109,7 +105,6 @@
         <item>Guinea-Bissau</item>
         <item>Guyana</item>
         <item>Haiti</item>
-        <item>Heard Island and McDonald Islands</item>
         <item>Holy See (Vatican City State)</item>
         <item>Honduras</item>
         <item>Hong Kong</item>
@@ -219,13 +214,11 @@
         <item>Solomon Islands</item>
         <item>Somalia</item>
         <item>South Africa</item>
-        <item>South Georgia and the South Sandwich Islands</item>
         <item>South Sudan</item>
         <item>Spain</item>
         <item>Sri Lanka</item>
         <item>Sudan</item>
         <item>Suriname</item>
-        <item>Svalbard and Jan Mayen</item>
         <item>Swaziland</item>
         <item>Sweden</item>
         <item>Switzerland</item>
@@ -249,7 +242,6 @@
         <item>United Arab Emirates</item>
         <item>United Kingdom</item>
         <item>United States</item>
-        <item>United States Minor Outlying Islands</item>
         <item>Uruguay</item>
         <item>Uzbekistan</item>
         <item>Vanuatu</item>
@@ -258,7 +250,6 @@
         <item>Virgin Islands, British</item>
         <item>Virgin Islands, U.S.</item>
         <item>Wallis and Futuna</item>
-        <item>Western Sahara</item>
         <item>Yemen</item>
         <item>Zambia</item>
         <item>Zimbabwe</item>
@@ -294,7 +285,6 @@
         <item>BQ</item>
         <item>BA</item>
         <item>BW</item>
-        <item>BV</item>
         <item>BR</item>
         <item>IO</item>
         <item>BN</item>
@@ -310,8 +300,6 @@
         <item>TD</item>
         <item>CL</item>
         <item>CN</item>
-        <item>CX</item>
-        <item>CC</item>
         <item>CO</item>
         <item>KM</item>
         <item>CG</item>
@@ -342,7 +330,6 @@
         <item>FR</item>
         <item>GF</item>
         <item>PF</item>
-        <item>TF</item>
         <item>GA</item>
         <item>GM</item>
         <item>GE</item>
@@ -360,7 +347,6 @@
         <item>GW</item>
         <item>GY</item>
         <item>HT</item>
-        <item>HM</item>
         <item>VA</item>
         <item>HN</item>
         <item>HK</item>
@@ -470,13 +456,11 @@
         <item>SB</item>
         <item>SO</item>
         <item>ZA</item>
-        <item>GS</item>
         <item>SS</item>
         <item>ES</item>
         <item>LK</item>
         <item>SD</item>
         <item>SR</item>
-        <item>SJ</item>
         <item>SZ</item>
         <item>SE</item>
         <item>CH</item>
@@ -500,7 +484,6 @@
         <item>AE</item>
         <item>GB</item>
         <item>US</item>
-        <item>UM</item>
         <item>UY</item>
         <item>UZ</item>
         <item>VU</item>
@@ -509,7 +492,6 @@
         <item>VG</item>
         <item>VI</item>
         <item>WF</item>
-        <item>EH</item>
         <item>YE</item>
         <item>ZM</item>
         <item>ZW</item>
