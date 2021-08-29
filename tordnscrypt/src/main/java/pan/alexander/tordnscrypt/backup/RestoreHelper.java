@@ -156,7 +156,7 @@ class RestoreHelper extends Installer {
                 refreshModulesStatus(activity);
 
                 Patch patch = new Patch(activity);
-                patch.checkPatches();
+                patch.checkPatches(true);
 
             } catch (Exception e) {
                 Log.e(LOG_TAG, "Restore fault " + e.getMessage() + " " + e.getCause());

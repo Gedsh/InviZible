@@ -39,6 +39,7 @@ import java.util.List;
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
+import pan.alexander.tordnscrypt.patches.Patch;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
@@ -138,6 +139,8 @@ public class ModulesStarterHelper {
                                 + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
                     }
 
+                    checkModulesConfigPatches();
+
                     sendAskForceCloseBroadcast(context, "DNSCrypt");
                 }
 
@@ -211,6 +214,8 @@ public class ModulesStarterHelper {
                                 + "\n\n ERR = " + shellResult.getStderr()
                                 + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
                     }
+
+                    checkModulesConfigPatches();
 
                     sendAskForceCloseBroadcast(context, "Tor");
 
@@ -309,6 +314,8 @@ public class ModulesStarterHelper {
                                 + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr()
                                 + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
                     }
+
+                    checkModulesConfigPatches();
 
                     sendAskForceCloseBroadcast(context, "I2P");
                 }
@@ -429,5 +436,10 @@ public class ModulesStarterHelper {
         intent.putExtra("Mark", TopFragmentMark);
         intent.putExtra(MODULE_NAME, module);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+    }
+
+    private void checkModulesConfigPatches() {
+        Patch patch = new Patch(context);
+        patch.checkPatches(true);
     }
 }

@@ -46,22 +46,22 @@ class Patch(private val context: Context) {
     private val preferenceRepository = App.instance.daggerComponent.getPreferenceRepository()
 
     @WorkerThread
-    fun checkPatches() {
+    fun checkPatches(forceCheck: Boolean) {
 
         if (patchingIsInProgress.compareAndSet(false, true)) {
             try {
-                tryCheckPatches()
+                tryCheckPatches(forceCheck)
             } finally {
                 patchingIsInProgress.getAndSet(false)
             }
         }
     }
 
-    private fun tryCheckPatches() {
+    private fun tryCheckPatches(forceCheck: Boolean) {
         val currentVersion = BuildConfig.VERSION_CODE
         val currentVersionSaved = preferenceRepository.get().getIntPreference(SAVED_VERSION_CODE)
 
-        if (currentVersionSaved != 0 && currentVersion > currentVersionSaved) {
+        if (currentVersionSaved != 0 && currentVersion > currentVersionSaved || forceCheck) {
             try {
                 val configUtil = ConfigUtil(context)
 

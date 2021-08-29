@@ -1121,6 +1121,6 @@ public class ModulesService extends Service {
 
     private void checkModulesConfigPatches() {
         Patch patch = new Patch(this);
-        patch.checkPatches();
+        patch.checkPatches(false);
     }
 }
