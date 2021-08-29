@@ -109,6 +109,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            minifyEnabled false
+            shrinkResources false
+            multiDexEnabled = true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.betasign
+        }
         release {
             minifyEnabled true
             shrinkResources true
@@ -193,4 +200,7 @@ dependencies {
     //DI
     implementation "com.google.dagger:dagger:$dagger_version"
     kapt "com.google.dagger:dagger-compiler:$dagger_version"
+
+    //Multidex
+    debugImplementation "androidx.multidex:multidex:$multidex_version"
 }

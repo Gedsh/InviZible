@@ -21,6 +21,7 @@ package pan.alexander.tordnscrypt
 
 import android.annotation.TargetApi
 import android.app.*
+import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
@@ -33,6 +34,7 @@ import pan.alexander.tordnscrypt.di.CoroutinesModule
 import pan.alexander.tordnscrypt.di.DaggerAppComponent
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule
 import pan.alexander.tordnscrypt.language.Language
+import pan.alexander.tordnscrypt.utils.multidex.MultidexActivator
 import java.lang.ref.WeakReference
 
 const val ANDROID_CHANNEL_ID = "InviZible"
@@ -46,6 +48,13 @@ class App : Application() {
 
     companion object {
         lateinit var instance: App
+    }
+
+    override fun attachBaseContext(base: Context?) {
+        super.attachBaseContext(base)
+        if (BuildConfig.DEBUG) {
+            MultidexActivator.activate(this)
+        }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
