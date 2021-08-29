@@ -37,6 +37,12 @@
             android:summary="@string/pref_tor_virtual_addr_network_IPv4_summ"
             android:title="@string/pref_tor_virtual_addr_network_IPv4" />
         <CheckBoxPreference
+            android:id="@+id/pref_tor_hardware_accel"
+            android:defaultValue="false"
+            android:key="HardwareAccel"
+            android:summary="@string/pref_tor_hardware_accel_summ"
+            android:title="@string/pref_tor_hardware_accel" />
+        <CheckBoxPreference
             android:id="@+id/pref_tor_avoid_disc_writes"
             android:defaultValue="true"
             android:key="AvoidDiskWrites"
