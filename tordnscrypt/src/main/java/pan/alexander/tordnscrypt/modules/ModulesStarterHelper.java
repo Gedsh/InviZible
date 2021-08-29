@@ -63,7 +63,7 @@ public class ModulesStarterHelper {
     public final static String ASK_FORCE_CLOSE = "pan.alexander.tordnscrypt.AskForceClose";
     public final static String MODULE_NAME = "pan.alexander.tordnscrypt.ModuleName";
 
-    private final ModulesService service;
+    private final Context context;
     private final Handler handler;
     private final String appDataDir;
     private final String busyboxPath;
@@ -76,8 +76,8 @@ public class ModulesStarterHelper {
     private final ModulesStatus modulesStatus;
     private final Lazy<PreferenceRepository> preferenceRepository;
 
-    ModulesStarterHelper(ModulesService service, Handler handler, PathVars pathVars) {
-        this.service = service;
+    ModulesStarterHelper(Context context, Handler handler, PathVars pathVars) {
+        this.context = context;
         this.handler = handler;
         appDataDir = pathVars.getAppDataDir();
         busyboxPath = pathVars.getBusyboxPath();
@@ -133,12 +133,12 @@ public class ModulesStarterHelper {
                 if (modulesStatus.getDnsCryptState() != STOPPING && modulesStatus.getDnsCryptState() != STOPPED) {
 
                     if (appVersion.startsWith("b") && handler != null) {
-                        handler.post(() -> Toast.makeText(service, "DNSCrypt Module Fault: "
+                        handler.post(() -> Toast.makeText(context, "DNSCrypt Module Fault: "
                                 + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr()
                                 + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
                     }
 
-                    sendAskForceCloseBroadcast(service, "DNSCrypt");
+                    sendAskForceCloseBroadcast(context, "DNSCrypt");
                 }
 
                 Log.e(LOG_TAG, "Error DNSCrypt: "
@@ -147,7 +147,7 @@ public class ModulesStarterHelper {
 
                 modulesStatus.setDnsCryptState(STOPPED);
 
-                ModulesAux.makeModulesStateExtraLoop(service);
+                ModulesAux.makeModulesStateExtraLoop(context);
 
                 sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
             }
@@ -165,7 +165,7 @@ public class ModulesStarterHelper {
             final CommandResult shellResult;
             if (modulesStatus.isUseModulesWithRoot()) {
 
-                List<String> lines = correctTorConfRunAsDaemon(service, true);
+                List<String> lines = correctTorConfRunAsDaemon(context, true);
 
                 correctObfsModulePath(lines);
 
@@ -186,7 +186,7 @@ public class ModulesStarterHelper {
 
             } else {
 
-                List<String> lines = correctTorConfRunAsDaemon(service, false);
+                List<String> lines = correctTorConfRunAsDaemon(context, false);
 
                 useTorSchedulerVanilla(lines);
 
@@ -207,17 +207,17 @@ public class ModulesStarterHelper {
 
                 if (modulesStatus.getTorState() != STOPPING && modulesStatus.getTorState() != STOPPED) {
                     if (appVersion.startsWith("b") && handler != null) {
-                        handler.post(() -> Toast.makeText(service, "Tor Module Fault: " + shellResult.exitCode
+                        handler.post(() -> Toast.makeText(context, "Tor Module Fault: " + shellResult.exitCode
                                 + "\n\n ERR = " + shellResult.getStderr()
                                 + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
                     }
 
-                    sendAskForceCloseBroadcast(service, "Tor");
+                    sendAskForceCloseBroadcast(context, "Tor");
 
                     //Try to update Selinux context and UID once again
                     if (shellResult.exitCode == 1 && modulesStatus.isRootAvailable()) {
                         modulesStatus.setContextUIDUpdateRequested(true);
-                        ModulesAux.makeModulesStateExtraLoop(service);
+                        ModulesAux.makeModulesStateExtraLoop(context);
                     }
                 }
 
@@ -230,7 +230,7 @@ public class ModulesStarterHelper {
 
                 modulesStatus.setTorState(STOPPED);
 
-                ModulesAux.makeModulesStateExtraLoop(service);
+                ModulesAux.makeModulesStateExtraLoop(context);
 
                 sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
             }
@@ -265,7 +265,7 @@ public class ModulesStarterHelper {
 
             final CommandResult shellResult;
             if (modulesStatus.isUseModulesWithRoot()) {
-                correctITPDConfRunAsDaemon(service, appDataDir, true);
+                correctITPDConfRunAsDaemon(context, appDataDir, true);
 
                 Shell.SU.run(busyboxPath + "mkdir -p " + appDataDir + "/i2pd_data",
                         "cd " + appDataDir + "/app_data/i2pd",
@@ -288,7 +288,7 @@ public class ModulesStarterHelper {
                 }
 
             } else {
-                correctITPDConfRunAsDaemon(service, appDataDir, false);
+                correctITPDConfRunAsDaemon(context, appDataDir, false);
                 itpdCmdString = itpdPath + " --conf " + appDataDir
                         + "/app_data/i2pd/i2pd.conf --datadir " + appDataDir
                         + "/i2pd_data --pidfile " + appDataDir + "/i2pd.pid";
@@ -305,12 +305,12 @@ public class ModulesStarterHelper {
 
                 if (modulesStatus.getItpdState() != STOPPING && modulesStatus.getItpdState() != STOPPED) {
                     if (appVersion.startsWith("b") && handler != null) {
-                        handler.post(() -> Toast.makeText(service, "Purple I2P Module Fault: "
+                        handler.post(() -> Toast.makeText(context, "Purple I2P Module Fault: "
                                 + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr()
                                 + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
                     }
 
-                    sendAskForceCloseBroadcast(service, "I2P");
+                    sendAskForceCloseBroadcast(context, "I2P");
                 }
 
                 Log.e(LOG_TAG, "Error ITPD: " + shellResult.exitCode + " ERR="
@@ -318,7 +318,7 @@ public class ModulesStarterHelper {
 
                 modulesStatus.setItpdState(STOPPED);
 
-                ModulesAux.makeModulesStateExtraLoop(service);
+                ModulesAux.makeModulesStateExtraLoop(context);
 
                 sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
             }
@@ -361,7 +361,7 @@ public class ModulesStarterHelper {
 
         if (indexOfClientOnly > 0) {
             lines.add(indexOfClientOnly, "Schedulers Vanilla");
-            FileManager.writeTextFileSynchronous(service, torConfPath, lines);
+            FileManager.writeTextFileSynchronous(context, torConfPath, lines);
         }
     }
 
@@ -383,15 +383,15 @@ public class ModulesStarterHelper {
                 for (int i = 0; i < lines.size(); i++) {
                     line = lines.get(i);
                     if (line.contains("ClientTransportPlugin ") && line.contains("/libobfs4proxy.so")) {
-                        line = line.replaceAll("/.+?/libobfs4proxy.so", service.getApplicationInfo().nativeLibraryDir + "/libobfs4proxy.so");
+                        line = line.replaceAll("/.+?/libobfs4proxy.so", context.getApplicationInfo().nativeLibraryDir + "/libobfs4proxy.so");
                         lines.set(i, line);
                     } else if (line.contains("ClientTransportPlugin ") && line.contains("/libsnowflake.so")) {
-                        line = line.replaceAll("/.+?/libsnowflake.so", service.getApplicationInfo().nativeLibraryDir + "/libsnowflake.so");
+                        line = line.replaceAll("/.+?/libsnowflake.so", context.getApplicationInfo().nativeLibraryDir + "/libsnowflake.so");
                         lines.set(i, line);
                     }
                 }
 
-                FileManager.writeTextFileSynchronous(service, torConfPath, lines);
+                FileManager.writeTextFileSynchronous(context, torConfPath, lines);
 
                 Log.i(LOG_TAG, "ModulesService Tor Obfs module path is corrected");
             }
@@ -421,7 +421,7 @@ public class ModulesStarterHelper {
         Intent intent = new Intent(COMMAND_RESULT);
         intent.putExtra("CommandsResult", comResult);
         intent.putExtra("Mark", moduleMark);
-        LocalBroadcastManager.getInstance(service).sendBroadcast(intent);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
     private void sendAskForceCloseBroadcast(Context context, String module) {

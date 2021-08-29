@@ -319,7 +319,9 @@ public class ModulesService extends Service {
                 cleanLogFileNoRootMethod(pathVars.getAppDataDir() + "/logs/DnsCrypt.log",
                         ModulesService.this.getResources().getString(R.string.tvDNSDefaultLog) + " " + DNSCryptVersion);
 
-                ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(ModulesService.this, handler, pathVars);
+                ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(
+                        ModulesService.this.getApplicationContext(), handler, pathVars
+                );
                 Thread dnsCryptThread = new Thread(modulesStarterHelper.getDNSCryptStarterRunnable());
                 dnsCryptThread.setName("DNSCryptThread");
                 dnsCryptThread.setDaemon(false);
@@ -442,7 +444,9 @@ public class ModulesService extends Service {
                 cleanLogFileNoRootMethod(pathVars.getAppDataDir() + "/logs/Tor.log",
                         ModulesService.this.getResources().getString(R.string.tvTorDefaultLog) + " " + TorVersion);
 
-                ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(ModulesService.this, handler, pathVars);
+                ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(
+                        ModulesService.this.getApplicationContext(), handler, pathVars
+                );
                 Thread torThread = new Thread(modulesStarterHelper.getTorStarterRunnable());
                 torThread.setName("TorThread");
                 torThread.setDaemon(false);
@@ -570,7 +574,9 @@ public class ModulesService extends Service {
 
                 cleanLogFileNoRootMethod(pathVars.getAppDataDir() + "/logs/i2pd.log", "");
 
-                ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(ModulesService.this, handler, pathVars);
+                ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(
+                        ModulesService.this.getApplicationContext(), handler, pathVars
+                );
                 Thread itpdThread = new Thread(modulesStarterHelper.getITPDStarterRunnable());
                 itpdThread.setName("ITPDThread");
                 itpdThread.setDaemon(false);
@@ -1097,8 +1103,8 @@ public class ModulesService extends Service {
     }
 
     private void startArpScanner() {
-        arpScanner = ArpScanner.INSTANCE.getInstance(this, handler);
-        arpScanner.start(this);
+        arpScanner = ArpScanner.INSTANCE.getInstance(this.getApplicationContext(), handler);
+        arpScanner.start(this.getApplicationContext());
     }
 
     private void stopArpScanner() {

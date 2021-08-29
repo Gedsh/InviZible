@@ -485,14 +485,14 @@ public class ServiceVPN extends VpnService {
         PendingIntent pi;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             pi = PendingIntent.getActivity(
-                    this,
+                    this.getApplicationContext(),
                     0,
                     configure,
                     PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
             );
         } else {
             pi = PendingIntent.getActivity(
-                    this,
+                    this.getApplicationContext(),
                     0,
                     configure,
                     PendingIntent.FLAG_UPDATE_CURRENT
@@ -605,6 +605,7 @@ public class ServiceVPN extends VpnService {
 
             });
 
+            tunnelThread.setName("VPN tunnel thread");
             tunnelThread.start();
 
             Log.i(LOG_TAG, "VPN Started tunnel thread");

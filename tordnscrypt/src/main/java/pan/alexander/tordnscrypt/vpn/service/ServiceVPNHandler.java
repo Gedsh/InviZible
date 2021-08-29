@@ -34,6 +34,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -65,12 +66,13 @@ import static pan.alexander.tordnscrypt.vpn.service.ServiceVPN.EXTRA_REASON;
 public class ServiceVPNHandler extends Handler {
     private static ServiceVPNHandler serviceVPNHandler;
     private static List<Rule> listRule;
+    @Nullable
     private final ServiceVPN serviceVPN;
     private ServiceVPN.Builder last_builder = null;
     private ArpScanner arpScanner;
     private final Lazy<PreferenceRepository> preferenceRepositoryLazy;
 
-    private ServiceVPNHandler(Looper looper, ServiceVPN serviceVPN) {
+    private ServiceVPNHandler(Looper looper, @Nullable ServiceVPN serviceVPN) {
         super(looper);
         this.serviceVPN = serviceVPN;
         preferenceRepositoryLazy = App.instance.daggerComponent.getPreferenceRepository();
@@ -102,10 +104,16 @@ public class ServiceVPNHandler extends Handler {
     }
 
     private void handleIntent(Intent intent) {
+
+        if (serviceVPN == null) {
+            return;
+        }
+
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(serviceVPN);
 
         VPNCommand cmd = (VPNCommand) intent.getSerializableExtra(EXTRA_COMMAND);
         String reason = intent.getStringExtra(EXTRA_REASON);
+
         Log.i(LOG_TAG, "VPN Handler Executing intent=" + intent + " command=" + cmd + " reason=" + reason +
                 " vpn=" + (serviceVPN.vpn != null) + " user=" + (Process.myUid() / 100000));
 
@@ -163,7 +171,11 @@ public class ServiceVPNHandler extends Handler {
 
     private void start() {
 
-        arpScanner = ArpScanner.INSTANCE.getInstance(serviceVPN, null);
+        if (serviceVPN == null) {
+            return;
+        }
+
+        arpScanner = ArpScanner.INSTANCE.getInstance(serviceVPN.getApplicationContext(), null);
 
         if (serviceVPN.vpn == null) {
 
@@ -182,6 +194,11 @@ public class ServiceVPNHandler extends Handler {
     }
 
     private void reload() {
+
+        if (serviceVPN == null) {
+            return;
+        }
+
         serviceVPN.reloading = true;
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
@@ -278,7 +295,7 @@ public class ServiceVPNHandler extends Handler {
     }
 
     private void stop() {
-        if (serviceVPN.vpn != null) {
+        if (serviceVPN != null && serviceVPN.vpn != null) {
             serviceVPN.stopNative();
             stopVPN(serviceVPN.vpn);
             serviceVPN.vpn = null;
@@ -290,6 +307,10 @@ public class ServiceVPNHandler extends Handler {
 
     private List<String> getAllowedRules(List<Rule> listRule) {
         List<String> listAllowed = new ArrayList<>();
+
+        if (serviceVPN == null) {
+            return listAllowed;
+        }
 
         // Update connected state
         serviceVPN.last_connected = NetworkUtils.isConnected(serviceVPN);
@@ -325,7 +346,7 @@ public class ServiceVPNHandler extends Handler {
             ParcelFileDescriptor pfd = builder.establish();
 
             // Set underlying network
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && serviceVPN != null) {
                 ConnectivityManager cm = (ConnectivityManager) serviceVPN.getSystemService(CONNECTIVITY_SERVICE);
                 Network active = (cm == null ? null : cm.getActiveNetwork());
                 if (active != null) {
