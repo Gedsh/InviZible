@@ -592,3 +592,11 @@
 * Updated Purple I2P.
 * Updated firewall view.
 * Updated Polish translation.
+
+**InviZible Pro beta 1.3.6**
+* Updated Purple I2P to version 2.39.0.
+* Changed implementation of saving app settings.
+* Added HardwareAccel option to Tor settings.
+* Updated Tor default bridges.
+* Fixed showing recently installed apps at the top of the firewall apps list.
+* Minor bug fixes and optimizations.
