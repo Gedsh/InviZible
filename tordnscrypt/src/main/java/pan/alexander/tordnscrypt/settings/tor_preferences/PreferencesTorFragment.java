@@ -98,6 +98,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         ArrayList<Preference> preferences = new ArrayList<>();
 
         preferences.add(findPreference("VirtualAddrNetwork"));
+        preferences.add(findPreference("HardwareAccel"));
         preferences.add(findPreference("AvoidDiskWrites"));
         preferences.add(findPreference("ConnectionPadding"));
         preferences.add(findPreference("ReducedConnectionPadding"));
@@ -240,7 +241,9 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         for (int i = 0; i < key_tor.size(); i++) {
 
             if (!isChanged
-                    && (key_tor_orig.size() != key_tor.size() || !key_tor_orig.get(i).equals(key_tor.get(i)) || !val_tor_orig.get(i).equals(val_tor.get(i)))) {
+                    && (key_tor_orig.size() != key_tor.size()
+                    || !key_tor_orig.get(i).equals(key_tor.get(i))
+                    || !val_tor_orig.get(i).equals(val_tor.get(i)))) {
                 isChanged = true;
             }
 
@@ -315,6 +318,12 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 key_tor.set(key_tor.indexOf("EntryNodes"), "#EntryNodes");
             }
             return true;
+        } else if (Objects.equals(preference.getKey(), "HardwareAccel")) {
+            if (Boolean.parseBoolean(newValue.toString())
+                    && !key_tor.contains("HardwareAccel") && key_tor.contains("Schedulers") ) {
+                key_tor.add(key_tor.indexOf("Schedulers"), "HardwareAccel");
+                val_tor.add(key_tor.indexOf("HardwareAccel"), newValue.toString());
+            }
         } else if (Objects.equals(preference.getKey(), "Enable SOCKS proxy")) {
             if (Boolean.parseBoolean(newValue.toString()) && key_tor.contains("#SOCKSPort")) {
                 key_tor.set(key_tor.indexOf("#SOCKSPort"), "SOCKSPort");
