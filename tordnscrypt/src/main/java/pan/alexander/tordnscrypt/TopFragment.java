@@ -450,7 +450,7 @@ public class TopFragment extends Fragment {
 
             TopFragment topFragment = topFragmentWeakReference.get();
 
-            Activity activity = topFragment.getActivity();
+            MainActivity activity = (MainActivity) topFragment.getActivity();
 
             if (activity == null || activity.isFinishing()) {
                 return;
@@ -466,7 +466,7 @@ public class TopFragment extends Fragment {
                 if (topFragment.rootIsAvailable != topFragment.rootIsAvailableSaved || topFragment.mode == UNDEFINED) {
                     ModulesAux.switchModes(topFragment.rootIsAvailable, topFragment.runModulesWithRoot, topFragment.mode);
 
-                    activity.invalidateOptionsMenu();
+                    activity.invalidateMenu();
                 }
 
                 if (!PathVars.isModulesInstalled()) {

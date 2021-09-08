@@ -21,6 +21,6 @@ package pan.alexander.tordnscrypt.utils.mode
 
 interface AppModeManagerCallback {
     fun prepareVPNService()
-    fun invalidateOptionsMenu()
     fun setFirewallNavigationItemVisible(visibility: Boolean)
+    fun invalidateMenu()
 }

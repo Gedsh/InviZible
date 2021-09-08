@@ -61,7 +61,7 @@ object AppModeManager {
         modulesStatus.setIptablesRulesUpdateRequested(true)
 
         appModeManagerCallback?.setFirewallNavigationItemVisible(false)
-        appModeManagerCallback?.invalidateOptionsMenu()
+        appModeManagerCallback?.invalidateMenu()
     }
 
     fun switchToProxyMode(context: Context, item: MenuItem?, appModeManagerCallback: AppModeManagerCallback?) {
@@ -88,7 +88,7 @@ object AppModeManager {
         }
 
         appModeManagerCallback?.setFirewallNavigationItemVisible(false)
-        appModeManagerCallback?.invalidateOptionsMenu()
+        appModeManagerCallback?.invalidateMenu()
     }
 
     fun switchToVPNMode(context: Context, item: MenuItem?, appModeManagerCallback: AppModeManagerCallback?) {
@@ -131,7 +131,7 @@ object AppModeManager {
         }
 
         appModeManagerCallback?.setFirewallNavigationItemVisible(true)
-        appModeManagerCallback?.invalidateOptionsMenu()
+        appModeManagerCallback?.invalidateMenu()
     }
 
     private fun disableUseModulesWithRoot(context: Context, modulesStatus: ModulesStatus) {

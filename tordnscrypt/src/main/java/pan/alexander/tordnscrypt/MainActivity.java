@@ -198,6 +198,13 @@ public class MainActivity extends LangAppCompatActivity
             viewPager.setCurrentItem(viewPagerPosition);
         }
 
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+
         Looper looper = Looper.getMainLooper();
         if (looper != null) {
             handler = new Handler(looper);
@@ -300,6 +307,11 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     private void handleMitmAttackWarning() {
+
+        if (handler == null) {
+            return;
+        }
+
         Intent intent = getIntent();
         if (intent.getBooleanExtra(ArpScannerKt.mitmAttackWarning, false)
                 && (ArpScanner.INSTANCE.getArpAttackDetected() || ArpScanner.INSTANCE.getDhcpGatewayAttackDetected())) {
@@ -562,7 +574,7 @@ public class MainActivity extends LangAppCompatActivity
 
         newIdentityMenuItem.setVisible(show);
 
-        invalidateOptionsMenu();
+        invalidateMenu();
     }
 
     @Override
@@ -688,7 +700,7 @@ public class MainActivity extends LangAppCompatActivity
                     checkHotspotStateTimer = null;
                 }
 
-                runOnUiThread(() -> invalidateOptionsMenu());
+                invalidateMenu();
             }
         }, 3000, 5000);
     }
@@ -966,7 +978,7 @@ public class MainActivity extends LangAppCompatActivity
             @Override
             public void onReceive(Context context, Intent intent) {
                 if (ArpScannerKt.mitmAttackWarning.equals(intent.getAction())) {
-                    handler.post(() -> invalidateOptionsMenu());
+                    invalidateMenu();
                 }
             }
         };
@@ -1011,17 +1023,11 @@ public class MainActivity extends LangAppCompatActivity
             intent.setAction(ModulesServiceActions.actionStopService);
             startService(intent);
         }
+
+        clearViews();
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-
-        if (checkHotspotStateTimer != null) {
-            checkHotspotStateTimer.cancel();
-            checkHotspotStateTimer.purge();
-            checkHotspotStateTimer = null;
-        }
+    private void clearViews() {
 
         if (viewPager != null) {
             viewPagerPosition = viewPager.getCurrentItem();
@@ -1030,7 +1036,6 @@ public class MainActivity extends LangAppCompatActivity
 
         if (handler != null) {
             handler.removeCallbacksAndMessages(null);
-            handler = null;
         }
 
         topFragment = null;
@@ -1042,6 +1047,22 @@ public class MainActivity extends LangAppCompatActivity
         newIdentityMenuItem = null;
         animatingImage = null;
         rotateAnimation = null;
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (checkHotspotStateTimer != null) {
+            checkHotspotStateTimer.cancel();
+            checkHotspotStateTimer.purge();
+            checkHotspotStateTimer = null;
+        }
+
+        if (handler != null) {
+            handler.removeCallbacksAndMessages(null);
+            handler = null;
+        }
+
+        super.onDestroy();
     }
 
     @Override
@@ -1066,5 +1087,12 @@ public class MainActivity extends LangAppCompatActivity
             return true;
         }
         return super.onKeyLongPress(keyCode, event);
+    }
+
+    @Override
+    public void invalidateMenu() {
+        if (handler != null) {
+            handler.post(this::invalidateOptionsMenu);
+        }
     }
 }
