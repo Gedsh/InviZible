@@ -57,10 +57,11 @@ class AppPreferenceHelperImpl @Inject constructor(
                     is Boolean -> editor.putBoolean(key, value)
                     is Int -> editor.putInt(key, value)
                     is Float -> editor.putFloat(key, value)
-                    is String -> editor.putString(key, value)
+                    is String -> editor.putString(key, null).putString(key, value)
                     is Set<*> -> {
                         if (value.all { it is String }) {
-                            editor.remove(key).putStringSet(key, value as Set<String>)
+                            @Suppress("UNCHECKED_CAST")
+                            editor.putStringSet(key, null).putStringSet(key, value as Set<String>)
                         } else {
                             throw UnsupportedOperationException("AppPreferenceHelper Only String Set is allowed")
                         }
