@@ -117,21 +117,6 @@
             android:visibility="invisible" />
 
         <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/btnTopWifiFirewall"
-            android:layout_width="@dimen/firewall_button_size"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_margin="@dimen/firewall_views_margin"
-            android:adjustViewBounds="true"
-            android:background="@drawable/button_start_selector"
-            android:cropToPadding="true"
-            android:padding="@dimen/firewall_buttons_padding"
-            android:scaleType="fitCenter"
-            android:tooltipText="@string/firewall_btnTopWifiFirewall_tooltip"
-            app:srcCompat="@drawable/ic_firewall_wifi_24"
-            tools:targetApi="o" />
-
-        <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/btnTopLanFirewall"
             android:layout_width="@dimen/firewall_button_size"
             android:layout_height="wrap_content"
@@ -144,6 +129,21 @@
             android:scaleType="fitCenter"
             android:tooltipText="@string/firewall_btnTopLanFirewall_tooltip"
             app:srcCompat="@drawable/ic_firewall_lan"
+            tools:targetApi="o" />
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/btnTopWifiFirewall"
+            android:layout_width="@dimen/firewall_button_size"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="@dimen/firewall_views_margin"
+            android:adjustViewBounds="true"
+            android:background="@drawable/button_start_selector"
+            android:cropToPadding="true"
+            android:padding="@dimen/firewall_buttons_padding"
+            android:scaleType="fitCenter"
+            android:tooltipText="@string/firewall_btnTopWifiFirewall_tooltip"
+            app:srcCompat="@drawable/ic_firewall_wifi_24"
             tools:targetApi="o" />
 
         <androidx.appcompat.widget.AppCompatImageButton
