@@ -25,7 +25,6 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -111,7 +110,8 @@ public class ModulesService extends Service {
 
     ModulesBroadcastReceiver modulesBroadcastReceiver;
 
-    private volatile Handler handler;
+    @Inject
+    public volatile Lazy<Handler> handler;
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
     private PathVars pathVars;
@@ -159,11 +159,6 @@ public class ModulesService extends Service {
         startModulesThreadsTimer();
 
         startArpScanner();
-
-        Looper looper = Looper.getMainLooper();
-        if (looper != null) {
-            handler = new Handler(Looper.getMainLooper());
-        }
     }
 
 
@@ -320,7 +315,7 @@ public class ModulesService extends Service {
                         ModulesService.this.getResources().getString(R.string.tvDNSDefaultLog) + " " + DNSCryptVersion);
 
                 ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(
-                        ModulesService.this.getApplicationContext(), handler, pathVars
+                        ModulesService.this.getApplicationContext(), handler.get(), pathVars
                 );
                 Thread dnsCryptThread = new Thread(modulesStarterHelper.getDNSCryptStarterRunnable());
                 dnsCryptThread.setName("DNSCryptThread");
@@ -337,7 +332,7 @@ public class ModulesService extends Service {
             } catch (Exception e) {
                 Log.e(LOG_TAG, "DnsCrypt was unable to start " + e.getMessage());
                 if (handler != null) {
-                    handler.post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
+                    handler.get().post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
                 }
             }
 
@@ -445,7 +440,7 @@ public class ModulesService extends Service {
                         ModulesService.this.getResources().getString(R.string.tvTorDefaultLog) + " " + TorVersion);
 
                 ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(
-                        ModulesService.this.getApplicationContext(), handler, pathVars
+                        ModulesService.this.getApplicationContext(), handler.get(), pathVars
                 );
                 Thread torThread = new Thread(modulesStarterHelper.getTorStarterRunnable());
                 torThread.setName("TorThread");
@@ -461,7 +456,7 @@ public class ModulesService extends Service {
             } catch (Exception e) {
                 Log.e(LOG_TAG, "Tor was unable to startRefreshModulesStatus: " + e.getMessage());
                 if (handler != null) {
-                    handler.post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
+                    handler.get().post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
                 }
             }
 
@@ -575,7 +570,7 @@ public class ModulesService extends Service {
                 cleanLogFileNoRootMethod(pathVars.getAppDataDir() + "/logs/i2pd.log", "");
 
                 ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(
-                        ModulesService.this.getApplicationContext(), handler, pathVars
+                        ModulesService.this.getApplicationContext(), handler.get(), pathVars
                 );
                 Thread itpdThread = new Thread(modulesStarterHelper.getITPDStarterRunnable());
                 itpdThread.setName("ITPDThread");
@@ -591,7 +586,7 @@ public class ModulesService extends Service {
             } catch (Exception e) {
                 Log.e(LOG_TAG, "I2PD was unable to startRefreshModulesStatus: " + e.getMessage());
                 if (handler != null) {
-                    handler.post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
+                    handler.get().post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
                 }
             }
 
@@ -931,7 +926,7 @@ public class ModulesService extends Service {
         stopVPNServiceIfRunning();
 
         if (handler != null) {
-            handler.removeCallbacksAndMessages(null);
+            handler.get().removeCallbacksAndMessages(null);
         }
 
         serviceIsRunning = false;
@@ -1103,7 +1098,7 @@ public class ModulesService extends Service {
     }
 
     private void startArpScanner() {
-        arpScanner = ArpScanner.INSTANCE.getInstance(this.getApplicationContext(), handler);
+        arpScanner = ArpScanner.INSTANCE.getInstance(this.getApplicationContext(), handler.get());
         arpScanner.start(this.getApplicationContext());
     }
 

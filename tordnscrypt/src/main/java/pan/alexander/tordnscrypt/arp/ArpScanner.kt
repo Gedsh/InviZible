@@ -44,6 +44,7 @@ import pan.alexander.tordnscrypt.vpn.NetworkUtils
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
+import java.lang.ref.WeakReference
 import java.math.BigInteger
 import java.net.InetAddress
 import java.nio.ByteOrder
@@ -72,10 +73,13 @@ class ArpScanner private constructor(
     handler: Handler?
 ) : Shell.OnCommandResultListener {
 
-    private var handler = handler
-        set(value) {
-            if (handler != null) field = value
+    private var handler: WeakReference<Handler>? = null
+
+    init {
+        if (handler != null) {
+            this.handler = WeakReference(handler)
         }
+    }
 
     private var arpTableAccessible: Boolean? = null
 
@@ -789,13 +793,13 @@ class ArpScanner private constructor(
     }
 
     private fun updateMainActivityIcons(context: Context) {
-        handler?.post {
+        handler?.get()?.post {
             LocalBroadcastManager.getInstance(context).sendBroadcast(Intent(mitmAttackWarning))
         }
     }
 
     private fun makeToast(context: Context, message: Int) {
-        handler?.post { Toast.makeText(context, message, Toast.LENGTH_LONG).show() }
+        handler?.get()?.post { Toast.makeText(context, message, Toast.LENGTH_LONG).show() }
     }
 
     private fun reloadIptablesWithRootMode(context: Context) {

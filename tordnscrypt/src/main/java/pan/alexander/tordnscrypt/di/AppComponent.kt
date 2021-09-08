@@ -40,7 +40,8 @@ import javax.inject.Singleton
 
 @Singleton
 @Component(modules = [SharedPreferencesModule::class, RepositoryModule::class,
-    DataSourcesModule::class, HelpersModule::class, CoroutinesModule::class])
+    DataSourcesModule::class, HelpersModule::class, CoroutinesModule::class,
+    HandlerModule::class])
 interface AppComponent {
     fun getPreferenceRepository(): dagger.Lazy<PreferenceRepository>
 

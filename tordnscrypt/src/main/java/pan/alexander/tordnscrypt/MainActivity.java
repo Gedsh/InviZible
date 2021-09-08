@@ -48,7 +48,6 @@ import androidx.preference.PreferenceManager;
 import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.ViewPager;
 
-import android.os.Looper;
 import android.text.InputType;
 import android.util.Base64;
 import android.util.Log;
@@ -115,17 +114,20 @@ import javax.inject.Inject;
 public class MainActivity extends LangAppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, AppModeManagerCallback {
 
-    private static final int CODE_IS_AP_ON = 100;
-    private static final int CODE_IS_VPN_ALLOWED = 110;
-
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
 
+    @Inject
+    public Handler handler;
+
     public boolean childLockActive = false;
     public AccelerateDevelop accelerateDevelop;
+
+    private static final int CODE_IS_AP_ON = 100;
+    private static final int CODE_IS_VPN_ALLOWED = 110;
+
     private volatile boolean vpnRequested;
     private Timer checkHotspotStateTimer;
-    private Handler handler;
     private TopFragment topFragment;
     private DNSCryptRunFragment dNSCryptRunFragment;
     private TorRunFragment torRunFragment;
@@ -198,17 +200,6 @@ public class MainActivity extends LangAppCompatActivity
             viewPager.setCurrentItem(viewPagerPosition);
         }
 
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-
-        Looper looper = Looper.getMainLooper();
-        if (looper != null) {
-            handler = new Handler(looper);
-        }
     }
 
     @Override
@@ -1034,7 +1025,7 @@ public class MainActivity extends LangAppCompatActivity
             viewPager = null;
         }
 
-        if (handler != null) {
+        if (handler != null && !isFinishing()) {
             handler.removeCallbacksAndMessages(null);
         }
 

@@ -29,10 +29,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat.getSystemService
 import pan.alexander.tordnscrypt.crash_handling.TopExceptionHandler
-import pan.alexander.tordnscrypt.di.AppComponent
-import pan.alexander.tordnscrypt.di.CoroutinesModule
-import pan.alexander.tordnscrypt.di.DaggerAppComponent
-import pan.alexander.tordnscrypt.di.SharedPreferencesModule
+import pan.alexander.tordnscrypt.di.*
 import pan.alexander.tordnscrypt.language.Language
 import pan.alexander.tordnscrypt.utils.multidex.MultidexActivator
 import java.lang.ref.WeakReference
@@ -90,6 +87,7 @@ class App : Application() {
             .builder()
             .sharedPreferencesModule(SharedPreferencesModule(this))
             .coroutinesModule(CoroutinesModule())
+            .handlerModule(HandlerModule())
             .build()
     }
 
