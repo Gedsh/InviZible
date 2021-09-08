@@ -568,7 +568,6 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         categories.add(findPreference("pref_dnscrypt_blacklist"));
         categories.add(findPreference("pref_dnscrypt_ipblacklist"));
         categories.add(findPreference("pref_dnscrypt_whitelist"));
-        categories.add(findPreference("pref_dnscrypt_other"));
 
         for (PreferenceCategory category : categories) {
             if (dnscryptSettings != null && category != null) {
@@ -588,6 +587,13 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
         if (queryLogCategory != null && ignoredQtypes != null) {
             queryLogCategory.removePreference(ignoredQtypes);
+        }
+
+        PreferenceCategory otherCategory = findPreference("pref_dnscrypt_other");
+        Preference editDNSTomlDirectly = findPreference("editDNSTomlDirectly");
+
+        if (otherCategory != null && editDNSTomlDirectly != null) {
+            otherCategory.removePreference(editDNSTomlDirectly);
         }
     }
 
