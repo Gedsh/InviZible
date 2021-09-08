@@ -68,6 +68,8 @@ class ResetHelper(activity: Activity, backupFragment: BackupFragment) : Installe
 
                 chmodExtractedDirs()
 
+                savePreferencesModulesInstalled(false)
+
                 correctAppDir()
 
                 val code = saveSomeOldInfo(activityWeakReference.get())

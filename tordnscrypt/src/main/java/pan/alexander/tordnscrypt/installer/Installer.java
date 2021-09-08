@@ -379,18 +379,22 @@ public class Installer implements TopFragment.OnActivityChangeListener {
                 line = "";
             } else if (line.contains("whitelist_file")) {
                 line = "";
+            } else if (line.contains("blocked_names_file")) {
+                line = "";
+            } else if (line.contains("blocked_ips_file")) {
+                line = "";
             } else if (line.matches("(^| )\\{ ?server_name([ =]).+")) {
                 line = "";
             } else if (line.matches("(^| )server_names([ =]).+")) {
                 line = "server_names = ['ams-dnscrypt-nl', " +
                         "'ams-doh-nl', " +
-                        "'cs-swe', " +
+                        "'cs-tx', " +
                         "'dns.digitale-gesellschaft.ch', " +
-                        "'doh-fi-snopyta', " +
+                        "'dnscrypt.ca-1', " +
                         "'doh-ibksturm', " +
                         "'libredns', " +
-                        "'opennic-R4SAS', " +
-                        "'publicarray-au', " +
+                        "'opennic-luggs', " +
+                        "'publicarray-au-doh', " +
                         "'scaleway-fr']";
             }
 
