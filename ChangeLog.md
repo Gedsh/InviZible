@@ -600,3 +600,10 @@
 * Updated Tor default bridges.
 * Fixed showing recently installed apps at the top of the firewall apps list.
 * Minor bug fixes and optimizations.
+
+**InviZible Pro beta 1.3.7**
+* Fixed updating of the main screen toolbar depending on the mode.
+* Fixed firewall view.
+* Fixed delayed saving of settings in some cases.
+* Fixed display of warning about arp spoofing attack if app is launched.
+* Minor bug fixes and optimizations.
