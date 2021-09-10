@@ -52,24 +52,28 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.InstalledApplications;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.Verifier;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager;
+import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
+import javax.inject.Inject;
 
-public class UnlockTorAppsFragment extends Fragment implements InstalledApplications.OnAppAddListener,
+
+public class UnlockTorAppsFragment extends Fragment implements InstalledApplicationsManager.OnAppAddListener,
         CompoundButton.OnCheckedChangeListener, ChipGroup.OnCheckedChangeListener, SearchView.OnQueryTextListener {
 
     public static final String UNLOCK_APPS = "unlockApps";
@@ -93,6 +97,8 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
     private final ReentrantLock reentrantLock = new ReentrantLock();
     private volatile boolean appsListComplete = false;
     private String searchText;
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
 
 
     public UnlockTorAppsFragment() {
@@ -115,6 +121,8 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
             handler = new Handler(looper);
         }
 
+        App.instance.daggerComponent.inject(this);
+
         ////////////////////////////////////////////////////////////////////////////////////
         ///////////////////////Reverse logic when route all through Tor!///////////////////
         //////////////////////////////////////////////////////////////////////////////////
@@ -131,7 +139,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
             unlockAppsStr = CLEARNET_APPS;
         }
 
-        setUnlockApps = new PrefManager(context).getSetStrPref(unlockAppsStr);
+        setUnlockApps = preferenceRepository.get().getStringSetPreference(unlockAppsStr);
     }
 
     @Override
@@ -237,20 +245,11 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
             return;
         }
 
-        new PrefManager(context).setSetStrPref(unlockAppsStr, setAppUIDtoSave);
+        preferenceRepository.get().setStringSetPreference(unlockAppsStr, setAppUIDtoSave);
 
         setUnlockApps.clear();
         setUnlockApps.addAll(setAppUIDtoSave);
 
-        /*List<String> listAppUIDtoSave = new LinkedList<>();
-
-        for (String appUID : setAppUIDtoSave) {
-            if (Integer.parseInt(appUID) >= 0) {
-                listAppUIDtoSave.add(appUID);
-            }
-        }
-
-        FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/" + unlockAppsStr, listAppUIDtoSave, "ignored");*/
         Toast.makeText(context, getString(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
@@ -543,9 +542,9 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
 
                     appsListComplete = false;
 
-                    InstalledApplications installedApplications = new InstalledApplications(context, unlockAppsArrListSaved);
-                    installedApplications.setOnAppAddListener(UnlockTorAppsFragment.this);
-                    List<ApplicationData> installedApps = installedApplications.getInstalledApps(false);
+                    InstalledApplicationsManager installedApplicationsManager = new InstalledApplicationsManager(context, unlockAppsArrListSaved);
+                    installedApplicationsManager.setOnAppAddListener(UnlockTorAppsFragment.this);
+                    List<ApplicationData> installedApps = installedApplicationsManager.getInstalledApps(false);
 
                     while (rvListTorApps != null && rvListTorApps.isComputingLayout()) {
                         TimeUnit.MILLISECONDS.sleep(100);

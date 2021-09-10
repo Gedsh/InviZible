@@ -51,24 +51,26 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.LangAppCompatActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
-import pan.alexander.tordnscrypt.utils.file_operations.ExternalStoragePermissions;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
-import pan.alexander.tordnscrypt.utils.file_operations.OnBinaryFileOperationsCompleteListener;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.utils.filemanager.ExternalStoragePermissions;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
+import pan.alexander.tordnscrypt.utils.filemanager.OnBinaryFileOperationsCompleteListener;
+import pan.alexander.tordnscrypt.utils.root.RootCommands;
+import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.deleteFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class HelpActivity extends LangAppCompatActivity implements View.OnClickListener,
         CompoundButton.OnCheckedChangeListener, OnBinaryFileOperationsCompleteListener {
@@ -86,6 +88,8 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     private ModulesStatus modulesStatus;
     private String info;
     private boolean logsDirAccessible;
+    private final Lazy<PreferenceRepository> preferenceRepository = App.instance.daggerComponent
+            .getPreferenceRepository();
 
     @SuppressLint("NewApi")
     @Override
@@ -112,7 +116,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         SwitchCompat swRootCommandsLog = findViewById(R.id.swRootCommandsLog);
 
         if (ModulesStatus.getInstance().isRootAvailable()) {
-            swRootCommandsLog.setChecked(new PrefManager(this).getBoolPref("swRootCommandsLog"));
+            swRootCommandsLog.setChecked(preferenceRepository.get().getBoolPreference("swRootCommandsLog"));
             swRootCommandsLog.setOnCheckedChangeListener(this);
         } else {
             swRootCommandsLog.setVisibility(View.GONE);
@@ -157,7 +161,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
         CachedExecutor.INSTANCE.getExecutorService().submit(() -> new File(cacheDir + "/logs").mkdirs());
 
-        FileOperations.setOnFileOperationCompleteListener(this);
+        FileManager.setOnFileOperationCompleteListener(this);
     }
 
     @Override
@@ -225,6 +229,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                 busyboxPath + "mkdir -m 655 -p logs_dir 2> /dev/null",
                 busyboxPath + "cp -R " + appDataDir + "/logs" + " logs_dir 2> /dev/null",
                 "logcat -d | grep " + pid + " > logs_dir/logcat.log 2> /dev/null",
+                "ifconfig > logs_dir/ifconfig.log 2> /dev/null",
                 iptables + "-L -v > logs_dir/filter.log 2> /dev/null",
                 iptables + "-t nat -L -v > logs_dir/nat.log 2> /dev/null",
                 iptables + "-t mangle -L -v > logs_dir/mangle.log 2> /dev/null",
@@ -250,7 +255,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     public void onPause() {
         super.onPause();
 
-        FileOperations.deleteOnFileOperationCompleteListener(this);
+        FileManager.deleteOnFileOperationCompleteListener(this);
     }
 
     @Override
@@ -279,11 +284,11 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     @Override
     public void onCheckedChanged(CompoundButton compoundButton, boolean newValue) {
         if (compoundButton.getId() == R.id.swRootCommandsLog) {
-            new PrefManager(this).setBoolPref("swRootCommandsLog", newValue);
+            preferenceRepository.get().setBoolPreference("swRootCommandsLog", newValue);
 
             if (!newValue) {
-                FileOperations.deleteFile(getApplicationContext(), appDataDir + "/logs", "RootExec.log", "RootExec.log");
-                FileOperations.deleteFile(getApplicationContext(), appDataDir + "/logs", "Snowflake.log", "Snowflake.log");
+                FileManager.deleteFile(getApplicationContext(), appDataDir + "/logs", "RootExec.log", "RootExec.log");
+                FileManager.deleteFile(getApplicationContext(), appDataDir + "/logs", "Snowflake.log", "Snowflake.log");
             }
         }
     }

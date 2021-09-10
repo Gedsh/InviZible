@@ -22,15 +22,18 @@ package pan.alexander.tordnscrypt.dialogs;
 import androidx.fragment.app.DialogFragment;
 import androidx.appcompat.app.AlertDialog;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
-import pan.alexander.tordnscrypt.utils.PrefManager;
 
 public class UpdateModulesDialogFragment extends ExtendedDialogFragment {
 
     public static DialogFragment getInstance() {
         return new UpdateModulesDialogFragment();
     }
+    private final Lazy<PreferenceRepository> preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
 
     @Override
     public AlertDialog.Builder assignBuilder() {
@@ -52,9 +55,9 @@ public class UpdateModulesDialogFragment extends ExtendedDialogFragment {
                     ModulesAux.stopModulesIfRunning(getActivity());
 
                     if (getActivity() != null) {
-                        new PrefManager(getActivity()).setBoolPref("DNSCrypt Installed",false);
-                        new PrefManager(getActivity()).setBoolPref("Tor Installed",false);
-                        new PrefManager(getActivity()).setBoolPref("I2PD Installed",false);
+                        preferenceRepository.get().setBoolPreference("DNSCrypt Installed",false);
+                        preferenceRepository.get().setBoolPreference("Tor Installed",false);
+                        preferenceRepository.get().setBoolPreference("I2PD Installed",false);
                         DialogFragment dialogShowSU = NotificationDialogFragment.newInstance(R.string.update_core_restart);
                         if (getFragmentManager() != null) {
                             dialogShowSU.show(getFragmentManager(), "NotificationDialogFragment");
@@ -65,7 +68,7 @@ public class UpdateModulesDialogFragment extends ExtendedDialogFragment {
                 .setNegativeButton(R.string.update_core_no, (dialog, id) -> dismiss())
                 .setNeutralButton(R.string.update_core_not_show_again, (dialogInterface, i) -> {
                     if (getActivity() != null) {
-                        new PrefManager(getActivity()).setBoolPref("UpdateNotAllowed",true);
+                        preferenceRepository.get().setBoolPreference("UpdateNotAllowed",true);
                     }
                 });
 

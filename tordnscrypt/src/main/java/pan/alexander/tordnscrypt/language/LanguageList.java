@@ -37,6 +37,7 @@ public class LanguageList {
             "SmFwYW5lc2UgKOaXpeacrOiqnik=",
             "UGVyc2lhbiAo2YHYp9ix2LPbjCk=",
             "UG9saXNoIChQb2xza2kp",
+            "UG9ydHVndWVzZS1CUiAoUG9ydHVndcOqcy1CUik=",
             "UnVzc2lhbiAo0KDRg9GB0YHQutC40Lkp",
             "U3BhbmlzaCAoRXNwYcOxb2xhKQ=="
     };
@@ -51,6 +52,7 @@ public class LanguageList {
             "ja",
             "fa",
             "pl",
+            "pt-rBR",
             "ru",
             "es"
     };

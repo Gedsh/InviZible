@@ -97,7 +97,7 @@
         <EditTextPreference
             android:id="@+id/fallback_resolver"
             android:defaultValue="9.9.9.9"
-            android:key="fallback_resolver"
+            android:key="bootstrap_resolvers"
             android:selectAllOnFocus="false"
             android:singleLine="false"
             android:summary="@string/pref_dnscrypt_fallback_resolver_summ"
@@ -284,7 +284,7 @@
         android:key="pref_dnscrypt_servers">
         <EditTextPreference
             android:id="@+id/sources"
-            android:defaultValue="['https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v2/public-resolvers.md', 'https://download.dnscrypt.info/resolvers-list/v2/public-resolvers.md']"
+            android:defaultValue="['https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v3/public-resolvers.md', 'https://download.dnscrypt.info/resolvers-list/v3/public-resolvers.md']"
             android:key="Sources"
             android:selectAllOnFocus="false"
             android:singleLine="false"
@@ -303,7 +303,7 @@
         android:key="pref_dnscrypt_relays">
         <EditTextPreference
             android:id="@+id/relays"
-            android:defaultValue="['https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v2/relays.md', 'https://download.dnscrypt.info/resolvers-list/v2/relays.md']"
+            android:defaultValue="['https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v3/relays.md', 'https://download.dnscrypt.info/resolvers-list/v3/relays.md']"
             android:key="Relays"
             android:selectAllOnFocus="false"
             android:singleLine="false"

@@ -301,7 +301,7 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1done(
 // JNI Util
 
 JNIEXPORT jstring JNICALL
-Java_pan_alexander_tordnscrypt_vpn_Util_jni_1getprop(JNIEnv *env, jclass type, jstring name_) {
+Java_pan_alexander_tordnscrypt_vpn_NetworkUtils_jni_1getprop(JNIEnv *env, jclass type, jstring name_) {
     const char *name = (*env)->GetStringUTFChars(env, name_, 0);
     ng_add_alloc(name, "name");
 
@@ -315,8 +315,8 @@ Java_pan_alexander_tordnscrypt_vpn_Util_jni_1getprop(JNIEnv *env, jclass type, j
 }
 
 JNIEXPORT jboolean JNICALL
-Java_pan_alexander_tordnscrypt_vpn_Util_is_1numeric_1address(JNIEnv *env, jclass type,
-                                                             jstring ip_) {
+Java_pan_alexander_tordnscrypt_vpn_NetworkUtils_is_1numeric_1address(JNIEnv *env, jclass type,
+                                                                     jstring ip_) {
     jboolean numeric = 0;
     const char *ip = (*env)->GetStringUTFChars(env, ip_, 0);
     ng_add_alloc(ip, "ip");

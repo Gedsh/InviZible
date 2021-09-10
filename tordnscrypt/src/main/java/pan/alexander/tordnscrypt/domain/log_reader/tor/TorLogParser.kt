@@ -19,9 +19,9 @@
 
 package pan.alexander.tordnscrypt.domain.log_reader.tor
 
-import pan.alexander.tordnscrypt.domain.entities.LogDataModel
+import pan.alexander.tordnscrypt.domain.log_reader.LogDataModel
 import pan.alexander.tordnscrypt.domain.log_reader.AbstractLogParser
-import pan.alexander.tordnscrypt.domain.ModulesLogRepository
+import pan.alexander.tordnscrypt.domain.log_reader.ModulesLogRepository
 import java.util.regex.Pattern
 
 private const val COUNT_DOWN_TIMER = 5

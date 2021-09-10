@@ -24,18 +24,21 @@ import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.FileProvider
 import androidx.preference.PreferenceManager
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.help.Utils
 import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.utils.CachedExecutor
-import pan.alexander.tordnscrypt.utils.PrefManager
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileWriter
 import java.io.InputStreamReader
 
 class SendCrashReport : ExtendedDialogFragment() {
+
+    private val preferenceRepository = App.instance.daggerComponent.getPreferenceRepository()
+
     override fun assignBuilder(): AlertDialog.Builder? {
         if (activity == null || requireActivity().isFinishing) {
             return null
@@ -75,7 +78,7 @@ class SendCrashReport : ExtendedDialogFragment() {
                 }
                 .setNegativeButton(R.string.dont_show) { _, _ ->
                     if (activity != null) {
-                        PrefManager(activity).setBoolPref("never_send_crash_reports", true)
+                        preferenceRepository.get().setBoolPreference("never_send_crash_reports", true)
                     }
 
                     dismiss()
@@ -130,20 +133,21 @@ class SendCrashReport : ExtendedDialogFragment() {
 
     private fun sendCrashEmail(context: Context, info: String, logCat: File) {
 
-        val text = PrefManager(context).getStrPref("CrashReport")
+        val text = preferenceRepository.get().getStringPreference("CrashReport")
         if (text.isNotEmpty()) {
             val uri = FileProvider.getUriForFile(context, context.packageName + ".fileprovider", logCat)
             if (uri != null) {
                 Utils.sendMail(context, info + "\n\n" + text, uri)
             }
-            PrefManager(context).setStrPref("CrashReport", "")
+            preferenceRepository.get().setStringPreference("CrashReport", "")
         }
     }
 
     companion object {
         fun getCrashReportDialog(context: Context): SendCrashReport? {
             val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
-            if (!PrefManager(context).getBoolPref("never_send_crash_reports")
+            val preferenceRepository = App.instance.daggerComponent.getPreferenceRepository()
+            if (!preferenceRepository.get().getBoolPreference("never_send_crash_reports")
                     || sharedPreferences.getBoolean("pref_common_show_help", false)) {
                 return SendCrashReport()
             }

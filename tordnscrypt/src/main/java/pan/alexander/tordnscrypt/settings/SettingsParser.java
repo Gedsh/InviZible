@@ -30,6 +30,8 @@ import androidx.preference.PreferenceManager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
@@ -39,10 +41,11 @@ import pan.alexander.tordnscrypt.settings.dnscrypt_settings.PreferencesDNSFragme
 import pan.alexander.tordnscrypt.settings.show_rules.ShowRulesRecycleFrag;
 import pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
-import pan.alexander.tordnscrypt.utils.file_operations.OnTextFileOperationsCompleteListener;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
+import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.writeToTextFile;
 
@@ -88,12 +91,15 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     } else if (val.contains("'") && val.contains(":")) {
                         val = val.substring(val.indexOf(":") + 1, val.indexOf("'", 3)).trim();
                     }
-                } else if (key.equals("fallback_resolver")) {
-                    if (val.contains("\"") && val.contains(":")) {
-                        val = val.substring(val.indexOf("\"") + 1, val.indexOf(":")).trim();
-                    } else if (val.contains("'") && val.contains(":")) {
-                        val = val.substring(val.indexOf("'") + 1, val.indexOf(":")).trim();
+                } else if (key.equals("bootstrap_resolvers")) {
+                    Pattern pattern =
+                            Pattern.compile("((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)");
+                    Matcher matcher = pattern.matcher(val);
+                    String fallbackResolver = QUAD_DNS_41;
+                    if (matcher.find()) {
+                        fallbackResolver = matcher.group();
                     }
+                    val = fallbackResolver;
                 } else if (key.equals("proxy")) {
                     key = "proxy_port";
                     if (val.contains("\"") && val.contains(":")) {
@@ -577,7 +583,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
         PathVars pathVars = PathVars.getInstance(settingsActivity);
         appDataDir = pathVars.getAppDataDir();
 
-        FileOperations.setOnFileOperationCompleteListener(this);
+        FileManager.setOnFileOperationCompleteListener(this);
     }
 
     public void deactivateSettingsParser() {
@@ -585,7 +591,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
             bundleForReadPublicResolversMdFunction.clear();
         }
 
-        FileOperations.deleteOnFileOperationCompleteListener(this);
+        FileManager.deleteOnFileOperationCompleteListener(this);
     }
 
     @Override

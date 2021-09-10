@@ -572,3 +572,38 @@
 
 **InviZible Pro beta 1.3.3**
 * Revert back to Tor 4.5.x versions so that v2 onion services can be used.
+
+**InviZible Pro beta 1.3.4**
+* Updated Tor to version 4.5.9.
+* Updated Tor Snowflake bridge to version 1.0.0.
+* Updated Purple I2P.
+* Block DNS over TLS and google DNS when DNSCrypt ignore_system_dns is enabled.
+* Restart InviZible when Tor fails in the background.
+* Attempt to fix wifi access point on android 11.
+* Updated firewall view.
+* Updated Spanish translation.
+* Updated Portuguese-BR translation.
+* Minor bug fixes and optimizations.
+
+**InviZible Pro beta 1.3.5**
+* Updated DNSCrypt to version 2.1.0.
+* Updated Tor to version 4.5.10.
+* Updated Tor Snowflake bridge to version 1.1.0.
+* Updated Purple I2P.
+* Updated firewall view.
+* Updated Polish translation.
+
+**InviZible Pro beta 1.3.6**
+* Updated Purple I2P to version 2.39.0.
+* Changed implementation of saving app settings.
+* Added HardwareAccel option to Tor settings.
+* Updated Tor default bridges.
+* Fixed showing recently installed apps at the top of the firewall apps list.
+* Minor bug fixes and optimizations.
+
+**InviZible Pro beta 1.3.7**
+* Fixed updating of the main screen toolbar depending on the mode.
+* Fixed firewall view.
+* Fixed delayed saving of settings in some cases.
+* Fixed display of warning about arp spoofing attack if app is launched.
+* Minor bug fixes and optimizations.

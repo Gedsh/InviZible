@@ -1,13 +1,12 @@
 package pan.alexander.tordnscrypt.domain.log_reader
 
 import android.util.Log
-import pan.alexander.tordnscrypt.domain.LogReaderInteractors
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsInteractor
 import pan.alexander.tordnscrypt.domain.log_reader.dnscrypt.DNSCryptInteractor
 import pan.alexander.tordnscrypt.domain.log_reader.itpd.ITPDHtmlInteractor
 import pan.alexander.tordnscrypt.domain.log_reader.itpd.ITPDInteractor
 import pan.alexander.tordnscrypt.domain.log_reader.tor.TorInteractor
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.lang.Exception
 import java.util.concurrent.locks.ReentrantLock
 

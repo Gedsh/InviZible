@@ -24,6 +24,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+
 import androidx.preference.PreferenceManager;
 
 import android.net.VpnService;
@@ -32,39 +33,49 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
-import pan.alexander.tordnscrypt.utils.ApManager;
-import pan.alexander.tordnscrypt.utils.FileShortener;
-import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.ap.ApManager;
+import pan.alexander.tordnscrypt.utils.filemanager.FileShortener;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
-import static pan.alexander.tordnscrypt.modules.ModulesService.actionStopServiceForeground;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStopServiceForeground;
 import static pan.alexander.tordnscrypt.modules.ModulesStateLoop.SAVED_DNSCRYPT_STATE_PREF;
 import static pan.alexander.tordnscrypt.modules.ModulesStateLoop.SAVED_ITPD_STATE_PREF;
 import static pan.alexander.tordnscrypt.modules.ModulesStateLoop.SAVED_TOR_STATE_PREF;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
+import javax.inject.Inject;
+
 public class BootCompleteReceiver extends BroadcastReceiver {
     public static final String ALWAYS_ON_VPN = "pan.alexander.tordnscrypt.ALWAYS_ON_VPN";
     public static final String SHELL_SCRIPT_CONTROL = "pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL";
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
 
     private Context context;
     private String appDataDir;
 
     @Override
     public void onReceive(final Context context, Intent intent) {
+
+        App.instance.daggerComponent.inject(this);
 
         final String BOOT_COMPLETE = "android.intent.action.BOOT_COMPLETED";
         final String QUICKBOOT_POWERON = "android.intent.action.QUICKBOOT_POWERON";
@@ -79,6 +90,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         final boolean tethering_autostart;
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
+        PreferenceRepository preferences = preferenceRepository.get();
 
         String action = intent.getAction();
 
@@ -101,30 +113,30 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                 return;
             }
 
-            new PrefManager(context).setBoolPref("APisON", false);
-            new PrefManager(context).setBoolPref("ModemIsON", false);
+            preferences.setBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON, false);
+            preferences.setBoolPreference(PreferenceKeys.USB_MODEM_IS_ON, false);
 
             tethering_autostart = shPref.getBoolean("pref_common_tethering_autostart", false);
 
-            boolean rootIsAvailable = new PrefManager(context).getBoolPref("rootIsAvailable");
+            boolean rootIsAvailable = preferences.getBoolPreference("rootIsAvailable");
             boolean runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
             boolean fixTTL = shPref.getBoolean("pref_common_fix_ttl", false);
-            String operationMode = new PrefManager(context).getStrPref("OPERATION_MODE");
+            String operationMode = preferences.getStringPreference("OPERATION_MODE");
 
             OperationMode mode = UNDEFINED;
             if (!operationMode.isEmpty()) {
                 mode = OperationMode.valueOf(operationMode);
             }
 
-            ModulesAux.switchModes(context, rootIsAvailable, runModulesWithRoot, mode);
+            ModulesAux.switchModes(rootIsAvailable, runModulesWithRoot, mode);
 
             boolean autoStartDNSCrypt = shPref.getBoolean("swAutostartDNS", false);
             boolean autoStartTor = shPref.getBoolean("swAutostartTor", false);
             boolean autoStartITPD = shPref.getBoolean("swAutostartITPD", false);
 
-            boolean savedDNSCryptStateRunning = ModulesAux.isDnsCryptSavedStateRunning(context);
-            boolean savedTorStateRunning = ModulesAux.isTorSavedStateRunning(context);
-            boolean savedITPDStateRunning = ModulesAux.isITPDSavedStateRunning(context);
+            boolean savedDNSCryptStateRunning = ModulesAux.isDnsCryptSavedStateRunning();
+            boolean savedTorStateRunning = ModulesAux.isTorSavedStateRunning();
+            boolean savedITPDStateRunning = ModulesAux.isITPDSavedStateRunning();
 
             if (action.equalsIgnoreCase(MY_PACKAGE_REPLACED) || action.equalsIgnoreCase(ALWAYS_ON_VPN)) {
                 autoStartDNSCrypt = savedDNSCryptStateRunning;
@@ -138,7 +150,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                 Log.i(LOG_TAG, "SHELL_SCRIPT_CONTROL start: " +
                         "DNSCrypt " + autoStartDNSCrypt + " Tor " + autoStartTor + " ITPD " + autoStartITPD);
             } else {
-                resetModulesSavedState(context);
+                resetModulesSavedState(preferences);
             }
 
             if (savedDNSCryptStateRunning || savedTorStateRunning || savedITPDStateRunning) {
@@ -156,13 +168,13 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
                 if (!action.equalsIgnoreCase(MY_PACKAGE_REPLACED) && !action.equalsIgnoreCase(ALWAYS_ON_VPN)
                         && !action.equals(SHELL_SCRIPT_CONTROL)) {
-                    startHOTSPOT();
+                    startHOTSPOT(preferences);
                 }
 
             }
 
             if (autoStartDNSCrypt && !runModulesWithRoot
-                    && !shPref.getBoolean("ignore_system_dns", false)
+                    && !shPref.getBoolean(IGNORE_SYSTEM_DNS, false)
                     && !action.equalsIgnoreCase(MY_PACKAGE_REPLACED)
                     && !action.equals(SHELL_SCRIPT_CONTROL)) {
                 modulesStatus.setSystemDNSAllowed(true);
@@ -225,9 +237,9 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         FileShortener.shortenTooTooLongFile(appDataDir + "/logs/i2pd.log");
     }
 
-    private void startHOTSPOT() {
+    private void startHOTSPOT(PreferenceRepository preferences) {
 
-        new PrefManager(context).setBoolPref("APisON", true);
+        preferences.setBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON, true);
 
         ApManager apManager = new ApManager(context);
         if (!apManager.configApState()) {
@@ -251,7 +263,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         if (autoStartDNSCrypt) {
             runDNSCrypt();
             modulesStatus.setIptablesRulesUpdateRequested(true);
-        } else if (ModulesAux.isDnsCryptSavedStateRunning(context)) {
+        } else if (ModulesAux.isDnsCryptSavedStateRunning()) {
             stopDNSCrypt();
         } else {
             modulesStatus.setDnsCryptState(STOPPED);
@@ -260,7 +272,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         if (autoStartTor) {
             runTor();
             modulesStatus.setIptablesRulesUpdateRequested(true);
-        } else if (ModulesAux.isTorSavedStateRunning(context)){
+        } else if (ModulesAux.isTorSavedStateRunning()) {
             stopTor();
         } else {
             modulesStatus.setTorState(STOPPED);
@@ -269,7 +281,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
         if (autoStartITPD) {
             runITPD();
             modulesStatus.setIptablesRulesUpdateRequested(true);
-        } else if (ModulesAux.isITPDSavedStateRunning(context)){
+        } else if (ModulesAux.isITPDSavedStateRunning()) {
             stopITPD();
         } else {
             modulesStatus.setItpdState(STOPPED);
@@ -280,15 +292,15 @@ public class BootCompleteReceiver extends BroadcastReceiver {
     }
 
     private void saveModulesStateRunning(boolean saveDNSCryptRunning, boolean saveTorRunning, boolean saveITPDRunning) {
-        ModulesAux.saveDNSCryptStateRunning(context, saveDNSCryptRunning);
-        ModulesAux.saveTorStateRunning(context, saveTorRunning);
-        ModulesAux.saveITPDStateRunning(context, saveITPDRunning);
+        ModulesAux.saveDNSCryptStateRunning(saveDNSCryptRunning);
+        ModulesAux.saveTorStateRunning(saveTorRunning);
+        ModulesAux.saveITPDStateRunning(saveITPDRunning);
     }
 
-    private void resetModulesSavedState(Context context) {
-        new PrefManager(context).setStrPref(SAVED_DNSCRYPT_STATE_PREF, ModuleState.UNDEFINED.toString());
-        new PrefManager(context).setStrPref(SAVED_TOR_STATE_PREF, ModuleState.UNDEFINED.toString());
-        new PrefManager(context).setStrPref(SAVED_ITPD_STATE_PREF, ModuleState.UNDEFINED.toString());
+    private void resetModulesSavedState(PreferenceRepository preferences) {
+        preferences.setStringPreference(SAVED_DNSCRYPT_STATE_PREF, ModuleState.UNDEFINED.toString());
+        preferences.setStringPreference(SAVED_TOR_STATE_PREF, ModuleState.UNDEFINED.toString());
+        preferences.setStringPreference(SAVED_ITPD_STATE_PREF, ModuleState.UNDEFINED.toString());
     }
 
     private void runDNSCrypt() {

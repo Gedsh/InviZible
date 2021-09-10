@@ -28,14 +28,14 @@ import android.util.Log
 import android.widget.Toast
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.RootCommands
-import pan.alexander.tordnscrypt.utils.RootExecService.*
+import pan.alexander.tordnscrypt.utils.root.RootCommands
+import pan.alexander.tordnscrypt.utils.root.RootExecService.*
 import java.util.*
 
 class IptablesReceiver : BroadcastReceiver() {
 
     var lastIptablesCommandsReturnError = false
-    var savedError = ""
+    private var savedError = ""
 
     override fun onReceive(context: Context?, intent: Intent?) {
 
@@ -67,7 +67,7 @@ class IptablesReceiver : BroadcastReceiver() {
             return
         }
 
-        val resultStr = result.toString().toLowerCase(Locale.ROOT)
+        val resultStr = result.toString().lowercase(Locale.ROOT)
 
         lastIptablesCommandsReturnError = true
 

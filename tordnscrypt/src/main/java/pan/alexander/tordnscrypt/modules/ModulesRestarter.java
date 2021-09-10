@@ -28,23 +28,23 @@ import java.util.List;
 
 import eu.chainfire.libsuperuser.Shell;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class ModulesRestarter {
     public static void restartDNSCrypt(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesService.actionRestartDnsCrypt);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.actionRestartDnsCrypt);
         ModulesAux.speedupModulesStateLoopTimer(context);
     }
 
     public static void restartTor(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesService.actionRestartTorFull);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.actionRestartTorFull);
         ModulesAux.speedupModulesStateLoopTimer(context);
     }
 
     public static void restartITPD(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesService.actionRestartITPD);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.actionRestartITPD);
         ModulesAux.speedupModulesStateLoopTimer(context);
     }
 
@@ -62,7 +62,7 @@ public class ModulesRestarter {
 
         File file = new File(path);
         if (file.isFile()) {
-            List<String> lines = FileOperations.readTextFileSynchronous(context, path);
+            List<String> lines = FileManager.readTextFileSynchronous(context, path);
 
             for (String line : lines) {
                 if (!line.trim().isEmpty()) {

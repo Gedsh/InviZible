@@ -31,22 +31,24 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.RootExecService;
-import pan.alexander.tordnscrypt.utils.Verifier;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.root.RootCommands;
+import pan.alexander.tordnscrypt.utils.root.RootExecService;
+import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 
 import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -59,9 +61,12 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
     private String dnscryptPath;
     private String busyboxPath;
 
+    private final Lazy<PreferenceRepository> preferenceRepository;
+
     public DNSCryptFragmentReceiver(DNSCryptFragmentView view, DNSCryptFragmentPresenter presenter) {
         this.view = view;
         this.presenter = presenter;
+        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     @Override
@@ -113,11 +118,12 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                     String[] strArr = sb.toString().split("DNSCrypt_version");
                     if (strArr.length > 1 && strArr[1].trim().matches("\\d+\\.\\d+\\.\\d+")) {
                         DNSCryptVersion = strArr[1].trim();
-                        new PrefManager(context).setStrPref("DNSCryptVersion", DNSCryptVersion);
+                        preferenceRepository.get()
+                                .setStringPreference("DNSCryptVersion", DNSCryptVersion);
 
                         if (!modulesStatus.isUseModulesWithRoot()) {
 
-                            if (!ModulesAux.isDnsCryptSavedStateRunning(context)) {
+                            if (!ModulesAux.isDnsCryptSavedStateRunning()) {
                                 view.setDNSCryptLogViewText();
                             }
 
@@ -133,7 +139,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                 } else if (!sb.toString().toLowerCase().contains(dnscryptPath.toLowerCase())
                         && sb.toString().contains("checkDNSRunning")) {
                     if (modulesStatus.getDnsCryptState() == STOPPED) {
-                        ModulesAux.saveDNSCryptStateRunning(context, false);
+                        ModulesAux.saveDNSCryptStateRunning(false);
                     }
                     presenter.stopDisplayLog();
                     presenter.setDnsCryptStopped();

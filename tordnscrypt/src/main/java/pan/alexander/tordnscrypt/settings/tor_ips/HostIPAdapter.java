@@ -35,8 +35,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.Set;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 
 public class HostIPAdapter extends RecyclerView.Adapter<HostIPAdapter.HostIPViewHolder> {
 
@@ -45,7 +47,7 @@ public class HostIPAdapter extends RecyclerView.Adapter<HostIPAdapter.HostIPView
     private final ArrayList<HostIP> unlockHostIP;
     private final String unlockIPsStr;
     private final String unlockHostsStr;
-
+    private final Lazy<PreferenceRepository> preferenceRepository;
 
     HostIPAdapter(UnlockTorIpsFrag unlockTorIpsFrag) {
         this.unlockTorIpsFrag = unlockTorIpsFrag;
@@ -53,6 +55,7 @@ public class HostIPAdapter extends RecyclerView.Adapter<HostIPAdapter.HostIPView
         this.unlockHostIP = unlockTorIpsFrag.unlockHostIP;
         this.unlockIPsStr = unlockTorIpsFrag.unlockIPsStr;
         this.unlockHostsStr = unlockTorIpsFrag.unlockHostsStr;
+        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     @NonNull
@@ -84,28 +87,30 @@ public class HostIPAdapter extends RecyclerView.Adapter<HostIPAdapter.HostIPView
             return;
         }
 
+        PreferenceRepository preferences = preferenceRepository.get();
+
         HostIP hostIP = getItem(position);
         if (hostIP.inputIP) {
             Set<String> ipSet;
-            ipSet = new PrefManager(activity).getSetStrPref(unlockIPsStr);
+            ipSet = preferences.getStringSetPreference(unlockIPsStr);
 
             if (hostIP.active) {
                 ipSet.remove(hostIP.IP);
             } else {
                 ipSet.remove("#" + hostIP.IP);
             }
-            new PrefManager(activity).setSetStrPref(unlockIPsStr, ipSet);
+            preferences.setStringSetPreference(unlockIPsStr, ipSet);
 
         } else if (hostIP.inputHost) {
             Set<String> hostSet;
-            hostSet = new PrefManager(activity).getSetStrPref(unlockHostsStr);
+            hostSet = preferences.getStringSetPreference(unlockHostsStr);
 
             if (hostIP.active) {
                 hostSet.remove(hostIP.host);
             } else {
                 hostSet.remove("#" + hostIP.host);
             }
-            new PrefManager(activity).setSetStrPref(unlockHostsStr, hostSet);
+            preferences.setStringSetPreference(unlockHostsStr, hostSet);
 
         }
         unlockHostIP.remove(position);
@@ -259,7 +264,7 @@ public class HostIPAdapter extends RecyclerView.Adapter<HostIPAdapter.HostIPView
     }
 
     private void saveActiveHost(String oldHost, boolean active) {
-        Set<String> hostsSet = new PrefManager(context).getSetStrPref(unlockHostsStr);
+        Set<String> hostsSet = preferenceRepository.get().getStringSetPreference(unlockHostsStr);
         if (active) {
             hostsSet.remove("#" + oldHost);
             hostsSet.add(oldHost.replace("#", ""));
@@ -267,11 +272,11 @@ public class HostIPAdapter extends RecyclerView.Adapter<HostIPAdapter.HostIPView
             hostsSet.remove(oldHost);
             hostsSet.add("#" + oldHost);
         }
-        new PrefManager(context).setSetStrPref(unlockHostsStr, hostsSet);
+        preferenceRepository.get().setStringSetPreference(unlockHostsStr, hostsSet);
     }
 
     private void saveActiveIP(String oldIP, boolean active) {
-        Set<String> ipsSet = new PrefManager(context).getSetStrPref(unlockIPsStr);
+        Set<String> ipsSet = preferenceRepository.get().getStringSetPreference(unlockIPsStr);
         if (active) {
             ipsSet.remove("#" + oldIP);
             ipsSet.add(oldIP.replace("#", ""));
@@ -279,6 +284,6 @@ public class HostIPAdapter extends RecyclerView.Adapter<HostIPAdapter.HostIPView
             ipsSet.remove(oldIP);
             ipsSet.add("#" + oldIP);
         }
-        new PrefManager(context).setSetStrPref(unlockIPsStr, ipsSet);
+        preferenceRepository.get().setStringSetPreference(unlockIPsStr, ipsSet);
     }
 }

@@ -25,8 +25,8 @@ import android.util.Log
 import pan.alexander.tordnscrypt.modules.ModulesRestarter
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
-import pan.alexander.tordnscrypt.utils.WakeLocksManager
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.wakelock.WakeLocksManager
 import pan.alexander.tordnscrypt.utils.enums.DNSCryptRulesVariant
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import java.io.BufferedReader
@@ -37,11 +37,11 @@ import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.collections.ArrayList
 
-private val blackListHostRulesRegex = Regex("^[a-zA-Z\\d-.=_*\\[\\]]+$")
+private val blackListHostRulesRegex = Regex("^[a-zA-Z\\d-.=_*\\[\\]?]+$")
 private val blacklistIPRulesRegex = Regex("^(?:[0-9*]{1,3}\\.){1,3}[0-9*]{1,3}(?:/\\d+)*$")
 private val cloakingRulesRegex = Regex("^[a-zA-Z\\d-.=_*]+[ \\t]+[a-zA-Z\\d-.=_*]+$")
 private val forwardingRulesRegex = Regex("^[a-zA-Z\\d-._]+[ \\t]+(?:[0-9*]{1,3}\\.){3}[0-9*]{1,3}(?:, ?(?:[0-9*]{1,3}\\.){3}[0-9*]{1,3})*$")
-private val whiteListHostRulesRegex = Regex("^[a-zA-Z\\d-.=_*\\[\\]]+$")
+private val whiteListHostRulesRegex = Regex("^[a-zA-Z\\d-.=_*\\[\\]?]+$")
 private val hostFileRegex = Regex("^(?:0.0.0.0|127.0.0.1)[ \\t]+[a-zA-Z\\d-._]+$")
 private const val itpdRedirectAddress = "*i2p 10.191.0.1"
 private val excludeFromHost = listOf("localhost", "localhost.localdomain", "local", "0.0.0.0")

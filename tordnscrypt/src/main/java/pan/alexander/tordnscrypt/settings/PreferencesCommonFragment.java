@@ -51,21 +51,24 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesService;
+import pan.alexander.tordnscrypt.modules.ModulesServiceActions;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.proxy.ProxyHelper;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.Utils;
-import pan.alexander.tordnscrypt.utils.Verifier;
+import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
-import pan.alexander.tordnscrypt.utils.file_operations.OnTextFileOperationsCompleteListener;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
+import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
@@ -74,7 +77,7 @@ import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
 import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.ISOLATE_DEST_ADDRESS;
 import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.ISOLATE_DEST_PORT;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -93,6 +96,8 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     private String itpdConfPath = "";
     private String itpdTunnelsPath = "";
     private boolean commandDisableProxy;
+    private final Lazy<PreferenceRepository> preferenceRepository = App.instance.daggerComponent
+            .getPreferenceRepository();
 
     public PreferencesCommonFragment() {
     }
@@ -110,7 +115,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        FileOperations.setOnFileOperationCompleteListener(this);
+        FileManager.setOnFileOperationCompleteListener(this);
 
         Activity activity = getActivity();
 
@@ -250,11 +255,10 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         boolean swUseProxy = sharedPreferences.getBoolean("swUseProxy", false);
         String proxyServer = sharedPreferences.getString("ProxyServer", "");
         String proxyPort = sharedPreferences.getString("ProxyPort", "");
-        Set<String> setBypassProxy = new PrefManager(context).getSetStrPref(CLEARNET_APPS_FOR_PROXY);
+        Set<String> setBypassProxy = preferenceRepository.get().getStringSetPreference(CLEARNET_APPS_FOR_PROXY);
         if (swUseProxy && ModulesStatus.getInstance().getMode() == VPN_MODE
                 && (proxyServer == null || proxyServer.isEmpty()
                 || proxyPort == null || proxyPort.isEmpty()
-                || setBypassProxy == null
                 || setBypassProxy.isEmpty() && proxyServer.equals("127.0.0.1"))) {
 
             Preference swUseProxyPreference = findPreference("swUseProxy");
@@ -302,7 +306,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             case "swShowNotification":
                 if (!Boolean.parseBoolean(newValue.toString())) {
                     Intent intent = new Intent(context, ModulesService.class);
-                    intent.setAction(ModulesService.actionDismissNotification);
+                    intent.setAction(ModulesServiceActions.actionDismissNotification);
                     context.startService(intent);
                     InfoNotificationProtectService infoNotification = new InfoNotificationProtectService();
                     if (isAdded()) {
@@ -325,13 +329,13 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                     prefTorSiteUnlockTether.setEnabled(!Boolean.parseBoolean(newValue.toString()));
                 }
 
-                if (ModulesAux.isTorSavedStateRunning(context)) {
+                if (ModulesAux.isTorSavedStateRunning()) {
                     ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
                 }
                 break;
             case "pref_common_block_http":
-                if (ModulesAux.isDnsCryptSavedStateRunning(context)
-                        || ModulesAux.isTorSavedStateRunning(context)) {
+                if (ModulesAux.isDnsCryptSavedStateRunning()
+                        || ModulesAux.isTorSavedStateRunning()) {
                     ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
                 }
                 break;
@@ -451,11 +455,11 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         activity.overridePendingTransition(0, 0);
         startActivity(intent);
 
-        new PrefManager(activity).setBoolPref("refresh_main_activity", true);
+        preferenceRepository.get().setBoolPreference("refresh_main_activity", true);
     }
 
     private void readTorConf(Context context) {
-        FileOperations.readTextFile(context, torConfPath, SettingsActivity.tor_conf_tag);
+        FileManager.readTextFile(context, torConfPath, SettingsActivity.tor_conf_tag);
     }
 
     private void allowTorTethering(List<String> torConf) {
@@ -485,9 +489,9 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             }
         }
 
-        FileOperations.writeToTextFile(context, torConfPath, torConf, "ignored");
+        FileManager.writeToTextFile(context, torConfPath, torConf, "ignored");
 
-        if (ModulesAux.isTorSavedStateRunning(context)) {
+        if (ModulesAux.isTorSavedStateRunning()) {
             ModulesRestarter.restartTor(context);
             ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
         }
@@ -508,7 +512,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     }
 
     private void readITPDConf(Context context) {
-        FileOperations.readTextFile(context, itpdConfPath, SettingsActivity.itpd_conf_tag);
+        FileManager.readTextFile(context, itpdConfPath, SettingsActivity.itpd_conf_tag);
     }
 
     private void allowITPDTethering(List<String> itpdConf) {
@@ -542,16 +546,16 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             }
         }
 
-        FileOperations.writeToTextFile(context, itpdConfPath, itpdConf, "ignored");
+        FileManager.writeToTextFile(context, itpdConfPath, itpdConf, "ignored");
 
-        if (ModulesAux.isITPDSavedStateRunning(context)) {
+        if (ModulesAux.isITPDSavedStateRunning()) {
             ModulesRestarter.restartITPD(context);
             ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
         }
     }
 
     private void readITPDTunnelsConf(Context context) {
-        FileOperations.readTextFile(context, itpdTunnelsPath, SettingsActivity.itpd_tunnels_tag);
+        FileManager.readTextFile(context, itpdTunnelsPath, SettingsActivity.itpd_tunnels_tag);
     }
 
     private void allowITPDTunnelsTethering(List<String> itpdTunnels) {
@@ -575,7 +579,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             }
         }
 
-        FileOperations.writeToTextFile(context, itpdTunnelsPath, itpdTunnels, "ignored");
+        FileManager.writeToTextFile(context, itpdTunnelsPath, itpdTunnels, "ignored");
     }
 
     @Override
@@ -776,7 +780,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     public void onDestroyView() {
         super.onDestroyView();
 
-        FileOperations.deleteOnFileOperationCompleteListener(this);
+        FileManager.deleteOnFileOperationCompleteListener(this);
     }
 
     @Override

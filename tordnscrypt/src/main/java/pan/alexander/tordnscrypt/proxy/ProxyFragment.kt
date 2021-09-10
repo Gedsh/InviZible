@@ -39,20 +39,25 @@ import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.SettingsActivity
 import pan.alexander.tordnscrypt.databinding.FragmentProxyBinding
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.utils.CachedExecutor.getExecutorService
-import pan.alexander.tordnscrypt.utils.PrefManager
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor.getExecutorService
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.util.concurrent.Future
+import javax.inject.Inject
 
 const val CLEARNET_APPS_FOR_PROXY = "clearnetAppsForProxy"
 private val IP_REGEX = Regex("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
 private val PORT_REGEX = Regex("^\\d+$")
 
 class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
+
+    @Inject
+    lateinit var preferenceRepository: dagger.Lazy<PreferenceRepository>
 
     private var _binding: FragmentProxyBinding? = null
     private val binding get() = _binding!!
@@ -67,6 +72,8 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
     private var handler: Handler? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        App.instance.daggerComponent.inject(this)
+
         super.onCreate(savedInstanceState)
 
         if (activity == null) {
@@ -153,7 +160,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
         saveToSharedPreferences("ProxyUserName", proxyUserName)
         saveToSharedPreferences("ProxyPass", proxyPass)
 
-        val setBypassProxy = PrefManager(context).getSetStrPref(CLEARNET_APPS_FOR_PROXY)
+        val setBypassProxy = preferenceRepository.get().getStringSetPreference(CLEARNET_APPS_FOR_PROXY)
 
         if (proxyServer.isNotEmpty() && proxyPort.isNotEmpty()
                 && (setBypassProxy.isNotEmpty() || proxyServer != "127.0.0.1")) {
@@ -220,7 +227,8 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
         if (server.isEmpty() || !server.matches(IP_REGEX)) {
             binding.etProxyServer.background = ContextCompat.getDrawable(context, R.drawable.error_hint_selector)
             return
-        } else if (server == "127.0.0.1" && PrefManager(context).getSetStrPref(CLEARNET_APPS_FOR_PROXY).isEmpty()) {
+        } else if (server == "127.0.0.1" && preferenceRepository.get()
+                .getStringSetPreference(CLEARNET_APPS_FOR_PROXY).isEmpty()) {
             binding.tvProxyHint.apply {
                 setText(R.string.proxy_select_proxy_app)
                 setTextColor(ContextCompat.getColor(context, R.color.textModuleStatusColorAlert))

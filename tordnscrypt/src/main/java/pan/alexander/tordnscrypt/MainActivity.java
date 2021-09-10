@@ -48,7 +48,6 @@ import androidx.preference.PreferenceManager;
 import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.ViewPager;
 
-import android.os.Looper;
 import android.text.InputType;
 import android.util.Base64;
 import android.util.Log;
@@ -68,6 +67,7 @@ import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import dagger.Lazy;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.arp.ArpScannerKt;
 import pan.alexander.tordnscrypt.arp.DNSRebindProtectionKt;
@@ -76,6 +76,7 @@ import pan.alexander.tordnscrypt.backup.BackupActivity;
 import pan.alexander.tordnscrypt.dialogs.ChangeModeDialog;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptRunFragment;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.help.HelpActivity;
 import pan.alexander.tordnscrypt.main_fragment.MainFragment;
 import pan.alexander.tordnscrypt.main_fragment.ViewPagerAdapter;
@@ -83,21 +84,23 @@ import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesService;
+import pan.alexander.tordnscrypt.modules.ModulesServiceActions;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDRunFragment;
 import pan.alexander.tordnscrypt.tor_fragment.TorRunFragment;
-import pan.alexander.tordnscrypt.utils.ApManager;
-import pan.alexander.tordnscrypt.utils.ChangeModeInterface;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.Registration;
+import pan.alexander.tordnscrypt.utils.ap.ApManager;
+import pan.alexander.tordnscrypt.utils.mode.AppModeManagerCallback;
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
+import pan.alexander.tordnscrypt.dialogs.Registration;
+import pan.alexander.tordnscrypt.utils.enums.AccessPointState;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -106,17 +109,25 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
+import javax.inject.Inject;
+
 public class MainActivity extends LangAppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, ChangeModeInterface {
+        implements NavigationView.OnNavigationItemSelectedListener, AppModeManagerCallback {
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
+
+    @Inject
+    public Handler handler;
+
+    public boolean childLockActive = false;
+    public AccelerateDevelop accelerateDevelop;
 
     private static final int CODE_IS_AP_ON = 100;
     private static final int CODE_IS_VPN_ALLOWED = 110;
 
-    public boolean childLockActive = false;
-    public AccelerateDevelop accelerateDevelop;
     private volatile boolean vpnRequested;
     private Timer checkHotspotStateTimer;
-    private Handler handler;
     private TopFragment topFragment;
     private DNSCryptRunFragment dNSCryptRunFragment;
     private TorRunFragment torRunFragment;
@@ -134,6 +145,8 @@ public class MainActivity extends LangAppCompatActivity
     @SuppressLint("NewApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        App.instance.daggerComponent.inject(this);
 
         setDayNightTheme();
 
@@ -187,10 +200,6 @@ public class MainActivity extends LangAppCompatActivity
             viewPager.setCurrentItem(viewPagerPosition);
         }
 
-        Looper looper = Looper.getMainLooper();
-        if (looper != null) {
-            handler = new Handler(looper);
-        }
     }
 
     @Override
@@ -217,8 +226,8 @@ public class MainActivity extends LangAppCompatActivity
     protected void onRestart() {
         super.onRestart();
 
-        if (new PrefManager(this).getBoolPref("refresh_main_activity")) {
-            new PrefManager(this).setBoolPref("refresh_main_activity", false);
+        if (preferenceRepository.get().getBoolPreference("refresh_main_activity")) {
+            preferenceRepository.get().setBoolPreference("refresh_main_activity", false);
             recreate();
         }
     }
@@ -289,6 +298,11 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     private void handleMitmAttackWarning() {
+
+        if (handler == null) {
+            return;
+        }
+
         Intent intent = getIntent();
         if (intent.getBooleanExtra(ArpScannerKt.mitmAttackWarning, false)
                 && (ArpScanner.INSTANCE.getArpAttackDetected() || ArpScanner.INSTANCE.getDhcpGatewayAttackDetected())) {
@@ -312,7 +326,7 @@ public class MainActivity extends LangAppCompatActivity
     private boolean isInterfaceLocked() {
         boolean locked = false;
         try {
-            String saved_pass = new String(Base64.decode(new PrefManager(this).getStrPref("passwd"), 16));
+            String saved_pass = new String(Base64.decode(preferenceRepository.get().getStringPreference("passwd"), 16));
             locked = saved_pass.contains("-l-o-c-k-e-d");
         } catch (IllegalArgumentException e) {
             Log.e(LOG_TAG, "MainActivity Child Lock Exception " + e.getMessage());
@@ -356,7 +370,7 @@ public class MainActivity extends LangAppCompatActivity
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
 
-        boolean rootIsAvailable = new PrefManager(this).getBoolPref("rootIsAvailable");
+        boolean rootIsAvailable = preferenceRepository.get().getBoolPreference("rootIsAvailable");
 
         switchIconsDependingOnMode(menu, rootIsAvailable);
 
@@ -377,7 +391,8 @@ public class MainActivity extends LangAppCompatActivity
         boolean fixTTL = sharedPreferences.getBoolean("pref_common_fix_ttl", false);
         boolean useModulesWithRoot = sharedPreferences.getBoolean("swUseModulesRoot", false);
 
-        boolean busyBoxIsAvailable = new PrefManager(this).getBoolPref("bbOK");
+        PreferenceRepository preferences = preferenceRepository.get();
+        boolean busyBoxIsAvailable = preferences.getBoolPreference("bbOK");
 
         boolean mitmDetected = ArpScanner.INSTANCE.getArpAttackDetected()
                 || ArpScanner.INSTANCE.getDhcpGatewayAttackDetected();
@@ -386,7 +401,7 @@ public class MainActivity extends LangAppCompatActivity
 
         OperationMode mode = UNDEFINED;
 
-        String operationMode = new PrefManager(this).getStrPref("OPERATION_MODE");
+        String operationMode = preferences.getStringPreference("OPERATION_MODE");
         if (!operationMode.isEmpty()) {
             mode = OperationMode.valueOf(operationMode);
         }
@@ -416,7 +431,7 @@ public class MainActivity extends LangAppCompatActivity
                 menuRootMode.setChecked(true);
                 modulesStatus.setMode(ROOT_MODE);
                 mode = ROOT_MODE;
-                new PrefManager(this).setStrPref("OPERATION_MODE", mode.toString());
+                preferences.setStringPreference("OPERATION_MODE", mode.toString());
             }
 
             if (mitmDetected) {
@@ -454,12 +469,12 @@ public class MainActivity extends LangAppCompatActivity
                 menuVPNMode.setChecked(true);
                 modulesStatus.setMode(VPN_MODE);
                 mode = VPN_MODE;
-                new PrefManager(this).setStrPref("OPERATION_MODE", mode.toString());
+                preferences.setStringPreference("OPERATION_MODE", mode.toString());
             } else {
                 menuProxiesMode.setChecked(true);
                 modulesStatus.setMode(PROXY_MODE);
                 mode = PROXY_MODE;
-                new PrefManager(this).setStrPref("OPERATION_MODE", mode.toString());
+                preferences.setStringPreference("OPERATION_MODE", mode.toString());
             }
 
             if (mitmDetected) {
@@ -488,23 +503,25 @@ public class MainActivity extends LangAppCompatActivity
         ApManager apManager = new ApManager(this);
         int apState = apManager.isApOn();
 
-        if (apState == ApManager.apStateON) {
+        PreferenceRepository preferences = preferenceRepository.get();
+
+        if (apState == AccessPointState.STATE_ON) {
 
             menu.findItem(R.id.item_hotspot).setIcon(R.drawable.ic_wifi_tethering_green_24dp);
 
-            if (!new PrefManager(this).getBoolPref("APisON")) {
+            if (!preferences.getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON)) {
 
-                new PrefManager(this).setBoolPref("APisON", true);
+                preferences.setBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON, true);
 
                 modulesStatus.setIptablesRulesUpdateRequested(true);
                 ModulesAux.requestModulesStatusUpdate(this);
 
             }
 
-        } else if (apState == ApManager.apStateOFF) {
+        } else if (apState == AccessPointState.STATE_OFF) {
             menu.findItem(R.id.item_hotspot).setIcon(R.drawable.ic_portable_wifi_off_white_24dp);
-            if (new PrefManager(this).getBoolPref("APisON")) {
-                new PrefManager(this).setBoolPref("APisON", false);
+            if (preferences.getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON)) {
+                preferences.setBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON, false);
 
                 modulesStatus.setIptablesRulesUpdateRequested(true);
                 ModulesAux.requestModulesStatusUpdate(this);
@@ -548,7 +565,7 @@ public class MainActivity extends LangAppCompatActivity
 
         newIdentityMenuItem.setVisible(show);
 
-        invalidateOptionsMenu();
+        invalidateMenu();
     }
 
     @Override
@@ -674,7 +691,7 @@ public class MainActivity extends LangAppCompatActivity
                     checkHotspotStateTimer = null;
                 }
 
-                runOnUiThread(() -> invalidateOptionsMenu());
+                invalidateMenu();
             }
         }, 3000, 5000);
     }
@@ -707,7 +724,7 @@ public class MainActivity extends LangAppCompatActivity
 
         final MainActivity mainActivity = this;
 
-        String saved_pass = new PrefManager(getApplicationContext()).getStrPref("passwd");
+        String saved_pass = preferenceRepository.get().getStringPreference("passwd");
         if (!saved_pass.isEmpty()) {
             saved_pass = new String(Base64.decode(saved_pass, 16));
             input.setText(saved_pass);
@@ -721,7 +738,7 @@ public class MainActivity extends LangAppCompatActivity
                 Toast.makeText(getApplicationContext(), "Debug mode " + TopFragment.debug, Toast.LENGTH_LONG).show();
             } else if (!input.getText().toString().trim().isEmpty()) {
                 String pass = Base64.encodeToString((input.getText().toString() + "-l-o-c-k-e-d").getBytes(), 16);
-                new PrefManager(getApplicationContext()).setStrPref("passwd", pass);
+                preferenceRepository.get().setStringPreference("passwd", pass);
                 Toast.makeText(getApplicationContext(), getText(R.string.action_mode_dialog_locked), Toast.LENGTH_SHORT).show();
                 item.setIcon(R.drawable.ic_lock_white_24dp);
                 childLockActive = true;
@@ -751,10 +768,10 @@ public class MainActivity extends LangAppCompatActivity
         final MainActivity mainActivity = this;
 
         builder.setPositiveButton(R.string.ok, (dialogInterface, i) -> {
-            String saved_pass = new String(Base64.decode(new PrefManager(getApplicationContext()).getStrPref("passwd"), 16));
+            String saved_pass = new String(Base64.decode(preferenceRepository.get().getStringPreference("passwd"), 16));
             if (saved_pass.replace("-l-o-c-k-e-d", "").equals(input.getText().toString())) {
                 String pass = Base64.encodeToString((input.getText().toString()).getBytes(), 16);
-                new PrefManager(getApplicationContext()).setStrPref("passwd", pass);
+                preferenceRepository.get().setStringPreference("passwd", pass);
                 Toast.makeText(getApplicationContext(), getText(R.string.action_mode_dialog_unlocked), Toast.LENGTH_SHORT).show();
                 item.setIcon(R.drawable.ic_lock_open_white_24dp);
                 childLockActive = false;
@@ -850,8 +867,8 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     private void showInfoAboutRoot() {
-        boolean rootIsAvailable = new PrefManager(this).getBoolPref("rootIsAvailable");
-        boolean busyBoxIsAvailable = new PrefManager(this).getBoolPref("bbOK");
+        boolean rootIsAvailable = preferenceRepository.get().getBoolPreference("rootIsAvailable");
+        boolean busyBoxIsAvailable = preferenceRepository.get().getBoolPreference("bbOK");
         boolean mitmDetected = ArpScanner.INSTANCE.getArpAttackDetected()
                 || ArpScanner.INSTANCE.getDhcpGatewayAttackDetected();
 
@@ -952,7 +969,7 @@ public class MainActivity extends LangAppCompatActivity
             @Override
             public void onReceive(Context context, Intent intent) {
                 if (ArpScannerKt.mitmAttackWarning.equals(intent.getAction())) {
-                    handler.post(() -> invalidateOptionsMenu());
+                    invalidateMenu();
                 }
             }
         };
@@ -994,29 +1011,22 @@ public class MainActivity extends LangAppCompatActivity
                 && (modulesStatus.getTorState() == STOPPED || modulesStatus.getTorState() == FAULT || modulesStatus.getTorState() == ModuleState.UNDEFINED)
                 && (modulesStatus.getItpdState() == STOPPED || modulesStatus.getItpdState() == FAULT || modulesStatus.getItpdState() == ModuleState.UNDEFINED)) {
             Intent intent = new Intent(this, ModulesService.class);
-            intent.setAction(ModulesService.actionStopService);
+            intent.setAction(ModulesServiceActions.actionStopService);
             startService(intent);
         }
+
+        clearViews();
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-
-        if (checkHotspotStateTimer != null) {
-            checkHotspotStateTimer.cancel();
-            checkHotspotStateTimer.purge();
-            checkHotspotStateTimer = null;
-        }
+    private void clearViews() {
 
         if (viewPager != null) {
             viewPagerPosition = viewPager.getCurrentItem();
             viewPager = null;
         }
 
-        if (handler != null) {
+        if (handler != null && !isFinishing()) {
             handler.removeCallbacksAndMessages(null);
-            handler = null;
         }
 
         topFragment = null;
@@ -1031,6 +1041,22 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     @Override
+    protected void onDestroy() {
+        if (checkHotspotStateTimer != null) {
+            checkHotspotStateTimer.cancel();
+            checkHotspotStateTimer.purge();
+            checkHotspotStateTimer = null;
+        }
+
+        if (handler != null) {
+            handler.removeCallbacksAndMessages(null);
+            handler = null;
+        }
+
+        super.onDestroy();
+    }
+
+    @Override
     public boolean onKeyLongPress(int keyCode, KeyEvent event) {
 
         if (keyCode == KeyEvent.KEYCODE_BACK && handler != null) {
@@ -1042,7 +1068,7 @@ public class MainActivity extends LangAppCompatActivity
 
             handler.postDelayed(() -> {
                 Intent intent = new Intent(MainActivity.this, ModulesService.class);
-                intent.setAction(ModulesService.actionStopService);
+                intent.setAction(ModulesServiceActions.actionStopService);
                 startService(intent);
             }, 3000);
 
@@ -1052,5 +1078,12 @@ public class MainActivity extends LangAppCompatActivity
             return true;
         }
         return super.onKeyLongPress(keyCode, event);
+    }
+
+    @Override
+    public void invalidateMenu() {
+        if (handler != null) {
+            handler.post(this::invalidateOptionsMenu);
+        }
     }
 }

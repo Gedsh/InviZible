@@ -41,27 +41,31 @@ import java.util.concurrent.Future;
 
 import javax.crypto.Cipher;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.BuildConfig;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.HttpsRequest;
-import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.web.HttpsRequest;
 
 import static pan.alexander.tordnscrypt.TopFragment.appProcVersion;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
-import static pan.alexander.tordnscrypt.utils.Registration.wrongRegistrationCode;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.dialogs.Registration.wrongRegistrationCode;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class UpdateCheck {
     private final TopFragment topFragment;
     private final Context context;
     private static PublicKey publicKey;
     private static PrivateKey privateKey;
+    private final Lazy<PreferenceRepository> preferenceRepository;
 
     public UpdateCheck(TopFragment topFragment) {
         this.topFragment = topFragment;
         this.context = topFragment.getContext();
+        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     /*public byte[] RSAEncrypt(final String plain) throws NoSuchAlgorithmException, NoSuchPaddingException,
@@ -236,7 +240,7 @@ public class UpdateCheck {
                     return;
                 }
 
-                String registrationCode = new PrefManager(context).getStrPref("registrationCode");
+                String registrationCode = preferenceRepository.get().getStringPreference("registrationCode");
 
                 HashMap<String, String> request = new HashMap<>();
                 request.put("sign", rsaSign);
@@ -255,7 +259,7 @@ public class UpdateCheck {
                 } else if (serverAnswerEncoded.contains("fault")) {
                     if (serverAnswerEncoded.contains("wrong code")) {
                         showUpdateMessageAndSaveResult(R.string.update_wrong_code, R.string.update_fault);
-                        new PrefManager(context).setStrPref("updateTimeLast", "");
+                        preferenceRepository.get().setStringPreference("updateTimeLast", "");
                         wrongRegistrationCode = true;
                         Log.e(LOG_TAG, "requestUpdateData function fault - server returns wrong code");
                         return;
@@ -291,7 +295,7 @@ public class UpdateCheck {
 
     private void showUpdateMessageAndSaveResult(int messageRes) {
         String message = context.getString(messageRes);
-        new PrefManager(context).setStrPref("LastUpdateResult", message);
+        preferenceRepository.get().setStringPreference("LastUpdateResult", message);
 
         showUpdateMessage(message);
     }
@@ -299,7 +303,7 @@ public class UpdateCheck {
     private void showUpdateMessageAndSaveResult(int messageRes, int toSaveRes) {
         String message = context.getString(messageRes);
         String toSave = context.getString(toSaveRes);
-        new PrefManager(context).setStrPref("LastUpdateResult", toSave);
+        preferenceRepository.get().setStringPreference("LastUpdateResult", toSave);
 
         showUpdateMessage(message);
     }

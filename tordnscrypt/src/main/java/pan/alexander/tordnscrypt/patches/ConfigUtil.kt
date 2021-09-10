@@ -19,18 +19,18 @@ package pan.alexander.tordnscrypt.patches
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.app.Activity
+import android.content.Context
 import android.util.Log
 import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.zip.ZipInputStream
 
-class ConfigUtil(private val activity: Activity) {
-    private val pathVars = PathVars.getInstance(activity)
+class ConfigUtil(private val context: Context) {
+    private val pathVars = PathVars.getInstance(context)
 
     fun patchDNSCryptConfig(dnsCryptConfigPatches: List<PatchLine>) {
         readFromFile(pathVars.dnscryptConfPath).replaceLinesInFile(dnsCryptConfigPatches).writeToFile(pathVars.dnscryptConfPath)
@@ -57,7 +57,7 @@ class ConfigUtil(private val activity: Activity) {
 
     private fun List<String>.writeToFile(filePath: String) {
 
-        if (this.isEmpty() || activity.isFinishing) {
+        if (this.isEmpty()) {
             return
         }
 
@@ -112,7 +112,7 @@ class ConfigUtil(private val activity: Activity) {
         val installedGeoipSize = geoip.length()
         val installedGeoip6Size = geoip6.length()
         try {
-            ZipInputStream(activity.assets.open("tor.mp3")).use { zipInputStream ->
+            ZipInputStream(context.assets.open("tor.mp3")).use { zipInputStream ->
                 var zipEntry = zipInputStream.nextEntry
                 while (zipEntry != null) {
                     val fileName = zipEntry.name

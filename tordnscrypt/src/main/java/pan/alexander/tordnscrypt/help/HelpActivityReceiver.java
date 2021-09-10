@@ -23,7 +23,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
+
 import androidx.fragment.app.DialogFragment;
+
 import android.util.Log;
 import android.widget.Toast;
 
@@ -33,15 +35,18 @@ import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.util.Objects;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
+import pan.alexander.tordnscrypt.iptables.Tethering;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.root.RootCommands;
+import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class HelpActivityReceiver extends BroadcastReceiver {
     private final Handler mHandler;
@@ -50,12 +55,14 @@ public class HelpActivityReceiver extends BroadcastReceiver {
     private String info;
     private String pathToSaveLogs;
     private DialogFragment progressDialog;
+    private final Lazy<PreferenceRepository> preferenceRepository;
 
     public HelpActivityReceiver(Handler mHandler, String appDataDir, String cacheDir, String pathToSaveLogs) {
         this.mHandler = mHandler;
         this.appDataDir = appDataDir;
         this.cacheDir = cacheDir;
         this.pathToSaveLogs = pathToSaveLogs;
+        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     @Override
@@ -89,7 +96,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
             }
 
             if (isLogsExist()) {
-                FileOperations.moveBinaryFile(context, cacheDir
+                FileManager.moveBinaryFile(context, cacheDir
                         + "/logs", "InvizibleLogs.txt", pathToSaveLogs, "InvizibleLogs.txt");
             } else {
                 closeProgressDialog();
@@ -103,7 +110,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
         try {
             ZipFileManager zipFileManager = new ZipFileManager(cacheDir + "/logs/InvizibleLogs.txt");
             zipFileManager.createZip(context, cacheDir + "/logs_dir");
-            FileOperations.deleteDirSynchronous(context,cacheDir + "/logs_dir");
+            FileManager.deleteDirSynchronous(context, cacheDir + "/logs_dir");
         } catch (Exception e) {
             Log.e(LOG_TAG, "Create zip file for first method failed  " + e.getMessage() + " " + e.getCause());
         }
@@ -121,29 +128,15 @@ public class HelpActivityReceiver extends BroadcastReceiver {
         }
 
         try {
-            FileOperations.copyFolderSynchronous(context, appDataDir + "/logs", logsDirPath);
-            FileOperations.copyFolderSynchronous(context, appDataDir + "/shared_prefs", logsDirPath);
+            FileManager.copyFolderSynchronous(context, appDataDir + "/logs", logsDirPath);
+            FileManager.copyFolderSynchronous(context, appDataDir + "/shared_prefs", logsDirPath);
 
-            Process process = Runtime.getRuntime().exec("logcat -d");
-            StringBuilder log = new StringBuilder();
-            try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = bufferedReader.readLine()) != null) {
-                    log.append(line);
-                    log.append(System.lineSeparator());
-                }
-            }
+            saveLogcat(logsDirPath);
 
-            try (FileWriter out = new FileWriter(logsDirPath + "/logcat.log")) {
-                out.write(log.toString());
-            }
+            saveDeviceInfo(logsDirPath);
 
-            process.destroy();
-
-            try (FileWriter out = new FileWriter(logsDirPath + "/device_info.log")) {
-                if (info != null) {
-                    out.write(info);
-                }
+            if (Tethering.apIsOn || Tethering.usbTetherOn) {
+                trySaveIfconfig(logsDirPath);
             }
 
             saveLogsMethodOne(context);
@@ -154,10 +147,63 @@ public class HelpActivityReceiver extends BroadcastReceiver {
         }
     }
 
+    private void saveLogcat(String logsDirPath) throws Exception {
+        Process process = Runtime.getRuntime().exec("logcat -d");
+        StringBuilder log = new StringBuilder();
+        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                log.append(line);
+                log.append(System.lineSeparator());
+            }
+        }
+
+        try (FileWriter out = new FileWriter(logsDirPath + "/logcat.log")) {
+            out.write(log.toString());
+        }
+
+        process.destroy();
+    }
+
+    private void saveDeviceInfo(String logsDirPath) throws Exception {
+        try (FileWriter out = new FileWriter(logsDirPath + "/device_info.log")) {
+            if (info != null) {
+                out.write(info);
+            }
+        }
+    }
+
+    private void trySaveIfconfig(String logsDirPath) {
+        try {
+            saveIfconfig(logsDirPath);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "Collect ifconfig alternative method fault " + e.getMessage() + " " + e.getCause());
+        }
+    }
+
+    private void saveIfconfig(String logsDirPath) throws Exception {
+        Process process = Runtime.getRuntime().exec("ifconfig");
+        StringBuilder log = new StringBuilder();
+        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                log.append(line);
+                log.append(System.lineSeparator());
+            }
+        }
+
+        try (FileWriter out = new FileWriter(logsDirPath + "/ifconfig.log")) {
+            out.write(log.toString());
+        }
+
+        process.destroy();
+    }
+
     private void deleteRootExecLog(Context context) {
         File file = new File(appDataDir + "/logs/RootExec.log");
-        if (new PrefManager(context).getBoolPref("swRootCommandsLog") && file.isFile()) {
-            FileOperations.deleteFileSynchronous(context, appDataDir + "/logs", "RootExec.log");
+        if (preferenceRepository.get()
+                .getBoolPreference("swRootCommandsLog") && file.isFile()) {
+            FileManager.deleteFileSynchronous(context, appDataDir + "/logs", "RootExec.log");
         }
     }
 

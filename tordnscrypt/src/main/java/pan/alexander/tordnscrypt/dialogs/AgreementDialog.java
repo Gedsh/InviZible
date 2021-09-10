@@ -25,8 +25,9 @@ import android.view.View;
 
 import androidx.appcompat.app.AlertDialog;
 
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 
 public class AgreementDialog {
     public static AlertDialog.Builder getDialogBuilder(Context context) {
@@ -34,15 +35,17 @@ public class AgreementDialog {
 
         LayoutInflater lInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
+        PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
+
         if (lInflater == null) {
-            new PrefManager(context).setBoolPref("Agreement", true);
+            preferences.setBoolPreference("Agreement", true);
             return null;
         }
 
         View view = lInflater.inflate(R.layout.agreement_layout, null, false);
 
         if (view == null) {
-            new PrefManager(context).setBoolPref("Agreement", true);
+            preferences.setBoolPreference("Agreement", true);
             return null;
         }
 
@@ -51,7 +54,7 @@ public class AgreementDialog {
         alertDialog.setCancelable(false);
 
         alertDialog.setPositiveButton(R.string.agree, (dialog, id) -> {
-            new PrefManager(context).setBoolPref("Agreement", true);
+            preferences.setBoolPreference("Agreement", true);
             dialog.dismiss();
         });
         alertDialog.setNegativeButton(R.string.disagree, ((dialog, id) -> System.exit(0)));

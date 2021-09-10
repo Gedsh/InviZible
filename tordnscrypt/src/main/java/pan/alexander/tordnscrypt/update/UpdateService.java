@@ -18,6 +18,7 @@ package pan.alexander.tordnscrypt.update;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -39,10 +40,14 @@ import android.util.SparseArray;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.inject.Inject;
+
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.WakeLocksManager;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
+import pan.alexander.tordnscrypt.utils.wakelock.WakeLocksManager;
 
 public class UpdateService extends Service {
 
@@ -58,6 +63,8 @@ public class UpdateService extends Service {
     NotificationManager notificationManager;
     volatile SparseArray<DownloadTask> sparseArray;
     private WakeLocksManager wakeLocksManager = WakeLocksManager.getInstance();
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
 
     public UpdateService() {
     }
@@ -69,6 +76,8 @@ public class UpdateService extends Service {
 
     @Override
     public void onCreate() {
+        App.instance.daggerComponent.inject(this);
+
         super.onCreate();
 
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
@@ -159,11 +168,11 @@ public class UpdateService extends Service {
     private void installationRequestAction() {
         sendNotification(0, currentNotificationId.get(), System.currentTimeMillis(), getString(R.string.app_name), getString(R.string.app_name), "");
 
-        String path = new PrefManager(this).getStrPref("RequiredAppUpdateForQ");
+        String path = preferenceRepository.get().getStringPreference("RequiredAppUpdateForQ");
 
         if (!path.isEmpty()) {
 
-            new PrefManager(this).setStrPref("RequiredAppUpdateForQ", "");
+            preferenceRepository.get().setStringPreference("RequiredAppUpdateForQ", "");
 
             File file = new File(path);
 
@@ -195,6 +204,7 @@ public class UpdateService extends Service {
         notificationManager.createNotificationChannel(notificationChannel);
     }
 
+    @SuppressLint("UnspecifiedImmutableFlag")
     void sendNotification(int serviceStartId, int notificationId, long startTime, String Ticker, String Title, String Text) {
 
         Intent notificationIntent = new Intent(this, MainActivity.class);
@@ -204,11 +214,39 @@ public class UpdateService extends Service {
         Intent stopDownloadIntent = new Intent(this, UpdateService.class);
         stopDownloadIntent.setAction(STOP_DOWNLOAD_ACTION);
         stopDownloadIntent.putExtra("ServiceStartId", serviceStartId);
-        PendingIntent stopDownloadPendingIntent = PendingIntent.getService(this,
-                notificationId, stopDownloadIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent stopDownloadPendingIntent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            stopDownloadPendingIntent = PendingIntent.getService(
+                    this,
+                    notificationId,
+                    stopDownloadIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
+        } else {
+            stopDownloadPendingIntent = PendingIntent.getService(
+                    this,
+                    notificationId,
+                    stopDownloadIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT
+            );
+        }
 
-        PendingIntent contentIntent = PendingIntent.getActivity(this,
-                0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent contentIntent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            contentIntent = PendingIntent.getActivity(
+                    this,
+                    0,
+                    notificationIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
+        } else {
+            contentIntent = PendingIntent.getActivity(
+                    this,
+                    0,
+                    notificationIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT
+            );
+        }
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, UPDATE_CHANNEL_ID);
         builder.setContentIntent(contentIntent)

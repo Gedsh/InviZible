@@ -34,12 +34,12 @@ import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.preference.PreferenceManager
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.FIREWALL_CHANNEL_ID
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.SettingsActivity
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.PrefManager
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 
 const val ALLOW_ACTION = "pan.alexander.tordnscrypt.ALLOW_APP_FOR_FIREWALL"
 const val DENY_ACTION = "pan.alexander.tordnscrypt.DENY_APP_FOR_FIREWALL"
@@ -49,6 +49,7 @@ const val EXTRA_UID = "pan.alexander.tordnscrypt.EXTRA_UID"
 class FirewallNotification : BroadcastReceiver() {
 
     private val modulesStatus = ModulesStatus.getInstance()
+    private val preferenceRepository = App.instance.daggerComponent.getPreferenceRepository()
     private var notificationStartId = 102130
     private var newAppsAreAllowed = false
 
@@ -73,11 +74,12 @@ class FirewallNotification : BroadcastReceiver() {
 
     override fun onReceive(context: Context?, intent: Intent?) {
 
-        if (context == null || !PrefManager(context).getBoolPref("FirewallEnabled")) {
+        if (context == null || !preferenceRepository.get().getBoolPreference("FirewallEnabled")) {
             return
         }
 
-        val notificationManager = context.applicationContext?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?
+        val notificationManager =
+            context.applicationContext?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?
 
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
         newAppsAreAllowed = sharedPreferences.getBoolean("NewAppsInternetAllowed", false)
@@ -112,7 +114,8 @@ class FirewallNotification : BroadcastReceiver() {
         val packageManager = context?.packageManager
 
         if (uid == 0 || packageManager == null
-                || intent.getBooleanExtra(Intent.EXTRA_REPLACING, false)) {
+            || intent.getBooleanExtra(Intent.EXTRA_REPLACING, false)
+        ) {
             return
         }
 
@@ -130,7 +133,10 @@ class FirewallNotification : BroadcastReceiver() {
         try {
             val applicationInfo = packageManager.getPackageInfo(packages[0], 0).applicationInfo
             system = (applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
-            val pInfo: PackageInfo = packageManager.getPackageInfo(applicationInfo.packageName, PackageManager.GET_PERMISSIONS)
+            val pInfo: PackageInfo = packageManager.getPackageInfo(
+                applicationInfo.packageName,
+                PackageManager.GET_PERMISSIONS
+            )
             if (pInfo.requestedPermissions != null) {
                 for (permInfo in pInfo.requestedPermissions) {
                     if (permInfo == Manifest.permission.INTERNET) {
@@ -149,7 +155,10 @@ class FirewallNotification : BroadcastReceiver() {
             try {
                 label = packageManager.getNameForUid(uid) ?: ""
             } catch (e: Exception) {
-                Log.e(LOG_TAG, "FirewallNotification packageAdded exception  ${e.message}\n${e.cause}")
+                Log.e(
+                    LOG_TAG,
+                    "FirewallNotification packageAdded exception  ${e.message}\n${e.cause}"
+                )
             }
         }
 
@@ -167,8 +176,12 @@ class FirewallNotification : BroadcastReceiver() {
 
         sendNotification(context, uid, notificationStartId + uid, message, title, message)
 
-        val appsNewlyInstalled = PrefManager(context).getSetStrPref(APPS_NEWLY_INSTALLED)
-        PrefManager(context).setSetStrPref(APPS_NEWLY_INSTALLED, appsNewlyInstalled.apply { add(uid.toString()) })
+        val preferences = preferenceRepository.get()
+
+        val appsNewlyInstalled = preferences.getStringSetPreference(APPS_NEWLY_INSTALLED)
+        preferences.setStringSetPreference(APPS_NEWLY_INSTALLED, appsNewlyInstalled.apply {
+            add(uid.toString())
+        })
 
         if (newAppsAreAllowed) {
             addFirewallRule(context, uid)
@@ -191,19 +204,32 @@ class FirewallNotification : BroadcastReceiver() {
 
     private fun addFirewallRule(context: Context?, uid: Int) {
         if (uid > 0) {
-            val appsAllowLan = PrefManager(context).getSetStrPref(APPS_ALLOW_LAN_PREF)
-            val appsAllowWifi = PrefManager(context).getSetStrPref(APPS_ALLOW_WIFI_PREF)
-            val appsAllowGsm = PrefManager(context).getSetStrPref(APPS_ALLOW_GSM_PREF)
-            val appsAllowRoaming = PrefManager(context).getSetStrPref(APPS_ALLOW_ROAMING)
-            val appsAllowVpn = PrefManager(context).getSetStrPref(APPS_ALLOW_VPN)
+
+            val preferences = preferenceRepository.get()
+
+            val appsAllowLan = preferences.getStringSetPreference(APPS_ALLOW_LAN_PREF)
+            val appsAllowWifi = preferences.getStringSetPreference(APPS_ALLOW_WIFI_PREF)
+            val appsAllowGsm = preferences.getStringSetPreference(APPS_ALLOW_GSM_PREF)
+            val appsAllowRoaming =preferences.getStringSetPreference(APPS_ALLOW_ROAMING)
+            val appsAllowVpn = preferences.getStringSetPreference(APPS_ALLOW_VPN)
 
 
-            PrefManager(context).setSetStrPref(APPS_ALLOW_LAN_PREF, appsAllowLan.apply { add(uid.toString()) })
-            PrefManager(context).setSetStrPref(APPS_ALLOW_WIFI_PREF, appsAllowWifi.apply { add(uid.toString()) })
-            PrefManager(context).setSetStrPref(APPS_ALLOW_GSM_PREF, appsAllowGsm.apply { add(uid.toString()) })
-            PrefManager(context).setSetStrPref(APPS_ALLOW_ROAMING, appsAllowRoaming.apply { add(uid.toString()) })
+            preferences.setStringSetPreference(
+                APPS_ALLOW_LAN_PREF,
+                appsAllowLan.apply { add(uid.toString()) })
+            preferences.setStringSetPreference(
+                APPS_ALLOW_WIFI_PREF,
+                appsAllowWifi.apply { add(uid.toString()) })
+            preferences.setStringSetPreference(
+                APPS_ALLOW_GSM_PREF,
+                appsAllowGsm.apply { add(uid.toString()) })
+            preferences.setStringSetPreference(
+                APPS_ALLOW_ROAMING,
+                appsAllowRoaming.apply { add(uid.toString()) })
             if (modulesStatus.isRootAvailable) {
-                PrefManager(context).setSetStrPref(APPS_ALLOW_VPN, appsAllowVpn.apply { add(uid.toString()) })
+                preferences.setStringSetPreference(
+                    APPS_ALLOW_VPN,
+                    appsAllowVpn.apply { add(uid.toString()) })
             }
 
             if (context != null) {
@@ -216,19 +242,32 @@ class FirewallNotification : BroadcastReceiver() {
 
     private fun removeFirewallRule(context: Context?, uid: Int) {
         if (uid > 0) {
-            val appsAllowLan = PrefManager(context).getSetStrPref(APPS_ALLOW_LAN_PREF)
-            val appsAllowWifi = PrefManager(context).getSetStrPref(APPS_ALLOW_WIFI_PREF)
-            val appsAllowGsm = PrefManager(context).getSetStrPref(APPS_ALLOW_GSM_PREF)
-            val appsAllowRoaming = PrefManager(context).getSetStrPref(APPS_ALLOW_ROAMING)
-            val appsAllowVpn = PrefManager(context).getSetStrPref(APPS_ALLOW_VPN)
+
+            val preferences = preferenceRepository.get()
+
+            val appsAllowLan = preferences.getStringSetPreference(APPS_ALLOW_LAN_PREF)
+            val appsAllowWifi = preferences.getStringSetPreference(APPS_ALLOW_WIFI_PREF)
+            val appsAllowGsm = preferences.getStringSetPreference(APPS_ALLOW_GSM_PREF)
+            val appsAllowRoaming = preferences.getStringSetPreference(APPS_ALLOW_ROAMING)
+            val appsAllowVpn = preferences.getStringSetPreference(APPS_ALLOW_VPN)
 
 
-            PrefManager(context).setSetStrPref(APPS_ALLOW_LAN_PREF, appsAllowLan.apply { remove(uid.toString()) })
-            PrefManager(context).setSetStrPref(APPS_ALLOW_WIFI_PREF, appsAllowWifi.apply { remove(uid.toString()) })
-            PrefManager(context).setSetStrPref(APPS_ALLOW_GSM_PREF, appsAllowGsm.apply { remove(uid.toString()) })
-            PrefManager(context).setSetStrPref(APPS_ALLOW_ROAMING, appsAllowRoaming.apply { remove(uid.toString()) })
+            preferences.setStringSetPreference(
+                APPS_ALLOW_LAN_PREF,
+                appsAllowLan.apply { remove(uid.toString()) })
+            preferences.setStringSetPreference(
+                APPS_ALLOW_WIFI_PREF,
+                appsAllowWifi.apply { remove(uid.toString()) })
+            preferences.setStringSetPreference(
+                APPS_ALLOW_GSM_PREF,
+                appsAllowGsm.apply { remove(uid.toString()) })
+            preferences.setStringSetPreference(
+                APPS_ALLOW_ROAMING,
+                appsAllowRoaming.apply { remove(uid.toString()) })
             if (modulesStatus.isRootAvailable) {
-                PrefManager(context).setSetStrPref(APPS_ALLOW_VPN, appsAllowVpn.apply { remove(uid.toString()) })
+                preferences.setStringSetPreference(
+                    APPS_ALLOW_VPN,
+                    appsAllowVpn.apply { remove(uid.toString()) })
             }
 
             if (context != null) {
@@ -245,53 +284,110 @@ class FirewallNotification : BroadcastReceiver() {
         }
     }
 
-    private fun sendNotification(context: Context?, uid: Int, notificationId: Int, ticker: String, title: String, message: String) {
+    private fun sendNotification(
+        context: Context?,
+        uid: Int,
+        notificationId: Int,
+        ticker: String,
+        title: String,
+        message: String
+    ) {
 
         if (context == null) {
             return
         }
 
-        //These three lines makes Notification to open main activity after clicking on it
         val notificationIntent = Intent(context, SettingsActivity::class.java)
         notificationIntent.action = "firewall"
         notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER)
-        val contentIntent = PendingIntent.getActivity(context, 1025, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val contentIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.getActivity(
+                context,
+                1025,
+                notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        } else {
+            @Suppress("UnspecifiedImmutableFlag")
+            PendingIntent.getActivity(
+                context, 1025,
+                notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        }
 
         val allowApp = Intent(context, FirewallNotification::class.java)
         allowApp.action = ALLOW_ACTION
         allowApp.putExtra(NOTIFICATION_ID, notificationId)
         allowApp.putExtra(EXTRA_UID, uid)
-        val allowPendingIntent = PendingIntent.getBroadcast(context, notificationId, allowApp, PendingIntent.FLAG_UPDATE_CURRENT)
+        val allowPendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.getBroadcast(
+                context,
+                notificationId,
+                allowApp,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        } else {
+            @Suppress("UnspecifiedImmutableFlag")
+            PendingIntent.getBroadcast(
+                context,
+                notificationId,
+                allowApp,
+                PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        }
 
         val denyApp = Intent(context, FirewallNotification::class.java)
         denyApp.action = DENY_ACTION
         denyApp.putExtra(NOTIFICATION_ID, notificationId)
         denyApp.putExtra(EXTRA_UID, uid)
-        val denyPendingIntent = PendingIntent.getBroadcast(context, notificationId, denyApp, PendingIntent.FLAG_UPDATE_CURRENT)
+        val denyPendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.getBroadcast(
+                context,
+                notificationId,
+                denyApp,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        } else {
+            @Suppress("UnspecifiedImmutableFlag")
+            PendingIntent.getBroadcast(
+                context,
+                notificationId,
+                denyApp,
+                PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        }
 
         val builder = NotificationCompat.Builder(context, FIREWALL_CHANNEL_ID)
         builder.setContentIntent(contentIntent)
-                .setOngoing(false) //Can be swiped out
-                .setSmallIcon(R.drawable.ic_firewall)
-                .setTicker(ticker)
-                .setContentTitle(title) //Заголовок
-                .setContentText(message) // Текст уведомления
-                .setOnlyAlertOnce(true)
-                //.setWhen(startTime)
-                //.setUsesChronometer(true)
-                .setAutoCancel(true)
-                .setVibrate(longArrayOf(300))
-                .setChannelId(FIREWALL_CHANNEL_ID)
-                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
-                .addAction(R.drawable.ic_done_white_24dp, context.getText(R.string.allow), allowPendingIntent)
-                .addAction(R.drawable.ic_baseline_close_24, context.getText(R.string.deny), denyPendingIntent)
+            .setOngoing(false)
+            .setSmallIcon(R.drawable.ic_firewall)
+            .setTicker(ticker)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setOnlyAlertOnce(true)
+            .setAutoCancel(true)
+            .setVibrate(longArrayOf(300))
+            .setChannelId(FIREWALL_CHANNEL_ID)
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+            .addAction(
+                R.drawable.ic_done_white_24dp,
+                context.getText(R.string.allow),
+                allowPendingIntent
+            )
+            .addAction(
+                R.drawable.ic_baseline_close_24,
+                context.getText(R.string.deny),
+                denyPendingIntent
+            )
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             builder.setCategory(Notification.CATEGORY_REMINDER)
         }
 
         val notification = builder.build()
-        val notificationManager = context.applicationContext?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?
+        val notificationManager =
+            context.applicationContext?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?
         notificationManager?.notify(notificationId, notification)
     }
 }

@@ -26,10 +26,12 @@ import android.util.Log;
 import androidx.appcompat.app.AlertDialog;
 import androidx.preference.PreferenceManager;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class NotificationHelper extends ExtendedDialogFragment {
 
@@ -37,6 +39,7 @@ public class NotificationHelper extends ExtendedDialogFragment {
     private static String message = "";
     public static final String TAG_HELPER = "pan.alexander.tordnscrypt.HELPER_NOTIFICATION";
     private static NotificationHelper notificationHelper = null;
+    private final Lazy<PreferenceRepository> preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
 
     @Override
     public AlertDialog.Builder assignBuilder() {
@@ -51,7 +54,7 @@ public class NotificationHelper extends ExtendedDialogFragment {
                 .setTitle(R.string.helper_dialog_title)
                 .setPositiveButton(R.string.ok, (dialog, which) -> notificationHelper = null)
                 .setNegativeButton(R.string.dont_show, (dialog, id) -> {
-                    new PrefManager(activity).setBoolPref("helper_no_show_" + tag, true);
+                    preferenceRepository.get().setBoolPreference("helper_no_show_" + tag, true);
                     notificationHelper = null;
                     dismiss();
                 });
@@ -63,7 +66,8 @@ public class NotificationHelper extends ExtendedDialogFragment {
 
         try {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-            if ((!new PrefManager(context).getBoolPref("helper_no_show_" + preferenceTag)
+            PreferenceRepository preferences = App.Companion.getInstance().daggerComponent.getPreferenceRepository().get();
+            if ((!preferences.getBoolPreference("helper_no_show_" + preferenceTag)
                     || sharedPreferences.getBoolean("pref_common_show_help", false)
                     || preferenceTag.matches("\\d+"))
                     && notificationHelper == null) {

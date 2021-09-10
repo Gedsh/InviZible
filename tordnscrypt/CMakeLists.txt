@@ -1,6 +1,8 @@
 
 cmake_minimum_required(VERSION 3.4.1)
 
+project(inviziblePro)
+
 add_library( invizible
              SHARED
              src/main/jni/invizible/invizible.c

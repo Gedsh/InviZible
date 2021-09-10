@@ -19,9 +19,9 @@
 
 package pan.alexander.tordnscrypt.domain.log_reader.itpd
 
-import pan.alexander.tordnscrypt.domain.entities.LogDataModel
+import pan.alexander.tordnscrypt.domain.log_reader.LogDataModel
 import pan.alexander.tordnscrypt.domain.log_reader.AbstractLogParser
-import pan.alexander.tordnscrypt.domain.ModulesLogRepository
+import pan.alexander.tordnscrypt.domain.log_reader.ModulesLogRepository
 
 class ITPDLogParser(private val modulesLogRepository: ModulesLogRepository) : AbstractLogParser() {
     private var startedSuccessfully = false

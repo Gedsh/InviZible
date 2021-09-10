@@ -23,12 +23,12 @@ import android.app.Activity
 import android.content.Intent
 import android.util.Log
 import androidx.appcompat.app.AlertDialog
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.SettingsActivity
 import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.utils.CachedExecutor.getExecutorService
-import pan.alexander.tordnscrypt.utils.PrefManager
-import pan.alexander.tordnscrypt.utils.RootExecService
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor.getExecutorService
+import pan.alexander.tordnscrypt.utils.root.RootExecService
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -59,7 +59,8 @@ class UpdateDefaultBridgesDialog private constructor() {
             builder.setNegativeButton(R.string.cancel) { dialog, _ -> dialog.cancel() }
 
             builder.setNeutralButton(R.string.dont_show) { _, _ ->
-                PrefManager(activity).setBoolPref("doNotShowNewDefaultBridgesDialog", true)
+                App.instance.daggerComponent.getPreferenceRepository().get()
+                    .setBoolPreference("doNotShowNewDefaultBridgesDialog", true)
             }
 
             return builder.create()

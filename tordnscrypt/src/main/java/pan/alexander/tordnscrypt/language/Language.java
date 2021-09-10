@@ -27,7 +27,7 @@ import android.util.Log;
 
 import java.util.Locale;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class Language {
     private static final Locale mOriginalLocale;

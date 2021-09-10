@@ -33,26 +33,29 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
-import pan.alexander.tordnscrypt.domain.ConnectionRecordsInteractorInterface;
-import pan.alexander.tordnscrypt.domain.DNSCryptInteractorInterface;
+import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsInteractorInterface;
+import pan.alexander.tordnscrypt.domain.log_reader.DNSCryptInteractorInterface;
 import pan.alexander.tordnscrypt.domain.connection_records.OnConnectionRecordsUpdatedListener;
-import pan.alexander.tordnscrypt.domain.entities.LogDataModel;
-import pan.alexander.tordnscrypt.domain.LogReaderInteractors;
+import pan.alexander.tordnscrypt.domain.log_reader.LogDataModel;
+import pan.alexander.tordnscrypt.domain.log_reader.LogReaderInteractors;
 import pan.alexander.tordnscrypt.domain.log_reader.dnscrypt.OnDNSCryptLogUpdatedListener;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
-import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -82,9 +85,11 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
     private boolean fixedDNSCryptError;
 
     private ScaleGestureDetector scaleGestureDetector;
+    private final Lazy<PreferenceRepository> preferenceRepository;
 
     public DNSCryptFragmentPresenter(DNSCryptFragmentView view) {
         this.view = view;
+        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     public void onStart() {
@@ -99,7 +104,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
             ModuleState currentModuleState = modulesStatus.getDnsCryptState();
 
-            if (currentModuleState == RUNNING || ModulesAux.isDnsCryptSavedStateRunning(context)) {
+            if (currentModuleState == RUNNING || ModulesAux.isDnsCryptSavedStateRunning()) {
 
 
                 if (isDNSCryptReady()) {
@@ -164,7 +169,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
     @Override
     public boolean isDNSCryptInstalled() {
-        return new PrefManager(context).getBoolPref("DNSCrypt Installed");
+        return preferenceRepository.get()
+                .getBoolPreference("DNSCrypt Installed");
     }
 
     @Override
@@ -478,7 +484,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
             setDNSCryptStartButtonEnabled(true);
 
-            ModulesAux.saveDNSCryptStateRunning(context, true);
+            ModulesAux.saveDNSCryptStateRunning(true);
 
             view.setStartButtonText(R.string.btnDNSCryptStop);
         } else if (currentModuleState == RESTARTING) {
@@ -492,7 +498,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
             stopDisplayLog();
 
-            if (ModulesAux.isDnsCryptSavedStateRunning(context)) {
+            if (ModulesAux.isDnsCryptSavedStateRunning()) {
                 setDNSCryptStoppedBySystem();
             } else {
                 setDnsCryptStopped();
@@ -500,7 +506,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
             setDNSCryptProgressBarIndeterminate(false);
 
-            ModulesAux.saveDNSCryptStateRunning(context, false);
+            ModulesAux.saveDNSCryptStateRunning(false);
 
             setDNSCryptStartButtonEnabled(true);
         }
@@ -543,7 +549,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 
         if ((!modulesStatus.isRootAvailable() || !modulesStatus.isUseModulesWithRoot())
-                && !sharedPreferences.getBoolean("ignore_system_dns", false)) {
+                && !sharedPreferences.getBoolean(IGNORE_SYSTEM_DNS, false)) {
             modulesStatus.setSystemDNSAllowed(true);
         }
     }

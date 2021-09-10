@@ -20,9 +20,9 @@
 package pan.alexander.tordnscrypt.domain.log_reader.itpd
 
 import android.util.Log
-import pan.alexander.tordnscrypt.domain.ModulesLogRepository
+import pan.alexander.tordnscrypt.domain.log_reader.ModulesLogRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import java.lang.Exception
 

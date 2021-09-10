@@ -43,15 +43,17 @@ import android.view.MenuItem;
 import java.util.ArrayList;
 import java.util.Objects;
 
+import dagger.Lazy;
 import pan.alexander.tordnscrypt.dialogs.SaveFirewallChanges;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.proxy.ProxyFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.PreferencesCommonFragment;
 import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
 import pan.alexander.tordnscrypt.settings.dnscrypt_settings.PreferencesDNSFragment;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallFragment;
-import pan.alexander.tordnscrypt.settings.firewall.PreferencesFirewallFragment;
+import pan.alexander.tordnscrypt.settings.firewall.FirewallPreferencesFragment;
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges;
 import pan.alexander.tordnscrypt.settings.SettingsParser;
 import pan.alexander.tordnscrypt.settings.ShowLogFragment;
@@ -59,11 +61,12 @@ import pan.alexander.tordnscrypt.settings.show_rules.ShowRulesRecycleFrag;
 import pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment;
 import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag;
 import pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment;
-import pan.alexander.tordnscrypt.utils.PrefManager;
 import pan.alexander.tordnscrypt.utils.enums.DNSCryptRulesVariant;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+
+import javax.inject.Inject;
 
 
 public class SettingsActivity extends LangAppCompatActivity {
@@ -74,6 +77,9 @@ public class SettingsActivity extends LangAppCompatActivity {
     public static final String itpd_tunnels_tag = "pan.alexander.tordnscrypt/app_data/itpd/tunnels.conf";
     public static final String public_resolvers_md_tag = "pan.alexander.tordnscrypt/app_data/dnscrypt-proxy/public-resolvers.md";
     public static final String rules_tag = "pan.alexander.tordnscrypt/app_data/abstract_rules";
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
 
     public DialogFragment dialogFragment;
     public PreferencesTorFragment preferencesTorFragment;
@@ -88,6 +94,8 @@ public class SettingsActivity extends LangAppCompatActivity {
     @SuppressLint("NewApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        App.instance.daggerComponent.inject(this);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
@@ -108,15 +116,15 @@ public class SettingsActivity extends LangAppCompatActivity {
         if (Objects.equals(intent.getAction(), "DNS_Pref")) {
             dialogFragment = PleaseWaitProgressDialog.getInstance();
             dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
-            FileOperations.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml", dnscrypt_proxy_toml_tag);
+            FileManager.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml", dnscrypt_proxy_toml_tag);
         } else if (Objects.equals(intent.getAction(), "Tor_Pref")) {
             dialogFragment = PleaseWaitProgressDialog.getInstance();
             dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
-            FileOperations.readTextFile(this, appDataDir + "/app_data/tor/tor.conf", tor_conf_tag);
+            FileManager.readTextFile(this, appDataDir + "/app_data/tor/tor.conf", tor_conf_tag);
         } else if (Objects.equals(intent.getAction(), "I2PD_Pref")) {
             dialogFragment = PleaseWaitProgressDialog.getInstance();
             dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
-            FileOperations.readTextFile(this, appDataDir + "/app_data/i2pd/i2pd.conf", itpd_conf_tag);
+            FileManager.readTextFile(this, appDataDir + "/app_data/i2pd/i2pd.conf", itpd_conf_tag);
         } else if (Objects.equals(intent.getAction(), "fast_Pref")) {
             PreferencesFastFragment preferencesFastFragment = new PreferencesFastFragment();
             fSupportTrans.replace(android.R.id.content, preferencesFastFragment, "fastSettingsFragment");
@@ -130,8 +138,8 @@ public class SettingsActivity extends LangAppCompatActivity {
         } else if (Objects.equals(intent.getAction(), "DNS_servers_Pref")) {
             dialogFragment = PleaseWaitProgressDialog.getInstance();
             dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
-            FileOperations.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml", public_resolvers_md_tag);
-            FileOperations.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/public-resolvers.md", public_resolvers_md_tag);
+            FileManager.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml", public_resolvers_md_tag);
+            FileManager.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/public-resolvers.md", public_resolvers_md_tag);
         } else if (Objects.equals(intent.getAction(), "open_qery_log")) {
             Bundle bundle = new Bundle();
             String path = appDataDir + "/cache/query.log";
@@ -151,23 +159,23 @@ public class SettingsActivity extends LangAppCompatActivity {
         } else if (Objects.equals(intent.getAction(), "forwarding_rules_Pref")) {
             dialogFragment = PleaseWaitProgressDialog.getInstance();
             dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
-            FileOperations.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/forwarding-rules.txt", rules_tag);
+            FileManager.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/forwarding-rules.txt", rules_tag);
         } else if (Objects.equals(intent.getAction(), "cloaking_rules_Pref")) {
             dialogFragment = PleaseWaitProgressDialog.getInstance();
             dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
-            FileOperations.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/cloaking-rules.txt", rules_tag);
+            FileManager.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/cloaking-rules.txt", rules_tag);
         } else if (Objects.equals(intent.getAction(), "blacklist_Pref")) {
             dialogFragment = PleaseWaitProgressDialog.getInstance();
             dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
-            FileOperations.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/blacklist.txt", rules_tag);
+            FileManager.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/blacklist.txt", rules_tag);
         } else if (Objects.equals(intent.getAction(), "ipblacklist_Pref")) {
             dialogFragment = PleaseWaitProgressDialog.getInstance();
             dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
-            FileOperations.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/ip-blacklist.txt", rules_tag);
+            FileManager.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/ip-blacklist.txt", rules_tag);
         } else if (Objects.equals(intent.getAction(), "whitelist_Pref")) {
             dialogFragment = PleaseWaitProgressDialog.getInstance();
             dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
-            FileOperations.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/whitelist.txt", rules_tag);
+            FileManager.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/whitelist.txt", rules_tag);
         } else if (Objects.equals(intent.getAction(), "pref_itpd_addressbook_subscriptions")) {
             SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
             ArrayList<String> rules_file = new ArrayList<>();
@@ -221,7 +229,7 @@ public class SettingsActivity extends LangAppCompatActivity {
             fSupportTrans.replace(android.R.id.content, unlockTorAppsFragment);
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "firewall_pref")) {
-            fSupportTrans.replace(android.R.id.content, new PreferencesFirewallFragment(), "PreferencesFirewallFragment");
+            fSupportTrans.replace(android.R.id.content, new FirewallPreferencesFragment(), "PreferencesFirewallFragment");
             fSupportTrans.commit();
         }
 
@@ -373,7 +381,7 @@ public class SettingsActivity extends LangAppCompatActivity {
         if (Objects.equals(action, "firewall") && firewallFragment != null) {
             menuSearchView.setOnQueryTextListener(firewallFragment);
 
-            boolean firewallEnabled = new PrefManager(this).getBoolPref("FirewallEnabled");
+            boolean firewallEnabled = preferenceRepository.get().getBoolPreference("FirewallEnabled");
             menuSwitch.setChecked(firewallEnabled);
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

@@ -19,8 +19,8 @@
 
 package pan.alexander.tordnscrypt.domain.log_reader.itpd
 
-import pan.alexander.tordnscrypt.domain.entities.LogDataModel
-import pan.alexander.tordnscrypt.domain.ModulesLogRepository
+import pan.alexander.tordnscrypt.domain.log_reader.LogDataModel
+import pan.alexander.tordnscrypt.domain.log_reader.ModulesLogRepository
 import java.util.*
 import java.util.regex.Pattern
 
@@ -66,7 +66,7 @@ class ITPDHtmlParser(val modulesLogRepository: ModulesLogRepository) {
 
                     break
                 } else if (line.contains("Network status")) {
-                    if (line.toLowerCase(Locale.ROOT).contains("error")) {
+                    if (line.lowercase(Locale.ROOT).contains("error")) {
                         startedSuccessfully = false
                         startedWithError = true
                         errorFound = true

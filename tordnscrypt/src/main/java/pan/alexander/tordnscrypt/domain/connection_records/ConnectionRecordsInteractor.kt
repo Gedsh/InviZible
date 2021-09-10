@@ -20,15 +20,13 @@
 package pan.alexander.tordnscrypt.domain.connection_records
 
 import android.util.Log
-import pan.alexander.tordnscrypt.ApplicationBase
-import pan.alexander.tordnscrypt.domain.ConnectionRecordsRepository
-import pan.alexander.tordnscrypt.domain.entities.ConnectionRecord
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.App
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.lang.Exception
 import kotlin.collections.HashSet
 
 class ConnectionRecordsInteractor(private val connectionRecordsRepository: ConnectionRecordsRepository) {
-    private val applicationContext = ApplicationBase.instance?.applicationContext
+    private val applicationContext = App.instance.applicationContext
     private val listeners: HashSet<OnConnectionRecordsUpdatedListener?> = HashSet()
     private var converter: ConnectionRecordsConverter? = null
     private var parser: ConnectionRecordsParser? = null

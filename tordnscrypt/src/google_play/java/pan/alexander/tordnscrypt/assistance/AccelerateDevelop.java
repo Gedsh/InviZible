@@ -58,14 +58,16 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javax.crypto.Cipher;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class AccelerateDevelop implements BillingClientStateListener {
     public final static String mSkuId = "invizible_premium_version";
@@ -80,12 +82,14 @@ public class AccelerateDevelop implements BillingClientStateListener {
     private volatile boolean billingServiceConnected = false;
     private volatile String signedData;
     private volatile String signature;
+    private final Lazy<PreferenceRepository> preferenceRepository;
 
     public AccelerateDevelop(MainActivity activity) {
         this.activity = activity;
         this.context = activity.getApplicationContext();
-        this.signedData = new PrefManager(activity).getStrPref("gpData");
-        this.signature = new PrefManager(activity).getStrPref("gpSign");
+        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
+        this.signedData = preferenceRepository.get().getStringPreference("gpData");
+        this.signature = preferenceRepository.get().getStringPreference("gpSign");
     }
 
     public void removeActivity() {
@@ -117,7 +121,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
 
                 Log.i(LOG_TAG, "Launch billing");
 
-                new PrefManager(context).setBoolPref("helper_no_show_pending_purchase", false);
+                preferenceRepository.get().setBoolPreference("helper_no_show_pending_purchase", false);
 
                 BillingFlowParams billingFlowParams = BillingFlowParams.newBuilder()
                         .setSkuDetails(skuDetails)
@@ -367,8 +371,8 @@ public class AccelerateDevelop implements BillingClientStateListener {
         if (result) {
             this.signedData = signedData;
             this.signature = signature;
-            new PrefManager(context).setStrPref("gpData", signedData);
-            new PrefManager(context).setStrPref("gpSign", signature);
+            preferenceRepository.get().setStringPreference("gpData", signedData);
+            preferenceRepository.get().setStringPreference("gpSign", signature);
         }
 
         return result;

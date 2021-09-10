@@ -37,13 +37,14 @@ import pan.alexander.tordnscrypt.AUX_CHANNEL_ID
 import pan.alexander.tordnscrypt.MainActivity
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.CachedExecutor
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
-import pan.alexander.tordnscrypt.vpn.Util
+import pan.alexander.tordnscrypt.vpn.NetworkUtils
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
+import java.lang.ref.WeakReference
 import java.math.BigInteger
 import java.net.InetAddress
 import java.nio.ByteOrder
@@ -72,10 +73,13 @@ class ArpScanner private constructor(
     handler: Handler?
 ) : Shell.OnCommandResultListener {
 
-    private var handler = handler
-        set(value) {
-            if (handler != null) field = value
+    private var handler: WeakReference<Handler>? = null
+
+    init {
+        if (handler != null) {
+            this.handler = WeakReference(handler)
         }
+    }
 
     private var arpTableAccessible: Boolean? = null
 
@@ -156,9 +160,9 @@ class ArpScanner private constructor(
             return
         }
 
-        cellularActive = Util.isCellularActive(context)
-        wifiActive = Util.isWifiActive(context)
-        ethernetActive = Util.isEthernetActive(context)
+        cellularActive = NetworkUtils.isCellularActive(context)
+        wifiActive = NetworkUtils.isWifiActive(context)
+        ethernetActive = NetworkUtils.isEthernetActive(context)
 
         if (!wifiActive && !ethernetActive && (cellularActive || !connectionAvailable)) {
             return
@@ -312,7 +316,7 @@ class ArpScanner private constructor(
 
         }, 1, 10, TimeUnit.SECONDS)
 
-        if (!Util.isConnected(context) && !connectionAvailable) {
+        if (!NetworkUtils.isConnected(context) && !connectionAvailable) {
             pause(context, true, resetInternalValues = true)
         }
     }
@@ -331,9 +335,9 @@ class ArpScanner private constructor(
             return
         }
 
-        cellularActive = Util.isCellularActive(context)
-        wifiActive = Util.isWifiActive(context)
-        ethernetActive = Util.isEthernetActive(context)
+        cellularActive = NetworkUtils.isCellularActive(context)
+        wifiActive = NetworkUtils.isWifiActive(context)
+        ethernetActive = NetworkUtils.isEthernetActive(context)
 
         if (connectionAvailable && (wifiActive || ethernetActive || !cellularActive)) {
             if (scheduledExecutorService?.isShutdown == false) {
@@ -731,18 +735,27 @@ class ArpScanner private constructor(
         text: String,
         NOTIFICATION_ID: Int
     ) {
-
-        //These three lines makes Notification to open main activity after clicking on it
         val notificationIntent = Intent(context, MainActivity::class.java)
         notificationIntent.action = Intent.ACTION_MAIN
         notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER)
         notificationIntent.putExtra(mitmAttackWarning, true)
-        val contentIntent = PendingIntent.getActivity(
-            context.applicationContext,
-            111,
-            notificationIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT
-        )
+
+        val contentIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.getActivity(
+                context.applicationContext,
+                111,
+                notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        } else {
+            @Suppress("UnspecifiedImmutableFlag")
+            PendingIntent.getActivity(
+                context.applicationContext,
+                111,
+                notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        }
         var iconResource: Int = context.resources.getIdentifier(
             "ic_arp_attack_notification",
             "drawable",
@@ -754,7 +767,7 @@ class ArpScanner private constructor(
         val builder = NotificationCompat.Builder(context, AUX_CHANNEL_ID)
         @Suppress("DEPRECATION")
         builder.setContentIntent(contentIntent)
-            .setOngoing(false) //Can be swiped out
+            .setOngoing(false)
             .setSmallIcon(iconResource)
             .setLargeIcon(
                 BitmapFactory.decodeResource(
@@ -762,8 +775,8 @@ class ArpScanner private constructor(
                     R.drawable.ic_arp_attack_notification
                 )
             )   // большая картинка
-            .setContentTitle(title) //Заголовок
-            .setContentText(text) // Текст уведомления
+            .setContentTitle(title)
+            .setContentText(text)
             .setPriority(Notification.PRIORITY_HIGH)
             .setOnlyAlertOnce(true)
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
@@ -780,13 +793,13 @@ class ArpScanner private constructor(
     }
 
     private fun updateMainActivityIcons(context: Context) {
-        handler?.post {
+        handler?.get()?.post {
             LocalBroadcastManager.getInstance(context).sendBroadcast(Intent(mitmAttackWarning))
         }
     }
 
     private fun makeToast(context: Context, message: Int) {
-        handler?.post { Toast.makeText(context, message, Toast.LENGTH_LONG).show() }
+        handler?.get()?.post { Toast.makeText(context, message, Toast.LENGTH_LONG).show() }
     }
 
     private fun reloadIptablesWithRootMode(context: Context) {

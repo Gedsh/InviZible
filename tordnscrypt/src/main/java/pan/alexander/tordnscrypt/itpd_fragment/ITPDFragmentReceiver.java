@@ -28,17 +28,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.TopFragment;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.utils.root.RootCommands;
+import pan.alexander.tordnscrypt.utils.root.RootExecService;
 
 import static pan.alexander.tordnscrypt.TopFragment.ITPDVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
@@ -48,10 +50,12 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
 
     private String itpdPath;
     private String busyboxPath;
+    private final Lazy<PreferenceRepository> preferenceRepository;
 
     public ITPDFragmentReceiver(ITPDFragmentView view, ITPDFragmentPresenterInterface presenter) {
         this.view = view;
         this.presenter = presenter;
+        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     @Override
@@ -105,11 +109,12 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
                         String[] verArr = strArr[1].trim().split(" ");
                         if (verArr.length > 2 && verArr[1].contains("version")) {
                             ITPDVersion = verArr[2].trim();
-                            new PrefManager(context).setStrPref("ITPDVersion", ITPDVersion);
+                            preferenceRepository.get()
+                                    .setStringPreference("ITPDVersion", ITPDVersion);
 
                             if (!modulesStatus.isUseModulesWithRoot()) {
 
-                                if (!ModulesAux.isITPDSavedStateRunning(context)) {
+                                if (!ModulesAux.isITPDSavedStateRunning()) {
                                     view.setITPDLogViewText();
                                 }
 
@@ -126,7 +131,7 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
                 } else if (!sb.toString().toLowerCase().contains(itpdPath.toLowerCase())
                         && sb.toString().contains("checkITPDRunning")) {
                     if (modulesStatus.getItpdState() == STOPPED) {
-                        ModulesAux.saveITPDStateRunning(context, false);
+                        ModulesAux.saveITPDStateRunning(false);
                     }
                     presenter.stopDisplayLog();
                     presenter.setITPDStopped();

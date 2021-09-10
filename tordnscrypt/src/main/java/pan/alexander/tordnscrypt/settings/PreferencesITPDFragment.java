@@ -39,12 +39,12 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
@@ -230,9 +230,9 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
 
         if (!isChanged) return;
 
-        FileOperations.writeToTextFile(context, appDataDir + "/app_data/i2pd/i2pd.conf", itpd_conf, SettingsActivity.itpd_conf_tag);
+        FileManager.writeToTextFile(context, appDataDir + "/app_data/i2pd/i2pd.conf", itpd_conf, SettingsActivity.itpd_conf_tag);
 
-        boolean itpdRunning = ModulesAux.isITPDSavedStateRunning(context);
+        boolean itpdRunning = ModulesAux.isITPDSavedStateRunning();
 
         if (itpdRunning) {
             ModulesRestarter.restartITPD(context);
@@ -394,7 +394,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
             CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
                 boolean successfully = false;
                 if (getActivity() != null) {
-                    successfully = FileOperations.deleteDirSynchronous(getActivity(), appDataDir + "/i2pd_data");
+                    successfully = FileManager.deleteDirSynchronous(getActivity(), appDataDir + "/i2pd_data");
                 }
 
                 if (getActivity() != null && !getActivity().isFinishing()) {

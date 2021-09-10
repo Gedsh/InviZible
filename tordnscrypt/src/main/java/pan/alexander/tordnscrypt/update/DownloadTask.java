@@ -19,6 +19,7 @@ package pan.alexander.tordnscrypt.update;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -51,20 +52,21 @@ import java.util.zip.CRC32;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import pan.alexander.tordnscrypt.ApplicationBase;
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.update.UpdateService.STOP_DOWNLOAD_ACTION;
 import static pan.alexander.tordnscrypt.update.UpdateService.UPDATE_CHANNEL_ID;
 import static pan.alexander.tordnscrypt.update.UpdateService.UPDATE_CHANNEL_NOTIFICATION_ID;
 import static pan.alexander.tordnscrypt.update.UpdateService.UPDATE_RESULT;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
-import static pan.alexander.tordnscrypt.utils.RootExecService.TopFragmentMark;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.TopFragmentMark;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 
 class DownloadTask extends Thread {
@@ -82,6 +84,8 @@ class DownloadTask extends Thread {
     int notificationId;
     long startTime;
 
+    private final Lazy<PreferenceRepository> preferenceRepository;
+
     DownloadTask(UpdateService updateService, Intent intent, int serviceStartId, int notificationId, long startTime) {
         this.context = updateService;
         this.updateService = updateService;
@@ -90,6 +94,7 @@ class DownloadTask extends Thread {
         this.notificationId = notificationId;
         this.startTime = startTime;
         this.cacheDir = PathVars.getInstance(updateService).getCacheDirPath(updateService);
+        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     @Override
@@ -97,6 +102,7 @@ class DownloadTask extends Thread {
         String urlToDownload = intent.getStringExtra("url");
         String fileToDownload = intent.getStringExtra("file");
         String hash = intent.getStringExtra("hash");
+        PreferenceRepository preferences = preferenceRepository.get();
 
         try {
 
@@ -112,7 +118,7 @@ class DownloadTask extends Thread {
 
             if (checkSum) {
 
-                new PrefManager(context).setStrPref("LastUpdateResult",
+                preferences.setStringPreference("LastUpdateResult",
                         context.getString(R.string.update_installed));
 
                 if (fileToDownload.contains("InviZible")) {
@@ -122,9 +128,9 @@ class DownloadTask extends Thread {
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !activityActive) {
                         //Required for androidQ because even if the service is in the foreground we cannot start an activity if no activity is visible
-                        new PrefManager(context).setStrPref("RequiredAppUpdateForQ", outputFile.getCanonicalPath());
+                        preferences.setStringPreference("RequiredAppUpdateForQ", outputFile.getCanonicalPath());
                     } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                       installApkForNougatAndHigher(outputFile);
+                        installApkForNougatAndHigher(outputFile);
                     } else {
                         installApkLowerNougat(outputFile);
                     }
@@ -133,15 +139,15 @@ class DownloadTask extends Thread {
                 }
 
             } else {
-                new PrefManager(context).setStrPref("LastUpdateResult", context.getString(R.string.update_fault));
-                new PrefManager(context).setStrPref("UpdateResultMessage", context.getString(R.string.update_fault));
-                FileOperations.deleteFile(context, cacheDir, fileToDownload, "ignored");
+                preferences.setStringPreference("LastUpdateResult", context.getString(R.string.update_fault));
+                preferences.setStringPreference("UpdateResultMessage", context.getString(R.string.update_fault));
+                FileManager.deleteFile(context, cacheDir, fileToDownload, "ignored");
                 Log.e(LOG_TAG, "UpdateService file hashes mismatch " + fileToDownload);
             }
 
         } catch (Exception e) {
-            new PrefManager(context).setStrPref("LastUpdateResult", context.getString(R.string.update_fault));
-            new PrefManager(context).setStrPref("UpdateResultMessage", context.getString(R.string.update_fault));
+            preferences.setStringPreference("LastUpdateResult", context.getString(R.string.update_fault));
+            preferences.setStringPreference("UpdateResultMessage", context.getString(R.string.update_fault));
             Log.e(LOG_TAG, "UpdateService failed to download file " + urlToDownload + " " + e.getMessage());
         } finally {
             updateService.sparseArray.delete(serviceStartId);
@@ -204,8 +210,8 @@ class DownloadTask extends Thread {
 
         long fileLength = con.getContentLength();
 
-        try(InputStream input = new BufferedInputStream(con.getInputStream());
-            OutputStream output = new FileOutputStream(path, true)) {
+        try (InputStream input = new BufferedInputStream(con.getInputStream());
+             OutputStream output = new FileOutputStream(path, true)) {
             byte[] data = new byte[1024];
             int count;
             int percent = 0;
@@ -234,15 +240,20 @@ class DownloadTask extends Thread {
     }
 
     private boolean isActivityActive() {
-        boolean isActivityActive = false;
-        if (context.getApplicationContext() instanceof ApplicationBase) {
 
-            ApplicationBase applicationBase = (ApplicationBase) context.getApplicationContext();
-            WeakReference<Activity> currentActivity = applicationBase.getCurrentActivity();
-            isActivityActive = currentActivity != null && currentActivity.get() != null
-                    && !currentActivity.get().isFinishing();
+        App app = App.Companion.getInstance();
+
+        WeakReference<Activity> activityWeakReference = app.getCurrentActivity();
+        if (activityWeakReference == null) {
+            return false;
         }
-        return isActivityActive;
+
+        Activity activity = activityWeakReference.get();
+        if (activity == null) {
+            return false;
+        }
+
+        return !activity.isFinishing();
     }
 
     private void installApkForNougatAndHigher(File outputFile) {
@@ -309,8 +320,8 @@ class DownloadTask extends Thread {
     private String crc32(File file) {
         CRC32 crc = new CRC32();
 
-        try(InputStream is = new FileInputStream(file);
-            ByteArrayOutputStream bout = new ByteArrayOutputStream()) {
+        try (InputStream is = new FileInputStream(file);
+             ByteArrayOutputStream bout = new ByteArrayOutputStream()) {
             byte[] readBuffer = new byte[4 * 1024];
             int read;
             while ((read = is.read(readBuffer)) != -1) {
@@ -327,6 +338,7 @@ class DownloadTask extends Thread {
         return null;
     }
 
+    @SuppressLint("UnspecifiedImmutableFlag")
     private void updateNotification(String fileToDownload, int percent) {
         String ticker = context.getString(R.string.update_notification);
         String text = context.getString(R.string.update_notification) +
@@ -339,11 +351,39 @@ class DownloadTask extends Thread {
         Intent stopDownloadIntent = new Intent(updateService, UpdateService.class);
         stopDownloadIntent.setAction(STOP_DOWNLOAD_ACTION);
         stopDownloadIntent.putExtra("ServiceStartId", serviceStartId);
-        PendingIntent stopDownloadPendingIntent = PendingIntent.getService(updateService,
-                notificationId, stopDownloadIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        PendingIntent contentIntent = PendingIntent.getActivity(updateService,
-                0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent stopDownloadPendingIntent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            stopDownloadPendingIntent = PendingIntent.getService(
+                    updateService,
+                    notificationId,
+                    stopDownloadIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        } else {
+            stopDownloadPendingIntent = PendingIntent.getService(
+                    updateService,
+                    notificationId,
+                    stopDownloadIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT
+            );
+        }
+
+        PendingIntent contentIntent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            contentIntent = PendingIntent.getActivity(
+                    updateService,
+                    0,
+                    notificationIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
+        } else {
+            contentIntent = PendingIntent.getActivity(
+                    updateService,
+                    0,
+                    notificationIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT
+            );
+        }
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(updateService, UPDATE_CHANNEL_ID);
         builder.setContentIntent(contentIntent)

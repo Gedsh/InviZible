@@ -48,17 +48,21 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Future;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.Verifier;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+
+import javax.inject.Inject;
 
 public class UnlockTorIpsFrag extends Fragment {
 
@@ -83,12 +87,16 @@ public class UnlockTorIpsFrag extends Fragment {
     String unlockIPsStr;
 
     private Future<?> getHostIPTask;
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
 
     public UnlockTorIpsFrag() {
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        App.instance.daggerComponent.inject(this);
+
         super.onCreate(savedInstanceState);
 
         setRetainInstance(true);
@@ -190,9 +198,9 @@ public class UnlockTorIpsFrag extends Fragment {
         }
 
         unlockHosts.clear();
-        unlockHosts.addAll(new PrefManager(activity).getSetStrPref(unlockHostsStr));
+        unlockHosts.addAll(preferenceRepository.get().getStringSetPreference(unlockHostsStr));
         unlockIPs.clear();
-        unlockIPs.addAll(new PrefManager(activity).getSetStrPref(unlockIPsStr));
+        unlockIPs.addAll(preferenceRepository.get().getStringSetPreference(unlockIPsStr));
 
         unlockHostIP.clear();
         for (String host : unlockHosts) {
@@ -257,10 +265,10 @@ public class UnlockTorIpsFrag extends Fragment {
 
         if ("device".equals(deviceOrTether)) {
             if (!routeAllThroughTorDevice) {
-                settingsChanged = saveSettings(context, ipsToUnlock, IPS_TO_UNLOCK);
+                settingsChanged = saveSettings(ipsToUnlock, IPS_TO_UNLOCK);
                 //FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/unlock", ipsToUnlock, "ignored");
             } else {
-                settingsChanged = saveSettings(context, ipsToUnlock, IPS_FOR_CLEARNET);
+                settingsChanged = saveSettings(ipsToUnlock, IPS_FOR_CLEARNET);
                 //FileOperations.writeToTextFile(getActivity(), appDataDir + "/app_data/tor/clearnet", ipsToUnlock, "ignored");
             }
 
@@ -269,10 +277,10 @@ public class UnlockTorIpsFrag extends Fragment {
             /////////////////////////////////////////////////////////////////////////////////////
         } else if ("tether".equals(deviceOrTether)) {
             if (!routeAllThroughTorTether) {
-                settingsChanged = saveSettings(context, ipsToUnlock, IPS_TO_UNLOCK_TETHER);
+                settingsChanged = saveSettings(ipsToUnlock, IPS_TO_UNLOCK_TETHER);
                 //FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/unlock_tether", new ArrayList<>(ipsToUnlock), "ignored");
             } else {
-                settingsChanged = saveSettings(context, ipsToUnlock, IPS_FOR_CLEARNET_TETHER);
+                settingsChanged = saveSettings(ipsToUnlock, IPS_FOR_CLEARNET_TETHER);
                 //FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/clearnet_tether", new ArrayList<>(ipsToUnlock), "ignored");
             }
         }
@@ -287,12 +295,12 @@ public class UnlockTorIpsFrag extends Fragment {
         Toast.makeText(context, getText(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
     }
 
-    private boolean saveSettings(Context context, Set<String> ipsToUnlock, String settingsKey) {
-        Set<String> ips = new PrefManager(context).getSetStrPref(settingsKey);
+    private boolean saveSettings(Set<String> ipsToUnlock, String settingsKey) {
+        Set<String> ips = preferenceRepository.get().getStringSetPreference(settingsKey);
         if (ips.size() == ipsToUnlock.size() && ips.containsAll(ipsToUnlock)) {
             return false;
         } else {
-            new PrefManager(context).setSetStrPref(settingsKey, ipsToUnlock);
+            preferenceRepository.get().setStringSetPreference(settingsKey, ipsToUnlock);
             return true;
         }
     }

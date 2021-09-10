@@ -33,20 +33,22 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
+import dagger.Lazy;
 import eu.chainfire.libsuperuser.Shell;
+import pan.alexander.tordnscrypt.App;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.utils.root.RootCommands;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.modules.ModulesService.DNSCRYPT_KEYWORD;
 import static pan.alexander.tordnscrypt.modules.ModulesService.ITPD_KEYWORD;
 import static pan.alexander.tordnscrypt.modules.ModulesService.TOR_KEYWORD;
-import static pan.alexander.tordnscrypt.utils.RootExecService.COMMAND_RESULT;
-import static pan.alexander.tordnscrypt.utils.RootExecService.DNSCryptRunFragmentMark;
-import static pan.alexander.tordnscrypt.utils.RootExecService.I2PDRunFragmentMark;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
-import static pan.alexander.tordnscrypt.utils.RootExecService.TorRunFragmentMark;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.DNSCryptRunFragmentMark;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.I2PDRunFragmentMark;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.TorRunFragmentMark;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -67,6 +69,7 @@ public class ModulesKiller {
     private static Thread dnsCryptThread;
     private static Thread torThread;
     private static Thread itpdThread;
+    private final Lazy<PreferenceRepository> preferenceRepository;
 
     ModulesKiller(Service service, PathVars pathVars) {
         this.service = service;
@@ -77,18 +80,19 @@ public class ModulesKiller {
         itpdPath = pathVars.getITPDPath();
         modulesStatus = ModulesStatus.getInstance();
         reentrantLock = new ReentrantLock();
+        preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     public static void stopDNSCrypt(Context context) {
-        sendStopIntent(context, ModulesService.actionStopDnsCrypt);
+        sendStopIntent(context, ModulesServiceActions.actionStopDnsCrypt);
     }
 
     public static void stopTor(Context context) {
-        sendStopIntent(context, ModulesService.actionStopTor);
+        sendStopIntent(context, ModulesServiceActions.actionStopTor);
     }
 
     public static void stopITPD(Context context) {
-        sendStopIntent(context, ModulesService.actionStopITPD);
+        sendStopIntent(context, ModulesServiceActions.actionStopITPD);
     }
 
     private static void sendStopIntent(Context context, String action) {
@@ -147,7 +151,8 @@ public class ModulesKiller {
             try {
                 String dnsCryptPid = readPidFile(appDataDir + "/dnscrypt-proxy.pid");
 
-                boolean moduleStartedWithRoot = new PrefManager(service).getBoolPref("DNSCryptStartedWithRoot");
+                boolean moduleStartedWithRoot = preferenceRepository.get()
+                        .getBoolPreference("DNSCryptStartedWithRoot");
                 boolean rootIsAvailable = modulesStatus.isRootAvailable();
 
                 boolean result = doThreeAttemptsToStopModule(dnscryptPath, dnsCryptPid, dnsCryptThread, moduleStartedWithRoot);
@@ -171,7 +176,8 @@ public class ModulesKiller {
                 if (moduleStartedWithRoot) {
                     if (!result) {
                         if (modulesStatus.getDnsCryptState() != RESTARTING) {
-                            ModulesAux.saveDNSCryptStateRunning(service, true);
+                            ModulesAux.saveDNSCryptStateRunning(true);
+                            makeDelay(1);
                             sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, dnscryptPath);
                         }
 
@@ -181,8 +187,9 @@ public class ModulesKiller {
 
                     } else {
                         if (modulesStatus.getDnsCryptState() != RESTARTING) {
-                            ModulesAux.saveDNSCryptStateRunning(service, false);
+                            ModulesAux.saveDNSCryptStateRunning(false);
                             modulesStatus.setDnsCryptState(STOPPED);
+                            makeDelay(1);
                             sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
                         }
                     }
@@ -190,7 +197,8 @@ public class ModulesKiller {
                     if (dnsCryptThread != null && dnsCryptThread.isAlive()) {
 
                         if (modulesStatus.getDnsCryptState() != RESTARTING) {
-                            ModulesAux.saveDNSCryptStateRunning(service, true);
+                            ModulesAux.saveDNSCryptStateRunning(true);
+                            makeDelay(1);
                             sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, dnscryptPath);
                         }
 
@@ -200,8 +208,9 @@ public class ModulesKiller {
                     } else {
 
                         if (modulesStatus.getDnsCryptState() != RESTARTING) {
-                            ModulesAux.saveDNSCryptStateRunning(service, false);
+                            ModulesAux.saveDNSCryptStateRunning(false);
                             modulesStatus.setDnsCryptState(STOPPED);
+                            makeDelay(1);
                             sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
                         }
                     }
@@ -228,7 +237,8 @@ public class ModulesKiller {
             try {
                 String torPid = readPidFile(appDataDir + "/tor.pid");
 
-                boolean moduleStartedWithRoot = new PrefManager(service).getBoolPref("TorStartedWithRoot");
+                boolean moduleStartedWithRoot = preferenceRepository.get()
+                        .getBoolPreference("TorStartedWithRoot");
                 boolean rootIsAvailable = modulesStatus.isRootAvailable();
 
                 boolean result = doThreeAttemptsToStopModule(torPath, torPid, torThread, moduleStartedWithRoot);
@@ -253,8 +263,9 @@ public class ModulesKiller {
                 if (moduleStartedWithRoot) {
                     if (!result) {
                         if (modulesStatus.getTorState() != RESTARTING) {
+                            ModulesAux.saveTorStateRunning(true);
+                            makeDelay(1);
                             sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, torPath);
-                            ModulesAux.saveTorStateRunning(service, true);
                         }
 
                         modulesStatus.setTorState(RUNNING);
@@ -263,8 +274,9 @@ public class ModulesKiller {
 
                     } else {
                         if (modulesStatus.getTorState() != RESTARTING) {
-                            ModulesAux.saveTorStateRunning(service, false);
+                            ModulesAux.saveTorStateRunning(false);
                             modulesStatus.setTorState(STOPPED);
+                            makeDelay(1);
                             sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
                         }
                     }
@@ -272,7 +284,8 @@ public class ModulesKiller {
                     if (torThread != null && torThread.isAlive()) {
 
                         if (modulesStatus.getTorState() != RESTARTING) {
-                            ModulesAux.saveTorStateRunning(service, true);
+                            ModulesAux.saveTorStateRunning(true);
+                            makeDelay(1);
                             sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, torPath);
                         }
 
@@ -282,8 +295,9 @@ public class ModulesKiller {
                     } else {
 
                         if (modulesStatus.getTorState() != RESTARTING) {
-                            ModulesAux.saveTorStateRunning(service, false);
+                            ModulesAux.saveTorStateRunning(false);
                             modulesStatus.setTorState(STOPPED);
+                            makeDelay(1);
                             sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
                         }
                     }
@@ -309,7 +323,8 @@ public class ModulesKiller {
             try {
                 String itpdPid = readPidFile(appDataDir + "/i2pd.pid");
 
-                boolean moduleStartedWithRoot = new PrefManager(service).getBoolPref("ITPDStartedWithRoot");
+                boolean moduleStartedWithRoot = preferenceRepository.get()
+                        .getBoolPreference("ITPDStartedWithRoot");
                 boolean rootIsAvailable = modulesStatus.isRootAvailable();
 
                 boolean result = doThreeAttemptsToStopModule(itpdPath, itpdPid, itpdThread, moduleStartedWithRoot);
@@ -333,7 +348,8 @@ public class ModulesKiller {
                 if (moduleStartedWithRoot) {
                     if (!result) {
                         if (modulesStatus.getItpdState() != RESTARTING) {
-                            ModulesAux.saveITPDStateRunning(service, true);
+                            ModulesAux.saveITPDStateRunning(true);
+                            makeDelay(1);
                             sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, itpdPath);
                         }
 
@@ -343,8 +359,9 @@ public class ModulesKiller {
 
                     } else {
                         if (modulesStatus.getItpdState() != RESTARTING) {
-                            ModulesAux.saveITPDStateRunning(service, false);
+                            ModulesAux.saveITPDStateRunning(false);
                             modulesStatus.setItpdState(STOPPED);
+                            makeDelay(1);
                             sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
                         }
 
@@ -354,7 +371,8 @@ public class ModulesKiller {
                 if (itpdThread != null && itpdThread.isAlive()) {
 
                     if (modulesStatus.getItpdState() != RESTARTING) {
-                        ModulesAux.saveITPDStateRunning(service, true);
+                        ModulesAux.saveITPDStateRunning(true);
+                        makeDelay(1);
                         sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, itpdPath);
                     }
 
@@ -364,8 +382,9 @@ public class ModulesKiller {
                 } else {
 
                     if (modulesStatus.getItpdState() != RESTARTING) {
-                        ModulesAux.saveITPDStateRunning(service, false);
+                        ModulesAux.saveITPDStateRunning(false);
                         modulesStatus.setItpdState(STOPPED);
+                        makeDelay(1);
                         sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
                     }
                 }
@@ -562,7 +581,7 @@ public class ModulesKiller {
 
         File file = new File(path);
         if (file.isFile()) {
-            List<String> lines = FileOperations.readTextFileSynchronous(service, path);
+            List<String> lines = FileManager.readTextFileSynchronous(service, path);
 
             for (String line : lines) {
                 if (!line.trim().isEmpty()) {

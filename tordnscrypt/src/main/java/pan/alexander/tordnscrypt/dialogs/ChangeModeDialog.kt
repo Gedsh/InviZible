@@ -23,23 +23,23 @@ import android.util.Log
 import android.view.MenuItem
 import androidx.appcompat.app.AlertDialog
 import pan.alexander.tordnscrypt.R
-import pan.alexander.tordnscrypt.utils.ChangeMode
-import pan.alexander.tordnscrypt.utils.ChangeModeInterface
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.mode.AppModeManager
+import pan.alexander.tordnscrypt.utils.mode.AppModeManagerCallback
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import java.lang.ref.WeakReference
 
 private var instance: WeakReference<ChangeModeDialog>? = null
-private var changeModeInterface: WeakReference<ChangeModeInterface>? = null
+private var appModeManagerCallback: WeakReference<AppModeManagerCallback>? = null
 private var menuItem: WeakReference<MenuItem>? = null
 private var mode: OperationMode? = OperationMode.UNDEFINED
 
 class ChangeModeDialog: ExtendedDialogFragment() {
 
     companion object INSTANCE {
-        fun getInstance(_changeModeInterface: ChangeModeInterface, _item: MenuItem, _mode: OperationMode): ChangeModeDialog? {
+        fun getInstance(_appModeManagerCallback: AppModeManagerCallback, _item: MenuItem, _mode: OperationMode): ChangeModeDialog? {
 
-            changeModeInterface = WeakReference(_changeModeInterface)
+            appModeManagerCallback = WeakReference(_appModeManagerCallback)
             menuItem = WeakReference(_item)
             mode = _mode
 
@@ -65,9 +65,9 @@ class ChangeModeDialog: ExtendedDialogFragment() {
 
         builder.setPositiveButton(R.string.ok) { _, _ ->
             when (mode) {
-                OperationMode.ROOT_MODE -> ChangeMode.switchToRootMode(activity.applicationContext, menuItem?.get(), changeModeInterface?.get())
-                OperationMode.PROXY_MODE -> ChangeMode.switchToProxyMode(activity.applicationContext, menuItem?.get(), changeModeInterface?.get())
-                OperationMode.VPN_MODE -> ChangeMode.switchToVPNMode(activity.applicationContext, menuItem?.get(), changeModeInterface?.get())
+                OperationMode.ROOT_MODE -> AppModeManager.switchToRootMode(activity.applicationContext, menuItem?.get(), appModeManagerCallback?.get())
+                OperationMode.PROXY_MODE -> AppModeManager.switchToProxyMode(activity.applicationContext, menuItem?.get(), appModeManagerCallback?.get())
+                OperationMode.VPN_MODE -> AppModeManager.switchToVPNMode(activity.applicationContext, menuItem?.get(), appModeManagerCallback?.get())
                 else -> Log.e(LOG_TAG, "ChangeModeDialog unknown mode!")
             }
 
@@ -84,7 +84,7 @@ class ChangeModeDialog: ExtendedDialogFragment() {
         super.onDestroy()
 
         instance = null
-        changeModeInterface = null
+        appModeManagerCallback = null
         menuItem = null
         mode = null
     }

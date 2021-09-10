@@ -19,6 +19,7 @@ package pan.alexander.tordnscrypt.settings.firewall
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.text.Html
 import android.util.Log
@@ -32,17 +33,17 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 
 class FirewallAdapter(private val firewallFragment: FirewallFragment) :
-        RecyclerView.Adapter<FirewallAdapter.FirewallViewHolder>() {
+    RecyclerView.Adapter<FirewallAdapter.FirewallViewHolder>() {
 
-    private var context: Context? = null
+    private var context = firewallFragment.requireContext()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FirewallViewHolder {
-        context = parent.context
-        val itemView = LayoutInflater.from(context).inflate(R.layout.item_firewall, parent, false)
+        val itemView =
+            LayoutInflater.from(parent.context).inflate(R.layout.item_firewall, parent, false)
 
         val modulesStatus = ModulesStatus.getInstance()
         if (modulesStatus.mode == OperationMode.VPN_MODE) {
@@ -64,28 +65,30 @@ class FirewallAdapter(private val firewallFragment: FirewallFragment) :
         return firewallFragment.appsList.size
     }
 
-    fun getItem(position: Int): AppFirewall {
+    fun getItem(position: Int): FirewallAppModel {
         return firewallFragment.appsList[position]
     }
 
-    private fun setItem(position: Int,
-                        appFirewall: AppFirewall) {
-        firewallFragment.appsList[position] = appFirewall
+    private fun setItem(
+        position: Int,
+        firewallAppModel: FirewallAppModel
+    ) {
+        firewallFragment.appsList[position] = firewallAppModel
 
-        val uid = appFirewall.applicationData.uid
+        val uid = firewallAppModel.applicationData.uid
         run label@{
             firewallFragment.savedAppsListWhenSearch?.forEachIndexed { index, savedApp ->
                 if (savedApp.applicationData.uid == uid) {
-                    firewallFragment.savedAppsListWhenSearch?.set(index, appFirewall)
+                    firewallFragment.savedAppsListWhenSearch?.set(index, firewallAppModel)
                     return@label
                 }
             }
         }
     }
 
-    private fun allowLan(position: Int, appFirewall: AppFirewall, allow: Boolean) {
-        appFirewall.allowLan = allow
-        setItem(position, appFirewall)
+    private fun allowLan(position: Int, firewallAppModel: FirewallAppModel, allow: Boolean) {
+        firewallAppModel.allowLan = allow
+        setItem(position, firewallAppModel)
 
         if (firewallFragment.allowLanForAll) {
             firewallFragment.allowLanForAll = false
@@ -96,9 +99,9 @@ class FirewallAdapter(private val firewallFragment: FirewallFragment) :
         }
     }
 
-    private fun allowWifi(position: Int, appFirewall: AppFirewall, allow: Boolean) {
-        appFirewall.allowWifi = allow
-        setItem(position, appFirewall)
+    private fun allowWifi(position: Int, firewallAppModel: FirewallAppModel, allow: Boolean) {
+        firewallAppModel.allowWifi = allow
+        setItem(position, firewallAppModel)
 
         if (firewallFragment.allowWifiForAll) {
             firewallFragment.allowWifiForAll = false
@@ -109,9 +112,9 @@ class FirewallAdapter(private val firewallFragment: FirewallFragment) :
         }
     }
 
-    private fun allowGsm(position: Int, appFirewall: AppFirewall, allow: Boolean) {
-        appFirewall.allowGsm = allow
-        setItem(position, appFirewall)
+    private fun allowGsm(position: Int, firewallAppModel: FirewallAppModel, allow: Boolean) {
+        firewallAppModel.allowGsm = allow
+        setItem(position, firewallAppModel)
 
         if (firewallFragment.allowGsmForAll) {
             firewallFragment.allowGsmForAll = false
@@ -122,9 +125,9 @@ class FirewallAdapter(private val firewallFragment: FirewallFragment) :
         }
     }
 
-    private fun allowRoaming(position: Int, appFirewall: AppFirewall, allow: Boolean) {
-        appFirewall.allowRoaming = allow
-        setItem(position, appFirewall)
+    private fun allowRoaming(position: Int, firewallAppModel: FirewallAppModel, allow: Boolean) {
+        firewallAppModel.allowRoaming = allow
+        setItem(position, firewallAppModel)
 
         if (firewallFragment.allowRoamingForAll) {
             firewallFragment.allowRoamingForAll = false
@@ -135,9 +138,9 @@ class FirewallAdapter(private val firewallFragment: FirewallFragment) :
         }
     }
 
-    private fun allowVpn(position: Int, appFirewall: AppFirewall, allow: Boolean) {
-        appFirewall.allowVPN = allow
-        setItem(position, appFirewall)
+    private fun allowVpn(position: Int, firewallAppModel: FirewallAppModel, allow: Boolean) {
+        firewallAppModel.allowVPN = allow
+        setItem(position, firewallAppModel)
 
         if (firewallFragment.allowVPNForAll) {
             firewallFragment.allowVPNForAll = false
@@ -148,33 +151,48 @@ class FirewallAdapter(private val firewallFragment: FirewallFragment) :
         }
     }
 
-    inner class FirewallViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
+    private val icFirewallLan = ContextCompat.getDrawable(context, R.drawable.ic_firewall_lan)
+    private val icFirewallLanGreen =
+        ContextCompat.getDrawable(context, R.drawable.ic_firewall_lan_green)
+    private val icFirewallWifi =
+        ContextCompat.getDrawable(context, R.drawable.ic_firewall_wifi_24)
+    private val icFirewallWifiGreen =
+        ContextCompat.getDrawable(context, R.drawable.ic_firewall_wifi_green_24)
+    private val icFirewallGsm =
+        ContextCompat.getDrawable(context, R.drawable.ic_firewall_gsm_24)
+    private val icFirewallGsmGreen =
+        ContextCompat.getDrawable(context, R.drawable.ic_firewall_gsm_green_24)
+    private val icFirewallRoaming =
+        ContextCompat.getDrawable(context, R.drawable.ic_firewall_roaming_24)
+    private val icFirewallRoamingGreen =
+        ContextCompat.getDrawable(context, R.drawable.ic_firewall_roaming_green_24)
+    private val icFirewallVpn =
+        ContextCompat.getDrawable(context, R.drawable.ic_firewall_vpn_key_24)
+    private val icFirewallVpnGreen =
+        ContextCompat.getDrawable(context, R.drawable.ic_firewall_vpn_key_green_24)
+
+    private val colorRed = ContextCompat.getColor(context, R.color.colorAlert)
+    private val colorBlack = ContextCompat.getColor(
+        context,
+        R.color.textModuleStatusColorStopped
+    )
+
+    inner class FirewallViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView),
+        View.OnClickListener {
         val context: Context = itemView.context
 
         private val imgAppIconFirewall = itemView.findViewById<ImageView>(R.id.imgAppIconFirewall)
         private val btnLanFirewall = itemView.findViewById<ImageButton>(R.id.btnLanFirewall)
-                .also { it.setOnClickListener(this) }
+            .also { it.setOnClickListener(this) }
         private val btnWifiFirewall = itemView.findViewById<ImageButton>(R.id.btnWifiFirewall)
-                .also { it.setOnClickListener(this) }
+            .also { it.setOnClickListener(this) }
         private val btnGsmFirewall = itemView.findViewById<ImageButton>(R.id.btnGsmFirewall)
-                .also { it.setOnClickListener(this) }
+            .also { it.setOnClickListener(this) }
         private val btnRoamingFirewall = itemView.findViewById<ImageButton>(R.id.btnRoamingFirewall)
-                .also { it.setOnClickListener(this) }
+            .also { it.setOnClickListener(this) }
         private val btnVpnFirewall = itemView.findViewById<ImageButton>(R.id.btnVpnFirewall)
-                .also { it.setOnClickListener(this) }
+            .also { it.setOnClickListener(this) }
         private val tvAppName = itemView.findViewById<TextView>(R.id.tvAppName)
-
-        private val icFirewallLan = ContextCompat.getDrawable(context, R.drawable.ic_firewall_lan)
-        private val icFirewallLanGreen = ContextCompat.getDrawable(context, R.drawable.ic_firewall_lan_green)
-        private val icFirewallWifi = ContextCompat.getDrawable(context, R.drawable.ic_firewall_wifi_24)
-        private val icFirewallWifiGreen = ContextCompat.getDrawable(context, R.drawable.ic_firewall_wifi_green_24)
-        private val icFirewallGsm = ContextCompat.getDrawable(context, R.drawable.ic_firewall_gsm_24)
-        private val icFirewallGsmGreen = ContextCompat.getDrawable(context, R.drawable.ic_firewall_gsm_green_24)
-        private val icFirewallRoaming = ContextCompat.getDrawable(context, R.drawable.ic_firewall_roaming_24)
-        private val icFirewallRoamingGreen = ContextCompat.getDrawable(context, R.drawable.ic_firewall_roaming_green_24)
-        private val icFirewallVpn = ContextCompat.getDrawable(context, R.drawable.ic_firewall_vpn_key_24)
-        private val icFirewallVpnGreen = ContextCompat.getDrawable(context, R.drawable.ic_firewall_vpn_key_green_24)
-
 
         fun bind(position: Int) {
 
@@ -199,54 +217,55 @@ class FirewallAdapter(private val firewallFragment: FirewallFragment) :
                 tvAppName.text = Html.fromHtml(description.toString())
             }
             if (appFirewall.applicationData.system) {
-                tvAppName.setTextColor(ContextCompat.getColor(context, R.color.colorAlert))
+                tvAppName.setTextColor(colorRed)
             } else {
-                tvAppName.setTextColor(ContextCompat.getColor(context, R.color.textModuleStatusColorStopped))
+                tvAppName.setTextColor(colorBlack)
             }
 
             btnLanFirewall.setImageDrawable(
-                    if (appFirewall.allowLan)
-                        icFirewallLanGreen
-                    else
-                        icFirewallLan
+                if (appFirewall.allowLan)
+                    icFirewallLanGreen
+                else
+                    icFirewallLan
             )
 
-
             btnWifiFirewall.setImageDrawable(
-                    if (appFirewall.allowWifi)
-                        icFirewallWifiGreen
-                    else
-                        icFirewallWifi
+                if (appFirewall.allowWifi)
+                    icFirewallWifiGreen
+                else
+                    icFirewallWifi
             )
 
             btnGsmFirewall.setImageDrawable(
-                    if (appFirewall.allowGsm)
-                        icFirewallGsmGreen
-                    else
-                        icFirewallGsm
+                if (appFirewall.allowGsm)
+                    icFirewallGsmGreen
+                else
+                    icFirewallGsm
             )
 
             btnRoamingFirewall.setImageDrawable(
-                    if (appFirewall.allowRoaming)
-                        icFirewallRoamingGreen
-                    else
-                        icFirewallRoaming
+                if (appFirewall.allowRoaming)
+                    icFirewallRoamingGreen
+                else
+                    icFirewallRoaming
             )
 
             btnVpnFirewall.setImageDrawable(
-                    if (appFirewall.allowVPN)
-                        icFirewallVpnGreen
-                    else
-                        icFirewallVpn
+                if (appFirewall.allowVPN)
+                    icFirewallVpnGreen
+                else
+                    icFirewallVpn
             )
         }
 
+        @SuppressLint("NotifyDataSetChanged")
         override fun onClick(v: View?) {
             val id = v?.id
             val position = bindingAdapterPosition
 
             if (id == null || position < 0 || position > itemCount - 1
-                    || !firewallFragment.appsListComplete) {
+                || !firewallFragment.appsListComplete
+            ) {
                 return
             }
 

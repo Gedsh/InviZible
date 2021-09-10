@@ -33,14 +33,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.RootCommands;
-import pan.alexander.tordnscrypt.utils.RootExecService;
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
+import pan.alexander.tordnscrypt.utils.root.RootCommands;
+import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
-import pan.alexander.tordnscrypt.vpn.Util;
+import pan.alexander.tordnscrypt.vpn.NetworkUtils;
 
 import static pan.alexander.tordnscrypt.iptables.Tethering.usbModemAddressesRange;
 import static pan.alexander.tordnscrypt.iptables.Tethering.vpnInterfaceName;
@@ -52,7 +55,12 @@ import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridg
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
 import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_FOR_CLEARNET;
 import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_TO_UNLOCK;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.Constants.DNS_OVER_TLS_PORT;
+import static pan.alexander.tordnscrypt.utils.Constants.G_DNG_41;
+import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_42;
+import static pan.alexander.tordnscrypt.utils.Constants.HTTP_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -62,9 +70,12 @@ public class ModulesIptablesRules extends IptablesRulesSender {
     String iptables = "iptables ";
     String ip6tables = "ip6tables ";
     String busybox = "busybox ";
+    private final Lazy<PreferenceRepository> preferenceRepository;
 
     public ModulesIptablesRules(Context context) {
         super(context);
+
+        preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     @Override
@@ -75,17 +86,19 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         busybox = pathVars.getBusyboxPath();
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
+        PreferenceRepository preferences = preferenceRepository.get();
         runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
         routeAllThroughTor = shPref.getBoolean("pref_fast_all_through_tor", true);
         lan = shPref.getBoolean("Allow LAN", false);
         blockHttp = shPref.getBoolean("pref_fast_block_http", false);
-        apIsOn = new PrefManager(context).getBoolPref("APisON");
-        modemIsOn = new PrefManager(context).getBoolPref("ModemIsON");
-        Set<String> unlockApps = new PrefManager(context).getSetStrPref(UNLOCK_APPS);
-        Set<String> unlockIPs = new PrefManager(context).getSetStrPref(IPS_TO_UNLOCK);
-        Set<String> clearnetApps = new PrefManager(context).getSetStrPref(CLEARNET_APPS);
-        Set<String> clearnetIPs = new PrefManager(context).getSetStrPref(IPS_FOR_CLEARNET);
-        Set<String> clearnetAppsForProxy = new PrefManager(context).getSetStrPref(CLEARNET_APPS_FOR_PROXY);
+        ignoreSystemDNS = shPref.getBoolean(IGNORE_SYSTEM_DNS, false);
+        apIsOn = preferences.getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON);
+        modemIsOn = preferences.getBoolPreference(PreferenceKeys.USB_MODEM_IS_ON);
+        Set<String> unlockApps = preferences.getStringSetPreference(UNLOCK_APPS);
+        Set<String> unlockIPs = preferences.getStringSetPreference(IPS_TO_UNLOCK);
+        Set<String> clearnetApps = preferences.getStringSetPreference(CLEARNET_APPS);
+        Set<String> clearnetIPs = preferences.getStringSetPreference(IPS_FOR_CLEARNET);
+        Set<String> clearnetAppsForProxy = preferences.getStringSetPreference(CLEARNET_APPS_FOR_PROXY);
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
         boolean ttlFix = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE) && !modulesStatus.isUseModulesWithRoot();
@@ -106,7 +119,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         String bypassLanFilter = "";
         if (lan) {
             StringBuilder nonTorRanges = new StringBuilder();
-            for (String address : Util.nonTorList) {
+            for (String address : NetworkUtils.nonTorList) {
                 nonTorRanges.append(address).append(" ");
             }
             nonTorRanges.deleteCharAt(nonTorRanges.lastIndexOf(" "));
@@ -194,13 +207,26 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             torAppsRejectNonTCPFilter = removeRedundantSymbols(torAppsRejectNonTCPFilterBuilder);
         }
 
-        String blockHttpRuleFilterAll = "";
+        String blockRejectAddressFilter = "";
         String blockHttpRuleNatTCP = "";
         String blockHttpRuleNatUDP = "";
         if (blockHttp) {
-            blockHttpRuleFilterAll = iptables + "-A tordnscrypt -d +" + rejectAddress + " -j REJECT";
-            blockHttpRuleNatTCP = iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 80 -j DNAT --to-destination " + rejectAddress;
-            blockHttpRuleNatUDP = iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 80 -j DNAT --to-destination " + rejectAddress;
+            blockRejectAddressFilter = iptables + "-A tordnscrypt -d +" + rejectAddress + " -j REJECT";
+            blockHttpRuleNatTCP = iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport " + HTTP_PORT + " -j DNAT --to-destination " + rejectAddress;
+            blockHttpRuleNatUDP = iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport " + HTTP_PORT + " -j DNAT --to-destination " + rejectAddress;
+        }
+
+        String blockTlsRuleNatTCP = "";
+        String blockTlsRuleNatUDP = "";
+        String blockGDNSNat = "";
+        if (ignoreSystemDNS) {
+            if (!blockHttp) {
+                blockRejectAddressFilter = iptables + "-A tordnscrypt -d +" + rejectAddress + " -j REJECT";
+            }
+            blockTlsRuleNatTCP = iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport " + DNS_OVER_TLS_PORT + " -j DNAT --to-destination " + rejectAddress;
+            blockTlsRuleNatUDP = iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport " + DNS_OVER_TLS_PORT + " -j DNAT --to-destination " + rejectAddress;
+            blockGDNSNat = iptables + "-t nat -A tordnscrypt_nat_output -d +" + G_DNG_41 + " -j DNAT --to-destination " + rejectAddress + "; "
+                    + iptables + "-t nat -A tordnscrypt_nat_output -d +" + G_DNS_42 + " -j DNAT --to-destination " + rejectAddress;
         }
 
         String unblockHOTSPOT = iptables + "-D FORWARD -j DROP 2> /dev/null || true";
@@ -226,10 +252,10 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         }
 
         boolean torReady = modulesStatus.isTorReady();
-        boolean useDefaultBridges = new PrefManager(context).getBoolPref("useDefaultBridges");
-        boolean useOwnBridges = new PrefManager(context).getBoolPref("useOwnBridges");
-        boolean bridgesSnowflakeDefault = new PrefManager(context).getStrPref("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
-        boolean bridgesSnowflakeOwn = new PrefManager(context).getStrPref("ownBridgesObfs").equals(snowFlakeBridgesOwn);
+        boolean useDefaultBridges = preferences.getBoolPreference("useDefaultBridges");
+        boolean useOwnBridges = preferences.getBoolPreference("useOwnBridges");
+        boolean bridgesSnowflakeDefault = preferences.getStringPreference("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
+        boolean bridgesSnowflakeOwn = preferences.getStringPreference("ownBridgesObfs").equals(snowFlakeBridgesOwn);
 
         String torSystemDNSAllowedNat = "";
         String torSystemDNSAllowedFilter = "";
@@ -310,13 +336,16 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
                         blockHttpRuleNatTCP,
                         blockHttpRuleNatUDP,
+                        blockTlsRuleNatTCP,
+                        blockTlsRuleNatUDP,
+                        blockGDNSNat,
                         iptables + "-N tordnscrypt 2> /dev/null",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                         dnsCryptSystemDNSAllowedFilter,
                         dnsCryptRootDNSAllowedFilter,
                         iptables + "-A tordnscrypt -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
-                        blockHttpRuleFilterAll,
+                        blockRejectAddressFilter,
                         proxyAppsBypassNat,
                         bypassLanNat,
                         //Redirect TCP sites to Tor
@@ -365,6 +394,9 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
                         blockHttpRuleNatTCP,
                         blockHttpRuleNatUDP,
+                        blockTlsRuleNatTCP,
+                        blockTlsRuleNatUDP,
+                        blockGDNSNat,
                         torSitesBypassNat,
                         torAppsBypassNat,
                         kernelBypassNat,
@@ -379,7 +411,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-A tordnscrypt -m owner --uid-owner $TOR_UID -j RETURN",
                         dnsCryptSystemDNSAllowedFilter,
                         dnsCryptRootDNSAllowedFilter,
-                        blockHttpRuleFilterAll,
+                        blockRejectAddressFilter,
                         iptables + "-A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
                         torSitesBypassFilter,
                         torAppsBypassFilter,
@@ -423,13 +455,16 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                     blockHttpRuleNatTCP,
                     blockHttpRuleNatUDP,
+                    blockTlsRuleNatTCP,
+                    blockTlsRuleNatUDP,
+                    blockGDNSNat,
                     iptables + "-N tordnscrypt 2> /dev/null",
                     iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                     iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                     dnsCryptSystemDNSAllowedFilter,
                     dnsCryptRootDNSAllowedFilter,
                     iptables + "-A tordnscrypt -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
-                    blockHttpRuleFilterAll,
+                    blockRejectAddressFilter,
                     iptables + "-A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
                     iptables + "-I OUTPUT -j tordnscrypt",
                     unblockHOTSPOT,
@@ -482,12 +517,15 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
                         blockHttpRuleNatTCP,
                         blockHttpRuleNatUDP,
+                        blockTlsRuleNatTCP,
+                        blockTlsRuleNatUDP,
+                        blockGDNSNat,
                         iptables + "-N tordnscrypt 2> /dev/null",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
                         torSystemDNSAllowedFilter,
                         torRootDNSAllowedFilter,
-                        blockHttpRuleFilterAll,
+                        blockRejectAddressFilter,
                         proxyAppsBypassNat,
                         bypassLanNat,
                         //Redirect TCP sites to Tor
@@ -532,6 +570,9 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
                         blockHttpRuleNatTCP,
                         blockHttpRuleNatUDP,
+                        blockTlsRuleNatTCP,
+                        blockTlsRuleNatUDP,
+                        blockGDNSNat,
                         torSitesBypassNat,
                         torAppsBypassNat,
                         kernelBypassNat,
@@ -545,7 +586,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p all -j RETURN",
                         iptables + "-A tordnscrypt -m owner --uid-owner $TOR_UID -j RETURN",
-                        blockHttpRuleFilterAll,
+                        blockRejectAddressFilter,
                         iptables + "-A tordnscrypt -m state --state ESTABLISHED,RELATED -j RETURN",
                         torSitesBypassFilter,
                         torAppsBypassFilter,

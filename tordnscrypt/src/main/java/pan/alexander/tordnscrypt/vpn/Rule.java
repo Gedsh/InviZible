@@ -20,32 +20,24 @@ package pan.alexander.tordnscrypt.vpn;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.os.Build;
-import android.os.Process;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import pan.alexander.tordnscrypt.App;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData;
-import pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment;
-import pan.alexander.tordnscrypt.utils.InstalledApplications;
-import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager;
 
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
 import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.CLEARNET_APPS;
 import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.UNLOCK_APPS;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class Rule {
     public int uid;
@@ -54,15 +46,15 @@ public class Rule {
     public boolean apply = true;
 
     private static boolean isSystem(String packageName, Context context) {
-        return Util.isSystem(packageName, context);
+        return NetworkUtils.isSystem(packageName, context);
     }
 
     private static boolean hasInternet(String packageName, Context context) {
-        return Util.hasInternet(packageName, context);
+        return NetworkUtils.hasInternet(packageName, context);
     }
 
     private static boolean isEnabled(PackageInfo info, Context context) {
-        return Util.isEnabled(info, context);
+        return NetworkUtils.isEnabled(info, context);
     }
 
     private Rule(ApplicationData info) {
@@ -84,15 +76,17 @@ public class Rule {
                 unlockAppsStr = CLEARNET_APPS;
             }
 
-            Set<String> setUnlockApps = new PrefManager(context).getSetStrPref(unlockAppsStr);
+            final PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
 
-            Set<String> setBypassProxy = new PrefManager(context).getSetStrPref(CLEARNET_APPS_FOR_PROXY);
+            Set<String> setUnlockApps = preferences.getStringSetPreference(unlockAppsStr);
+
+            Set<String> setBypassProxy = preferences.getStringSetPreference(CLEARNET_APPS_FOR_PROXY);
 
             // Build rule list
             List<Rule> listRules = new CopyOnWriteArrayList<>();
 
-            InstalledApplications installedApplications = new InstalledApplications(context, Collections.emptySet());
-            List<ApplicationData> installedApps = installedApplications.getInstalledApps(false);
+            InstalledApplicationsManager installedApplicationsManager = new InstalledApplicationsManager(context, Collections.emptySet());
+            List<ApplicationData> installedApps = installedApplicationsManager.getInstalledApps(false);
 
 
             for (ApplicationData info : installedApps)

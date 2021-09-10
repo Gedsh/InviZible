@@ -39,8 +39,8 @@ import java.util.List;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.DialogSaveConfigChanges;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
-import pan.alexander.tordnscrypt.utils.file_operations.OnTextFileOperationsCompleteListener;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
+import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 
@@ -86,7 +86,7 @@ public class ConfigEditorFragment extends Fragment implements OnTextFileOperatio
                 break;
         }
 
-        FileOperations.setOnFileOperationCompleteListener(this);
+        FileManager.setOnFileOperationCompleteListener(this);
     }
 
     @Nullable
@@ -102,7 +102,7 @@ public class ConfigEditorFragment extends Fragment implements OnTextFileOperatio
             getActivity().setTitle(fileName);
         }
 
-        FileOperations.readTextFile(getActivity(), filePath, fileName);
+        FileManager.readTextFile(getActivity(), filePath, fileName);
 
         return view;
     }
@@ -137,7 +137,7 @@ public class ConfigEditorFragment extends Fragment implements OnTextFileOperatio
     public void onDestroy() {
         super.onDestroy();
 
-        FileOperations.deleteOnFileOperationCompleteListener(this);
+        FileManager.deleteOnFileOperationCompleteListener(this);
     }
 
     @Override

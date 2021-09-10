@@ -31,7 +31,7 @@ import androidx.fragment.app.DialogFragment;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.dnscrypt_servers.DNSServerItem;
 
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class AddDNSCryptServerDialogFragment extends ExtendedDialogFragment {
 

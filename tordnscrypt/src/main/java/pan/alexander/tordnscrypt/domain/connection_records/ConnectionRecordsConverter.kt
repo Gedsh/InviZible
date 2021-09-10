@@ -24,19 +24,18 @@ import android.content.SharedPreferences
 import android.os.Build
 import android.util.Log
 import androidx.preference.PreferenceManager
-import pan.alexander.tordnscrypt.domain.entities.ConnectionRecord
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.firewall.APPS_ALLOW_GSM_PREF
 import pan.alexander.tordnscrypt.settings.firewall.APPS_ALLOW_LAN_PREF
 import pan.alexander.tordnscrypt.settings.firewall.APPS_ALLOW_ROAMING
 import pan.alexander.tordnscrypt.settings.firewall.APPS_ALLOW_WIFI_PREF
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
-import pan.alexander.tordnscrypt.utils.CachedExecutor
-import pan.alexander.tordnscrypt.utils.PrefManager
-import pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
+import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.Utils.getHostByIP
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
-import pan.alexander.tordnscrypt.vpn.Util
+import pan.alexander.tordnscrypt.vpn.NetworkUtils
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPN
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Future
@@ -47,9 +46,10 @@ private const val IP_TO_HOST_ADDRESS_MAP_SIZE = 500
 class ConnectionRecordsConverter(context: Context) {
 
     private val sharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+    private val preferenceRepository = App.instance.daggerComponent.getPreferenceRepository()
     private val blockIPv6: Boolean = sharedPreferences.getBoolean("block_ipv6", true)
     private var compatibilityMode = sharedPreferences.getBoolean("swCompatibilityMode", false)
-    private val meteredNetwork = Util.isMeteredNetwork(context)
+    private val meteredNetwork = NetworkUtils.isMeteredNetwork(context)
     private val vpnDNS = ServiceVPN.vpnDnsSet
     private val modulesStatus = ModulesStatus.getInstance()
     private val fixTTL = (modulesStatus.isFixTTL && modulesStatus.mode == OperationMode.ROOT_MODE
@@ -61,21 +61,21 @@ class ConnectionRecordsConverter(context: Context) {
     private val ipToHostAddressMap = mutableMapOf<String, String>()
     private var futureTask: Future<*>? = null
 
-    private val firewallEnabled = PrefManager(context).getBoolPref("FirewallEnabled")
+    private val firewallEnabled = preferenceRepository.get().getBoolPreference("FirewallEnabled")
     private var appsAllowed = mutableSetOf<Int>()
     private val appsLanAllowed = mutableListOf<Int>()
 
     init {
         if (firewallEnabled) {
-            PrefManager(context).getSetStrPref(APPS_ALLOW_LAN_PREF).forEach { appsLanAllowed.add(it.toInt()) }
+            preferenceRepository.get().getStringSetPreference(APPS_ALLOW_LAN_PREF).forEach { appsLanAllowed.add(it.toInt()) }
 
             var tempSet: MutableSet<String>? = null
-            if (Util.isWifiActive(context) || Util.isEthernetActive(context)) {
-                tempSet = PrefManager(context).getSetStrPref(APPS_ALLOW_WIFI_PREF)
-            } else if (Util.isCellularActive(context)) {
-                tempSet = PrefManager(context).getSetStrPref(APPS_ALLOW_GSM_PREF)
-            } else if (Util.isRoaming(context)) {
-                tempSet = PrefManager(context).getSetStrPref(APPS_ALLOW_ROAMING)
+            if (NetworkUtils.isWifiActive(context) || NetworkUtils.isEthernetActive(context)) {
+                tempSet = preferenceRepository.get().getStringSetPreference(APPS_ALLOW_WIFI_PREF)
+            } else if (NetworkUtils.isCellularActive(context)) {
+                tempSet = preferenceRepository.get().getStringSetPreference(APPS_ALLOW_GSM_PREF)
+            } else if (NetworkUtils.isRoaming(context)) {
+                tempSet = preferenceRepository.get().getStringSetPreference(APPS_ALLOW_ROAMING)
             }
 
             tempSet?.forEach { appsAllowed.add(it.toInt()) }
@@ -291,8 +291,8 @@ class ConnectionRecordsConverter(context: Context) {
             return false
         }
 
-        for (address in Util.nonTorList) {
-            if (Util.isIpInSubnet(destAddress, address)) {
+        for (address in NetworkUtils.nonTorList) {
+            if (NetworkUtils.isIpInSubnet(destAddress, address)) {
                 return true
             }
         }

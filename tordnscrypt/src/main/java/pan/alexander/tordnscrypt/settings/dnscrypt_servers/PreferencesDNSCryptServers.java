@@ -48,29 +48,36 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.AddDNSCryptServerDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.dnscrypt_relays.DNSServerRelays;
 import pan.alexander.tordnscrypt.settings.dnscrypt_relays.PreferencesDNSCryptRelays;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.PrefManager;
-import pan.alexander.tordnscrypt.utils.Verifier;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
-import pan.alexander.tordnscrypt.utils.file_operations.OnTextFileOperationsCompleteListener;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
+import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+
+import javax.inject.Inject;
 
 public class PreferencesDNSCryptServers extends Fragment implements View.OnClickListener,
         PreferencesDNSCryptRelays.OnRoutesChangeListener, OnTextFileOperationsCompleteListener,
         AddDNSCryptServerDialogFragment.OnServerAddedListener, SearchView.OnQueryTextListener {
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
 
     private RecyclerView.Adapter<DNSServersAdapter.DNSServersViewHolder> dNSServersAdapter;
     private ArrayList<String> dnsServerNames;
@@ -97,6 +104,8 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        App.instance.daggerComponent.inject(this);
+
         super.onCreate(savedInstanceState);
 
         setRetainInstance(true);
@@ -167,7 +176,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         PathVars pathVars = PathVars.getInstance(activity);
         appDataDir = pathVars.getAppDataDir();
 
-        FileOperations.setOnFileOperationCompleteListener(this);
+        FileManager.setOnFileOperationCompleteListener(this);
 
         fillDNSServersList(activity);
 
@@ -210,7 +219,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
             rvViewState = rvDNSServers.getLayoutManager().onSaveInstanceState();
         }
 
-        FileOperations.deleteOnFileOperationCompleteListener(this);
+        FileManager.deleteOnFileOperationCompleteListener(this);
 
         Context context = getActivity();
         if (context == null) {
@@ -231,7 +240,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
             return;
         }
 
-        saveDNSServersToPrefs(context, dnscrypt_servers);
+        saveDNSServersToPrefs(dnscrypt_servers);
 
         boolean isChanges = saveDNSServersToTomlList(dnscrypt_servers);
 
@@ -313,7 +322,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         ownServersFilePath = appDataDir + "/app_data/dnscrypt-proxy/own-resolvers.md";
 
         if (new File(ownServersFilePath).isFile()) {
-            FileOperations.readTextFile(context, ownServersFilePath, "own-resolvers.md");
+            FileManager.readTextFile(context, ownServersFilePath, "own-resolvers.md");
         }
     }
 
@@ -395,8 +404,9 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         return line;
     }
 
-    private void saveDNSServersToPrefs(Context context, String dnscrypt_servers) {
-        new PrefManager(context).setStrPref("DNSCrypt Servers", dnscrypt_servers);
+    private void saveDNSServersToPrefs(String dnscrypt_servers) {
+        preferenceRepository.get()
+                .setStringPreference("DNSCrypt Servers", dnscrypt_servers);
     }
 
     private boolean saveDNSServersToTomlList(String dnscrypt_servers) {
@@ -534,14 +544,14 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
     }
 
     private void saveLinesToTomlFile(Context context) {
-        FileOperations.writeToTextFile(context, appDataDir
+        FileManager.writeToTextFile(context, appDataDir
                         + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml", dnscrypt_proxy_toml,
                 SettingsActivity.public_resolvers_md_tag);
     }
 
     private void restartDNSCryptIfRunning(Context context) {
 
-        boolean dnsCryptRunning = ModulesAux.isDnsCryptSavedStateRunning(context);
+        boolean dnsCryptRunning = ModulesAux.isDnsCryptSavedStateRunning();
 
         if (dnsCryptRunning) {
             ModulesRestarter.restartDNSCrypt(context);
@@ -660,7 +670,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
             return;
         }
 
-        FileOperations.writeToTextFile(context, ownServersFilePath, linesReadyToSave, "ignored");
+        FileManager.writeToTextFile(context, ownServersFilePath, linesReadyToSave, "ignored");
 
     }
 

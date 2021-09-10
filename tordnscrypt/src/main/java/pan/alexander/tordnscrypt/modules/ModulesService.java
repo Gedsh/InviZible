@@ -25,7 +25,6 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -46,20 +45,43 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
+import pan.alexander.tordnscrypt.patches.Patch;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.PrefManager;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.Utils;
-import pan.alexander.tordnscrypt.utils.WakeLocksManager;
+import pan.alexander.tordnscrypt.utils.wakelock.WakeLocksManager;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
-import pan.alexander.tordnscrypt.utils.file_operations.FileOperations;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
-import static pan.alexander.tordnscrypt.utils.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionDismissNotification;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionRecoverService;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionRestartDnsCrypt;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionRestartITPD;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionRestartTor;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionRestartTorFull;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStartDnsCrypt;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStartITPD;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStartTor;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStopDnsCrypt;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStopITPD;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStopService;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStopServiceForeground;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStopTor;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.clearIptablesCommandsHash;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.extraLoop;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.slowdownLoop;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.speedupLoop;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.startArpScanner;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.stopArpScanner;
+import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
@@ -67,50 +89,33 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
-public class ModulesService extends Service {
-    public static final String actionDismissNotification = "pan.alexander.tordnscrypt.action.DISMISS_NOTIFICATION";
-    public static final int DEFAULT_NOTIFICATION_ID = 101102;
+import javax.inject.Inject;
 
-    public static final String actionStopService = "pan.alexander.tordnscrypt.action.STOP_SERVICE";
-    public static final String actionStopServiceForeground = "pan.alexander.tordnscrypt.action.STOP_SERVICE_FOREGROUND";
+public class ModulesService extends Service {
+    public static final int DEFAULT_NOTIFICATION_ID = 101102;
 
     public static boolean serviceIsRunning = false;
 
     private final static int TIMER_HIGH_SPEED = 1000;
     private final static int TIMER_LOW_SPEED = 30000;
 
-    static final String actionStartDnsCrypt = "pan.alexander.tordnscrypt.action.START_DNSCRYPT";
-    static final String actionStartTor = "pan.alexander.tordnscrypt.action.START_TOR";
-    static final String actionStartITPD = "pan.alexander.tordnscrypt.action.START_ITPD";
-    static final String actionStopDnsCrypt = "pan.alexander.tordnscrypt.action.STOP_DNSCRYPT";
-    static final String actionStopTor = "pan.alexander.tordnscrypt.action.STOP_TOR";
-    static final String actionStopITPD = "pan.alexander.tordnscrypt.action.STOP_ITPD";
-    static final String actionRestartDnsCrypt = "pan.alexander.tordnscrypt.action.RESTART_DNSCRYPT";
-    static final String actionRestartTor = "pan.alexander.tordnscrypt.action.RESTART_TOR";
-    static final String actionRestartTorFull = "pan.alexander.tordnscrypt.action.RESTART_TOR_FULL";
-    static final String actionRestartITPD = "pan.alexander.tordnscrypt.action.RESTART_ITPD";
-    static final String actionUpdateModulesStatus = "pan.alexander.tordnscrypt.action.UPDATE_MODULES_STATUS";
-    static final String actionRecoverService = "pan.alexander.tordnscrypt.action.RECOVER_SERVICE";
-    static final String speedupLoop = "pan.alexander.tordnscrypt.action.SPEEDUP_LOOP";
-    static final String slowdownLoop = "pan.alexander.tordnscrypt.action.SLOWDOWN_LOOP";
-    static final String extraLoop = "pan.alexander.tordnscrypt.action.MAKE_EXTRA_LOOP";
-    static final String startArpScanner= "pan.alexander.tordnscrypt.action.START_ARP_SCANNER";
-    static final String stopArpScanner= "pan.alexander.tordnscrypt.action.STOP_ARP_SCANNER";
-    static final String clearIptablesCommandsHash = "pan.alexander.tordnscrypt.action.CLEAR_IPTABLES_COMMANDS_HASH";
-
     static final String DNSCRYPT_KEYWORD = "checkDNSRunning";
     static final String TOR_KEYWORD = "checkTrRunning";
     static final String ITPD_KEYWORD = "checkITPDRunning";
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
 
     private static WakeLocksManager wakeLocksManager;
 
     ModulesBroadcastReceiver modulesBroadcastReceiver;
 
-    private volatile Handler handler;
+    @Inject
+    public volatile Lazy<Handler> handler;
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
     private PathVars pathVars;
-    private NotificationManager notificationManager;
+    private NotificationManager systemNotificationManager;
     private ScheduledExecutorService checkModulesThreadsTimer;
     private ScheduledFuture<?> scheduledFuture;
     private int timerPeriod = TIMER_HIGH_SPEED;
@@ -126,7 +131,7 @@ public class ModulesService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
+        systemNotificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
 
         usageStatistic = new UsageStatistic(this);
 
@@ -139,9 +144,11 @@ public class ModulesService extends Service {
                 message = usageStatistic.getMessage(System.currentTimeMillis());
             }
 
-            ServiceNotification notification = new ServiceNotification(this, notificationManager, UsageStatisticKt.getStartTime());
-            notification.sendNotification(title, message);
+            ModulesServiceNotificationManager serviceNotificationManager = new ModulesServiceNotificationManager(this, systemNotificationManager, UsageStatisticKt.getStartTime());
+            serviceNotificationManager.sendNotification(title, message);
         }
+
+        App.instance.daggerComponent.inject(this);
 
         serviceIsRunning = true;
 
@@ -152,11 +159,6 @@ public class ModulesService extends Service {
         startModulesThreadsTimer();
 
         startArpScanner();
-
-        Looper looper = Looper.getMainLooper();
-        if (looper != null) {
-            handler = new Handler(Looper.getMainLooper());
-        }
     }
 
 
@@ -183,7 +185,7 @@ public class ModulesService extends Service {
                 message = usageStatistic.getMessage(System.currentTimeMillis());
             }
 
-            ServiceNotification notification = new ServiceNotification(this, notificationManager, UsageStatisticKt.getStartTime());
+            ModulesServiceNotificationManager notification = new ModulesServiceNotificationManager(this, systemNotificationManager, UsageStatisticKt.getStartTime());
             notification.sendNotification(title, message);
             usageStatistic.setServiceNotification(notification);
 
@@ -285,6 +287,8 @@ public class ModulesService extends Service {
 
         new Thread(() -> {
 
+            checkModulesConfigPatches();
+
             if (!modulesStatus.isUseModulesWithRoot()) {
                 Thread previousDnsCryptThread = modulesKiller.getDnsCryptThread();
 
@@ -310,7 +314,9 @@ public class ModulesService extends Service {
                 cleanLogFileNoRootMethod(pathVars.getAppDataDir() + "/logs/DnsCrypt.log",
                         ModulesService.this.getResources().getString(R.string.tvDNSDefaultLog) + " " + DNSCryptVersion);
 
-                ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(ModulesService.this, handler, pathVars);
+                ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(
+                        ModulesService.this.getApplicationContext(), handler.get(), pathVars
+                );
                 Thread dnsCryptThread = new Thread(modulesStarterHelper.getDNSCryptStarterRunnable());
                 dnsCryptThread.setName("DNSCryptThread");
                 dnsCryptThread.setDaemon(false);
@@ -326,7 +332,7 @@ public class ModulesService extends Service {
             } catch (Exception e) {
                 Log.e(LOG_TAG, "DnsCrypt was unable to start " + e.getMessage());
                 if (handler != null) {
-                    handler.post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
+                    handler.get().post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
                 }
             }
 
@@ -406,6 +412,8 @@ public class ModulesService extends Service {
 
         new Thread(() -> {
 
+            checkModulesConfigPatches();
+
             if (!modulesStatus.isUseModulesWithRoot()) {
                 Thread previousTorThread = modulesKiller.getTorThread();
 
@@ -431,7 +439,9 @@ public class ModulesService extends Service {
                 cleanLogFileNoRootMethod(pathVars.getAppDataDir() + "/logs/Tor.log",
                         ModulesService.this.getResources().getString(R.string.tvTorDefaultLog) + " " + TorVersion);
 
-                ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(ModulesService.this, handler, pathVars);
+                ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(
+                        ModulesService.this.getApplicationContext(), handler.get(), pathVars
+                );
                 Thread torThread = new Thread(modulesStarterHelper.getTorStarterRunnable());
                 torThread.setName("TorThread");
                 torThread.setDaemon(false);
@@ -446,7 +456,7 @@ public class ModulesService extends Service {
             } catch (Exception e) {
                 Log.e(LOG_TAG, "Tor was unable to startRefreshModulesStatus: " + e.getMessage());
                 if (handler != null) {
-                    handler.post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
+                    handler.get().post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
                 }
             }
 
@@ -533,6 +543,8 @@ public class ModulesService extends Service {
 
         new Thread(() -> {
 
+            checkModulesConfigPatches();
+
             if (!modulesStatus.isUseModulesWithRoot()) {
                 Thread previousITPDThread = modulesKiller.getItpdThread();
 
@@ -557,7 +569,9 @@ public class ModulesService extends Service {
 
                 cleanLogFileNoRootMethod(pathVars.getAppDataDir() + "/logs/i2pd.log", "");
 
-                ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(ModulesService.this, handler, pathVars);
+                ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(
+                        ModulesService.this.getApplicationContext(), handler.get(), pathVars
+                );
                 Thread itpdThread = new Thread(modulesStarterHelper.getITPDStarterRunnable());
                 itpdThread.setName("ITPDThread");
                 itpdThread.setDaemon(false);
@@ -572,7 +586,7 @@ public class ModulesService extends Service {
             } catch (Exception e) {
                 Log.e(LOG_TAG, "I2PD was unable to startRefreshModulesStatus: " + e.getMessage());
                 if (handler != null) {
-                    handler.post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
+                    handler.get().post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
                 }
             }
 
@@ -621,7 +635,7 @@ public class ModulesService extends Service {
 
         Set<String> itpdTunnelsPorts = new HashSet<>();
 
-        List<String> lines = FileOperations.readTextFileSynchronous(this, pathVars.getAppDataDir() + "/app_data/i2pd/tunnels.conf");
+        List<String> lines = FileManager.readTextFileSynchronous(this, pathVars.getAppDataDir() + "/app_data/i2pd/tunnels.conf");
         for (String line : lines) {
             if (line.matches("^port ?= ?\\d+")) {
                 String port = line.substring(line.indexOf("=") + 1).trim();
@@ -631,7 +645,8 @@ public class ModulesService extends Service {
             }
         }
 
-        new PrefManager(this).setSetStrPref("ITPDTunnelsPorts", itpdTunnelsPorts);
+        preferenceRepository.get()
+                .setStringSetPreference("ITPDTunnelsPorts", itpdTunnelsPorts);
 
         boolean stopRequired = false;
 
@@ -799,7 +814,7 @@ public class ModulesService extends Service {
 
     private void dismissNotification(int startId) {
         try {
-            notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
+            systemNotificationManager.cancel(DEFAULT_NOTIFICATION_ID);
             stopForeground(true);
         } catch (Exception e) {
             Log.e(LOG_TAG, "ModulesService dismissNotification exception " + e.getMessage() + " " + e.getCause());
@@ -911,7 +926,7 @@ public class ModulesService extends Service {
         stopVPNServiceIfRunning();
 
         if (handler != null) {
-            handler.removeCallbacksAndMessages(null);
+            handler.get().removeCallbacksAndMessages(null);
         }
 
         serviceIsRunning = false;
@@ -922,7 +937,7 @@ public class ModulesService extends Service {
     private void stopService(int startID) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             try {
-                notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
+                systemNotificationManager.cancel(DEFAULT_NOTIFICATION_ID);
                 stopForeground(true);
             } catch (Exception e) {
                 Log.e(LOG_TAG, "ModulesService stopService exception " + e.getMessage() + " " + e.getCause());
@@ -941,7 +956,7 @@ public class ModulesService extends Service {
 
     private void stopModulesService() {
         try {
-            notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
+            systemNotificationManager.cancel(DEFAULT_NOTIFICATION_ID);
             stopForeground(true);
         } catch (Exception e) {
             Log.e(LOG_TAG, "ModulesService stopModulesService exception " + e.getMessage() + " " + e.getCause());
@@ -953,7 +968,7 @@ public class ModulesService extends Service {
     private void stopModulesServiceForeground() {
 
         try {
-            notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
+            systemNotificationManager.cancel(DEFAULT_NOTIFICATION_ID);
             stopForeground(true);
         } catch (Exception e) {
             Log.e(LOG_TAG, "ModulesService stopModulesServiceForeground1 exception " + e.getMessage() + " " + e.getCause());
@@ -963,7 +978,7 @@ public class ModulesService extends Service {
     private void stopModulesServiceForeground(int startId) {
 
         try {
-            notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
+            systemNotificationManager.cancel(DEFAULT_NOTIFICATION_ID);
             stopForeground(true);
         } catch (Exception e) {
             Log.e(LOG_TAG, "ModulesService stopModulesServiceForeground2 exception " + e.getMessage() + " " + e.getCause());
@@ -1083,8 +1098,8 @@ public class ModulesService extends Service {
     }
 
     private void startArpScanner() {
-        arpScanner = ArpScanner.INSTANCE.getInstance(this, handler);
-        arpScanner.start(this);
+        arpScanner = ArpScanner.INSTANCE.getInstance(this.getApplicationContext(), handler.get());
+        arpScanner.start(this.getApplicationContext());
     }
 
     private void stopArpScanner() {
@@ -1097,5 +1112,10 @@ public class ModulesService extends Service {
         if (checkModulesStateTask != null) {
             checkModulesStateTask.clearIptablesCommandHash();
         }
+    }
+
+    private void checkModulesConfigPatches() {
+        Patch patch = new Patch(this);
+        patch.checkPatches(false);
     }
 }
