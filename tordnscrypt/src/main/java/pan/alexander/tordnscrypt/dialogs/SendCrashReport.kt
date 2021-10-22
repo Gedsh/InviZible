@@ -29,6 +29,7 @@ import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.help.Utils
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.io.BufferedReader
 import java.io.File
@@ -148,7 +149,7 @@ class SendCrashReport : ExtendedDialogFragment() {
             val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
             val preferenceRepository = App.instance.daggerComponent.getPreferenceRepository()
             if (!preferenceRepository.get().getBoolPreference("never_send_crash_reports")
-                    || sharedPreferences.getBoolean("pref_common_show_help", false)) {
+                    || sharedPreferences.getBoolean(ALWAYS_SHOW_HELP_MESSAGES, false)) {
                 return SendCrashReport()
             }
             return null

@@ -458,7 +458,7 @@ class ArpScanner private constructor(
         try {
             val myAddr = InetAddress.getByAddress(ipAddressByte)
 
-            defaultGateway = myAddr.hostAddress.trim()
+            defaultGateway = myAddr.hostAddress?.trim() ?: ""
 
             if (savedDefaultGateway.isEmpty()) {
                 Log.i(LOG_TAG, "ArpScanner defaultGateway is $defaultGateway")

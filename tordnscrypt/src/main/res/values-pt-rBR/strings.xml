@@ -127,7 +127,7 @@
     <string name="pref_common_show_help">"Mensagens de ajuda"</string>
     <string name="pref_common_show_help_summ">"Sempre mostrar mensagens de ajuda"</string>
     <string name="pref_common_notification_helper">"
-Por favor, exclua o InviZible Pro da optimização da bateria de androd. Caso contrário, o android parará DNSCrypt, Tor ou I2P em qualquer momento. Em sistemas especiais, como o MIUI, foram necessários alguns passos adicionais, para excluir o InviZible Pro da optimização da bateria (por exemplo, Apps e notificações-&gt;Acesso especial a apps-&gt;Otimização de Bateria). Selecione InviZible Pro e o remova da otimização de bateria."</string>
+Por favor, exclua o InviZible Pro da optimização da bateria de androd. Caso contrário, o android parará DNSCrypt, Tor ou I2P em qualquer momento. Em sistemas especiais, como o MIUI, foram necessários alguns passos adicionais."</string>
     <string name="pref_common_use_busybox">"Selecionar BusyBox"</string>
     <string name="pref_common_categ_hotspot">"HOTSPOT-Experimental"</string>
 

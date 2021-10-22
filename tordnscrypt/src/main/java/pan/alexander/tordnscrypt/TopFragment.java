@@ -88,6 +88,7 @@ import static pan.alexander.tordnscrypt.modules.ModulesStateLoop.ITPD_READY_PREF
 import static pan.alexander.tordnscrypt.modules.ModulesStateLoop.TOR_READY_PREF;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -974,7 +975,7 @@ public class TopFragment extends Fragment {
             boolean bridgesSnowflakeDefault = preferences.getStringPreference("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
             boolean bridgesSnowflakeOwn = preferences.getStringPreference("ownBridgesObfs").equals(snowFlakeBridgesOwn);
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-            boolean showHelperMessages = shPref.getBoolean("pref_common_show_help", false);
+            boolean showHelperMessages = shPref.getBoolean(ALWAYS_SHOW_HELP_MESSAGES, false);
 
             if (showHelperMessages && (bridgesSnowflakeDefault || bridgesSnowflakeOwn)) {
                 PathVars pathVars = PathVars.getInstance(context);

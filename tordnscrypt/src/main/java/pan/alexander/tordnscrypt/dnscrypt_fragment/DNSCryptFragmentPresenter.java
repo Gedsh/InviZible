@@ -40,6 +40,7 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
+import pan.alexander.tordnscrypt.dialogs.RequestIgnoreBatteryOptimizationDialog;
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsInteractorInterface;
 import pan.alexander.tordnscrypt.domain.log_reader.DNSCryptInteractorInterface;
 import pan.alexander.tordnscrypt.domain.connection_records.OnConnectionRecordsUpdatedListener;
@@ -600,12 +601,25 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             runDNSCrypt();
 
             displayLog();
+
+            showIgnoreBatteryOptimizationDialog();
         } else if (modulesStatus.getDnsCryptState() == RUNNING) {
             setDnsCryptStopping();
             stopDNSCrypt();
         }
 
         setDNSCryptProgressBarIndeterminate(true);
+    }
+
+    private void showIgnoreBatteryOptimizationDialog() {
+        DialogFragment dialog = RequestIgnoreBatteryOptimizationDialog.getInstance(
+                context, preferenceRepository.get()
+        );
+
+        FragmentManager fragmentManager = view.getFragmentFragmentManager();
+        if (dialog != null && !fragmentManager.isStateSaved()) {
+            dialog.show(fragmentManager, RequestIgnoreBatteryOptimizationDialog.TAG);
+        }
     }
 
     public void dnsCryptLogAutoScrollingAllowed(boolean allowed) {

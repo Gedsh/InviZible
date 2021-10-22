@@ -212,10 +212,7 @@
         --ei dnscrypt 1 --ei tor 1 --ei i2p 1 -n %s/.BootCompleteReceiver\". Where 1 - starts, 0 - stops the module.</string>
     <string name="pref_common_notification_helper">Please exclude InviZible Pro from android battery optimisation.
         Otherwise android will kill DNSCrypt, Tor or I2P at any time. On special systems,
-        like MIUI, required some additional steps, to exclude InviZible Pro from battery
-        optimisation (e.g. Safety->Battery->Power Saving->Select InviZible Pro->No Background Restrictions,
-        Safety->allow auto start and Long Press The Home Button->Open the Recent App->Then Swipe InviZible Pro
-        Downward and click sign lock in memory).</string>
+        like MIUI, required some additional steps.</string>
     <string name="pref_common_use_busybox">Select BusyBox</string>
     <string-array name="pref_common_categ_use_busybox_titles">
         <item>Auto</item>

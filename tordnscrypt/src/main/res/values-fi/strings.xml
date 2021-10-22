@@ -124,8 +124,7 @@
     <string name="pref_common_show_help_summ">"Näytä ohjeviestit aina"</string>
     <string name="pref_common_notification_helper">"Ota InviZible Pro pois Android-akun optimoinnista.
         Muuten android sulkee DNSCryptin, Tor:in tai I2P:n milloin tahansa. Erityisissä järjestelmissä,
-        kuten MIUI, vaati joitain lisävaiheita InviZible Pron poistamiseksi akun optimisoinnista(esim. Turvallisuus-&gt; Akku-&gt; Virransäästö-&gt; Valitse InviZible Pro-&gt; Ei taustarajoituksia,
-        Turvallisuus-&gt; Salli automaattinen käynnistys ja paina pitkään Koti-painiketta-&gt; Avaa viimeisin sovellus-&gt; Swaippaa sitten InviZible Pro alaspäin ja napsauta \"sign lock in memory\")."</string>
+        kuten MIUI, vaati joitain lisävaiheita."</string>
     <string name="pref_common_use_busybox">"Valitse BusyBox"</string>
     <string name="pref_common_categ_hotspot">"Kokeellinen-HOTSPOT"</string>
     <string name="pref_common_tethering_autostart">"Aloita tethering käynnistyksessä"</string>

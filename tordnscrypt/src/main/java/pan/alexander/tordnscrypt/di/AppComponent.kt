@@ -23,6 +23,7 @@ import pan.alexander.tordnscrypt.BootCompleteReceiver
 import pan.alexander.tordnscrypt.MainActivity
 import pan.alexander.tordnscrypt.SettingsActivity
 import pan.alexander.tordnscrypt.TopFragment
+import pan.alexander.tordnscrypt.dialogs.RequestIgnoreBatteryOptimizationDialog
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.main_fragment.MainFragment
 import pan.alexander.tordnscrypt.modules.ModulesService
@@ -61,4 +62,5 @@ interface AppComponent {
     fun inject(service: ServiceVPN)
     fun inject(service: UpdateService)
     fun inject(receiver: BootCompleteReceiver)
+    fun inject(dialogFragment: RequestIgnoreBatteryOptimizationDialog)
 }

@@ -76,27 +76,32 @@
             android:enabled="true"
             android:exported="false"
             android:stopWithTask="true" />
+
         <service
             android:name=".update.UpdateService"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
 
         <activity android:name=".help.HelpActivity" />
 
         <service
             android:name=".utils.root.RootExecService"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
         <service
             android:name=".modules.ModulesService"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
 
         <activity
             android:name=".MainActivity"
+            android:exported="true"
             android:label="@string/main_activity_label"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:exported="true">
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -142,6 +147,7 @@
         <activity
             android:name=".backup.BackupActivity"
             android:theme="@style/AppTheme" />
+
         <activity
             android:name=".SettingsActivity"
             android:label="@string/empty_string"
@@ -152,12 +158,15 @@
             android:name=".utils.web.GetIPsJobService"
             android:enabled="true"
             android:exported="true"
+            android:foregroundServiceType="dataSync"
             android:permission="android.permission.BIND_JOB_SERVICE" />
+
         <service
             android:name=".vpn.service.ServiceVPN"
+            android:exported="true"
+            android:foregroundServiceType="dataSync"
             android:label="@string/app_name"
-            android:permission="android.permission.BIND_VPN_SERVICE"
-            android:exported="true">
+            android:permission="android.permission.BIND_VPN_SERVICE">
             <intent-filter>
                 <action android:name="android.net.VpnService" />
             </intent-filter>

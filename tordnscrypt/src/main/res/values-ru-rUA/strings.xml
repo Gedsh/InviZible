@@ -102,11 +102,9 @@
     <string name="pref_common_show_notification">Показывать уведомление</string>
     <string name="pref_common_show_help">Показывать справку</string>
     <string name="pref_common_show_help_summ">Всегда показывать справочные сообщения</string>
-    <string name="pref_common_notification_helper">Пожалуйста, исключите InviZible Pro со списка оптимизации энергопотребления.
+    <string name="pref_common_notification_helper">Пожалуйста, исключите InviZible Pro из списка оптимизации энергопотребления.
         Иначе андроид может завершить DNSCrypt, Tor или I2P в любой момент.
-        Например, для MIUI, нужны дополнительные настройки. Безопасность -> Экономия энергии ->
-        Нет ограничений. Безопасность -> Разрешения -> Автозапуск. Долгий клик на кнопке Home -> прошлые приложения ->
-        Потянуть картинку InviZible вниз -> Заблокировать.</string>
+        Для некоторых оболочек, например MIUI, могут потребоваться дополнительные настройки.</string>
     <string name="pref_common_use_busybox">Выбрать BusyBox</string>
     <string name="pref_common_categ_hotspot">Точка доступа</string>
     <string name="pref_common_tethering_autostart">Автозапуск раздачи</string>

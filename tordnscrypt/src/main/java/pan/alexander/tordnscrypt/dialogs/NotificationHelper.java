@@ -31,6 +31,7 @@ import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class NotificationHelper extends ExtendedDialogFragment {
@@ -68,7 +69,7 @@ public class NotificationHelper extends ExtendedDialogFragment {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
             PreferenceRepository preferences = App.Companion.getInstance().daggerComponent.getPreferenceRepository().get();
             if ((!preferences.getBoolPreference("helper_no_show_" + preferenceTag)
-                    || sharedPreferences.getBoolean("pref_common_show_help", false)
+                    || sharedPreferences.getBoolean(ALWAYS_SHOW_HELP_MESSAGES, false)
                     || preferenceTag.matches("\\d+"))
                     && notificationHelper == null) {
                 notificationHelper = new NotificationHelper();

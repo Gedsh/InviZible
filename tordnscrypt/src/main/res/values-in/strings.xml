@@ -136,9 +136,7 @@
     <string name="pref_common_show_help_summ">"Selalu Tampilkan pesan Bantuan"</string>
     <string name="pref_common_notification_helper">"Silahkan hapus InviZible Pro dari daftar pengoptimalan baterai Android
 	Jika tidak, Sistem Android akan mematikan DNSCrypt, Tor, atau I2P kapanpun. 
-Sistem Operasi seperti MIUI membutuhkan langkah khusus untuk menghapus InviZible Pro dari daftar Pengoptimalan Baterai (misal. Pengaturan-&gt;Baterai-&gt;Penghemat Daya-&gt;Pilih InviZible Pro-&gt;Tidak ada batasan Latar Belakang,
-	Pengaturan-&gt;ijinkan mulai otomatis dan Tekan Tahan Tombol Home-&gt;Buka Recent App-&gt;Kemudian swipe kebawah InviZible Pro
-	dan klik kunci pada memori)."</string>
+Sistem Operasi seperti MIUI membutuhkan langkah khusus."</string>
     <string name="pref_common_use_busybox">"Pilih BusyBox"</string>
     <string name="pref_common_categ_hotspot">"Experimental-HOTSPOT"</string>
     <string name="pref_common_tethering_autostart">"Memulai Penambatan saat Boot"</string>

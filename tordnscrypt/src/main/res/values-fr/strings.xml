@@ -124,10 +124,7 @@
     <string name="pref_common_show_help_summ">"Toujours afficher les messages d'aide"</string>
     <string name="pref_common_notification_helper">"Veuillez exclure InviZible Pro de l'optimisation de la batterie d'Android.
                 Sinon, le système tuera les services DNSCrypt, Tor ou I2P à n'importe quel moment. Sur les systèmes spécifiques,
-                comme MIUI, cela nécessite quelques mesures supplémentaires, pour exclure InviZible Pro de l'optimisation de la                 
-                batterie (par exemple, sécurité-&gt;Batterie-&gt;Économie d'énergie&gt;Sélectionner InviZible Pro-&gt;Aucune restriction de fonctionnement en arrière plan,
-                Sécurité-&gt;auto-démarrage et pression longue sur le bouton Accueil-&gt;Ouverture des application récentes-&gt;InviZible Pro
-                vers le bas et cliquez sur le signe \"verrouillé\" en mémoire)."</string>
+                comme MIUI, cela nécessite quelques mesures supplémentaires"</string>
     <string name="pref_common_use_busybox">"Sélectionnez BusyBox"</string>
     <string name="pref_common_categ_hotspot">"POINT D'ACCÈS-Expérimental"</string>
     <string name="pref_common_tethering_autostart">"Commencer le partage de connexion au démarrage"</string>

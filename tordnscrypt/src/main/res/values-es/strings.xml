@@ -124,7 +124,7 @@
     <string name="pref_common_show_help_summ">"Muestra siempre los mensajes de ayuda."</string>
     <string name="pref_common_notification_helper">"Por favor, desactiva para InviZible Pro la optimización de bateria de Android.
 De otra manera Android parará los procesos de DNSCrypt, Tor e I2P en cualquier momento.
-En otros sistemas, como MIUI, se requieren ajustes adicionales para desactivar la optimización para InviZible Pro (p.ej. Seguridad-&gt;Bateria-&gt;Optimización de la batería-&gt;Selecciona la App-&gt;Desactivar restricciones en segundo plano, Seguridad-&gt;permitir inicio automatico y mantener presionado el botón Inicio-&gt;Abrir aplicaciones recientes-&gt;Desliza hasta InviZible Pro y pulsa el candado de mantener app en memoria)."</string>
+En otros sistemas, como MIUI, se requieren ajustes adicionales."</string>
     <string name="pref_common_use_busybox">"Seleccionar binario BusyBox"</string>
     <string name="pref_common_categ_hotspot">"Compartir Internet-En pruebas"</string>
     <string name="pref_common_tethering_autostart">"Arrancar Compartir Internet al inicio del dispositivo"</string>

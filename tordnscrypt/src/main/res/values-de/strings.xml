@@ -123,8 +123,7 @@
     <string name="pref_common_show_help">"Hilfe Messages"</string>
     <string name="pref_common_show_help_summ">"Hilfe Messages immer anzeigen"</string>
     <string name="pref_common_notification_helper">"Bitte deaktiviere die Batterieoptimierung deines Telefons für InviZible Pro.
-Andernfalls können DNSCrypt, Tor oder I2P jederzeit durch Android beendet werden. Auf manchen Systemen, wie zB MIUI, können zusätzliche Schritte nötig sein, um InviZible Pro von den Batterie Optimierungen auszuschliessen.
-(zB Safety-&gt;Battery-&gt;Power Saving-&gt;Select InviZible Pro-&gt;No Background Restrictions, Safety-&gt;allow auto start and Long Press The Home Button-&gt;Open the Recent App-&gt;Then Swipe InviZible Pro Downward and click sign lock in memory)."</string>
+Andernfalls können DNSCrypt, Tor oder I2P jederzeit durch Android beendet werden. Auf manchen Systemen, wie zB MIUI, können zusätzliche Schritte nötig sein."</string>
     <string name="pref_common_use_busybox">"BusyBox auswählen"</string>
     <string name="pref_common_categ_hotspot">"HOTSPOT-Experimentell"</string>
     <string name="pref_common_tethering_autostart">"Starte Tethering beim Booten"</string>

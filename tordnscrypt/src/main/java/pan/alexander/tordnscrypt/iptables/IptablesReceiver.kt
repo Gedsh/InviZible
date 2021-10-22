@@ -28,6 +28,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.modules.ModulesStatus
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES
 import pan.alexander.tordnscrypt.utils.root.RootCommands
 import pan.alexander.tordnscrypt.utils.root.RootExecService.*
 import java.util.*
@@ -85,7 +86,7 @@ class IptablesReceiver : BroadcastReceiver() {
         handler?.let {
 
             val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
-            val showToastWithCommandsResultError = sharedPreferences.getBoolean("pref_common_show_help", false)
+            val showToastWithCommandsResultError = sharedPreferences.getBoolean(ALWAYS_SHOW_HELP_MESSAGES, false)
             val refreshRules = sharedPreferences.getBoolean("swRefreshRules", false)
 
             if (resultStr.contains("unknown option \"-w\"")) {

@@ -19,7 +19,6 @@ package pan.alexander.tordnscrypt.settings;
 */
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -27,12 +26,8 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.PowerManager;
-import android.provider.Settings;
 
 import androidx.annotation.NonNull;
-import androidx.fragment.app.DialogFragment;
-import androidx.appcompat.app.AlertDialog;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
@@ -308,10 +303,6 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                     Intent intent = new Intent(context, ModulesService.class);
                     intent.setAction(ModulesServiceActions.actionDismissNotification);
                     context.startService(intent);
-                    InfoNotificationProtectService infoNotification = new InfoNotificationProtectService();
-                    if (isAdded()) {
-                        infoNotification.show(getParentFragmentManager(), "dialogProtectService");
-                    }
                 }
                 break;
             case "pref_common_tor_tethering":
@@ -600,44 +591,6 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                         break;
                 }
             }
-        }
-    }
-
-    public static class InfoNotificationProtectService extends DialogFragment {
-
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-
-            Context context = getActivity();
-
-            if (context == null) {
-                return super.onCreateDialog(savedInstanceState);
-            }
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomAlertDialogTheme);
-            builder.setMessage(R.string.pref_common_notification_helper)
-                    .setTitle(R.string.helper_dialog_title)
-                    .setPositiveButton(R.string.ok, (dialog, which) -> {
-                        final String packageName = context.getPackageName();
-                        final PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (pm != null && !pm.isIgnoringBatteryOptimizations(packageName))) {
-                            Intent intent = new Intent();
-                            intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
-                            try {
-                                context.startActivity(intent);
-                            } catch (Exception e) {
-                                Log.e(LOG_TAG, "PreferencesCommonFragment InfoNotificationProtectService exception " + e.getMessage() + " " + e.getCause());
-                            }
-                        }
-                    });
-            // Create the AlertDialog object and return it
-            return builder.create();
-        }
-
-        @Override
-        public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            return super.onCreateView(inflater, container, savedInstanceState);
         }
     }
 

@@ -146,8 +146,8 @@
     <string name="pref_common_wakelock_summ">"حفاظت بیش‌تر بدون حالت Root برای جلوگیری از توقف برنامه توسط اندروید. ممکن است باعث تخلیه زودتر باتری شود."</string>
     <string name="pref_common_show_help">"راهنمایی‌ها"</string>
     <string name="pref_common_show_help_summ">"همیشه پیغام‌های راهنما را نشان بده"</string>
-    <string name="pref_common_notification_helper">"لطفا InviZible Pro را در بهینه‌سازی باتری دستگاه قرار ندهید‌. در غیر این صورت، ممکن است اندروید DNSCrypt و TOR و یا I2P را در هر زمان خاموش کند.
-در بعضی سیستم عامل‌های استثناء همانند سیستم عامل گوشی‌های شیائومی باید چند گام اضافه را انجام داد تا InviZible Pro را از تنظیمات ویژه باتری مستثنی نماید (مثلاً در بخش حفاظت -&gt; باتری -&gt; ذخیره نیرو -&gt; انتخاب InviZible Pro -&gt; محدود نساختن فعالیت‌های پس‌زمینه را انتخاب نمایید، و سپس در بخش حفاظت -&gt; مجاز به شروع خودکار را انتخاب نمایید و با فشار طولانی دکمه Home -&gt; باز کردن برنامه‌های اخیر -&gt; سپس InviZible Pro را به سمت پایین بکشید و قفل نشانه‌ای را در حافظه انتخاب نمایید)."</string>
+    <string name="pref_common_notification_helper">لطفا InviZible Pro را در بهینه‌سازی باتری دستگاه قرار ندهید‌. در غیر این صورت، ممکن است اندروید DNSCrypt و TOR و یا I2P را در هر زمان خاموش کند."
+"در بعضی سیستم عامل‌های استثناء همانند سیستم عامل گوشی‌های شیائومی باید چند گام اضافه</string>
     <string name="pref_common_use_busybox">"انتخاب BusyBox"</string>
     <string name="pref_common_categ_hotspot">"هات اسپات-آزمایشی"</string>
     <string name="pref_common_tethering_autostart">"شروع Tethering هنگام راه‌اندازی مجدد"</string>

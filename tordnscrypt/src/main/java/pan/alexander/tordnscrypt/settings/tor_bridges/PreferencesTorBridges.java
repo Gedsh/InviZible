@@ -82,6 +82,7 @@ import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteL
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.meek_lite;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.vanilla;
@@ -348,7 +349,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         }
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean saveExtendedLogs = sharedPreferences.getBoolean("pref_common_show_help", false);
+        boolean saveExtendedLogs = sharedPreferences.getBoolean(ALWAYS_SHOW_HELP_MESSAGES, false);
         String saveLogsString = "";
         if (saveExtendedLogs) {
             saveLogsString = " -log " + appDataDir + "/logs/Snowflake.log";
