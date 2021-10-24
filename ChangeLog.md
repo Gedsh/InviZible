@@ -607,3 +607,8 @@
 * Fixed delayed saving of settings in some cases.
 * Fixed display of warning about arp spoofing attack if app is launched.
 * Minor bug fixes and optimizations.
+
+**InviZible Pro beta 1.3.8**
+* Updated DNSCrypt to version 2.1.1.
+* Added tiles to Android Quick Settings for starting/stopping modules.
+* Preparing the app for Android 12.
