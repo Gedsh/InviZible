@@ -31,6 +31,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATION_MODE;
 
 public class ModulesAux {
 
@@ -50,13 +51,13 @@ public class ModulesAux {
             modulesStatus.setMode(operationMode);
         } else if (rootIsAvailable) {
             modulesStatus.setMode(ROOT_MODE);
-            preferences.setStringPreference("OPERATION_MODE", ROOT_MODE.toString());
+            preferences.setStringPreference(OPERATION_MODE, ROOT_MODE.toString());
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             modulesStatus.setMode(VPN_MODE);
-            preferences.setStringPreference("OPERATION_MODE", VPN_MODE.toString());
+            preferences.setStringPreference(OPERATION_MODE, VPN_MODE.toString());
         } else {
             modulesStatus.setMode(PROXY_MODE);
-            preferences.setStringPreference("OPERATION_MODE", PROXY_MODE.toString());
+            preferences.setStringPreference(OPERATION_MODE, PROXY_MODE.toString());
         }
 
     }

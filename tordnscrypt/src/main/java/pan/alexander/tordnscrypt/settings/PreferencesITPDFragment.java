@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;

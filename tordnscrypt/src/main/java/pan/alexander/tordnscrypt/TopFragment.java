@@ -72,9 +72,7 @@ import pan.alexander.tordnscrypt.modules.ModulesVersions;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.update.UpdateCheck;
 import pan.alexander.tordnscrypt.update.UpdateService;
-import pan.alexander.tordnscrypt.utils.appexit.AppExitDetectService;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.filemanager.FileShortener;
 import pan.alexander.tordnscrypt.dialogs.Registration;
 import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.utils.Utils;
@@ -83,15 +81,16 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
-import static pan.alexander.tordnscrypt.modules.ModulesStateLoop.DNSCRYPT_READY_PREF;
-import static pan.alexander.tordnscrypt.modules.ModulesStateLoop.ITPD_READY_PREF;
-import static pan.alexander.tordnscrypt.modules.ModulesStateLoop.TOR_READY_PREF;
-import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
-import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES;
+import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongSnowflakeLog;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_READY_PREF;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ITPD_READY_PREF;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATION_MODE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_READY_PREF;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
-import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 
@@ -180,15 +179,15 @@ public class TopFragment extends Fragment {
         if (context != null) {
             SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
             PreferenceRepository preferences = preferenceRepository.get();
-            rootIsAvailableSaved = rootIsAvailable = preferences.getBoolPreference("rootIsAvailable");
-            runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+            rootIsAvailableSaved = rootIsAvailable = preferences.getBoolPreference(ROOT_IS_AVAILABLE);
+            runModulesWithRoot = shPref.getBoolean(RUN_MODULES_WITH_ROOT, false);
 
-            modulesStatus.setFixTTL(shPref.getBoolean("pref_common_fix_ttl", false));
+            modulesStatus.setFixTTL(shPref.getBoolean(FIX_TTL, false));
             modulesStatus.setTorReady(preferences.getBoolPreference(TOR_READY_PREF));
             modulesStatus.setDnsCryptReady(preferences.getBoolPreference(DNSCRYPT_READY_PREF));
             modulesStatus.setItpdReady(preferences.getBoolPreference(ITPD_READY_PREF));
 
-            String operationMode = preferences.getStringPreference("OPERATION_MODE");
+            String operationMode = preferences.getStringPreference(OPERATION_MODE);
 
             if (!operationMode.isEmpty()) {
                 mode = OperationMode.valueOf(operationMode);
@@ -217,7 +216,6 @@ public class TopFragment extends Fragment {
 
         Context context = getActivity();
         if (context != null) {
-            ModulesAux.speedupModulesStateLoopTimer(context);
             registerReceiver(context);
         }
     }
@@ -277,8 +275,6 @@ public class TopFragment extends Fragment {
 
         closePleaseWaitDialog();
 
-        slowDownModulesStateTimerIfRequired(activity);
-
         if (!activity.isChangingConfigurations()) {
             stopInstallationTimer();
 
@@ -297,16 +293,6 @@ public class TopFragment extends Fragment {
 
     private void saveLogsTextSize() {
         preferenceRepository.get().setFloatPreference("LogsTextSize", logsTextSize);
-    }
-
-    private void slowDownModulesStateTimerIfRequired(Activity activity) {
-        if (!activity.isChangingConfigurations() && !modulesStatus.isUseModulesWithRoot()
-                && (modulesStatus.getDnsCryptState() == RUNNING || modulesStatus.getDnsCryptState() == STOPPED)
-                && (modulesStatus.getTorState() == RUNNING || modulesStatus.getTorState() == STOPPED)
-                && (modulesStatus.getItpdState() == RUNNING || modulesStatus.getItpdState() == STOPPED)
-                && !(modulesStatus.getDnsCryptState() == STOPPED && modulesStatus.getTorState() == STOPPED && modulesStatus.getItpdState() == STOPPED)) {
-            ModulesAux.slowdownModulesStateLoopTimer(activity);
-        }
     }
 
     private void cancelRootChecker() {
@@ -388,8 +374,7 @@ public class TopFragment extends Fragment {
             }
 
             Context context = activity.getApplicationContext();
-
-            topFragment.startAppExitDetectService(context);
+            Utils.startAppExitDetectService(context);
 
             PreferenceRepository preferences = topFragment.preferenceRepository.get();
 
@@ -611,7 +596,7 @@ public class TopFragment extends Fragment {
 
             rootIsAvailable = true;
 
-            preferences.setBoolPreference("rootIsAvailable", true);
+            preferences.setBoolPreference(ROOT_IS_AVAILABLE, true);
 
             if (fSuVersion != null && fSuVersion.length() != 0) {
                 verSU = "Root is available." + (char) 10 +
@@ -625,7 +610,7 @@ public class TopFragment extends Fragment {
             Log.i(LOG_TAG, verSU);
         } else {
             rootIsAvailable = false;
-            preferences.setBoolPreference("rootIsAvailable", false);
+            preferences.setBoolPreference(ROOT_IS_AVAILABLE, false);
         }
     }
 
@@ -967,32 +952,6 @@ public class TopFragment extends Fragment {
         if (timer != null && !timer.isShutdown()) {
             timer.shutdownNow();
             timer = null;
-        }
-    }
-
-    private static void shortenTooLongSnowflakeLog(Context context, PreferenceRepository preferences) {
-        try {
-            boolean bridgesSnowflakeDefault = preferences.getStringPreference("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
-            boolean bridgesSnowflakeOwn = preferences.getStringPreference("ownBridgesObfs").equals(snowFlakeBridgesOwn);
-            SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-            boolean showHelperMessages = shPref.getBoolean(ALWAYS_SHOW_HELP_MESSAGES, false);
-
-            if (showHelperMessages && (bridgesSnowflakeDefault || bridgesSnowflakeOwn)) {
-                PathVars pathVars = PathVars.getInstance(context);
-                FileShortener.shortenTooTooLongFile(pathVars.getAppDataDir() + "/logs/Snowflake.log");
-            }
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "TopFragment shortenTooLongSnowflakeLog exception " + e.getMessage() + " " + e.getCause());
-        }
-    }
-
-    private void startAppExitDetectService(Context context) {
-        try {
-            Intent intent = new Intent(context, AppExitDetectService.class);
-            context.startService(intent);
-            Log.i(LOG_TAG, "Start app exit detect service");
-        } catch (Exception e) {
-            Log.i(LOG_TAG, "Start app exit detect service exception " + e.getMessage() + " " + e.getCause());
         }
     }
 

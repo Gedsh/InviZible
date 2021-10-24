@@ -46,7 +46,7 @@ import java.util.Set;
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.settings.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.utils.enums.BridgeType;

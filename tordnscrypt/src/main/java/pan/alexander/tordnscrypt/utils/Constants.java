@@ -37,4 +37,7 @@ public interface Constants {
     String QUAD_DNS_42 = "149.112.112.112";
     String QUAD_DNS_61 = "2620:fe::fe";
     String QUAD_DNS_62 = "2620:fe::9";
+
+    int SITES_IPS_REFRESH_JOB_ID = 1;
+    int DEFAULT_SITES_IPS_REFRESH_INTERVAL = 12;
 }

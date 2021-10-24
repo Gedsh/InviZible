@@ -56,6 +56,7 @@ import pan.alexander.tordnscrypt.vpn.NetworkUtils;
 
 import static android.content.Context.CONNECTIVITY_SERVICE;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -140,7 +141,7 @@ public class ServiceVPNHandler extends Handler {
             // Stop service if needed
             if (!serviceVPNHandler.hasMessages(VPNCommand.START.ordinal()) &&
                     !serviceVPNHandler.hasMessages(VPNCommand.RELOAD.ordinal()) &&
-                    !prefs.getBoolean("VPNServiceEnabled", false))
+                    !prefs.getBoolean(VPN_SERVICE_ENABLED, false))
                 stopServiceVPN();
 
             // Request garbage collection
@@ -162,7 +163,7 @@ public class ServiceVPNHandler extends Handler {
 
                     // Disable firewall
                     if (!(ex instanceof StartFailedException)) {
-                        prefs.edit().putBoolean("VPNServiceEnabled", false).apply();
+                        prefs.edit().putBoolean(VPN_SERVICE_ENABLED, false).apply();
                     }
                 }
             }
@@ -389,7 +390,7 @@ public class ServiceVPNHandler extends Handler {
         }
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(serviceVPN);
-        prefs.edit().putBoolean("VPNServiceEnabled", false).apply();
+        prefs.edit().putBoolean(VPN_SERVICE_ENABLED, false).apply();
 
         serviceVPN.stopSelf();
 

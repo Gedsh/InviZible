@@ -25,7 +25,7 @@ import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
-import pan.alexander.tordnscrypt.SettingsActivity
+import pan.alexander.tordnscrypt.settings.SettingsActivity
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor.getExecutorService
 import pan.alexander.tordnscrypt.utils.root.RootExecService

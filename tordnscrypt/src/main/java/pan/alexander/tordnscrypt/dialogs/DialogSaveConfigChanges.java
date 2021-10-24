@@ -34,7 +34,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.settings.SettingsActivity;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;

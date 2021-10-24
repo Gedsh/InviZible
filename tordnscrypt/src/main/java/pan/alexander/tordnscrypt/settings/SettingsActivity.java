@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt;
+package pan.alexander.tordnscrypt.settings;
 /*
     This file is part of InviZible Pro.
 
@@ -44,19 +44,17 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
+import pan.alexander.tordnscrypt.LangAppCompatActivity;
+import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.SaveFirewallChanges;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.proxy.ProxyFragment;
-import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.settings.PreferencesCommonFragment;
-import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
 import pan.alexander.tordnscrypt.settings.dnscrypt_settings.PreferencesDNSFragment;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallFragment;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallPreferencesFragment;
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges;
-import pan.alexander.tordnscrypt.settings.SettingsParser;
-import pan.alexander.tordnscrypt.settings.ShowLogFragment;
 import pan.alexander.tordnscrypt.settings.show_rules.ShowRulesRecycleFrag;
 import pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment;
 import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag;

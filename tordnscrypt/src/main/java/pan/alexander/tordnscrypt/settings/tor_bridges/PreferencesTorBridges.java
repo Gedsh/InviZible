@@ -64,7 +64,7 @@ import java.util.zip.ZipInputStream;
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.settings.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.dialogs.UpdateDefaultBridgesDialog;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
@@ -83,6 +83,8 @@ import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OWN_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.meek_lite;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.vanilla;
@@ -227,11 +229,11 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         PreferenceRepository preferences = preferenceRepository.get();
 
-        if (!preferences.getStringPreference("defaultBridgesObfs").isEmpty())
-            spDefaultBridges.setSelection(Integer.parseInt(preferences.getStringPreference("defaultBridgesObfs")));
+        if (!preferences.getStringPreference(DEFAULT_BRIDGES_OBFS).isEmpty())
+            spDefaultBridges.setSelection(Integer.parseInt(preferences.getStringPreference(DEFAULT_BRIDGES_OBFS)));
 
-        if (!preferences.getStringPreference("ownBridgesObfs").isEmpty())
-            spOwnBridges.setSelection(Integer.parseInt(preferences.getStringPreference("ownBridgesObfs")));
+        if (!preferences.getStringPreference(OWN_BRIDGES_OBFS).isEmpty())
+            spOwnBridges.setSelection(Integer.parseInt(preferences.getStringPreference(OWN_BRIDGES_OBFS)));
 
 
         Activity activity = getActivity();
@@ -990,13 +992,13 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         int id = adapterView.getId();
 
         if (id == R.id.spDefaultBridges) {
-            preferenceRepository.get().setStringPreference("defaultBridgesObfs", String.valueOf(i));
+            preferenceRepository.get().setStringPreference(DEFAULT_BRIDGES_OBFS, String.valueOf(i));
             if (rbDefaultBridges.isChecked()) {
                 currentBridgesFilePath = bridgesDefaultFilePath;
                 FileManager.readTextFile(context, currentBridgesFilePath, defaultBridgesOperationTag);
             }
         } else if (id == R.id.spOwnBridges) {
-            preferenceRepository.get().setStringPreference("ownBridgesObfs", String.valueOf(i));
+            preferenceRepository.get().setStringPreference(OWN_BRIDGES_OBFS, String.valueOf(i));
             if (rbOwnBridges.isChecked()) {
                 currentBridgesFilePath = bridgesCustomFilePath;
                 FileManager.readTextFile(context, currentBridgesFilePath, ownBridgesOperationTag);

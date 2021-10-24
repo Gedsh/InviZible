@@ -60,6 +60,7 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.TopFragment.ITPDVersion;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
@@ -107,7 +108,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
         }
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        runI2PDWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+        runI2PDWithRoot = shPref.getBoolean(RUN_MODULES_WITH_ROOT, false);
 
         if (isITPDInstalled()) {
             setITPDInstalled(true);

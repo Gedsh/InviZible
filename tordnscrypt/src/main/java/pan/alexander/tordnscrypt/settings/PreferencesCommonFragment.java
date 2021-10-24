@@ -49,7 +49,6 @@ import java.util.Set;
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
@@ -72,6 +71,8 @@ import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
 import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.ISOLATE_DEST_ADDRESS;
 import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.ISOLATE_DEST_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
@@ -330,7 +331,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                     ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
                 }
                 break;
-            case "swUseModulesRoot":
+            case RUN_MODULES_WITH_ROOT:
                 ModulesStatus modulesStatus = ModulesStatus.getInstance();
                 ModulesAux.stopModulesIfRunning(context);
                 boolean newOptionValue = Boolean.parseBoolean(newValue.toString());
@@ -338,7 +339,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 modulesStatus.setContextUIDUpdateRequested(true);
                 ModulesAux.makeModulesStateExtraLoop(context);
 
-                Preference fixTTLPreference = findPreference("pref_common_fix_ttl");
+                Preference fixTTLPreference = findPreference(FIX_TTL);
                 if (fixTTLPreference != null) {
                     fixTTLPreference.setEnabled(!newOptionValue);
                 }
@@ -346,7 +347,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 Log.i(LOG_TAG, "PreferencesCommonFragment switch to "
                         + (Boolean.parseBoolean(newValue.toString()) ? "Root" : "No Root"));
                 break;
-            case "pref_common_fix_ttl":
+            case FIX_TTL:
                 modulesStatus = ModulesStatus.getInstance();
                 boolean fixed = Boolean.parseBoolean(newValue.toString());
                 modulesStatus.setFixTTL(fixed);
@@ -602,12 +603,12 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             return;
         }
 
-        Preference swFixTTL = findPreference("pref_common_fix_ttl");
+        Preference swFixTTL = findPreference(FIX_TTL);
         if (swFixTTL != null) {
             swFixTTL.setOnPreferenceChangeListener(this);
 
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-            swFixTTL.setEnabled(!sharedPreferences.getBoolean("swUseModulesRoot", false));
+            swFixTTL.setEnabled(!sharedPreferences.getBoolean(RUN_MODULES_WITH_ROOT, false));
         }
 
         Preference prefTorSiteUnlockTether = findPreference("prefTorSiteUnlockTether");
@@ -621,7 +622,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         preferences.add(findPreference("pref_common_tor_route_all"));
         preferences.add(findPreference("pref_common_itpd_tethering"));
         preferences.add(findPreference("pref_common_block_http"));
-        preferences.add(findPreference("swUseModulesRoot"));
+        preferences.add(findPreference(RUN_MODULES_WITH_ROOT));
         preferences.add(findPreference("swWakelock"));
         preferences.add(findPreference("pref_common_local_eth_device_addr"));
 
@@ -649,7 +650,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             preferencesHOTSPOT.add(findPreference("prefTorSiteExcludeTether"));
             preferencesHOTSPOT.add(findPreference("pref_common_itpd_tethering"));
             preferencesHOTSPOT.add(findPreference("pref_common_block_http"));
-            preferencesHOTSPOT.add(findPreference("pref_common_fix_ttl"));
+            preferencesHOTSPOT.add(findPreference(FIX_TTL));
             preferencesHOTSPOT.add(findPreference("pref_common_local_eth_device_addr"));
 
             if (hotspotSettingsCategory != null) {
@@ -671,7 +672,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         if (ModulesStatus.getInstance().isRootAvailable()
                 && ModulesStatus.getInstance().getMode() != VPN_MODE) {
-            Preference pref_common_use_modules_with_root = findPreference("swUseModulesRoot");
+            Preference pref_common_use_modules_with_root = findPreference(RUN_MODULES_WITH_ROOT);
             if (pref_common_use_modules_with_root != null) {
                 pref_common_use_modules_with_root.setOnPreferenceChangeListener(this);
             }

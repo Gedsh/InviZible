@@ -18,6 +18,7 @@ package pan.alexander.tordnscrypt.utils.root;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE;
 import static pan.alexander.tordnscrypt.utils.root.RootServiceNotificationManager.DEFAULT_NOTIFICATION_ID;
 
 import android.app.NotificationManager;
@@ -110,7 +111,7 @@ public class RootExecService extends Service {
     public static void performAction(Context context, Intent intent) {
         final PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
 
-        boolean rootIsAvailable = preferences.getBoolPreference("rootIsAvailable");
+        boolean rootIsAvailable = preferences.getBoolPreference(ROOT_IS_AVAILABLE);
         saveRootLogs = preferences.getBoolPreference("swRootCommandsLog");
 
         if ((intent == null) || Objects.equals(intent.getAction(), "") || !rootIsAvailable) return;

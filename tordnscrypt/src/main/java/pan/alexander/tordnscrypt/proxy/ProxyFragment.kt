@@ -41,7 +41,7 @@ import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
-import pan.alexander.tordnscrypt.SettingsActivity
+import pan.alexander.tordnscrypt.settings.SettingsActivity
 import pan.alexander.tordnscrypt.databinding.FragmentProxyBinding
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.settings.PathVars

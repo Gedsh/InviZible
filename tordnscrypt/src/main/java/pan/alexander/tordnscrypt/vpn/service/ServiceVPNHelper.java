@@ -35,6 +35,7 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.utils.enums.VPNCommand;
 
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -59,7 +60,7 @@ public class ServiceVPNHelper {
         ModuleState dnsCryptState = modulesStatus.getDnsCryptState();
         ModuleState torState = modulesStatus.getTorState();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean vpnServiceEnabled = prefs.getBoolean("VPNServiceEnabled", false);
+        boolean vpnServiceEnabled = prefs.getBoolean(VPN_SERVICE_ENABLED, false);
 
         boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
                 && !modulesStatus.isUseModulesWithRoot();
@@ -76,7 +77,7 @@ public class ServiceVPNHelper {
 
     public static void stop(String reason, Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean vpnServiceEnabled = prefs.getBoolean("VPNServiceEnabled", false);
+        boolean vpnServiceEnabled = prefs.getBoolean(VPN_SERVICE_ENABLED, false);
 
         if (vpnServiceEnabled) {
             Intent intent = new Intent(context, ServiceVPN.class);
@@ -99,7 +100,7 @@ public class ServiceVPNHelper {
             SharedPreferences prefs = android.preference.PreferenceManager.getDefaultSharedPreferences(activity);
             if (((operationMode == VPN_MODE) || fixTTL)
                     && activity instanceof MainActivity
-                    && !prefs.getBoolean("VPNServiceEnabled", false)) {
+                    && !prefs.getBoolean(VPN_SERVICE_ENABLED, false)) {
                 ((MainActivity) activity).prepareVPNService();
             }
         } catch (Exception e) {

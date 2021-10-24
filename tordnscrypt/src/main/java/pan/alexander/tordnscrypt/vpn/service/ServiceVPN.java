@@ -117,7 +117,9 @@ import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_42;
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_61;
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_62;
 import static pan.alexander.tordnscrypt.utils.Constants.VPN_DNS_2;
+import static pan.alexander.tordnscrypt.utils.bootcomplete.BootCompleteManager.ALWAYS_ON_VPN;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -758,7 +760,7 @@ public class ServiceVPN extends VpnService {
         Log.w(LOG_TAG, "VPN Native exit reason=" + reason);
         if (reason != null) {
             SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
-            prefs.edit().putBoolean("VPNServiceEnabled", false).apply();
+            prefs.edit().putBoolean(VPN_SERVICE_ENABLED, false).apply();
         }
     }
 
@@ -1415,7 +1417,7 @@ public class ServiceVPN extends VpnService {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
-        boolean vpnEnabled = prefs.getBoolean("VPNServiceEnabled", false);
+        boolean vpnEnabled = prefs.getBoolean(VPN_SERVICE_ENABLED, false);
 
         modulesStatus = ModulesStatus.getInstance();
 
@@ -1472,7 +1474,7 @@ public class ServiceVPN extends VpnService {
 
             if (vpnEnabled) {
                 Intent starterIntent = new Intent(this, BootCompleteReceiver.class);
-                starterIntent.setAction(BootCompleteReceiver.ALWAYS_ON_VPN);
+                starterIntent.setAction(ALWAYS_ON_VPN);
                 sendBroadcast(starterIntent);
                 stopSelf(startId);
                 return START_NOT_STICKY;
@@ -1490,7 +1492,7 @@ public class ServiceVPN extends VpnService {
 
             if (vpnEnabled) {
                 Intent starterIntent = new Intent(this, BootCompleteReceiver.class);
-                starterIntent.setAction(BootCompleteReceiver.ALWAYS_ON_VPN);
+                starterIntent.setAction(ALWAYS_ON_VPN);
                 sendBroadcast(starterIntent);
                 stopSelf(startId);
                 return START_NOT_STICKY;
@@ -1514,7 +1516,7 @@ public class ServiceVPN extends VpnService {
 
         // Disable firewall (will result in stop command)
         SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
-        prefs.edit().putBoolean("VPNServiceEnabled", false).apply();
+        prefs.edit().putBoolean(VPN_SERVICE_ENABLED, false).apply();
 
         ModulesAux.stopModulesIfRunning(this.getApplicationContext());
 

@@ -22,16 +22,25 @@ package pan.alexander.tordnscrypt.utils
 import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Point
 import android.os.Environment
+import android.util.Base64
 import android.util.Log
 import android.view.Display
 import androidx.preference.PreferenceManager
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesService
+import pan.alexander.tordnscrypt.settings.PathVars
+import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges
+import pan.alexander.tordnscrypt.utils.appexit.AppExitDetectService
+import pan.alexander.tordnscrypt.utils.filemanager.FileShortener
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.io.File
 import java.io.PrintWriter
+import java.lang.IllegalArgumentException
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
@@ -39,7 +48,7 @@ import java.net.SocketException
 import kotlin.math.roundToInt
 
 object Utils {
-    fun getScreenOrientation(activity: Activity): Int {
+    fun getScreenOrientationOld(activity: Activity): Int {
         val getOrient: Display = activity.windowManager.defaultDisplay
         val point = Point()
         getOrient.getSize(point)
@@ -54,6 +63,16 @@ object Utils {
         }
     }
 
+    fun getScreenOrientation(activity: Activity): Int {
+        val displayMetrics = activity.resources.displayMetrics
+        return when {
+            displayMetrics.widthPixels < displayMetrics.heightPixels -> Configuration.ORIENTATION_PORTRAIT
+            displayMetrics.widthPixels > displayMetrics.heightPixels -> Configuration.ORIENTATION_LANDSCAPE
+            else -> Configuration.ORIENTATION_UNDEFINED
+        }
+    }
+
+
     fun dips2pixels(dips: Int, context: Context): Int {
         return (dips * context.resources.displayMetrics.density + 0.5f).roundToInt()
     }
@@ -67,7 +86,7 @@ object Utils {
                 while (enumIpAddr.hasMoreElements()) {
                     val inetAddress = enumIpAddr.nextElement()
                     if (!inetAddress.isLoopbackAddress && inetAddress is Inet4Address) {
-                        return inetAddress.getHostAddress()
+                        return inetAddress.getHostAddress() ?: ""
                     }
                 }
             }
@@ -122,7 +141,10 @@ object Utils {
                 }
             }
         } catch (exception: Exception) {
-            Log.e(LOG_TAG, "Utils isServiceRunning exception " + exception.message + " " + exception.cause)
+            Log.e(
+                LOG_TAG,
+                "Utils isServiceRunning exception " + exception.message + " " + exception.cause
+            )
         }
 
         return result
@@ -170,4 +192,49 @@ object Utils {
         }
         return result
     }
+
+    @JvmStatic
+    fun isInterfaceLocked(preferenceRepository: PreferenceRepository): Boolean {
+        var locked = false
+        try {
+            locked = String(
+                Base64.decode(preferenceRepository.getStringPreference(CHILD_LOCK_PASSWORD), 16)
+            ).contains("-l-o-c-k-e-d")
+        } catch (e: IllegalArgumentException) {
+            Log.e(LOG_TAG, "Decode child password exception ${e.message}")
+        }
+        return locked
+    }
+
+    @JvmStatic
+    fun startAppExitDetectService(context: Context) {
+        try {
+            Intent(context, AppExitDetectService::class.java).apply {
+                context.startService(this)
+                Log.i(LOG_TAG, "Start app exit detect service")
+            }
+        } catch (e: java.lang.Exception) {
+            Log.e(LOG_TAG, "Start app exit detect service exception + ${e.message} ${e.cause}")
+        }
+    }
+
+    @JvmStatic
+    fun shortenTooLongSnowflakeLog(context: Context, preferences: PreferenceRepository) {
+        try {
+            val bridgesSnowflakeDefault =
+                preferences.getStringPreference(DEFAULT_BRIDGES_OBFS) == PreferencesTorBridges.snowFlakeBridgesDefault
+            val bridgesSnowflakeOwn =
+                preferences.getStringPreference(OWN_BRIDGES_OBFS) == PreferencesTorBridges.snowFlakeBridgesOwn
+            val shPref = PreferenceManager.getDefaultSharedPreferences(context)
+            val showHelperMessages =
+                shPref.getBoolean(ALWAYS_SHOW_HELP_MESSAGES, false)
+            if (showHelperMessages && (bridgesSnowflakeDefault || bridgesSnowflakeOwn)) {
+                val pathVars = PathVars.getInstance(context)
+                FileShortener.shortenTooTooLongFile(pathVars.appDataDir + "/logs/Snowflake.log")
+            }
+        } catch (e: Exception) {
+            Log.e(LOG_TAG, "ShortenTooLongSnowflakeLog exception ${e.message} ${e.cause}")
+        }
+    }
+
 }

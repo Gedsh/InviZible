@@ -20,9 +20,6 @@ package pan.alexander.tordnscrypt.tor_fragment;
 */
 
 import android.app.Activity;
-import android.app.job.JobInfo;
-import android.app.job.JobScheduler;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.Html;
@@ -56,10 +53,7 @@ import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
-import pan.alexander.tordnscrypt.settings.PreferencesFastFragment;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.web.GetIPsJobService;
-import pan.alexander.tordnscrypt.utils.web.TorRefreshIPsWork;
 import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
@@ -67,6 +61,8 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
+import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.startRefreshTorUnlockIPs;
+import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.stopRefreshTorUnlockIPs;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
@@ -82,9 +78,6 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
         OnTorLogUpdatedListener, OnInternetConnectionCheckedListener {
 
     public TorFragmentView view;
-
-    private final int mJobId = PreferencesFastFragment.mJobId;
-    private int refreshPeriodHours = 12;
 
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
     private ModuleState fixedModuleState = STOPPED;
@@ -114,12 +107,6 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
         }
 
         context = view.getFragmentActivity();
-
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        String refreshPeriod = shPref.getString("pref_fast_site_refresh_interval", "12");
-        if (refreshPeriod != null) {
-            refreshPeriodHours = Integer.parseInt(refreshPeriod);
-        }
 
         if (isTorInstalled()) {
             setTorInstalled(true);
@@ -235,7 +222,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
             return;
         }
 
-        stopRefreshTorUnlockIPs();
+        stopRefreshTorUnlockIPs(context);
 
         view.setTorStatus(R.string.tvTorStop, R.color.textModuleStatusColorStopped);
         view.setStartButtonText(R.string.btnTorStart);
@@ -503,7 +490,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
         setFixedReadyState(true);
         setFixedErrorState(false);
 
-        startRefreshTorUnlockIPs();
+        startRefreshTorUnlockIPsIfRequired();
 
         /////////////////Check Updates///////////////////////////////////////////////
         if (isActive() && view.getFragmentActivity() instanceof MainActivity) {
@@ -530,39 +517,12 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
         }
     }
 
-    private void startRefreshTorUnlockIPs() {
+    private void startRefreshTorUnlockIPsIfRequired() {
         if (!isActive()) {
             return;
         }
 
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP || refreshPeriodHours == 0) {
-            TorRefreshIPsWork torRefreshIPsWork = new TorRefreshIPsWork(context, null);
-            torRefreshIPsWork.refreshIPs();
-        } else {
-            ComponentName jobService = new ComponentName(context, GetIPsJobService.class);
-            JobInfo.Builder getIPsJobBuilder;
-            getIPsJobBuilder = new JobInfo.Builder(mJobId, jobService);
-            getIPsJobBuilder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
-            getIPsJobBuilder.setPeriodic((long) refreshPeriodHours * 60 * 60 * 1000);
-
-            JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
-
-            if (jobScheduler != null) {
-                jobScheduler.schedule(getIPsJobBuilder.build());
-            }
-        }
-    }
-
-    private void stopRefreshTorUnlockIPs() {
-
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP || refreshPeriodHours == 0) {
-            return;
-        }
-
-        JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
-        if (jobScheduler != null) {
-            jobScheduler.cancel(mJobId);
-        }
+        startRefreshTorUnlockIPs(context);
     }
 
     @Override
@@ -678,7 +638,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
             displayLog();
         } else if (modulesStatus.getTorState() == RUNNING) {
 
-            stopRefreshTorUnlockIPs();
+            stopRefreshTorUnlockIPs(context);
 
             setTorStopping();
             stopTor();

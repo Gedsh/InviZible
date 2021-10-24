@@ -59,7 +59,10 @@ import static pan.alexander.tordnscrypt.utils.Constants.DNS_OVER_TLS_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNG_41;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_42;
 import static pan.alexander.tordnscrypt.utils.Constants.HTTP_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OWN_BRIDGES_OBFS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -87,7 +90,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
         PreferenceRepository preferences = preferenceRepository.get();
-        runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+        runModulesWithRoot = shPref.getBoolean(RUN_MODULES_WITH_ROOT, false);
         routeAllThroughTor = shPref.getBoolean("pref_fast_all_through_tor", true);
         lan = shPref.getBoolean("Allow LAN", false);
         blockHttp = shPref.getBoolean("pref_fast_block_http", false);
@@ -254,8 +257,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         boolean torReady = modulesStatus.isTorReady();
         boolean useDefaultBridges = preferences.getBoolPreference("useDefaultBridges");
         boolean useOwnBridges = preferences.getBoolPreference("useOwnBridges");
-        boolean bridgesSnowflakeDefault = preferences.getStringPreference("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
-        boolean bridgesSnowflakeOwn = preferences.getStringPreference("ownBridgesObfs").equals(snowFlakeBridgesOwn);
+        boolean bridgesSnowflakeDefault = preferences.getStringPreference(DEFAULT_BRIDGES_OBFS).equals(snowFlakeBridgesDefault);
+        boolean bridgesSnowflakeOwn = preferences.getStringPreference(OWN_BRIDGES_OBFS).equals(snowFlakeBridgesOwn);
 
         String torSystemDNSAllowedNat = "";
         String torSystemDNSAllowedFilter = "";
@@ -617,7 +620,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
     public List<String> fastUpdate() {
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+        runModulesWithRoot = shPref.getBoolean(RUN_MODULES_WITH_ROOT, false);
         String appUID = String.valueOf(Process.myUid());
         if (runModulesWithRoot) {
             appUID = "0";
@@ -661,7 +664,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         }
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+        runModulesWithRoot = shPref.getBoolean(RUN_MODULES_WITH_ROOT, false);
         String appUID = String.valueOf(Process.myUid());
         if (runModulesWithRoot) {
             appUID = "0";
@@ -714,7 +717,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         String iptables = PathVars.getInstance(context).getIptablesPath();
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+        boolean runModulesWithRoot = shPref.getBoolean(RUN_MODULES_WITH_ROOT, false);
         String appUID = String.valueOf(Process.myUid());
         if (runModulesWithRoot) {
             appUID = "0";

@@ -44,7 +44,7 @@ import java.util.concurrent.FutureTask;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.settings.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.SelectBridgesTransport;
 import pan.alexander.tordnscrypt.dialogs.ShowBridgesCodeImage;
 import pan.alexander.tordnscrypt.dialogs.ShowBridgesDialog;

@@ -19,9 +19,6 @@ package pan.alexander.tordnscrypt.settings;
 */
 
 import android.app.Activity;
-import android.app.job.JobInfo;
-import android.app.job.JobScheduler;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -56,10 +53,12 @@ import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.language.Language;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
-import pan.alexander.tordnscrypt.utils.web.GetIPsJobService;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
+import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.startRefreshTorUnlockIPs;
+import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.stopRefreshTorUnlockIPs;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SITES_IPS_REFRESH_INTERVAL;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -71,8 +70,6 @@ import javax.inject.Inject;
 public class PreferencesFastFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
 
     private Handler handler;
-    public static final int mJobId = 1;
-    private int refreshPeriodHours = 12;
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
 
@@ -345,26 +342,10 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
         switch (preference.getKey()) {
             case "swAutostartTor":
-                if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP || refreshPeriodHours == 0) {
-                    return true;
-                }
                 if (Boolean.parseBoolean(newValue.toString())) {
-
-                    ComponentName jobService = new ComponentName(context, GetIPsJobService.class);
-                    JobInfo.Builder getIPsJobBuilder = new JobInfo.Builder(mJobId, jobService);
-                    getIPsJobBuilder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
-                    getIPsJobBuilder.setPeriodic((long) refreshPeriodHours * 60 * 60 * 1000);
-
-                    JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
-
-                    if (jobScheduler != null) {
-                        jobScheduler.schedule(getIPsJobBuilder.build());
-                    }
+                    startRefreshTorUnlockIPs(context);
                 } else if (!ModulesAux.isTorSavedStateRunning()) {
-                    JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
-                    if (jobScheduler != null) {
-                        jobScheduler.cancel(mJobId);
-                    }
+                    stopRefreshTorUnlockIPs(context);
                 }
                 return true;
             case "pref_fast_all_through_tor":
@@ -419,7 +400,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                     handler.post(this::activityCurrentRecreate);
                     return true;
                 }
-            case "pref_fast_site_refresh_interval":
+            case SITES_IPS_REFRESH_INTERVAL:
             case "pref_fast_autostart_delay":
                 return newValue.toString().matches("\\d+");
         }
@@ -443,20 +424,15 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
             pref_fast_block_http.setOnPreferenceChangeListener(this);
         }
 
-        Preference pref_fast_site_refresh_interval = findPreference("pref_fast_site_refresh_interval");
+        Preference pref_fast_site_refresh_interval = findPreference(SITES_IPS_REFRESH_INTERVAL);
         if (pref_fast_site_refresh_interval != null) {
             pref_fast_site_refresh_interval.setOnPreferenceChangeListener(this);
-        }
-
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        String refreshPeriod = shPref.getString("pref_fast_site_refresh_interval", "12");
-        if (refreshPeriod != null) {
-            refreshPeriodHours = Integer.parseInt(refreshPeriod);
         }
 
         Preference prefTorSiteUnlock = findPreference("prefTorSiteUnlock");
         Preference prefTorAppUnlock = findPreference("prefTorAppUnlock");
 
+        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
         if (shPref.getBoolean("pref_fast_all_through_tor", true)) {
             if (prefTorSiteUnlock != null && prefTorAppUnlock != null) {
                 prefTorSiteUnlock.setEnabled(false);
@@ -482,7 +458,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         preferencesList.add(findPreference("prefTorSiteExclude"));
         preferencesList.add(findPreference("prefTorAppExclude"));
         preferencesList.add(findPreference("Allow LAN"));
-        preferencesList.add(findPreference("pref_fast_site_refresh_interval"));
+        preferencesList.add(findPreference(SITES_IPS_REFRESH_INTERVAL));
 
         for (Preference preference : preferencesList) {
             if (preference != null && torSettingsCategory != null) {
@@ -534,7 +510,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
         if (prefFastAutoUpdate != null) {
             prefFastAutoUpdate.setSummary(R.string.only_for_pro);
-            ((SwitchPreference)prefFastAutoUpdate).setChecked(false);
+            ((SwitchPreference) prefFastAutoUpdate).setChecked(false);
             prefFastAutoUpdate.setEnabled(false);
         }
 

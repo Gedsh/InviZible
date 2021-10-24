@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt;
+package pan.alexander.tordnscrypt.about;
 /*
     This file is part of InviZible Pro.
 
@@ -34,6 +34,10 @@ import java.text.DateFormat;
 import java.util.Date;
 
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+
+import pan.alexander.tordnscrypt.BuildConfig;
+import pan.alexander.tordnscrypt.LangAppCompatActivity;
+import pan.alexander.tordnscrypt.R;
 
 public class AboutActivity extends LangAppCompatActivity implements View.OnClickListener {
 

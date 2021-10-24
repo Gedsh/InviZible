@@ -64,6 +64,7 @@ import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.delet
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.writeToTextFile;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class FileManager {
@@ -974,7 +975,7 @@ public class FileManager {
 
     public void restoreAccess(Context context, String filePath) {
         if (context != null) {
-            boolean rootIsAvailable = preferenceRepository.get().getBoolPreference("rootIsAvailable");
+            boolean rootIsAvailable = preferenceRepository.get().getBoolPreference(ROOT_IS_AVAILABLE);
 
             if (!rootIsAvailable) {
                 return;
