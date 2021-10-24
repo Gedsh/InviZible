@@ -612,3 +612,6 @@
 * Updated DNSCrypt to version 2.1.1.
 * Added tiles to Android Quick Settings for starting/stopping modules.
 * Preparing the app for Android 12.
+
+**InviZible Pro beta 1.3.9**
+* Fixed crash when opening some settings.
