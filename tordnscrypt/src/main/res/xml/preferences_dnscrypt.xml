@@ -138,7 +138,7 @@
             android:summary="@string/pref_dnscrypt_blacklist_summ">
             <intent
                 android:action="blacklist_Pref"
-                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetClass="pan.alexander.tordnscrypt.settings.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
         <Preference
@@ -159,7 +159,7 @@
             android:summary="@string/pref_dnscrypt_whitelist_summ">
             <intent
                 android:action="whitelist_Pref"
-                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetClass="pan.alexander.tordnscrypt.settings.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
         <Preference
@@ -180,7 +180,7 @@
             android:summary="@string/pref_dnscrypt_ipblacklist_summ">
             <intent
                 android:action="ipblacklist_Pref"
-                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetClass="pan.alexander.tordnscrypt.settings.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
         <Preference
@@ -201,7 +201,7 @@
             android:summary="@string/pref_dnscrypt_forwarding_rules_summ">
             <intent
                 android:action="forwarding_rules_Pref"
-                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetClass="pan.alexander.tordnscrypt.settings.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
         <Preference
@@ -222,7 +222,7 @@
             android:summary="@string/pref_dnscrypt_cloaking_rules_summ">
             <intent
                 android:action="cloaking_rules_Pref"
-                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetClass="pan.alexander.tordnscrypt.settings.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
         <Preference
@@ -258,7 +258,7 @@
             android:dependency="Enable Query logging">
             <intent
                 android:action="open_qery_log"
-                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetClass="pan.alexander.tordnscrypt.settings.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
     </PreferenceCategory>
@@ -276,7 +276,7 @@
             android:dependency="Enable Suspicious logging">
             <intent
                 android:action="open_nx_log"
-                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetClass="pan.alexander.tordnscrypt.settings.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
     </PreferenceCategory>
