@@ -81,6 +81,7 @@ import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.slowdownLo
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.speedupLoop;
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.startArpScanner;
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.stopArpScanner;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -845,7 +846,7 @@ public class ModulesService extends Service {
         }
     }
 
-    private void slowdownTimer() {
+    void slowdownTimer() {
         if (timerPeriod != TIMER_LOW_SPEED && checkModulesThreadsTimer != null
                 && !checkModulesThreadsTimer.isShutdown() && checkModulesStateTask != null) {
 
@@ -878,7 +879,7 @@ public class ModulesService extends Service {
     private void stopVPNServiceIfRunning() {
         OperationMode operationMode = modulesStatus.getMode();
         SharedPreferences prefs = android.preference.PreferenceManager.getDefaultSharedPreferences(this);
-        if (((operationMode == VPN_MODE) || modulesStatus.isFixTTL()) && prefs.getBoolean("VPNServiceEnabled", false)) {
+        if (((operationMode == VPN_MODE) || modulesStatus.isFixTTL()) && prefs.getBoolean(VPN_SERVICE_ENABLED, false)) {
             ServiceVPNHelper.stop("ModulesService is destroyed", this);
         }
     }

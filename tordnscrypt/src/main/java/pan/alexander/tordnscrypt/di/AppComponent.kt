@@ -18,10 +18,11 @@ package pan.alexander.tordnscrypt.di
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.os.Handler
 import dagger.Component
 import pan.alexander.tordnscrypt.BootCompleteReceiver
 import pan.alexander.tordnscrypt.MainActivity
-import pan.alexander.tordnscrypt.SettingsActivity
+import pan.alexander.tordnscrypt.settings.SettingsActivity
 import pan.alexander.tordnscrypt.TopFragment
 import pan.alexander.tordnscrypt.dialogs.RequestIgnoreBatteryOptimizationDialog
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
@@ -35,16 +36,22 @@ import pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges
 import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag
 import pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment
+import pan.alexander.tordnscrypt.tiles.DNSCryptTileService
+import pan.alexander.tordnscrypt.tiles.ITPDTileService
+import pan.alexander.tordnscrypt.tiles.TorTileService
 import pan.alexander.tordnscrypt.update.UpdateService
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPN
 import javax.inject.Singleton
 
 @Singleton
-@Component(modules = [SharedPreferencesModule::class, RepositoryModule::class,
-    DataSourcesModule::class, HelpersModule::class, CoroutinesModule::class,
-    HandlerModule::class])
+@Component(
+    modules = [SharedPreferencesModule::class, RepositoryModule::class,
+        DataSourcesModule::class, HelpersModule::class, CoroutinesModule::class,
+        HandlerModule::class, ContextModule::class]
+)
 interface AppComponent {
     fun getPreferenceRepository(): dagger.Lazy<PreferenceRepository>
+    fun getHandler(): dagger.Lazy<Handler>
 
     fun inject(activity: MainActivity)
     fun inject(activity: SettingsActivity)
@@ -63,4 +70,7 @@ interface AppComponent {
     fun inject(service: UpdateService)
     fun inject(receiver: BootCompleteReceiver)
     fun inject(dialogFragment: RequestIgnoreBatteryOptimizationDialog)
+    fun inject(service: TorTileService)
+    fun inject(service: DNSCryptTileService)
+    fun inject(service: ITPDTileService)
 }

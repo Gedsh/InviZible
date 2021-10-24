@@ -60,6 +60,51 @@
         tools:targetApi="q">
 
         <service
+            android:name=".tiles.TorTileService"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@drawable/ic_tor_tile"
+            android:label="Tor"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
+        </service>
+
+        <service
+            android:name=".tiles.DNSCryptTileService"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@drawable/ic_dns_tile"
+            android:label="DNSCrypt"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
+        </service>
+
+        <service
+            android:name=".tiles.ITPDTileService"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@drawable/ic_i2p_tile"
+            android:label="Purple I2P"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
+        </service>
+
+        <service
             android:name=".utils.appexit.AppExitDetectService"
             android:enabled="true"
             android:exported="false"
@@ -135,11 +180,11 @@
             android:theme="@style/AppTheme" />
 
         <activity
-            android:name=".SettingsActivity"
+            android:name=".settings.SettingsActivity"
             android:label="@string/empty_string"
             android:theme="@style/AppTheme" />
 
-        <activity android:name=".AboutActivity" />
+        <activity android:name=".about.AboutActivity" />
 
         <service
             android:name=".utils.web.GetIPsJobService"

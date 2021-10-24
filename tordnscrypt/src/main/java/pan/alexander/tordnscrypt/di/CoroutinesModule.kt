@@ -31,8 +31,17 @@ class CoroutinesModule {
     @Provides
     @Named(SUPERVISOR_JOB_MAIN_DISPATCHER_SCOPE)
     fun provideSupervisorMainDispatcherCoroutineScope(): CoroutineScope {
-        return CoroutineScope(SupervisorJob() + Dispatchers.Main)
+        return MainScope()
     }
+
+    @Provides
+    @Named(SUPERVISOR_JOB_IO_DISPATCHER_SCOPE)
+    fun provideSupervisorIoDispatcherCoroutineScope(): CoroutineScope {
+        return CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    }
+
+    @Provides
+    fun provideDispatcherMain(): MainCoroutineDispatcher = Dispatchers.Main
 
     @Provides
     fun provideCoroutineExceptionHandler(): CoroutineExceptionHandler {
@@ -46,5 +55,6 @@ class CoroutinesModule {
 
     companion object {
         const val SUPERVISOR_JOB_MAIN_DISPATCHER_SCOPE = "SUPERVISOR_JOB_MAIN_DISPATCHER_SCOPE"
+        const val SUPERVISOR_JOB_IO_DISPATCHER_SCOPE = "SUPERVISOR_JOB_IO_DISPATCHER_SCOPE"
     }
 }

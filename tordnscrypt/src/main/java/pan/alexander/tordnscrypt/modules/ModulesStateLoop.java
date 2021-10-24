@@ -24,7 +24,6 @@ import android.content.SharedPreferences;
 import android.net.VpnService;
 import android.os.Build;
 import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -52,6 +51,13 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_READY_PREF;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ITPD_READY_PREF;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SAVED_DNSCRYPT_STATE_PREF;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SAVED_ITPD_STATE_PREF;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SAVED_TOR_STATE_PREF;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_READY_PREF;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
@@ -64,13 +70,6 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 public class ModulesStateLoop implements Runnable,
         OnDNSCryptLogUpdatedListener, OnTorLogUpdatedListener, OnITPDHtmlUpdatedListener {
-    public static final String DNSCRYPT_READY_PREF = "DNSCrypt Ready";
-    public static final String TOR_READY_PREF = "Tor Ready";
-    public static final String ITPD_READY_PREF = "ITPD Ready";
-
-    public static final String SAVED_DNSCRYPT_STATE_PREF = "savedDNSCryptState";
-    public static final String SAVED_TOR_STATE_PREF = "savedTorState";
-    public static final String SAVED_ITPD_STATE_PREF = "savedITPDState";
 
     //Depends on timer, currently 10 sec
     private static final int STOP_COUNTER_DELAY = 10;
@@ -96,7 +95,7 @@ public class ModulesStateLoop implements Runnable,
 
     private final SharedPreferences sharedPreferences;
 
-    private final Handler handler;
+    private final Lazy<Handler> handler;
 
     private int savedIptablesCommandsHash = 0;
 
@@ -119,7 +118,7 @@ public class ModulesStateLoop implements Runnable,
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(modulesService);
 
-        handler = new Handler(Looper.getMainLooper());
+        handler = App.instance.daggerComponent.getHandler();
 
         LogReaderInteractors logReaderInteractors = LogReaderInteractors.Companion.getInteractor();
         dnsCryptInteractor = logReaderInteractors;
@@ -181,9 +180,12 @@ public class ModulesStateLoop implements Runnable,
                 modulesStatus.setContextUIDUpdateRequested(false);
                 safeStopModulesService();
             }
+
+            slowDownModulesStateTimerIfRequired();
+
         } catch (Exception e) {
             if (handler != null) {
-                handler.post(() -> Toast.makeText(modulesService, R.string.wrong, Toast.LENGTH_SHORT).show());
+                handler.get().post(() -> Toast.makeText(modulesService, R.string.wrong, Toast.LENGTH_SHORT).show());
             }
             Log.e(LOG_TAG, "ModulesStateLoop exception " + e.getMessage() + " " + e.getCause());
         }
@@ -342,7 +344,7 @@ public class ModulesStateLoop implements Runnable,
                 modulesStatus.setIptablesRulesUpdateRequested(false);
             }
 
-            boolean vpnServiceEnabled = sharedPreferences.getBoolean("VPNServiceEnabled", false);
+            boolean vpnServiceEnabled = sharedPreferences.getBoolean(VPN_SERVICE_ENABLED, false);
 
             if (iptablesRules != null && rootIsAvailable && operationMode == ROOT_MODE) {
                 List<String> commands = iptablesRules.configureIptables(dnsCryptState, torState, itpdState);
@@ -390,7 +392,7 @@ public class ModulesStateLoop implements Runnable,
             //Avoid too frequent iptables update
             if (handler != null) {
                 iptablesUpdateTemporaryBlocked = true;
-                handler.postDelayed(() -> {
+                handler.get().postDelayed(() -> {
                     iptablesUpdateTemporaryBlocked = false;
                     ModulesAux.makeModulesStateExtraLoop(modulesService);
                 }, 8000);
@@ -468,11 +470,11 @@ public class ModulesStateLoop implements Runnable,
         final Intent prepareIntent = VpnService.prepare(modulesService);
 
         if (handler != null && prepareIntent == null) {
-            handler.postDelayed(() -> {
+            handler.get().postDelayed(() -> {
                 if (modulesService != null && modulesStatus != null && sharedPreferences != null
-                        && !sharedPreferences.getBoolean("VPNServiceEnabled", false)
+                        && !sharedPreferences.getBoolean(VPN_SERVICE_ENABLED, false)
                         && (modulesStatus.getDnsCryptState() == RUNNING || modulesStatus.getTorState() == RUNNING)) {
-                    sharedPreferences.edit().putBoolean("VPNServiceEnabled", true).apply();
+                    sharedPreferences.edit().putBoolean(VPN_SERVICE_ENABLED, true).apply();
                     ServiceVPNHelper.start("ModulesStateLoop start VPN service", modulesService);
                 }
             }, 10000);
@@ -480,11 +482,14 @@ public class ModulesStateLoop implements Runnable,
     }
 
     private void safeStopModulesService() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            modulesService.stopForeground(true);
-        }
+        handler.get().post(() -> {
 
-        modulesService.stopSelf();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                modulesService.stopForeground(true);
+            }
+
+            modulesService.stopSelf();
+        });
     }
 
     void setDnsCryptThread(Thread dnsCryptThread) {
@@ -509,7 +514,7 @@ public class ModulesStateLoop implements Runnable,
         }
 
         if (handler != null) {
-            handler.removeCallbacksAndMessages(null);
+            handler.get().removeCallbacksAndMessages(null);
         }
     }
 
@@ -603,5 +608,16 @@ public class ModulesStateLoop implements Runnable,
     private boolean isFixTTL() {
         return modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
                 && !modulesStatus.isUseModulesWithRoot();
+    }
+
+    private void slowDownModulesStateTimerIfRequired() {
+        if (!modulesStatus.isUseModulesWithRoot()
+                && (modulesStatus.getDnsCryptState() == RUNNING && modulesStatus.isDnsCryptReady() || modulesStatus.getDnsCryptState() == STOPPED)
+                && (modulesStatus.getTorState() == RUNNING && modulesStatus.isTorReady() || modulesStatus.getTorState() == STOPPED)
+                && (modulesStatus.getItpdState() == RUNNING && modulesStatus.isItpdReady() || modulesStatus.getItpdState() == STOPPED)
+                && !(modulesStatus.getDnsCryptState() == STOPPED && modulesStatus.getTorState() == STOPPED && modulesStatus.getItpdState() == STOPPED)
+                && !App.instance.isAppForeground()) {
+            modulesService.slowdownTimer();
+        }
     }
 }
