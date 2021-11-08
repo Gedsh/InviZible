@@ -36,9 +36,11 @@ import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
-public class PathVars {
-    private static volatile PathVars pathVars;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
+@Singleton
+public class PathVars {
     private final SharedPreferences preferences;
 
     private String appDataDir;
@@ -50,7 +52,8 @@ public class PathVars {
     private final boolean bbOK;
 
     @SuppressLint("SdCardPath")
-    private PathVars(Context context) {
+    @Inject
+    PathVars(Context context) {
 
         preferences = PreferenceManager.getDefaultSharedPreferences(context);
 
@@ -62,26 +65,13 @@ public class PathVars {
 
         String nativeLibPath = context.getApplicationInfo().nativeLibraryDir;
 
-        bbOK = App.instance.daggerComponent.getPreferenceRepository().get().getBoolPreference("bbOK");
+        bbOK = App.getInstance().getDaggerComponent().getPreferenceRepository().get().getBoolPreference("bbOK");
 
         dnscryptPath = nativeLibPath + "/libdnscrypt-proxy.so";
         torPath = nativeLibPath + "/libtor.so";
         itpdPath = nativeLibPath + "/libi2pd.so";
         obfsPath = nativeLibPath + "/libobfs4proxy.so";
         snowflakePath = nativeLibPath + "/libsnowflake.so";
-    }
-
-    public static PathVars getInstance(Context context) {
-
-
-        if (pathVars == null) {
-            synchronized (PathVars.class) {
-                if (pathVars == null) {
-                    pathVars = new PathVars(context);
-                }
-            }
-        }
-        return pathVars;
     }
 
     public String getDefaultBackupPath() {
@@ -165,8 +155,7 @@ public class PathVars {
         return path;
     }
 
-    public static boolean isModulesInstalled() {
-        PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
+    public static boolean isModulesInstalled(PreferenceRepository preferences) {
         return preferences.getBoolPreference("DNSCrypt Installed")
                 && preferences.getBoolPreference("Tor Installed")
                 && preferences.getBoolPreference("I2PD Installed");

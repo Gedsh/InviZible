@@ -1,5 +1,3 @@
-package pan.alexander.tordnscrypt.settings.tor_ips;
-
 /*
     This file is part of InviZible Pro.
 
@@ -17,20 +15,26 @@ package pan.alexander.tordnscrypt.settings.tor_ips;
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
-*/
+ */
 
-class HostIP {
-    boolean active;
-    boolean inputHost;
-    boolean inputIP;
-    String host;
-    String IP;
+package pan.alexander.tordnscrypt.di.logreader
 
-    HostIP(String host, String IP, boolean inputHost, boolean inputIP, boolean active) {
-        this.host = host;
-        this.IP = IP;
-        this.inputHost = inputHost;
-        this.inputIP = inputIP;
-        this.active = active;
-    }
+import dagger.Binds
+import dagger.Module
+import pan.alexander.tordnscrypt.data.connection_records.ConnectionRecordsRepositoryImpl
+import pan.alexander.tordnscrypt.data.log_reader.ModulesLogRepositoryImpl
+import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsRepository
+import pan.alexander.tordnscrypt.domain.log_reader.ModulesLogRepository
+
+@Module
+abstract class LogReaderRepositoryModule {
+    @Binds
+    abstract fun provideModulesLogRepository(
+        repository: ModulesLogRepositoryImpl
+    ): ModulesLogRepository
+
+    @Binds
+    abstract fun provideConnectionRecordsRepository(
+        repository: ConnectionRecordsRepositoryImpl
+    ): ConnectionRecordsRepository
 }

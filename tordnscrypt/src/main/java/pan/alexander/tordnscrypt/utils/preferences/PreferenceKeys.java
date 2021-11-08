@@ -23,6 +23,11 @@ public interface PreferenceKeys {
     String DEFAULT_BRIDGES_OBFS = "defaultBridgesObfs";
     String OWN_BRIDGES_OBFS = "ownBridgesObfs";
 
+    String IPS_TO_UNLOCK = "ipsToUnlock";
+    String IPS_FOR_CLEARNET = "ipsForClearNet";
+    String IPS_TO_UNLOCK_TETHER = "ipsToUnlockTether";
+    String IPS_FOR_CLEARNET_TETHER = "ipsForClearNetTether";
+
     //VPN
     String VPN_SERVICE_ENABLED = "VPNServiceEnabled";
 

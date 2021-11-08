@@ -77,6 +77,7 @@ public class BootCompleteManager {
     private final Lazy<PreferenceRepository> preferenceRepository;
     private final Lazy<SharedPreferences> defaultSharedPreferences;
     private final Lazy<Handler> handler;
+    private final Lazy<PathVars> pathVars;
     private Context context;
     private String appDataDir;
 
@@ -85,19 +86,20 @@ public class BootCompleteManager {
             @Named(DEFAULT_PREFERENCES_NAME)
             Lazy<SharedPreferences> defaultSharedPreferences,
             Lazy<PreferenceRepository> preferenceRepository,
-            Lazy<Handler> handler
+            Lazy<Handler> handler,
+            Lazy<PathVars> pathVars
     ) {
         this.defaultSharedPreferences = defaultSharedPreferences;
         this.preferenceRepository = preferenceRepository;
         this.handler = handler;
+        this.pathVars = pathVars;
     }
 
     public void performAction(final Context context, Intent intent) {
 
         this.context = context;
 
-        final PathVars pathVars = PathVars.getInstance(context.getApplicationContext());
-        appDataDir = pathVars.getAppDataDir();
+        appDataDir = pathVars.get().getAppDataDir();
 
         SharedPreferences defaultPreferences = defaultSharedPreferences.get();
         PreferenceRepository preferences = preferenceRepository.get();

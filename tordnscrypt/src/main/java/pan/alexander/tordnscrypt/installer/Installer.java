@@ -36,8 +36,6 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import dagger.Lazy;
-import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
@@ -67,12 +65,12 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
     private InstallerUIChanger installerUIChanger;
 
-    private final Lazy<PreferenceRepository> preferenceRepository;
+    private final PreferenceRepository preferenceRepository;
 
-    public Installer(Activity activity) {
+    public Installer(Activity activity, PathVars pathVars, PreferenceRepository preferenceRepository) {
         this.activity = activity;
 
-        pathVars = PathVars.getInstance(activity);
+        this.pathVars = pathVars;
         appDataDir = pathVars.getAppDataDir();
 
         if (activity instanceof MainActivity) {
@@ -80,7 +78,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             installerUIChanger = new InstallerUIChanger(mainActivity);
         }
 
-        preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
+        this.preferenceRepository = preferenceRepository;
     }
 
     public void installModules() {
@@ -259,13 +257,13 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         }
 
         if (installed) {
-            preferenceRepository.get().setBoolPreference("DNSCrypt Installed", true);
-            preferenceRepository.get().setBoolPreference("Tor Installed", true);
-            preferenceRepository.get().setBoolPreference("I2PD Installed", true);
+            preferenceRepository.setBoolPreference("DNSCrypt Installed", true);
+            preferenceRepository.setBoolPreference("Tor Installed", true);
+            preferenceRepository.setBoolPreference("I2PD Installed", true);
         } else {
-            preferenceRepository.get().setBoolPreference("DNSCrypt Installed", false);
-            preferenceRepository.get().setBoolPreference("Tor Installed", false);
-            preferenceRepository.get().setBoolPreference("I2PD Installed", false);
+            preferenceRepository.setBoolPreference("DNSCrypt Installed", false);
+            preferenceRepository.setBoolPreference("Tor Installed", false);
+            preferenceRepository.setBoolPreference("I2PD Installed", false);
         }
 
     }
@@ -354,7 +352,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             if (activity != null
                     && activity.getText(R.string.package_name).toString().contains(".gp")
                     && path.contains("dnscrypt-proxy.toml")
-                    && !PathVars.isModulesInstalled()) {
+                    && !PathVars.isModulesInstalled(preferenceRepository)) {
                 lines = prepareDNSCryptForGP(lines);
             }
 
@@ -414,7 +412,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         ModulesAux.saveITPDStateRunning(false);
 
         String busyboxNative = "";
-        if (preferenceRepository.get().getBoolPreference("bbOK") && pathVars.getBusyboxPath().equals("busybox ")) {
+        if (preferenceRepository.getBoolPreference("bbOK") && pathVars.getBusyboxPath().equals("busybox ")) {
             busyboxNative = "busybox ";
         }
 
@@ -511,7 +509,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             ModulesVersions.getInstance().refreshVersions(activity);
         }
 
-        preferenceRepository.get().setBoolPreference("refresh_main_activity", true);
+        preferenceRepository.setBoolPreference("refresh_main_activity", true);
     }
 
     protected void registerReceiver(Activity activity) {

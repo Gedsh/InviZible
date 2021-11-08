@@ -36,6 +36,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
 import pan.alexander.tordnscrypt.settings.PathVars;
@@ -45,10 +47,16 @@ import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteL
 
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
+import javax.inject.Inject;
+
 /**
  * A simple {@link Fragment} subclass.
  */
 public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOperationsCompleteListener {
+
+    @Inject
+    public Lazy<PathVars> pathVars;
+
     private String dnsServerName;
     private final ArrayList<DNSRelayItem> dnsRelayItems = new ArrayList<>();
     private CopyOnWriteArrayList<DNSServerRelays> routesCurrent;
@@ -72,6 +80,7 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        App.getInstance().getDaggerComponent().inject(this);
         super.onCreate(savedInstanceState);
 
         setRetainInstance(true);
@@ -92,10 +101,8 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
 
         FileManager.setOnFileOperationCompleteListener(this);
 
-        PathVars pathVars = PathVars.getInstance(activity);
-
         if (dnsRelayItems.isEmpty()) {
-            FileManager.readTextFile(activity, pathVars.getAppDataDir() + "/app_data/dnscrypt-proxy/relays.md", "relays.md");
+            FileManager.readTextFile(activity, pathVars.get().getAppDataDir() + "/app_data/dnscrypt-proxy/relays.md", "relays.md");
         }
 
         activity.setTitle(R.string.pref_dnscrypt_relays_title);

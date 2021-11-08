@@ -75,13 +75,12 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        App.getInstance().getDaggerComponent().inject(this);
         super.onCreate(savedInstanceState);
 
         setRetainInstance(true);
 
         addPreferencesFromResource(R.xml.preferences_fast);
-
-        App.instance.daggerComponent.inject(this);
     }
 
     @Override

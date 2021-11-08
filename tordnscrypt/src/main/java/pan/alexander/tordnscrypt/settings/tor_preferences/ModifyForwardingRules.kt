@@ -21,9 +21,9 @@ package pan.alexander.tordnscrypt.settings.tor_preferences
 
 import android.content.Context
 import android.util.Log
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.modules.ModulesRestarter
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import java.io.File
@@ -32,9 +32,10 @@ import java.io.PrintWriter
 class ModifyForwardingRules(private val context: Context,
                             private val lineToReplaceTo: String) {
 
-    private val forwardingRulesFile: String = PathVars.getInstance(context).dnsCryptForwardingRulesPath
-    private val localForwardingRulesFile: String = PathVars.getInstance(context).dnsCryptLocalForwardingRulesPath
-    private val cacheDir: String = PathVars.getInstance(context).appDataDir + "/cache/"
+    private val pathVars = App.instance.daggerComponent.getPathVars().get()
+    private val forwardingRulesFile: String = pathVars.dnsCryptForwardingRulesPath
+    private val localForwardingRulesFile: String = pathVars.dnsCryptLocalForwardingRulesPath
+    private val cacheDir: String = pathVars.appDataDir + "/cache/"
     private val tempFile: String = "$cacheDir/tmpForwardingRules.txt"
     private val lineToFindRegExp = Regex("^onion +127.0.0.1:\\d+$")
 

@@ -65,7 +65,7 @@ public class UpdateCheck {
     public UpdateCheck(TopFragment topFragment) {
         this.topFragment = topFragment;
         this.context = topFragment.getContext();
-        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
+        this.preferenceRepository = App.getInstance().getDaggerComponent().getPreferenceRepository();
     }
 
     /*public byte[] RSAEncrypt(final String plain) throws NoSuchAlgorithmException, NoSuchPaddingException,
@@ -252,7 +252,7 @@ public class UpdateCheck {
 
 
                 String url = domainName + "/ru/update/";
-                serverAnswerEncoded = HttpsRequest.post(context, url, HttpsRequest.hashMapToUrl(request));
+                serverAnswerEncoded = HttpsRequest.post(url, HttpsRequest.hashMapToUrl(request));
 
                 if (serverAnswerEncoded.isEmpty()) {
                     throw new IllegalStateException("requestUpdateData function fault - server answer is empty");

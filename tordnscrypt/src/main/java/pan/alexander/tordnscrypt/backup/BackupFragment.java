@@ -53,8 +53,11 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.Utils;
@@ -76,10 +79,17 @@ import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.deleteFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
 
+import javax.inject.Inject;
+
 
 public class BackupFragment extends Fragment implements View.OnClickListener,
         DialogInterface.OnClickListener,
         OnBinaryFileOperationsCompleteListener {
+
+    @Inject
+    public Lazy<PathVars> pathVarsLazy;
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
 
     final static Set<String> TAGS_TO_CONVERT = new HashSet<>(Arrays.asList(
             APPS_ALLOW_LAN_PREF,
@@ -113,6 +123,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener,
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        App.getInstance().getDaggerComponent().inject(this);
         super.onCreate(savedInstanceState);
 
         setRetainInstance(true);
@@ -141,7 +152,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener,
 
         etFilePath = view.findViewById(R.id.etPathBackup);
 
-        PathVars pathVars = PathVars.getInstance(view.getContext());
+        PathVars pathVars = pathVarsLazy.get();
         pathBackup = pathVars.getDefaultBackupPath();
         cacheDir = pathVars.getCacheDirPath(view.getContext());
 
@@ -206,13 +217,15 @@ public class BackupFragment extends Fragment implements View.OnClickListener,
 
         openPleaseWaitDialog();
 
-        resetHelper = new ResetHelper(activity, this);
+        resetHelper = new ResetHelper(activity, this, pathVarsLazy.get(), preferenceRepository.get());
         resetHelper.resetSettings();
     }
 
     private void restoreBackup(Activity activity) {
 
-        restoreHelper = new RestoreHelper(activity, appDataDir, cacheDir, pathBackup);
+        restoreHelper = new RestoreHelper(
+                activity, appDataDir, cacheDir, pathBackup, pathVarsLazy.get(), preferenceRepository
+        );
 
         ExternalStoragePermissions permissions = new ExternalStoragePermissions(activity);
         if (!permissions.isReadPermissions()) {
@@ -257,7 +270,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener,
         properties.selection_mode = DialogConfigs.SINGLE_MODE;
         properties.selection_type = DialogConfigs.DIR_SELECT;
         properties.root = new File(Environment.getExternalStorageDirectory().getPath());
-        properties.error_dir = new File(PathVars.getInstance(activity).getCacheDirPath(activity));
+        properties.error_dir = new File(pathVarsLazy.get().getCacheDirPath(activity));
         properties.offset = new File(Environment.getExternalStorageDirectory().getPath());
         properties.extensions = null;
 
@@ -390,7 +403,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener,
         } catch (Exception e) {
             closePleaseWaitDialog();
             showToast(getString(R.string.wrong));
-            Log.e(LOG_TAG, "BackupFragment onResultActivity exception " + e.getMessage() +" " + e.getCause());
+            Log.e(LOG_TAG, "BackupFragment onResultActivity exception " + e.getMessage() + " " + e.getCause());
         }
     }
 

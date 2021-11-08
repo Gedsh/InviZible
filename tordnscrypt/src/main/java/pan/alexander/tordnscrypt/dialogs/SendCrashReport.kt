@@ -20,12 +20,14 @@ package pan.alexander.tordnscrypt.dialogs
 */
 
 import android.content.Context
+import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.FileProvider
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.help.Utils
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
@@ -35,10 +37,19 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.FileWriter
 import java.io.InputStreamReader
+import javax.inject.Inject
 
 class SendCrashReport : ExtendedDialogFragment() {
 
-    private val preferenceRepository = App.instance.daggerComponent.getPreferenceRepository()
+    @Inject
+    lateinit var preferenceRepository: dagger.Lazy<PreferenceRepository>
+    @Inject
+    lateinit var pathVars: dagger.Lazy<PathVars>
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        App.instance.daggerComponent.inject(this)
+        super.onCreate(savedInstanceState)
+    }
 
     override fun assignBuilder(): AlertDialog.Builder? {
         if (activity == null || requireActivity().isFinishing) {
@@ -92,7 +103,7 @@ class SendCrashReport : ExtendedDialogFragment() {
         val cacheDir: String
         try {
             cacheDir = context.cacheDir?.canonicalPath
-                    ?: PathVars.getInstance(context).appDataDir + "/cache"
+                    ?: pathVars.get().appDataDir + "/cache"
         } catch (e: Exception) {
             Log.w(LOG_TAG, "SendCrashReport cannot get cache dir ${e.message} ${e.cause}")
             return null

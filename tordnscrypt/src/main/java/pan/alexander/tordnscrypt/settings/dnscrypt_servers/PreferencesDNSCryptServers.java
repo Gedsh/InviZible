@@ -78,6 +78,8 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Lazy<PathVars> pathVars;
 
     private RecyclerView.Adapter<DNSServersAdapter.DNSServersViewHolder> dNSServersAdapter;
     private ArrayList<String> dnsServerNames;
@@ -104,7 +106,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        App.instance.daggerComponent.inject(this);
+        App.getInstance().getDaggerComponent().inject(this);
 
         super.onCreate(savedInstanceState);
 
@@ -173,8 +175,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
         activity.setTitle(R.string.pref_fast_dns_server);
 
-        PathVars pathVars = PathVars.getInstance(activity);
-        appDataDir = pathVars.getAppDataDir();
+        appDataDir = pathVars.get().getAppDataDir();
 
         FileManager.setOnFileOperationCompleteListener(this);
 

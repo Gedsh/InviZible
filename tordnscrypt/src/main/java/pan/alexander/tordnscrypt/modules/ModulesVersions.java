@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
@@ -71,7 +72,7 @@ public class ModulesVersions {
         CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
             //openCommandShell();
 
-            PathVars pathVars = getPathVars(context);
+            PathVars pathVars = App.getInstance().getDaggerComponent().getPathVars().get();
 
             //checkModulesVersions(pathVars);
             checkModulesVersionsModern(pathVars);
@@ -90,10 +91,6 @@ public class ModulesVersions {
 
             //closeCommandShell();
         });
-    }
-
-    private PathVars getPathVars(Context context) {
-        return PathVars.getInstance(context);
     }
 
     private boolean isBinaryFileAccessible(String path) {

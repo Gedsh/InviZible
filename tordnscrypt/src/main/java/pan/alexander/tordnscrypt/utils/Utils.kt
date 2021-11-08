@@ -219,7 +219,7 @@ object Utils {
     }
 
     @JvmStatic
-    fun shortenTooLongSnowflakeLog(context: Context, preferences: PreferenceRepository) {
+    fun shortenTooLongSnowflakeLog(context: Context, preferences: PreferenceRepository, pathVars: PathVars) {
         try {
             val bridgesSnowflakeDefault =
                 preferences.getStringPreference(DEFAULT_BRIDGES_OBFS) == PreferencesTorBridges.snowFlakeBridgesDefault
@@ -229,7 +229,6 @@ object Utils {
             val showHelperMessages =
                 shPref.getBoolean(ALWAYS_SHOW_HELP_MESSAGES, false)
             if (showHelperMessages && (bridgesSnowflakeDefault || bridgesSnowflakeOwn)) {
-                val pathVars = PathVars.getInstance(context)
                 FileShortener.shortenTooTooLongFile(pathVars.appDataDir + "/logs/Snowflake.log")
             }
         } catch (e: Exception) {

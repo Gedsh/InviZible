@@ -17,8 +17,10 @@
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.domain.connection_checker
+package pan.alexander.tordnscrypt.di.logreader
 
-interface CheckInternetConnectionRepository {
-    fun checkInternetAvailable(site: String, withTor: Boolean): Boolean
-}
+import javax.inject.Scope
+
+@Scope
+@Retention(value = AnnotationRetention.RUNTIME)
+annotation class LogReaderScope

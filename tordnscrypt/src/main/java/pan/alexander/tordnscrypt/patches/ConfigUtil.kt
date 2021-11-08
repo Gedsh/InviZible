@@ -21,7 +21,7 @@ package pan.alexander.tordnscrypt.patches
 
 import android.content.Context
 import android.util.Log
-import pan.alexander.tordnscrypt.settings.PathVars
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.io.File
 import java.io.FileOutputStream
@@ -30,7 +30,7 @@ import java.io.OutputStream
 import java.util.zip.ZipInputStream
 
 class ConfigUtil(private val context: Context) {
-    private val pathVars = PathVars.getInstance(context)
+    private val pathVars = App.instance.daggerComponent.getPathVars().get()
 
     fun patchDNSCryptConfig(dnsCryptConfigPatches: List<PatchLine>) {
         readFromFile(pathVars.dnscryptConfPath).replaceLinesInFile(dnsCryptConfigPatches).writeToFile(pathVars.dnscryptConfPath)

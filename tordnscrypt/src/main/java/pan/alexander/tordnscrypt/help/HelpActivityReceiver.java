@@ -48,21 +48,26 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
+import javax.inject.Inject;
+
 public class HelpActivityReceiver extends BroadcastReceiver {
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
+
     private final Handler mHandler;
     private final String appDataDir;
     private final String cacheDir;
     private String info;
     private String pathToSaveLogs;
     private DialogFragment progressDialog;
-    private final Lazy<PreferenceRepository> preferenceRepository;
 
     public HelpActivityReceiver(Handler mHandler, String appDataDir, String cacheDir, String pathToSaveLogs) {
+        App.getInstance().getDaggerComponent().inject(this);
         this.mHandler = mHandler;
         this.appDataDir = appDataDir;
         this.cacheDir = cacheDir;
         this.pathToSaveLogs = pathToSaveLogs;
-        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     @Override

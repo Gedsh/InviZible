@@ -85,7 +85,6 @@ import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesService;
-import pan.alexander.tordnscrypt.modules.ModulesServiceActions;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDRunFragment;
@@ -124,9 +123,10 @@ public class MainActivity extends LangAppCompatActivity
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
-
     @Inject
     public Handler handler;
+    @Inject
+    public Lazy<PathVars> pathVars;
 
     public boolean childLockActive = false;
     public AccelerateDevelop accelerateDevelop;
@@ -154,7 +154,7 @@ public class MainActivity extends LangAppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        App.instance.daggerComponent.inject(this);
+        App.getInstance().getDaggerComponent().inject(this);
 
         setDayNightTheme();
 
@@ -312,7 +312,7 @@ public class MainActivity extends LangAppCompatActivity
         }
 
         Intent intent = getIntent();
-        if (intent.getBooleanExtra(ArpScannerKt.mitmAttackWarning, false)
+        if (intent.getBooleanExtra(ArpScannerKt.MITM_ATTACK_WARNING, false)
                 && (ArpScanner.INSTANCE.getArpAttackDetected() || ArpScanner.INSTANCE.getDhcpGatewayAttackDetected())) {
 
             handler.postDelayed(() -> {
@@ -965,13 +965,13 @@ public class MainActivity extends LangAppCompatActivity
         mainActivityReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if (ArpScannerKt.mitmAttackWarning.equals(intent.getAction())) {
+                if (ArpScannerKt.MITM_ATTACK_WARNING.equals(intent.getAction())) {
                     invalidateMenu();
                 }
             }
         };
 
-        IntentFilter mitmDetected = new IntentFilter(ArpScannerKt.mitmAttackWarning);
+        IntentFilter mitmDetected = new IntentFilter(ArpScannerKt.MITM_ATTACK_WARNING);
         LocalBroadcastManager.getInstance(this).registerReceiver(mainActivityReceiver, mitmDetected);
     }
 
@@ -1007,9 +1007,7 @@ public class MainActivity extends LangAppCompatActivity
                 && (modulesStatus.getDnsCryptState() == STOPPED || modulesStatus.getDnsCryptState() == FAULT || modulesStatus.getDnsCryptState() == ModuleState.UNDEFINED)
                 && (modulesStatus.getTorState() == STOPPED || modulesStatus.getTorState() == FAULT || modulesStatus.getTorState() == ModuleState.UNDEFINED)
                 && (modulesStatus.getItpdState() == STOPPED || modulesStatus.getItpdState() == FAULT || modulesStatus.getItpdState() == ModuleState.UNDEFINED)) {
-            Intent intent = new Intent(this, ModulesService.class);
-            intent.setAction(ModulesServiceActions.actionStopService);
-            startService(intent);
+            ModulesAux.stopModulesService(this);
         }
 
         clearViews();
@@ -1061,13 +1059,9 @@ public class MainActivity extends LangAppCompatActivity
 
             Toast.makeText(this, "Force Close ...", Toast.LENGTH_LONG).show();
 
-            ModulesKiller.forceCloseApp(PathVars.getInstance(this));
+            ModulesKiller.forceCloseApp(pathVars.get());
 
-            handler.postDelayed(() -> {
-                Intent intent = new Intent(MainActivity.this, ModulesService.class);
-                intent.setAction(ModulesServiceActions.actionStopService);
-                startService(intent);
-            }, 3000);
+            handler.postDelayed(() -> ModulesAux.stopModulesService(this), 3000);
 
             handler.postDelayed(() -> System.exit(0), 5000);
 

@@ -26,7 +26,6 @@ import androidx.appcompat.app.AlertDialog
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.settings.SettingsActivity
-import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor.getExecutorService
 import pan.alexander.tordnscrypt.utils.root.RootExecService
 import java.io.File
@@ -68,7 +67,7 @@ class UpdateDefaultBridgesDialog private constructor() {
 
         private fun updateDefaultBridges(activity: Activity, useDefaultBridges: Boolean): Future<*>? {
             return getExecutorService().submit {
-                val pathVars = PathVars.getInstance(activity)
+                val pathVars = App.instance.daggerComponent.getPathVars().get()
                 val outputFile = File(pathVars.appDataDir + "/app_data/tor/bridges_default.lst")
                 val installedBridgesSize = outputFile.length()
                 try {

@@ -59,10 +59,17 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 
+import javax.inject.Inject;
+
 public class ModulesStarterHelper {
 
     public final static String ASK_FORCE_CLOSE = "pan.alexander.tordnscrypt.AskForceClose";
     public final static String MODULE_NAME = "pan.alexander.tordnscrypt.ModuleName";
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public PathVars pathVars;
 
     private final Context context;
     private final Handler handler;
@@ -75,9 +82,9 @@ public class ModulesStarterHelper {
     private final String itpdPath;
 
     private final ModulesStatus modulesStatus;
-    private final Lazy<PreferenceRepository> preferenceRepository;
 
-    ModulesStarterHelper(Context context, Handler handler, PathVars pathVars) {
+    ModulesStarterHelper(Context context, Handler handler) {
+        App.getInstance().getDaggerComponent().inject(this);
         this.context = context;
         this.handler = handler;
         appDataDir = pathVars.getAppDataDir();
@@ -88,7 +95,6 @@ public class ModulesStarterHelper {
         obfsPath = pathVars.getObfsPath();
         itpdPath = pathVars.getITPDPath();
         this.modulesStatus = ModulesStatus.getInstance();
-        preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     Runnable getDNSCryptStarterRunnable() {

@@ -21,8 +21,9 @@ package pan.alexander.tordnscrypt.data.connection_records
 
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsRepository
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecord
+import javax.inject.Inject
 
-class ConnectionRecordsRepositoryImpl: ConnectionRecordsRepository {
+class ConnectionRecordsRepositoryImpl @Inject constructor(): ConnectionRecordsRepository {
     private var connectionRecordsGetter: ConnectionRecordsGetter? = null
 
     override fun getRawConnectionRecords(): List<ConnectionRecord?> {

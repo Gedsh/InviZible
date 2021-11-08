@@ -21,9 +21,9 @@ package pan.alexander.tordnscrypt.proxy
 
 import android.content.Context
 import androidx.preference.PreferenceManager
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.modules.ModulesRestarter
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager
@@ -40,7 +40,7 @@ object ProxyHelper {
         }
 
         val modulesStatus = ModulesStatus.getInstance()
-        val pathVars = PathVars.getInstance(context)
+        val pathVars = App.instance.daggerComponent.getPathVars().get()
 
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
         val dnsCryptProxified = sharedPreferences.getBoolean("Enable proxy", false)
@@ -81,13 +81,13 @@ object ProxyHelper {
         }
     }
 
-    fun checkProxyConnectivity(context: Context, proxyHost: String, proxyPort: Int): String {
+    fun checkProxyConnectivity(proxyHost: String, proxyPort: Int): String {
         val start = System.currentTimeMillis()
 
         try {
-            val dnsCryptFallbackRes = PathVars.getInstance(context).dnsCryptFallbackRes
+            val dnsCryptFallbackRes = App.instance.daggerComponent.getPathVars().get().dnsCryptFallbackRes
             val sockaddr: SocketAddress = InetSocketAddress(InetAddress.getByName(dnsCryptFallbackRes), 53)
-            val proxy: Proxy? = Proxy(Proxy.Type.SOCKS, InetSocketAddress(proxyHost, proxyPort))
+            val proxy = Proxy(Proxy.Type.SOCKS, InetSocketAddress(proxyHost, proxyPort))
 
             Socket(proxy).use {
                 it.connect(sockaddr, 500)
@@ -140,10 +140,10 @@ object ProxyHelper {
         for (i in torConf.indices) {
             var line = torConf[i]
             if (line.contains("Socks5Proxy")) {
-                when {
-                    socksProxyLineExist -> line = ""
-                    enable -> line = "Socks5Proxy $address"
-                    else -> line = "#Socks5Proxy $address"
+                line = when {
+                    socksProxyLineExist -> ""
+                    enable -> "Socks5Proxy $address"
+                    else -> "#Socks5Proxy $address"
                 }
                 socksProxyLineExist = true
             } else if (line.contains("ClientOnly")) {

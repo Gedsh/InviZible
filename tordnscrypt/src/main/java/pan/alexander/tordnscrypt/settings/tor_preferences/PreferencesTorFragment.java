@@ -73,12 +73,15 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
     public String excludeExitNodes;
     public String exitNodes;
     private boolean isChanged;
+
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Lazy<PathVars> pathVars;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        App.instance.daggerComponent.inject(this);
+        App.getInstance().getDaggerComponent().inject(this);
 
         super.onCreate(savedInstanceState);
 
@@ -184,8 +187,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
         activity.setTitle(R.string.drawer_menu_TorSettings);
 
-        PathVars pathVars = PathVars.getInstance(activity);
-        appDataDir = pathVars.getAppDataDir();
+        appDataDir = pathVars.get().getAppDataDir();
 
         isChanged = false;
 

@@ -44,6 +44,10 @@ class CoroutinesModule {
     fun provideDispatcherMain(): MainCoroutineDispatcher = Dispatchers.Main
 
     @Provides
+    @Named(DISPATCHER_IO)
+    fun provideDispatcherIo(): CoroutineDispatcher = Dispatchers.IO
+
+    @Provides
     fun provideCoroutineExceptionHandler(): CoroutineExceptionHandler {
         return CoroutineExceptionHandler { coroutine, throwable ->
             Log.e(
@@ -56,5 +60,6 @@ class CoroutinesModule {
     companion object {
         const val SUPERVISOR_JOB_MAIN_DISPATCHER_SCOPE = "SUPERVISOR_JOB_MAIN_DISPATCHER_SCOPE"
         const val SUPERVISOR_JOB_IO_DISPATCHER_SCOPE = "SUPERVISOR_JOB_IO_DISPATCHER_SCOPE"
+        const val DISPATCHER_IO = "DISPATCHER_IO"
     }
 }

@@ -45,9 +45,9 @@ public class ModulesAux {
         modulesStatus.setRootAvailable(rootIsAvailable);
         modulesStatus.setUseModulesWithRoot(runModulesWithRoot);
 
-        PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
+        PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
 
-        if (operationMode != UNDEFINED && PathVars.isModulesInstalled()) {
+        if (operationMode != UNDEFINED && PathVars.isModulesInstalled(preferences)) {
             modulesStatus.setMode(operationMode);
         } else if (rootIsAvailable) {
             modulesStatus.setMode(ROOT_MODE);
@@ -64,21 +64,21 @@ public class ModulesAux {
 
     public static boolean isDnsCryptSavedStateRunning() {
         //synchronized (DNSCRYPT_RUNNING_PREF) {
-        PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
+        PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
         return preferences.getBoolPreference(DNSCRYPT_RUNNING_PREF);
         //}
     }
 
     public static void saveDNSCryptStateRunning(boolean running) {
         //synchronized (DNSCRYPT_RUNNING_PREF) {
-        PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
+        PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
         preferences.setBoolPreference(DNSCRYPT_RUNNING_PREF, running);
         //}
     }
 
     public static boolean isTorSavedStateRunning() {
         //synchronized (TOR_RUNNING_PREF) {
-        PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
+        PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
         return preferences.getBoolPreference(TOR_RUNNING_PREF);
         //}
     }
@@ -86,21 +86,21 @@ public class ModulesAux {
 
     public static void saveTorStateRunning(boolean running) {
         //synchronized (TOR_RUNNING_PREF) {
-        PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
+        PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
         preferences.setBoolPreference(TOR_RUNNING_PREF, running);
         //}
     }
 
     public static boolean isITPDSavedStateRunning() {
         //synchronized (ITPD_RUNNING_PREF) {
-        PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
+        PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
         return preferences.getBoolPreference(ITPD_RUNNING_PREF);
         //}
     }
 
     public static void saveITPDStateRunning(boolean running) {
         //synchronized (ITPD_RUNNING_PREF) {
-        PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
+        PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
         preferences.setBoolPreference(ITPD_RUNNING_PREF, running);
         //}
     }
@@ -121,6 +121,10 @@ public class ModulesAux {
         if (itpdRunning) {
             ModulesKiller.stopITPD(context);
         }
+    }
+
+    public static void stopModulesService(Context context) {
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.actionStopService);
     }
 
     public static void requestModulesStatusUpdate(Context context) {

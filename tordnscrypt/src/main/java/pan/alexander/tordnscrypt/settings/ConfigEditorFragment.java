@@ -36,6 +36,8 @@ import androidx.fragment.app.FragmentTransaction;
 
 import java.util.List;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.DialogSaveConfigChanges;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
@@ -44,7 +46,12 @@ import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteL
 
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 
+import javax.inject.Inject;
+
 public class ConfigEditorFragment extends Fragment implements OnTextFileOperationsCompleteListener {
+
+    @Inject
+    public Lazy<PathVars> pathVars;
 
     private String filePath;
     private String fileName;
@@ -54,6 +61,7 @@ public class ConfigEditorFragment extends Fragment implements OnTextFileOperatio
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        App.getInstance().getDaggerComponent().inject(this);
         super.onCreate(savedInstanceState);
 
         if (this.getArguments() != null) {
@@ -64,8 +72,7 @@ public class ConfigEditorFragment extends Fragment implements OnTextFileOperatio
             return;
         }
 
-        PathVars pathVars = PathVars.getInstance(getActivity());
-        String appDataDir = pathVars.getAppDataDir();
+        String appDataDir = pathVars.get().getAppDataDir();
 
         switch (fileName) {
             case "dnscrypt-proxy.toml":

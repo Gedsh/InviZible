@@ -106,6 +106,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        App.getInstance().getDaggerComponent().inject(this);
         super.onCreate(savedInstanceState);
 
         Context context = getActivity();
@@ -120,8 +121,6 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
         if (looper != null) {
             handler = new Handler(looper);
         }
-
-        App.instance.daggerComponent.inject(this);
 
         ////////////////////////////////////////////////////////////////////////////////////
         ///////////////////////Reverse logic when route all through Tor!///////////////////

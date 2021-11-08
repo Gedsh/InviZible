@@ -71,6 +71,8 @@ import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
 import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.ISOLATE_DEST_ADDRESS;
 import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.ISOLATE_DEST_PORT;
+import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
@@ -79,10 +81,18 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
+import javax.inject.Inject;
+
 
 public class PreferencesCommonFragment extends PreferenceFragmentCompat
         implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener,
         OnTextFileOperationsCompleteListener {
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Lazy<PathVars> pathVars;
+
     private String torTransPort;
     private String torSocksPort;
     private String torHTTPTunnelPort;
@@ -92,8 +102,6 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     private String itpdConfPath = "";
     private String itpdTunnelsPath = "";
     private boolean commandDisableProxy;
-    private final Lazy<PreferenceRepository> preferenceRepository = App.instance.daggerComponent
-            .getPreferenceRepository();
 
     public PreferencesCommonFragment() {
     }
@@ -101,6 +109,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        App.getInstance().getDaggerComponent().inject(this);
         super.onCreate(savedInstanceState);
 
         setRetainInstance(true);
@@ -239,13 +248,12 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             return;
         }
 
-        PathVars pathVars = PathVars.getInstance(context);
-        torTransPort = pathVars.getTorTransPort();
-        torSocksPort = pathVars.getTorSOCKSPort();
-        torHTTPTunnelPort = pathVars.getTorHTTPTunnelPort();
-        torConfPath = pathVars.getTorConfPath();
-        itpdConfPath = pathVars.getItpdConfPath();
-        itpdTunnelsPath = pathVars.getItpdTunnelsPath();
+        torTransPort = pathVars.get().getTorTransPort();
+        torSocksPort = pathVars.get().getTorSOCKSPort();
+        torHTTPTunnelPort = pathVars.get().getTorHTTPTunnelPort();
+        torConfPath = pathVars.get().getTorConfPath();
+        itpdConfPath = pathVars.get().getItpdConfPath();
+        itpdTunnelsPath = pathVars.get().getItpdTunnelsPath();
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         boolean swUseProxy = sharedPreferences.getBoolean("swUseProxy", false);
@@ -255,7 +263,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         if (swUseProxy && ModulesStatus.getInstance().getMode() == VPN_MODE
                 && (proxyServer == null || proxyServer.isEmpty()
                 || proxyPort == null || proxyPort.isEmpty()
-                || setBypassProxy.isEmpty() && proxyServer.equals("127.0.0.1"))) {
+                || setBypassProxy.isEmpty() && proxyServer.equals(LOOPBACK_ADDRESS))) {
 
             Preference swUseProxyPreference = findPreference("swUseProxy");
             if (swUseProxyPreference != null) {
@@ -523,16 +531,16 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 head = line.replace("[", "").replace("]", "");
             if (head.equals("httpproxy") && line.contains("address")) {
                 if (allowITPDtether) {
-                    line = line.replace("127.0.0.1", "0.0.0.0");
+                    line = line.replace(LOOPBACK_ADDRESS, META_ADDRESS);
                 } else {
-                    line = line.replace("0.0.0.0", "127.0.0.1");
+                    line = line.replace(META_ADDRESS, LOOPBACK_ADDRESS);
                 }
                 itpdConf.set(i, line);
             } else if (head.equals("socksproxy") && line.contains("address")) {
                 if (allowITPDtether) {
-                    line = line.replace("127.0.0.1", "0.0.0.0");
+                    line = line.replace(LOOPBACK_ADDRESS, META_ADDRESS);
                 } else {
-                    line = line.replace("0.0.0.0", "127.0.0.1");
+                    line = line.replace(META_ADDRESS, LOOPBACK_ADDRESS);
                 }
                 itpdConf.set(i, line);
             }
@@ -563,9 +571,9 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             line = itpdTunnels.get(i);
             if (line.contains("address")) {
                 if (allowITPDtether) {
-                    line = line.replace("127.0.0.1", "0.0.0.0");
+                    line = line.replace(LOOPBACK_ADDRESS, META_ADDRESS);
                 } else {
-                    line = line.replace("0.0.0.0", "127.0.0.1");
+                    line = line.replace(META_ADDRESS, LOOPBACK_ADDRESS);
                 }
                 itpdTunnels.set(i, line);
             }

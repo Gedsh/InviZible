@@ -22,9 +22,11 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_settings
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.modules.ModulesRestarter
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
+import pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.wakelock.WakeLocksManager
 import pan.alexander.tordnscrypt.utils.enums.DNSCryptRulesVariant
@@ -40,20 +42,23 @@ import kotlin.collections.ArrayList
 private val blackListHostRulesRegex = Regex("^[a-zA-Z\\d-.=_*\\[\\]?]+$")
 private val blacklistIPRulesRegex = Regex("^(?:[0-9*]{1,3}\\.){1,3}[0-9*]{1,3}(?:/\\d+)*$")
 private val cloakingRulesRegex = Regex("^[a-zA-Z\\d-.=_*]+[ \\t]+[a-zA-Z\\d-.=_*]+$")
-private val forwardingRulesRegex = Regex("^[a-zA-Z\\d-._]+[ \\t]+(?:[0-9*]{1,3}\\.){3}[0-9*]{1,3}(?:, ?(?:[0-9*]{1,3}\\.){3}[0-9*]{1,3})*$")
+private val forwardingRulesRegex =
+    Regex("^[a-zA-Z\\d-._]+[ \\t]+(?:[0-9*]{1,3}\\.){3}[0-9*]{1,3}(?:, ?(?:[0-9*]{1,3}\\.){3}[0-9*]{1,3})*$")
 private val whiteListHostRulesRegex = Regex("^[a-zA-Z\\d-.=_*\\[\\]?]+$")
 private val hostFileRegex = Regex("^(?:0.0.0.0|127.0.0.1)[ \\t]+[a-zA-Z\\d-._]+$")
 private const val itpdRedirectAddress = "*i2p 10.191.0.1"
-private val excludeFromHost = listOf("localhost", "localhost.localdomain", "local", "0.0.0.0")
+private val excludeFromHost = listOf("localhost", "localhost.localdomain", "local", META_ADDRESS)
 private val reentrantLock = ReentrantLock()
 private val wakeLocksManager = WakeLocksManager.getInstance()
 
-class ImportRules(private val context: Context,
-                  private var rulesVariant: DNSCryptRulesVariant,
-                  private val localRules: Boolean,
-                  private val filePathToImport: Array<*>) : Thread() {
+class ImportRules(
+    private val context: Context,
+    private var rulesVariant: DNSCryptRulesVariant,
+    private val localRules: Boolean,
+    private val filePathToImport: Array<*>
+) : Thread() {
 
-    private val pathVars: PathVars = PathVars.getInstance(context)
+    private val pathVars: PathVars = App.instance.daggerComponent.getPathVars().get()
 
     private val blackListHostRulesPath = pathVars.dnsCryptBlackListPath
     private val blackListHostRulesLocalPath = pathVars.dnsCryptLocalBlackListPath
@@ -101,31 +106,58 @@ class ImportRules(private val context: Context,
     override fun run() {
 
         when (rulesVariant) {
-            DNSCryptRulesVariant.BLACKLIST_HOSTS -> doTheJob(blackListHostRulesPath,
-                    blackListHostRulesLocalPath, blackListHostRulesRemotePath, blackListHostRulesRegex, filePathToImport)
+            DNSCryptRulesVariant.BLACKLIST_HOSTS -> doTheJob(
+                blackListHostRulesPath,
+                blackListHostRulesLocalPath,
+                blackListHostRulesRemotePath,
+                blackListHostRulesRegex,
+                filePathToImport
+            )
 
-            DNSCryptRulesVariant.WHITELIST_HOSTS -> doTheJob(whiteListHostRulesPath,
-                    whiteListHostRulesLocalPath, whiteListHostRulesRemotePath, whiteListHostRulesRegex, filePathToImport)
+            DNSCryptRulesVariant.WHITELIST_HOSTS -> doTheJob(
+                whiteListHostRulesPath,
+                whiteListHostRulesLocalPath,
+                whiteListHostRulesRemotePath,
+                whiteListHostRulesRegex,
+                filePathToImport
+            )
 
-            DNSCryptRulesVariant.BLACKLIST_IPS -> doTheJob(blackListIPRulesPath,
-                    blackListIPRulesLocalPath, blackListIPRulesRemotePath, blacklistIPRulesRegex, filePathToImport)
+            DNSCryptRulesVariant.BLACKLIST_IPS -> doTheJob(
+                blackListIPRulesPath,
+                blackListIPRulesLocalPath,
+                blackListIPRulesRemotePath,
+                blacklistIPRulesRegex,
+                filePathToImport
+            )
 
-            DNSCryptRulesVariant.CLOAKING -> doTheJob(cloakingRulesPath,
-                    cloakingRulesLocalPath, cloakingRulesRemotePath, cloakingRulesRegex, filePathToImport)
+            DNSCryptRulesVariant.CLOAKING -> doTheJob(
+                cloakingRulesPath,
+                cloakingRulesLocalPath,
+                cloakingRulesRemotePath,
+                cloakingRulesRegex,
+                filePathToImport
+            )
 
-            DNSCryptRulesVariant.FORWARDING -> doTheJob(forwardingRulesPath,
-                    forwardingRulesLocalPath, forwardingRulesRemotePath, forwardingRulesRegex, filePathToImport)
+            DNSCryptRulesVariant.FORWARDING -> doTheJob(
+                forwardingRulesPath,
+                forwardingRulesLocalPath,
+                forwardingRulesRemotePath,
+                forwardingRulesRegex,
+                filePathToImport
+            )
 
             DNSCryptRulesVariant.UNDEFINED -> return
         }
 
     }
 
-    private fun doTheJob(rulesFilePath: String,
-                         localRulesFilePath: String,
-                         remoteRulesFilePath: String,
-                         rulesRegex: Regex,
-                         filesToImport: Array<*>) {
+    private fun doTheJob(
+        rulesFilePath: String,
+        localRulesFilePath: String,
+        remoteRulesFilePath: String,
+        rulesRegex: Regex,
+        filesToImport: Array<*>
+    ) {
 
 
         reentrantLock.lock()
@@ -141,7 +173,13 @@ class ImportRules(private val context: Context,
             if (filesToImport.isNotEmpty()) {
                 File(rulesFilePath).printWriter().use {
                     addDefaultLinesIfRequired(it)
-                    mixFiles(it, localRulesFilePath, remoteRulesFilePath, rulesRegex, filesToImport.toMutableList())
+                    mixFiles(
+                        it,
+                        localRulesFilePath,
+                        remoteRulesFilePath,
+                        rulesRegex,
+                        filesToImport.toMutableList()
+                    )
                 }
             }
 
@@ -167,11 +205,13 @@ class ImportRules(private val context: Context,
 
     }
 
-    private fun mixFiles(printWriter: PrintWriter,
-                         localRulesFilePath: String,
-                         remoteRulesFilePath: String,
-                         rulesRegex: Regex,
-                         filesToImport: MutableList<Any?>) {
+    private fun mixFiles(
+        printWriter: PrintWriter,
+        localRulesFilePath: String,
+        remoteRulesFilePath: String,
+        rulesRegex: Regex,
+        filesToImport: MutableList<Any?>
+    ) {
 
         val fileToAdd: String = if (localRules) {
             remoteRulesFilePath
@@ -202,8 +242,10 @@ class ImportRules(private val context: Context,
         }
     }
 
-    private fun mixFilesWithPass(index: Int, file: String,
-                                 rulesRegex: Regex, hashIsRequired: Boolean, printWriter: PrintWriter) {
+    private fun mixFilesWithPass(
+        index: Int, file: String,
+        rulesRegex: Regex, hashIsRequired: Boolean, printWriter: PrintWriter
+    ) {
 
         if (file.isNotEmpty()) {
             val inputFile = File(file)
@@ -217,8 +259,15 @@ class ImportRules(private val context: Context,
                     val hashesNew = ArrayList<Int>()
 
                     if (blackListFileIsHost || isInputFileFormatCorrect(inputFile, rulesRegex)) {
-                        inputFile.bufferedReader().use {reader ->
-                            mixFilesCommonPart(printWriter, reader, rulesRegex, hashIsRequired, index, hashesNew)
+                        inputFile.bufferedReader().use { reader ->
+                            mixFilesCommonPart(
+                                printWriter,
+                                reader,
+                                rulesRegex,
+                                hashIsRequired,
+                                index,
+                                hashesNew
+                            )
                         }
                     }
                 } catch (e: Exception) {
@@ -228,8 +277,10 @@ class ImportRules(private val context: Context,
         }
     }
 
-    private fun mixFilesWithUri(index: Int, uri: Uri,
-                                 rulesRegex: Regex, hashIsRequired: Boolean, printWriter: PrintWriter) {
+    private fun mixFilesWithUri(
+        index: Int, uri: Uri,
+        rulesRegex: Regex, hashIsRequired: Boolean, printWriter: PrintWriter
+    ) {
         try {
             if (DNSCryptRulesVariant.BLACKLIST_HOSTS == rulesVariant) {
                 blackListFileIsHost = isInputFileFormatCorrect(uri, hostFileRegex)
@@ -240,7 +291,14 @@ class ImportRules(private val context: Context,
             if (blackListFileIsHost || isInputFileFormatCorrect(uri, rulesRegex)) {
                 contentResolver.openInputStream(uri)?.use { inputStream ->
                     BufferedReader(InputStreamReader(inputStream)).use { reader ->
-                        mixFilesCommonPart(printWriter, reader, rulesRegex, hashIsRequired, index, hashesNew)
+                        mixFilesCommonPart(
+                            printWriter,
+                            reader,
+                            rulesRegex,
+                            hashIsRequired,
+                            index,
+                            hashesNew
+                        )
                     }
                 }
             }
@@ -249,9 +307,11 @@ class ImportRules(private val context: Context,
         }
     }
 
-    private fun mixFilesCommonPart(printWriter: PrintWriter, reader: BufferedReader,
-                                   rulesRegex: Regex, hashIsRequired: Boolean,
-                                   index: Int, hashesNew: ArrayList<Int>) {
+    private fun mixFilesCommonPart(
+        printWriter: PrintWriter, reader: BufferedReader,
+        rulesRegex: Regex, hashIsRequired: Boolean,
+        index: Int, hashesNew: ArrayList<Int>
+    ) {
         var line = reader.readLine()?.trim()
         while (line != null && !currentThread().isInterrupted) {
             val lineReady = if (blackListFileIsHost) {
@@ -264,7 +324,11 @@ class ImportRules(private val context: Context,
                 hash = lineReady.hashCode()
             }
 
-            if (lineReady.isNotEmpty() && (!hashIsRequired || index < 1 || Arrays.binarySearch(hashes, hash) < 0)) {
+            if (lineReady.isNotEmpty() && (!hashIsRequired || index < 1 || Arrays.binarySearch(
+                    hashes,
+                    hash
+                ) < 0)
+            ) {
 
                 if (hashIsRequired) {
                     hashesNew += hash
@@ -319,7 +383,9 @@ class ImportRules(private val context: Context,
         if (DNSCryptRulesVariant.CLOAKING == rulesVariant) {
             printWriter.println(itpdRedirectAddress)
         } else if (DNSCryptRulesVariant.FORWARDING == rulesVariant) {
-            printWriter.println("onion 127.0.0.1:" + PathVars.getInstance(context).torDNSPort)
+            printWriter.println(
+                "onion 127.0.0.1:" + App.instance.daggerComponent.getPathVars().get().torDNSPort
+            )
         }
     }
 

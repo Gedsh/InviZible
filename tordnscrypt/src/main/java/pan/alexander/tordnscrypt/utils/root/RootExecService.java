@@ -109,7 +109,7 @@ public class RootExecService extends Service {
     }
 
     public static void performAction(Context context, Intent intent) {
-        final PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
+        final PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
 
         boolean rootIsAvailable = preferences.getBoolPreference(ROOT_IS_AVAILABLE);
         saveRootLogs = preferences.getBoolPreference("swRootCommandsLog");

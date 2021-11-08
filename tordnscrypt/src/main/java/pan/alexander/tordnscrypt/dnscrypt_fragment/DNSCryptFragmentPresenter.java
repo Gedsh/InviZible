@@ -45,7 +45,6 @@ import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsInte
 import pan.alexander.tordnscrypt.domain.log_reader.DNSCryptInteractorInterface;
 import pan.alexander.tordnscrypt.domain.connection_records.OnConnectionRecordsUpdatedListener;
 import pan.alexander.tordnscrypt.domain.log_reader.LogDataModel;
-import pan.alexander.tordnscrypt.domain.log_reader.LogReaderInteractors;
 import pan.alexander.tordnscrypt.domain.log_reader.dnscrypt.OnDNSCryptLogUpdatedListener;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
@@ -67,8 +66,17 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
+import javax.inject.Inject;
+
 public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInterface,
         OnDNSCryptLogUpdatedListener, OnConnectionRecordsUpdatedListener {
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Lazy<DNSCryptInteractorInterface> dnsCryptInteractor;
+    @Inject
+    public Lazy<ConnectionRecordsInteractorInterface> connectionRecordsInteractor;
 
     private Context context;
 
@@ -77,8 +85,6 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
     private ModuleState fixedModuleState = STOPPED;
     private volatile boolean dnsCryptLogAutoScroll = true;
 
-    private DNSCryptInteractorInterface dnsCryptInteractor;
-    private ConnectionRecordsInteractorInterface connectionRecordsInteractor;
     private volatile LogDataModel savedLogData;
     private volatile int savedLinesLength;
     private volatile String savedConnectionRecords = "";
@@ -86,11 +92,10 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
     private boolean fixedDNSCryptError;
 
     private ScaleGestureDetector scaleGestureDetector;
-    private final Lazy<PreferenceRepository> preferenceRepository;
 
     public DNSCryptFragmentPresenter(DNSCryptFragmentView view) {
+        App.getInstance().initLogReaderDaggerSubcomponent().inject(this);
         this.view = view;
-        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     public void onStart() {
@@ -156,8 +161,6 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
             dnsCryptLogAutoScroll = true;
             fixedModuleState = STOPPED;
-            dnsCryptInteractor = null;
-            connectionRecordsInteractor = null;
             savedLogData = null;
             savedLinesLength = 0;
             savedConnectionRecords = "";
@@ -177,18 +180,10 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
     @Override
     public synchronized void displayLog() {
 
-        if (dnsCryptInteractor == null) {
-            dnsCryptInteractor = LogReaderInteractors.Companion.getInteractor();
-        }
-
-        if (connectionRecordsInteractor == null) {
-            connectionRecordsInteractor = LogReaderInteractors.Companion.getInteractor();
-        }
-
-        dnsCryptInteractor.addOnDNSCryptLogUpdatedListener(this);
+        dnsCryptInteractor.get().addOnDNSCryptLogUpdatedListener(this);
 
         if (modulesStatus.getMode() == VPN_MODE || isFixTTL()) {
-            connectionRecordsInteractor.addOnConnectionRecordsUpdatedListener(this);
+            connectionRecordsInteractor.get().addOnConnectionRecordsUpdatedListener(this);
         }
 
         savedLogData = null;
@@ -199,11 +194,11 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
     @Override
     public void stopDisplayLog() {
         if (dnsCryptInteractor != null) {
-            dnsCryptInteractor.removeOnDNSCryptLogUpdatedListener(this);
+            dnsCryptInteractor.get().removeOnDNSCryptLogUpdatedListener(this);
         }
 
         if (connectionRecordsInteractor != null) {
-            connectionRecordsInteractor.removeOnConnectionRecordsUpdatedListener(this);
+            connectionRecordsInteractor.get().removeOnConnectionRecordsUpdatedListener(this);
         }
 
         savedLogData = null;
@@ -427,7 +422,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
         }
 
         if (connectionRecordsInteractor != null && modulesStatus.getDnsCryptState() == RESTARTING) {
-            connectionRecordsInteractor.clearConnectionRecords();
+            connectionRecordsInteractor.get().clearConnectionRecords();
             return;
         }
 
@@ -561,7 +556,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
         }
 
         if (connectionRecordsInteractor != null && (modulesStatus.getMode() == VPN_MODE || isFixTTL())) {
-            connectionRecordsInteractor.clearConnectionRecords();
+            connectionRecordsInteractor.get().clearConnectionRecords();
         }
 
         ModulesKiller.stopDNSCrypt(context);

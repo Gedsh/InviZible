@@ -61,20 +61,24 @@ import static pan.alexander.tordnscrypt.backup.BackupFragment.CODE_WRITE;
 import static pan.alexander.tordnscrypt.backup.BackupFragment.TAGS_TO_CONVERT;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
-class BackupHelper {
+import javax.inject.Inject;
+
+public class BackupHelper {
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
+
     private Activity activity;
     private String pathBackup;
     private final String appDataDir;
     private final String cacheDir;
-    private final Lazy<PreferenceRepository> preferenceRepository;
 
     BackupHelper(Activity activity, String appDataDir, String cacheDir, String pathBackup) {
+        App.getInstance().getDaggerComponent().inject(this);
         this.activity = activity;
         this.appDataDir = appDataDir;
         this.cacheDir = cacheDir;
         this.pathBackup = pathBackup;
-        preferenceRepository = App.Companion.getInstance()
-                .daggerComponent.getPreferenceRepository();
     }
 
     void saveAll(boolean logsDirAccessible) {

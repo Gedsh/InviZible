@@ -17,16 +17,10 @@
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.data.connection_checker
+package pan.alexander.tordnscrypt.di
 
-import pan.alexander.tordnscrypt.App
-import pan.alexander.tordnscrypt.domain.connection_checker.CheckInternetConnectionRepository
+import dagger.Module
+import pan.alexander.tordnscrypt.di.logreader.LogReaderSubcomponent
 
-class CheckInternetConnectionRepositoryImpl: CheckInternetConnectionRepository {
-    private val applicationContext = App.instance?.applicationContext
-
-    override fun checkInternetAvailable(site: String, withTor: Boolean): Boolean {
-        val internetChecker = InternetChecker(site, withTor)
-        return internetChecker.checkConnectionAvailability(applicationContext)
-    }
-}
+@Module(subcomponents = [LogReaderSubcomponent::class])
+class AppSubcomponentModule

@@ -21,8 +21,10 @@ package pan.alexander.tordnscrypt.dialogs;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.preference.PreferenceManager;
 
@@ -34,13 +36,23 @@ import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
+import javax.inject.Inject;
+
 public class NotificationHelper extends ExtendedDialogFragment {
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
 
     private String tag = "";
     private static String message = "";
     public static final String TAG_HELPER = "pan.alexander.tordnscrypt.HELPER_NOTIFICATION";
     private static NotificationHelper notificationHelper = null;
-    private final Lazy<PreferenceRepository> preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        App.getInstance().getDaggerComponent().inject(this);
+        super.onCreate(savedInstanceState);
+    }
 
     @Override
     public AlertDialog.Builder assignBuilder() {
@@ -63,11 +75,15 @@ public class NotificationHelper extends ExtendedDialogFragment {
         return builder;
     }
 
-    public static NotificationHelper setHelperMessage(Context context, String message, String preferenceTag) {
+    public static NotificationHelper setHelperMessage(
+            Context context,
+            String message,
+            String preferenceTag
+    ) {
 
         try {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-            PreferenceRepository preferences = App.Companion.getInstance().daggerComponent.getPreferenceRepository().get();
+            PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
             if ((!preferences.getBoolPreference("helper_no_show_" + preferenceTag)
                     || sharedPreferences.getBoolean(ALWAYS_SHOW_HELP_MESSAGES, false)
                     || preferenceTag.matches("\\d+"))

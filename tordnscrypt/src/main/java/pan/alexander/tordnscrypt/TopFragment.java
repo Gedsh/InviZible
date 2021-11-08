@@ -115,7 +115,6 @@ public class TopFragment extends Fragment {
     public static String appSign;
 
 
-
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
     private RootChecker rootChecker;
@@ -128,6 +127,8 @@ public class TopFragment extends Fragment {
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Lazy<PathVars> pathVars;
 
     private OperationMode mode = UNDEFINED;
     private boolean runModulesWithRoot = false;
@@ -164,7 +165,7 @@ public class TopFragment extends Fragment {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        App.instance.daggerComponent.inject(this);
+        App.getInstance().getDaggerComponent().inject(this);
 
         super.onCreate(savedInstanceState);
 
@@ -194,7 +195,7 @@ public class TopFragment extends Fragment {
                 ModulesAux.switchModes(rootIsAvailable, runModulesWithRoot, mode);
             }
 
-            if (PathVars.isModulesInstalled() && appVersion.endsWith("p")) {
+            if (PathVars.isModulesInstalled(preferences) && appVersion.endsWith("p")) {
                 checkAgreement(context);
             }
 
@@ -378,7 +379,7 @@ public class TopFragment extends Fragment {
 
             PreferenceRepository preferences = topFragment.preferenceRepository.get();
 
-            shortenTooLongSnowflakeLog(context, preferences);
+            shortenTooLongSnowflakeLog(context, preferences, topFragment.pathVars.get());
 
             if (topFragment.handler != null) {
                 topFragment.handler.postDelayed(() -> {
@@ -455,7 +456,7 @@ public class TopFragment extends Fragment {
                     activity.invalidateMenu();
                 }
 
-                if (!PathVars.isModulesInstalled()) {
+                if (!PathVars.isModulesInstalled(topFragment.preferenceRepository.get())) {
                     topFragment.actionModulesNotInstalled(activity);
                 } else {
 
@@ -658,7 +659,7 @@ public class TopFragment extends Fragment {
                 Activity activity = getActivity();
 
                 if (activity instanceof MainActivity) {
-                    Installer installer = new Installer(activity);
+                    Installer installer = new Installer(activity, pathVars.get(), preferenceRepository.get());
                     installer.installModules();
                     Log.i(LOG_TAG, "TopFragment Timer startRefreshModulesStatus Modules Installation");
                     stopInstallationTimer();

@@ -25,6 +25,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import dagger.Lazy;
 import pan.alexander.tordnscrypt.utils.bootcomplete.BootCompleteManager;
 
 import javax.inject.Inject;
@@ -38,12 +39,12 @@ public class BootCompleteReceiver extends BroadcastReceiver {
     private static final String REBOOT = "android.intent.action.REBOOT";
 
     @Inject
-    public BootCompleteManager bootCompleteManager;
+    public Lazy<BootCompleteManager> bootCompleteManager;
 
     @Override
     public void onReceive(final Context context, Intent intent) {
 
-        App.instance.daggerComponent.inject(this);
+        App.getInstance().getDaggerComponent().inject(this);
 
         String action = intent.getAction();
 
@@ -58,7 +59,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
                 || action.equalsIgnoreCase(MY_PACKAGE_REPLACED)
                 || action.equals(ALWAYS_ON_VPN)
                 || action.equals(SHELL_SCRIPT_CONTROL)) {
-            bootCompleteManager.performAction(context, intent);
+            bootCompleteManager.get().performAction(context, intent);
         }
     }
 }

@@ -72,8 +72,15 @@ import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.delet
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
+import javax.inject.Inject;
+
 public class HelpActivity extends LangAppCompatActivity implements View.OnClickListener,
         CompoundButton.OnCheckedChangeListener, OnBinaryFileOperationsCompleteListener {
+
+    @Inject
+    public Lazy<PathVars> pathVarsLazy;
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
 
     private TextView tvLogsPath;
     private EditText etLogsPath;
@@ -88,12 +95,11 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     private ModulesStatus modulesStatus;
     private String info;
     private boolean logsDirAccessible;
-    private final Lazy<PreferenceRepository> preferenceRepository = App.instance.daggerComponent
-            .getPreferenceRepository();
 
     @SuppressLint("NewApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        App.getInstance().getDaggerComponent().inject(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_help);
 
@@ -129,7 +135,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
             mHandler = new Handler(looper);
         }
 
-        PathVars pathVars = PathVars.getInstance(this);
+        PathVars pathVars = pathVarsLazy.get();
         appDataDir = pathVars.getAppDataDir();
         busyboxPath = pathVars.getBusyboxPath();
         pathToSaveLogs = pathVars.getDefaultBackupPath();
@@ -196,7 +202,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         properties.selection_mode = DialogConfigs.SINGLE_MODE;
         properties.selection_type = DialogConfigs.DIR_SELECT;
         properties.root = new File(Environment.getExternalStorageDirectory().getPath());
-        properties.error_dir = new File(PathVars.getInstance(this).getCacheDirPath(this));
+        properties.error_dir = new File(pathVarsLazy.get().getCacheDirPath(this));
         properties.offset = new File(Environment.getExternalStorageDirectory().getPath());
         properties.extensions = null;
 

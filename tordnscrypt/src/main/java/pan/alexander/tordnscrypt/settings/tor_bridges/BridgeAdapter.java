@@ -44,7 +44,6 @@ import java.util.List;
 import java.util.Set;
 
 import dagger.Lazy;
-import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
@@ -53,19 +52,24 @@ import pan.alexander.tordnscrypt.utils.enums.BridgeType;
 import pan.alexander.tordnscrypt.utils.enums.BridgesSelector;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
-class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder> {
+public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeViewHolder> {
+
+    private final Lazy<PreferenceRepository> preferenceRepository;
     private final SettingsActivity activity;
     private final FragmentManager fragmentManager;
     private final LayoutInflater lInflater;
     private final PreferencesBridges preferencesBridges;
-    private final Lazy<PreferenceRepository> preferenceRepository;
 
-    BridgeAdapter(SettingsActivity activity, FragmentManager fragmentManager, PreferencesBridges preferencesBridges) {
+    BridgeAdapter(SettingsActivity activity,
+                  FragmentManager fragmentManager,
+                  Lazy<PreferenceRepository> preferenceRepository,
+                  PreferencesBridges preferencesBridges
+    ) {
         this.activity = activity;
         this.fragmentManager = fragmentManager;
         this.preferencesBridges = preferencesBridges;
         this.lInflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
+        this.preferenceRepository = preferenceRepository;
     }
 
     @NonNull

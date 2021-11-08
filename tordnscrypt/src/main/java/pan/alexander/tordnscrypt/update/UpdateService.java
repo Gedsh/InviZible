@@ -18,8 +18,6 @@ package pan.alexander.tordnscrypt.update;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
-
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -79,7 +77,7 @@ public class UpdateService extends Service {
 
     @Override
     public void onCreate() {
-        App.instance.daggerComponent.inject(this);
+        App.getInstance().getDaggerComponent().inject(this);
 
         super.onCreate();
 

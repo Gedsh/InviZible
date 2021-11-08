@@ -40,22 +40,30 @@ import pan.alexander.tordnscrypt.utils.root.RootExecService;
 
 import static pan.alexander.tordnscrypt.TopFragment.ITPDVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
+import static pan.alexander.tordnscrypt.modules.ModulesService.ITPD_KEYWORD;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
+import javax.inject.Inject;
+
 public class ITPDFragmentReceiver extends BroadcastReceiver {
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Lazy<PathVars> pathVars;
+
     private final ITPDFragmentView view;
     private final ITPDFragmentPresenterInterface presenter;
 
     private String itpdPath;
     private String busyboxPath;
-    private final Lazy<PreferenceRepository> preferenceRepository;
 
     public ITPDFragmentReceiver(ITPDFragmentView view, ITPDFragmentPresenterInterface presenter) {
+        App.getInstance().getDaggerComponent().inject(this);
         this.view = view;
         this.presenter = presenter;
-        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     @Override
@@ -70,9 +78,8 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
-        PathVars pathVars = PathVars.getInstance(context);
-        itpdPath = pathVars.getITPDPath();
-        busyboxPath = pathVars.getBusyboxPath();
+        itpdPath = pathVars.get().getITPDPath();
+        busyboxPath = pathVars.get().getBusyboxPath();
 
         if (intent != null) {
             final String action = intent.getAction();
@@ -125,11 +132,11 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
                 }
 
                 if (sb.toString().toLowerCase().contains(itpdPath.toLowerCase())
-                        && sb.toString().contains("checkITPDRunning")) {
+                        && sb.toString().contains(ITPD_KEYWORD)) {
                     modulesStatus.setItpdState(RUNNING);
                     presenter.displayLog();
                 } else if (!sb.toString().toLowerCase().contains(itpdPath.toLowerCase())
-                        && sb.toString().contains("checkITPDRunning")) {
+                        && sb.toString().contains(ITPD_KEYWORD)) {
                     if (modulesStatus.getItpdState() == STOPPED) {
                         ModulesAux.saveITPDStateRunning(false);
                     }

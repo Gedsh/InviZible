@@ -31,6 +31,8 @@ import pan.alexander.tordnscrypt.settings.firewall.APPS_ALLOW_LAN_PREF
 import pan.alexander.tordnscrypt.settings.firewall.APPS_ALLOW_ROAMING
 import pan.alexander.tordnscrypt.settings.firewall.APPS_ALLOW_WIFI_PREF
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
+import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
+import pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.Utils.getHostByIP
@@ -251,8 +253,8 @@ class ConnectionRecordsConverter(context: Context) {
 
     private fun setQueryBlocked(dnsQueryRawRecord: ConnectionRecord): Boolean {
 
-        if (dnsQueryRawRecord.daddr == "0.0.0.0"
-                || dnsQueryRawRecord.daddr == "127.0.0.1"
+        if (dnsQueryRawRecord.daddr == META_ADDRESS
+                || dnsQueryRawRecord.daddr == LOOPBACK_ADDRESS
                 || dnsQueryRawRecord.daddr == "::"
                 || dnsQueryRawRecord.daddr.contains(":") && blockIPv6
                 || dnsQueryRawRecord.hInfo.contains("dnscrypt")

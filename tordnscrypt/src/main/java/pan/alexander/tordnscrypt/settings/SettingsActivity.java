@@ -57,11 +57,13 @@ import pan.alexander.tordnscrypt.settings.firewall.FirewallPreferencesFragment;
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges;
 import pan.alexander.tordnscrypt.settings.show_rules.ShowRulesRecycleFrag;
 import pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment;
-import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag;
+import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFragment;
 import pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment;
 import pan.alexander.tordnscrypt.utils.enums.DNSCryptRulesVariant;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
+import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFragment.DeviceOrTether.DEVICE;
+import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFragment.DeviceOrTether.TETHER;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
@@ -78,6 +80,8 @@ public class SettingsActivity extends LangAppCompatActivity {
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Lazy<PathVars> pathVars;
 
     public DialogFragment dialogFragment;
     public PreferencesTorFragment preferencesTorFragment;
@@ -92,19 +96,18 @@ public class SettingsActivity extends LangAppCompatActivity {
     @SuppressLint("NewApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        App.instance.daggerComponent.inject(this);
+        App.getInstance().getDaggerComponent().inject(this);
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
 
-        PathVars pathVars = PathVars.getInstance(this);
-        String appDataDir = pathVars.getAppDataDir();
+        String appDataDir = pathVars.get().getAppDataDir();
 
         if (savedInstanceState != null) return;
 
-        settingsParser = new SettingsParser(this);
+        settingsParser = new SettingsParser(this, appDataDir);
         settingsParser.activateSettingsParser();
 
         FragmentTransaction fSupportTrans = getSupportFragmentManager().beginTransaction();
@@ -197,18 +200,12 @@ public class SettingsActivity extends LangAppCompatActivity {
             fSupportTrans.replace(android.R.id.content, frag);
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "tor_sites_unlock")) {
-            Bundle bundle = new Bundle();
-            bundle.putString("deviceOrTether", "device");
-            UnlockTorIpsFrag unlockTorIpsFrag = new UnlockTorIpsFrag();
-            unlockTorIpsFrag.setArguments(bundle);
-            fSupportTrans.replace(android.R.id.content, unlockTorIpsFrag);
+            UnlockTorIpsFragment unlockTorIpsFragment = UnlockTorIpsFragment.getInstance(DEVICE);
+            fSupportTrans.replace(android.R.id.content, unlockTorIpsFragment);
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "tor_sites_unlock_tether")) {
-            Bundle bundle = new Bundle();
-            bundle.putString("deviceOrTether", "tether");
-            UnlockTorIpsFrag unlockTorIpsFrag = new UnlockTorIpsFrag();
-            unlockTorIpsFrag.setArguments(bundle);
-            fSupportTrans.replace(android.R.id.content, unlockTorIpsFrag);
+            UnlockTorIpsFragment unlockTorIpsFragment = UnlockTorIpsFragment.getInstance(TETHER);
+            fSupportTrans.replace(android.R.id.content, unlockTorIpsFragment);
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "tor_apps_unlock")) {
             fSupportTrans.replace(android.R.id.content, new UnlockTorAppsFragment());

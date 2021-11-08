@@ -45,7 +45,6 @@ import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.domain.log_reader.ITPDInteractorInterface;
 import pan.alexander.tordnscrypt.domain.log_reader.LogDataModel;
-import pan.alexander.tordnscrypt.domain.log_reader.LogReaderInteractors;
 import pan.alexander.tordnscrypt.domain.log_reader.itpd.OnITPDHtmlUpdatedListener;
 import pan.alexander.tordnscrypt.domain.log_reader.itpd.OnITPDLogUpdatedListener;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
@@ -71,8 +70,17 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
+import javax.inject.Inject;
+
 public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
         OnITPDLogUpdatedListener, OnITPDHtmlUpdatedListener {
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Lazy<PathVars> pathVars;
+    @Inject
+    public Lazy<ITPDInteractorInterface> itpdInteractor;
 
     private boolean runI2PDWithRoot = false;
 
@@ -84,15 +92,13 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
     private volatile boolean itpdLogAutoScroll = true;
     private ScaleGestureDetector scaleGestureDetector;
 
-    private ITPDInteractorInterface itpdInteractor;
     private volatile int previousLastLinesLength;
     private boolean fixedITPDReady;
-    private final Lazy<PreferenceRepository> preferenceRepository;
 
 
     public ITPDFragmentPresenter(ITPDFragmentView view) {
+        App.getInstance().initLogReaderDaggerSubcomponent().inject(this);
         this.view = view;
-        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     public void onStart() {
@@ -103,8 +109,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
         context = view.getFragmentActivity();
 
         if (appDataDir == null) {
-            PathVars pathVars = PathVars.getInstance(context);
-            appDataDir = pathVars.getAppDataDir();
+            appDataDir = pathVars.get().getAppDataDir();
         }
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
@@ -165,7 +170,6 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
             fixedModuleState = STOPPED;
             itpdLogAutoScroll = true;
             scaleGestureDetector = null;
-            itpdInteractor = null;
             previousLastLinesLength = 0;
             fixedITPDReady = false;
         }
@@ -340,12 +344,8 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
     @Override
     public synchronized void displayLog() {
 
-        if (itpdInteractor == null) {
-            itpdInteractor = LogReaderInteractors.Companion.getInteractor();
-        }
-
-        itpdInteractor.addOnITPDLogUpdatedListener(this);
-        itpdInteractor.addOnITPDHtmlUpdatedListener(this);
+        itpdInteractor.get().addOnITPDLogUpdatedListener(this);
+        itpdInteractor.get().addOnITPDHtmlUpdatedListener(this);
 
         previousLastLinesLength = 0;
     }
@@ -353,8 +353,8 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
     @Override
     public void stopDisplayLog() {
         if (itpdInteractor != null) {
-            itpdInteractor.removeOnITPDLogUpdatedListener(this);
-            itpdInteractor.removeOnITPDHtmlUpdatedListener(this);
+            itpdInteractor.get().removeOnITPDLogUpdatedListener(this);
+            itpdInteractor.get().removeOnITPDHtmlUpdatedListener(this);
         }
     }
 

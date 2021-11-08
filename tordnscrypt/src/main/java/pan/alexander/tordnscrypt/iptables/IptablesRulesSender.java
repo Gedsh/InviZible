@@ -51,10 +51,10 @@ abstract class IptablesRulesSender implements IptablesRules {
     boolean modemIsOn;
     boolean lan;
 
-    IptablesRulesSender(Context context) {
+    IptablesRulesSender(Context context, PathVars pathVars) {
         this.context = context;
 
-        pathVars = PathVars.getInstance(context);
+        this.pathVars = pathVars;
         appDataDir = pathVars.getAppDataDir();
         rejectAddress = pathVars.getRejectAddress();
 

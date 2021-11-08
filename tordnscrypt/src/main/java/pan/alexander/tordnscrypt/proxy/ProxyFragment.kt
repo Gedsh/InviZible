@@ -44,7 +44,7 @@ import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.settings.SettingsActivity
 import pan.alexander.tordnscrypt.databinding.FragmentProxyBinding
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
-import pan.alexander.tordnscrypt.settings.PathVars
+import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor.getExecutorService
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.util.concurrent.Future
@@ -67,8 +67,6 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
     private var etBackground: Drawable? = null
     private var futureTask: Future<*>? = null
 
-    private var pathVars: PathVars? = null
-
     private var handler: Handler? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,7 +85,6 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
         Looper.getMainLooper()?.let { handler = Handler(it) }
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
-        pathVars = PathVars.getInstance(context)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -163,7 +160,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
         val setBypassProxy = preferenceRepository.get().getStringSetPreference(CLEARNET_APPS_FOR_PROXY)
 
         if (proxyServer.isNotEmpty() && proxyPort.isNotEmpty()
-                && (setBypassProxy.isNotEmpty() || proxyServer != "127.0.0.1")) {
+                && (setBypassProxy.isNotEmpty() || proxyServer != LOOPBACK_ADDRESS)) {
             ProxyHelper.manageProxy(context, proxyServer, proxyPort, serverOrPortChanged,
                     activateDNSCryptProxy, activateTorProxy, activateITPDProxy)
         } else {
@@ -227,7 +224,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
         if (server.isEmpty() || !server.matches(IP_REGEX)) {
             binding.etProxyServer.background = ContextCompat.getDrawable(context, R.drawable.error_hint_selector)
             return
-        } else if (server == "127.0.0.1" && preferenceRepository.get()
+        } else if (server == LOOPBACK_ADDRESS && preferenceRepository.get()
                 .getStringSetPreference(CLEARNET_APPS_FOR_PROXY).isEmpty()) {
             binding.tvProxyHint.apply {
                 setText(R.string.proxy_select_proxy_app)
@@ -245,7 +242,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
 
         futureTask = getExecutorService().submit {
             try {
-                val result = ProxyHelper.checkProxyConnectivity(context, server, port.toInt())
+                val result = ProxyHelper.checkProxyConnectivity(server, port.toInt())
 
                 if (_binding != null) {
                     if (result.matches(Regex("\\d+"))) {

@@ -25,12 +25,14 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
+import androidx.annotation.MainThread
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.ProcessLifecycleOwner
 import pan.alexander.tordnscrypt.crash_handling.TopExceptionHandler
 import pan.alexander.tordnscrypt.di.*
+import pan.alexander.tordnscrypt.di.logreader.LogReaderSubcomponent
 import pan.alexander.tordnscrypt.language.Language
 import pan.alexander.tordnscrypt.utils.multidex.MultidexActivator
 import java.lang.ref.WeakReference
@@ -42,11 +44,18 @@ const val AUX_CHANNEL_ID = "Auxiliary"
 class App : Application() {
 
     var currentActivity: WeakReference<Activity>? = null
+
     lateinit var daggerComponent: AppComponent
+    private set
+
+    private var logReaderDaggerSubcomponent: LogReaderSubcomponent? = null
+
     var isAppForeground: Boolean = false
 
     companion object {
+        @JvmStatic
         lateinit var instance: App
+        private set
     }
 
     override fun attachBaseContext(base: Context?) {
@@ -94,6 +103,16 @@ class App : Application() {
             .handlerModule(HandlerModule())
             .contextModule(ContextModule(this))
             .build()
+    }
+
+    @MainThread
+    fun initLogReaderDaggerSubcomponent() = logReaderDaggerSubcomponent ?:
+        daggerComponent.logReaderSubcomponent().create().also {
+            logReaderDaggerSubcomponent = it
+        }
+
+    fun releaseLogReaderScope() {
+        logReaderDaggerSubcomponent = null
     }
 
     @TargetApi(Build.VERSION_CODES.O)

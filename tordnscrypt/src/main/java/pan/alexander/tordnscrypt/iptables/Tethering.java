@@ -39,11 +39,13 @@ import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
 import pan.alexander.tordnscrypt.vpn.NetworkUtils;
 
-import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_FOR_CLEARNET_TETHER;
-import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_TO_UNLOCK_TETHER;
 import static pan.alexander.tordnscrypt.utils.Constants.HTTP_PORT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR_CLEARNET_TETHER;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_UNLOCK_TETHER;
+
+import javax.inject.Inject;
 
 public class Tethering {
     private final Context context;
@@ -61,14 +63,16 @@ public class Tethering {
     static String usbModemInterfaceName = Constants.STANDARD_USB_MODEM_INTERFACE_NAME;
     private static String ethernetInterfaceName = Constants.STANDARD_ETHERNET_INTERFACE_NAME;
 
-    private final PathVars pathVars;
+    @Inject
+    public Lazy<PathVars> pathVarsLazy;
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
+
     private String iptables = "iptables ";
-    private final Lazy<PreferenceRepository> preferenceRepository;
 
     Tethering(Context context) {
+        App.getInstance().getDaggerComponent().inject(this);
         this.context = context;
-        pathVars = PathVars.getInstance(context);
-        preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     @NonNull
@@ -77,6 +81,8 @@ public class Tethering {
         if (context == null) {
             return new ArrayList<>();
         }
+
+        PathVars pathVars = pathVarsLazy.get();
 
         iptables = pathVars.getIptablesPath();
         String ip6tables = pathVars.getIp6tablesPath();
@@ -696,8 +702,8 @@ public class Tethering {
 
         setInterfaceNames();
 
-        String ip6tables = pathVars.getIp6tablesPath();
-        String busybox = pathVars.getBusyboxPath();
+        String ip6tables = pathVarsLazy.get().getIp6tablesPath();
+        String busybox = pathVarsLazy.get().getBusyboxPath();
 
         tetheringCommands.addAll(Arrays.asList(
                 iptables + "-I FORWARD -j DROP",
@@ -731,6 +737,8 @@ public class Tethering {
     }
 
     List<String> fixTTLCommands() {
+        PathVars pathVars = pathVarsLazy.get();
+
         preferenceRepository.get().setBoolPreference("TTLisFixed", true);
 
         List<String> commands = new ArrayList<>(Arrays.asList(

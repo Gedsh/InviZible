@@ -47,12 +47,12 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import dagger.Lazy;
-import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.patches.Patch;
+import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager;
@@ -88,14 +88,21 @@ class RestoreHelper extends Installer {
     private String pathBackup;
     private final Lazy<PreferenceRepository> preferenceRepository;
 
-    RestoreHelper(Activity activity, String appDataDir, String cacheDir, String pathBackup) {
-        super(activity);
+    RestoreHelper(
+            Activity activity,
+            String appDataDir,
+            String cacheDir,
+            String pathBackup,
+            PathVars pathVars,
+            Lazy<PreferenceRepository> preferenceRepository
+    ) {
+        super(activity, pathVars, preferenceRepository.get());
 
         this.activity = activity;
         this.appDataDir = appDataDir;
         this.cacheDir = cacheDir;
         this.pathBackup = pathBackup;
-        preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
+        this.preferenceRepository = preferenceRepository;
     }
 
     void restoreAll(InputStream inputStream, boolean logsDirAccessible) {
@@ -317,7 +324,7 @@ class RestoreHelper extends Installer {
         InstalledApplicationsManager installedApplicationsManager = new InstalledApplicationsManager(context, Collections.emptySet());
         List<ApplicationData> applications = installedApplicationsManager.getInstalledApps(false);
 
-        for (String tag: TAGS_TO_CONVERT) {
+        for (String tag : TAGS_TO_CONVERT) {
             convertPackageNamesToUIDs(applications, tag);
         }
     }
@@ -326,18 +333,18 @@ class RestoreHelper extends Installer {
         Set<String> savedPackageNames = preferenceRepository.get().getStringSetPreference(tag + "Backup");
         Set<String> uIDsToSave = new HashSet<>();
 
-        for (String savedPackage: savedPackageNames) {
+        for (String savedPackage : savedPackageNames) {
 
             if (savedPackage.matches("^-?\\d+$")) {
                 uIDsToSave.add(savedPackage);
                 continue;
             }
 
-            for (ApplicationData applicationData: applications) {
+            for (ApplicationData applicationData : applications) {
                 String pack = applicationData.getPack();
                 ConcurrentSkipListSet<String> names = applicationData.getNames();
                 if (!names.isEmpty() && names.first().contains("(M)")) {
-                    pack +="(M)";
+                    pack += "(M)";
                 }
 
                 if (pack.equals(savedPackage)) {

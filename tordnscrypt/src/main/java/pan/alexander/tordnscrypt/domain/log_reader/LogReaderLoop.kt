@@ -1,6 +1,7 @@
 package pan.alexander.tordnscrypt.domain.log_reader
 
 import android.util.Log
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsInteractor
 import pan.alexander.tordnscrypt.domain.log_reader.dnscrypt.DNSCryptInteractor
 import pan.alexander.tordnscrypt.domain.log_reader.itpd.ITPDHtmlInteractor
@@ -50,7 +51,8 @@ class LogReaderLoop(
         } catch (e: Exception) {
             Log.e(
                 LOG_TAG, "LogReaderLoop startLogsParser exception " +
-                    "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}")
+                        "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
+            )
         } finally {
             if (reentrantLock.isHeldByCurrentThread) {
                 reentrantLock.unlock()
@@ -78,7 +80,7 @@ class LogReaderLoop(
         timer?.stopExecutor()
         timer = null
         connectionRecordsInteractor.stopConverter(true)
-        LogReaderInteractors.logReaderInteractors = null
+        App.instance.releaseLogReaderScope()
 
         Log.i(LOG_TAG, "LogReaderLoop stopLogsParser")
     }

@@ -31,12 +31,21 @@ import pan.alexander.tordnscrypt.di.SharedPreferencesModule
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.installer.Installer
 import pan.alexander.tordnscrypt.modules.ModulesStatus
+import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.lang.ref.WeakReference
 
-class ResetHelper(activity: Activity, backupFragment: BackupFragment) : Installer(activity) {
-
+class ResetHelper(
+    activity: Activity,
+    backupFragment: BackupFragment,
+    pathVars: PathVars,
+    preferenceRepository: PreferenceRepository,
+) : Installer(
+    activity,
+    pathVars,
+    preferenceRepository
+) {
     private var activityWeakReference: WeakReference<Activity> = WeakReference(activity)
     private val backupFragmentWeakReference: WeakReference<BackupFragment> = WeakReference(backupFragment)
     private val preferenceRepository: Lazy<PreferenceRepository> = App.instance.daggerComponent.getPreferenceRepository()

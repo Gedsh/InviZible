@@ -137,8 +137,11 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     private BridgesSelector savedBridgesSelector;
     private Future<?> verifyDefaultBridgesTask;
     private Handler handler;
+
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Lazy<PathVars> pathVars;
 
 
     public PreferencesTorBridges() {
@@ -146,7 +149,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        App.instance.daggerComponent.inject(this);
+        App.getInstance().getDaggerComponent().inject(this);
 
         super.onCreate(savedInstanceState);
 
@@ -158,11 +161,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             return;
         }
 
-        PathVars pathVars = PathVars.getInstance(context);
-
-        appDataDir = pathVars.getAppDataDir();
-        obfsPath = pathVars.getObfsPath();
-        snowflakePath = pathVars.getSnowflakePath();
+        appDataDir = pathVars.get().getAppDataDir();
+        obfsPath = pathVars.get().getObfsPath();
+        snowflakePath = pathVars.get().getSnowflakePath();
 
         currentBridgesFilePath = appDataDir + "/app_data/tor/bridges_default.lst";
         bridgesDefaultFilePath = appDataDir + "/app_data/tor/bridges_default.lst";
@@ -238,7 +239,12 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         Activity activity = getActivity();
         if (activity instanceof SettingsActivity) {
-            bridgeAdapter = new BridgeAdapter((SettingsActivity) activity, getParentFragmentManager(), this);
+            bridgeAdapter = new BridgeAdapter(
+                    (SettingsActivity) activity,
+                    getParentFragmentManager(),
+                    preferenceRepository,
+                    this
+            );
             rvBridges.setAdapter(bridgeAdapter);
         }
 
