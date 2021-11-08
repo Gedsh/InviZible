@@ -378,11 +378,11 @@
     <string name="disagree">Не согласен</string>
     <string name="agreement_text">
         \tСпасибо за выбор InviZible Pro. Надеюсь, приложение будет полезно для Вашей конфиденциальности и комфортного использования интернета.
-        \n\tInviZible Pro содержит Tor, DNSCrypt и Purple I2P в качестве модулей.
-        \n\tInviZible Pro может использовать рут, если у Вас есть рут права, или использовать локальный VPN для доставки интернет траффика в сети Tor, DNSCrypt и I2P.
-        \n\tЭто приложение созданно независимо от проектов Tor®, DNSCrypt и Purple I2P. Эти проекты не предоставляют данному приложению какие-либо гарантии в отношении качества, пригодности или чего-то еще.
-        \n\tInviZible Pro распространяется в надежде на то, что будет полезно, но БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ; в том числе подразумеваемых гарантией ТОВАРНОЙ ПРИГОДНОСТИ и ГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННОЙ ЦЕЛИ.
-        \n\tCopyright © 2019-2021
+        \n\n\tInviZible Pro содержит Tor, DNSCrypt и Purple I2P в качестве модулей.
+        \n\n\tInviZible Pro может использовать рут, если у Вас есть рут права, или использовать локальный VPN для доставки интернет траффика в сети Tor, DNSCrypt и I2P.
+        \n\n\tПолитика конфиденциальности:
+        \n\tInviZible Pro не собирает и не передает какие-либо личные или конфиденциальные данные пользователей.
+        \n\n\tCopyright © 2019-2021
         \n\tGarmatin Oleksandr
         \n\tinvizible.soft@gmail.com
         \n\tinvizible.net/en/privacy
@@ -514,4 +514,6 @@
     <string name="backupSaved">Резервная копия сохранена</string>
     <string name="backupRestored">Резервная копия восстановлена</string>
     <string name="pref_tor_hardware_accel_summ">Использовать встроенное аппаратное ускорение шифрования, если оно доступно.</string>
+    <string name="notification_connecting">Соединение…</string>
+    <string name="notification_waiting_network">Ожидание сети…</string>
 </resources>
