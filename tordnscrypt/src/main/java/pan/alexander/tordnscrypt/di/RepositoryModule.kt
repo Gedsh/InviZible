@@ -20,7 +20,11 @@ package pan.alexander.tordnscrypt.di
 
 import dagger.Binds
 import dagger.Module
+import pan.alexander.tordnscrypt.data.connection_checker.ConnectionCheckerRepositoryImpl
+import pan.alexander.tordnscrypt.data.dns_resolver.DnsRepositoryImpl
 import pan.alexander.tordnscrypt.data.preferences.PreferenceRepositoryImpl
+import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerRepository
+import pan.alexander.tordnscrypt.domain.dns_resolver.DnsRepository
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 
 @Module
@@ -28,4 +32,12 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun providePreferenceRepository(repository: PreferenceRepositoryImpl): PreferenceRepository
+
+    @Binds
+    abstract fun provideDnsRepository(repository: DnsRepositoryImpl): DnsRepository
+
+    @Binds
+    abstract fun provideInternetCheckingRepository(
+        repository: ConnectionCheckerRepositoryImpl
+    ): ConnectionCheckerRepository
 }
