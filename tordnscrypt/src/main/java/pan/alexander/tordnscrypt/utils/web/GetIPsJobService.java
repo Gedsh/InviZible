@@ -21,9 +21,8 @@ package pan.alexander.tordnscrypt.utils.web;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.os.Build;
-import androidx.annotation.RequiresApi;
 
-import pan.alexander.tordnscrypt.utils.web.TorRefreshIPsWork;
+import androidx.annotation.RequiresApi;
 
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public class GetIPsJobService extends JobService {
@@ -37,14 +36,14 @@ public class GetIPsJobService extends JobService {
     public boolean onStartJob(JobParameters params) {
         this.params = params;
 
-        TorRefreshIPsWork torRefreshIPsWork = new TorRefreshIPsWork(getApplicationContext(),this);
+        TorRefreshIPsWork torRefreshIPsWork = new TorRefreshIPsWork(getApplicationContext(), this);
         torRefreshIPsWork.refreshIPs();
 
         return true;
     }
 
-    public void finishJob() {
-        jobFinished(params,false);
+    public void finishJob(boolean wantReschedule) {
+        jobFinished(params, wantReschedule);
     }
 
     @Override
