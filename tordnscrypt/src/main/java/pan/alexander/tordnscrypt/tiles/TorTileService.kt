@@ -29,21 +29,24 @@ import javax.inject.Inject
 class TorTileService : TileService() {
 
     @Inject
-    lateinit var tileManager: TileManager
+    lateinit var tileManager: dagger.Lazy<TileManager>
+
+    override fun onCreate() {
+        App.instance.daggerComponent.inject(this)
+        super.onCreate()
+    }
 
     override fun onStartListening() {
-        App.instance.daggerComponent.inject(this)
-
         val tile = qsTile ?: return
 
-        tileManager.startUpdatingState(tile, TileManager.ManageTask.MANAGE_TOR)
+        tileManager.get().startUpdatingState(tile, TileManager.ManageTask.MANAGE_TOR)
     }
 
     override fun onStopListening() {
-        tileManager.stopUpdatingState()
+        tileManager.get().stopUpdatingState()
     }
 
     override fun onClick() {
-        tileManager.manageModule(TileManager.ManageTask.MANAGE_TOR)
+        tileManager.get().manageModule(TileManager.ManageTask.MANAGE_TOR)
     }
 }

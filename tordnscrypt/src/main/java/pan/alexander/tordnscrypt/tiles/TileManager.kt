@@ -20,6 +20,7 @@ package pan.alexander.tordnscrypt.tiles
 */
 
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.net.VpnService
 import android.os.Build
@@ -29,12 +30,14 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import androidx.core.os.postDelayed
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.coroutines.*
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.di.CoroutinesModule
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.*
+import pan.alexander.tordnscrypt.modules.ModulesService.*
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.Constants.DEFAULT_SITES_IPS_REFRESH_INTERVAL
 import pan.alexander.tordnscrypt.utils.Utils
@@ -45,6 +48,8 @@ import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.filemanager.FileShortener
 import pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.stopRefreshTorUnlockIPs
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
+import pan.alexander.tordnscrypt.utils.root.RootCommands
+import pan.alexander.tordnscrypt.utils.root.RootExecService.*
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper
 import javax.inject.Inject
 import javax.inject.Named
@@ -63,7 +68,8 @@ class TileManager @Inject constructor(
     private val preferenceRepository: PreferenceRepository,
     @Named(SharedPreferencesModule.DEFAULT_PREFERENCES_NAME)
     private val defaultPreferences: SharedPreferences,
-    private val handler: Handler
+    private val handler: Handler,
+    private val pathVars: PathVars,
 ) {
     private val modulesStatus = ModulesStatus.getInstance()
     private var task: Job? = null
@@ -128,11 +134,23 @@ class TileManager @Inject constructor(
         savedTorState = moduleState
 
         when (moduleState) {
-            ModuleState.STARTING, ModuleState.RESTARTING -> tile.label =
-                context.getString(R.string.tvTorStarting)
-            ModuleState.RUNNING -> tile.label = context.getString(R.string.tvTorRunning)
-            ModuleState.STOPPING -> tile.label = context.getString(R.string.tvTorStopping)
-            else -> tile.label = context.getString(R.string.tvTorStop)
+            ModuleState.STARTING, ModuleState.RESTARTING -> {
+                tile.label = context.getString(R.string.tvTorStarting)
+            }
+            ModuleState.RUNNING -> {
+                tile.label = context.getString(R.string.tvTorRunning)
+                refreshModuleInterfaceIfAppLaunched(
+                    TorRunFragmentMark,
+                    TOR_KEYWORD,
+                    pathVars.torPath
+                )
+            }
+            ModuleState.STOPPING -> {
+                tile.label = context.getString(R.string.tvTorStopping)
+            }
+            else -> {
+                tile.label = context.getString(R.string.tvTorStop)
+            }
         }
 
         tile.updateTile()
@@ -146,11 +164,23 @@ class TileManager @Inject constructor(
         savedDnsCryptState = moduleState
 
         when (moduleState) {
-            ModuleState.STARTING, ModuleState.RESTARTING -> tile.label =
-                context.getString(R.string.tvDNSStarting)
-            ModuleState.RUNNING -> tile.label = context.getString(R.string.tvDNSRunning)
-            ModuleState.STOPPING -> tile.label = context.getString(R.string.tvDNSStopping)
-            else -> tile.label = context.getString(R.string.tvDNSStop)
+            ModuleState.STARTING, ModuleState.RESTARTING -> {
+                tile.label = context.getString(R.string.tvDNSStarting)
+            }
+            ModuleState.RUNNING -> {
+                tile.label = context.getString(R.string.tvDNSRunning)
+                refreshModuleInterfaceIfAppLaunched(
+                    DNSCryptRunFragmentMark,
+                    DNSCRYPT_KEYWORD,
+                    pathVars.dnsCryptPath
+                )
+            }
+            ModuleState.STOPPING -> {
+                tile.label = context.getString(R.string.tvDNSStopping)
+            }
+            else -> {
+                tile.label = context.getString(R.string.tvDNSStop)
+            }
         }
 
         tile.updateTile()
@@ -164,11 +194,23 @@ class TileManager @Inject constructor(
         savedITPDState = moduleState
 
         when (moduleState) {
-            ModuleState.STARTING, ModuleState.RESTARTING -> tile.label =
-                context.getString(R.string.tvITPDStarting)
-            ModuleState.RUNNING -> tile.label = context.getString(R.string.tvITPDRunning)
-            ModuleState.STOPPING -> tile.label = context.getString(R.string.tvITPDStopping)
-            else -> tile.label = context.getString(R.string.tvITPDStop)
+            ModuleState.STARTING, ModuleState.RESTARTING -> {
+                tile.label = context.getString(R.string.tvITPDStarting)
+            }
+            ModuleState.RUNNING -> {
+                tile.label = context.getString(R.string.tvITPDRunning)
+                refreshModuleInterfaceIfAppLaunched(
+                    I2PDRunFragmentMark,
+                    ITPD_KEYWORD,
+                    pathVars.itpdPath
+                )
+            }
+            ModuleState.STOPPING -> {
+                tile.label = context.getString(R.string.tvITPDStopping)
+            }
+            else -> {
+                tile.label = context.getString(R.string.tvITPDStop)
+            }
         }
 
         tile.updateTile()
@@ -230,7 +272,7 @@ class TileManager @Inject constructor(
 
         Utils.startAppExitDetectService(context)
 
-        shortenTooLongSnowflakeLog(context, preferenceRepository)
+        shortenTooLongSnowflakeLog(context, preferenceRepository, pathVars)
     }
 
     private suspend fun manageTor() {
@@ -325,15 +367,11 @@ class TileManager @Inject constructor(
                 showPleaseWaitToast()
                 return
             }
-            FileShortener.shortenTooTooLongFile(
-                PathVars.getInstance(context).appDataDir + "/logs/i2pd.log"
-            )
+            FileShortener.shortenTooTooLongFile(pathVars.appDataDir + "/logs/i2pd.log")
             runITPD()
         } else if (modulesStatus.itpdState == ModuleState.RUNNING) {
             stopITPD()
-            FileShortener.shortenTooTooLongFile(
-                PathVars.getInstance(context).appDataDir + "/logs/i2pd.log"
-            )
+            FileShortener.shortenTooTooLongFile(pathVars.appDataDir + "/logs/i2pd.log")
         }
     }
 
@@ -356,7 +394,10 @@ class TileManager @Inject constructor(
 
         if (VpnService.prepare(context) == null) {
             handler.postDelayed(VPN_SERVICE_START_DELAY_SEC * 1000L) {
-                defaultPreferences.edit().putBoolean(VPN_SERVICE_ENABLED, true).commit()
+                defaultPreferences.edit().let {
+                    it.putBoolean(VPN_SERVICE_ENABLED, true)
+                    it.apply()
+                }
                 ServiceVPNHelper.start("Tile start", context)
             }
         }
@@ -386,6 +427,18 @@ class TileManager @Inject constructor(
 
     private suspend fun showToast(@StringRes message: Int) = withContext(dispatcherMain) {
         Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+    }
+
+    private fun refreshModuleInterfaceIfAppLaunched(
+        moduleMark: Int,
+        moduleKeyWord: String,
+        binaryPath: String
+    ) {
+        val comResult = RootCommands(arrayListOf(moduleKeyWord, binaryPath))
+        val intent = Intent(COMMAND_RESULT)
+        intent.putExtra("CommandsResult", comResult)
+        intent.putExtra("Mark", moduleMark)
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent)
     }
 
     enum class ManageTask {

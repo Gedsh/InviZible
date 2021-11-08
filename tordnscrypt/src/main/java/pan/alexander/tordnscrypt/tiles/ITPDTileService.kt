@@ -29,21 +29,25 @@ import javax.inject.Inject
 class ITPDTileService : TileService() {
 
     @Inject
-    lateinit var tileManager: TileManager
+    lateinit var tileManager: dagger.Lazy<TileManager>
+
+    override fun onCreate() {
+        App.instance.daggerComponent.inject(this)
+        super.onCreate()
+    }
 
     override fun onStartListening() {
-        App.instance.daggerComponent.inject(this)
 
         val tile = qsTile ?: return
 
-        tileManager.startUpdatingState(tile, TileManager.ManageTask.MANAGE_ITPD)
+        tileManager.get().startUpdatingState(tile, TileManager.ManageTask.MANAGE_ITPD)
     }
 
     override fun onStopListening() {
-        tileManager.stopUpdatingState()
+        tileManager.get().stopUpdatingState()
     }
 
     override fun onClick() {
-        tileManager.manageModule(TileManager.ManageTask.MANAGE_ITPD)
+        tileManager.get().manageModule(TileManager.ManageTask.MANAGE_ITPD)
     }
 }
