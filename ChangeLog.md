@@ -615,3 +615,11 @@
 
 **InviZible Pro beta 1.3.9**
 * Fixed crash when opening some settings.
+
+**InviZible Pro beta 1.4.0**
+* Added current connection status to the notification.
+* Optimized application behavior on unstable networks.
+* Improved websites handling for the Tor Exclude/Select websites feature.
+* Improved Android Quick Settings tiles for starting/stopping modules.
+* Improved ARP Spoofing detection.
+* Lots of internal code optimizations.
