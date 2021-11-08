@@ -32,7 +32,6 @@ import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.preference.PreferenceManager
-import com.jrummyapps.android.shell.Shell
 import pan.alexander.tordnscrypt.AUX_CHANNEL_ID
 import pan.alexander.tordnscrypt.MainActivity
 import pan.alexander.tordnscrypt.R
@@ -54,24 +53,21 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import java.util.regex.Pattern
 
-const val mitmAttackWarning = "pan.alexander.tordnscrypt.arp.mitm_attack_warning"
-private const val arpFilePath = "/proc/net/arp"
-private const val commandArp = "ip neighbour show"
-private const val commandRuleShow = "ip rule"
-private const val commandRouteShow = "ip route show table %s"
+const val MITM_ATTACK_WARNING = "pan.alexander.tordnscrypt.arp.mitm_attack_warning"
+private const val ARP_FILE_PATH = "/proc/net/arp"
+private const val COMMAND_ARP = "ip neigh" //"ip neighbour show"
+private const val COMMAND_RULE_SHOW = "ip rule"
+private const val COMMAND_ROUTE_SHOW = "ip route show table %s"
 private const val ARP_NOTIFICATION_ID = 110
 private const val DHCP_NOTIFICATION_ID = 111
-private const val ARP_COMMAND = 100
-private const val RULE_COMMAND = 200
-private const val ROUTE_SHOW = 300
-private val macPattern = Pattern.compile("([0-9a-fA-F]{2}[:]){5}([0-9a-fA-F]{2})")
-private val ethTablePattern = Pattern.compile("eth\\d lookup (\\w+)")
-private val defaultGatewayPattern = Pattern.compile("default via (([0-9*]{1,3}\\.){3}[0-9*]{1,3})")
+private val macPattern by lazy { Pattern.compile("([0-9a-fA-F]{2}[:]){5}([0-9a-fA-F]{2})") }
+private val ethTablePattern by lazy { Pattern.compile("eth\\d lookup (\\w+)") }
+private val defaultGatewayPattern by lazy { Pattern.compile("default via (([0-9*]{1,3}\\.){3}[0-9*]{1,3})") }
 
 class ArpScanner private constructor(
     context: Context,
     handler: Handler?
-) : Shell.OnCommandResultListener {
+) {
 
     private var handler: WeakReference<Handler>? = null
 
@@ -82,9 +78,6 @@ class ArpScanner private constructor(
     }
 
     private var arpTableAccessible: Boolean? = null
-
-    @Volatile
-    private var session: Shell.Interactive? = null
 
     @Volatile
     private var scheduledExecutorService: ScheduledExecutorService? = null
@@ -189,8 +182,6 @@ class ArpScanner private constructor(
                 try {
 
                     if (stopping) {
-
-                        session?.close()
 
                         if (defaultGateway.isNotEmpty()) {
                             resetInternalValues()
@@ -474,7 +465,7 @@ class ArpScanner private constructor(
                     resetInternalValues()
                 }
 
-                Log.e(LOG_TAG, "ArpScanner error getting default gateway ${e.message} ${e.cause}")
+                Log.e(LOG_TAG, "ArpScanner error getting default gateway ${e.message}\n${e.cause}")
             }
         }
     }
@@ -498,7 +489,7 @@ class ArpScanner private constructor(
         }
 
         try {
-            BufferedReader(InputStreamReader(File(arpFilePath).inputStream())).use { bufferedReader ->
+            BufferedReader(InputStreamReader(File(ARP_FILE_PATH).inputStream())).use { bufferedReader ->
                 var line = bufferedReader.readLine()
                 while (line != null) {
                     if (line.contains("$defaultGateway ")) {
@@ -519,47 +510,44 @@ class ArpScanner private constructor(
                 }
             }
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "ArpScanner getArpStringFromFile exception ${e.message} ${e.cause}")
+            Log.e(LOG_TAG, "ArpScanner getArpStringFromFile exception ${e.message}\n${e.cause}")
         }
     }
 
     private fun getArpLineFromShell() {
-
         try {
+            setGatewayMacFromShell(execCommand(COMMAND_ARP))
+        } catch (e: Exception) {
+            Log.e(LOG_TAG, "ArpScanner getArpStringFromShell exception ${e.message}\n${e.cause}")
+        }
+    }
 
-            if (session?.isRunning != true) {
-                session = openSession()
+    private fun execCommand(command: String): MutableList<String> {
+        val result = mutableListOf<String>()
+        var process: Process? = null
+        try {
+            process = Runtime.getRuntime().exec(command)
+
+            process.inputStream.bufferedReader().use {
+                result.addAll(it.readLines())
+            }
+            process.errorStream.bufferedReader().use {
+                it.forEachLine { line ->
+                    Log.e(LOG_TAG, "ArpScanner execCommand $command error $line")
+                }
+            }
+            val exitCode = process.waitFor()
+
+            if (exitCode != 0) {
+                Log.w(LOG_TAG, "ArpScanner result exitCode:$exitCode command:$command")
             }
 
-            session?.addCommand(commandArp, ARP_COMMAND, this)
-
-        } catch (e: Exception) {
-            Log.e(LOG_TAG, "ArpScanner getArpStringFromShell exception ${e.message} ${e.cause}")
+        } catch (e: java.lang.Exception) {
+            Log.e(LOG_TAG, "ArpScanner execCommand $command exception ${e.message}\n${e.cause}")
+        } finally {
+            process?.destroy()
         }
-    }
-
-    private fun openSession(): Shell.Interactive? {
-        return Shell.Builder()
-            .useSH()
-            .setWatchdogTimeout(5)
-            .open(this)
-    }
-
-    override fun onCommandResult(commandCode: Int, exitCode: Int, output: MutableList<String>?) {
-        if (output == null) {
-            return
-        }
-
-        if (exitCode != 0) {
-            Log.w(LOG_TAG, "ArpScanner onCommandResult exitCode:$exitCode commandCode:$commandCode")
-        }
-
-        when (commandCode) {
-            ARP_COMMAND -> setGatewayMacFromShell(output)
-            RULE_COMMAND -> requestDefaultEthernetGateway(output)
-            ROUTE_SHOW -> setDefaultEthernetGateway(output)
-        }
-
+        return result
     }
 
     private fun setGatewayMacFromShell(lines: MutableList<String>) {
@@ -600,18 +588,10 @@ class ArpScanner private constructor(
     }
 
     private fun requestRuleTable() {
-
         if (ethernetTable.isEmpty()) {
             try {
-
-                if (session?.isRunning != true) {
-                    session = openSession()
-                }
-
                 Log.i(LOG_TAG, "ArpScanner requestRuleTable")
-
-                session?.addCommand(commandRuleShow, RULE_COMMAND, this)
-
+                requestDefaultEthernetGateway(execCommand(COMMAND_RULE_SHOW))
             } catch (e: Exception) {
                 Log.e(LOG_TAG, "ArpScanner requestRuleTable exception ${e.message} ${e.cause}")
             }
@@ -632,15 +612,14 @@ class ArpScanner private constructor(
 
                     Log.i(LOG_TAG, "ArpScanner ethTable is $ethernetTable")
 
-                    if (session?.isRunning != true) {
-                        session = openSession()
-                    }
-
                     if (ethernetTable.isNotEmpty()) {
-                        session?.addCommand(
-                            String.format(commandRouteShow, ethernetTable),
-                            ROUTE_SHOW,
-                            this
+                        setDefaultEthernetGateway(
+                            execCommand(
+                                String.format(
+                                    COMMAND_ROUTE_SHOW,
+                                    ethernetTable
+                                )
+                            )
                         )
                     }
 
@@ -657,15 +636,14 @@ class ArpScanner private constructor(
 
     private fun requestDefaultEthernetGateway() {
         try {
-            if (session?.isRunning != true) {
-                session = openSession()
-            }
-
             if (ethernetTable.isNotEmpty()) {
-                session?.addCommand(
-                    String.format(commandRouteShow, ethernetTable),
-                    ROUTE_SHOW,
-                    this
+                setDefaultEthernetGateway(
+                    execCommand(
+                        String.format(
+                            COMMAND_ROUTE_SHOW,
+                            ethernetTable
+                        )
+                    )
                 )
             }
         } catch (e: java.lang.Exception) {
@@ -717,7 +695,7 @@ class ArpScanner private constructor(
     private fun isArpTableAccessible(): Boolean {
         var result = false
 
-        val arp = File(arpFilePath)
+        val arp = File(ARP_FILE_PATH)
 
         try {
             if (arp.isFile && arp.canRead()) {
@@ -738,7 +716,7 @@ class ArpScanner private constructor(
         val notificationIntent = Intent(context, MainActivity::class.java)
         notificationIntent.action = Intent.ACTION_MAIN
         notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER)
-        notificationIntent.putExtra(mitmAttackWarning, true)
+        notificationIntent.putExtra(MITM_ATTACK_WARNING, true)
 
         val contentIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             PendingIntent.getActivity(
@@ -794,7 +772,7 @@ class ArpScanner private constructor(
 
     private fun updateMainActivityIcons(context: Context) {
         handler?.get()?.post {
-            LocalBroadcastManager.getInstance(context).sendBroadcast(Intent(mitmAttackWarning))
+            LocalBroadcastManager.getInstance(context).sendBroadcast(Intent(MITM_ATTACK_WARNING))
         }
     }
 
