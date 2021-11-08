@@ -37,19 +37,14 @@ import androidx.core.net.ConnectivityManagerCompat;
 
 import java.io.File;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPN;
 
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
-import static pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper.reload;
 
 public class NetworkUtils {
 
@@ -78,7 +73,7 @@ public class NetworkUtils {
             "172.16.0.0/12",
             "192.168.0.0/16",
             "100.64.0.0/10"
-            ));
+    ));
 
     @Keep
     private static native String jni_getprop(String name);
@@ -110,15 +105,12 @@ public class NetworkUtils {
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork());
 
-            if (capabilities != null
-                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) {
-
+            if (capabilities != null) {
                 if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
                     return true;
                 } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
                     return true;
-                }  else return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET);
+                } else return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET);
             }
 
             return false;
@@ -138,9 +130,7 @@ public class NetworkUtils {
         }
 
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && capabilities != null) {
-            return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-                    && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
+            return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
         } else {
             NetworkInfo ni = (connectivityManager == null ? null : connectivityManager.getActiveNetworkInfo());
             return (ni != null && ni.getType() == ConnectivityManager.TYPE_MOBILE);
@@ -158,9 +148,7 @@ public class NetworkUtils {
 
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && capabilities != null) {
 
-            return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-                    && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+            return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
                     && !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_ROAMING);
         } else {
             NetworkInfo ni = (connectivityManager == null ? null : connectivityManager.getActiveNetworkInfo());
@@ -183,9 +171,7 @@ public class NetworkUtils {
 
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && capabilities != null) {
 
-            return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-                    && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
+            return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
         } else {
             NetworkInfo ni = (connectivityManager == null ? null : connectivityManager.getActiveNetworkInfo());
             return ni != null && ni.getType() == ConnectivityManager.TYPE_WIFI;
@@ -203,9 +189,7 @@ public class NetworkUtils {
 
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && capabilities != null) {
 
-            return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-                    && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET);
+            return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET);
         } else {
             NetworkInfo ni = (connectivityManager == null ? null : connectivityManager.getActiveNetworkInfo());
             return ni != null && ni.getType() == ConnectivityManager.TYPE_ETHERNET;
@@ -223,34 +207,6 @@ public class NetworkUtils {
         }
 
         return false;
-    }
-
-    public static void isConnectedAsynchronousConfirmation(ServiceVPN serviceVPN) {
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
-            try (Socket socket = new Socket()) {
-
-                String dnsCryptFallbackRes = PathVars.getInstance(serviceVPN).getDNSCryptFallbackRes();
-
-                SocketAddress sockaddr = new InetSocketAddress(InetAddress.getByName(dnsCryptFallbackRes), 53);
-                socket.connect(sockaddr, 5000);
-
-                if (socket.isConnected()) {
-
-                    if (!serviceVPN.last_connected_override) {
-                        serviceVPN.last_connected_override = true;
-
-                        reload("Network is available due to confirmation.", serviceVPN);
-                    }
-
-                } else {
-                    serviceVPN.last_connected_override = false;
-                    Log.i(LOG_TAG, "Network is not available due to confirmation.");
-                }
-            } catch (Exception e) {
-                Log.i(LOG_TAG, "Network is not available due to confirmation " + e.getMessage() + " " + e.getCause());
-                serviceVPN.last_connected_override = false;
-            }
-        });
     }
 
     public static List<String> getDefaultDNS(Context context) {
@@ -333,15 +289,16 @@ public class NetworkUtils {
             try {
                 if (tcp.exists() && tcp.canRead() && serviceVPN != null)
                     serviceVPN.canFilter = true;
-                    return;
-            } catch (SecurityException ignored) {}
+                return;
+            } catch (SecurityException ignored) {
+            }
 
             try {
-                if (tcp6.exists() && tcp6.canRead() && serviceVPN != null){
+                if (tcp6.exists() && tcp6.canRead() && serviceVPN != null) {
                     serviceVPN.canFilter = true;
                 }
             } catch (SecurityException ignored) {
-                if (serviceVPN != null){
+                if (serviceVPN != null) {
                     serviceVPN.canFilter = false;
                 }
             }
