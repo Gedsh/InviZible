@@ -42,8 +42,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.FutureTask;
 
+import javax.inject.Inject;
 import javax.net.ssl.HttpsURLConnection;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.settings.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.SelectBridgesTransport;
 import pan.alexander.tordnscrypt.dialogs.ShowBridgesCodeImage;
@@ -54,6 +57,8 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.wakelock.WakeLocksManager;
 
+import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.Constants.TOR_BROWSER_USER_AGENT;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 
@@ -61,6 +66,9 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 public class GetNewBridges implements GetNewBridgesCallbacks {
 
     private volatile static WeakReference<PleaseWaitDialogBridgesRequest> dialogPleaseWait;
+
+    @Inject
+    public Lazy<PathVars> pathVars;
 
     private static final int READTIMEOUT = 180;
     private static final int CONNECTTIMEOUT = 180;
@@ -72,6 +80,7 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
     private BufferedReader bufferedReader;
 
     public GetNewBridges(WeakReference<SettingsActivity> activityWeakReference) {
+        App.getInstance().getDaggerComponent().inject(this);
         this.activity = activityWeakReference.get();
     }
 
@@ -89,8 +98,13 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
 
                 Proxy proxy = null;
                 if (ModulesStatus.getInstance().getTorState() == RUNNING) {
-                    PathVars pathVars = PathVars.getInstance(activity);
-                    proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", Integer.parseInt(pathVars.getTorHTTPTunnelPort())));
+                    proxy = new Proxy(
+                            Proxy.Type.HTTP,
+                            new InetSocketAddress(
+                                    LOOPBACK_ADDRESS,
+                                    Integer.parseInt(pathVars.get().getTorHTTPTunnelPort())
+                            )
+                    );
                 }
 
                 URL url = new URL("https://bridges.torproject.org/bridges?transport=" + transport);
@@ -108,8 +122,7 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
                 httpsURLConnection.setConnectTimeout(1000 * CONNECTTIMEOUT);
                 httpsURLConnection.setReadTimeout(1000 * READTIMEOUT);
                 httpsURLConnection.setRequestMethod("GET");
-                httpsURLConnection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) " +
-                        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36");
+                httpsURLConnection.setRequestProperty("User-Agent", TOR_BROWSER_USER_AGENT);
                 httpsURLConnection.connect();
 
                 final int code = httpsURLConnection.getResponseCode();
@@ -312,8 +325,13 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
 
                 Proxy proxy = null;
                 if (ModulesStatus.getInstance().getTorState() == RUNNING) {
-                    PathVars pathVars = PathVars.getInstance(activity);
-                    proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", Integer.parseInt(pathVars.getTorHTTPTunnelPort())));
+                    proxy = new Proxy(
+                            Proxy.Type.HTTP,
+                            new InetSocketAddress(
+                                    LOOPBACK_ADDRESS,
+                                    Integer.parseInt(pathVars.get().getTorHTTPTunnelPort())
+                            )
+                    );
                 }
 
                 String query = "captcha_challenge_field=" + secretCode +
@@ -335,8 +353,7 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
                 httpsURLConnection.setDoOutput(true);
                 httpsURLConnection.setRequestMethod("POST");
                 httpsURLConnection.setRequestProperty("Content-Length", String.valueOf(query.getBytes().length));
-                httpsURLConnection.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 9.0.1; " +
-                        "Mi Mi) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Mobile Safari/537.36");
+                httpsURLConnection.setRequestProperty("User-Agent", TOR_BROWSER_USER_AGENT);
                 httpsURLConnection.setConnectTimeout(1000 * CONNECTTIMEOUT);
                 httpsURLConnection.setReadTimeout(1000 * READTIMEOUT);
 

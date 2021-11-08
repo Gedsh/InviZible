@@ -20,6 +20,7 @@
 package pan.alexander.tordnscrypt.data.log_reader
 
 import android.util.Log
+import pan.alexander.tordnscrypt.utils.Constants.TOR_BROWSER_USER_AGENT
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.lang.Exception
 import java.net.HttpURLConnection
@@ -56,10 +57,7 @@ class HtmlReader(val port: Int) {
 
         connection.apply {
             requestMethod = "GET"
-            setRequestProperty(
-                "User-Agent", "Mozilla/5.0 (Linux; Android 9.0.1; " +
-                        "Mi Mi) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Mobile Safari/537.36"
-            )
+            setRequestProperty("User-Agent", TOR_BROWSER_USER_AGENT)
             connectTimeout = CONNECT_TIMEOUT * 1000
             connect()
         }

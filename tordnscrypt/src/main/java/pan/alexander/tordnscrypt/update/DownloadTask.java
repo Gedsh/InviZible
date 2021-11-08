@@ -50,6 +50,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.CRC32;
 
+import javax.inject.Inject;
 import javax.net.ssl.HttpsURLConnection;
 
 import dagger.Lazy;
@@ -65,13 +66,20 @@ import static pan.alexander.tordnscrypt.update.UpdateService.STOP_DOWNLOAD_ACTIO
 import static pan.alexander.tordnscrypt.update.UpdateService.UPDATE_CHANNEL_ID;
 import static pan.alexander.tordnscrypt.update.UpdateService.UPDATE_CHANNEL_NOTIFICATION_ID;
 import static pan.alexander.tordnscrypt.update.UpdateService.UPDATE_RESULT;
+import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.Constants.TOR_BROWSER_USER_AGENT;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.TopFragmentMark;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 
-class DownloadTask extends Thread {
+public class DownloadTask extends Thread {
     private static final int READ_TIMEOUT = 60;
     private static final int CONNECT_TIMEOUT = 60;
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public PathVars pathVars;
 
     private final Context context;
     private final UpdateService updateService;
@@ -84,17 +92,17 @@ class DownloadTask extends Thread {
     int notificationId;
     long startTime;
 
-    private final Lazy<PreferenceRepository> preferenceRepository;
 
-    DownloadTask(UpdateService updateService, Intent intent, int serviceStartId, int notificationId, long startTime) {
+
+    public DownloadTask(UpdateService updateService, Intent intent, int serviceStartId, int notificationId, long startTime) {
+        App.getInstance().getDaggerComponent().inject(this);
         this.context = updateService;
         this.updateService = updateService;
         this.intent = intent;
         this.serviceStartId = serviceStartId;
         this.notificationId = notificationId;
         this.startTime = startTime;
-        this.cacheDir = PathVars.getInstance(updateService).getCacheDirPath(updateService);
-        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
+        this.cacheDir = pathVars.getCacheDirPath(updateService);
     }
 
     @Override
@@ -181,8 +189,7 @@ class DownloadTask extends Thread {
 
         Proxy proxy = null;
         if (ModulesStatus.getInstance().getTorState() == RUNNING) {
-            PathVars pathVars = PathVars.getInstance(context);
-            proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", Integer.parseInt(pathVars.getTorHTTPTunnelPort())));
+            proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(LOOPBACK_ADDRESS, Integer.parseInt(pathVars.getTorHTTPTunnelPort())));
         }
 
         //create url and connect
@@ -201,8 +208,7 @@ class DownloadTask extends Thread {
 
         con.setConnectTimeout(1000 * CONNECT_TIMEOUT);
         con.setReadTimeout(1000 * READ_TIMEOUT);
-        con.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 9.0.1; " +
-                "Mi Mi) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Mobile Safari/537.36");
+        con.setRequestProperty("User-Agent", TOR_BROWSER_USER_AGENT);
 
         if (range != 0) {
             con.setRequestProperty("Range", "bytes=" + range + "-");
