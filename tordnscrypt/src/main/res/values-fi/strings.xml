@@ -363,23 +363,6 @@
     <string name="buy_premium_gp">"InviZible Pro -projekti tarvitsee apuasi. Voit ostaa premium-ominaisuuksia painamalla OK-painiketta."</string>
     <string name="wrong_purchase_signature_gp">"Anteeksi, mutta ostoksesi vahvistaminen on mahdotonta. Saat hyvityksen 3 päivän kuluttua."</string>
     <string name="only_premium_feature">"Valitettavasti tämä ominaisuus on saatavana vain premium-versiolle."</string>
-    <string name="agreement_text">"         \tKiitos InviZible Pro:n valitsemisesta. Toivon, että siitä on hyötyä yksityisyydellesi ja Internetin mukavalle käytölle.
-        
-\tInviZible Pro sisältää moduuleina Tor:in, DNSCrypt:n ja Purple I2P:n.
-
-\tInviZible Pro voi käyttää roottia, jos laitteellasi on root-käyttöoikeudet, tai käyttää paikallista VPN:ää Internet-liikenteen lähettämiseen Tor-, DNSCrypt- ja I2P-verkkoihin.
-        
-\tTämä tuote on valmistettu riippumattomasti Tor®-, DNSCrypt-, Purple I2P-ohjelmistoista, eikä sillä ole mitään yllä mainittujen projektien takuuta laadusta, sopivuudesta tai muusta.
-        
-\tInviZible Prota jaetaan siinä toivossa, että se on hyödyllinen, mutta ILMAN TAKUUTA; ilman edes implisiittistä takuita kaupallisuudelle tai sopivuudelle tietylle tavoitteelle.
-
-\tCopyright © 2019-2021
-        
-\tGarmatin Oleksandr
-        
-\tinvizible.soft@gmail.com
-        
-\tinvizible.net/en/privacy"</string>
     <string name="pref_itpd_use_HTTP_outproxy">"HTTP outproxy"</string>
     <string name="pref_itpd_HTTP_outproxy_address">"HTTP outproxy osoite"</string>
     <string name="pref_itpd_use_Socks_outproxy">"SOCKS outproxy"</string>

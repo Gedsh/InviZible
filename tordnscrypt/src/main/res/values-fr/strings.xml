@@ -363,24 +363,6 @@
     <string name="buy_premium_gp">"Le Projet InviZible Pro a besoin de votre aide. Appuyez sur OK pour acheter les fonctionnalités premium."</string>
     <string name="wrong_purchase_signature_gp">"Désolé, mais il est impossible de confirmer votre achat. Vous serez remboursé au bout de 3 jours."</string>
     <string name="only_premium_feature">"Malheureusement, cette fonctionnalité n'est disponible que dans la version premium."</string>
-    <string name="agreement_text">"\tMerci d'avoir choisi InviZible Pro. J'espère que cela sera utile à votre vie privée ainsi qu'à une utilisation d'Internet plus confortable.
-        
-\tInviZible Pro inclut Tor, DNSCrypt et Purple I2P comme modules.
-        
-\tInviZible Pro peut utiliser les Privilèges Administrateur, si votre appareil dispose de ces Privilèges, ou utiliser un VPN local pour acheminer le trafic Internet vers les réseaux Tor, DNSCrypt et I2P.
-
-\tCe logiciel est produit indépendamment des logiciels Tor®, DNSCrypt ou Purple I2P et ne comporte aucune garantie de la part de The Above Projects concernant la qualité, l'adéquation ou quoi que ce soit d'autre.
-        
-\tInviZible Pro est distribué dans l'espoir qu'il sera utile, mais SANS AUCUNE GARANTIE; sans même la garantie implicite QUALITÉ MARCHANDE ou D'ADAPTATION À UN USAGE PARTICULIER.
-        
-\tCopyright © 2019-2021
-        
-\tGarmatin Oleksandr
-        
-\tinvizible.soft@gmail.com
-        
-\tinvizible.net/fr/privacy
-    "</string>
     <string name="pref_itpd_use_HTTP_outproxy">"Mandataire HTTP sortant"</string>
     <string name="pref_itpd_HTTP_outproxy_address">"Adresse du mandataire HTTP sortant"</string>
     <string name="pref_itpd_use_Socks_outproxy">"Mandataire SOCKS sortant"</string>

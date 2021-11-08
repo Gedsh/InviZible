@@ -398,24 +398,6 @@
     <string name="buy_premium_gp">"پروژه InviZible Pro به کمک شما نیاز دارد. بر روی OK کلیک کرده تا نسخه پیشرفته را خریداری نمایید."</string>
     <string name="wrong_purchase_signature_gp">"متأسفیم، اما خرید شما تأیید نشد. طی ۳ روز آینده وجه به حساب شما برمی‌گردد."</string>
     <string name="only_premium_feature">"متأسفانه، این قابلیت فقط برای نسخه کامل برنامه قابل استفاده است."</string>
-    <string name="agreement_text">"از انتخاب InviZible Pro متشکرم. امیدوارم که برای حفظ حریم شخصی شما و استفاده راحت از اینترنت مفید باشد.
-
-اپلیکیشن InviZible Pro شامل TOR و DNSCrypt و Purple I2P به‌عنوان ماژول است.
-
-اگر دستگاه شما دارای قابلیت دسترسی به ریشه باشد، یا از VPN محلی برای انتقال ترافیک اینترنت به شبکه‌های TOR و DNSCrypt و I2P استفاده کند، InviZible Pro می تواند از ROOT استفاده کند.
-
-این محصول مستقلاً از نرم‌افزار TOR® ، DNSCrypt ، Purple I2P تولید شده است و هیچ‌گونه تضمینی از Above Projects در مورد کیفیت، مناسب بودن یا هر چیز دیگری ندارد.
-        
-اپلیکیشن InviZible Pro با این امید که مفید واقع شود، توزیع می‌شود، اما بدون هیچ‌گونه ضمانتی؛ حتی بدون ضمانت ضمنی قابلیت دستیابی یا تناسب برای یک هدف خاص.
-        
-حق چاپ © 2019-2021
-
-Garmatin Oleksandr
-
-invizible.soft@gmail.com
-
-invizible.net/en/privacy
-    "</string>
     <string name="pref_itpd_use_HTTP_outproxy">"پروکسی"</string>
     <string name="pref_itpd_HTTP_outproxy_address">"آدرس وکالت HTTP"</string>
     <string name="pref_itpd_use_Socks_outproxy">"وکالت ساکس"</string>

@@ -347,15 +347,6 @@ Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych 
     <string name="buy_premium_gp">"Projekt InviZible Pro potrzebuje Twojego wsparcia. Naciśnij OK, aby kupić funkcje premium."</string>
     <string name="wrong_purchase_signature_gp">"Przepraszamy, ale nie mozna potwierdzic zakupu. Otrzymasz zwrot pieniedzy po 3 dniach."</string>
     <string name="only_premium_feature">"Niestety ta funkcja jest dostepna tylko w wersji premium."</string>
-    <string name="agreement_text">"\tDziekuje za wybor InviZible Pro. Mam nadzieje ze bedzie przydatna do zachowania Twojej prywatnosci i latwiejszego korzystania z sieci.
-\tInviZible Pro sklada sie z Tor, DNSCrypt oraz Purple I2P jako moduly.
-\tInviZible Pro moze korzystac z praw roota, jesli zrootowales urzadzenie lub korzystac z trybu VPNlokalnego wcelu przekierowania ruchu do Tora, DNSCrypt oraz sieci  I2P.
-\tTen produkt zostal opracowany niezaleznie od projektow Tor®, DNSCrypt, Purple I2P oraz nieprzenosi zadnych praw odnosnie gwarnacji, jakosci, przydatnosci itp.
-\tInviZible Pro jest dystrybuowany w dobrej wierze ze bedzie przydatny, jednak bez zadnej GWARANCJI (wliczajac gwarancje handlowe i gwarancje przydatnosci do okreslonych celow).
-\tCopyright © 2019-2021
-\tGarmatin Oleksandr
-\tinvizible.soft@gmail.com
-\tinvizible.net/en/privacy"</string>
     <string name="pref_itpd_use_HTTP_outproxy">"Proxy wychodzace HTTP"</string>
     <string name="pref_itpd_HTTP_outproxy_address">"Adres wychodzacego proxy HTTP"</string>
     <string name="pref_itpd_use_Socks_outproxy">"Proxy wychodzace SOCKS"</string>

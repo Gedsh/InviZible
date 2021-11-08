@@ -353,15 +353,6 @@
     <string name="buy_premium_gp">"InviZible Pro 项目需要您的帮助。点按 OK 购买高级功能。"</string>
     <string name="wrong_purchase_signature_gp">"抱歉，无法确认您的购买。您将在 3 日后收到退款。"</string>
     <string name="only_premium_feature">"不幸的是，此功能仅高级版可用。"</string>
-    <string name="agreement_text">"\t感谢选择 InviZible Pro。我希望它将对您的隐私有帮助并使您舒适地使用互联网。
-\tInviZible Pro 包含 Tor，DNSCrypt 和 Purple I2P 模块。
-\tInviZible Pro 可以使用 root，如果您的设备拥有 root 权限，或使用本地 VPN 将互联网流量传入 Tor，DNSCrypt 和 I2P 网络。
-\t此产品独立于 Tor®，DNSCrypt，Purple I2P 软件，不附带来自上述项目的任何关于质量，适用性或任何其它方面的担保。
-\tInviZible Pro 在希望有用的愿景下分发，但没有任何担保；甚至不隐含对特定目的的可销售性和可用性的担保。
-\tCopyright © 2019-2021
-\tGarmatin Oleksandr
-\tinvizible.soft@gmail.com
-\tinvizible.net/en/privacy"</string>
     <string name="pref_itpd_use_HTTP_outproxy">"HTTP 出口代理"</string>
     <string name="pref_itpd_HTTP_outproxy_address">"HTTP 出口代理地址"</string>
     <string name="pref_itpd_use_Socks_outproxy">"SOCKS 出口代理"</string>

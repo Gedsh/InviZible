@@ -350,15 +350,6 @@ Con estas peticiones se puede descubrir la presencia de malware, aplicaciones de
     <string name="buy_premium_gp">"InviZible Pro necesita de tu ayuda. Pulsa OK para comprar y obtener funciones exclusivas."</string>
     <string name="wrong_purchase_signature_gp">"Lo sentimos, pero no hemos podido verificar tu compra. Recibiras un reembolso en los próximos días (3 días, al menos)."</string>
     <string name="only_premium_feature">"Lo sentimos, pero esa función solo esta disponible en la versión exclusiva."</string>
-    <string name="agreement_text">"\tGracias por usar InviZible Pro. Esperamos que le sea de utilidad para aumentar la privacidad en Internet y puedas sentir más confianza en su uso, cómo fue en un pasado no tan lejano, y como debería ser una verdadera red libre.
-\tInviZible Pro provee acceso al software de Tor, DNSCrypt e I2Pd de una manera sencilla e intuitiva.
-\tInviZible Pro puede usar privilegios de SuperUsuario, en caso de que estén disponible, y, por supuesto, tú otorgues a la app su utilización, aunque también puede proveer crear una VPN local, como alternativa, y redirigir el tráfico de Internet de éstas formas de forma transparente a través de la red de Tor, DNSCrypt y/o/e I2P, según configures las opciones de la app.
-\tÉsta aplicación está desarrollada y producida de forma independiente a los proyectos Tor®, DNSCrypt, e I2Pd, y, por tanto, el software que provee no dispone, tiene, u obtiene, ni provee. garantía alguna, ni sobre ningún tipo de mantenimiento, o soporte, que pudiese afectar a/de los proyectos ya mencionados, tampoco ninguna/s garantía/s sobre calidad o aprobación, o cualquier otro resultado que pudiese entregar éste producto respectivamente respecto al software que proveen dichos proyectos.
-\tInviZible Pro se distribuye con la esperanza de que le sea útil, pero, se repite, que SIN GARANTÍAS DE NINGÚN TIPO; incluso sin las garantías que impliquen o implicasen ser un producto COMERCIAL, o, SERVIR A ALGÚN PROPÓSITO EN CONCRETO.
-\tTodos los derechos de autor reservados © 2019-2021
-\tLa comunidad de InviZible Pro, y su desarrollador, Garmatin Oleksandr
-\tinvizible.soft@gmail.com
-\tinvizible.net/en/privacy"</string>
     <string name="pref_itpd_use_HTTP_outproxy">"Proxy HTTP exterior"</string>
     <string name="pref_itpd_HTTP_outproxy_address">"Dirección del proxy HTTP exterior"</string>
     <string name="pref_itpd_use_Socks_outproxy">"Proxy SOCKS exterior"</string>
