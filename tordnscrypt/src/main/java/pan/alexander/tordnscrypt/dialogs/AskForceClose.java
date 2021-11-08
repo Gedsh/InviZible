@@ -20,19 +20,20 @@ package pan.alexander.tordnscrypt.dialogs;
 */
 
 import android.content.Context;
-import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
-import pan.alexander.tordnscrypt.modules.ModulesService;
-import pan.alexander.tordnscrypt.modules.ModulesServiceActions;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
@@ -41,13 +42,25 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
+import javax.inject.Inject;
+
 public class AskForceClose extends ExtendedDialogFragment {
+
+    @Inject
+    public Lazy<PathVars> pathVars;
+
     private static String module;
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
     public static DialogFragment getInstance(String module) {
         AskForceClose.module = module;
         return new AskForceClose();
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        App.getInstance().getDaggerComponent().inject(this);
+        super.onCreate(savedInstanceState);
     }
 
     @Override
@@ -64,10 +77,8 @@ public class AskForceClose extends ExtendedDialogFragment {
                         final Context context = getActivity();
                         Handler handler = new Handler(Looper.getMainLooper());
                         handler.postDelayed(() -> {
-                            if (context!= null) {
-                                Intent intent = new Intent(context, ModulesService.class);
-                                intent.setAction(ModulesServiceActions.actionStopService);
-                                context.startService(intent);
+                            if (context != null) {
+                                ModulesAux.stopModulesService(context);
                             }
                         }, 1000);
 
@@ -101,7 +112,7 @@ public class AskForceClose extends ExtendedDialogFragment {
 
         cleanModulesFolders(context);
 
-        handler.postDelayed(() -> System.exit(0), 3000);
+        handler.postDelayed(() -> android.os.Process.killProcess(android.os.Process.myPid()), 3000);
     }
 
     private void forceStopModulesWithRootMethod(Context context, Handler handler) {
@@ -112,20 +123,28 @@ public class AskForceClose extends ExtendedDialogFragment {
 
         boolean useModulesWithRoot = modulesStatus.isUseModulesWithRoot();
 
-        ModulesKiller.forceCloseApp(PathVars.getInstance(context));
+        ModulesKiller.forceCloseApp(pathVars.get());
 
         cleanModulesFolders(context);
 
         if (!useModulesWithRoot) {
-            handler.postDelayed(() -> System.exit(0), 3000);
+            handler.postDelayed(() -> android.os.Process.killProcess(android.os.Process.myPid()), 3000);
         }
     }
 
     private void cleanModulesFolders(Context context) {
 
-        String appDataDir = PathVars.getInstance(context).getAppDataDir();
+        String appDataDir = pathVars.get().getAppDataDir();
 
         CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+            FileManager.deleteFileSynchronous(context, appDataDir
+                    + "/app_data/dnscrypt-proxy", "public-resolvers.md");
+            FileManager.deleteFileSynchronous(context, appDataDir
+                    + "/app_data/dnscrypt-proxy", "public-resolvers.md.minisig");
+            FileManager.deleteFileSynchronous(context, appDataDir
+                    + "/app_data/dnscrypt-proxy", "relays.md");
+            FileManager.deleteFileSynchronous(context, appDataDir
+                    + "/app_data/dnscrypt-proxy", "relays.md.minisig");
             FileManager.deleteDirSynchronous(context, appDataDir + "/tor_data");
             FileManager.deleteDirSynchronous(context, appDataDir + "/i2pd_data");
         });
