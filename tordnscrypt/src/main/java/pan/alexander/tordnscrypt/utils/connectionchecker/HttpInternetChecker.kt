@@ -17,54 +17,57 @@
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.data.connection_checker
+package pan.alexander.tordnscrypt.utils.connectionchecker
 
-import android.content.Context
 import android.util.Log
 import pan.alexander.tordnscrypt.settings.PathVars
+import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
+import pan.alexander.tordnscrypt.utils.Constants.TOR_BROWSER_USER_AGENT
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.net.HttpURLConnection
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.net.URL
+import javax.inject.Inject
 import javax.net.ssl.HttpsURLConnection
 
 private const val READ_TIMEOUT_SEC = 15
-private const val CONNECT_TIMEOUT_SEC = 15
-private const val USER_AGENT = "Mozilla/5.0 (Linux; Android 9.0.1; " +
-        "Mi Mi) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Mobile Safari/537.36"
+private const val CONNECT_TIMEOUT_SEC = 50
+private const val USER_AGENT_PROPERTY = "User-Agent"
+private const val REQUEST_METHOD_GET = "GET"
 
-class InternetChecker(val site: String, private val withTor: Boolean) {
+class HttpInternetChecker @Inject constructor(
+    private val pathVars: PathVars
+) {
 
-    var con: HttpURLConnection? = null
+    private var connection: HttpURLConnection? = null
 
-    fun checkConnectionAvailability(context: Context?): Boolean {
-        context ?: return false
+    fun checkConnectionAvailability(site: String, withTor: Boolean): Boolean {
         var result = false
 
         try {
-            result = checkConnection(context)
+            result = checkConnection(site, withTor)
             return result
         } catch (e: Exception) {
-            Log.w(LOG_TAG, "InternetChecker checkConnectionAvailability exception ${e.message} ${e.cause}")
+            Log.w(LOG_TAG, "HttpInternetChecker check connection failed ${e.message} ${e.cause}")
         } finally {
             if (result) {
-                con?.disconnect()
+                connection?.disconnect()
             }
         }
 
         return false
     }
 
-    private fun checkConnection(context: Context?): Boolean {
+    private fun checkConnection(site: String, withTor: Boolean): Boolean {
         val url = URL(site)
 
-        con = if (withTor) {
+        connection = if (withTor) {
             val proxy = Proxy(
-                Proxy.Type.HTTP,
+                Proxy.Type.SOCKS,
                 InetSocketAddress(
-                    "127.0.0.1",
-                    PathVars.getInstance(context).torHTTPTunnelPort.toInt()
+                    LOOPBACK_ADDRESS,
+                    pathVars.torSOCKSPort.toInt()
                 )
             )
 
@@ -73,13 +76,13 @@ class InternetChecker(val site: String, private val withTor: Boolean) {
             url.openConnection() as HttpsURLConnection
         }
 
-        val connection = con ?: return false
+        val connection = connection ?: return false
 
         connection.apply {
-            requestMethod = "GET"
+            requestMethod = REQUEST_METHOD_GET
             connectTimeout = CONNECT_TIMEOUT_SEC * 1000
             readTimeout = READ_TIMEOUT_SEC * 1000
-            setRequestProperty("User-Agent", USER_AGENT)
+            setRequestProperty(USER_AGENT_PROPERTY, TOR_BROWSER_USER_AGENT)
             connect()
         }
 

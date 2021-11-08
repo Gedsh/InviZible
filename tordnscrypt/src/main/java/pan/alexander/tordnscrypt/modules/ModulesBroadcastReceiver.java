@@ -45,6 +45,8 @@ import java.util.concurrent.TimeUnit;
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
+import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor;
+import pan.alexander.tordnscrypt.domain.connection_checker.OnInternetConnectionCheckedListener;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
@@ -55,7 +57,15 @@ import pan.alexander.tordnscrypt.vpn.NetworkUtils;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
-public class ModulesBroadcastReceiver extends BroadcastReceiver {
+
+import javax.inject.Inject;
+
+public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInternetConnectionCheckedListener {
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Lazy<ConnectionCheckerInteractor> connectionCheckerInteractor;
 
     private final static int DELAY_BEFORE_CHECKING_INTERNET_SHARING_SEC = 5;
     private final static int DELAY_BEFORE_UPDATING_IPTABLES_RULES_SEC = 5;
@@ -70,12 +80,12 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
     private static final String shutdownFilterAction = "android.intent.action.ACTION_SHUTDOWN";
     private static final String powerOFFFilterAction = "android.intent.action.QUICKBOOT_POWEROFF";
     private final ArpScanner arpScanner;
-    private final Lazy<PreferenceRepository> preferenceRepository;
+
 
     public ModulesBroadcastReceiver(Context context, ArpScanner arpScanner) {
+        App.getInstance().getDaggerComponent().inject(this);
         this.context = context;
         this.arpScanner = arpScanner;
-        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     @Override
@@ -205,6 +215,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
                 Log.i(LOG_TAG, "ModulesBroadcastReceiver Available network=" + network);
                 updateIptablesRules(false);
                 resetArpScanner(true);
+                setInternetAvailable(true);
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && last_network != network.hashCode()) {
                     PrivateDnsProxyManager.INSTANCE.checkPrivateDNSAndProxy(
@@ -233,6 +244,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
                 if (network.hashCode() != last_network) {
                     last_network = network.hashCode();
                     resetArpScanner();
+                    checkInternetConnection();
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                         PrivateDnsProxyManager.INSTANCE.checkPrivateDNSAndProxy(
@@ -248,7 +260,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
                     updateIptablesRules(false);
                     resetArpScanner();
                     last_network = network.hashCode();
-
+                    checkInternetConnection();
                     Log.i(LOG_TAG, "ModulesBroadcastReceiver Changed capabilities=" + network);
                 }
             }
@@ -259,6 +271,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
                 updateIptablesRules(false);
                 resetArpScanner(false);
                 last_network = 0;
+                setInternetAvailable(false);
             }
 
             boolean same(List<InetAddress> last, List<InetAddress> current) {
@@ -300,6 +313,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
         if (pm != null && !pm.isDeviceIdleMode()) {
             updateIptablesRules(false);
             resetArpScanner();
+            checkInternetConnection();
         }
     }
 
@@ -418,5 +432,31 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver {
         if (arpScanner != null && context != null) {
             arpScanner.reset(context, NetworkUtils.isConnected(context));
         }
+    }
+
+    private void setInternetAvailable(boolean available) {
+        ConnectionCheckerInteractor interactor = connectionCheckerInteractor.get();
+        interactor.setInternetConnectionResult(available);
+        interactor.checkNetworkConnection();
+    }
+
+    private void checkInternetConnection() {
+        ConnectionCheckerInteractor interactor = connectionCheckerInteractor.get();
+        interactor.setInternetConnectionResult(false);
+        interactor.checkInternetConnection();
+    }
+
+    @Override
+    public void onConnectionChecked(boolean available) {
+        if (available) {
+            Log.i(LOG_TAG, "Network is available due to confirmation.");
+        } else {
+            Log.i(LOG_TAG, "Network is not available due to confirmation.");
+        }
+    }
+
+    @Override
+    public boolean isActive() {
+        return true;
     }
 }

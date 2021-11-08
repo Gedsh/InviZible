@@ -49,6 +49,7 @@ import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
+import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.patches.Patch;
 import pan.alexander.tordnscrypt.settings.PathVars;
@@ -100,12 +101,14 @@ public class ModulesService extends Service {
     private final static int TIMER_HIGH_SPEED = 1000;
     private final static int TIMER_LOW_SPEED = 30000;
 
-    static final String DNSCRYPT_KEYWORD = "checkDNSRunning";
-    static final String TOR_KEYWORD = "checkTrRunning";
-    static final String ITPD_KEYWORD = "checkITPDRunning";
+    public static final String DNSCRYPT_KEYWORD = "checkDNSRunning";
+    public static final String TOR_KEYWORD = "checkTrRunning";
+    public static final String ITPD_KEYWORD = "checkITPDRunning";
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Lazy<ConnectionCheckerInteractor> internetCheckerInteractor;
 
     private static WakeLocksManager wakeLocksManager;
 
@@ -113,9 +116,11 @@ public class ModulesService extends Service {
 
     @Inject
     public volatile Lazy<Handler> handler;
+    @Inject
+    public Lazy<PathVars> pathVars;
+
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
-    private PathVars pathVars;
     private NotificationManager systemNotificationManager;
     private ScheduledExecutorService checkModulesThreadsTimer;
     private ScheduledFuture<?> scheduledFuture;
@@ -149,13 +154,11 @@ public class ModulesService extends Service {
             serviceNotificationManager.sendNotification(title, message);
         }
 
-        App.instance.daggerComponent.inject(this);
+        App.getInstance().getDaggerComponent().inject(this);
 
         serviceIsRunning = true;
 
-        pathVars = PathVars.getInstance(this);
-
-        modulesKiller = new ModulesKiller(this, pathVars);
+        modulesKiller = new ModulesKiller(this, pathVars.get());
 
         startModulesThreadsTimer();
 
@@ -312,11 +315,11 @@ public class ModulesService extends Service {
                     return;
                 }
 
-                cleanLogFileNoRootMethod(pathVars.getAppDataDir() + "/logs/DnsCrypt.log",
+                cleanLogFileNoRootMethod(pathVars.get().getAppDataDir() + "/logs/DnsCrypt.log",
                         ModulesService.this.getResources().getString(R.string.tvDNSDefaultLog) + " " + DNSCryptVersion);
 
                 ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(
-                        ModulesService.this.getApplicationContext(), handler.get(), pathVars
+                        ModulesService.this.getApplicationContext(), handler.get()
                 );
                 Thread dnsCryptThread = new Thread(modulesStarterHelper.getDNSCryptStarterRunnable());
                 dnsCryptThread.setName("DNSCryptThread");
@@ -379,7 +382,7 @@ public class ModulesService extends Service {
     }
 
     private boolean stopDNSCryptIfPortIsBusy() {
-        if (isNotAvailable(pathVars.getDNSCryptPort())) {
+        if (isNotAvailable(pathVars.get().getDNSCryptPort())) {
             try {
                 modulesStatus.setDnsCryptState(RESTARTING);
 
@@ -437,11 +440,11 @@ public class ModulesService extends Service {
                     return;
                 }
 
-                cleanLogFileNoRootMethod(pathVars.getAppDataDir() + "/logs/Tor.log",
+                cleanLogFileNoRootMethod(pathVars.get().getAppDataDir() + "/logs/Tor.log",
                         ModulesService.this.getResources().getString(R.string.tvTorDefaultLog) + " " + TorVersion);
 
                 ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(
-                        ModulesService.this.getApplicationContext(), handler.get(), pathVars
+                        ModulesService.this.getApplicationContext(), handler.get()
                 );
                 Thread torThread = new Thread(modulesStarterHelper.getTorStarterRunnable());
                 torThread.setName("TorThread");
@@ -504,10 +507,10 @@ public class ModulesService extends Service {
     }
 
     private boolean stopTorIfPortsIsBusy() {
-        boolean stopRequired = isNotAvailable(pathVars.getTorDNSPort())
-                || isNotAvailable(pathVars.getTorSOCKSPort())
-                || isNotAvailable(pathVars.getTorTransPort())
-                || isNotAvailable(pathVars.getTorHTTPTunnelPort());
+        boolean stopRequired = isNotAvailable(pathVars.get().getTorDNSPort())
+                || isNotAvailable(pathVars.get().getTorSOCKSPort())
+                || isNotAvailable(pathVars.get().getTorTransPort())
+                || isNotAvailable(pathVars.get().getTorHTTPTunnelPort());
 
         if (stopRequired) {
             try {
@@ -568,10 +571,10 @@ public class ModulesService extends Service {
                     return;
                 }
 
-                cleanLogFileNoRootMethod(pathVars.getAppDataDir() + "/logs/i2pd.log", "");
+                cleanLogFileNoRootMethod(pathVars.get().getAppDataDir() + "/logs/i2pd.log", "");
 
                 ModulesStarterHelper modulesStarterHelper = new ModulesStarterHelper(
-                        ModulesService.this.getApplicationContext(), handler.get(), pathVars
+                        ModulesService.this.getApplicationContext(), handler.get()
                 );
                 Thread itpdThread = new Thread(modulesStarterHelper.getITPDStarterRunnable());
                 itpdThread.setName("ITPDThread");
@@ -636,7 +639,7 @@ public class ModulesService extends Service {
 
         Set<String> itpdTunnelsPorts = new HashSet<>();
 
-        List<String> lines = FileManager.readTextFileSynchronous(this, pathVars.getAppDataDir() + "/app_data/i2pd/tunnels.conf");
+        List<String> lines = FileManager.readTextFileSynchronous(this, pathVars.get().getAppDataDir() + "/app_data/i2pd/tunnels.conf");
         for (String line : lines) {
             if (line.matches("^port ?= ?\\d+")) {
                 String port = line.substring(line.indexOf("=") + 1).trim();
@@ -658,8 +661,8 @@ public class ModulesService extends Service {
         }
 
         stopRequired = stopRequired ||
-                isNotAvailable(pathVars.getITPDSOCKSPort())
-                || isNotAvailable(pathVars.getITPDHttpProxyPort());
+                isNotAvailable(pathVars.get().getITPDSOCKSPort())
+                || isNotAvailable(pathVars.get().getITPDHttpProxyPort());
 
         if (stopRequired) {
             try {
@@ -747,6 +750,8 @@ public class ModulesService extends Service {
 
                 modulesStatus.setTorState(RUNNING);
 
+                checkInternetConnection();
+
             } catch (Exception e) {
                 Log.e(LOG_TAG, "ModulesService restartTor exception " + e.getMessage() + " " + e.getCause());
             }
@@ -774,6 +779,7 @@ public class ModulesService extends Service {
 
                 if (modulesStatus.getTorState() != RUNNING) {
                     startTor();
+                    checkInternetConnection();
                 }
 
             } catch (InterruptedException e) {
@@ -793,6 +799,8 @@ public class ModulesService extends Service {
             try {
                 modulesStatus.setItpdState(RESTARTING);
 
+                internetCheckerInteractor.get().setInternetConnectionResult(false);
+
                 Thread killerThread = new Thread(modulesKiller.getITPDKillerRunnable());
                 killerThread.start();
 
@@ -811,6 +819,12 @@ public class ModulesService extends Service {
             }
 
         }).start();
+    }
+
+    private void checkInternetConnection() {
+        ConnectionCheckerInteractor interactor = internetCheckerInteractor.get();
+        interactor.setInternetConnectionResult(false);
+        interactor.checkInternetConnection();
     }
 
     private void dismissNotification(int startId) {
@@ -994,9 +1008,11 @@ public class ModulesService extends Service {
                 && modulesBroadcastReceiver == null) {
             modulesBroadcastReceiver = new ModulesBroadcastReceiver(this, arpScanner);
             modulesBroadcastReceiver.registerReceivers();
+            internetCheckerInteractor.get().addListener(modulesBroadcastReceiver);
         } else if (modulesStatus.getMode() != ROOT_MODE
                 && modulesBroadcastReceiver != null) {
             unregisterModulesBroadcastReceiver();
+            internetCheckerInteractor.get().removeListener(modulesBroadcastReceiver);
             modulesBroadcastReceiver = null;
         }
 
@@ -1085,7 +1101,7 @@ public class ModulesService extends Service {
 
     private void cleanLogFileNoRootMethod(String logFilePath, String text) {
         try {
-            File f = new File(pathVars.getAppDataDir() + "/logs");
+            File f = new File(pathVars.get().getAppDataDir() + "/logs");
 
             if (f.mkdirs() && f.setReadable(true) && f.setWritable(true))
                 Log.i(LOG_TAG, "log dir created");

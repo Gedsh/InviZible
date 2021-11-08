@@ -42,11 +42,10 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
-import pan.alexander.tordnscrypt.domain.connection_checker.CheckConnectionInteractor;
+import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractorImpl;
 import pan.alexander.tordnscrypt.domain.log_reader.TorInteractorInterface;
 import pan.alexander.tordnscrypt.domain.connection_checker.OnInternetConnectionCheckedListener;
 import pan.alexander.tordnscrypt.domain.log_reader.LogDataModel;
-import pan.alexander.tordnscrypt.domain.log_reader.LogReaderInteractors;
 import pan.alexander.tordnscrypt.domain.log_reader.tor.OnTorLogUpdatedListener;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
@@ -61,7 +60,6 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
-import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.startRefreshTorUnlockIPs;
 import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.stopRefreshTorUnlockIPs;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
@@ -74,8 +72,17 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
+import javax.inject.Inject;
+
 public class TorFragmentPresenter implements TorFragmentPresenterInterface,
         OnTorLogUpdatedListener, OnInternetConnectionCheckedListener {
+
+    @Inject
+    public Lazy<ConnectionCheckerInteractorImpl> checkConnectionInteractor;
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Lazy<TorInteractorInterface> torInteractor;
 
     public TorFragmentView view;
 
@@ -87,18 +94,16 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
     private ScaleGestureDetector scaleGestureDetector;
 
-    private TorInteractorInterface torInteractor;
     private volatile LogDataModel savedLogData = null;
     private volatile int savedLinesLength;
     private boolean fixedTorReady;
     private boolean fixedTorError;
 
-    private CheckConnectionInteractor checkConnectionInteractor;
-    private final Lazy<PreferenceRepository> preferenceRepository;
+
 
     public TorFragmentPresenter(TorFragmentView view) {
+        App.getInstance().initLogReaderDaggerSubcomponent().inject(this);
         this.view = view;
-        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     public void onStart() {
@@ -163,12 +168,10 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
             fixedModuleState = STOPPED;
             torLogAutoScroll = true;
             scaleGestureDetector = null;
-            torInteractor = null;
             savedLogData = null;
             savedLinesLength = 0;
             fixedTorReady = false;
             fixedTorError = false;
-            checkConnectionInteractor = null;
         }
 
         view = null;
@@ -322,36 +325,26 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
     @Override
     public synchronized void displayLog() {
 
-        if (torInteractor == null) {
-            torInteractor = LogReaderInteractors.Companion.getInteractor();
-        }
-
-        torInteractor.addOnTorLogUpdatedListener(this);
+        torInteractor.get().addOnTorLogUpdatedListener(this);
 
         savedLogData = null;
 
         savedLinesLength = 0;
 
-        if (checkConnectionInteractor == null) {
-            checkConnectionInteractor = new CheckConnectionInteractor();
-            checkConnectionInteractor.setListener(this);
-        }
+        checkConnectionInteractor.get().addListener(this);
     }
 
     @Override
     public void stopDisplayLog() {
         if (torInteractor != null) {
-            torInteractor.removeOnTorLogUpdatedListener(this);
+            torInteractor.get().removeOnTorLogUpdatedListener(this);
         }
 
         savedLogData = null;
 
         savedLinesLength = 0;
 
-        if (checkConnectionInteractor != null) {
-            checkConnectionInteractor.removeListener();
-            checkConnectionInteractor = null;
-        }
+        checkConnectionInteractor.get().removeListener(this);
     }
 
     @Override
@@ -441,6 +434,9 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
             showNewTorIdentityIcon(true);
 
             checkInternetAvailable();
+
+            setFixedReadyState(true);
+            setFixedErrorState(false);
         }
     }
 
@@ -474,8 +470,9 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
     }
 
     private void checkInternetAvailable() {
-        if (isActive() && checkConnectionInteractor != null && !checkConnectionInteractor.isChecking()) {
-            checkConnectionInteractor.checkConnection("https://www.torproject.org/", true);
+        if (isActive()) {
+            checkConnectionInteractor.get().setInternetConnectionResult(false);
+            checkConnectionInteractor.get().checkInternetConnection();
         }
     }
 
@@ -487,15 +484,12 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
             return;
         }
 
-        setFixedReadyState(true);
-        setFixedErrorState(false);
-
-        startRefreshTorUnlockIPsIfRequired();
-
         /////////////////Check Updates///////////////////////////////////////////////
         if (isActive() && view.getFragmentActivity() instanceof MainActivity) {
             checkInvizibleUpdates((MainActivity) view.getFragmentActivity());
         }
+
+        checkConnectionInteractor.get().removeListener(this);
     }
 
     private void checkInvizibleUpdates(MainActivity activity) {
@@ -515,14 +509,6 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
                 topFragment.checkUpdates(activity);
             }
         }
-    }
-
-    private void startRefreshTorUnlockIPsIfRequired() {
-        if (!isActive()) {
-            return;
-        }
-
-        startRefreshTorUnlockIPs(context);
     }
 
     @Override

@@ -38,7 +38,6 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.domain.log_reader.DNSCryptInteractorInterface;
 import pan.alexander.tordnscrypt.domain.log_reader.ITPDInteractorInterface;
-import pan.alexander.tordnscrypt.domain.log_reader.LogReaderInteractors;
 import pan.alexander.tordnscrypt.domain.log_reader.TorInteractorInterface;
 import pan.alexander.tordnscrypt.domain.log_reader.LogDataModel;
 import pan.alexander.tordnscrypt.domain.log_reader.dnscrypt.OnDNSCryptLogUpdatedListener;
@@ -47,10 +46,12 @@ import pan.alexander.tordnscrypt.domain.log_reader.tor.OnTorLogUpdatedListener;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.iptables.IptablesRules;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
+import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
+import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.startRefreshTorUnlockIPs;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_READY_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ITPD_READY_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SAVED_DNSCRYPT_STATE_PREF;
@@ -68,6 +69,8 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
+import javax.inject.Inject;
+
 public class ModulesStateLoop implements Runnable,
         OnDNSCryptLogUpdatedListener, OnTorLogUpdatedListener, OnITPDHtmlUpdatedListener {
 
@@ -76,6 +79,19 @@ public class ModulesStateLoop implements Runnable,
 
     //Delay in sec before service can stop
     private static int stopCounter = STOP_COUNTER_DELAY;
+
+    @Inject
+    public DNSCryptInteractorInterface dnsCryptInteractor;
+    @Inject
+    public TorInteractorInterface torInteractor;
+    @Inject
+    public ITPDInteractorInterface itpdInteractor;
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Lazy<Handler> handler;
+    @Inject
+    public Lazy<PathVars> pathVars;
 
     private boolean iptablesUpdateTemporaryBlocked;
 
@@ -95,16 +111,11 @@ public class ModulesStateLoop implements Runnable,
 
     private final SharedPreferences sharedPreferences;
 
-    private final Lazy<Handler> handler;
-
     private int savedIptablesCommandsHash = 0;
 
-    private final DNSCryptInteractorInterface dnsCryptInteractor;
-    private final TorInteractorInterface torInteractor;
-    private final ITPDInteractorInterface itpdInteractor;
-    private final Lazy<PreferenceRepository> preferenceRepository;
-
     ModulesStateLoop(ModulesService modulesService) {
+        App.getInstance().initLogReaderDaggerSubcomponent().inject(this);
+
         //Delay in sec before service can stop
         stopCounter = STOP_COUNTER_DELAY;
 
@@ -117,15 +128,6 @@ public class ModulesStateLoop implements Runnable,
         contextUIDUpdater = new ContextUIDUpdater(modulesService);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(modulesService);
-
-        handler = App.instance.daggerComponent.getHandler();
-
-        LogReaderInteractors logReaderInteractors = LogReaderInteractors.Companion.getInteractor();
-        dnsCryptInteractor = logReaderInteractors;
-        torInteractor = logReaderInteractors;
-        itpdInteractor = logReaderInteractors;
-
-        preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
 
         restoreModulesSavedState();
     }
@@ -563,6 +565,7 @@ public class ModulesStateLoop implements Runnable,
     private void setTorReady(boolean ready) {
         preferenceRepository.get().setBoolPreference(TOR_READY_PREF, ready);
         modulesStatus.setTorReady(ready);
+        startRefreshTorUnlockIPs(modulesService.getApplicationContext());
     }
 
     private synchronized void denySystemDNS() {
@@ -570,7 +573,7 @@ public class ModulesStateLoop implements Runnable,
         if (modulesStatus.isSystemDNSAllowed()) {
             if (modulesStatus.getMode() == ROOT_MODE) {
                 modulesStatus.setSystemDNSAllowed(false);
-                ModulesIptablesRules.denySystemDNS(modulesService);
+                ModulesIptablesRules.denySystemDNS(modulesService, pathVars.get());
             }
 
             if (modulesStatus.getMode() == VPN_MODE || isFixTTL()) {
@@ -616,7 +619,7 @@ public class ModulesStateLoop implements Runnable,
                 && (modulesStatus.getTorState() == RUNNING && modulesStatus.isTorReady() || modulesStatus.getTorState() == STOPPED)
                 && (modulesStatus.getItpdState() == RUNNING && modulesStatus.isItpdReady() || modulesStatus.getItpdState() == STOPPED)
                 && !(modulesStatus.getDnsCryptState() == STOPPED && modulesStatus.getTorState() == STOPPED && modulesStatus.getItpdState() == STOPPED)
-                && !App.instance.isAppForeground()) {
+                && !App.getInstance().isAppForeground()) {
             modulesService.slowdownTimer();
         }
     }

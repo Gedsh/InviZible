@@ -23,7 +23,9 @@ import android.content.Context
 import android.net.TrafficStats
 import android.os.Process
 import android.util.Log
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
+import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
@@ -33,6 +35,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -41,6 +44,9 @@ var savedMessage = ""
 var startTime = 0L
 
 class UsageStatistic(private val context: Context) {
+
+    @Inject
+    lateinit var connectionCheckerInteractor: dagger.Lazy<ConnectionCheckerInteractor>
 
     var serviceNotification: ModulesServiceNotificationManager? = null
 
@@ -63,6 +69,7 @@ class UsageStatistic(private val context: Context) {
     init {
         initModulesLogsTimer()
         startTime = System.currentTimeMillis()
+        App.instance.daggerComponent.inject(this)
     }
 
     @JvmOverloads
@@ -149,7 +156,7 @@ class UsageStatistic(private val context: Context) {
     @Synchronized
     fun getMessage(currentTime: Long): String {
 
-        if (uid == -1) {
+        if (uid == Process.INVALID_UID) {
             return context.getString(R.string.notification_text)
         }
 
@@ -166,8 +173,19 @@ class UsageStatistic(private val context: Context) {
         val currentRX = TrafficStats.getTotalRxBytes() - TrafficStats.getUidRxBytes(uid) - startRX
         val currentTX = TrafficStats.getTotalTxBytes() - TrafficStats.getUidTxBytes(uid) - startTX
 
-        val message = "▼ ${getReadableSpeedString(currentRX - savedRX, timePeriod)} ${humanReadableByteCountBin(currentRX)}  " +
-                "▲ ${getReadableSpeedString(currentTX - savedTX, timePeriod)} ${humanReadableByteCountBin(currentTX)}"
+        val connectionChecker = connectionCheckerInteractor.get()
+        val message = if ((mode == OperationMode.VPN_MODE
+                    || mode == OperationMode.ROOT_MODE && !modulesStatus.isUseModulesWithRoot)
+            && !connectionChecker.getInternetConnectionResult()) {
+            if (connectionChecker.getNetworkConnectionResult()) {
+                context.getString(R.string.notification_connecting)
+            } else {
+                context.getString(R.string.notification_waiting_network)
+            }
+        } else {
+            "▼ ${getReadableSpeedString(currentRX - savedRX, timePeriod)} ${humanReadableByteCountBin(currentRX)}  " +
+                    "▲ ${getReadableSpeedString(currentTX - savedTX, timePeriod)} ${humanReadableByteCountBin(currentTX)}"
+        }
 
         savedRX = currentRX
         savedTX = currentTX
