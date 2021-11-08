@@ -261,6 +261,8 @@ typedef int32_t gint32_t;
 #define DNS_QTYPE_AAAA 28 // IPv6
 #define DNS_QTYPE_CNAME 5 //CNAME
 #define DNS_QTYPE_HINFO 13//HINFO
+#define DNS_QTYPE_SVCB 64
+#define DNS_QTYPE_HTTPS 65
 
 #define DNS_QNAME_MAX 255
 #define DNS_TTL (10 * 60) // seconds
