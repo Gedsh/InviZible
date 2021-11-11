@@ -19,10 +19,8 @@
 
 package pan.alexander.tordnscrypt.utils.connectionchecker
 
-import android.util.Log
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.Constants
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.lang.Exception
 import java.net.*
 import javax.inject.Inject
@@ -39,9 +37,6 @@ class SocketInternetChecker @Inject constructor(
     fun checkConnectionAvailability(ip: String, port: Int, withTor: Boolean): Boolean {
         return try {
             tryCheckConnection(ip, port, withTor)
-        } catch (e: Exception) {
-            Log.e(LOG_TAG, "SocketInternetChecker check connection failed ${e.message} ${e.cause}")
-            false
         } finally {
             tryCloseSocket()
         }

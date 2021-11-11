@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 
 public interface Resolver {
-    int DNS_DEFAULT_TIMEOUT_SEC = 20;
+    int DNS_DEFAULT_TIMEOUT_SEC = 10;
 
     Record[] resolve(Domain domain) throws IOException;
     String reverseResolve(String ip) throws UnknownHostException;

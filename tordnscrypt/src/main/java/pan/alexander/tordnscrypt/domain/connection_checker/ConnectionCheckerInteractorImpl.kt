@@ -22,13 +22,15 @@ package pan.alexander.tordnscrypt.domain.connection_checker
 import android.util.Log
 import kotlinx.coroutines.*
 import pan.alexander.tordnscrypt.di.CoroutinesModule.Companion.SUPERVISOR_JOB_IO_DISPATCHER_SCOPE
+import pan.alexander.tordnscrypt.domain.dns_resolver.DnsRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.Constants.*
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
-import java.lang.Exception
+import java.io.IOException
 import java.lang.ref.WeakReference
+import java.net.SocketTimeoutException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
@@ -36,13 +38,16 @@ import javax.inject.Named
 import javax.inject.Singleton
 
 const val INTERNET_CONNECTION_CHECK_INTERVAL_SEC = 10
+const val INTERNET_CONNECTION_ADDITIONAL_DELAY_SEC = 30
+const val INTERNET_CONNECTION_CHECK_SOCKET_TIMEOUT_SEC = 20
 
 @Singleton
 class ConnectionCheckerInteractorImpl @Inject constructor(
     private val checkerRepository: ConnectionCheckerRepository,
     private val pathVars: PathVars,
     @Named(SUPERVISOR_JOB_IO_DISPATCHER_SCOPE)
-    private val baseCoroutineScope: CoroutineScope
+    private val baseCoroutineScope: CoroutineScope,
+    private val dnsRepository: DnsRepository
 ) : ConnectionCheckerInteractor {
 
     private val coroutineScope = baseCoroutineScope + CoroutineName("ConnectionCheckerInteractor")
@@ -114,29 +119,44 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
             while (isActive && !internetAvailable) {
                 try {
                     check(via)
-                } catch (e: Exception) {
-                    Log.e(
-                        LOG_TAG, "CheckConnectionInteractor checkConnection($via)" +
-                                " exception ${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
-                    )
-                } finally {
+                } catch (e: SocketTimeoutException) {
+                    logException(via, e)
+                } catch (e: IOException) {
+                    logException(via, e)
                     checking.getAndSet(false)
-                    try {
-                        delay(INTERNET_CONNECTION_CHECK_INTERVAL_SEC * 1000L)
-                    } catch (ignored: Exception){
-                    }
+                    makeDelay(INTERNET_CONNECTION_ADDITIONAL_DELAY_SEC)
+                } catch (e: Exception) {
+                    logException(via, e)
+                } finally {
+                    checking.compareAndSet(true, false)
+                    makeDelay(INTERNET_CONNECTION_CHECK_INTERVAL_SEC)
                 }
             }
         }
     }
 
+    private suspend fun makeDelay(delaySec: Int) {
+        try {
+            delay(delaySec * 1000L)
+        } catch (ignored: Exception) {
+        }
+    }
+
+    private fun logException(via: Via, e: Exception) {
+        Log.e(
+            LOG_TAG, "CheckConnectionInteractor checkConnection via $via" +
+                    " ${e.javaClass} ${e.message} ${e.cause}"
+        )
+    }
+
     private suspend fun check(via: Via) = coroutineScope {
-        val available = when(via) {
+        val available = when (via) {
             Via.TOR -> {
-                checkerRepository.checkInternetAvailableOverHttp(
+                dnsRepository.resolveDomainUDP(
                     TOR_SITE_ADDRESS,
-                    true
-                )
+                    pathVars.torDNSPort.toInt(),
+                    INTERNET_CONNECTION_CHECK_SOCKET_TIMEOUT_SEC
+                ).isNotEmpty()
             }
             Via.DIRECT -> {
                 checkerRepository.checkInternetAvailableOverSocks(

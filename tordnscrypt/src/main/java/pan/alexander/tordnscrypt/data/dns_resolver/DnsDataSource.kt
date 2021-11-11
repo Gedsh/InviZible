@@ -22,7 +22,16 @@ package pan.alexander.tordnscrypt.data.dns_resolver
 import pan.alexander.tordnscrypt.utils.dns.Record
 
 interface DnsDataSource {
-    fun resolveDomainUDP(domain: String, port: Int): Array<Record>?
-    fun resolveDomainDOH(domain: String): Array<Record>?
+    fun resolveDomainUDP(
+        domain: String,
+        port: Int,
+        timeout: Int
+    ): Array<Record>?
+
+    fun resolveDomainDOH(
+        domain: String,
+        timeout: Int
+    ): Array<Record>?
+
     fun reverseResolve(ip: String): String
 }

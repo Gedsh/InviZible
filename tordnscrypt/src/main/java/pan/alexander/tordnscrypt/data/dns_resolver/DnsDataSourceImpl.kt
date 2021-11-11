@@ -19,6 +19,7 @@
 
 package pan.alexander.tordnscrypt.data.dns_resolver
 
+import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import pan.alexander.tordnscrypt.utils.Constants.*
 import pan.alexander.tordnscrypt.utils.dns.*
@@ -30,15 +31,15 @@ class DnsDataSourceImpl @Inject constructor(
     private val dohResolverFactory: DohResolverFactory
 ) : DnsDataSource {
 
-    override fun resolveDomainUDP(domain: String, port: Int): Array<Record>? {
+    override fun resolveDomainUDP(domain: String, port: Int, timeout: Int): Array<Record>? {
         val domainVerified = Domain(URL(domain).host ?: "")
-        return udpResolverFactory.createUdpResolver(LOOPBACK_ADDRESS, port)
+        return udpResolverFactory.createUdpResolver(LOOPBACK_ADDRESS, port, timeout)
             .resolve(domainVerified)
     }
 
-    override fun resolveDomainDOH(domain: String): Array<Record>? {
+    override fun resolveDomainDOH(domain: String, timeout: Int): Array<Record>? {
         val domainVerified = Domain(URL(domain).host ?: "")
-        return dohResolverFactory.createDohResolver(QUAD_DOH_SERVER)
+        return dohResolverFactory.createDohResolver(QUAD_DOH_SERVER, timeout)
             .resolve(domainVerified)
     }
 
@@ -48,11 +49,18 @@ class DnsDataSourceImpl @Inject constructor(
 
     @AssistedFactory
     interface UdpResolverFactory {
-        fun createUdpResolver(domain: String, port: Int): UdpResolver
+        fun createUdpResolver(
+            domain: String,
+            @Assisted("port") port: Int,
+            @Assisted("timeout") timeout: Int = Resolver.DNS_DEFAULT_TIMEOUT_SEC
+        ): UdpResolver
     }
 
     @AssistedFactory
     interface DohResolverFactory {
-        fun createDohResolver(domain: String): DohResolver
+        fun createDohResolver(
+            domain: String,
+            timeout: Int = Resolver.DNS_DEFAULT_TIMEOUT_SEC
+        ): DohResolver
     }
 }

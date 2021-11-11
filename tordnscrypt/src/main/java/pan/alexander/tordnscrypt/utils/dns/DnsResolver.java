@@ -36,6 +36,10 @@ public abstract class DnsResolver implements Resolver {
         this(server, Record.TYPE_A, DNS_DEFAULT_TIMEOUT_SEC);
     }
 
+    public DnsResolver(String server, int timeout) {
+        this(server, Record.TYPE_A, timeout);
+    }
+
     public DnsResolver(String server, int recordType, int timeout) {
         this.recordType = recordType;
         this.timeout = timeout > 0 ? timeout : DNS_DEFAULT_TIMEOUT_SEC;

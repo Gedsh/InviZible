@@ -21,17 +21,22 @@ package pan.alexander.tordnscrypt.domain.dns_resolver
 
 import android.util.Log
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.actor
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.settings.tor_ips.DomainEntity
 import pan.alexander.tordnscrypt.settings.tor_ips.DomainIpEntity
 import pan.alexander.tordnscrypt.settings.tor_ips.IpEntity
+import pan.alexander.tordnscrypt.utils.dns.Resolver
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
-import java.lang.Exception
+import java.io.IOException
+import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 private const val DELAY_ERROR_RETRY = 100L
+private const val ERROR_RETRY_COUNT = 1
 
 class DnsInteractorImpl @Inject constructor(
     private val pathVars: PathVars,
@@ -40,40 +45,112 @@ class DnsInteractorImpl @Inject constructor(
     private val modulesStatus = ModulesStatus.getInstance()
 
     override fun resolveDomain(domain: String): Set<String> =
+        resolveDomain(domain, Resolver.DNS_DEFAULT_TIMEOUT_SEC)
+
+    override fun resolveDomain(domain: String, timeout: Int): Set<String> =
         when {
             modulesStatus.dnsCryptState == ModuleState.RUNNING && modulesStatus.isDnsCryptReady -> {
-                dnsRepository.resolveDomainUDP(domain, pathVars.dnsCryptPort.toInt())
+                dnsRepository.resolveDomainUDP(domain, pathVars.dnsCryptPort.toInt(), timeout)
             }
             modulesStatus.torState == ModuleState.RUNNING && modulesStatus.isTorReady -> {
-                dnsRepository.resolveDomainUDP(domain, pathVars.torDNSPort.toInt())
+                dnsRepository.resolveDomainUDP(domain, pathVars.torDNSPort.toInt(), timeout)
             }
             else -> {
-                dnsRepository.resolveDomainDOH(domain)
+                dnsRepository.resolveDomainDOH(domain, timeout)
             }
         }
 
     override fun reverseResolve(ip: String): String =
         dnsRepository.reverseResolve(ip)
 
-    override suspend fun resolveDomainOrIp(domainIps: List<DomainIpEntity>): List<DomainIpEntity> {
+    @ObsoleteCoroutinesApi
+    override suspend fun resolveDomainOrIp(
+        domainIps: Set<DomainIpEntity>,
+        timeout: Int
+    ): Set<DomainIpEntity> {
+        val result = Collections.newSetFromMap(ConcurrentHashMap<DomainIpEntity, Boolean>())
+
+        coroutineScope {
+            val channel = actor<Triple<DomainIpEntity, Deferred<DomainIpEntity>, Int>> {
+                for (triple in channel) {
+                    launch {
+                        supervisorScope {
+                            try {
+                                val hostIp = triple.second.await()
+                                result.add(hostIp)
+                                if (result.size == domainIps.size) {
+                                    channel.close()
+                                }
+                            } catch (e: IOException) {
+                                if (triple.third < ERROR_RETRY_COUNT) {
+                                    channel.send(
+                                        Triple(
+                                            triple.first,
+                                            async { resolveDomainOrIp(triple.first, timeout) },
+                                            triple.third + 1
+                                        )
+                                    )
+
+                                } else {
+                                    Log.e(
+                                        LOG_TAG,
+                                        "DnsInteractor ${e.javaClass} ${e.message}\n${e.cause}"
+                                    )
+                                    result.add(triple.first)
+                                    if (result.size == domainIps.size) {
+                                        channel.close()
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                Log.e(
+                                    LOG_TAG,
+                                    "DnsInteractor ${e.javaClass} ${e.message}\n${e.cause}"
+                                )
+                                channel.close()
+                            }
+                        }
+                    }
+                }
+            }
+
+            supervisorScope {
+                domainIps.map {
+                    Triple(it, async { resolveDomainOrIp(it, timeout) }, 0)
+                }.map {
+                    channel.send(it)
+                }
+            }
+
+        }
+
+        return result
+    }
+
+    suspend fun resolveDomainOrIpOld(
+        domainIps: List<DomainIpEntity>,
+        timeout: Int
+    ): List<DomainIpEntity> {
         return supervisorScope {
 
             domainIps.map {
-                Pair(it, async { resolveDomainOrIp(it) })
+                it to async { resolveDomainOrIp(it, timeout) }
             }.map {
                 try {
                     it.second.await()
                 } catch (e: Exception) {
-                    retryResolveDomainOrIp(it.first)
+                    retryResolveDomainOrIp(it.first, timeout)
                 }
             }
         }
     }
 
-    private suspend fun retryResolveDomainOrIp(domainIp: DomainIpEntity): DomainIpEntity =
+    private suspend fun retryResolveDomainOrIp(
+        domainIp: DomainIpEntity,
+        timeout: Int
+    ): DomainIpEntity =
         try {
             delay(DELAY_ERROR_RETRY)
-            resolveDomainOrIp(domainIp)
+            resolveDomainOrIp(domainIp, timeout)
         } catch (e: Exception) {
             Log.e(
                 LOG_TAG,
@@ -82,10 +159,14 @@ class DnsInteractorImpl @Inject constructor(
             domainIp
         }
 
-    private fun resolveDomainOrIp(domainIp: DomainIpEntity): DomainIpEntity =
+    private fun resolveDomainOrIp(domainIp: DomainIpEntity, timeout: Int): DomainIpEntity =
         when (domainIp) {
             is DomainEntity -> {
-                DomainEntity(domainIp.domain, resolveDomain(domainIp.domain), domainIp.isActive)
+                DomainEntity(
+                    domainIp.domain,
+                    resolveDomain(domainIp.domain, timeout),
+                    domainIp.isActive
+                )
             }
             is IpEntity -> {
                 IpEntity(domainIp.ip, reverseResolve(domainIp.ip), domainIp.isActive)

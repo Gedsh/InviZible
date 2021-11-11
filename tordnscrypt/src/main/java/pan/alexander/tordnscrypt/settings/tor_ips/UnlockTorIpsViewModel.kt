@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.launch
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.di.CoroutinesModule.Companion.DISPATCHER_IO
@@ -26,8 +27,8 @@ class UnlockTorIpsViewModel : ViewModel() {
         App.instance.daggerComponent.inject(this)
     }
 
-    private val mutableDomainIpLiveData = MutableLiveData<List<DomainIpEntity>>()
-    val domainIpLiveData: LiveData<List<DomainIpEntity>> get() = mutableDomainIpLiveData
+    private val mutableDomainIpLiveData = MutableLiveData<Set<DomainIpEntity>>()
+    val domainIpLiveData: LiveData<Set<DomainIpEntity>> get() = mutableDomainIpLiveData
 
     fun resolveDomain(domain: String): Set<String> =
         dnsInteractor.get().resolveDomain(domain)
@@ -35,6 +36,7 @@ class UnlockTorIpsViewModel : ViewModel() {
     fun reverseResolve(ip: String): String =
         dnsInteractor.get().reverseResolve(ip)
 
+    @ObsoleteCoroutinesApi
     fun getDomainIps(
         unlockHostsStr: String,
         unlockIPsStr: String,
@@ -43,9 +45,7 @@ class UnlockTorIpsViewModel : ViewModel() {
     ) {
         viewModelScope.launch(dispatcherIo) {
 
-            val domainIps = arrayListOf<DomainIpEntity>()
-
-            getDomainIpsFromPreferences(domainIps, unlockHostsStr, unlockIPsStr, pleaseWaitMessage)
+            val domainIps = getDomainIpsFromPreferences(unlockHostsStr, unlockIPsStr, pleaseWaitMessage)
 
             mutableDomainIpLiveData.postValue(domainIps)
 
@@ -53,18 +53,19 @@ class UnlockTorIpsViewModel : ViewModel() {
                 dnsInteractor.get().resolveDomainOrIp(domainIps)
                     .map {
                         replacePleaseWaitMessage(it, pleaseWaitMessage, wrongDomainIpMessage)
-                    }
+                    }.toSet()
             )
 
         }
     }
 
     private fun getDomainIpsFromPreferences(
-        domainIps: ArrayList<DomainIpEntity>,
         unlockHostsStr: String,
         unlockIPsStr: String,
         pleaseWaitMessage: String
-    ) {
+    ): Set<DomainIpEntity> {
+        val domainIps = hashSetOf<DomainIpEntity>()
+
         val hosts = preferenceRepository.get().getStringSetPreference(unlockHostsStr)
         val ips: Set<String> = preferenceRepository.get().getStringSetPreference(unlockIPsStr)
 
@@ -89,6 +90,8 @@ class UnlockTorIpsViewModel : ViewModel() {
                 )
             )
         }
+
+        return domainIps
     }
 
     private fun replacePleaseWaitMessage(

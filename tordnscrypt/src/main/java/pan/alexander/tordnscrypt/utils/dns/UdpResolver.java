@@ -31,8 +31,8 @@ public class UdpResolver extends DnsResolver {
     private final int dnsUdpPort;
 
     @AssistedInject
-    public UdpResolver(@Assisted String serverIP, @Assisted int dnsUdpPort) {
-        super(serverIP);
+    public UdpResolver(@Assisted String serverIP, @Assisted("port") int dnsUdpPort, @Assisted("timeout") int timeout) {
+        super(serverIP, timeout);
         this.dnsUdpPort = dnsUdpPort;
     }
 

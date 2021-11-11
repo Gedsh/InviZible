@@ -19,10 +19,26 @@
 
 package pan.alexander.tordnscrypt.domain.dns_resolver
 
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import pan.alexander.tordnscrypt.settings.tor_ips.DomainIpEntity
+import pan.alexander.tordnscrypt.utils.dns.Resolver
 
 interface DnsInteractor {
-    fun resolveDomain(domain: String): Set<String>
+
+    fun resolveDomain(
+        domain: String,
+    ): Set<String>
+
+    fun resolveDomain(
+        domain: String,
+        timeout: Int
+    ): Set<String>
+
     fun reverseResolve(ip: String): String
-    suspend fun resolveDomainOrIp(domainIps: List<DomainIpEntity>): List<DomainIpEntity>
+
+    @ObsoleteCoroutinesApi
+    suspend fun resolveDomainOrIp(
+        domainIps: Set<DomainIpEntity>,
+        timeout: Int = Resolver.DNS_DEFAULT_TIMEOUT_SEC
+    ): Set<DomainIpEntity>
 }

@@ -53,6 +53,7 @@ import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInte
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.patches.Patch;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.wakelock.WakeLocksManager;
@@ -376,6 +377,8 @@ public class ModulesService extends Service {
             if (checkModulesStateTask != null && !modulesStatus.isUseModulesWithRoot()) {
                 checkModulesStateTask.setDnsCryptThread(dnsCryptThread);
             }
+
+            checkInternetConnection();
         } else {
             modulesStatus.setDnsCryptState(STOPPED);
         }
@@ -501,6 +504,8 @@ public class ModulesService extends Service {
             if (checkModulesStateTask != null && !modulesStatus.isUseModulesWithRoot()) {
                 checkModulesStateTask.setTorThread(torThread);
             }
+
+            checkInternetConnection();
         } else {
             modulesStatus.setTorState(STOPPED);
         }
@@ -943,6 +948,8 @@ public class ModulesService extends Service {
         if (handler != null) {
             handler.get().removeCallbacksAndMessages(null);
         }
+
+        InternetSharingChecker.resetTetherInterfaceName();
 
         serviceIsRunning = false;
 

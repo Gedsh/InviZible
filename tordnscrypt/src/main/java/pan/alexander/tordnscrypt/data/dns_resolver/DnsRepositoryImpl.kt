@@ -27,26 +27,26 @@ class DnsRepositoryImpl @Inject constructor(
     private val dnsDataSource: DnsDataSource
 ) : DnsRepository {
 
-    override fun resolveDomainUDP(domain: String, port: Int): Set<String> {
-        return dnsDataSource.resolveDomainUDP(domain, port)
+    override fun resolveDomainUDP(domain: String, port: Int, timeout: Int): Set<String> {
+        return dnsDataSource.resolveDomainUDP(domain, port, timeout)
             ?.filter { isRecordValid(it) }
             ?.flatMap {
                 when {
                     it.isA || it.isAAAA -> listOf(it.value.trim())
-                    it.isCname -> resolveDomainUDP("https://${it.value}", port)
+                    it.isCname -> resolveDomainUDP("https://${it.value}", port, timeout)
                     else -> emptyList()
                 }
             }
             ?.toHashSet() ?: emptySet()
     }
 
-    override fun resolveDomainDOH(domain: String): Set<String> {
-        return dnsDataSource.resolveDomainDOH(domain)
+    override fun resolveDomainDOH(domain: String, timeout: Int): Set<String> {
+        return dnsDataSource.resolveDomainDOH(domain, timeout)
             ?.filter { isRecordValid(it) }
             ?.flatMap {
                 when {
                     it.isA || it.isAAAA -> listOf(it.value.trim())
-                    it.isCname -> resolveDomainDOH("https://${it.value}")
+                    it.isCname -> resolveDomainDOH("https://${it.value}", timeout)
                     else -> emptyList()
                 }
             }
