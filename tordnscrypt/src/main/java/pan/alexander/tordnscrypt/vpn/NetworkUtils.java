@@ -223,8 +223,11 @@ public class NetworkUtils {
                 if (lp != null) {
                     List<InetAddress> dns = lp.getDnsServers();
                     for (InetAddress d : dns) {
-                        Log.i(LOG_TAG, "DNS from LP: " + d.getHostAddress());
-                        listDns.add(d.getHostAddress().split("%")[0]);
+                        String host = d.getHostAddress();
+                        if (host != null) {
+                            Log.i(LOG_TAG, "DNS from LP: " + host);
+                            listDns.add(host.split("%")[0]);
+                        }
                     }
                 }
             }

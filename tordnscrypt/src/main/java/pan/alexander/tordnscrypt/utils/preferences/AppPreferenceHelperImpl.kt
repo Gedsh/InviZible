@@ -81,7 +81,7 @@ class AppPreferenceHelperImpl @Inject constructor(
     @ObsoleteCoroutinesApi
     @ExperimentalCoroutinesApi
     override fun setPreference(key: String, value: Any) = coroutineScope.launch {
-        channel.send(Pair(key, value))
+        channel.send(key to value)
     }
 
     override fun getPreference(@PreferenceType type: Int, key: String): Any {
