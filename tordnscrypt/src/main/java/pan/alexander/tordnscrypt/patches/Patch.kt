@@ -70,6 +70,7 @@ class Patch(private val context: Context) {
                 replaceBlackNames()
                 updateITPDAddressBookDefaultUrl()
                 fallbackResolverToBootstrapResolvers()
+                removeDNSCryptDaemonize()
 
                 if (dnsCryptConfigPatches.isNotEmpty()) {
                     configUtil.patchDNSCryptConfig(dnsCryptConfigPatches)
@@ -231,6 +232,15 @@ class Patch(private val context: Context) {
             return matcher.group()
         }
         return defaultValue
+    }
+
+    private fun removeDNSCryptDaemonize() {
+        dnsCryptConfigPatches.add(
+            PatchLine(
+                "",
+                Regex("daemonize.+"), ""
+            )
+        )
     }
 
 }
