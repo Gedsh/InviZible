@@ -46,6 +46,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_UNLOCK_TETHER;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 public class Tethering {
     private final Context context;
@@ -67,6 +68,8 @@ public class Tethering {
     public Lazy<PathVars> pathVarsLazy;
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Provider<InternetSharingChecker> internetSharingChecker;
 
     private String iptables = "iptables ";
 
@@ -723,7 +726,7 @@ public class Tethering {
     }
 
     void setInterfaceNames() {
-        InternetSharingChecker checker = new InternetSharingChecker();
+        InternetSharingChecker checker = internetSharingChecker.get();
         checker.updateData();
         apIsOn = checker.isApOn();
         usbTetherOn = checker.isUsbTetherOn();

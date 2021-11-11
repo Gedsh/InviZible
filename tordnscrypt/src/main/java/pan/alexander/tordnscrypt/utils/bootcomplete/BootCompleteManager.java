@@ -78,6 +78,7 @@ public class BootCompleteManager {
     private final Lazy<SharedPreferences> defaultSharedPreferences;
     private final Lazy<Handler> handler;
     private final Lazy<PathVars> pathVars;
+    private final Lazy<ApManager> apManager;
     private Context context;
     private String appDataDir;
 
@@ -87,12 +88,14 @@ public class BootCompleteManager {
             Lazy<SharedPreferences> defaultSharedPreferences,
             Lazy<PreferenceRepository> preferenceRepository,
             Lazy<Handler> handler,
-            Lazy<PathVars> pathVars
+            Lazy<PathVars> pathVars,
+            Lazy<ApManager> apManager
     ) {
         this.defaultSharedPreferences = defaultSharedPreferences;
         this.preferenceRepository = preferenceRepository;
         this.handler = handler;
         this.pathVars = pathVars;
+        this.apManager = apManager;
     }
 
     public void performAction(final Context context, Intent intent) {
@@ -239,8 +242,7 @@ public class BootCompleteManager {
 
         preferences.setBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON, true);
 
-        ApManager apManager = new ApManager(context);
-        if (!apManager.configApState()) {
+        if (!apManager.get().configApState()) {
             Intent intent_tether = new Intent(Intent.ACTION_MAIN, null);
             intent_tether.addCategory(Intent.CATEGORY_LAUNCHER);
             ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.TetherSettings");

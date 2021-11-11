@@ -38,6 +38,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
 
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -59,6 +60,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInternetConnectionCheckedListener {
 
@@ -66,9 +68,12 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
     public Lazy<ConnectionCheckerInteractor> connectionCheckerInteractor;
+    @Inject
+    public Provider<InternetSharingChecker> internetSharingChecker;
 
     private final static int DELAY_BEFORE_CHECKING_INTERNET_SHARING_SEC = 5;
     private final static int DELAY_BEFORE_UPDATING_IPTABLES_RULES_SEC = 5;
+    private final static String EXTRA_ACTIVE_TETHER = "tetherArray";
 
     private final Context context;
     private boolean receiverRegistered = false;
@@ -106,9 +111,9 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
         } else if (action.equalsIgnoreCase(ConnectivityManager.CONNECTIVITY_ACTION)) {
             connectivityStateChanged(intent);
         } else if (action.equalsIgnoreCase(apStateFilterAction)) {
-            checkInternetSharingState();
+            checkInternetSharingState(intent);
         } else if (action.equalsIgnoreCase(tetherStateFilterAction)) {
-            checkInternetSharingState();
+            checkInternetSharingState(intent);
         } else if (action.equalsIgnoreCase(powerOFFFilterAction) || action.equalsIgnoreCase(shutdownFilterAction)) {
             powerOFFDetected();
         } else if (action.equalsIgnoreCase(Intent.ACTION_PACKAGE_ADDED) || action.equalsIgnoreCase(Intent.ACTION_PACKAGE_REMOVED)) {
@@ -325,15 +330,32 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
         resetArpScanner();
     }
 
-    private void checkInternetSharingState() {
+    @SuppressWarnings("unchecked")
+    private void checkInternetSharingState(Intent intent) {
         CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
             boolean wifiAccessPointOn = false;
             boolean usbTetherOn = false;
 
             try {
+
+                List<String> tetherList = null;
+                Serializable serializable = intent.getSerializableExtra(EXTRA_ACTIVE_TETHER);
+                if (serializable instanceof List) {
+                    tetherList = (List<String>) intent.getSerializableExtra(EXTRA_ACTIVE_TETHER);
+                }
+
                 TimeUnit.SECONDS.sleep(DELAY_BEFORE_CHECKING_INTERNET_SHARING_SEC);
 
-                InternetSharingChecker checker = new InternetSharingChecker();
+                InternetSharingChecker checker = internetSharingChecker.get();
+                if (tetherList != null) {
+                    if (tetherList.isEmpty()) {
+                        checker.setTetherInterfaceName("");
+                    } else {
+                        checker.setTetherInterfaceName(tetherList.get(0).trim());
+                    }
+                } else {
+                    checker.setTetherInterfaceName(null);
+                }
                 checker.updateData();
                 wifiAccessPointOn = checker.isApOn();
                 usbTetherOn = checker.isUsbTetherOn();
@@ -362,7 +384,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
 
             Log.i(LOG_TAG, "ModulesBroadcastReceiver " +
                     "WiFi Access Point state is " + (wifiAccessPointOn ? "ON" : "OFF") + "\n"
-                            + " USB modem state is " + (usbTetherOn ? "ON" : "OFF"));
+                    + " USB modem state is " + (usbTetherOn ? "ON" : "OFF"));
         });
     }
 

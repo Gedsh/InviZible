@@ -91,6 +91,7 @@ import pan.alexander.tordnscrypt.itpd_fragment.ITPDRunFragment;
 import pan.alexander.tordnscrypt.settings.SettingsActivity;
 import pan.alexander.tordnscrypt.tor_fragment.TorRunFragment;
 import pan.alexander.tordnscrypt.utils.ap.ApManager;
+import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
 import pan.alexander.tordnscrypt.utils.mode.AppModeManagerCallback;
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
 import pan.alexander.tordnscrypt.dialogs.Registration;
@@ -117,6 +118,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 public class MainActivity extends LangAppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, AppModeManagerCallback {
@@ -127,6 +129,10 @@ public class MainActivity extends LangAppCompatActivity
     public Handler handler;
     @Inject
     public Lazy<PathVars> pathVars;
+    @Inject
+    public Provider<InternetSharingChecker> internetSharingChecker;
+    @Inject
+    public Lazy<ApManager> apManager;
 
     public boolean childLockActive = false;
     public AccelerateDevelop accelerateDevelop;
@@ -497,8 +503,8 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     private void switchApIcon(Menu menu) {
-        ApManager apManager = new ApManager(this);
-        int apState = apManager.isApOn();
+
+        int apState = internetSharingChecker.get().checkApOn();
 
         PreferenceRepository preferences = preferenceRepository.get();
 
@@ -598,8 +604,7 @@ public class MainActivity extends LangAppCompatActivity
 
     private void switchHotspot() {
         try {
-            ApManager apManager = new ApManager(this);
-            if (apManager.configApState()) {
+            if (apManager.get().configApState()) {
                 checkHotspotState();
             } else if (!isFinishing()) {
                 Intent intent = new Intent(Intent.ACTION_MAIN, null);
