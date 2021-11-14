@@ -629,3 +629,7 @@
 * Improved Tor Exclude/Select websites feature.
 * Fixed internet sharing in Root mode on android 11.
 * Fixes and optimizations.
+
+**InviZible Pro beta 1.4.2**
+* Fixed Restore Settings feature.
+* Minor bug fixes and optimizations.
