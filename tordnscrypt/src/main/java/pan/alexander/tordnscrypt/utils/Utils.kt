@@ -123,11 +123,6 @@ object Utils {
         return result
     }
 
-    fun getHostByIP(IP: String): String {
-        val addr = InetAddress.getByName(IP)
-        return addr.hostName
-    }
-
     //For backwards compatibility, it will still return the caller's own services.
     @Suppress("deprecation")
     fun isServiceRunning(context: Context, serviceClass: Class<ModulesService>): Boolean {

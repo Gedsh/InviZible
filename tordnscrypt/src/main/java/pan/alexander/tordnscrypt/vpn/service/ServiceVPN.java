@@ -284,9 +284,12 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
         if (vpnDnsSet.size() == 1 && !QUAD_DNS_41.equals(vpnDns1) && !QUAD_DNS_42.equals(vpnDns1)) {
             try {
-                InetAddress addressOfDns = InetAddress.getByName(vpnDns1);
-                String name = addressOfDns.getCanonicalHostName();
-                vpnDnsSet.addAll(dnsInteractor.get().resolveDomain("https://" + name));
+                if (vpnDns1 != null) {
+                    String name = dnsInteractor.get().reverseResolve(vpnDns1);
+                    if (!name.isEmpty()) {
+                        vpnDnsSet.addAll(dnsInteractor.get().resolveDomain("https://" + name));
+                    }
+                }
                 Log.i(LOG_TAG, "ServiceVPN vpnDnsSet " + vpnDnsSet);
             } catch (Exception e) {
                 Log.w(LOG_TAG, "ServiceVPN getDns exception " + e.getMessage() + " " + e.getCause());
