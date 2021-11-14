@@ -24,7 +24,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -69,9 +68,10 @@ import javax.inject.Inject;
 
 public class PreferencesFastFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
 
-    private Handler handler;
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Lazy<Handler> handler;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -90,11 +90,6 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
         if (context == null) {
             return super.onCreateView(inflater, container, savedInstanceState);
-        }
-
-        Looper looper = Looper.getMainLooper();
-        if (looper != null) {
-            handler = new Handler(looper);
         }
 
         getActivity().setTitle(R.string.drawer_menu_fastSettings);
@@ -165,7 +160,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         Context context = getActivity();
 
         if (handler != null && context != null) {
-            handler.postDelayed(() -> {
+            handler.get().postDelayed(() -> {
                 if (getActivity() != null && !getActivity().isFinishing()) {
                     setDnsCryptServersSumm(preferenceRepository.get()
                             .getStringPreference("DNSCrypt Servers"));
@@ -223,7 +218,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
         prefLastUpdate.setOnPreferenceClickListener(preference -> {
             if (prefLastUpdate.isEnabled() && handler != null) {
-                handler.post(() -> {
+                handler.get().post(() -> {
 
                     if (activity.isFinishing()) {
                         return;
@@ -256,7 +251,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
             return;
         }
 
-        handler.post(() -> {
+        handler.get().post(() -> {
 
             SharedPreferences defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
             try {
@@ -324,10 +319,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
     public void onDestroyView() {
         super.onDestroyView();
 
-        if (handler != null) {
-            handler.removeCallbacksAndMessages(null);
-            handler = null;
-        }
+        handler.get().removeCallbacksAndMessages(null);
     }
 
     @Override
@@ -396,7 +388,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 return true;
             case "pref_fast_language":
                 if (handler != null) {
-                    handler.post(this::activityCurrentRecreate);
+                    handler.get().post(this::activityCurrentRecreate);
                     return true;
                 }
             case SITES_IPS_REFRESH_INTERVAL:

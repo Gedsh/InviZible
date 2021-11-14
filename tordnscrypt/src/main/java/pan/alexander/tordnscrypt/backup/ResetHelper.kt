@@ -24,7 +24,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import androidx.preference.PreferenceManager
-import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule
 import pan.alexander.tordnscrypt.installer.Installer
@@ -42,7 +41,7 @@ class ResetHelper(
     private val backupFragmentWeakReference: WeakReference<BackupFragment> = WeakReference(backupFragment)
 
     fun resetSettings() {
-        App.instance.daggerComponent.getCachedExecutor().submit {
+        cachedExecutor.submit {
             try {
 
                 registerReceiver(activityWeakReference.get())

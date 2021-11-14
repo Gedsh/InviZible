@@ -23,22 +23,27 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.preference.PreferenceManager
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES
 import pan.alexander.tordnscrypt.utils.root.RootCommands
 import pan.alexander.tordnscrypt.utils.root.RootExecService.*
 import java.util.*
+import javax.inject.Inject
 
 class IptablesReceiver : BroadcastReceiver() {
+
+    @Inject
+    lateinit var handler: dagger.Lazy<Handler>
 
     var lastIptablesCommandsReturnError = false
     private var savedError = ""
 
     override fun onReceive(context: Context?, intent: Intent?) {
+        App.instance.daggerComponent.inject(this)
 
         if (intent == null) {
             return
@@ -80,10 +85,7 @@ class IptablesReceiver : BroadcastReceiver() {
 
         savedError = removedDigits
 
-        var handler: Handler? = null
-        Looper.getMainLooper()?.let { handler = Handler(it) }
-
-        handler?.let {
+        handler.get().let {
 
             val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
             val showToastWithCommandsResultError = sharedPreferences.getBoolean(ALWAYS_SHOW_HELP_MESSAGES, false)

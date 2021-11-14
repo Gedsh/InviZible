@@ -35,6 +35,7 @@ import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.help.HelpActivity
 import pan.alexander.tordnscrypt.help.HelpActivityReceiver
 import pan.alexander.tordnscrypt.installer.Installer
+import pan.alexander.tordnscrypt.iptables.IptablesReceiver
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules
 import pan.alexander.tordnscrypt.iptables.Tethering
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDFragmentReceiver
@@ -103,6 +104,7 @@ interface AppComponent {
     fun inject(fragment: PreferencesDNSFragment)
     fun inject(fragment: UpdateModulesDialogFragment)
     fun inject(fragment: NotificationHelper)
+    fun inject(fragment: ExtendedDialogFragment)
     fun inject(service: ModulesService)
     fun inject(service: ServiceVPN)
     fun inject(service: UpdateService)
@@ -115,6 +117,7 @@ interface AppComponent {
     fun inject(receiver: ITPDFragmentReceiver)
     fun inject(receiver: ModulesBroadcastReceiver)
     fun inject(receiver: HelpActivityReceiver)
+    fun inject(receiver: IptablesReceiver)
     fun inject(dialogFragment: RequestIgnoreBatteryOptimizationDialog)
     fun inject(dialogFragment: AskForceClose)
     fun inject(dialogFragment: SendCrashReport)

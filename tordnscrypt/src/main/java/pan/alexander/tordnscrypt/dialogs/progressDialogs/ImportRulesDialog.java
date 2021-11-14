@@ -22,7 +22,6 @@ package pan.alexander.tordnscrypt.dialogs.progressDialogs;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.os.Bundle;
-import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -45,7 +44,6 @@ public class ImportRulesDialog extends ExtendedDialogFragment implements ImportR
     private TextView tvDialogImportRules;
     private ProgressBar pbDialogImportRules;
     private Button btnDialogImportRules;
-    private Handler handler = new Handler();
 
     public static ImportRulesDialog newInstance() {
         return new ImportRulesDialog();
@@ -162,7 +160,5 @@ public class ImportRulesDialog extends ExtendedDialogFragment implements ImportR
         if (importThread != null && importThread.isAlive()) {
             importThread.interrupt();
         }
-
-        handler = null;
     }
 }

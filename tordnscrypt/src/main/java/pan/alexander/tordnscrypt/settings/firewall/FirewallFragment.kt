@@ -23,7 +23,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -72,12 +71,13 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
     lateinit var preferenceRepository: dagger.Lazy<PreferenceRepository>
     @Inject
     lateinit var cachedExecutor: CachedExecutor
+    @Inject
+    lateinit var handler: dagger.Lazy<Handler>
 
     private var _binding: FragmentFirewallBinding? = null
     private val binding get() = _binding!!
 
     private val modulesStatus = ModulesStatus.getInstance()
-    private var handler: Handler? = null
     private var futureTask: Future<*>? = null
     private var firewallAdapter: RecyclerView.Adapter<FirewallAdapter.FirewallViewHolder>? = null
     private var lastVisibleAdapterPosition: Int = 0
@@ -130,11 +130,6 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
         super.onCreate(savedInstanceState)
 
         retainInstance = true
-
-        val looper = Looper.getMainLooper()
-        if (looper != null) {
-            handler = Handler(looper)
-        }
 
         firewallEnabled = preferenceRepository.get().getBoolPreference("FirewallEnabled")
 
@@ -246,7 +241,7 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
         super.onDestroy()
 
         futureTask?.cancel(true)
-        handler?.removeCallbacksAndMessages(null)
+        handler.get().removeCallbacksAndMessages(null)
     }
 
     private fun initComparators() {
@@ -288,7 +283,7 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
 
                 if (appsList.isEmpty()) {
 
-                    handler?.post {
+                    handler.get().post {
                         if (_binding != null) {
                             binding.pbFirewallApp.isIndeterminate = true
                             binding.pbFirewallApp.visibility = View.VISIBLE
@@ -386,7 +381,7 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
                         TimeUnit.MILLISECONDS.sleep(100)
                     }
 
-                    handler?.post {
+                    handler.get().post {
 
                         if (_binding != null) {
                             binding.pbFirewallApp.isIndeterminate = false
@@ -458,7 +453,7 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
             )
         )
 
-        handler?.post {
+        handler.get().post {
             if (!appsListComplete && _binding?.rvFirewallApps?.isComputingLayout == false) {
                 firewallAdapter?.notifyDataSetChanged()
             }

@@ -27,9 +27,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -75,7 +73,6 @@ public class RootExecService extends Service {
 
     private ExecutorService executorService;
     private NotificationManager systemNotificationManager;
-    private Handler handler;
     private RootServiceNotificationManager serviceNotificationManager;
 
 
@@ -91,21 +88,12 @@ public class RootExecService extends Service {
         }
 
         executorService = Executors.newSingleThreadExecutor();
-
-        Looper looper = Looper.getMainLooper();
-        if (looper != null) {
-            handler = new Handler(looper);
-        }
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         executorService.shutdown();
-        if (handler != null) {
-            handler.removeCallbacksAndMessages(null);
-            handler = null;
-        }
     }
 
     public static void performAction(Context context, Intent intent) {

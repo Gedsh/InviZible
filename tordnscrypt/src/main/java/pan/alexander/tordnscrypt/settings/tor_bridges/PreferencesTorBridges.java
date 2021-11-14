@@ -136,7 +136,6 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     private String requestedBridgesToAdd;
     private BridgesSelector savedBridgesSelector;
     private Future<?> verifyDefaultBridgesTask;
-    private Handler handler;
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
@@ -144,6 +143,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     public Lazy<PathVars> pathVars;
     @Inject
     public CachedExecutor cachedExecutor;
+    @Inject
+    public Lazy<Handler> handlerLazy;
 
 
     public PreferencesTorBridges() {
@@ -170,11 +171,6 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         currentBridgesFilePath = appDataDir + "/app_data/tor/bridges_default.lst";
         bridgesDefaultFilePath = appDataDir + "/app_data/tor/bridges_default.lst";
         bridgesCustomFilePath = appDataDir + "/app_data/tor/bridges_custom.lst";
-
-        Looper looper = Looper.getMainLooper();
-        if (looper != null) {
-            handler = new Handler(looper);
-        }
     }
 
     @Override
@@ -498,10 +494,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     public void onDestroy() {
         super.onDestroy();
 
-        if (handler != null) {
-            handler.removeCallbacksAndMessages(null);
-            handler = null;
-        }
+        handlerLazy.get().removeCallbacksAndMessages(null);
 
         if (verifyDefaultBridgesTask != null && !verifyDefaultBridgesTask.isCancelled()) {
             verifyDefaultBridgesTask.cancel(false);
@@ -792,9 +785,11 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     public void OnFileOperationComplete(FileOperationsVariants currentFileOperation, boolean fileOperationResult, String path, String tag, List<String> lines) {
 
         Activity activity = getActivity();
-        if (activity == null || activity.isFinishing()) {
+        if (activity == null || activity.isFinishing() || handlerLazy == null) {
             return;
         }
+
+        Handler handler = handlerLazy.get();
 
         if (fileOperationResult && currentFileOperation == readTextFile) {
             switch (tag) {
@@ -929,8 +924,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
                     String fileName = zipEntry.getName();
                     if (fileName.contains("bridges_default.lst") && zipEntry.getSize() != installedBridgesSize) {
-                        if (isAdded() && handler != null) {
-                            handler.post(() -> {
+                        if (isAdded() && handlerLazy != null) {
+                            handlerLazy.get().post(() -> {
                                 AlertDialog dialog = UpdateDefaultBridgesDialog.DIALOG.getDialog(getActivity(), useDefaultBridges);
                                 if (isAdded() && dialog != null) {
                                     dialog.show();

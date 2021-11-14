@@ -25,7 +25,6 @@ import android.content.SharedPreferences
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.os.Handler
-import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -60,6 +59,8 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
     lateinit var preferenceRepository: dagger.Lazy<PreferenceRepository>
     @Inject
     lateinit var cachedExecutor: CachedExecutor
+    @Inject
+    lateinit var handler: dagger.Lazy<Handler>
 
     private var _binding: FragmentProxyBinding? = null
     private val binding get() = _binding!!
@@ -68,8 +69,6 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
 
     private var etBackground: Drawable? = null
     private var futureTask: Future<*>? = null
-
-    private var handler: Handler? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         App.instance.daggerComponent.inject(this)
@@ -83,8 +82,6 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
         val context = activity as Context
 
         activity?.setTitle(R.string.pref_common_proxy_categ)
-
-        Looper.getMainLooper()?.let { handler = Handler(it) }
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
     }
@@ -177,8 +174,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
     override fun onDestroyView() {
         super.onDestroyView()
 
-        handler?.removeCallbacksAndMessages(null)
-        handler = null
+        handler.get().removeCallbacksAndMessages(null)
 
         futureTask?.let { if (it.isCancelled) it.cancel(true) }
 
@@ -248,7 +244,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
 
                 if (_binding != null) {
                     if (result.matches(Regex("\\d+"))) {
-                        handler?.post {
+                        handler.get().post {
                             binding.tvProxyHint.apply {
                                 text = String.format(getString(R.string.proxy_successful_connection), result)
                                 setTextColor(ContextCompat.getColor(context, R.color.textModuleStatusColorRunning))
@@ -256,7 +252,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
                             }
                         }
                     } else {
-                        handler?.post {
+                        handler.get().post {
                             binding.tvProxyHint.apply {
                                 text = String.format(getString(R.string.proxy_no_connection), result)
                                 setTextColor(ContextCompat.getColor(context, R.color.textModuleStatusColorAlert))
