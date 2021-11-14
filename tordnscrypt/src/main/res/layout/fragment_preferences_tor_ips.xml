@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".settings.tor_ips.UnlockTorIpsFragment">
 
     <androidx.appcompat.widget.LinearLayoutCompat
@@ -19,7 +19,9 @@
             android:id="@+id/rvTorIPs"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:clipToPadding="false"
             android:focusable="false"
+            android:paddingBottom="56dp"
             android:scrollbars="vertical" />
 
     </androidx.appcompat.widget.LinearLayoutCompat>
@@ -34,9 +36,9 @@
         android:cropToPadding="true"
         android:fitsSystemWindows="false"
         android:focusable="true"
-        app:srcCompat="@drawable/ic_add_white_24dp"
         app:backgroundTint="@color/buttonColor"
         app:fabSize="auto"
-        app:rippleColor="@color/colorAccent" />
+        app:rippleColor="@color/colorAccent"
+        app:srcCompat="@drawable/ic_add_white_24dp" />
 
 </FrameLayout>

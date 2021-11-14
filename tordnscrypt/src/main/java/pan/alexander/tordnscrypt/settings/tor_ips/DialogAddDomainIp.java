@@ -19,6 +19,9 @@ package pan.alexander.tordnscrypt.settings.tor_ips;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFragment.DEVICE_VALUE;
+import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFragment.TETHER_VALUE;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,7 +33,6 @@ import androidx.appcompat.app.AlertDialog;
 import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.concurrent.CancellationException;
 
 import kotlinx.coroutines.Job;
@@ -40,16 +42,10 @@ public class DialogAddDomainIp extends DialogDomainIp {
     private static Job resolvingJob;
 
     private final WeakReference<UnlockTorIpsFragment> unlockTorIpsFragment;
-    private final List<DomainIpEntity> domainIps;
-    private final String unlockHostsStr;
-    private final String unlockIPsStr;
 
     public DialogAddDomainIp(@NonNull WeakReference<UnlockTorIpsFragment> unlockTorIpsFragment, int themeResId) {
         super(unlockTorIpsFragment, themeResId);
         this.unlockTorIpsFragment = unlockTorIpsFragment;
-        this.domainIps = unlockTorIpsFragment.get().domainIps;
-        this.unlockHostsStr = unlockTorIpsFragment.get().unlockHostsStr;
-        this.unlockIPsStr = unlockTorIpsFragment.get().unlockIPsStr;
     }
 
     @NonNull
@@ -76,9 +72,7 @@ public class DialogAddDomainIp extends DialogDomainIp {
         setPositiveButton(R.string.ok, (dialog, which) -> {
 
             if (unlockTorIpsFragment.get() == null
-                    || fragment.rvAdapter == null
-                    || unlockHostsStr == null
-                    || unlockIPsStr == null) {
+                    || fragment.domainIpAdapter == null) {
                 return;
             }
 
@@ -95,7 +89,7 @@ public class DialogAddDomainIp extends DialogDomainIp {
             }
 
             resolvingJob = fragment.coroutineExecutor.get().execute("DialogAddHostIP", () -> {
-                resolveHostOrIP(domainIp, domainIps.size() - 1);
+                resolveHostOrIP(domainIp);
                 return null;
             });
         });
@@ -116,8 +110,12 @@ public class DialogAddDomainIp extends DialogDomainIp {
                 new HashSet<>(Collections.singletonList(unlockTorIpsFragment.get().getString(R.string.please_wait))),
                 true
         );
-        domainIps.add(domainIp);
-        unlockTorIpsFragment.get().viewModel.addDomainToPreferences(host, unlockHostsStr);
+
+        UnlockTorIpsFragment fragment = unlockTorIpsFragment.get();
+        if (fragment != null) {
+            fragment.viewModel.addDomainIp(domainIp);
+            fragment.viewModel.addDomainToPreferences(host);
+        }
 
         return domainIp;
     }
@@ -125,26 +123,30 @@ public class DialogAddDomainIp extends DialogDomainIp {
     private DomainIpEntity addIP(String ip) {
 
         DomainIpEntity domainIp = new IpEntity(ip, unlockTorIpsFragment.get().getString(R.string.please_wait), true);
-        domainIps.add(domainIp);
-        unlockTorIpsFragment.get().viewModel.addIpToPreferences(ip, unlockIPsStr);
+
+        UnlockTorIpsFragment fragment = unlockTorIpsFragment.get();
+        if (fragment != null) {
+            fragment.viewModel.addDomainIp(domainIp);
+            fragment.viewModel.addIpToPreferences(ip);
+        }
 
         return domainIp;
     }
 
     private void setDialogTitle() {
-        UnlockTorIpsFragment frag = unlockTorIpsFragment.get();
-        if (frag == null) {
+        UnlockTorIpsFragment fragment = unlockTorIpsFragment.get();
+        if (fragment == null) {
             return;
         }
 
-        if (frag.deviceOrTether.equals("device")) {
-            if (!frag.routeAllThroughTorDevice) {
+        if (fragment.viewModel.getDeviceOrTether().equals(DEVICE_VALUE)) {
+            if (!fragment.viewModel.getRouteAllThroughTorDevice()) {
                 setTitle(R.string.pref_tor_unlock);
             } else {
                 setTitle(R.string.pref_tor_clearnet);
             }
-        } else if (frag.deviceOrTether.equals("tether")) {
-            if (!frag.routeAllThroughTorTether) {
+        } else if (fragment.viewModel.getDeviceOrTether().equals(TETHER_VALUE)) {
+            if (!fragment.viewModel.getRouteAllThroughTorTether()) {
                 setTitle(R.string.pref_tor_unlock);
             } else {
                 setTitle(R.string.pref_tor_clearnet);

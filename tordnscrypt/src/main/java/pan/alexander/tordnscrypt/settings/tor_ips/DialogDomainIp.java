@@ -19,18 +19,15 @@ package pan.alexander.tordnscrypt.settings.tor_ips;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import static pan.alexander.tordnscrypt.utils.Constants.IP_REGEX;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
 
 import androidx.appcompat.app.AlertDialog;
-
-import android.app.Activity;
 
 import androidx.annotation.NonNull;
 
 import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import pan.alexander.tordnscrypt.R;
@@ -38,33 +35,42 @@ import pan.alexander.tordnscrypt.R;
 public abstract class DialogDomainIp extends AlertDialog.Builder {
 
     private final WeakReference<UnlockTorIpsFragment> unlockTorIpsFrag;
-    private final List<DomainIpEntity> domainIps;
 
     public DialogDomainIp(@NonNull WeakReference<UnlockTorIpsFragment> unlockTorIpsFrag,
                           int themeResId) {
         super(unlockTorIpsFrag.get().requireContext(), themeResId);
         this.unlockTorIpsFrag = unlockTorIpsFrag;
-        this.domainIps = unlockTorIpsFrag.get().domainIps;
     }
 
     boolean isTextIP(String text) {
-        return text.matches(IP_REGEX);
+        return text.matches(IPv4_REGEX);
     }
 
-    void resolveHostOrIP(DomainIpEntity domainIp, int position) {
+    void resolveHostOrIP(DomainIpEntity domainIp) {
+        UnlockTorIpsFragment fragment = unlockTorIpsFrag.get();
+        if (fragment == null) {
+            return;
+        }
+
         boolean active = domainIp.isActive();
 
         if (domainIp instanceof DomainEntity) {
             String domain = ((DomainEntity) domainIp).getDomain();
             try {
-                Set<String> ips = unlockTorIpsFrag.get().viewModel.resolveDomain(domain);
+                Set<String> ips = fragment.viewModel.resolveDomain(domain);
                 if (ips.isEmpty()) {
                     throw new Exception();
                 }
-                domainIps.set(position, new DomainEntity(domain, ips, active));
+                fragment.viewModel.addDomainIp(
+                        new DomainEntity(
+                                domain,
+                                ips,
+                                active
+                        )
+                );
             } catch (Exception ignored) {
                 String ip = unlockTorIpsFrag.get().getString(R.string.pref_fast_unlock_host_wrong);
-                domainIps.set(position,
+                fragment.viewModel.addDomainIp(
                         new DomainEntity(
                                 domain,
                                 new HashSet<>(Collections.singletonList(ip)),
@@ -75,34 +81,19 @@ public abstract class DialogDomainIp extends AlertDialog.Builder {
         } else if (domainIp instanceof IpEntity) {
             String ip = ((IpEntity) domainIp).getIp();
             try {
-                String host = unlockTorIpsFrag.get().viewModel.reverseResolve(ip);
+                String host = fragment.viewModel.reverseResolve(ip);
                 if (host.equals(ip)) {
                     throw new Exception();
                 }
-                domainIps.set(position, new IpEntity(ip, host, active));
+                fragment.viewModel.addDomainIp(
+                        new IpEntity(ip, host, active)
+                );
             } catch (Exception ignored) {
                 String host = "";
-                domainIps.set(position, new IpEntity(ip, host, active));
+                fragment.viewModel.addDomainIp(
+                        new IpEntity(ip, host, active)
+                );
             }
-        }
-
-        updateViewData(unlockTorIpsFrag, position);
-    }
-
-    void updateViewData(WeakReference<UnlockTorIpsFragment> unlockTorIpsFrag, int position) {
-        UnlockTorIpsFragment fragment = unlockTorIpsFrag.get();
-        if (fragment == null) {
-            return;
-        }
-
-        Activity activity = fragment.getActivity();
-        if (activity != null && !activity.isFinishing() && !Thread.currentThread().isInterrupted()) {
-            activity.runOnUiThread(() -> {
-                if (!activity.isFinishing()) {
-                    fragment.rvAdapter.notifyDataSetChanged();
-                    fragment.rvListHostIP.scrollToPosition(position);
-                }
-            });
         }
     }
 }

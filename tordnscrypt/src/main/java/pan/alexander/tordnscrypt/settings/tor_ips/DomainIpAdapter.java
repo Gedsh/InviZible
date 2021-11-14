@@ -31,27 +31,33 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.LinearLayoutCompat;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.recyclerview.widget.AsyncListDiffer;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import pan.alexander.tordnscrypt.R;
 
 public class DomainIpAdapter extends RecyclerView.Adapter<DomainIpAdapter.DomainIpViewHolder> {
-
+    private final AsyncListDiffer<DomainIpEntity> diff = new AsyncListDiffer<>(
+            this, new DomainIpDiffUtilItemCallback()
+    );
     private final UnlockTorIpsFragment unlockTorIpsFragment;
     private final Context context;
-    private final List<DomainIpEntity> domainIps;
-    private final String unlockIPsStr;
-    private final String unlockHostsStr;
 
     DomainIpAdapter(UnlockTorIpsFragment unlockTorIpsFragment) {
         this.unlockTorIpsFragment = unlockTorIpsFragment;
         this.context = unlockTorIpsFragment.getContext();
-        this.domainIps = unlockTorIpsFragment.domainIps;
-        this.unlockIPsStr = unlockTorIpsFragment.unlockIPsStr;
-        this.unlockHostsStr = unlockTorIpsFragment.unlockHostsStr;
+    }
+
+    public void updateDomainIps(Set<DomainIpEntity> newDomainIpsSet) {
+        List<DomainIpEntity> newDomainIps = new ArrayList<>(newDomainIpsSet);
+        Collections.sort(newDomainIps);
+        diff.submitList(newDomainIps);
     }
 
     @NonNull
@@ -68,31 +74,27 @@ public class DomainIpAdapter extends RecyclerView.Adapter<DomainIpAdapter.Domain
 
     @Override
     public int getItemCount() {
-        return domainIps.size();
+        return diff.getCurrentList().size();
     }
 
     DomainIpEntity getItem(int position) {
-        return domainIps.get(position);
+        return diff.getCurrentList().get(position);
     }
 
     private void delItem(int position) {
 
         Activity activity = unlockTorIpsFragment.getActivity();
-        if (activity == null || activity.isFinishing()
-                || unlockTorIpsFragment.unlockHostsStr == null || unlockIPsStr == null || domainIps == null) {
+        if (activity == null || activity.isFinishing()) {
             return;
         }
 
-        DomainIpEntity domainIp = domainIps.get(position);
-        unlockTorIpsFragment.viewModel.deleteDomainIpFromPreferences(domainIp, unlockHostsStr, unlockIPsStr);
-
-        domainIps.remove(position);
-
-        notifyItemRemoved(position);
+        DomainIpEntity domainIp = getItem(position);
+        unlockTorIpsFragment.viewModel.deleteDomainIpFromPreferences(domainIp);
+        unlockTorIpsFragment.viewModel.removeDomainIp(domainIp);
     }
 
     private void setActive(int position, boolean active) {
-        DomainIpEntity domainIp = domainIps.get(position);
+        DomainIpEntity domainIp = getItem(position);
         domainIp.setActive(active);
     }
 
@@ -135,35 +137,28 @@ public class DomainIpAdapter extends RecyclerView.Adapter<DomainIpAdapter.Domain
 
             if (domainIp instanceof IpEntity) {
                 String domain = ((IpEntity) domainIp).getDomain();
+                String ip = ((IpEntity) domainIp).getIp();
                 if (!domain.isEmpty()) {
                     tvTorItemHost.setText(domain);
-                    tvTorItemHost.setVisibility(View.VISIBLE);
                 } else {
-                    tvTorItemHost.setVisibility(View.GONE);
+                    tvTorItemHost.setText(ip);
                 }
             } else if (domainIp instanceof DomainEntity) {
                 String domain = ((DomainEntity) domainIp).getDomain();
                 tvTorItemHost.setText(domain);
-                tvTorItemHost.setVisibility(View.VISIBLE);
             }
 
             setItemIpText(domainIp);
 
             swTorItem.setChecked(domainIp.isActive());
             llHostIP.setEnabled(domainIp.isActive());
-
-            if (position == getItemCount() - 1) {
-                llHostIPRoot.setPadding(0, 0, 0, unlockTorIpsFragment.floatingBtnAddTorIPs.getHeight());
-            } else {
-                llHostIPRoot.setPadding(0, 0, 0, 0);
-            }
         }
 
-        void editHostIPDialog(final int position) {
+        void editHostIPDialog(final DomainIpEntity domainIpEntity) {
             DialogEditDomainIp dialogEditHostIP = new DialogEditDomainIp(
                     new WeakReference<>(unlockTorIpsFragment),
                     R.style.CustomAlertDialogTheme,
-                    position
+                    domainIpEntity
             );
             dialogEditHostIP.show();
         }
@@ -193,16 +188,15 @@ public class DomainIpAdapter extends RecyclerView.Adapter<DomainIpAdapter.Domain
             if (domainIp instanceof IpEntity) {
                 unlockTorIpsFragment.viewModel.saveIpActiveInPreferences(
                         ((IpEntity) domainIp).getIp(),
-                        isChecked,
-                        unlockIPsStr
+                        isChecked
                 );
             } else if (domainIp instanceof DomainEntity) {
                 unlockTorIpsFragment.viewModel.saveDomainActiveInPreferences(
                         ((DomainEntity) domainIp).getDomain(),
-                        isChecked,
-                        unlockHostsStr
+                        isChecked
                 );
             }
+            unlockTorIpsFragment.viewModel.addDomainIp(domainIp);
         }
 
         private void setItemIpText(DomainIpEntity domainIp) {
@@ -233,7 +227,7 @@ public class DomainIpAdapter extends RecyclerView.Adapter<DomainIpAdapter.Domain
             if (id == R.id.imbtnTorItem) {
                 delItem(position);
             } else if (id == R.id.llHostIP) {
-                editHostIPDialog(position);
+                editHostIPDialog(getItem(position));
             }
         }
 

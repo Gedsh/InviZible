@@ -31,7 +31,6 @@ import androidx.appcompat.app.AlertDialog;
 import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.concurrent.CancellationException;
 
 import kotlinx.coroutines.Job;
@@ -41,21 +40,15 @@ public class DialogEditDomainIp extends DialogDomainIp {
     private static Job resolvingJob;
 
     private final WeakReference<UnlockTorIpsFragment> unlockTorIpsFragment;
-    private final List<DomainIpEntity> domainIps;
-    private final String unlockHostsStr;
-    private final String unlockIPsStr;
-    private final int position;
+    private final DomainIpEntity domainIp;
 
     public DialogEditDomainIp(@NonNull WeakReference<UnlockTorIpsFragment> unlockTorIpsFragment,
                               int themeResId,
-                              int position
+                              DomainIpEntity domainIp
     ) {
         super(unlockTorIpsFragment, themeResId);
         this.unlockTorIpsFragment = unlockTorIpsFragment;
-        this.domainIps = unlockTorIpsFragment.get().domainIps;
-        this.unlockHostsStr = unlockTorIpsFragment.get().unlockHostsStr;
-        this.unlockIPsStr = unlockTorIpsFragment.get().unlockIPsStr;
-        this.position = position;
+        this.domainIp = domainIp;
     }
 
     @NonNull
@@ -77,12 +70,12 @@ public class DialogEditDomainIp extends DialogDomainIp {
 
         String oldHost;
         String oldIP;
-        if (domainIps.get(position) instanceof DomainEntity) {
-            oldHost = ((DomainEntity) domainIps.get(position)).getDomain();
+        if (domainIp instanceof DomainEntity) {
+            oldHost = ((DomainEntity) domainIp).getDomain();
             input.setText(oldHost, TextView.BufferType.EDITABLE);
             oldIP = "";
-        } else if (domainIps.get(position) instanceof IpEntity) {
-            oldIP = ((IpEntity) domainIps.get(position)).getIp();
+        } else if (domainIp instanceof IpEntity) {
+            oldIP = ((IpEntity) domainIp).getIp();
             input.setText(oldIP, TextView.BufferType.EDITABLE);
             oldHost = "";
         } else {
@@ -95,18 +88,16 @@ public class DialogEditDomainIp extends DialogDomainIp {
         setPositiveButton(R.string.ok, (dialog, which) -> {
 
             if ( unlockTorIpsFragment.get() == null
-                    || fragment.rvAdapter == null
-                    || unlockHostsStr == null
-                    || unlockIPsStr == null) {
+                    || fragment.domainIpAdapter == null) {
                 return;
             }
 
             String text = input.getText().toString();
             DomainIpEntity domainIp;
             if (isTextIP(text)) {
-                domainIp = editIP(text, oldIP, position);
+                domainIp = editIP(text, oldIP);
             } else {
-                domainIp = editHost(text, oldHost, position);
+                domainIp = editHost(text, oldHost);
             }
 
             if (resolvingJob != null) {
@@ -114,11 +105,9 @@ public class DialogEditDomainIp extends DialogDomainIp {
             }
 
             resolvingJob = fragment.coroutineExecutor.get().execute("DialogEditHostIP", () -> {
-                resolveHostOrIP(domainIp, position);
+                resolveHostOrIP(domainIp);
                 return null;
             });
-
-            fragment.rvAdapter.notifyItemChanged(position);
         });
 
         setNegativeButton(R.string.cancel, (dialog, which) -> dialog.cancel());
@@ -126,7 +115,7 @@ public class DialogEditDomainIp extends DialogDomainIp {
         return super.create();
     }
 
-    private DomainIpEntity editHost(String host, String oldHost, int position) {
+    private DomainIpEntity editHost(String host, String oldHost) {
 
         if (!host.startsWith("http")) {
             host = "https://" + host;
@@ -137,17 +126,32 @@ public class DialogEditDomainIp extends DialogDomainIp {
                 new HashSet<>(Collections.singletonList(unlockTorIpsFragment.get().getString(R.string.please_wait))),
                 true
         );
-        domainIps.set(position, domainIp);
-        unlockTorIpsFragment.get().viewModel.replaceDomainInPreferences(host, oldHost, unlockHostsStr);
+
+        DomainIpEntity oldDomainIp = new DomainEntity(
+                oldHost,
+                new HashSet<>(Collections.singletonList(unlockTorIpsFragment.get().getString(R.string.please_wait))),
+                true
+        );
+
+        UnlockTorIpsFragment fragment = unlockTorIpsFragment.get();
+        if (fragment != null) {
+            fragment.viewModel.updateDomainIp(domainIp, oldDomainIp);
+            fragment.viewModel.replaceDomainInPreferences(host, oldHost);
+        }
 
         return domainIp;
     }
 
-    private DomainIpEntity editIP(String ip, String oldIP, int position) {
+    private DomainIpEntity editIP(String ip, String oldIP) {
 
         DomainIpEntity domainIp = new IpEntity(ip, unlockTorIpsFragment.get().getString(R.string.please_wait), true);
-        domainIps.set(position, domainIp);
-        unlockTorIpsFragment.get().viewModel.replaceIpInPreferences(ip, oldIP, unlockIPsStr);
+        DomainIpEntity oldDomainIp = new IpEntity(oldIP, unlockTorIpsFragment.get().getString(R.string.please_wait), true);
+
+        UnlockTorIpsFragment fragment = unlockTorIpsFragment.get();
+        if (fragment != null) {
+            fragment.viewModel.updateDomainIp(domainIp, oldDomainIp);
+            fragment.viewModel.replaceIpInPreferences(ip, oldIP);
+        }
 
         return domainIp;
     }

@@ -19,7 +19,6 @@ package pan.alexander.tordnscrypt.settings.tor_ips;
 */
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
@@ -41,11 +40,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
@@ -59,11 +54,6 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
-import static pan.alexander.tordnscrypt.utils.Constants.IP_REGEX;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR_CLEARNET;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR_CLEARNET_TETHER;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_UNLOCK;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_UNLOCK_TETHER;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
@@ -71,21 +61,13 @@ import javax.inject.Inject;
 public class UnlockTorIpsFragment extends Fragment {
 
     private final static String DEVICE_OR_TETHER_KEY = "deviceOrTether";
-    private final static String DEVICE_VALUE = "device";
-    private final static String TETHER_VALUE = "tether";
+    final static String DEVICE_VALUE = "device";
+    final static String TETHER_VALUE = "tether";
 
     RecyclerView rvListHostIP;
-    RecyclerView.Adapter<DomainIpAdapter.DomainIpViewHolder> rvAdapter;
+    DomainIpAdapter domainIpAdapter;
     FloatingActionButton floatingBtnAddTorIPs;
 
-    final List<DomainIpEntity> domainIps = new ArrayList<>();
-
-    boolean routeAllThroughTorDevice = true;
-    boolean routeAllThroughTorTether = false;
-
-    String deviceOrTether = "";
-    String unlockHostsStr;
-    String unlockIPsStr;
 
     @Inject
     public Lazy<CoroutineExecutor> coroutineExecutor;
@@ -100,8 +82,9 @@ public class UnlockTorIpsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         App.getInstance().getDaggerComponent().inject(this);
-
         super.onCreate(savedInstanceState);
+
+        viewModel = new ViewModelProvider(this).get(UnlockTorIpsViewModel.class);
 
         Activity activity = getActivity();
         if (activity == null) {
@@ -112,9 +95,10 @@ public class UnlockTorIpsFragment extends Fragment {
         ///////////////////////Reverse logic when route all through Tor!///////////////////
         //////////////////////////////////////////////////////////////////////////////////
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(activity);
-        routeAllThroughTorDevice = shPref.getBoolean("pref_fast_all_through_tor", true);
-        routeAllThroughTorTether = shPref.getBoolean("pref_common_tor_route_all", false);
+        boolean routeAllThroughTorDevice = shPref.getBoolean("pref_fast_all_through_tor", true);
+        boolean routeAllThroughTorTether = shPref.getBoolean("pref_common_tor_route_all", false);
 
+        String deviceOrTether = null;
         if (getArguments() != null) {
             deviceOrTether = getArguments().getString(DEVICE_OR_TETHER_KEY);
         }
@@ -123,27 +107,20 @@ public class UnlockTorIpsFragment extends Fragment {
             return;
         }
 
-        if (deviceOrTether.equals(DEVICE_VALUE)) {
-            if (!routeAllThroughTorDevice) {
-                activity.setTitle(R.string.pref_tor_unlock);
-                unlockHostsStr = "unlockHosts";
-                unlockIPsStr = "unlockIPs";
-            } else {
-                activity.setTitle(R.string.pref_tor_clearnet);
-                unlockHostsStr = "clearnetHosts";
-                unlockIPsStr = "clearnetIPs";
-            }
-        } else if (deviceOrTether.equals(TETHER_VALUE)) {
-            if (!routeAllThroughTorTether) {
-                activity.setTitle(R.string.pref_tor_unlock);
-                unlockHostsStr = "unlockHostsTether";
-                unlockIPsStr = "unlockIPsTether";
-            } else {
-                activity.setTitle(R.string.pref_tor_clearnet);
-                unlockHostsStr = "clearnetHostsTether";
-                unlockIPsStr = "clearnetIPsTether";
-            }
+        if (savedInstanceState == null) {
+            viewModel.defineAppropriatePreferenceKeys(
+                    deviceOrTether,
+                    routeAllThroughTorDevice,
+                    routeAllThroughTorTether
+            );
         }
+
+        setTitle(
+                activity,
+                deviceOrTether,
+                routeAllThroughTorDevice,
+                routeAllThroughTorTether
+        );
 
         cachedExecutor.submit(() -> {
             try {
@@ -169,11 +146,30 @@ public class UnlockTorIpsFragment extends Fragment {
         });
     }
 
+    private void setTitle(
+            Activity activity,
+            String deviceOrTether,
+            boolean routeAllThroughTorDevice,
+            boolean routeAllThroughTorTether
+    ) {
+        if (deviceOrTether.equals(DEVICE_VALUE)) {
+            if (!routeAllThroughTorDevice) {
+                activity.setTitle(R.string.pref_tor_unlock);
+            } else {
+                activity.setTitle(R.string.pref_tor_clearnet);
+            }
+        } else if (deviceOrTether.equals(TETHER_VALUE)) {
+            if (!routeAllThroughTorTether) {
+                activity.setTitle(R.string.pref_tor_unlock);
+            } else {
+                activity.setTitle(R.string.pref_tor_clearnet);
+            }
+        }
+    }
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
-        viewModel = new ViewModelProvider(this).get(UnlockTorIpsViewModel.class);
 
         View view = inflater.inflate(R.layout.fragment_preferences_tor_ips, container, false);
 
@@ -202,8 +198,8 @@ public class UnlockTorIpsFragment extends Fragment {
     }
 
     private void initRecycler() {
-        rvAdapter = new DomainIpAdapter(this);
-        rvListHostIP.setAdapter(rvAdapter);
+        domainIpAdapter = new DomainIpAdapter(this);
+        rvListHostIP.setAdapter(domainIpAdapter);
     }
 
     @Override
@@ -211,95 +207,32 @@ public class UnlockTorIpsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         if (savedInstanceState == null) {
-            getDomainIps();
+            viewModel.getDomainIps();
         }
 
         observeResolvedDomainIps();
-    }
-
-    private void getDomainIps() {
-        viewModel.getDomainIps(
-                unlockHostsStr,
-                unlockIPsStr,
-                getString(R.string.please_wait),
-                getString(R.string.pref_fast_unlock_host_wrong)
-        );
     }
 
     @Override
     public void onStop() {
         super.onStop();
 
-        Context context = getActivity();
-        if (context == null) {
+        Activity activity = getActivity();
+        if (activity == null || activity.isChangingConfigurations()) {
             return;
         }
 
-        boolean unlockHostIPContainsActive = false;
+        if (viewModel.saveDomainIps()) {
+            ModulesStatus modulesStatus = ModulesStatus.getInstance();
+            modulesStatus.setIptablesRulesUpdateRequested(activity, true);
 
-        Set<String> ipsToUnlock = new HashSet<>();
-
-        for (DomainIpEntity domainIp : domainIps) {
-            if (domainIp.isActive()) {
-                if (domainIp instanceof DomainEntity) {
-                    for (String ip : ((DomainEntity) domainIp).getIps()) {
-                        if (ip.matches(IP_REGEX))
-                            ipsToUnlock.add(ip);
-                    }
-                } else if (domainIp instanceof IpEntity) {
-                    String ip = ((IpEntity) domainIp).getIp();
-                    if (ip.matches(IP_REGEX))
-                        ipsToUnlock.add(ip);
-                }
-                unlockHostIPContainsActive = true;
-            }
+            Toast.makeText(activity, getText(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
         }
-
-        if (domainIps.size() > 0 && ipsToUnlock.isEmpty() && unlockHostIPContainsActive) {
-            return;
-        }
-
-        boolean settingsChanged = false;
-
-
-        //////////////////////////////////////////////////////////////////////////////////////
-        //////////////When open this fragment to add sites for internal applications/////////
-        /////////////////////////////////////////////////////////////////////////////////////
-
-        if (DEVICE_VALUE.equals(deviceOrTether)) {
-            if (!routeAllThroughTorDevice) {
-                settingsChanged = viewModel.saveDomainIpsToPreferences(ipsToUnlock, IPS_TO_UNLOCK);
-            } else {
-                settingsChanged = viewModel.saveDomainIpsToPreferences(ipsToUnlock, IPS_FOR_CLEARNET);
-            }
-
-            //////////////////////////////////////////////////////////////////////////////////////
-            //////////////When open this fragment to add sites for external tether devices/////////
-            /////////////////////////////////////////////////////////////////////////////////////
-        } else if (TETHER_VALUE.equals(deviceOrTether)) {
-            if (!routeAllThroughTorTether) {
-                settingsChanged = viewModel.saveDomainIpsToPreferences(ipsToUnlock, IPS_TO_UNLOCK_TETHER);
-            } else {
-                settingsChanged = viewModel.saveDomainIpsToPreferences(ipsToUnlock, IPS_FOR_CLEARNET_TETHER);
-            }
-        }
-
-        if (!settingsChanged) {
-            return;
-        }
-
-        ModulesStatus modulesStatus = ModulesStatus.getInstance();
-        modulesStatus.setIptablesRulesUpdateRequested(context, true);
-
-        Toast.makeText(context, getText(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
     }
 
     private void observeResolvedDomainIps() {
-        viewModel.getDomainIpLiveData().observe(getViewLifecycleOwner(), domainIps -> {
-            this.domainIps.clear();
-            this.domainIps.addAll(domainIps);
-            rvAdapter.notifyDataSetChanged();
-        });
+        viewModel.getDomainIpLiveData().observe(getViewLifecycleOwner(), domainIps ->
+                domainIpAdapter.updateDomainIps(domainIps));
     }
 
     @Override
@@ -311,7 +244,7 @@ public class UnlockTorIpsFragment extends Fragment {
 
     private void destroyViews() {
         rvListHostIP = null;
-        rvAdapter = null;
+        domainIpAdapter = null;
         floatingBtnAddTorIPs = null;
     }
 
@@ -330,7 +263,7 @@ public class UnlockTorIpsFragment extends Fragment {
         UnlockTorIpsFragment unlockTorIpsFragment = new UnlockTorIpsFragment();
         unlockTorIpsFragment.setArguments(bundle);
 
-        return  unlockTorIpsFragment;
+        return unlockTorIpsFragment;
     }
 
     public enum DeviceOrTether {
