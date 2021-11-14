@@ -72,7 +72,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
     private Activity activity;
     private MainActivity mainActivity;
     private InstallerReceiver br;
-    private static CountDownLatch countDownLatch;
+    private static volatile CountDownLatch countDownLatch;
     private final String appDataDir;
 
     protected static boolean interruptInstallation = false;
