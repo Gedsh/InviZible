@@ -31,20 +31,53 @@ class DnsDataSourceImpl @Inject constructor(
     private val dohResolverFactory: DohResolverFactory
 ) : DnsDataSource {
 
-    override fun resolveDomainUDP(domain: String, port: Int, timeout: Int): Array<Record>? {
+    override fun resolveDomainUDP(
+        domain: String,
+        port: Int, timeout: Int
+    ): Array<Record>? {
         val domainVerified = Domain(URL(domain).host ?: "")
-        return udpResolverFactory.createUdpResolver(LOOPBACK_ADDRESS, port, timeout)
-            .resolve(domainVerified)
+        return udpResolverFactory.createUdpResolver(
+            LOOPBACK_ADDRESS,
+            port,
+            Record.TYPE_A,
+            timeout
+        ).resolve(domainVerified)
     }
 
-    override fun resolveDomainDOH(domain: String, timeout: Int): Array<Record>? {
+    override fun resolveDomainDOH(
+        domain: String,
+        timeout: Int
+    ): Array<Record>? {
         val domainVerified = Domain(URL(domain).host ?: "")
-        return dohResolverFactory.createDohResolver(QUAD_DOH_SERVER, timeout)
-            .resolve(domainVerified)
+        return dohResolverFactory.createDohResolver(
+            QUAD_DOH_SERVER,
+            Record.TYPE_A,
+            timeout
+        ).resolve(domainVerified)
     }
 
-    override fun reverseResolve(ip: String): String {
-        return udpResolverFactory.createUdpResolver(SYSTEM_RESOLVER, 53).reverseResolve(ip)
+    override fun reverseResolveUDP(
+        ip: String,
+        port: Int,
+        timeout: Int
+    ): Array<Record>? {
+        return udpResolverFactory.createUdpResolver(
+            LOOPBACK_ADDRESS,
+            port,
+            Record.TYPE_PTR,
+            timeout
+        ).reverseResolve(ip)
+    }
+
+    override fun reverseResolveDOH(
+        ip: String,
+        timeout: Int
+    ): Array<Record>? {
+        return dohResolverFactory.createDohResolver(
+            QUAD_DOH_SERVER,
+            Record.TYPE_PTR,
+            timeout
+        ).reverseResolve(ip)
     }
 
     @AssistedFactory
@@ -52,6 +85,7 @@ class DnsDataSourceImpl @Inject constructor(
         fun createUdpResolver(
             domain: String,
             @Assisted("port") port: Int,
+            @Assisted("type") type: Int,
             @Assisted("timeout") timeout: Int = Resolver.DNS_DEFAULT_TIMEOUT_SEC
         ): UdpResolver
     }
@@ -60,7 +94,8 @@ class DnsDataSourceImpl @Inject constructor(
     interface DohResolverFactory {
         fun createDohResolver(
             domain: String,
-            timeout: Int = Resolver.DNS_DEFAULT_TIMEOUT_SEC
+            @Assisted("type") type: Int,
+            @Assisted("timeout") timeout: Int = Resolver.DNS_DEFAULT_TIMEOUT_SEC
         ): DohResolver
     }
 }

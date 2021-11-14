@@ -33,8 +33,12 @@ import dagger.assisted.AssistedInject;
 public class DohResolver extends DnsResolver {
 
     @AssistedInject
-    public DohResolver(@Assisted String server, @Assisted int timeout) {
-        super(server, timeout);
+    public DohResolver(
+            @Assisted String server,
+            @Assisted("type") int type,
+            @Assisted("timeout") int timeout
+    ) {
+        super(server, type, timeout);
     }
 
     @Override

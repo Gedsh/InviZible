@@ -61,7 +61,28 @@ class DnsInteractorImpl @Inject constructor(
         }
 
     override fun reverseResolve(ip: String): String =
-        dnsRepository.reverseResolve(ip)
+        when {
+            modulesStatus.dnsCryptState == ModuleState.RUNNING && modulesStatus.isDnsCryptReady -> {
+                dnsRepository.reverseResolveDomainUDP(
+                    ip,
+                    pathVars.dnsCryptPort.toInt(),
+                    Resolver.DNS_DEFAULT_TIMEOUT_SEC
+                )
+            }
+            modulesStatus.torState == ModuleState.RUNNING && modulesStatus.isTorReady -> {
+                dnsRepository.reverseResolveDomainUDP(
+                    ip,
+                    pathVars.torDNSPort.toInt(),
+                    Resolver.DNS_DEFAULT_TIMEOUT_SEC
+                )
+            }
+            else -> {
+                dnsRepository.reverseResolveDomainDOH(
+                    ip,
+                    Resolver.DNS_DEFAULT_TIMEOUT_SEC
+                )
+            }
+        }
 
     @ObsoleteCoroutinesApi
     override suspend fun resolveDomainOrIp(

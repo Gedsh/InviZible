@@ -62,7 +62,11 @@ class DnsRequest extends DnsMessage {
             throw new IOException("rd is not valid");
         }
 
-        if (recordType != Record.TYPE_A && recordType != Record.TYPE_AAAA && recordType != Record.TYPE_CNAME && recordType != Record.TYPE_TXT) {
+        if (recordType != Record.TYPE_A
+                && recordType != Record.TYPE_AAAA
+                && recordType != Record.TYPE_CNAME
+                && recordType != Record.TYPE_PTR
+                && recordType != Record.TYPE_TXT) {
             throw new IOException("recordType is not valid");
         }
 

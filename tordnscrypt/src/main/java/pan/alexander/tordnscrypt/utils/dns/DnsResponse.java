@@ -227,7 +227,8 @@ class DnsResponse extends DnsMessage {
                 }
             }
             break;
-            case Record.TYPE_CNAME: {
+            case Record.TYPE_CNAME:
+            case Record.TYPE_PTR: {
                 if (length > 1) {
                     RecordName name = getNameFrom(from);
                     if (name != null) {

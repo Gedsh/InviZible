@@ -40,6 +40,8 @@ public final class Record {
 
     public static final int TYPE_CNAME = 5;
 
+    public static final int TYPE_PTR = 12;
+
     public static final int TYPE_TXT = 16;
 
     public final String value;
@@ -109,6 +111,10 @@ public final class Record {
 
     public boolean isCname() {
         return type == TYPE_CNAME;
+    }
+
+    public boolean isPointer() {
+        return type == TYPE_PTR;
     }
 
     public boolean isExpired() {

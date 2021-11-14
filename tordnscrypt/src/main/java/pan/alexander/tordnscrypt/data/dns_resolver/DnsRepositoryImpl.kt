@@ -53,8 +53,14 @@ class DnsRepositoryImpl @Inject constructor(
             ?.toHashSet() ?: emptySet()
     }
 
-    override fun reverseResolve(ip: String): String {
-        return dnsDataSource.reverseResolve(ip)
+    override fun reverseResolveDomainUDP(ip: String, port: Int, timeout: Int): String {
+        return dnsDataSource.reverseResolveUDP(ip, port, timeout)
+            ?.getOrNull(0)?.value ?: ""
+    }
+
+    override fun reverseResolveDomainDOH(ip: String, timeout: Int): String {
+        return dnsDataSource.reverseResolveDOH(ip, timeout)
+        ?.getOrNull(0)?.value ?: ""
     }
 
     private fun isRecordValid(record: Record?): Boolean {

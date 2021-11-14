@@ -19,26 +19,25 @@
 
 package pan.alexander.tordnscrypt.utils.dns;
 
+import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX;
+
+import android.text.TextUtils;
+
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public abstract class DnsResolver implements Resolver {
+
+    private final static String PTR_SUFFIX = ".in-addr.arpa";
 
     private final int recordType;
     private final String server;
 
     protected final int timeout;
-
-    public DnsResolver(String server) {
-        this(server, Record.TYPE_A, DNS_DEFAULT_TIMEOUT_SEC);
-    }
-
-    public DnsResolver(String server, int timeout) {
-        this(server, Record.TYPE_A, timeout);
-    }
 
     public DnsResolver(String server, int recordType, int timeout) {
         this.recordType = recordType;
@@ -68,9 +67,39 @@ public abstract class DnsResolver implements Resolver {
     }
 
     @Override
-    public String reverseResolve(String ip) throws UnknownHostException {
-        InetAddress addr = InetAddress.getByName(ip);
-        return addr.getCanonicalHostName();
+    public Record[] reverseResolve(String ip) throws IOException {
+
+        if (!ip.matches(IPv4_REGEX) && !ip.matches(IPv6_REGEX)) {
+            throw new IllegalArgumentException("IP wrong format " + ip);
+        }
+
+        String ptrRequest = ipToPointerRequest(ip);
+
+        DnsResponse response = lookupHost(ptrRequest);
+        if (response == null) {
+            throw new IOException("response is null");
+        }
+
+        List<Record> answers = response.getAnswerArray();
+        if (answers == null || answers.size() == 0) {
+            return null;
+        }
+
+        List<Record> records = new ArrayList<>();
+        for (Record record : answers) {
+            if (record.isPointer()) {
+                records.add(record);
+            }
+        }
+
+        return records.toArray(new Record[0]);
+    }
+
+    private String ipToPointerRequest(String ip) {
+        List<String> list = Arrays.asList(ip.split("\\."));
+        Collections.reverse(list);
+        return TextUtils.join(".", list) +
+                PTR_SUFFIX;
     }
 
     private DnsResponse lookupHost(String host) throws IOException {

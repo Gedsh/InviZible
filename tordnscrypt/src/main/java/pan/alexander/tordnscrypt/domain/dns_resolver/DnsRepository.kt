@@ -22,5 +22,6 @@ package pan.alexander.tordnscrypt.domain.dns_resolver
 interface DnsRepository {
     fun resolveDomainUDP(domain: String, port: Int, timeout: Int): Set<String>
     fun resolveDomainDOH(domain: String, timeout: Int): Set<String>
-    fun reverseResolve(ip: String): String
+    fun reverseResolveDomainUDP(ip: String, port: Int, timeout: Int): String
+    fun reverseResolveDomainDOH(ip: String, timeout: Int): String
 }

@@ -33,5 +33,14 @@ interface DnsDataSource {
         timeout: Int
     ): Array<Record>?
 
-    fun reverseResolve(ip: String): String
+    fun reverseResolveUDP(
+        ip: String,
+        port: Int,
+        timeout: Int
+    ): Array<Record>?
+
+    fun reverseResolveDOH(
+        ip: String,
+        timeout: Int
+    ): Array<Record>?
 }

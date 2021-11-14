@@ -20,11 +20,13 @@
 package pan.alexander.tordnscrypt.utils.dns;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
+
+//https://datatracker.ietf.org/doc/html/rfc1035
 
 public interface Resolver {
     int DNS_DEFAULT_TIMEOUT_SEC = 10;
 
     Record[] resolve(Domain domain) throws IOException;
-    String reverseResolve(String ip) throws UnknownHostException;
+
+    Record[] reverseResolve(String ip) throws IOException;
 }
