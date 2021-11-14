@@ -17,10 +17,16 @@
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.data.connection_checker
+package pan.alexander.tordnscrypt.utils.resources
 
-interface ConnectionCheckerDataSource {
-    fun checkInternetAvailableOverHttp(site: String): Boolean
-    fun checkInternetAvailableOverSocks(ip: String, port: Int, withTor: Boolean): Boolean
-    fun checkNetworkAvailable(): Boolean
+import android.content.Context
+import pan.alexander.tordnscrypt.R
+import javax.inject.Inject
+
+class ResourceManagerImpl @Inject constructor(
+    private val context: Context
+): ResourceManager {
+    override fun getPleaseWaitString() = context.getString(R.string.please_wait)
+
+    override fun getWrongIpString() = context.getString(R.string.pref_fast_unlock_host_wrong)
 }

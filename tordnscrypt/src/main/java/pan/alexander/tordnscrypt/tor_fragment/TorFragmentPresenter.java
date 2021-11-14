@@ -83,6 +83,8 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
     public Lazy<TorInteractorInterface> torInteractor;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
     public TorFragmentView view;
 
@@ -574,7 +576,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
             return;
         }
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
 
             if (!isActive() || activity == null) {
                 return;

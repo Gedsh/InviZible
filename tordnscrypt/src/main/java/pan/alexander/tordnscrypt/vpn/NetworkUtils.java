@@ -41,7 +41,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPN;
 
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
@@ -279,7 +279,7 @@ public class NetworkUtils {
 
     public static void canFilterAsynchronous(ServiceVPN serviceVPN) {
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        App.getInstance().getDaggerComponent().getCachedExecutor().submit(() -> {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && serviceVPN != null) {
                 serviceVPN.canFilter = true;
                 return;

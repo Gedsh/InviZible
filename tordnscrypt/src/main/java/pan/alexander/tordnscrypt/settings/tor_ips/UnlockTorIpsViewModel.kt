@@ -4,11 +4,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.ObsoleteCoroutinesApi
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import pan.alexander.tordnscrypt.App
-import pan.alexander.tordnscrypt.di.CoroutinesModule.Companion.DISPATCHER_IO
+import pan.alexander.tordnscrypt.di.CoroutinesModule.Companion.DISPATCHER_COMPUTATION
 import pan.alexander.tordnscrypt.domain.dns_resolver.DnsInteractor
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import javax.inject.Inject
@@ -20,8 +18,10 @@ class UnlockTorIpsViewModel : ViewModel() {
     lateinit var dnsInteractor: dagger.Lazy<DnsInteractor>
     @Inject
     lateinit var preferenceRepository: dagger.Lazy<PreferenceRepository>
-    @Inject @Named(DISPATCHER_IO)
+    @Inject @Named(DISPATCHER_COMPUTATION)
     lateinit var dispatcherIo: CoroutineDispatcher
+    @Inject
+    lateinit var exceptionHandler: CoroutineExceptionHandler
 
     init {
         App.instance.daggerComponent.inject(this)
@@ -43,7 +43,9 @@ class UnlockTorIpsViewModel : ViewModel() {
         pleaseWaitMessage: String,
         wrongDomainIpMessage: String
     ) {
-        viewModelScope.launch(dispatcherIo) {
+        viewModelScope.launch(
+            dispatcherIo + CoroutineName("getDomainIps") + exceptionHandler
+        ) {
 
             val domainIps = getDomainIpsFromPreferences(unlockHostsStr, unlockIPsStr, pleaseWaitMessage)
 

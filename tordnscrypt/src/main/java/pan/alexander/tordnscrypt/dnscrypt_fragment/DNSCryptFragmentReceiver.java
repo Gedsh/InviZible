@@ -62,6 +62,8 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
     public Lazy<PathVars> pathVars;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
     private final DNSCryptFragmentView view;
     private final DNSCryptFragmentPresenterInterface presenter;
@@ -167,7 +169,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                 FragmentManager fragmentManager = view.getFragmentFragmentManager();
                 Activity activity = view.getFragmentActivity();
 
-                CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+                cachedExecutor.submit(() -> {
                     try {
                         if (activity == null || activity.isFinishing()) {
                             return;

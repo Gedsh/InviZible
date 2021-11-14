@@ -129,6 +129,10 @@ public class TopFragment extends Fragment {
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
     public Lazy<PathVars> pathVars;
+    @Inject
+    public CachedExecutor cachedExecutor;
+    @Inject
+    public Lazy<ModulesVersions> modulesVersions;
 
     private OperationMode mode = UNDEFINED;
     private boolean runModulesWithRoot = false;
@@ -344,8 +348,6 @@ public class TopFragment extends Fragment {
         @SuppressWarnings("deprecation")
         protected Void doInBackground(Void... params) {
 
-            CachedExecutor.INSTANCE.startExecutorService();
-
             try {
                 suAvailable = Shell.SU.available();
             } catch (Exception e) {
@@ -528,7 +530,7 @@ public class TopFragment extends Fragment {
             LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
             Log.i(LOG_TAG, "TopFragment Send TOP_BROADCAST");
         } else {
-            ModulesVersions.getInstance().refreshVersions(context);
+            modulesVersions.get().refreshVersions(context);
         }
     }
 
@@ -659,7 +661,7 @@ public class TopFragment extends Fragment {
                 Activity activity = getActivity();
 
                 if (activity instanceof MainActivity) {
-                    Installer installer = new Installer(activity, pathVars.get(), preferenceRepository.get());
+                    Installer installer = new Installer(activity);
                     installer.installModules();
                     Log.i(LOG_TAG, "TopFragment Timer startRefreshModulesStatus Modules Installation");
                     stopInstallationTimer();

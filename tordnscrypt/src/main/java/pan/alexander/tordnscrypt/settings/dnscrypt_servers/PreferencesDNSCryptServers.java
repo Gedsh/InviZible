@@ -80,6 +80,8 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
     public Lazy<PathVars> pathVars;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
     private RecyclerView.Adapter<DNSServersAdapter.DNSServersViewHolder> dNSServersAdapter;
     private ArrayList<String> dnsServerNames;
@@ -119,7 +121,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
         takeArguments();
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
             try {
                 Verifier verifier = new Verifier(context);
                 String appSign = verifier.getApkSignatureZip();

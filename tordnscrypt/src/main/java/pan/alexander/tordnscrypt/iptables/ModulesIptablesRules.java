@@ -57,7 +57,7 @@ import static pan.alexander.tordnscrypt.utils.Constants.DNS_OVER_TLS_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNG_41;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_42;
 import static pan.alexander.tordnscrypt.utils.Constants.HTTP_PORT;
-import static pan.alexander.tordnscrypt.utils.Constants.IP_REGEX;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR_CLEARNET;
@@ -171,7 +171,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             StringBuilder torAppsBypassFilterBuilder = new StringBuilder();
 
             for (String torClearnetIP : clearnetIPs) {
-                if (torClearnetIP.matches(IP_REGEX)) {
+                if (torClearnetIP.matches(IPv4_REGEX)) {
                     torSitesBypassNatBuilder.append(iptables).append("-t nat -A tordnscrypt_nat_output -p all -d ").append(torClearnetIP).append(" -j RETURN; ");
                     torSitesBypassFilterBuilder.append(iptables).append("-A tordnscrypt -p all -d ").append(torClearnetIP).append(" -j RETURN; ");
                 }
@@ -195,7 +195,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             StringBuilder torAppsRejectNonTCPFilterBuilder = new StringBuilder();
 
             for (String unlockIP : unlockIPs) {
-                if (unlockIP.matches(IP_REGEX)) {
+                if (unlockIP.matches(IPv4_REGEX)) {
                     torSitesRedirectNatBuilder.append(iptables).append("-t nat -A tordnscrypt_nat_output -p tcp -d ").append(unlockIP).append(" -j REDIRECT --to-port ").append(pathVars.getTorTransPort()).append("; ");
                     torSitesRejectNonTCPFilterBuilder.append(iptables).append("-A tordnscrypt ! -p tcp -d ").append(unlockIP).append(" -j REJECT; ");
                 }

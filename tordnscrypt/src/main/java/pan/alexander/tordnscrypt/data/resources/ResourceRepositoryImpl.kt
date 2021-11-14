@@ -17,10 +17,16 @@
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.data.connection_checker
+package pan.alexander.tordnscrypt.data.resources
 
-interface ConnectionCheckerDataSource {
-    fun checkInternetAvailableOverHttp(site: String): Boolean
-    fun checkInternetAvailableOverSocks(ip: String, port: Int, withTor: Boolean): Boolean
-    fun checkNetworkAvailable(): Boolean
+import pan.alexander.tordnscrypt.domain.resources.ResourceRepository
+import pan.alexander.tordnscrypt.utils.resources.ResourceManager
+import javax.inject.Inject
+
+class ResourceRepositoryImpl @Inject constructor(
+    private val resourceManager: ResourceManager
+): ResourceRepository {
+    override fun getPleaseWaitString(): String = resourceManager.getPleaseWaitString()
+
+    override fun getWrongIpString(): String = resourceManager.getWrongIpString()
 }

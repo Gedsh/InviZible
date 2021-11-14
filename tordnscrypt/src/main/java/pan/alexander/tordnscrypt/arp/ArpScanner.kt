@@ -33,10 +33,10 @@ import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.AUX_CHANNEL_ID
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.MainActivity
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.vpn.NetworkUtils
@@ -349,7 +349,7 @@ class ArpScanner private constructor(
 
     private fun resetInternalValues() {
 
-        CachedExecutor.getExecutorService().submit {
+        App.instance.daggerComponent.getCachedExecutor().submit {
 
             try {
 

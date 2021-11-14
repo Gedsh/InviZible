@@ -45,7 +45,7 @@ import pan.alexander.tordnscrypt.settings.SettingsActivity
 import pan.alexander.tordnscrypt.databinding.FragmentProxyBinding
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor.getExecutorService
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.util.concurrent.Future
 import javax.inject.Inject
@@ -58,6 +58,8 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
 
     @Inject
     lateinit var preferenceRepository: dagger.Lazy<PreferenceRepository>
+    @Inject
+    lateinit var cachedExecutor: CachedExecutor
 
     private var _binding: FragmentProxyBinding? = null
     private val binding get() = _binding!!
@@ -240,7 +242,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
             return
         }
 
-        futureTask = getExecutorService().submit {
+        futureTask = cachedExecutor.submit {
             try {
                 val result = ProxyHelper.checkProxyConnectivity(server, port.toInt())
 

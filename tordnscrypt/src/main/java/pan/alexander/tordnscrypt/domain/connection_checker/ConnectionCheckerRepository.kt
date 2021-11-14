@@ -20,7 +20,7 @@
 package pan.alexander.tordnscrypt.domain.connection_checker
 
 interface ConnectionCheckerRepository {
-    fun checkInternetAvailableOverHttp(site: String, withTor: Boolean): Boolean
+    fun checkInternetAvailableOverHttp(site: String): Boolean
     fun checkInternetAvailableOverSocks(ip: String, port: Int, withTor: Boolean): Boolean
     fun checkNetworkAvailable(): Boolean
 }

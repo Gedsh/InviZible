@@ -70,6 +70,8 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
     public Lazy<ConnectionCheckerInteractor> connectionCheckerInteractor;
     @Inject
     public Provider<InternetSharingChecker> internetSharingChecker;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
     private final static int DELAY_BEFORE_CHECKING_INTERNET_SHARING_SEC = 5;
     private final static int DELAY_BEFORE_UPDATING_IPTABLES_RULES_SEC = 5;
@@ -332,7 +334,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
 
     @SuppressWarnings("unchecked")
     private void checkInternetSharingState(Intent intent) {
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
             boolean wifiAccessPointOn = false;
             boolean usbTetherOn = false;
 
@@ -422,7 +424,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
                 && !modulesStatus.isUseModulesWithRoot()
                 && !lock) {
 
-            CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+            cachedExecutor.submit(() -> {
                 if (!lock) {
 
                     lock = true;

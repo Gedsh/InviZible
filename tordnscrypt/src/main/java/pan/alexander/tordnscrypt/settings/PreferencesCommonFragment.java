@@ -92,6 +92,8 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
     public Lazy<PathVars> pathVars;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
     private String torTransPort;
     private String torSocksPort;
@@ -271,7 +273,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             }
         }
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
             try {
                 Verifier verifier = new Verifier(context);
                 String appSign = verifier.getApkSignatureZip();

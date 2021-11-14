@@ -67,6 +67,8 @@ public class BackupHelper {
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
     private Activity activity;
     private String pathBackup;
@@ -83,7 +85,7 @@ public class BackupHelper {
 
     void saveAll(boolean logsDirAccessible) {
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
             try {
                 convertSharedPreferencesUIDsToPackageNames(activity);
 
@@ -161,7 +163,7 @@ public class BackupHelper {
 
     void copyData(OutputStream outputStream) {
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
             try (FileInputStream fileInputStream = new FileInputStream(cacheDir + "/InvizibleBackup.zip")) {
                 byte[] buffer = new byte[8 * 1024];
 

@@ -26,8 +26,8 @@ class ConnectionCheckerRepositoryImpl @Inject constructor(
     private val connectionCheckerDataSource: ConnectionCheckerDataSource,
 ): ConnectionCheckerRepository {
 
-    override fun checkInternetAvailableOverHttp(site: String, withTor: Boolean): Boolean {
-        return connectionCheckerDataSource.checkInternetAvailableOverHttp(site, withTor)
+    override fun checkInternetAvailableOverHttp(site: String): Boolean {
+        return connectionCheckerDataSource.checkInternetAvailableOverHttp(site)
     }
 
     override fun checkInternetAvailableOverSocks(ip: String, port: Int, withTor: Boolean): Boolean {

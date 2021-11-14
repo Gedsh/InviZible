@@ -90,6 +90,8 @@ public class BackupFragment extends Fragment implements View.OnClickListener,
     public Lazy<PathVars> pathVarsLazy;
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
     final static Set<String> TAGS_TO_CONVERT = new HashSet<>(Arrays.asList(
             APPS_ALLOW_LAN_PREF,
@@ -217,14 +219,14 @@ public class BackupFragment extends Fragment implements View.OnClickListener,
 
         openPleaseWaitDialog();
 
-        resetHelper = new ResetHelper(activity, this, pathVarsLazy.get(), preferenceRepository.get());
+        resetHelper = new ResetHelper(activity, this);
         resetHelper.resetSettings();
     }
 
     private void restoreBackup(Activity activity) {
 
         restoreHelper = new RestoreHelper(
-                activity, appDataDir, cacheDir, pathBackup, pathVarsLazy.get(), preferenceRepository
+                activity, appDataDir, cacheDir, pathBackup
         );
 
         ExternalStoragePermissions permissions = new ExternalStoragePermissions(activity);
@@ -312,7 +314,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener,
             return;
         }
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
             try {
                 while (progress != null) {
                     if (progress.isStateSaved()) {
@@ -417,7 +419,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener,
     }
 
     private void hideSelectionEditTextIfRequired(Activity activity) {
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
 
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                 logsDirAccessible = Utils.INSTANCE.isLogsDirAccessible();

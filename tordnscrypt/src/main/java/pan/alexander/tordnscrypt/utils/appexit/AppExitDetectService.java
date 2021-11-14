@@ -24,7 +24,6 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
@@ -50,7 +49,6 @@ public class AppExitDetectService extends Service {
         super.onDestroy();
 
         FileManager.removeAllOnFileOperationsListeners();
-        CachedExecutor.INSTANCE.stopExecutorService();
 
         Log.i(LOG_TAG, "App Exit");
     }

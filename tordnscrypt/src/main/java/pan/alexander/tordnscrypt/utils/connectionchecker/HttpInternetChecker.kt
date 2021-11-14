@@ -42,11 +42,11 @@ class HttpInternetChecker @Inject constructor(
 
     private var connection: HttpURLConnection? = null
 
-    fun checkConnectionAvailability(site: String, withTor: Boolean): Boolean {
+    fun checkConnectionAvailability(site: String): Boolean {
         var result = false
 
         try {
-            result = checkConnection(site, withTor)
+            result = checkConnection(site, false)
             return result
         } catch (e: Exception) {
             Log.w(LOG_TAG, "HttpInternetChecker check connection failed ${e.message} ${e.cause}")
@@ -59,6 +59,8 @@ class HttpInternetChecker @Inject constructor(
         return false
     }
 
+    //Warning!!! Using this method with Tor may produce NullPointerException
+    // com.android.okhttp.internal.Util.closeQuietly(Util.java:95)
     private fun checkConnection(site: String, withTor: Boolean): Boolean {
         val url = URL(site)
 

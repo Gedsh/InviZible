@@ -47,6 +47,11 @@ class DNSCryptTileService : TileService() {
         tileManager.get().stopUpdatingState()
     }
 
+    override fun onDestroy() {
+        tileManager.get().stopUpdatingState()
+        super.onDestroy()
+    }
+
     override fun onClick() {
         tileManager.get().manageModule(TileManager.ManageTask.MANAGE_DNSCRYPT)
     }

@@ -19,23 +19,23 @@ package pan.alexander.tordnscrypt
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.*
 import pan.alexander.tordnscrypt.modules.ModulesAux
 import pan.alexander.tordnscrypt.utils.Utils
 
-class AppLifecycleListener(private val app: App): LifecycleObserver {
+class AppLifecycleListener(private val app: App): DefaultLifecycleObserver {
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    private fun setAppForeground() {
+    override fun onStart(owner: LifecycleOwner) {
+        super.onStart(owner)
+
         app.isAppForeground = true
 
         ModulesAux.speedupModulesStateLoopTimer(app)
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    private fun setAppBackground() {
+    override fun onStop(owner: LifecycleOwner) {
+        super.onStop(owner)
+
         app.isAppForeground = false
     }
 }

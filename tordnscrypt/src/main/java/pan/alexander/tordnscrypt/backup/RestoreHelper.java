@@ -47,12 +47,12 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.patches.Patch;
-import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager;
@@ -65,6 +65,8 @@ import static pan.alexander.tordnscrypt.backup.BackupFragment.CODE_READ;
 import static pan.alexander.tordnscrypt.backup.BackupFragment.TAGS_TO_CONVERT;
 import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_NEWLY_INSTALLED;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+
+import javax.inject.Inject;
 
 class RestoreHelper extends Installer {
     private final List<String> requiredFiles = Arrays.asList(
@@ -82,32 +84,33 @@ class RestoreHelper extends Installer {
             "defaultSharedPref", "sharedPreferences"
     );
 
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public CachedExecutor cachedExecutor;
+
     private Activity activity;
     private final String appDataDir;
     private final String cacheDir;
     private String pathBackup;
-    private final Lazy<PreferenceRepository> preferenceRepository;
 
     RestoreHelper(
             Activity activity,
             String appDataDir,
             String cacheDir,
-            String pathBackup,
-            PathVars pathVars,
-            Lazy<PreferenceRepository> preferenceRepository
+            String pathBackup
     ) {
-        super(activity, pathVars, preferenceRepository.get());
-
+        super(activity);
+        App.getInstance().getDaggerComponent().inject(this);
         this.activity = activity;
         this.appDataDir = appDataDir;
         this.cacheDir = cacheDir;
         this.pathBackup = pathBackup;
-        this.preferenceRepository = preferenceRepository;
     }
 
     void restoreAll(InputStream inputStream, boolean logsDirAccessible) {
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
             try {
 
                 if (!logsDirAccessible) {

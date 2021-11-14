@@ -78,6 +78,8 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
     public Lazy<PathVars> pathVars;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -365,7 +367,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
             ModifyForwardingRules modifyForwardingRules = new ModifyForwardingRules(context,
                     "onion 127.0.0.1:" + newValue.toString().trim());
-            CachedExecutor.INSTANCE.getExecutorService().execute(modifyForwardingRules.getRunnable());
+            cachedExecutor.submit(modifyForwardingRules.getRunnable());
         } else if (Objects.equals(preference.getKey(), "pref_tor_snowflake_stun")) {
 
             if (newValue.toString().trim().isEmpty()) {
@@ -515,7 +517,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 return true;
             }
 
-            CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+            cachedExecutor.submit(() -> {
                 Activity activity = getActivity();
                 if (activity == null) {
                     return;

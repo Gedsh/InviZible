@@ -81,6 +81,8 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
     public Lazy<PathVars> pathVars;
     @Inject
     public Lazy<ITPDInteractorInterface> itpdInteractor;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
     private boolean runI2PDWithRoot = false;
 
@@ -426,7 +428,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
         final String certificateFolder = appDataDir + "/i2pd_data/certificates";
         final String certificateDestination = appDataDir + "/i2pd_data";
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
 
             File certificateFolderDir = new File(certificateFolder);
 

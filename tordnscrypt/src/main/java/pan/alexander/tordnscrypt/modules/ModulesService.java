@@ -39,7 +39,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -119,6 +118,8 @@ public class ModulesService extends Service {
     public volatile Lazy<Handler> handler;
     @Inject
     public Lazy<PathVars> pathVars;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
@@ -882,9 +883,8 @@ public class ModulesService extends Service {
     }
 
     private void makeExtraLoop() {
-        ExecutorService executorService = CachedExecutor.INSTANCE.getExecutorService();
-        if (timerPeriod != TIMER_HIGH_SPEED && checkModulesStateTask != null && !executorService.isShutdown()) {
-            executorService.submit(checkModulesStateTask);
+        if (timerPeriod != TIMER_HIGH_SPEED && checkModulesStateTask != null) {
+            cachedExecutor.submit(checkModulesStateTask);
         }
     }
 

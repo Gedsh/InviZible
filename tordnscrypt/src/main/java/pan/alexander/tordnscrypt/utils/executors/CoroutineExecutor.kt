@@ -24,19 +24,17 @@ import pan.alexander.tordnscrypt.di.CoroutinesModule
 import javax.inject.Inject
 import javax.inject.Named
 
-private const val EXECUTE_TIMEOUT_MINUTES = 10
-
 class CoroutineExecutor @Inject constructor(
     @Named(CoroutinesModule.SUPERVISOR_JOB_IO_DISPATCHER_SCOPE)
-    private val baseCoroutineScope: CoroutineScope,
-    private val coroutineExceptionHandler: CoroutineExceptionHandler
+    val baseCoroutineScope: CoroutineScope,
+    val coroutineExceptionHandler: CoroutineExceptionHandler
 ) {
 
     @JvmOverloads
-    fun <T> execute(
+    inline fun <T> execute(
         maxExecutingTimeMinutes: Int = EXECUTE_TIMEOUT_MINUTES,
         name: String,
-        block: () -> T
+        crossinline block: () -> T
     ): Job {
         val scope = baseCoroutineScope + CoroutineName(name) + coroutineExceptionHandler
 
@@ -52,12 +50,12 @@ class CoroutineExecutor @Inject constructor(
     }
 
     @JvmOverloads
-    fun <T> repeat(
+    inline fun <T> repeat(
         times: Int,
         delaySec: Int,
         maxExecutingTimeMinutes: Int = EXECUTE_TIMEOUT_MINUTES,
         name: String,
-        block: () -> T
+        crossinline block: () -> T
     ): Job {
         val scope = baseCoroutineScope + CoroutineName(name) + coroutineExceptionHandler
 
@@ -75,6 +73,10 @@ class CoroutineExecutor @Inject constructor(
                 timesCount++
             }
         }
+    }
+
+    companion object {
+        const val EXECUTE_TIMEOUT_MINUTES = 10
     }
 
 }

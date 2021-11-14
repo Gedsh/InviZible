@@ -45,6 +45,8 @@ class SendCrashReport : ExtendedDialogFragment() {
     lateinit var preferenceRepository: dagger.Lazy<PreferenceRepository>
     @Inject
     lateinit var pathVars: dagger.Lazy<PathVars>
+    @Inject
+    lateinit var cachedExecutor: CachedExecutor
 
     override fun onCreate(savedInstanceState: Bundle?) {
         App.instance.daggerComponent.inject(this)
@@ -61,7 +63,7 @@ class SendCrashReport : ExtendedDialogFragment() {
                 .setTitle(R.string.helper_dialog_title)
                 .setPositiveButton(R.string.ok) { _, _ ->
                     if (activity != null && activity?.isFinishing == false) {
-                        CachedExecutor.getExecutorService().submit {
+                        cachedExecutor.submit {
 
                             val ctx = activity as Context
 

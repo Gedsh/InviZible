@@ -42,10 +42,10 @@ import pan.alexander.tordnscrypt.databinding.FragmentFirewallBinding
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor.getExecutorService
 import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
 import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Future
@@ -70,6 +70,8 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
 
     @Inject
     lateinit var preferenceRepository: dagger.Lazy<PreferenceRepository>
+    @Inject
+    lateinit var cachedExecutor: CachedExecutor
 
     private var _binding: FragmentFirewallBinding? = null
     private val binding get() = _binding!!
@@ -278,7 +280,7 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
 
         appsListComplete = false
 
-        futureTask = getExecutorService().submit {
+        futureTask = cachedExecutor.submit {
 
             try {
 

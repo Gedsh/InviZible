@@ -161,6 +161,8 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     public Lazy<ConnectionCheckerInteractor> connectionCheckerInteractor;
     @Inject
     public Lazy<Handler> handler;
+    @Inject
+    public Lazy<CachedExecutor> cachedExecutor;
 
     NotificationManager notificationManager;
     private static final Object jni_lock = new Object();
@@ -1678,7 +1680,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     }
 
     public void clearDnsQueryRawRecords() {
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.get().submit(() -> {
             try {
                 rrLock.writeLock().lockInterruptibly();
 

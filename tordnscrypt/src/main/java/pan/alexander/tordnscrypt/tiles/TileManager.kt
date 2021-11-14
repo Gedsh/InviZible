@@ -51,6 +51,7 @@ import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.utils.root.RootCommands
 import pan.alexander.tordnscrypt.utils.root.RootExecService.*
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper
+import java.lang.ref.WeakReference
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -82,13 +83,16 @@ class TileManager @Inject constructor(
 
     fun startUpdatingState(tile: Tile, manageTask: ManageTask) {
 
+        val tileWeakReference = WeakReference(tile)
+
         val coroutineScope =
             baseCoroutineScope + CoroutineName(manageTask.name) + coroutineExceptionHandler
 
+        task?.cancel()
+
         task = coroutineScope.launch {
             while (isActive) {
-
-                updateTile(tile, manageTask)
+                updateTile(tileWeakReference, manageTask)
                 delay(UPDATE_INTERVAL_SEC * 1000L)
             }
         }
@@ -103,7 +107,7 @@ class TileManager @Inject constructor(
         savedITPDState = ModuleState.UNDEFINED
     }
 
-    private suspend fun updateTile(tile: Tile, manageTask: ManageTask) =
+    private suspend fun updateTile(tile: WeakReference<Tile>, manageTask: ManageTask) =
         withContext(dispatcherMain) {
 
             var moduleState = ModuleState.UNDEFINED
@@ -111,23 +115,23 @@ class TileManager @Inject constructor(
             when (manageTask) {
                 ManageTask.MANAGE_TOR -> {
                     moduleState = modulesStatus.torState
-                    updateTorTileLabel(tile, moduleState)
+                    updateTorTileLabel(tile.get(), moduleState)
                 }
                 ManageTask.MANAGE_DNSCRYPT -> {
                     moduleState = modulesStatus.dnsCryptState
-                    updateDnsCryptTileLabel(tile, moduleState)
+                    updateDnsCryptTileLabel(tile.get(), moduleState)
                 }
                 ManageTask.MANAGE_ITPD -> {
                     moduleState = modulesStatus.itpdState
-                    updateITPDTileLabel(tile, moduleState)
+                    updateITPDTileLabel(tile.get(), moduleState)
                 }
             }
 
-            updateTileIconState(tile, moduleState)
+            updateTileIconState(tile.get(), moduleState)
         }
 
-    private fun updateTorTileLabel(tile: Tile, moduleState: ModuleState) {
-        if (moduleState == savedTorState) {
+    private fun updateTorTileLabel(tile: Tile?, moduleState: ModuleState) {
+        if (tile == null || moduleState == savedTorState) {
             return
         }
 
@@ -156,8 +160,8 @@ class TileManager @Inject constructor(
         tile.updateTile()
     }
 
-    private fun updateDnsCryptTileLabel(tile: Tile, moduleState: ModuleState) {
-        if (moduleState == savedDnsCryptState) {
+    private fun updateDnsCryptTileLabel(tile: Tile?, moduleState: ModuleState) {
+        if (tile == null || moduleState == savedDnsCryptState) {
             return
         }
 
@@ -186,8 +190,8 @@ class TileManager @Inject constructor(
         tile.updateTile()
     }
 
-    private fun updateITPDTileLabel(tile: Tile, moduleState: ModuleState) {
-        if (moduleState == savedITPDState) {
+    private fun updateITPDTileLabel(tile: Tile?, moduleState: ModuleState) {
+        if (tile == null || moduleState == savedITPDState) {
             return
         }
 
@@ -216,7 +220,9 @@ class TileManager @Inject constructor(
         tile.updateTile()
     }
 
-    private fun updateTileIconState(tile: Tile, moduleState: ModuleState) {
+    private fun updateTileIconState(tile: Tile?, moduleState: ModuleState) {
+        tile ?: return
+
         val savedTileState = tile.state
 
         val newTileState = when (moduleState) {

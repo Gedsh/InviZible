@@ -20,6 +20,7 @@ package pan.alexander.tordnscrypt.di
 
 import androidx.annotation.Keep
 import dagger.Component
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import pan.alexander.tordnscrypt.BootCompleteReceiver
 import pan.alexander.tordnscrypt.MainActivity
 import pan.alexander.tordnscrypt.TopFragment
@@ -29,9 +30,11 @@ import pan.alexander.tordnscrypt.di.logreader.LogReaderSubcomponent
 import pan.alexander.tordnscrypt.dialogs.*
 
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptFragmentReceiver
+import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsConverter
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.help.HelpActivity
 import pan.alexander.tordnscrypt.help.HelpActivityReceiver
+import pan.alexander.tordnscrypt.installer.Installer
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules
 import pan.alexander.tordnscrypt.iptables.Tethering
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDFragmentReceiver
@@ -56,6 +59,7 @@ import pan.alexander.tordnscrypt.tiles.TorTileService
 import pan.alexander.tordnscrypt.tor_fragment.TorFragmentReceiver
 import pan.alexander.tordnscrypt.update.DownloadTask
 import pan.alexander.tordnscrypt.update.UpdateService
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager
 import pan.alexander.tordnscrypt.utils.integrity.Verifier
 import pan.alexander.tordnscrypt.utils.web.TorRefreshIPsWork
@@ -76,6 +80,7 @@ interface AppComponent {
 
     fun getPathVars(): dagger.Lazy<PathVars>
     fun getPreferenceRepository(): dagger.Lazy<PreferenceRepository>
+    fun getCachedExecutor(): CachedExecutor
 
     fun inject(activity: MainActivity)
     fun inject(activity: SettingsActivity)
@@ -113,6 +118,7 @@ interface AppComponent {
     fun inject(dialogFragment: RequestIgnoreBatteryOptimizationDialog)
     fun inject(dialogFragment: AskForceClose)
     fun inject(dialogFragment: SendCrashReport)
+    @ObsoleteCoroutinesApi
     fun inject(viewModel: UnlockTorIpsViewModel)
     fun inject(usageStatistic: UsageStatistic)
     fun inject(modulesKiller: ModulesKiller)
@@ -128,4 +134,6 @@ interface AppComponent {
     fun inject(tethering: Tethering)
     fun inject(modulesIptablesRules: ModulesIptablesRules)
     fun inject(serviceVPNHandler: ServiceVPNHandler)
+    fun inject(installer: Installer)
+    fun inject(converter: ConnectionRecordsConverter)
 }

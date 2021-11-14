@@ -24,7 +24,6 @@ import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.modules.ModulesRestarter
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager
 import java.net.*
@@ -53,7 +52,7 @@ object ProxyHelper {
             defaultProxyAddress
         }
 
-        CachedExecutor.getExecutorService().submit {
+        App.instance.daggerComponent.getCachedExecutor().submit {
             if ((enableDNSCryptProxy xor dnsCryptProxified) || serverOrPortChanged) {
                 manageDNSCryptProxy(context, pathVars?.dnscryptConfPath, proxyAddr, enableDNSCryptProxy)
                 sharedPreferences.edit().putBoolean("Enable proxy", enableDNSCryptProxy).apply()

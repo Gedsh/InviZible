@@ -84,6 +84,8 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
     @Inject
     public Lazy<PathVars> pathVars;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
     private final static String ipv4Regex = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
 
@@ -613,7 +615,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
     private void checkRootDirAccessible() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+            cachedExecutor.submit(() -> {
                 rootDirAccessible = Utils.INSTANCE.isLogsDirAccessible();
             });
         }
@@ -640,7 +642,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             return;
         }
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
 
             boolean successfully1 = !FileManager.deleteFileSynchronous(context, appDataDir
                     + "/app_data/dnscrypt-proxy", "public-resolvers.md");

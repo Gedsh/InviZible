@@ -55,6 +55,8 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
 
     @Inject
     public Lazy<PathVars> pathVars;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
     private ArrayList<String> key_itpd;
     private ArrayList<String> val_itpd;
@@ -397,7 +399,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                 return true;
             }
 
-            CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+            cachedExecutor.submit(() -> {
                 boolean successfully = false;
                 if (getActivity() != null) {
                     successfully = FileManager.deleteDirSynchronous(getActivity(), appDataDir + "/i2pd_data");

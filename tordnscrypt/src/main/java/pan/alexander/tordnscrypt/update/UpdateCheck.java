@@ -47,7 +47,6 @@ import pan.alexander.tordnscrypt.BuildConfig;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.web.HttpsRequest;
 
 import static pan.alexander.tordnscrypt.TopFragment.appProcVersion;
@@ -227,7 +226,7 @@ public class UpdateCheck {
             return null;
         }
 
-        return CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        return App.getInstance().getDaggerComponent().getCachedExecutor().submit(() -> {
             String serverAnswerEncoded = "";
             String serverAnswer = "";
 

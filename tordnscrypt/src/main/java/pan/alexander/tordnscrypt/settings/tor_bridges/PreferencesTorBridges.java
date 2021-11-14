@@ -142,6 +142,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
     public Lazy<PathVars> pathVars;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
 
     public PreferencesTorBridges() {
@@ -279,7 +281,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         spDefaultBridges.setOnItemSelectedListener(this);
         spOwnBridges.setOnItemSelectedListener(this);
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
             try {
                 Verifier verifier = new Verifier(context);
                 String appSignAlt = verifier.getApkSignature();
@@ -322,16 +324,16 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         if (!currentBridges.isEmpty()) {
             switch (savedBridgesSelector) {
                 case NO_BRIDGES:
-                    saveUseBridgesPreferences(context, true, false, false);
+                    saveUseBridgesPreferences(true, false, false);
                     break;
                 case DEFAULT_BRIDGES:
-                    saveUseBridgesPreferences(context, false, true, false);
+                    saveUseBridgesPreferences(false, true, false);
                     break;
                 case OWN_BRIDGES:
-                    saveUseBridgesPreferences(context, false, false, true);
+                    saveUseBridgesPreferences(false, false, true);
                     break;
                 default:
-                    saveUseBridgesPreferences(context, false, false, false);
+                    saveUseBridgesPreferences(false, false, false);
                     break;
             }
         }
@@ -915,7 +917,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
     private Future<?> verifyNewDefaultBridgesExist(Context context, boolean useDefaultBridges) {
 
-        return CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        return cachedExecutor.submit(() -> {
             File outputFile = new File(appDataDir + "/app_data/tor/bridges_default.lst");
             long installedBridgesSize = outputFile.length();
 
@@ -961,14 +963,14 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         if (id == R.id.rbNoBridges) {
             if (newValue) {
 
-                saveUseBridgesPreferences(context, true, false, false);
+                saveUseBridgesPreferences(true, false, false);
 
                 noBridgesOperation();
             }
         } else if (id == R.id.rbDefaultBridges) {
             if (newValue) {
 
-                saveUseBridgesPreferences(context, false, true, false);
+                saveUseBridgesPreferences(false, true, false);
 
                 currentBridgesFilePath = bridgesDefaultFilePath;
 
@@ -977,7 +979,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         } else if (id == R.id.rbOwnBridges) {
             if (newValue) {
 
-                saveUseBridgesPreferences(context, false, false, true);
+                saveUseBridgesPreferences(false, false, true);
 
                 currentBridgesFilePath = bridgesCustomFilePath;
 
@@ -1017,10 +1019,11 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
     }
 
-    private void saveUseBridgesPreferences(Context context,
+    private void saveUseBridgesPreferences(
                                         boolean useNoBridges,
                                         boolean useDefaultBridges,
-                                        boolean useOwnBridges) {
+                                        boolean useOwnBridges
+    ) {
         preferenceRepository.get().setBoolPreference("useNoBridges", useNoBridges);
         preferenceRepository.get().setBoolPreference("useDefaultBridges", useDefaultBridges);
         preferenceRepository.get().setBoolPreference("useOwnBridges", useOwnBridges);

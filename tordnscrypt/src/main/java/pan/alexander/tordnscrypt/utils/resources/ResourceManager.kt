@@ -17,10 +17,9 @@
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.data.connection_checker
+package pan.alexander.tordnscrypt.utils.resources
 
-interface ConnectionCheckerDataSource {
-    fun checkInternetAvailableOverHttp(site: String): Boolean
-    fun checkInternetAvailableOverSocks(ip: String, port: Int, withTor: Boolean): Boolean
-    fun checkNetworkAvailable(): Boolean
+interface ResourceManager {
+    fun getPleaseWaitString(): String
+    fun getWrongIpString(): String
 }

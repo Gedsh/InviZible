@@ -42,7 +42,7 @@ import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 
-import static pan.alexander.tordnscrypt.utils.Constants.IP_REGEX;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR_CLEARNET;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR_CLEARNET_TETHER;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_UNLOCK;
@@ -61,8 +61,10 @@ public class TorRefreshIPsWork {
     public Lazy<DnsInteractor> dnsInteractor;
     @Inject
     public Lazy<Handler> handler;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
-    private final Pattern IP_PATTERN = Pattern.compile(IP_REGEX);
+    private final Pattern IP_PATTERN = Pattern.compile(IPv4_REGEX);
 
     private final Context context;
     private final GetIPsJobService getIPsJobService;
@@ -76,7 +78,7 @@ public class TorRefreshIPsWork {
     }
 
     public void refreshIPs() {
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
 
             Log.i(LOG_TAG, "TorRefreshIPsWork refreshIPs");
 

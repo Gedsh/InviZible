@@ -81,6 +81,8 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     public Lazy<PathVars> pathVarsLazy;
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
     private TextView tvLogsPath;
     private EditText etLogsPath;
@@ -165,7 +167,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
         etLogsPath.setText(pathToSaveLogs);
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> new File(cacheDir + "/logs").mkdirs());
+        cachedExecutor.submit(() -> new File(cacheDir + "/logs").mkdirs());
 
         FileManager.setOnFileOperationCompleteListener(this);
     }
@@ -190,7 +192,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
             if (modulesStatus.isRootAvailable()) {
                 collectLogsMethodOne(info);
             } else {
-                CachedExecutor.INSTANCE.getExecutorService().submit(br.saveLogs(getApplicationContext(), null));
+                cachedExecutor.submit(br.saveLogs(getApplicationContext(), null));
             }
         } else if (id == R.id.etLogsPath) {
             chooseOutputFolder();
@@ -327,7 +329,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     }
 
     private void hideSelectionEditTextIfRequired() {
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
 
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                 logsDirAccessible = pan.alexander.tordnscrypt.utils.Utils.INSTANCE.isLogsDirAccessible();

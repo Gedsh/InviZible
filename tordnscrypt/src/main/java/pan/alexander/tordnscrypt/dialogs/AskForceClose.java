@@ -48,6 +48,8 @@ public class AskForceClose extends ExtendedDialogFragment {
 
     @Inject
     public Lazy<PathVars> pathVars;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
     private static String module;
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
@@ -136,7 +138,7 @@ public class AskForceClose extends ExtendedDialogFragment {
 
         String appDataDir = pathVars.get().getAppDataDir();
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
             FileManager.deleteFileSynchronous(context, appDataDir
                     + "/app_data/dnscrypt-proxy", "public-resolvers.md");
             FileManager.deleteFileSynchronous(context, appDataDir

@@ -22,10 +22,19 @@ import dagger.Binds
 import dagger.Module
 import pan.alexander.tordnscrypt.utils.preferences.AppPreferenceHelper
 import pan.alexander.tordnscrypt.utils.preferences.AppPreferenceHelperImpl
+import pan.alexander.tordnscrypt.utils.resources.ResourceManager
+import pan.alexander.tordnscrypt.utils.resources.ResourceManagerImpl
 
 @Module
 abstract class HelpersModule {
 
     @Binds
-    abstract fun provideAppPreferenceHelper(appPreferenceHelper: AppPreferenceHelperImpl): AppPreferenceHelper
+    abstract fun provideAppPreferenceHelper(
+        appPreferenceHelper: AppPreferenceHelperImpl
+    ): AppPreferenceHelper
+
+    @Binds
+    abstract fun provideResourceManager(
+        resourceManager: ResourceManagerImpl
+    ): ResourceManager
 }

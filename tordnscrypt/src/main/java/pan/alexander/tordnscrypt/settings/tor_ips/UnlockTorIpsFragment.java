@@ -89,6 +89,8 @@ public class UnlockTorIpsFragment extends Fragment {
 
     @Inject
     public Lazy<CoroutineExecutor> coroutineExecutor;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
     public UnlockTorIpsViewModel viewModel;
 
@@ -143,7 +145,7 @@ public class UnlockTorIpsFragment extends Fragment {
             }
         }
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
             try {
                 Verifier verifier = new Verifier(activity);
                 String appSignAlt = verifier.getApkSignature();

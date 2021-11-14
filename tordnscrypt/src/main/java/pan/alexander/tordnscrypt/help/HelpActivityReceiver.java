@@ -54,6 +54,8 @@ public class HelpActivityReceiver extends BroadcastReceiver {
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
     private final Handler mHandler;
     private final String appDataDir;
@@ -86,7 +88,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
             return;
         }
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(saveLogs(context, comResult));
+        cachedExecutor.submit(saveLogs(context, comResult));
     }
 
     Runnable saveLogs(final Context context, final RootCommands comResult) {

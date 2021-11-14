@@ -36,6 +36,8 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
@@ -54,31 +56,39 @@ import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESUL
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.InstallerMark;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
+import javax.inject.Inject;
+
 public class Installer implements TopFragment.OnActivityChangeListener {
+
+    @Inject
+    public Lazy<PathVars> pathVars;
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public CachedExecutor cachedExecutor;
+    @Inject
+    public Lazy<ModulesVersions> modulesVersions;
+
     private Activity activity;
     private MainActivity mainActivity;
     private InstallerReceiver br;
     private static CountDownLatch countDownLatch;
     private final String appDataDir;
-    private final PathVars pathVars;
+
     protected static boolean interruptInstallation = false;
 
     private InstallerUIChanger installerUIChanger;
 
-    private final PreferenceRepository preferenceRepository;
+    public Installer(Activity activity) {
+        App.getInstance().getDaggerComponent().inject(this);
 
-    public Installer(Activity activity, PathVars pathVars, PreferenceRepository preferenceRepository) {
         this.activity = activity;
-
-        this.pathVars = pathVars;
-        appDataDir = pathVars.getAppDataDir();
+        appDataDir = pathVars.get().getAppDataDir();
 
         if (activity instanceof MainActivity) {
             mainActivity = (MainActivity) activity;
             installerUIChanger = new InstallerUIChanger(mainActivity);
         }
-
-        this.preferenceRepository = preferenceRepository;
     }
 
     public void installModules() {
@@ -256,14 +266,16 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             return;
         }
 
+        PreferenceRepository preferences = preferenceRepository.get();
+
         if (installed) {
-            preferenceRepository.setBoolPreference("DNSCrypt Installed", true);
-            preferenceRepository.setBoolPreference("Tor Installed", true);
-            preferenceRepository.setBoolPreference("I2PD Installed", true);
+            preferences.setBoolPreference("DNSCrypt Installed", true);
+            preferences.setBoolPreference("Tor Installed", true);
+            preferences.setBoolPreference("I2PD Installed", true);
         } else {
-            preferenceRepository.setBoolPreference("DNSCrypt Installed", false);
-            preferenceRepository.setBoolPreference("Tor Installed", false);
-            preferenceRepository.setBoolPreference("I2PD Installed", false);
+            preferences.setBoolPreference("DNSCrypt Installed", false);
+            preferences.setBoolPreference("Tor Installed", false);
+            preferences.setBoolPreference("I2PD Installed", false);
         }
 
     }
@@ -352,7 +364,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             if (activity != null
                     && activity.getText(R.string.package_name).toString().contains(".gp")
                     && path.contains("dnscrypt-proxy.toml")
-                    && !PathVars.isModulesInstalled(preferenceRepository)) {
+                    && !PathVars.isModulesInstalled(preferenceRepository.get())) {
                 lines = prepareDNSCryptForGP(lines);
             }
 
@@ -412,7 +424,8 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         ModulesAux.saveITPDStateRunning(false);
 
         String busyboxNative = "";
-        if (preferenceRepository.getBoolPreference("bbOK") && pathVars.getBusyboxPath().equals("busybox ")) {
+        if (preferenceRepository.get().getBoolPreference("bbOK")
+                && pathVars.get().getBusyboxPath().equals("busybox ")) {
             busyboxNative = "busybox ";
         }
 
@@ -447,7 +460,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
     protected void stopAllRunningModulesWithNoRootCommand() {
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
             ModulesAux.stopModulesIfRunning(activity);
 
             int counter = 15;
@@ -506,10 +519,10 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             Intent intent = new Intent(TOP_BROADCAST);
             LocalBroadcastManager.getInstance(activity).sendBroadcast(intent);
         } else {
-            ModulesVersions.getInstance().refreshVersions(activity);
+            modulesVersions.get().refreshVersions(activity);
         }
 
-        preferenceRepository.setBoolPreference("refresh_main_activity", true);
+        preferenceRepository.get().setBoolPreference("refresh_main_activity", true);
     }
 
     protected void registerReceiver(Activity activity) {

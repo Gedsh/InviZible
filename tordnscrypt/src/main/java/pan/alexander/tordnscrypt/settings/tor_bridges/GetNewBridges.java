@@ -69,6 +69,8 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
 
     @Inject
     public Lazy<PathVars> pathVars;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
     private static final int READTIMEOUT = 180;
     private static final int CONNECTTIMEOUT = 180;
@@ -242,7 +244,7 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
         if (dialogPleaseWait != null && dialogPleaseWait.get() != null)
             dialogPleaseWait.get().setThreadRequest(threadRequestCodeImage);
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(threadRequestCodeImage);
+        cachedExecutor.submit(threadRequestCodeImage);
     }
 
     public void showProgressDialog() {
@@ -536,6 +538,6 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
         if (dialogPleaseWait != null && dialogPleaseWait.get() != null)
             dialogPleaseWait.get().setThreadRequest(threadRequestBridges);
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(threadRequestBridges);
+        cachedExecutor.submit(threadRequestBridges);
     }
 }

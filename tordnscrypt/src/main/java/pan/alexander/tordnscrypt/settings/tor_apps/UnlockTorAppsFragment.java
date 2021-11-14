@@ -99,6 +99,8 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
     private String searchText;
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
 
     public UnlockTorAppsFragment() {
@@ -194,7 +196,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
 
         getDeviceApps(context, setUnlockApps);
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
             try {
                 Verifier verifier = new Verifier(context);
                 String appSignAlt = verifier.getApkSignature();
@@ -591,7 +593,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
             return null;
         });
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(futureTask);
+        cachedExecutor.submit(futureTask);
 
     }
 }
