@@ -623,3 +623,9 @@
 * Improved Android Quick Settings tiles for starting/stopping modules.
 * Improved ARP Spoofing detection.
 * Lots of internal code optimizations.
+
+**InviZible Pro beta 1.4.1**
+* Improved current connection status in the notification.
+* Improved Tor Exclude/Select websites feature.
+* Fixed internet sharing in Root mode on android 11.
+* Fixes and optimizations.
