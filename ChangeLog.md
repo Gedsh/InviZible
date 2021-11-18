@@ -633,3 +633,8 @@
 **InviZible Pro beta 1.4.2**
 * Fixed Restore Settings feature.
 * Minor bug fixes and optimizations.
+
+**InviZible Pro beta 1.4.3**
+* Optimized battery usage when network connection is unavailable.
+* Added tile to Android Quick Settings for changing Tor identity.
+* Fixed using Bypass LAN Addresses with socks5 proxy.
