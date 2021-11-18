@@ -31,8 +31,10 @@ class CoroutinesModule {
 
     @Provides
     @Named(SUPERVISOR_JOB_MAIN_DISPATCHER_SCOPE)
-    fun provideSupervisorMainDispatcherCoroutineScope(): CoroutineScope {
-        return MainScope()
+    fun provideSupervisorMainDispatcherCoroutineScope(
+        dispatcherMain: MainCoroutineDispatcher
+    ): CoroutineScope {
+        return CoroutineScope(SupervisorJob() + dispatcherMain)
     }
 
     @Provides

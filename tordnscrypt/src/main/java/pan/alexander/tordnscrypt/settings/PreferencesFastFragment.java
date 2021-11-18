@@ -24,13 +24,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.DialogFragment;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
@@ -52,13 +50,13 @@ import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.language.Language;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.utils.ThemeUtils;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.startRefreshTorUnlockIPs;
 import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.stopRefreshTorUnlockIPs;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SITES_IPS_REFRESH_INTERVAL;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
@@ -242,7 +240,6 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
     }
 
-    @SuppressWarnings("deprecation")
     private void changeTheme() {
 
         Context context = getActivity();
@@ -252,33 +249,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         }
 
         handler.get().post(() -> {
-
-            SharedPreferences defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-            try {
-
-                String theme = defaultSharedPreferences.getString("pref_fast_theme", "4");
-                if (theme == null) {
-                    theme = "4";
-                }
-
-                switch (theme) {
-                    case "1":
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-                        break;
-                    case "2":
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-                        break;
-                    case "3":
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_TIME);
-                        break;
-                    case "4":
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-                        break;
-                }
-            } catch (Exception e) {
-                Log.e(LOG_TAG, "PreferencesFastFragment changeTheme exception " + e.getMessage() + " " + e.getCause());
-            }
-
+            ThemeUtils.setDayNightTheme(context);
             activityCurrentRecreate();
         });
 

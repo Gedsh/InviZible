@@ -42,7 +42,6 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatDelegate;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 import androidx.appcompat.widget.Toolbar;
@@ -90,6 +89,7 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDRunFragment;
 import pan.alexander.tordnscrypt.settings.SettingsActivity;
 import pan.alexander.tordnscrypt.tor_fragment.TorRunFragment;
+import pan.alexander.tordnscrypt.utils.ThemeUtils;
 import pan.alexander.tordnscrypt.utils.ap.ApManager;
 import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
 import pan.alexander.tordnscrypt.utils.mode.AppModeManagerCallback;
@@ -263,35 +263,8 @@ public class MainActivity extends LangAppCompatActivity
         }
     }
 
-    @SuppressWarnings("deprecation")
     private void setDayNightTheme() {
-        try {
-
-            String theme;
-            if (appVersion.startsWith("g") && !accelerated) {
-                theme = "1";
-            } else {
-                SharedPreferences defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-                theme = defaultSharedPreferences.getString("pref_fast_theme", "4");
-            }
-
-            switch (Objects.requireNonNull(theme)) {
-                case "1":
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-                    break;
-                case "2":
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-                    break;
-                case "3":
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_TIME);
-                    break;
-                case "4":
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-                    break;
-            }
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "MainActivity setDayNightTheme exception " + e.getMessage() + " " + e.getCause());
-        }
+        ThemeUtils.setDayNightTheme(this);
     }
 
     private void checkUpdates() {

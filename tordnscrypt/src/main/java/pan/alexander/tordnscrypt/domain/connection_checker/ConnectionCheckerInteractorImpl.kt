@@ -60,7 +60,7 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
 
     @Volatile
     private var internetAvailable = false
-
+    @Volatile
     private var networkAvailable = false
 
     private var task: Job? = null

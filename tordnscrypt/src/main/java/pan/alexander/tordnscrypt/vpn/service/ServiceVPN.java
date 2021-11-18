@@ -105,6 +105,7 @@ import pan.alexander.tordnscrypt.vpn.NetworkUtils;
 
 import static java.net.IDN.ALLOW_UNASSIGNED;
 import static java.net.IDN.toUnicode;
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStopServiceForeground;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
@@ -134,6 +135,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper.reload;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 public class ServiceVPN extends VpnService implements OnInternetConnectionCheckedListener {
     static {
@@ -146,13 +148,15 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
     private boolean ignoreSystemDNS = false;
 
-    final static int linesInDNSQueryRawRecords = 500;
+    final static int LINES_IN_DNS_QUERY_RAW_RECORDS = 500;
 
     static final String EXTRA_COMMAND = "Command";
     static final String EXTRA_REASON = "Reason";
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultPreferences;
     @Inject
     public Lazy<PathVars> pathVars;
     @Inject
@@ -207,7 +211,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     private final Set<String> dnsRebindHosts = new HashSet<>();
     private boolean lan = false;
     private boolean firewallEnabled;
-    public static ConcurrentSkipListSet<String> vpnDnsSet;
+    public static volatile ConcurrentSkipListSet<String> vpnDnsSet;
 
     private boolean useProxy = false;
     private Set<String> setBypassProxy;
@@ -254,7 +258,11 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     @Keep
     private native void jni_done(long context);
 
-    private static List<InetAddress> getDns(Context context, Lazy<DnsInteractor> dnsInteractor) {
+    private static List<InetAddress> getDns(
+            Context context,
+            Lazy<DnsInteractor> dnsInteractor,
+            Lazy<SharedPreferences> defaultPreferences
+    ) {
         String vpnDns1;
 
         if (vpnDnsSet == null) {
@@ -265,8 +273,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         List<String> sysDns = NetworkUtils.getDefaultDNS(context);
 
         // Get custom DNS servers
-        SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
-        boolean ip6 = prefs.getBoolean("ipv6", false);
+        boolean ip6 = defaultPreferences.get().getBoolean("ipv6", false);
         vpnDns1 = App.getInstance().getDaggerComponent().getPathVars().get().getDNSCryptFallbackRes();
         Log.i(LOG_TAG, "VPN DNS system=" + TextUtils.join(",", sysDns) + " config=" + vpnDns1 + "," + VPN_DNS_2);
 
@@ -362,7 +369,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
     @SuppressLint("UnspecifiedImmutableFlag")
     BuilderVPN getBuilder(List<String> listAllowed, List<Rule> listRule) {
-        SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences prefs = defaultPreferences.get();
         //boolean ip6 = prefs.getBoolean("ipv6", true);
         boolean ip6 = true;
         boolean subnet = prefs.getBoolean("VPN subnet", true);
@@ -398,7 +405,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         }
 
         // DNS address
-        for (InetAddress dns : getDns(this, dnsInteractor)) {
+        for (InetAddress dns : getDns(this, dnsInteractor, defaultPreferences)) {
             Log.i(LOG_TAG, "VPN Using DNS=" + dns);
             builder.addDnsServer(dns);
         }
@@ -528,7 +535,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
         torVirtualAddressNetwork = pathVars.get().getTorVirtAdrNet();
 
-        SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences prefs = defaultPreferences.get();
 
         blockHttp = prefs.getBoolean("pref_fast_block_http", false);
         routeAllThroughTor = prefs.getBoolean("pref_fast_all_through_tor", true);
@@ -778,7 +785,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     public void nativeExit(String reason) {
         Log.w(LOG_TAG, "VPN Native exit reason=" + reason);
         if (reason != null) {
-            SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
+            SharedPreferences prefs = defaultPreferences.get();
             prefs.edit().putBoolean(VPN_SERVICE_ENABLED, false).apply();
         }
     }
@@ -819,7 +826,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
             if (!newRecord.equals(lastRecord)) {
                 dnsQueryRawRecords.add(newRecord);
 
-                if (dnsQueryRawRecords.size() > linesInDNSQueryRawRecords) {
+                if (dnsQueryRawRecords.size() > LINES_IN_DNS_QUERY_RAW_RECORDS) {
                     dnsQueryRawRecords.removeFirst();
                 }
             }
@@ -1286,7 +1293,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
             public void onLinkPropertiesChanged(@NonNull Network network, LinkProperties linkProperties) {
                 // Make sure the right DNS servers are being used
                 List<InetAddress> dns = linkProperties.getDnsServers();
-                SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ServiceVPN.this);
+                SharedPreferences prefs = defaultPreferences.get();
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
                         ? !same(last_dns, dns)
                         : prefs.getBoolean("swRefreshRules", false)) {
@@ -1447,7 +1454,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences prefs = defaultPreferences.get();
         boolean vpnEnabled = prefs.getBoolean(VPN_SERVICE_ENABLED, false);
 
         modulesStatus = ModulesStatus.getInstance();
@@ -1546,7 +1553,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         Log.i(LOG_TAG, "VPN Revoke");
 
         // Disable firewall (will result in stop command)
-        SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences prefs = defaultPreferences.get();
         prefs.edit().putBoolean(VPN_SERVICE_ENABLED, false).apply();
 
         ModulesAux.stopModulesIfRunning(this.getApplicationContext());
@@ -1726,7 +1733,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                 if (!newRecord.equals(lastRecord)) {
                     dnsQueryRawRecords.add(newRecord);
 
-                    if (dnsQueryRawRecords.size() > linesInDNSQueryRawRecords) {
+                    if (dnsQueryRawRecords.size() > LINES_IN_DNS_QUERY_RAW_RECORDS) {
                         dnsQueryRawRecords.removeFirst();
                     }
                 }
