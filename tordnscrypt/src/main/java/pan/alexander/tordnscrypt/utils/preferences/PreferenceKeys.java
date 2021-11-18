@@ -28,6 +28,8 @@ public interface PreferenceKeys {
     String IPS_TO_UNLOCK_TETHER = "ipsToUnlockTether";
     String IPS_FOR_CLEARNET_TETHER = "ipsForClearNetTether";
 
+    String TILES_LIMIT_DIALOG_NOT_SHOW = "tilesLimitDialogNotShow";
+
     //VPN
     String VPN_SERVICE_ENABLED = "VPNServiceEnabled";
 

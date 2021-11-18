@@ -24,10 +24,10 @@ import androidx.annotation.RequiresApi
 import javax.inject.Inject
 
 @RequiresApi(Build.VERSION_CODES.N)
-class ITPDTileService : BaseTileService() {
+class ChangeTorIpTileService : BaseTileService() {
 
     @Inject
-    lateinit var tileManager: dagger.Lazy<ModulesControlTileManager>
+    lateinit var tileManager: dagger.Lazy<ChangeTorIpTileManager>
 
     override fun onCreate() {
         tilesSubcomponent?.inject(this)
@@ -38,7 +38,7 @@ class ITPDTileService : BaseTileService() {
         super.onStartListening()
 
         val tile = qsTile ?: return
-        tileManager.get().startUpdatingState(tile, ModulesControlTileManager.ManageTask.MANAGE_ITPD)
+        tileManager.get().startUpdatingState(tile)
     }
 
     override fun onStopListening() {
@@ -56,6 +56,6 @@ class ITPDTileService : BaseTileService() {
         super.onClick()
 
         val tile = qsTile ?: return
-        tileManager.get().manageModule(tile, ModulesControlTileManager.ManageTask.MANAGE_ITPD)
+        tileManager.get().tileClicked(tile)
     }
 }

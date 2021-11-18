@@ -19,9 +19,11 @@ package pan.alexander.tordnscrypt
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.os.Build
 import androidx.lifecycle.*
 import pan.alexander.tordnscrypt.modules.ModulesAux
-import pan.alexander.tordnscrypt.utils.Utils
+import pan.alexander.tordnscrypt.tiles.BaseTileService
+import pan.alexander.tordnscrypt.tiles.TilesLimiter
 
 class AppLifecycleListener(private val app: App): DefaultLifecycleObserver {
 
@@ -37,5 +39,10 @@ class AppLifecycleListener(private val app: App): DefaultLifecycleObserver {
         super.onStop(owner)
 
         app.isAppForeground = false
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            BaseTileService.releaseTilesSubcomponent()
+            TilesLimiter.resetActiveTiles()
+        }
     }
 }

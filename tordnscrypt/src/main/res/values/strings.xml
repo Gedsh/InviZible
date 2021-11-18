@@ -651,7 +651,7 @@
     <string name="verifier_error">Looks like this unofficial version of InviZible. Please be care of it!</string>
     <string name="only_for_pro">Only for PRO version</string>
     <string name="donate">Donate</string>
-    <string name="donate_project">InviZible Pro Project needs your assistance. Please visit donate page or enter received registration code.</string>
+    <string name="donate_project">InviZible Pro Project needs your assistance. Please visit donate page or enter received premium code.</string>
     <string name="donate_button">Visit</string>
     <string name="enter_code_button">Enter Code</string>
     <string name="enter_code">Enter Code</string>
@@ -754,4 +754,8 @@
     <string name="pref_firewall_allow_internet_for_new_apps">Allow connections for new apps</string>
     <string name="pref_firewall_allow_internet_for_new_apps_on_summ">Internet connections for newly installed apps are allowed.</string>
     <string name="pref_firewall_allow_internet_for_new_apps_off_summ">Internet connections for newly installed applications are blocked.</string>
+    <string name="tile_change_tor_ip">Change Tor IP</string>
+    <string name="tile_changing_tor_ip">Tor IP changing</string>
+    <string name="tile_dialog_over_three_tiles_message">You have added more than 3 tiles to Quick Settings.
+        Please leave only 3. Adding more than 3 tiles can cause issues with app control.</string>
 </resources>

@@ -51,16 +51,11 @@ import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.utils.root.RootCommands
 import pan.alexander.tordnscrypt.utils.root.RootExecService.*
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper
-import java.lang.ref.WeakReference
 import javax.inject.Inject
 import javax.inject.Named
 
-private const val UPDATE_INTERVAL_SEC = 1
-private const val VPN_SERVICE_START_DELAY_SEC = 2
-private const val MANAGE_MODULE_TIMEOUT_SEC = 3
-
 @RequiresApi(Build.VERSION_CODES.N)
-class TileManager @Inject constructor(
+class ModulesControlTileManager @Inject constructor(
     private val dispatcherMain: MainCoroutineDispatcher,
     @Named(CoroutinesModule.SUPERVISOR_JOB_IO_DISPATCHER_SCOPE)
     private val baseCoroutineScope: CoroutineScope,
@@ -70,158 +65,162 @@ class TileManager @Inject constructor(
     @Named(SharedPreferencesModule.DEFAULT_PREFERENCES_NAME)
     private val defaultPreferences: SharedPreferences,
     private val handler: Handler,
-    private val pathVars: PathVars,
+    private val pathVars: PathVars
 ) {
     private val modulesStatus = ModulesStatus.getInstance()
+
+    @Volatile
     private var task: Job? = null
+    private var tile: Tile? = null
 
-    private var savedTorState = ModuleState.UNDEFINED
-    private var savedDnsCryptState = ModuleState.UNDEFINED
-    private var savedITPDState = ModuleState.UNDEFINED
-
-    private val manageModuleCoroutineScope = baseCoroutineScope + coroutineExceptionHandler
+    val coroutineScope by lazy { baseCoroutineScope + coroutineExceptionHandler }
 
     fun startUpdatingState(tile: Tile, manageTask: ManageTask) {
 
-        val tileWeakReference = WeakReference(tile)
-
-        val coroutineScope =
-            baseCoroutineScope + CoroutineName(manageTask.name) + coroutineExceptionHandler
+        this.tile = tile
 
         task?.cancel()
 
-        task = coroutineScope.launch {
+        task = (coroutineScope + CoroutineName("Update tile $manageTask")).launch {
             while (isActive) {
-                updateTile(tileWeakReference, manageTask)
+                updateTile(manageTask)
                 delay(UPDATE_INTERVAL_SEC * 1000L)
             }
         }
     }
 
     fun stopUpdatingState() {
-
         task?.cancel()
-
-        savedTorState = ModuleState.UNDEFINED
-        savedDnsCryptState = ModuleState.UNDEFINED
-        savedITPDState = ModuleState.UNDEFINED
+        tile = null
     }
 
-    private suspend fun updateTile(tile: WeakReference<Tile>, manageTask: ManageTask) =
-        withContext(dispatcherMain) {
+    private suspend fun updateTile(manageTask: ManageTask) {
+        val tile = tile ?: return
 
-            var moduleState = ModuleState.UNDEFINED
+        var moduleState = ModuleState.UNDEFINED
 
-            when (manageTask) {
-                ManageTask.MANAGE_TOR -> {
-                    moduleState = modulesStatus.torState
-                    updateTorTileLabel(tile.get(), moduleState)
-                }
-                ManageTask.MANAGE_DNSCRYPT -> {
-                    moduleState = modulesStatus.dnsCryptState
-                    updateDnsCryptTileLabel(tile.get(), moduleState)
-                }
-                ManageTask.MANAGE_ITPD -> {
-                    moduleState = modulesStatus.itpdState
-                    updateITPDTileLabel(tile.get(), moduleState)
-                }
+        val labelUpdated = when (manageTask) {
+            ManageTask.MANAGE_TOR -> {
+                moduleState = modulesStatus.torState
+                updateTorTileLabel(moduleState)
             }
-
-            updateTileIconState(tile.get(), moduleState)
+            ManageTask.MANAGE_DNSCRYPT -> {
+                moduleState = modulesStatus.dnsCryptState
+                updateDnsCryptTileLabel(moduleState)
+            }
+            ManageTask.MANAGE_ITPD -> {
+                moduleState = modulesStatus.itpdState
+                updateITPDTileLabel(moduleState)
+            }
         }
 
-    private fun updateTorTileLabel(tile: Tile?, moduleState: ModuleState) {
-        if (tile == null || moduleState == savedTorState) {
-            return
+        val iconUpdated = updateTileIconState(moduleState)
+
+        if (labelUpdated || iconUpdated) {
+            withContext(dispatcherMain) {
+                tile.updateTile()
+            }
         }
+    }
 
-        savedTorState = moduleState
+    private fun updateTorTileLabel(moduleState: ModuleState): Boolean {
+        val tile = tile ?: return false
 
-        when (moduleState) {
+        val savedTileLabel = tile.label
+
+        val newTileLabel = when (moduleState) {
             ModuleState.STARTING, ModuleState.RESTARTING -> {
-                tile.label = context.getString(R.string.tvTorStarting)
+                context.getString(R.string.tvTorStarting)
             }
             ModuleState.RUNNING -> {
-                tile.label = context.getString(R.string.tvTorRunning)
                 refreshModuleInterfaceIfAppLaunched(
                     TorRunFragmentMark,
                     TOR_KEYWORD,
                     pathVars.torPath
                 )
+                context.getString(R.string.tvTorRunning)
             }
             ModuleState.STOPPING -> {
-                tile.label = context.getString(R.string.tvTorStopping)
+                context.getString(R.string.tvTorStopping)
             }
             else -> {
-                tile.label = context.getString(R.string.tvTorStop)
+                context.getString(R.string.tvTorStop)
             }
         }
 
-        tile.updateTile()
+        if (newTileLabel != savedTileLabel) {
+            tile.label = newTileLabel
+            return true
+        }
+        return false
     }
 
-    private fun updateDnsCryptTileLabel(tile: Tile?, moduleState: ModuleState) {
-        if (tile == null || moduleState == savedDnsCryptState) {
-            return
-        }
+    private fun updateDnsCryptTileLabel(moduleState: ModuleState): Boolean {
+        val tile = tile ?: return false
 
-        savedDnsCryptState = moduleState
+        val savedTileLabel = tile.label
 
-        when (moduleState) {
+        val newTileLabel = when (moduleState) {
             ModuleState.STARTING, ModuleState.RESTARTING -> {
-                tile.label = context.getString(R.string.tvDNSStarting)
+                context.getString(R.string.tvDNSStarting)
             }
             ModuleState.RUNNING -> {
-                tile.label = context.getString(R.string.tvDNSRunning)
                 refreshModuleInterfaceIfAppLaunched(
                     DNSCryptRunFragmentMark,
                     DNSCRYPT_KEYWORD,
                     pathVars.dnsCryptPath
                 )
+                context.getString(R.string.tvDNSRunning)
             }
             ModuleState.STOPPING -> {
-                tile.label = context.getString(R.string.tvDNSStopping)
+                context.getString(R.string.tvDNSStopping)
             }
             else -> {
-                tile.label = context.getString(R.string.tvDNSStop)
+                context.getString(R.string.tvDNSStop)
             }
         }
 
-        tile.updateTile()
+        if (savedTileLabel != newTileLabel) {
+            tile.label = newTileLabel
+            return true
+        }
+        return false
     }
 
-    private fun updateITPDTileLabel(tile: Tile?, moduleState: ModuleState) {
-        if (tile == null || moduleState == savedITPDState) {
-            return
-        }
+    private fun updateITPDTileLabel(moduleState: ModuleState): Boolean {
+        val tile = tile ?: return false
 
-        savedITPDState = moduleState
+        val savedTileLabel = tile.label
 
-        when (moduleState) {
+        val newTileLabel = when (moduleState) {
             ModuleState.STARTING, ModuleState.RESTARTING -> {
-                tile.label = context.getString(R.string.tvITPDStarting)
+                context.getString(R.string.tvITPDStarting)
             }
             ModuleState.RUNNING -> {
-                tile.label = context.getString(R.string.tvITPDRunning)
                 refreshModuleInterfaceIfAppLaunched(
                     I2PDRunFragmentMark,
                     ITPD_KEYWORD,
                     pathVars.itpdPath
                 )
+                context.getString(R.string.tvITPDRunning)
             }
             ModuleState.STOPPING -> {
-                tile.label = context.getString(R.string.tvITPDStopping)
+                context.getString(R.string.tvITPDStopping)
             }
             else -> {
-                tile.label = context.getString(R.string.tvITPDStop)
+                context.getString(R.string.tvITPDStop)
             }
         }
 
-        tile.updateTile()
+        if (savedTileLabel != newTileLabel) {
+            tile.label = newTileLabel
+            return true
+        }
+        return false
     }
 
-    private fun updateTileIconState(tile: Tile?, moduleState: ModuleState) {
-        tile ?: return
+    private fun updateTileIconState(moduleState: ModuleState): Boolean {
+        val tile = tile ?: return false
 
         val savedTileState = tile.state
 
@@ -232,13 +231,14 @@ class TileManager @Inject constructor(
 
         if (savedTileState != newTileState) {
             tile.state = newTileState
-            tile.updateTile()
+            return true
         }
+        return false
     }
 
-    fun manageModule(manageTask: ManageTask) {
+    fun manageModule(tile: Tile, manageTask: ManageTask) {
 
-        manageModuleCoroutineScope.launch(CoroutineName(manageTask.name)) {
+        (coroutineScope + CoroutineName("Manage tile $manageTask")).launch {
             withTimeout(MANAGE_MODULE_TIMEOUT_SEC * 1000L) {
                 initActionsInCaseOfFirstStart()
 
@@ -252,6 +252,18 @@ class TileManager @Inject constructor(
 
                 startVpnServiceIfRequired()
             }
+        }
+
+        if (tile.state == Tile.STATE_INACTIVE) {
+            tile.state = Tile.STATE_ACTIVE
+            tile.updateTile()
+        } else if (tile.state == Tile.STATE_ACTIVE) {
+            tile.state = Tile.STATE_INACTIVE
+            tile.updateTile()
+        }
+
+        if (task?.isCompleted != false) {
+            startUpdatingState(tile, manageTask)
         }
     }
 
@@ -281,7 +293,7 @@ class TileManager @Inject constructor(
         shortenTooLongSnowflakeLog(context, preferenceRepository, pathVars)
     }
 
-    private suspend fun manageTor() {
+    private fun manageTor() {
 
         if (isInterfaceLocked(preferenceRepository)) {
             showInterfaceLockedToast()
@@ -327,7 +339,7 @@ class TileManager @Inject constructor(
         ModulesAux.saveTorStateRunning(false)
     }
 
-    private suspend fun manageDnsCrypt() {
+    private fun manageDnsCrypt() {
 
         if (isInterfaceLocked(preferenceRepository)) {
             showInterfaceLockedToast()
@@ -360,7 +372,7 @@ class TileManager @Inject constructor(
         ModulesAux.saveDNSCryptStateRunning(false)
     }
 
-    private suspend fun manageITPD() {
+    private fun manageITPD() {
 
         if (isInterfaceLocked(preferenceRepository)) {
             showInterfaceLockedToast()
@@ -423,15 +435,15 @@ class TileManager @Inject constructor(
         }
     }
 
-    private suspend fun showInterfaceLockedToast() {
+    private fun showInterfaceLockedToast() {
         showToast(R.string.action_mode_dialog_locked)
     }
 
-    private suspend fun showPleaseWaitToast() {
+    private fun showPleaseWaitToast() {
         showToast(R.string.please_wait)
     }
 
-    private suspend fun showToast(@StringRes message: Int) = withContext(dispatcherMain) {
+    private fun showToast(@StringRes message: Int) {
         Toast.makeText(context, message, Toast.LENGTH_LONG).show()
     }
 
@@ -451,5 +463,11 @@ class TileManager @Inject constructor(
         MANAGE_TOR,
         MANAGE_DNSCRYPT,
         MANAGE_ITPD
+    }
+
+    companion object {
+        const val UPDATE_INTERVAL_SEC = 1
+        private const val VPN_SERVICE_START_DELAY_SEC = 2
+        private const val MANAGE_MODULE_TIMEOUT_SEC = 3
     }
 }

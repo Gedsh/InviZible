@@ -27,6 +27,7 @@ import pan.alexander.tordnscrypt.TopFragment
 import pan.alexander.tordnscrypt.backup.BackupFragment
 import pan.alexander.tordnscrypt.backup.BackupHelper
 import pan.alexander.tordnscrypt.di.logreader.LogReaderSubcomponent
+import pan.alexander.tordnscrypt.di.tiles.TilesSubcomponent
 import pan.alexander.tordnscrypt.dialogs.*
 
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptFragmentReceiver
@@ -54,9 +55,6 @@ import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges
 import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFragment
 import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsViewModel
 import pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment
-import pan.alexander.tordnscrypt.tiles.DNSCryptTileService
-import pan.alexander.tordnscrypt.tiles.ITPDTileService
-import pan.alexander.tordnscrypt.tiles.TorTileService
 import pan.alexander.tordnscrypt.tor_fragment.TorFragmentReceiver
 import pan.alexander.tordnscrypt.update.DownloadTask
 import pan.alexander.tordnscrypt.update.UpdateService
@@ -78,6 +76,7 @@ import javax.inject.Singleton
 @Keep
 interface AppComponent {
     fun logReaderSubcomponent(): LogReaderSubcomponent.Factory
+    fun tilesSubcomponent(): TilesSubcomponent.Factory
 
     fun getPathVars(): dagger.Lazy<PathVars>
     fun getPreferenceRepository(): dagger.Lazy<PreferenceRepository>
@@ -108,9 +107,6 @@ interface AppComponent {
     fun inject(service: ModulesService)
     fun inject(service: ServiceVPN)
     fun inject(service: UpdateService)
-    fun inject(service: TorTileService)
-    fun inject(service: DNSCryptTileService)
-    fun inject(service: ITPDTileService)
     fun inject(receiver: BootCompleteReceiver)
     fun inject(receiver: DNSCryptFragmentReceiver)
     fun inject(receiver: TorFragmentReceiver)

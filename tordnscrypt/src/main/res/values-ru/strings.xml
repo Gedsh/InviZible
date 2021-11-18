@@ -330,7 +330,7 @@
     <string name="donate">Поддержка проекта</string>
     <string name="donate_button">Посетить</string>
     <string name="enter_code_button">Ввести код</string>
-    <string name="donate_project">Проект InviZible Pro нуждается в Вашей помощи. Пожалуйста, посетите         страницу поддержки или введите уже полученный регистрационный код.</string>
+    <string name="donate_project">Проект InviZible Pro нуждается в Вашей помощи. Пожалуйста, посетите         страницу поддержки или введите уже полученный PRO код.</string>
     <string name="thanks_for_donate">Проект InviZible Pro и его автор благодарен за помощь. Загрузить и обновить до PRO? Обновление будет продолжено в фоновом режиме.</string>
     <string name="thanks_for_donate_gp">Проект InviZible Pro и его автор благодарен за помощь!</string>
     <string name="enter_code">Введите код</string>
@@ -516,4 +516,8 @@
     <string name="pref_tor_hardware_accel_summ">Использовать встроенное аппаратное ускорение шифрования, если оно доступно.</string>
     <string name="notification_connecting">Соединение…</string>
     <string name="notification_waiting_network">Ожидание сети…</string>
+    <string name="tile_change_tor_ip">Изменить Tor IP</string>
+    <string name="tile_changing_tor_ip">Смена Tor IP</string>
+    <string name="tile_dialog_over_three_tiles_message">Вы добавили более 3-х ярлыков в быстрые настройки.
+         Оставьте только 3. Добавление более 3-х ярлыков может вызвать проблемы с управлением приложением.</string>
 </resources>

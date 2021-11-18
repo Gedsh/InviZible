@@ -1,5 +1,3 @@
-package pan.alexander.tordnscrypt.tiles
-
 /*
     This file is part of InviZible Pro.
 
@@ -17,17 +15,22 @@ package pan.alexander.tordnscrypt.tiles
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
-*/
+ */
+
+package pan.alexander.tordnscrypt.tiles
 
 import android.os.Build
+import android.service.quicksettings.TileService
 import androidx.annotation.RequiresApi
+import pan.alexander.tordnscrypt.App
+import pan.alexander.tordnscrypt.di.tiles.TilesSubcomponent
 import javax.inject.Inject
 
 @RequiresApi(Build.VERSION_CODES.N)
-class ITPDTileService : BaseTileService() {
+abstract class BaseTileService : TileService() {
 
     @Inject
-    lateinit var tileManager: dagger.Lazy<ModulesControlTileManager>
+    lateinit var tilesLimiter: TilesLimiter
 
     override fun onCreate() {
         tilesSubcomponent?.inject(this)
@@ -35,27 +38,29 @@ class ITPDTileService : BaseTileService() {
     }
 
     override fun onStartListening() {
-        super.onStartListening()
-
-        val tile = qsTile ?: return
-        tileManager.get().startUpdatingState(tile, ModulesControlTileManager.ManageTask.MANAGE_ITPD)
-    }
-
-    override fun onStopListening() {
-        super.onStopListening()
-
-        tileManager.get().stopUpdatingState()
+        tilesLimiter.listenTile(this)
     }
 
     override fun onDestroy() {
-        tileManager.get().stopUpdatingState()
-        super.onDestroy()
+        tilesLimiter.unlistenTile(this)
     }
 
     override fun onClick() {
-        super.onClick()
+        tilesLimiter.checkActiveTilesCount(this)
+    }
 
-        val tile = qsTile ?: return
-        tileManager.get().manageModule(tile, ModulesControlTileManager.ManageTask.MANAGE_ITPD)
+    override fun onTileRemoved() {
+        tilesLimiter.reset()
+    }
+
+    companion object {
+        var tilesSubcomponent: TilesSubcomponent? = null
+            get() = field ?: App.instance.daggerComponent.tilesSubcomponent().create()
+                .also { field = it }
+            private set
+
+        fun releaseTilesSubcomponent() {
+            tilesSubcomponent = null
+        }
     }
 }

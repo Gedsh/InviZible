@@ -17,11 +17,23 @@
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.di
+package pan.alexander.tordnscrypt.di.tiles
 
-import dagger.Module
-import pan.alexander.tordnscrypt.di.logreader.LogReaderSubcomponent
-import pan.alexander.tordnscrypt.di.tiles.TilesSubcomponent
+import dagger.Subcomponent
+import pan.alexander.tordnscrypt.tiles.*
 
-@Module(subcomponents = [LogReaderSubcomponent::class, TilesSubcomponent::class])
-class AppSubcomponentModule
+@TilesScope
+@Subcomponent
+interface TilesSubcomponent {
+
+    @Subcomponent.Factory
+    interface Factory {
+        fun create(): TilesSubcomponent
+    }
+
+    fun inject(service: BaseTileService)
+    fun inject(service: TorTileService)
+    fun inject(service: ChangeTorIpTileService)
+    fun inject(service: DNSCryptTileService)
+    fun inject(service: ITPDTileService)
+}

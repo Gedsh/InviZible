@@ -105,6 +105,21 @@
         </service>
 
         <service
+            android:name=".tiles.ChangeTorIpTileService"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@drawable/ic_ip_tile"
+            android:label="@string/tile_change_tor_ip"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
+        </service>
+
+        <service
             android:name=".utils.appexit.AppExitDetectService"
             android:enabled="true"
             android:exported="false"
@@ -153,6 +168,9 @@
                 <data
                     android:host="invizible.net"
                     android:scheme="http" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
             </intent-filter>
         </activity>
 

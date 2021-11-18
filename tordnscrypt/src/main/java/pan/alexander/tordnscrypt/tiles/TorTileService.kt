@@ -20,29 +20,30 @@ package pan.alexander.tordnscrypt.tiles
 */
 
 import android.os.Build
-import android.service.quicksettings.TileService
 import androidx.annotation.RequiresApi
-import pan.alexander.tordnscrypt.App
 import javax.inject.Inject
 
 @RequiresApi(Build.VERSION_CODES.N)
-class TorTileService : TileService() {
+class TorTileService : BaseTileService() {
 
     @Inject
-    lateinit var tileManager: dagger.Lazy<TileManager>
+    lateinit var tileManager: dagger.Lazy<ModulesControlTileManager>
 
     override fun onCreate() {
-        App.instance.daggerComponent.inject(this)
+        tilesSubcomponent?.inject(this)
         super.onCreate()
     }
 
     override fun onStartListening() {
-        val tile = qsTile ?: return
+        super.onStartListening()
 
-        tileManager.get().startUpdatingState(tile, TileManager.ManageTask.MANAGE_TOR)
+        val tile = qsTile ?: return
+        tileManager.get().startUpdatingState(tile, ModulesControlTileManager.ManageTask.MANAGE_TOR)
     }
 
     override fun onStopListening() {
+        super.onStopListening()
+
         tileManager.get().stopUpdatingState()
     }
 
@@ -52,6 +53,9 @@ class TorTileService : TileService() {
     }
 
     override fun onClick() {
-        tileManager.get().manageModule(TileManager.ManageTask.MANAGE_TOR)
+        super.onClick()
+
+        val tile = qsTile ?: return
+        tileManager.get().manageModule(tile, ModulesControlTileManager.ManageTask.MANAGE_TOR)
     }
 }
