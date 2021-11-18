@@ -29,7 +29,6 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.ParcelFileDescriptor;
 import android.os.Process;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -120,7 +119,7 @@ public class ServiceVPNHandler extends Handler {
             return;
         }
 
-        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(serviceVPN);
+        final SharedPreferences prefs = serviceVPN.defaultPreferences.get();
 
         VPNCommand cmd = (VPNCommand) intent.getSerializableExtra(EXTRA_COMMAND);
         String reason = intent.getStringExtra(EXTRA_REASON);
@@ -249,7 +248,7 @@ public class ServiceVPNHandler extends Handler {
             } else {
                 last_builder = builder;
 
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(serviceVPN);
+                SharedPreferences prefs = serviceVPN.defaultPreferences.get();
                 boolean handover = prefs.getBoolean("VPN handover", true);
                 Log.i(LOG_TAG, "VPN Handler restart handover=" + handover);
 
@@ -367,6 +366,12 @@ public class ServiceVPNHandler extends Handler {
                 if (active != null) {
                     Log.i(LOG_TAG, "VPN Handler Setting underlying network=" + cm.getNetworkInfo(active));
                     serviceVPN.setUnderlyingNetworks(new Network[]{active});
+                } else if (!serviceVPN.isNetworkAvailable() && !serviceVPN.isInternetAvailable()) {
+                    Log.i(LOG_TAG, "VPN Handler Setting underlying network=empty");
+                    serviceVPN.setUnderlyingNetworks(new Network[]{});
+                } else {
+                    Log.i(LOG_TAG, "VPN Handler Setting underlying network=default");
+                    serviceVPN.setUnderlyingNetworks(null);
                 }
             }
 
@@ -403,7 +408,7 @@ public class ServiceVPNHandler extends Handler {
             }
         }
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(serviceVPN);
+        SharedPreferences prefs = serviceVPN.defaultPreferences.get();
         prefs.edit().putBoolean(VPN_SERVICE_ENABLED, false).apply();
 
         serviceVPN.stopSelf();
