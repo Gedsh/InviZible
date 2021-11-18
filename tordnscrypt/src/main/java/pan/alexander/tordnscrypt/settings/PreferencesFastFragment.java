@@ -76,6 +76,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         App.getInstance().getDaggerComponent().inject(this);
         super.onCreate(savedInstanceState);
 
+        //noinspection deprecation
         setRetainInstance(true);
 
         addPreferencesFromResource(R.xml.preferences_fast);
@@ -336,15 +337,10 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
                 return true;
             case "pref_fast_block_http":
+            case "Allow LAN":
                 if (ModulesAux.isDnsCryptSavedStateRunning()
                         || ModulesAux.isTorSavedStateRunning()) {
                     ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
-                }
-                return true;
-            case "Allow LAN":
-                modulesStatus = ModulesStatus.getInstance();
-                if (modulesStatus.getTorState() == RUNNING) {
-                    modulesStatus.setIptablesRulesUpdateRequested(context, true);
                 }
                 return true;
             case "pref_fast_theme":
