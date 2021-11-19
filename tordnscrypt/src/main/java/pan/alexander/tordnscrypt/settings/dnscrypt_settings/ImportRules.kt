@@ -398,7 +398,7 @@ class ImportRules(
                     return false
                 }
 
-                if (line.isNotEmpty() && !line.contains("#")) {
+                if (line.isNotEmpty() && !line.contains("#") && !line.contains("!")) {
                     return line.matches(regExp)
                 }
 
@@ -418,7 +418,7 @@ class ImportRules(
                         return false
                     }
 
-                    if (line.isNotEmpty() && !line.contains("#")) {
+                    if (line.isNotEmpty() && !line.contains("#") && !line.contains("!")) {
                         return line.matches(regExp)
                     }
 
