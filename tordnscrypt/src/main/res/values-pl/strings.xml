@@ -122,7 +122,7 @@
     <string name="pref_common_wakelock_summ">"Dodatkowa ochrona bez trybu rootowania, aby zapobiec uspieniu aplikacji przez Androida. Moze wyczeprac baterie"</string>
     <string name="pref_common_show_help">"Podpowiedzi"</string>
     <string name="pref_common_show_help_summ">"Zawsze pokazuj podpowiedzi"</string>
-    <string name="pref_common_notification_helper">"Prosze wykluczyc InviZible Pro z optymalizacji baterii. W innym przypadku Android moze zatrzymac proces DNSCrypt, Tor or I2P w kazdej chwili. Systemy niest- andardowe jak MIUI, wymagaja dodatowych czynnosci, wykluczajacych InviZible Pro z optymalizacji baterii (np. Safety-&gt;Battery-&gt;Power Saving-&gt;Select InviZible Pro-&gt;No Background Restrictions, Safety-&gt;allow auto start and Long Press The Home Button-&gt;Open the Recent App-&gt;Then Swipe InviZible Pro Downward i kliknac sign lock in memory)."</string>
+    <string name="pref_common_notification_helper">"Prosze wykluczyc InviZible Pro z optymalizacji baterii. W innym przypadku Android moze zatrzymac proces DNSCrypt, Tor or I2P w kazdej chwili. Systemy niest- andardowe jak MIUI, wymagaja dodatowych czynnosci."</string>
     <string name="pref_common_use_busybox">"Wybierz BusyBox"</string>
     <string name="pref_common_categ_hotspot">"Punkt dostepu - eksperymentalnie"</string>
     <string name="pref_common_tethering_autostart">"Autostart udostepniania polaczenia przy starcie systemu"</string>
@@ -347,15 +347,6 @@ Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych 
     <string name="buy_premium_gp">"Projekt InviZible Pro potrzebuje Twojego wsparcia. Naciśnij OK, aby kupić funkcje premium."</string>
     <string name="wrong_purchase_signature_gp">"Przepraszamy, ale nie mozna potwierdzic zakupu. Otrzymasz zwrot pieniedzy po 3 dniach."</string>
     <string name="only_premium_feature">"Niestety ta funkcja jest dostepna tylko w wersji premium."</string>
-    <string name="agreement_text">"\tDziekuje za wybor InviZible Pro. Mam nadzieje ze bedzie przydatna do zachowania Twojej prywatnosci i latwiejszego korzystania z sieci.
-\tInviZible Pro sklada sie z Tor, DNSCrypt oraz Purple I2P jako moduly.
-\tInviZible Pro moze korzystac z praw roota, jesli zrootowales urzadzenie lub korzystac z trybu VPNlokalnego wcelu przekierowania ruchu do Tora, DNSCrypt oraz sieci  I2P.
-\tTen produkt zostal opracowany niezaleznie od projektow Tor®, DNSCrypt, Purple I2P oraz nieprzenosi zadnych praw odnosnie gwarnacji, jakosci, przydatnosci itp.
-\tInviZible Pro jest dystrybuowany w dobrej wierze ze bedzie przydatny, jednak bez zadnej GWARANCJI (wliczajac gwarancje handlowe i gwarancje przydatnosci do okreslonych celow).
-\tCopyright © 2019-2021
-\tGarmatin Oleksandr
-\tinvizible.soft@gmail.com
-\tinvizible.net/en/privacy"</string>
     <string name="pref_itpd_use_HTTP_outproxy">"Proxy wychodzace HTTP"</string>
     <string name="pref_itpd_HTTP_outproxy_address">"Adres wychodzacego proxy HTTP"</string>
     <string name="pref_itpd_use_Socks_outproxy">"Proxy wychodzace SOCKS"</string>

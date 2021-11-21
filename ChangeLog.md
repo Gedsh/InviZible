@@ -607,3 +607,34 @@
 * Fixed delayed saving of settings in some cases.
 * Fixed display of warning about arp spoofing attack if app is launched.
 * Minor bug fixes and optimizations.
+
+**InviZible Pro beta 1.3.8**
+* Updated DNSCrypt to version 2.1.1.
+* Added tiles to Android Quick Settings for starting/stopping modules.
+* Preparing the app for Android 12.
+
+**InviZible Pro beta 1.3.9**
+* Fixed crash when opening some settings.
+
+**InviZible Pro beta 1.4.0**
+* Added current connection status to the notification.
+* Optimized application behavior on unstable networks.
+* Improved websites handling for the Tor Exclude/Select websites feature.
+* Improved Android Quick Settings tiles for starting/stopping modules.
+* Improved ARP Spoofing detection.
+* Lots of internal code optimizations.
+
+**InviZible Pro beta 1.4.1**
+* Improved current connection status in the notification.
+* Improved Tor Exclude/Select websites feature.
+* Fixed internet sharing in Root mode on android 11.
+* Fixes and optimizations.
+
+**InviZible Pro beta 1.4.2**
+* Fixed Restore Settings feature.
+* Minor bug fixes and optimizations.
+
+**InviZible Pro beta 1.4.3**
+* Optimized battery usage when network connection is unavailable.
+* Added tile to Android Quick Settings for changing Tor identity.
+* Fixed using Bypass LAN Addresses with socks5 proxy.

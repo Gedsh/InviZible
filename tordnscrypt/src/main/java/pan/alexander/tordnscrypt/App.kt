@@ -25,11 +25,14 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
+import androidx.annotation.MainThread
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat.getSystemService
+import androidx.lifecycle.ProcessLifecycleOwner
 import pan.alexander.tordnscrypt.crash_handling.TopExceptionHandler
 import pan.alexander.tordnscrypt.di.*
+import pan.alexander.tordnscrypt.di.logreader.LogReaderSubcomponent
 import pan.alexander.tordnscrypt.language.Language
 import pan.alexander.tordnscrypt.utils.multidex.MultidexActivator
 import java.lang.ref.WeakReference
@@ -41,10 +44,18 @@ const val AUX_CHANNEL_ID = "Auxiliary"
 class App : Application() {
 
     var currentActivity: WeakReference<Activity>? = null
+
     lateinit var daggerComponent: AppComponent
+    private set
+
+    private var logReaderDaggerSubcomponent: LogReaderSubcomponent? = null
+
+    var isAppForeground: Boolean = false
 
     companion object {
+        @JvmStatic
         lateinit var instance: App
+        private set
     }
 
     override fun attachBaseContext(base: Context?) {
@@ -80,21 +91,38 @@ class App : Application() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             AppCompatDelegate.setCompatVectorFromResourcesEnabled(true)
         }
+
+        initAppLifecycleListener()
     }
 
     private fun initDaggerComponent() {
         daggerComponent = DaggerAppComponent
             .builder()
-            .sharedPreferencesModule(SharedPreferencesModule(this))
+            .sharedPreferencesModule(SharedPreferencesModule())
             .coroutinesModule(CoroutinesModule())
             .handlerModule(HandlerModule())
+            .contextModule(ContextModule(this))
             .build()
+    }
+
+    @MainThread
+    fun initLogReaderDaggerSubcomponent() = logReaderDaggerSubcomponent ?:
+        daggerComponent.logReaderSubcomponent().create().also {
+            logReaderDaggerSubcomponent = it
+        }
+
+    fun releaseLogReaderScope() {
+        logReaderDaggerSubcomponent = null
     }
 
     @TargetApi(Build.VERSION_CODES.O)
     private fun createNotificationChannel() {
         val notificationManager = getSystemService(this, NotificationManager::class.java)
-        val channel = NotificationChannel(ANDROID_CHANNEL_ID, getString(R.string.notification_channel_services), NotificationManager.IMPORTANCE_MIN)
+        val channel = NotificationChannel(
+            ANDROID_CHANNEL_ID,
+            getString(R.string.notification_channel_services),
+            NotificationManager.IMPORTANCE_MIN
+        )
         channel.setSound(null, Notification.AUDIO_ATTRIBUTES_DEFAULT)
         channel.description = ""
         channel.enableLights(false)
@@ -107,7 +135,11 @@ class App : Application() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createFirewallChannel() {
         val notificationManager = getSystemService(this, NotificationManager::class.java)
-        val channel = NotificationChannel(FIREWALL_CHANNEL_ID, getString(R.string.notification_channel_firewall), NotificationManager.IMPORTANCE_HIGH)
+        val channel = NotificationChannel(
+            FIREWALL_CHANNEL_ID,
+            getString(R.string.notification_channel_firewall),
+            NotificationManager.IMPORTANCE_HIGH
+        )
         channel.setSound(null, Notification.AUDIO_ATTRIBUTES_DEFAULT)
         channel.description = ""
         channel.enableLights(true)
@@ -120,7 +152,11 @@ class App : Application() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createAuxChannel() {
         val notificationManager = getSystemService(this, NotificationManager::class.java)
-        val channel = NotificationChannel(AUX_CHANNEL_ID, getString(R.string.notification_channel_auxiliary), NotificationManager.IMPORTANCE_HIGH)
+        val channel = NotificationChannel(
+            AUX_CHANNEL_ID,
+            getString(R.string.notification_channel_auxiliary),
+            NotificationManager.IMPORTANCE_HIGH
+        )
         channel.setSound(null, Notification.AUDIO_ATTRIBUTES_DEFAULT)
         channel.description = ""
         channel.enableLights(true)
@@ -133,6 +169,10 @@ class App : Application() {
 
     private fun setExceptionHandler() {
         Thread.setDefaultUncaughtExceptionHandler(TopExceptionHandler())
+    }
+
+    private fun initAppLifecycleListener() {
+        ProcessLifecycleOwner.get().lifecycle.addObserver(AppLifecycleListener(this))
     }
 
 }

@@ -31,7 +31,7 @@
             android:dependency="pref_common_tor_tethering">
             <intent
                 android:action="tor_sites_unlock_tether"
-                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetClass="pan.alexander.tordnscrypt.settings.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
         <Preference
@@ -41,7 +41,7 @@
             android:dependency="pref_common_tor_route_all">
             <intent
                 android:action="tor_sites_unlock_tether"
-                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetClass="pan.alexander.tordnscrypt.settings.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
         <SwitchPreference

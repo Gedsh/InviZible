@@ -64,16 +64,26 @@ import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.delet
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.writeToTextFile;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
+import javax.inject.Inject;
+
 public class FileManager {
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
+
     private CountDownLatch latch;
     private static final Map<String, List<String>> linesListMap = new HashMap<>();
     private static final ReentrantLock reentrantLock = new ReentrantLock();
     private static OnFileOperationsCompleteListener callback;
     private static CopyOnWriteArrayList<OnFileOperationsCompleteListener> stackCallbacks;
     private static ExecutorService executorService = Executors.newSingleThreadExecutor();
-    private final Lazy<PreferenceRepository> preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
+
+    public FileManager() {
+        App.getInstance().getDaggerComponent().inject(this);
+    }
 
     private BroadcastReceiver br = new BroadcastReceiver() {
         @Override
@@ -974,7 +984,7 @@ public class FileManager {
 
     public void restoreAccess(Context context, String filePath) {
         if (context != null) {
-            boolean rootIsAvailable = preferenceRepository.get().getBoolPreference("rootIsAvailable");
+            boolean rootIsAvailable = preferenceRepository.get().getBoolPreference(ROOT_IS_AVAILABLE);
 
             if (!rootIsAvailable) {
                 return;
@@ -984,7 +994,7 @@ public class FileManager {
             LocalBroadcastManager.getInstance(context).registerReceiver(br, intentFilterBckgIntSer);
 
             String appUID = String.valueOf(Process.myUid());
-            PathVars pathVars = PathVars.getInstance(context);
+            PathVars pathVars = App.getInstance().getDaggerComponent().getPathVars().get();
             List<String> commands = new ArrayList<>(Arrays.asList(
                     pathVars.getBusyboxPath()+ "chown -R " + appUID + "." + appUID + " " + filePath + " 2> /dev/null",
                     "restorecon " + filePath + " 2> /dev/null",

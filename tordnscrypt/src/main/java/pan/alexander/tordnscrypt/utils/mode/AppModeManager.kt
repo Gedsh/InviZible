@@ -33,6 +33,8 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATION_MODE
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper
 
 object AppModeManager {
@@ -43,7 +45,7 @@ object AppModeManager {
         val modulesStatus = ModulesStatus.getInstance()
 
         App.instance.daggerComponent.getPreferenceRepository().get()
-            .setStringPreference("OPERATION_MODE", OperationMode.ROOT_MODE.toString())
+            .setStringPreference(OPERATION_MODE, OperationMode.ROOT_MODE.toString())
         Log.i(LOG_TAG, "Root mode enabled")
 
         val fixTTL = modulesStatus.isFixTTL && !modulesStatus.isUseModulesWithRoot
@@ -71,7 +73,7 @@ object AppModeManager {
         val modulesStatus = ModulesStatus.getInstance()
 
         App.instance.daggerComponent.getPreferenceRepository().get()
-            .setStringPreference("OPERATION_MODE", OperationMode.PROXY_MODE.toString())
+            .setStringPreference(OPERATION_MODE, OperationMode.PROXY_MODE.toString())
         Log.i(LOG_TAG, "Proxy mode enabled")
         val operationMode: OperationMode = modulesStatus.mode
 
@@ -98,7 +100,7 @@ object AppModeManager {
         val modulesStatus = ModulesStatus.getInstance()
 
         App.instance.daggerComponent.getPreferenceRepository().get()
-            .setStringPreference("OPERATION_MODE", OperationMode.VPN_MODE.toString())
+            .setStringPreference(OPERATION_MODE, OperationMode.VPN_MODE.toString())
         Log.i(LOG_TAG, "VPN mode enabled")
         val operationMode: OperationMode = modulesStatus.mode
 
@@ -136,7 +138,7 @@ object AppModeManager {
 
     private fun disableUseModulesWithRoot(context: Context, modulesStatus: ModulesStatus) {
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
-        sharedPreferences.edit().putBoolean("swUseModulesRoot", false).apply()
+        sharedPreferences.edit().putBoolean(RUN_MODULES_WITH_ROOT, false).apply()
         ModulesAux.stopModulesIfRunning(context)
         modulesStatus.isUseModulesWithRoot = false
         modulesStatus.isContextUIDUpdateRequested = true

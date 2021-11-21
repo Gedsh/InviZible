@@ -50,7 +50,7 @@ public class Registration {
 
     public Registration(Activity activity) {
         this.activity = activity;
-        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
+        this.preferenceRepository = App.getInstance().getDaggerComponent().getPreferenceRepository();
     }
 
     public void showDonateDialog() {

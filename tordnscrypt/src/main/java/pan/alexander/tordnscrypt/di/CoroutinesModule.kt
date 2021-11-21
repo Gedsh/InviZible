@@ -22,6 +22,7 @@ import android.util.Log
 import dagger.Module
 import dagger.Provides
 import kotlinx.coroutines.*
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import javax.inject.Named
 
@@ -30,9 +31,31 @@ class CoroutinesModule {
 
     @Provides
     @Named(SUPERVISOR_JOB_MAIN_DISPATCHER_SCOPE)
-    fun provideSupervisorMainDispatcherCoroutineScope(): CoroutineScope {
-        return CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    fun provideSupervisorMainDispatcherCoroutineScope(
+        dispatcherMain: MainCoroutineDispatcher
+    ): CoroutineScope {
+        return CoroutineScope(SupervisorJob() + dispatcherMain)
     }
+
+    @Provides
+    @Named(SUPERVISOR_JOB_IO_DISPATCHER_SCOPE)
+    fun provideSupervisorIoDispatcherCoroutineScope(
+        @Named(DISPATCHER_IO) dispatcherIo: CoroutineDispatcher
+    ): CoroutineScope {
+        return CoroutineScope(SupervisorJob() + dispatcherIo)
+    }
+
+    @Provides
+    fun provideDispatcherMain(): MainCoroutineDispatcher = Dispatchers.Main
+
+    @Provides
+    @Named(DISPATCHER_IO)
+    fun provideDispatcherIo(cachedExecutor: CachedExecutor): CoroutineDispatcher =
+        cachedExecutor.executorService.asCoroutineDispatcher()
+
+    @Provides
+    @Named(DISPATCHER_COMPUTATION)
+    fun provideDispatcherComputation(): CoroutineDispatcher = Dispatchers.Default
 
     @Provides
     fun provideCoroutineExceptionHandler(): CoroutineExceptionHandler {
@@ -46,5 +69,8 @@ class CoroutinesModule {
 
     companion object {
         const val SUPERVISOR_JOB_MAIN_DISPATCHER_SCOPE = "SUPERVISOR_JOB_MAIN_DISPATCHER_SCOPE"
+        const val SUPERVISOR_JOB_IO_DISPATCHER_SCOPE = "SUPERVISOR_JOB_IO_DISPATCHER_SCOPE"
+        const val DISPATCHER_IO = "DISPATCHER_IO"
+        const val DISPATCHER_COMPUTATION = "DISPATCHER_COMPUTATION"
     }
 }

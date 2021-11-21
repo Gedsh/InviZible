@@ -25,7 +25,6 @@ import android.content.SharedPreferences
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.os.Handler
-import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -41,11 +40,11 @@ import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
-import pan.alexander.tordnscrypt.SettingsActivity
+import pan.alexander.tordnscrypt.settings.SettingsActivity
 import pan.alexander.tordnscrypt.databinding.FragmentProxyBinding
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
-import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor.getExecutorService
+import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.util.concurrent.Future
 import javax.inject.Inject
@@ -58,6 +57,10 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
 
     @Inject
     lateinit var preferenceRepository: dagger.Lazy<PreferenceRepository>
+    @Inject
+    lateinit var cachedExecutor: CachedExecutor
+    @Inject
+    lateinit var handler: dagger.Lazy<Handler>
 
     private var _binding: FragmentProxyBinding? = null
     private val binding get() = _binding!!
@@ -66,10 +69,6 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
 
     private var etBackground: Drawable? = null
     private var futureTask: Future<*>? = null
-
-    private var pathVars: PathVars? = null
-
-    private var handler: Handler? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         App.instance.daggerComponent.inject(this)
@@ -84,10 +83,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
 
         activity?.setTitle(R.string.pref_common_proxy_categ)
 
-        Looper.getMainLooper()?.let { handler = Handler(it) }
-
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
-        pathVars = PathVars.getInstance(context)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -163,7 +159,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
         val setBypassProxy = preferenceRepository.get().getStringSetPreference(CLEARNET_APPS_FOR_PROXY)
 
         if (proxyServer.isNotEmpty() && proxyPort.isNotEmpty()
-                && (setBypassProxy.isNotEmpty() || proxyServer != "127.0.0.1")) {
+                && (setBypassProxy.isNotEmpty() || proxyServer != LOOPBACK_ADDRESS)) {
             ProxyHelper.manageProxy(context, proxyServer, proxyPort, serverOrPortChanged,
                     activateDNSCryptProxy, activateTorProxy, activateITPDProxy)
         } else {
@@ -178,8 +174,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
     override fun onDestroyView() {
         super.onDestroyView()
 
-        handler?.removeCallbacksAndMessages(null)
-        handler = null
+        handler.get().removeCallbacksAndMessages(null)
 
         futureTask?.let { if (it.isCancelled) it.cancel(true) }
 
@@ -227,7 +222,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
         if (server.isEmpty() || !server.matches(IP_REGEX)) {
             binding.etProxyServer.background = ContextCompat.getDrawable(context, R.drawable.error_hint_selector)
             return
-        } else if (server == "127.0.0.1" && preferenceRepository.get()
+        } else if (server == LOOPBACK_ADDRESS && preferenceRepository.get()
                 .getStringSetPreference(CLEARNET_APPS_FOR_PROXY).isEmpty()) {
             binding.tvProxyHint.apply {
                 setText(R.string.proxy_select_proxy_app)
@@ -243,13 +238,13 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
             return
         }
 
-        futureTask = getExecutorService().submit {
+        futureTask = cachedExecutor.submit {
             try {
-                val result = ProxyHelper.checkProxyConnectivity(context, server, port.toInt())
+                val result = ProxyHelper.checkProxyConnectivity(server, port.toInt())
 
                 if (_binding != null) {
                     if (result.matches(Regex("\\d+"))) {
-                        handler?.post {
+                        handler.get().post {
                             binding.tvProxyHint.apply {
                                 text = String.format(getString(R.string.proxy_successful_connection), result)
                                 setTextColor(ContextCompat.getColor(context, R.color.textModuleStatusColorRunning))
@@ -257,7 +252,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
                             }
                         }
                     } else {
-                        handler?.post {
+                        handler.get().post {
                             binding.tvProxyHint.apply {
                                 text = String.format(getString(R.string.proxy_no_connection), result)
                                 setTextColor(ContextCompat.getColor(context, R.color.textModuleStatusColorAlert))

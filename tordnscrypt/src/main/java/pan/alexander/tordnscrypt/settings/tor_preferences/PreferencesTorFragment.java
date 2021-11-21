@@ -40,7 +40,7 @@ import java.util.Objects;
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.settings.SettingsActivity;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
@@ -73,12 +73,17 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
     public String excludeExitNodes;
     public String exitNodes;
     private boolean isChanged;
+
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Lazy<PathVars> pathVars;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        App.instance.daggerComponent.inject(this);
+        App.getInstance().getDaggerComponent().inject(this);
 
         super.onCreate(savedInstanceState);
 
@@ -184,8 +189,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
         activity.setTitle(R.string.drawer_menu_TorSettings);
 
-        PathVars pathVars = PathVars.getInstance(activity);
-        appDataDir = pathVars.getAppDataDir();
+        appDataDir = pathVars.get().getAppDataDir();
 
         isChanged = false;
 
@@ -363,7 +367,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
             ModifyForwardingRules modifyForwardingRules = new ModifyForwardingRules(context,
                     "onion 127.0.0.1:" + newValue.toString().trim());
-            CachedExecutor.INSTANCE.getExecutorService().execute(modifyForwardingRules.getRunnable());
+            cachedExecutor.submit(modifyForwardingRules.getRunnable());
         } else if (Objects.equals(preference.getKey(), "pref_tor_snowflake_stun")) {
 
             if (newValue.toString().trim().isEmpty()) {
@@ -513,7 +517,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 return true;
             }
 
-            CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+            cachedExecutor.submit(() -> {
                 Activity activity = getActivity();
                 if (activity == null) {
                     return;

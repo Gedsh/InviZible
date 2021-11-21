@@ -2,8 +2,8 @@
 
 buildscript {
     ext {
-        kotlin_version = '1.5.30'
-        dagger_version = '2.37'
+        kotlin_version = '1.5.31'
+        dagger_version = '2.40'
         multidex_version = "2.0.1"
     }
 
@@ -13,7 +13,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.2'
+        classpath 'com.android.tools.build:gradle:7.0.3'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
 
 

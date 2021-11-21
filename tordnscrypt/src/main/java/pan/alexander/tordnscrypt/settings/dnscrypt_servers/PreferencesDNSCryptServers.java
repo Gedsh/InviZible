@@ -51,7 +51,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.settings.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.AddDNSCryptServerDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
@@ -78,6 +78,10 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Lazy<PathVars> pathVars;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
     private RecyclerView.Adapter<DNSServersAdapter.DNSServersViewHolder> dNSServersAdapter;
     private ArrayList<String> dnsServerNames;
@@ -104,7 +108,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        App.instance.daggerComponent.inject(this);
+        App.getInstance().getDaggerComponent().inject(this);
 
         super.onCreate(savedInstanceState);
 
@@ -117,7 +121,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
         takeArguments();
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
             try {
                 Verifier verifier = new Verifier(context);
                 String appSign = verifier.getApkSignatureZip();
@@ -173,8 +177,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
         activity.setTitle(R.string.pref_fast_dns_server);
 
-        PathVars pathVars = PathVars.getInstance(activity);
-        appDataDir = pathVars.getAppDataDir();
+        appDataDir = pathVars.get().getAppDataDir();
 
         FileManager.setOnFileOperationCompleteListener(this);
 

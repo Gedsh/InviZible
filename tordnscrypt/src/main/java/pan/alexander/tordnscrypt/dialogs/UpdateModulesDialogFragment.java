@@ -19,8 +19,13 @@ package pan.alexander.tordnscrypt.dialogs;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.os.Bundle;
+
+import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.appcompat.app.AlertDialog;
+
+import javax.inject.Inject;
 
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
@@ -33,7 +38,15 @@ public class UpdateModulesDialogFragment extends ExtendedDialogFragment {
     public static DialogFragment getInstance() {
         return new UpdateModulesDialogFragment();
     }
-    private final Lazy<PreferenceRepository> preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        App.getInstance().getDaggerComponent().inject(this);
+        super.onCreate(savedInstanceState);
+    }
 
     @Override
     public AlertDialog.Builder assignBuilder() {

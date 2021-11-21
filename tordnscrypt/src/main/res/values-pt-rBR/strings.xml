@@ -127,7 +127,7 @@
     <string name="pref_common_show_help">"Mensagens de ajuda"</string>
     <string name="pref_common_show_help_summ">"Sempre mostrar mensagens de ajuda"</string>
     <string name="pref_common_notification_helper">"
-Por favor, exclua o InviZible Pro da optimização da bateria de androd. Caso contrário, o android parará DNSCrypt, Tor ou I2P em qualquer momento. Em sistemas especiais, como o MIUI, foram necessários alguns passos adicionais, para excluir o InviZible Pro da optimização da bateria (por exemplo, Apps e notificações-&gt;Acesso especial a apps-&gt;Otimização de Bateria). Selecione InviZible Pro e o remova da otimização de bateria."</string>
+Por favor, exclua o InviZible Pro da optimização da bateria de androd. Caso contrário, o android parará DNSCrypt, Tor ou I2P em qualquer momento. Em sistemas especiais, como o MIUI, foram necessários alguns passos adicionais."</string>
     <string name="pref_common_use_busybox">"Selecionar BusyBox"</string>
     <string name="pref_common_categ_hotspot">"HOTSPOT-Experimental"</string>
 
@@ -384,15 +384,6 @@ Essas consultas podem revelar a presença de malware, aplicativos quebrados / ob
     <string name="buy_premium_gp">"O Projeto InviZible Pro precisa de sua ajuda. Pressione OK para adquirir recursos premium."</string>
     <string name="wrong_purchase_signature_gp">"Desculpe, mas é impossível confirmar sua compra. Você receberá um reembolso após 3 dias."</string>
     <string name="only_premium_feature">"Infelizmente, esse recurso está disponível apenas para a versão premium."</string>
-    <string name="agreement_text">"\ tObrigado por escolher o InviZible Pro. Espero que seja útil para sua privacidade e uso confortável da Internet.
-\ tInviZible Pro inclui Tor, DNSCrypt e Purple I2P como módulos.
-\ tInviZible Pro pode usar root, se o seu dispositivo tiver privilégios de root, ou usar uma VPN local para entregar tráfego de Internet para redes Tor, DNSCrypt e I2P.
-\ tEste produto é produzido independentemente do software Tor®, DNSCrypt, Purple I2P e não traz nenhuma garantia dos Projetos Acima sobre qualidade, adequação ou qualquer outra coisa.
-\ tInviZible Pro é distribuído na esperança de ser útil, mas SEM NENHUMA GARANTIA; sem mesmo a garantia implícita de COMERCIALIZAÇÃO ou ADEQUAÇÃO A UM DETERMINADO FIM.
-\ tCopyright © 2019-2021
-\ tGarmatin Oleksandr
-\ tinvizible.soft@gmail.com
-\ tinvizible.net/en/privacy."</string>
     <string name="pref_itpd_use_HTTP_outproxy">"HTTP outproxy"</string>
     <string name="pref_itpd_HTTP_outproxy_address">"Endereço HTTP outproxy"</string>
     <string name="pref_itpd_use_Socks_outproxy">"SOCKS outproxy"</string>

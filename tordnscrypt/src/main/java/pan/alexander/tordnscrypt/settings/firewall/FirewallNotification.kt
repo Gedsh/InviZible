@@ -37,7 +37,7 @@ import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.FIREWALL_CHANNEL_ID
 import pan.alexander.tordnscrypt.R
-import pan.alexander.tordnscrypt.SettingsActivity
+import pan.alexander.tordnscrypt.settings.SettingsActivity
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 

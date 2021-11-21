@@ -26,6 +26,8 @@ import pan.alexander.tordnscrypt.TopFragment
 import pan.alexander.tordnscrypt.iptables.Tethering
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.utils.Constants
+import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
+import pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHandler
@@ -138,8 +140,8 @@ class ConnectionRecordsParser(private val applicationContext: Context) {
                 lines.append(" -> ").append(record.cName.lowercase(Locale.ROOT))
             }
             if (record.daddr.trim().isNotEmpty()
-                && (!record.daddr.contains("0.0.0.0")
-                        && !record.daddr.contains("127.0.0.1")
+                && (!record.daddr.contains(META_ADDRESS)
+                        && !record.daddr.contains(LOOPBACK_ADDRESS)
                         || record.uid != -1000)
             ) {
                 if (record.uid == -1000) {

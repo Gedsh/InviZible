@@ -19,10 +19,10 @@
 
 package pan.alexander.tordnscrypt.domain.log_reader
 
-import pan.alexander.tordnscrypt.data.connection_records.ConnectionRecordsRepositoryImpl
-import pan.alexander.tordnscrypt.data.log_reader.ModulesLogRepositoryImpl
+import pan.alexander.tordnscrypt.di.logreader.LogReaderScope
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsInteractor
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsInteractorInterface
+import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsRepository
 import pan.alexander.tordnscrypt.domain.connection_records.OnConnectionRecordsUpdatedListener
 import pan.alexander.tordnscrypt.domain.log_reader.dnscrypt.DNSCryptInteractor
 import pan.alexander.tordnscrypt.domain.log_reader.dnscrypt.OnDNSCryptLogUpdatedListener
@@ -32,15 +32,17 @@ import pan.alexander.tordnscrypt.domain.log_reader.itpd.OnITPDHtmlUpdatedListene
 import pan.alexander.tordnscrypt.domain.log_reader.itpd.OnITPDLogUpdatedListener
 import pan.alexander.tordnscrypt.domain.log_reader.tor.OnTorLogUpdatedListener
 import pan.alexander.tordnscrypt.domain.log_reader.tor.TorInteractor
+import javax.inject.Inject
 
-class LogReaderInteractors private constructor() :
+@LogReaderScope
+class LogReaderInteractors @Inject constructor(
+    modulesLogRepository: ModulesLogRepository,
+    connectionsRepository: ConnectionRecordsRepository
+) :
     DNSCryptInteractorInterface,
     TorInteractorInterface,
     ITPDInteractorInterface,
     ConnectionRecordsInteractorInterface {
-
-    private val modulesLogRepository = ModulesLogRepositoryImpl()
-    private val connectionsRepository = ConnectionRecordsRepositoryImpl()
 
     private val dnsCryptInteractor = DNSCryptInteractor(modulesLogRepository)
     private val torInteractor = TorInteractor(modulesLogRepository)
@@ -55,22 +57,6 @@ class LogReaderInteractors private constructor() :
         itpdHtmlInteractor,
         connectionRecordsInteractor
     )
-
-    companion object {
-        @Volatile
-        var logReaderInteractors: LogReaderInteractors? = null
-
-        fun getInteractor(): LogReaderInteractors {
-            if (logReaderInteractors == null) {
-                synchronized(LogReaderInteractors::class.java) {
-                    if (logReaderInteractors == null) {
-                        logReaderInteractors = LogReaderInteractors()
-                    }
-                }
-            }
-            return logReaderInteractors ?: LogReaderInteractors()
-        }
-    }
 
     override fun addOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: OnDNSCryptLogUpdatedListener) {
         dnsCryptInteractor.addListener(onDNSCryptLogUpdatedListener)

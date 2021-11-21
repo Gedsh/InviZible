@@ -24,25 +24,24 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import androidx.preference.PreferenceManager
-import dagger.Lazy
-import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule
-import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.installer.Installer
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.lang.ref.WeakReference
 
-class ResetHelper(activity: Activity, backupFragment: BackupFragment) : Installer(activity) {
-
+class ResetHelper(
+    activity: Activity,
+    backupFragment: BackupFragment,
+) : Installer(
+    activity
+) {
     private var activityWeakReference: WeakReference<Activity> = WeakReference(activity)
     private val backupFragmentWeakReference: WeakReference<BackupFragment> = WeakReference(backupFragment)
-    private val preferenceRepository: Lazy<PreferenceRepository> = App.instance.daggerComponent.getPreferenceRepository()
 
     fun resetSettings() {
-        CachedExecutor.getExecutorService().submit {
+        cachedExecutor.submit {
             try {
 
                 registerReceiver(activityWeakReference.get())

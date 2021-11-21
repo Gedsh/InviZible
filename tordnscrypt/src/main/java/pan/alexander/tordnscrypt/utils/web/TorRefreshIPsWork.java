@@ -25,45 +25,60 @@ import android.os.Build;
 import androidx.preference.PreferenceManager;
 
 import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 
-import java.net.InetAddress;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
+import pan.alexander.tordnscrypt.domain.dns_resolver.DnsInteractor;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 
-import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_FOR_CLEARNET;
-import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_FOR_CLEARNET_TETHER;
-import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_TO_UNLOCK;
-import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_TO_UNLOCK_TETHER;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR_CLEARNET;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR_CLEARNET_TETHER;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_UNLOCK;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_UNLOCK_TETHER;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
+import javax.inject.Inject;
+
 public class TorRefreshIPsWork {
-    private final Pattern IP_PATTERN = Pattern.compile("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$");
+
+    private final static long DELAY_ERROR_RETRY_MSEC = 500;
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Lazy<DnsInteractor> dnsInteractor;
+    @Inject
+    public Lazy<Handler> handler;
+    @Inject
+    public CachedExecutor cachedExecutor;
+
+    private final Pattern IP_PATTERN = Pattern.compile(IPv4_REGEX);
 
     private final Context context;
     private final GetIPsJobService getIPsJobService;
-    private final Lazy<PreferenceRepository> preferenceRepository;
+
+    private boolean exceptionWhenResolvingHost = false;
 
     public TorRefreshIPsWork(Context context, GetIPsJobService getIPsJobService) {
+        App.getInstance().getDaggerComponent().inject(this);
         this.context = context;
         this.getIPsJobService = getIPsJobService;
-        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     public void refreshIPs() {
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
 
             Log.i(LOG_TAG, "TorRefreshIPsWork refreshIPs");
 
@@ -103,9 +118,7 @@ public class TorRefreshIPsWork {
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && getIPsJobService != null) {
-            Looper looper = Looper.getMainLooper();
-            Handler handler = new Handler(looper);
-            handler.post(getIPsJobService::finishJob);
+            handler.get().post(() -> getIPsJobService.finishJob(exceptionWhenResolvingHost));
         }
 
     }
@@ -170,16 +183,14 @@ public class TorRefreshIPsWork {
 
         if (!routeAllThroughTorTether) {
             settingsChanged = saveSettings(unlockIPsReadyTether, IPS_TO_UNLOCK_TETHER);
-            //FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/unlock_tether", new ArrayList<>(unlockIPsReadyTether), "ignored");
         } else {
             settingsChanged = saveSettings(unlockIPsReadyTether, IPS_FOR_CLEARNET_TETHER);
-            //FileOperations.writeToTextFile(context, appDataDir + "/app_data/tor/clearnet_tether", new ArrayList<>(unlockIPsReadyTether), "ignored");
         }
 
         return settingsChanged;
     }
 
-    private Set<String> universalGetIPs(Set<String> hosts, Set<String> IPs) {
+    private Set<String> universalGetIPs(Set<String> hosts, Set<String> ips) {
 
 
         Set<String> unlockIPsPrepared = new HashSet<>();
@@ -201,8 +212,8 @@ public class TorRefreshIPsWork {
             }
         }
 
-        if (IPs != null) {
-            for (String unlockIP : IPs) {
+        if (ips != null) {
+            for (String unlockIP : ips) {
                 Matcher matcher = IP_PATTERN.matcher(unlockIP);
                 if (matcher.find()) {
                     IPsReady.add(unlockIP);
@@ -217,12 +228,16 @@ public class TorRefreshIPsWork {
     private ArrayList<String> handleActionGetIP(String host) {
         ArrayList<String> preparedIPs = new ArrayList<>();
         try {
-            InetAddress[] addresses = InetAddress.getAllByName(new URL(host).getHost());
-            for (InetAddress address : addresses) {
-                preparedIPs.add(address.getHostAddress());
+            preparedIPs.addAll(dnsInteractor.get().resolveDomain(host));
+        } catch (Exception ignored) {
+            try {
+                TimeUnit.MILLISECONDS.sleep(DELAY_ERROR_RETRY_MSEC);
+                preparedIPs.addAll(dnsInteractor.get().resolveDomain(host));
+            } catch (Exception e) {
+                exceptionWhenResolvingHost = true;
+                Log.e(LOG_TAG, "TorRefreshIPsWork get " + host + " exception "
+                        + e.getMessage() + "\n" + e.getCause());
             }
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "TorRefreshIPsWork handleActionGetIP exception " + e.getMessage() + " " + e.getCause());
         }
         return preparedIPs;
     }

@@ -48,12 +48,22 @@ import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
+import static pan.alexander.tordnscrypt.modules.ModulesService.DNSCRYPT_KEYWORD;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
+import javax.inject.Inject;
+
 public class DNSCryptFragmentReceiver extends BroadcastReceiver {
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Lazy<PathVars> pathVars;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
     private final DNSCryptFragmentView view;
     private final DNSCryptFragmentPresenterInterface presenter;
@@ -61,12 +71,12 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
     private String dnscryptPath;
     private String busyboxPath;
 
-    private final Lazy<PreferenceRepository> preferenceRepository;
+
 
     public DNSCryptFragmentReceiver(DNSCryptFragmentView view, DNSCryptFragmentPresenter presenter) {
+        App.getInstance().getDaggerComponent().inject(this);
         this.view = view;
         this.presenter = presenter;
-        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     @Override
@@ -80,9 +90,8 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
-        PathVars pathVars = PathVars.getInstance(context);
-        dnscryptPath = pathVars.getDNSCryptPath();
-        busyboxPath = pathVars.getBusyboxPath();
+        dnscryptPath = pathVars.get().getDNSCryptPath();
+        busyboxPath = pathVars.get().getBusyboxPath();
 
 
         if (intent != null) {
@@ -133,11 +142,11 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                 }
 
                 if (sb.toString().toLowerCase().contains(dnscryptPath.toLowerCase())
-                        && sb.toString().contains("checkDNSRunning")) {
+                        && sb.toString().contains(DNSCRYPT_KEYWORD)) {
                     modulesStatus.setDnsCryptState(RUNNING);
                     presenter.displayLog();
                 } else if (!sb.toString().toLowerCase().contains(dnscryptPath.toLowerCase())
-                        && sb.toString().contains("checkDNSRunning")) {
+                        && sb.toString().contains(DNSCRYPT_KEYWORD)) {
                     if (modulesStatus.getDnsCryptState() == STOPPED) {
                         ModulesAux.saveDNSCryptStateRunning(false);
                     }
@@ -160,7 +169,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                 FragmentManager fragmentManager = view.getFragmentFragmentManager();
                 Activity activity = view.getFragmentActivity();
 
-                CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+                cachedExecutor.submit(() -> {
                     try {
                         if (activity == null || activity.isFinishing()) {
                             return;

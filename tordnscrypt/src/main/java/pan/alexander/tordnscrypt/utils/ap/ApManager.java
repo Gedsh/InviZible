@@ -40,44 +40,26 @@ import pan.alexander.tordnscrypt.utils.enums.AccessPointState;
 import static android.content.Context.CONNECTIVITY_SERVICE;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
+import javax.inject.Inject;
+
 @SuppressLint("PrivateApi")
 public class ApManager {
     private final Context context;
+    private final InternetSharingChecker checker;
     private static Object mReservation;
 
-    public ApManager(Context context) {
-        this.context = context.getApplicationContext();
+    @Inject
+    public ApManager(Context context, InternetSharingChecker checker) {
+        this.context = context;
+        this.checker = checker;
     }
 
     //check whether wifi hotspot on or off
-    public int isApOn() {
-        int result = AccessPointState.STATE_UNKNOWN;
-
-        try {
-            WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            Method method = null;
-            if (wifiManager != null) {
-                method = wifiManager.getClass().getDeclaredMethod("isWifiApEnabled");
-                method.setAccessible(true);
-            }
-
-            if (method != null) {
-                Object on = method.invoke(wifiManager);
-                if (on != null && (Boolean) on) {
-                    result = AccessPointState.STATE_ON;
-                } else {
-                    result = AccessPointState.STATE_OFF;
-                }
-            }
-        } catch (Exception e) {
-            Log.w(LOG_TAG, "ApManager isApOn Exception " + e.getMessage() + System.lineSeparator() + e.getCause());
-        }
-
-        return result;
+    private int isApOn() {
+        return checker.checkApOn();
     }
 
     public int confirmApState() {
-        InternetSharingChecker checker = new InternetSharingChecker();
         checker.updateData();
 
         if (checker.isApOn()) {

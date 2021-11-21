@@ -31,6 +31,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATION_MODE;
 
 public class ModulesAux {
 
@@ -44,40 +45,40 @@ public class ModulesAux {
         modulesStatus.setRootAvailable(rootIsAvailable);
         modulesStatus.setUseModulesWithRoot(runModulesWithRoot);
 
-        PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
+        PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
 
-        if (operationMode != UNDEFINED && PathVars.isModulesInstalled()) {
+        if (operationMode != UNDEFINED && PathVars.isModulesInstalled(preferences)) {
             modulesStatus.setMode(operationMode);
         } else if (rootIsAvailable) {
             modulesStatus.setMode(ROOT_MODE);
-            preferences.setStringPreference("OPERATION_MODE", ROOT_MODE.toString());
+            preferences.setStringPreference(OPERATION_MODE, ROOT_MODE.toString());
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             modulesStatus.setMode(VPN_MODE);
-            preferences.setStringPreference("OPERATION_MODE", VPN_MODE.toString());
+            preferences.setStringPreference(OPERATION_MODE, VPN_MODE.toString());
         } else {
             modulesStatus.setMode(PROXY_MODE);
-            preferences.setStringPreference("OPERATION_MODE", PROXY_MODE.toString());
+            preferences.setStringPreference(OPERATION_MODE, PROXY_MODE.toString());
         }
 
     }
 
     public static boolean isDnsCryptSavedStateRunning() {
         //synchronized (DNSCRYPT_RUNNING_PREF) {
-        PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
+        PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
         return preferences.getBoolPreference(DNSCRYPT_RUNNING_PREF);
         //}
     }
 
     public static void saveDNSCryptStateRunning(boolean running) {
         //synchronized (DNSCRYPT_RUNNING_PREF) {
-        PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
+        PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
         preferences.setBoolPreference(DNSCRYPT_RUNNING_PREF, running);
         //}
     }
 
     public static boolean isTorSavedStateRunning() {
         //synchronized (TOR_RUNNING_PREF) {
-        PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
+        PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
         return preferences.getBoolPreference(TOR_RUNNING_PREF);
         //}
     }
@@ -85,21 +86,21 @@ public class ModulesAux {
 
     public static void saveTorStateRunning(boolean running) {
         //synchronized (TOR_RUNNING_PREF) {
-        PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
+        PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
         preferences.setBoolPreference(TOR_RUNNING_PREF, running);
         //}
     }
 
     public static boolean isITPDSavedStateRunning() {
         //synchronized (ITPD_RUNNING_PREF) {
-        PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
+        PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
         return preferences.getBoolPreference(ITPD_RUNNING_PREF);
         //}
     }
 
     public static void saveITPDStateRunning(boolean running) {
         //synchronized (ITPD_RUNNING_PREF) {
-        PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
+        PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
         preferences.setBoolPreference(ITPD_RUNNING_PREF, running);
         //}
     }
@@ -120,6 +121,10 @@ public class ModulesAux {
         if (itpdRunning) {
             ModulesKiller.stopITPD(context);
         }
+    }
+
+    public static void stopModulesService(Context context) {
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.actionStopService);
     }
 
     public static void requestModulesStatusUpdate(Context context) {

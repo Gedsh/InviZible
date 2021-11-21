@@ -39,24 +39,31 @@ import pan.alexander.tordnscrypt.utils.root.RootCommands;
 import pan.alexander.tordnscrypt.utils.root.RootExecService;
 
 import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
+import static pan.alexander.tordnscrypt.modules.ModulesService.TOR_KEYWORD;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
+import javax.inject.Inject;
+
 public class TorFragmentReceiver extends BroadcastReceiver {
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Lazy<PathVars> pathVars;
+
     private final TorFragmentView view;
     private final TorFragmentPresenterInterface presenter;
 
     private String torPath;
     private String busyboxPath;
-    private final Lazy<PreferenceRepository> preferenceRepository;
 
     public TorFragmentReceiver(TorFragmentView view, TorFragmentPresenterInterface presenter) {
+        App.getInstance().getDaggerComponent().inject(this);
         this.view = view;
         this.presenter = presenter;
-        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
-
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -70,9 +77,8 @@ public class TorFragmentReceiver extends BroadcastReceiver {
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
-        PathVars pathVars = PathVars.getInstance(context);
-        torPath = pathVars.getTorPath();
-        busyboxPath = pathVars.getBusyboxPath();
+        torPath = pathVars.get().getTorPath();
+        busyboxPath = pathVars.get().getBusyboxPath();
 
         if (intent != null) {
             final String action = intent.getAction();
@@ -121,14 +127,14 @@ public class TorFragmentReceiver extends BroadcastReceiver {
                 }
 
                 if (sb.toString().toLowerCase().contains(torPath.toLowerCase())
-                        && sb.toString().contains("checkTrRunning")) {
+                        && sb.toString().contains(TOR_KEYWORD)) {
 
                     ModulesAux.saveTorStateRunning(true);
                     modulesStatus.setTorState(RUNNING);
                     presenter.displayLog();
 
                 } else if (!sb.toString().toLowerCase().contains(torPath.toLowerCase())
-                        && sb.toString().contains("checkTrRunning")) {
+                        && sb.toString().contains(TOR_KEYWORD)) {
                     if (modulesStatus.getTorState() == STOPPED) {
                         ModulesAux.saveTorStateRunning(false);
                     }

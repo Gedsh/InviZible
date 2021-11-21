@@ -74,7 +74,7 @@
     <string name="allow">Allow</string>
     <string name="deny">Deny</string>
     <string name="areYouSure">Are you sure? This action cannot be undone!</string>
-    <string name="empty_string" translatable="false"/>
+    <string name="empty_string" translatable="false" />
 
     <string name="message_no_root_used">You can use InviZible Pro with local VPN mode, or applications with own proxy or local VPN feature in proxy mode.</string>
     <string name="message_no_root_used_kitkat">You can use InviZible Pro with applications with own proxy or local VPN feature in proxy mode.</string>
@@ -212,10 +212,7 @@
         --ei dnscrypt 1 --ei tor 1 --ei i2p 1 -n %s/.BootCompleteReceiver\". Where 1 - starts, 0 - stops the module.</string>
     <string name="pref_common_notification_helper">Please exclude InviZible Pro from android battery optimisation.
         Otherwise android will kill DNSCrypt, Tor or I2P at any time. On special systems,
-        like MIUI, required some additional steps, to exclude InviZible Pro from battery
-        optimisation (e.g. Safety->Battery->Power Saving->Select InviZible Pro->No Background Restrictions,
-        Safety->allow auto start and Long Press The Home Button->Open the Recent App->Then Swipe InviZible Pro
-        Downward and click sign lock in memory).</string>
+        like MIUI, required some additional steps.</string>
     <string name="pref_common_use_busybox">Select BusyBox</string>
     <string-array name="pref_common_categ_use_busybox_titles">
         <item>Auto</item>
@@ -267,6 +264,8 @@
 
     <string name="notification_text">DNSCrypt, Tor, I2P are protected. Don\'t hide.</string>
     <string name="notification_temp_text">Executing Root commands…</string>
+    <string name="notification_connecting">Connecting…</string>
+    <string name="notification_waiting_network">Waiting for network…</string>
 
     <string name="tvSettings_text">Please wait…</string>
     <string name="toastSettings_saved">Settings saved</string>
@@ -584,7 +583,7 @@
     <string name="action_mode_hotspot">HOTSPOT</string>
     <string name="action_mode_root" translatable="false">Root</string>
 
-    <string name="help_activity_save_logs">Save logs</string>
+    <string name="help_activity_save_logs">Collect logs</string>
     <string name="help_activity_path">Path for logs:</string>
     <string name="help_activity_logs_saved">Logs Saved. Please send InvizibleLogs.txt to developer. You can find logs in the folder:</string>
 
@@ -601,6 +600,10 @@
     <string name="about_build_date" translatable="false">Build Date:</string>
     <string name="about_proc_ver" translatable="false">Processor Version:</string>
     <string name="about_own_copyright" translatable="false">Copyright (C) 2019-2021 Garmatin Oleksandr\n All Rights Reserved\n Web Site:</string>
+    <string name="privacy_policy_title" translatable="false">Privacy Policy</string>
+    <string name="privacy_policy" translatable="false">\tInviZible Pro does not collect or share any personal or sensitive user data.
+        InviZible Pro forwards internet traffic to Tor, DNSCrypt and I2P networks.
+        For detailed information, please visit the official pages of the mentioned projects.</string>
     <string name="about_own_licence" translatable="false">
         \tInviZible Pro is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -648,7 +651,7 @@
     <string name="verifier_error">Looks like this unofficial version of InviZible. Please be care of it!</string>
     <string name="only_for_pro">Only for PRO version</string>
     <string name="donate">Donate</string>
-    <string name="donate_project">InviZible Pro Project needs your assistance. Please visit donate page or enter received registration code.</string>
+    <string name="donate_project">InviZible Pro Project needs your assistance. Please visit donate page or enter received premium code.</string>
     <string name="donate_button">Visit</string>
     <string name="enter_code_button">Enter Code</string>
     <string name="enter_code">Enter Code</string>
@@ -682,11 +685,11 @@
     <string name="only_premium_feature">Unfortunately, this feature is available for the premium version only.</string>
     <string name="agreement_text">
         \tThanks for choosing InviZible Pro. I hope that it will be useful for your privacy and comfortable use of the Internet.
-        \n\tInviZible Pro includes Tor, DNSCrypt and Purple I2P as modules.
-        \n\tInviZible Pro can use root, if your device has root privileges, or uses a local VPN to deliver Internet traffic to Tor, DNSCrypt and I2P networks.
-        \n\tThis product is produced independently from the Tor®, DNSCrypt, Purple I2P software and carries no guarantee from The Above Projects about quality, suitability or anything else.
-        \n\tInviZible Pro is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-        \n\tCopyright © 2019-2021
+        \n\n\tInviZible Pro includes Tor, DNSCrypt and Purple I2P as modules.
+        \n\n\tInviZible Pro can use root, if your device has root privileges, or uses a local VPN to deliver Internet traffic to Tor, DNSCrypt and I2P networks.
+        \n\n\tPrivacy Policy:
+        \n\tInviZible Pro does not collect or share any personal or sensitive user data.
+        \n\n\tCopyright © 2019-2021
         \n\tGarmatin Oleksandr
         \n\tinvizible.soft@gmail.com
         \n\tinvizible.net/en/privacy
@@ -751,5 +754,8 @@
     <string name="pref_firewall_allow_internet_for_new_apps">Allow connections for new apps</string>
     <string name="pref_firewall_allow_internet_for_new_apps_on_summ">Internet connections for newly installed apps are allowed.</string>
     <string name="pref_firewall_allow_internet_for_new_apps_off_summ">Internet connections for newly installed applications are blocked.</string>
-
+    <string name="tile_change_tor_ip">Change Tor IP</string>
+    <string name="tile_changing_tor_ip">Tor IP changing</string>
+    <string name="tile_dialog_over_three_tiles_message">You have added more than 3 tiles to Quick Settings.
+        Please leave only 3. Adding more than 3 tiles can cause issues with app control.</string>
 </resources>

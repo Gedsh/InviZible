@@ -45,8 +45,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.SettingsActivity;
+import pan.alexander.tordnscrypt.settings.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.ImportRulesDialog;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
@@ -57,13 +59,18 @@ import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.DNSCryptRulesVariant;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
+import pan.alexander.tordnscrypt.vpn.service.ServiceVPN;
 
 import static android.provider.DocumentsContract.EXTRA_INITIAL_URI;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
+import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
+
+import javax.inject.Inject;
 
 public class PreferencesDNSFragment extends PreferenceFragmentCompat
         implements Preference.OnPreferenceChangeListener,
@@ -74,6 +81,11 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
     public static final int PICK_BLACKLIST_IPS = 1003;
     public static final int PICK_FORWARDING = 1004;
     public static final int PICK_CLOAKING = 1005;
+
+    @Inject
+    public Lazy<PathVars> pathVars;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
     private final static String ipv4Regex = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
 
@@ -88,6 +100,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
     @SuppressWarnings("deprecation")
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        App.getInstance().getDaggerComponent().inject(this);
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
 
@@ -233,8 +246,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
         activity.setTitle(R.string.drawer_menu_DNSSettings);
 
-        PathVars pathVars = PathVars.getInstance(activity);
-        appDataDir = pathVars.getAppDataDir();
+        appDataDir = pathVars.get().getAppDataDir();
 
         isChanged = false;
 
@@ -293,7 +305,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
         try {
             boolean invalidFallbackResolver = !newValue.toString().matches(ipv4Regex)
-                    || newValue.toString().equals("127.0.0.1") || newValue.toString().equals("0.0.0.0");
+                    || newValue.toString().equals(LOOPBACK_ADDRESS) || newValue.toString().equals(META_ADDRESS);
 
             if (Objects.equals(preference.getKey(), "listen_port")) {
                 boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
@@ -316,6 +328,10 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                 val = "'" + newValue.toString() + ":53'";
                 if (key_toml.indexOf("netprobe_address") > 0) {
                     val_toml.set(key_toml.indexOf("netprobe_address"), val);
+                }
+
+                if (ServiceVPN.vpnDnsSet != null) {
+                    ServiceVPN.vpnDnsSet.clear();
                 }
                 return true;
             } else if (Objects.equals(preference.getKey(), "proxy_port")) {
@@ -599,7 +615,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
     private void checkRootDirAccessible() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+            cachedExecutor.submit(() -> {
                 rootDirAccessible = Utils.INSTANCE.isLogsDirAccessible();
             });
         }
@@ -607,7 +623,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
     private DialogProperties getFilePickerProperties(Context context) {
 
-        String cacheDirPath = PathVars.getInstance(context).getCacheDirPath(context);
+        String cacheDirPath = pathVars.get().getCacheDirPath(context);
 
         DialogProperties properties = new DialogProperties();
         properties.selection_mode = DialogConfigs.MULTI_MODE;
@@ -626,7 +642,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             return;
         }
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
 
             boolean successfully1 = !FileManager.deleteFileSynchronous(context, appDataDir
                     + "/app_data/dnscrypt-proxy", "public-resolvers.md");

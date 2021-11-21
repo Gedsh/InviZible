@@ -23,7 +23,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -42,10 +41,10 @@ import pan.alexander.tordnscrypt.databinding.FragmentFirewallBinding
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor.getExecutorService
 import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
 import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Future
@@ -70,12 +69,15 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
 
     @Inject
     lateinit var preferenceRepository: dagger.Lazy<PreferenceRepository>
+    @Inject
+    lateinit var cachedExecutor: CachedExecutor
+    @Inject
+    lateinit var handler: dagger.Lazy<Handler>
 
     private var _binding: FragmentFirewallBinding? = null
     private val binding get() = _binding!!
 
     private val modulesStatus = ModulesStatus.getInstance()
-    private var handler: Handler? = null
     private var futureTask: Future<*>? = null
     private var firewallAdapter: RecyclerView.Adapter<FirewallAdapter.FirewallViewHolder>? = null
     private var lastVisibleAdapterPosition: Int = 0
@@ -128,11 +130,6 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
         super.onCreate(savedInstanceState)
 
         retainInstance = true
-
-        val looper = Looper.getMainLooper()
-        if (looper != null) {
-            handler = Handler(looper)
-        }
 
         firewallEnabled = preferenceRepository.get().getBoolPreference("FirewallEnabled")
 
@@ -244,7 +241,7 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
         super.onDestroy()
 
         futureTask?.cancel(true)
-        handler?.removeCallbacksAndMessages(null)
+        handler.get().removeCallbacksAndMessages(null)
     }
 
     private fun initComparators() {
@@ -278,7 +275,7 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
 
         appsListComplete = false
 
-        futureTask = getExecutorService().submit {
+        futureTask = cachedExecutor.submit {
 
             try {
 
@@ -286,7 +283,7 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
 
                 if (appsList.isEmpty()) {
 
-                    handler?.post {
+                    handler.get().post {
                         if (_binding != null) {
                             binding.pbFirewallApp.isIndeterminate = true
                             binding.pbFirewallApp.visibility = View.VISIBLE
@@ -384,7 +381,7 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
                         TimeUnit.MILLISECONDS.sleep(100)
                     }
 
-                    handler?.post {
+                    handler.get().post {
 
                         if (_binding != null) {
                             binding.pbFirewallApp.isIndeterminate = false
@@ -456,7 +453,7 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
             )
         )
 
-        handler?.post {
+        handler.get().post {
             if (!appsListComplete && _binding?.rvFirewallApps?.isComputingLayout == false) {
                 firewallAdapter?.notifyDataSetChanged()
             }

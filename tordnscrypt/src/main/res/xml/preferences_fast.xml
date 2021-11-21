@@ -34,7 +34,7 @@
             android:title="@string/pref_fast_select_dns_server">
             <intent
                 android:action="DNS_servers_Pref"
-                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetClass="pan.alexander.tordnscrypt.settings.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
     </PreferenceCategory>
@@ -53,7 +53,7 @@
             android:title="@string/pref_fast_unlock_with_tor">
             <intent
                 android:action="tor_sites_unlock"
-                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetClass="pan.alexander.tordnscrypt.settings.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
         <Preference
@@ -62,7 +62,7 @@
             android:title="@string/pref_fast_unlock_apps_with_tor">
             <intent
                 android:action="tor_apps_unlock"
-                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetClass="pan.alexander.tordnscrypt.settings.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
         <Preference
@@ -72,7 +72,7 @@
             android:dependency="pref_fast_all_through_tor">
             <intent
                 android:action="tor_sites_unlock"
-                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetClass="pan.alexander.tordnscrypt.settings.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
         <EditTextPreference
@@ -89,7 +89,7 @@
             android:dependency="pref_fast_all_through_tor">
             <intent
                 android:action="tor_apps_unlock"
-                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetClass="pan.alexander.tordnscrypt.settings.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
         <SwitchPreference
@@ -103,7 +103,7 @@
             android:summary="@string/pref_fast_use_tor_bridges_summ">
             <intent
                 android:action="tor_bridges"
-                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetClass="pan.alexander.tordnscrypt.settings.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
     </PreferenceCategory>

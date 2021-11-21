@@ -6,6 +6,6 @@
     android:gravity="center"
     android:orientation="vertical"
     tools:actionBarNavMode="standard"
-    tools:context=".SettingsActivity">
+    tools:context=".settings.SettingsActivity">
 
 </androidx.appcompat.widget.LinearLayoutCompat>

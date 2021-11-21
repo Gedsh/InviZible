@@ -26,7 +26,7 @@ import android.view.View
 import android.widget.RadioGroup
 import androidx.appcompat.app.AlertDialog
 import pan.alexander.tordnscrypt.R
-import pan.alexander.tordnscrypt.SettingsActivity
+import pan.alexander.tordnscrypt.settings.SettingsActivity
 import pan.alexander.tordnscrypt.settings.tor_bridges.GetNewBridgesCallbacks
 import pan.alexander.tordnscrypt.settings.tor_bridges.GetNewBridges
 import java.lang.ref.WeakReference

@@ -42,7 +42,6 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatDelegate;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 import androidx.appcompat.widget.Toolbar;
@@ -68,6 +67,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import dagger.Lazy;
+import pan.alexander.tordnscrypt.about.AboutActivity;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.arp.ArpScannerKt;
 import pan.alexander.tordnscrypt.arp.DNSRebindProtectionKt;
@@ -84,12 +84,15 @@ import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesService;
-import pan.alexander.tordnscrypt.modules.ModulesServiceActions;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDRunFragment;
+import pan.alexander.tordnscrypt.settings.SettingsActivity;
 import pan.alexander.tordnscrypt.tor_fragment.TorRunFragment;
+import pan.alexander.tordnscrypt.utils.ThemeUtils;
 import pan.alexander.tordnscrypt.utils.ap.ApManager;
+import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.mode.AppModeManagerCallback;
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
 import pan.alexander.tordnscrypt.dialogs.Registration;
@@ -100,6 +103,12 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
+import static pan.alexander.tordnscrypt.utils.Utils.isInterfaceLocked;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATION_MODE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -110,15 +119,23 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 public class MainActivity extends LangAppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, AppModeManagerCallback {
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
-
     @Inject
     public Handler handler;
+    @Inject
+    public Lazy<PathVars> pathVars;
+    @Inject
+    public Provider<InternetSharingChecker> internetSharingChecker;
+    @Inject
+    public Lazy<ApManager> apManager;
+    @Inject
+    public Lazy<CachedExecutor> executor;
 
     public boolean childLockActive = false;
     public AccelerateDevelop accelerateDevelop;
@@ -146,7 +163,7 @@ public class MainActivity extends LangAppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        App.instance.daggerComponent.inject(this);
+        App.getInstance().getDaggerComponent().inject(this);
 
         setDayNightTheme();
 
@@ -208,7 +225,7 @@ public class MainActivity extends LangAppCompatActivity
 
         vpnRequested = false;
 
-        childLockActive = isInterfaceLocked();
+        childLockActive = isInterfaceLocked(preferenceRepository.get());
 
         checkUpdates();
 
@@ -249,35 +266,8 @@ public class MainActivity extends LangAppCompatActivity
         }
     }
 
-    @SuppressWarnings("deprecation")
     private void setDayNightTheme() {
-        try {
-
-            String theme;
-            if (appVersion.startsWith("g") && !accelerated) {
-                theme = "1";
-            } else {
-                SharedPreferences defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-                theme = defaultSharedPreferences.getString("pref_fast_theme", "4");
-            }
-
-            switch (Objects.requireNonNull(theme)) {
-                case "1":
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-                    break;
-                case "2":
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-                    break;
-                case "3":
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_TIME);
-                    break;
-                case "4":
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-                    break;
-            }
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "MainActivity setDayNightTheme exception " + e.getMessage() + " " + e.getCause());
-        }
+        ThemeUtils.setDayNightTheme(this);
     }
 
     private void checkUpdates() {
@@ -304,7 +294,7 @@ public class MainActivity extends LangAppCompatActivity
         }
 
         Intent intent = getIntent();
-        if (intent.getBooleanExtra(ArpScannerKt.mitmAttackWarning, false)
+        if (intent.getBooleanExtra(ArpScannerKt.MITM_ATTACK_WARNING, false)
                 && (ArpScanner.INSTANCE.getArpAttackDetected() || ArpScanner.INSTANCE.getDhcpGatewayAttackDetected())) {
 
             handler.postDelayed(() -> {
@@ -321,17 +311,6 @@ public class MainActivity extends LangAppCompatActivity
                 commandResult.show(getSupportFragmentManager(), "NotificationDialogFragment");
             }, 1200);
         }
-    }
-
-    private boolean isInterfaceLocked() {
-        boolean locked = false;
-        try {
-            String saved_pass = new String(Base64.decode(preferenceRepository.get().getStringPreference("passwd"), 16));
-            locked = saved_pass.contains("-l-o-c-k-e-d");
-        } catch (IllegalArgumentException e) {
-            Log.e(LOG_TAG, "MainActivity Child Lock Exception " + e.getMessage());
-        }
-        return locked;
     }
 
     public DNSCryptRunFragment getDNSCryptRunFragment() {
@@ -370,7 +349,7 @@ public class MainActivity extends LangAppCompatActivity
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
 
-        boolean rootIsAvailable = preferenceRepository.get().getBoolPreference("rootIsAvailable");
+        boolean rootIsAvailable = preferenceRepository.get().getBoolPreference(ROOT_IS_AVAILABLE);
 
         switchIconsDependingOnMode(menu, rootIsAvailable);
 
@@ -388,8 +367,8 @@ public class MainActivity extends LangAppCompatActivity
     private void switchIconsDependingOnMode(Menu menu, boolean rootIsAvailable) {
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean fixTTL = sharedPreferences.getBoolean("pref_common_fix_ttl", false);
-        boolean useModulesWithRoot = sharedPreferences.getBoolean("swUseModulesRoot", false);
+        boolean fixTTL = sharedPreferences.getBoolean(FIX_TTL, false);
+        boolean useModulesWithRoot = sharedPreferences.getBoolean(RUN_MODULES_WITH_ROOT, false);
 
         PreferenceRepository preferences = preferenceRepository.get();
         boolean busyBoxIsAvailable = preferences.getBoolPreference("bbOK");
@@ -401,7 +380,7 @@ public class MainActivity extends LangAppCompatActivity
 
         OperationMode mode = UNDEFINED;
 
-        String operationMode = preferences.getStringPreference("OPERATION_MODE");
+        String operationMode = preferences.getStringPreference(OPERATION_MODE);
         if (!operationMode.isEmpty()) {
             mode = OperationMode.valueOf(operationMode);
         }
@@ -431,7 +410,7 @@ public class MainActivity extends LangAppCompatActivity
                 menuRootMode.setChecked(true);
                 modulesStatus.setMode(ROOT_MODE);
                 mode = ROOT_MODE;
-                preferences.setStringPreference("OPERATION_MODE", mode.toString());
+                preferences.setStringPreference(OPERATION_MODE, mode.toString());
             }
 
             if (mitmDetected) {
@@ -469,12 +448,12 @@ public class MainActivity extends LangAppCompatActivity
                 menuVPNMode.setChecked(true);
                 modulesStatus.setMode(VPN_MODE);
                 mode = VPN_MODE;
-                preferences.setStringPreference("OPERATION_MODE", mode.toString());
+                preferences.setStringPreference(OPERATION_MODE, mode.toString());
             } else {
                 menuProxiesMode.setChecked(true);
                 modulesStatus.setMode(PROXY_MODE);
                 mode = PROXY_MODE;
-                preferences.setStringPreference("OPERATION_MODE", mode.toString());
+                preferences.setStringPreference(OPERATION_MODE, mode.toString());
             }
 
             if (mitmDetected) {
@@ -500,8 +479,8 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     private void switchApIcon(Menu menu) {
-        ApManager apManager = new ApManager(this);
-        int apState = apManager.isApOn();
+
+        int apState = internetSharingChecker.get().checkApOn();
 
         PreferenceRepository preferences = preferenceRepository.get();
 
@@ -572,13 +551,13 @@ public class MainActivity extends LangAppCompatActivity
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
 
-        if (isInterfaceLocked() && id != R.id.item_unlock) {
+        if (childLockActive && id != R.id.item_unlock) {
             Toast.makeText(this, getText(R.string.action_mode_dialog_locked), Toast.LENGTH_LONG).show();
             return false;
         }
 
         if (id == R.id.item_unlock) {
-            if (isInterfaceLocked()) {
+            if (childLockActive) {
                 childUnlock(item);
             } else {
                 childLock(item);
@@ -601,8 +580,7 @@ public class MainActivity extends LangAppCompatActivity
 
     private void switchHotspot() {
         try {
-            ApManager apManager = new ApManager(this);
-            if (apManager.configApState()) {
+            if (apManager.get().configApState()) {
                 checkHotspotState();
             } else if (!isFinishing()) {
                 Intent intent = new Intent(Intent.ACTION_MAIN, null);
@@ -796,7 +774,7 @@ public class MainActivity extends LangAppCompatActivity
 
         int id = item.getItemId();
 
-        if (isInterfaceLocked()) {
+        if (childLockActive) {
             Toast.makeText(this, getText(R.string.action_mode_dialog_locked), Toast.LENGTH_LONG).show();
             DrawerLayout drawer = findViewById(R.id.drawer_layout);
             drawer.closeDrawer(GravityCompat.START);
@@ -867,7 +845,7 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     private void showInfoAboutRoot() {
-        boolean rootIsAvailable = preferenceRepository.get().getBoolPreference("rootIsAvailable");
+        boolean rootIsAvailable = preferenceRepository.get().getBoolPreference(ROOT_IS_AVAILABLE);
         boolean busyBoxIsAvailable = preferenceRepository.get().getBoolPreference("bbOK");
         boolean mitmDetected = ArpScanner.INSTANCE.getArpAttackDetected()
                 || ArpScanner.INSTANCE.getDhcpGatewayAttackDetected();
@@ -920,7 +898,7 @@ public class MainActivity extends LangAppCompatActivity
 
     private void startVPNService(int resultCode) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        prefs.edit().putBoolean("VPNServiceEnabled", resultCode == RESULT_OK).apply();
+        prefs.edit().putBoolean(VPN_SERVICE_ENABLED, resultCode == RESULT_OK).apply();
         if (resultCode == RESULT_OK) {
             ServiceVPNHelper.start("VPN Service is Prepared", this);
             Toast.makeText(this, getText(R.string.vpn_mode_active), Toast.LENGTH_SHORT).show();
@@ -968,13 +946,13 @@ public class MainActivity extends LangAppCompatActivity
         mainActivityReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if (ArpScannerKt.mitmAttackWarning.equals(intent.getAction())) {
+                if (ArpScannerKt.MITM_ATTACK_WARNING.equals(intent.getAction())) {
                     invalidateMenu();
                 }
             }
         };
 
-        IntentFilter mitmDetected = new IntentFilter(ArpScannerKt.mitmAttackWarning);
+        IntentFilter mitmDetected = new IntentFilter(ArpScannerKt.MITM_ATTACK_WARNING);
         LocalBroadcastManager.getInstance(this).registerReceiver(mainActivityReceiver, mitmDetected);
     }
 
@@ -1010,9 +988,7 @@ public class MainActivity extends LangAppCompatActivity
                 && (modulesStatus.getDnsCryptState() == STOPPED || modulesStatus.getDnsCryptState() == FAULT || modulesStatus.getDnsCryptState() == ModuleState.UNDEFINED)
                 && (modulesStatus.getTorState() == STOPPED || modulesStatus.getTorState() == FAULT || modulesStatus.getTorState() == ModuleState.UNDEFINED)
                 && (modulesStatus.getItpdState() == STOPPED || modulesStatus.getItpdState() == FAULT || modulesStatus.getItpdState() == ModuleState.UNDEFINED)) {
-            Intent intent = new Intent(this, ModulesService.class);
-            intent.setAction(ModulesServiceActions.actionStopService);
-            startService(intent);
+            ModulesAux.stopModulesService(this);
         }
 
         clearViews();
@@ -1064,13 +1040,9 @@ public class MainActivity extends LangAppCompatActivity
 
             Toast.makeText(this, "Force Close ...", Toast.LENGTH_LONG).show();
 
-            ModulesKiller.forceCloseApp(PathVars.getInstance(this));
+            ModulesKiller.forceCloseApp(pathVars.get());
 
-            handler.postDelayed(() -> {
-                Intent intent = new Intent(MainActivity.this, ModulesService.class);
-                intent.setAction(ModulesServiceActions.actionStopService);
-                startService(intent);
-            }, 3000);
+            handler.postDelayed(() -> ModulesAux.stopModulesService(this), 3000);
 
             handler.postDelayed(() -> System.exit(0), 5000);
 

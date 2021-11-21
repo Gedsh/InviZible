@@ -22,7 +22,6 @@ package pan.alexander.tordnscrypt.dialogs;
 import android.app.Dialog;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -34,13 +33,20 @@ import androidx.fragment.app.FragmentTransaction;
 
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
+import javax.inject.Inject;
+
+import pan.alexander.tordnscrypt.App;
+
 public abstract class ExtendedDialogFragment extends DialogFragment {
 
-    private Handler handler = new Handler(Looper.getMainLooper());
+    @Inject
+    public Handler handler;
+
     private int waitForCloseCounter = 3;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        App.getInstance().getDaggerComponent().inject(this);
         super.onCreate(savedInstanceState);
 
         setRetainInstance(true);
@@ -60,10 +66,7 @@ public abstract class ExtendedDialogFragment extends DialogFragment {
     @Override
     public void onDestroy() {
 
-        if (handler != null) {
-            handler.removeCallbacksAndMessages(null);
-            handler = null;
-        }
+        handler.removeCallbacksAndMessages(null);
 
         super.onDestroy();
     }

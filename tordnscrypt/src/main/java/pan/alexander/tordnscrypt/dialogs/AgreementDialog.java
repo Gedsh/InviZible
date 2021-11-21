@@ -35,7 +35,7 @@ public class AgreementDialog {
 
         LayoutInflater lInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-        PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
+        PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
 
         if (lInflater == null) {
             preferences.setBoolPreference("Agreement", true);

@@ -4,6 +4,7 @@
     <color name="colorPrimaryDark">#13193E</color>
     <color name="colorAccent">#2979FF</color>
     <color name="colorBackground">#121212</color>
+    <color name="colorText">#FFFFFF</color>
     <color name="colorSelected">#1A3F70B5</color>
     <!-- colorFirst same as cardsColor -->
     <color name="colorFirst">#1E1E1E</color>

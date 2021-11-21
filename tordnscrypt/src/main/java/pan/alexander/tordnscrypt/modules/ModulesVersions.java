@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
@@ -43,8 +44,12 @@ import static pan.alexander.tordnscrypt.utils.root.RootExecService.I2PDRunFragme
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.TorRunFragmentMark;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+@Singleton
 public class ModulesVersions {
-    private static volatile ModulesVersions holder;
+    private final CachedExecutor cachedExecutor;
 
     private String dnsCryptVersion = "";
     private String torVersion = "";
@@ -52,26 +57,17 @@ public class ModulesVersions {
 
     private Shell.Console console;
 
-    private ModulesVersions() {
-    }
-
-    public static ModulesVersions getInstance() {
-        if (holder == null) {
-            synchronized (ModulesVersions.class) {
-                if (holder == null) {
-                    holder = new ModulesVersions();
-                }
-            }
-        }
-        return holder;
+    @Inject
+    ModulesVersions(CachedExecutor cachedExecutor) {
+        this.cachedExecutor = cachedExecutor;
     }
 
     public void refreshVersions(final Context context) {
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
             //openCommandShell();
 
-            PathVars pathVars = getPathVars(context);
+            PathVars pathVars = App.getInstance().getDaggerComponent().getPathVars().get();
 
             //checkModulesVersions(pathVars);
             checkModulesVersionsModern(pathVars);
@@ -90,10 +86,6 @@ public class ModulesVersions {
 
             //closeCommandShell();
         });
-    }
-
-    private PathVars getPathVars(Context context) {
-        return PathVars.getInstance(context);
     }
 
     private boolean isBinaryFileAccessible(String path) {

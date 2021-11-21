@@ -22,6 +22,10 @@ import dagger.Binds
 import dagger.Module
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
+import pan.alexander.tordnscrypt.data.connection_checker.ConnectionCheckerDataSource
+import pan.alexander.tordnscrypt.data.connection_checker.ConnectionCheckerDataSourceImpl
+import pan.alexander.tordnscrypt.data.dns_resolver.DnsDataSource
+import pan.alexander.tordnscrypt.data.dns_resolver.DnsDataSourceImpl
 import pan.alexander.tordnscrypt.data.preferences.PreferenceDataSource
 import pan.alexander.tordnscrypt.data.preferences.PreferenceDataSourceImpl
 
@@ -30,5 +34,17 @@ abstract class DataSourcesModule {
     @ObsoleteCoroutinesApi
     @ExperimentalCoroutinesApi
     @Binds
-    abstract fun providePreferencesDataSource(preferenceDataSource: PreferenceDataSourceImpl): PreferenceDataSource
+    abstract fun providePreferencesDataSource(
+        preferenceDataSource: PreferenceDataSourceImpl
+    ): PreferenceDataSource
+
+    @Binds
+    abstract fun provideDnsDataSource(
+        dnsDataSource: DnsDataSourceImpl
+    ): DnsDataSource
+
+    @Binds
+    abstract fun provideInternetCheckerDataSource(
+        internetCheckerDataSource: ConnectionCheckerDataSourceImpl
+    ): ConnectionCheckerDataSource
 }

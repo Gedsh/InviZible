@@ -27,6 +27,7 @@ import java.io.File;
 import java.util.List;
 
 import eu.chainfire.libsuperuser.Shell;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
@@ -50,7 +51,7 @@ public class ModulesRestarter {
 
     Runnable getTorRestarterRunnable(Context context) {
         boolean useModulesWithRoot = ModulesStatus.getInstance().isUseModulesWithRoot();
-        PathVars pathVars = PathVars.getInstance(context);
+        PathVars pathVars = App.getInstance().getDaggerComponent().getPathVars().get();
         String torPid = readPidFile(context, pathVars.getAppDataDir() + "/tor.pid");
 
         return () -> restartModule(pathVars, pathVars.getTorPath(), torPid, useModulesWithRoot);

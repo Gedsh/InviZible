@@ -253,7 +253,7 @@
             android:summary="@string/pref_itpd_addressbook_subscriptions_summ">
             <intent
                 android:action="pref_itpd_addressbook_subscriptions"
-                android:targetClass="pan.alexander.tordnscrypt.SettingsActivity"
+                android:targetClass="pan.alexander.tordnscrypt.settings.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
     </PreferenceCategory>

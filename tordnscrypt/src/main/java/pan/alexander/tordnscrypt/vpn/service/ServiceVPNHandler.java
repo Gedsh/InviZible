@@ -29,7 +29,6 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.ParcelFileDescriptor;
 import android.os.Process;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -44,10 +43,12 @@ import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
+import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.VPNCommand;
@@ -56,26 +57,34 @@ import pan.alexander.tordnscrypt.vpn.NetworkUtils;
 
 import static android.content.Context.CONNECTIVITY_SERVICE;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPN.EXTRA_COMMAND;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPN.EXTRA_REASON;
 
+import javax.inject.Inject;
+
 
 public class ServiceVPNHandler extends Handler {
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepositoryLazy;
+    @Inject
+    public Lazy<PathVars> pathVars;
+
     private static ServiceVPNHandler serviceVPNHandler;
     private static List<Rule> listRule;
     @Nullable
     private final ServiceVPN serviceVPN;
     private ServiceVPN.Builder last_builder = null;
     private ArpScanner arpScanner;
-    private final Lazy<PreferenceRepository> preferenceRepositoryLazy;
 
     private ServiceVPNHandler(Looper looper, @Nullable ServiceVPN serviceVPN) {
         super(looper);
+        App.getInstance().getDaggerComponent().inject(this);
         this.serviceVPN = serviceVPN;
-        preferenceRepositoryLazy = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     static ServiceVPNHandler getInstance(Looper looper, ServiceVPN serviceVPN) {
@@ -88,6 +97,7 @@ public class ServiceVPNHandler extends Handler {
         msg.obj = intent;
         if (cmd != null) {
             msg.what = cmd.ordinal();
+            serviceVPNHandler.removeMessages(msg.what);
             serviceVPNHandler.sendMessage(msg);
         }
     }
@@ -109,7 +119,7 @@ public class ServiceVPNHandler extends Handler {
             return;
         }
 
-        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(serviceVPN);
+        final SharedPreferences prefs = serviceVPN.defaultPreferences.get();
 
         VPNCommand cmd = (VPNCommand) intent.getSerializableExtra(EXTRA_COMMAND);
         String reason = intent.getStringExtra(EXTRA_REASON);
@@ -140,7 +150,7 @@ public class ServiceVPNHandler extends Handler {
             // Stop service if needed
             if (!serviceVPNHandler.hasMessages(VPNCommand.START.ordinal()) &&
                     !serviceVPNHandler.hasMessages(VPNCommand.RELOAD.ordinal()) &&
-                    !prefs.getBoolean("VPNServiceEnabled", false))
+                    !prefs.getBoolean(VPN_SERVICE_ENABLED, false))
                 stopServiceVPN();
 
             // Request garbage collection
@@ -152,8 +162,8 @@ public class ServiceVPNHandler extends Handler {
 
             if (cmd == VPNCommand.START || cmd == VPNCommand.RELOAD) {
                 if (VpnService.prepare(serviceVPN) == null) {
-                    Log.w(LOG_TAG, "VPN Handler prepared connected=" + serviceVPN.last_connected);
-                    if (serviceVPN.last_connected && !(ex instanceof StartFailedException)) {
+                    Log.w(LOG_TAG, "VPN Handler prepared connected=" + serviceVPN.isNetworkAvailable());
+                    if (serviceVPN.isNetworkAvailable() && !(ex instanceof StartFailedException)) {
                         Toast.makeText(serviceVPN, serviceVPN.getText(R.string.vpn_mode_error), Toast.LENGTH_SHORT).show();
                     }
                     // Retried on connectivity change
@@ -162,7 +172,7 @@ public class ServiceVPNHandler extends Handler {
 
                     // Disable firewall
                     if (!(ex instanceof StartFailedException)) {
-                        prefs.edit().putBoolean("VPNServiceEnabled", false).apply();
+                        prefs.edit().putBoolean(VPN_SERVICE_ENABLED, false).apply();
                     }
                 }
             }
@@ -207,7 +217,7 @@ public class ServiceVPNHandler extends Handler {
 
         String oldVpnInterfaceName = "";
         if (fixTTL) {
-            oldVpnInterfaceName = ModulesIptablesRules.blockTethering(serviceVPN);
+            oldVpnInterfaceName = ModulesIptablesRules.blockTethering(serviceVPN, pathVars.get());
         }
 
         listRule = Rule.getRules(serviceVPN);
@@ -238,7 +248,7 @@ public class ServiceVPNHandler extends Handler {
             } else {
                 last_builder = builder;
 
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(serviceVPN);
+                SharedPreferences prefs = serviceVPN.defaultPreferences.get();
                 boolean handover = prefs.getBoolean("VPN handover", true);
                 Log.i(LOG_TAG, "VPN Handler restart handover=" + handover);
 
@@ -285,13 +295,16 @@ public class ServiceVPNHandler extends Handler {
             String finalOldVpnInterfaceName = oldVpnInterfaceName;
             postDelayed(() -> {
                 modulesStatus.setFixTTLRulesUpdateRequested(serviceVPN, true);
-                ModulesIptablesRules.allowTethering(serviceVPN, finalOldVpnInterfaceName);
+                ModulesIptablesRules.allowTethering(serviceVPN, pathVars.get(), finalOldVpnInterfaceName);
             }, 1000);
         }
 
         serviceVPN.reloading = false;
 
-        arpScanner.reset(serviceVPN, serviceVPN.last_connected || serviceVPN.last_connected_override);
+        arpScanner.reset(
+                serviceVPN,
+                serviceVPN.isNetworkAvailable() || serviceVPN.isInternetAvailable()
+        );
     }
 
     private void stop() {
@@ -312,20 +325,21 @@ public class ServiceVPNHandler extends Handler {
             return listAllowed;
         }
 
-        // Update connected state
-        serviceVPN.last_connected = NetworkUtils.isConnected(serviceVPN);
+        //Update connected state
+        ConnectionCheckerInteractor interactor = serviceVPN.connectionCheckerInteractor.get();
+        interactor.checkNetworkConnection();
 
         //Request disconnected state confirmation in case of Always on VPN is enabled
-        if (!serviceVPN.last_connected) {
-            NetworkUtils.isConnectedAsynchronousConfirmation(serviceVPN);
+        if (!serviceVPN.isInternetAvailable()) {
+            interactor.checkInternetConnection();
         }
 
-        if (serviceVPN.last_connected || serviceVPN.last_connected_override) {
+        //if (serviceVPN.isNetworkAvailable() || serviceVPN.isInternetAvailable()) {
 
             PreferenceRepository preferences = preferenceRepositoryLazy.get();
 
             if (!preferences.getBoolPreference("FirewallEnabled")) {
-                for (Rule rule: listRule) {
+                for (Rule rule : listRule) {
                     listAllowed.add(String.valueOf(rule.uid));
                 }
             } else if (NetworkUtils.isWifiActive(serviceVPN) || NetworkUtils.isEthernetActive(serviceVPN)) {
@@ -335,7 +349,7 @@ public class ServiceVPNHandler extends Handler {
             } else if (NetworkUtils.isRoaming(serviceVPN)) {
                 listAllowed.addAll(preferences.getStringSetPreference(FirewallFragmentKt.APPS_ALLOW_ROAMING));
             }
-        }
+        //}
 
         Log.i(LOG_TAG, "VPN Handler Allowed " + listAllowed.size() + " of " + listRule.size());
         return listAllowed;
@@ -352,6 +366,12 @@ public class ServiceVPNHandler extends Handler {
                 if (active != null) {
                     Log.i(LOG_TAG, "VPN Handler Setting underlying network=" + cm.getNetworkInfo(active));
                     serviceVPN.setUnderlyingNetworks(new Network[]{active});
+                } else if (!serviceVPN.isNetworkAvailable() && !serviceVPN.isInternetAvailable()) {
+                    Log.i(LOG_TAG, "VPN Handler Setting underlying network=empty");
+                    serviceVPN.setUnderlyingNetworks(new Network[]{});
+                } else {
+                    Log.i(LOG_TAG, "VPN Handler Setting underlying network=default");
+                    serviceVPN.setUnderlyingNetworks(null);
                 }
             }
 
@@ -388,8 +408,8 @@ public class ServiceVPNHandler extends Handler {
             }
         }
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(serviceVPN);
-        prefs.edit().putBoolean("VPNServiceEnabled", false).apply();
+        SharedPreferences prefs = serviceVPN.defaultPreferences.get();
+        prefs.edit().putBoolean(VPN_SERVICE_ENABLED, false).apply();
 
         serviceVPN.stopSelf();
 

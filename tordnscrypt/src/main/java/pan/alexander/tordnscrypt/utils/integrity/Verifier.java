@@ -43,7 +43,10 @@ import java.util.zip.ZipFile;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import javax.inject.Inject;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
 
@@ -53,9 +56,13 @@ import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class Verifier {
 
+    @Inject
+    public Lazy<PathVars> pathVars;
+
     public Context context;
 
     public Verifier(Context context) {
+        App.getInstance().getDaggerComponent().inject(this);
         this.context = context;
     }
 
@@ -154,8 +161,7 @@ public class Verifier {
                 cipher.init(Cipher.ENCRYPT_MODE, aesKey, new IvParameterSpec(ivBytes));
                 byte[] encrypted = cipher.doFinal(text.getBytes(StandardCharsets.UTF_8));
 
-                PathVars pathVars = PathVars.getInstance(context);
-                File f = new File(pathVars.getAppDataDir() + "/logs");
+                File f = new File(pathVars.get().getAppDataDir() + "/logs");
 
                 if (f.mkdirs() && f.setReadable(true) && f.setWritable(true)) {
                     Log.i(LOG_TAG, "encryptStr log dir created");
@@ -163,7 +169,13 @@ public class Verifier {
                     Log.e(LOG_TAG, "encryptStr Unable to create and chmod log dir");
                 }
 
-                PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(pathVars.getAppDataDir() + "/logs/EncryptedStr.txt", true)));
+                PrintWriter writer = new PrintWriter(
+                        new BufferedWriter(
+                                new FileWriter(
+                                        pathVars.get().getAppDataDir() + "/logs/EncryptedStr.txt", true
+                                )
+                        )
+                );
                 writer.println(text);
                 writer.println(Base64.encodeToString(encrypted, Base64.DEFAULT));
                 writer.println("********************");

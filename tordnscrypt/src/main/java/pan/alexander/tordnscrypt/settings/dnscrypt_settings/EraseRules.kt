@@ -23,11 +23,11 @@ import android.content.Context
 import android.util.Log
 import androidx.fragment.app.FragmentManager
 import androidx.preference.PreferenceManager
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment
 import pan.alexander.tordnscrypt.modules.ModulesRestarter
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.DNSCryptRulesVariant
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
@@ -40,7 +40,7 @@ class EraseRules(private val context: Context,
                  private val remoteRulesLinkPreferenceTag: String) : Thread() {
 
     override fun run() {
-        val pathVars = PathVars.getInstance(context)
+        val pathVars = App.instance.daggerComponent.getPathVars().get()
 
         when(dnsCryptRulesVariant) {
 
@@ -79,7 +79,7 @@ class EraseRules(private val context: Context,
         if (dnsCryptRulesVariant == DNSCryptRulesVariant.CLOAKING) {
             eraseText = "*i2p 10.191.0.1"
         } else if (dnsCryptRulesVariant == DNSCryptRulesVariant.FORWARDING) {
-            eraseText = "onion 127.0.0.1:" + PathVars.getInstance(context).torDNSPort
+            eraseText = "onion 127.0.0.1:" + App.instance.daggerComponent.getPathVars().get().torDNSPort
         }
 
         try {

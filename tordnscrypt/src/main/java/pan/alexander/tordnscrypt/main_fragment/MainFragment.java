@@ -127,7 +127,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        App.instance.daggerComponent.inject(this);
+        App.getInstance().getDaggerComponent().inject(this);
 
         super.onCreate(savedInstanceState);
     }

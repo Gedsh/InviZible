@@ -136,9 +136,7 @@
     <string name="pref_common_show_help_summ">"Selalu Tampilkan pesan Bantuan"</string>
     <string name="pref_common_notification_helper">"Silahkan hapus InviZible Pro dari daftar pengoptimalan baterai Android
 	Jika tidak, Sistem Android akan mematikan DNSCrypt, Tor, atau I2P kapanpun. 
-Sistem Operasi seperti MIUI membutuhkan langkah khusus untuk menghapus InviZible Pro dari daftar Pengoptimalan Baterai (misal. Pengaturan-&gt;Baterai-&gt;Penghemat Daya-&gt;Pilih InviZible Pro-&gt;Tidak ada batasan Latar Belakang,
-	Pengaturan-&gt;ijinkan mulai otomatis dan Tekan Tahan Tombol Home-&gt;Buka Recent App-&gt;Kemudian swipe kebawah InviZible Pro
-	dan klik kunci pada memori)."</string>
+Sistem Operasi seperti MIUI membutuhkan langkah khusus."</string>
     <string name="pref_common_use_busybox">"Pilih BusyBox"</string>
     <string name="pref_common_categ_hotspot">"Experimental-HOTSPOT"</string>
     <string name="pref_common_tethering_autostart">"Memulai Penambatan saat Boot"</string>
@@ -384,24 +382,6 @@ Periksa pengaturan perangkat!"</string>
     <string name="buy_premium_gp">"Proyek Pro InviZible membutuhkan bantuan Anda. Tekan OK untuk membeli fitur premium."</string>
     <string name="wrong_purchase_signature_gp">"Maaf, tetapi tidak mungkin untuk mengkonfirmasi pembelian Anda. Anda akan menerima pengembalian dana setelah 3 hari."</string>
     <string name="only_premium_feature">"Sayangnya, fitur ini hanya tersedia untuk versi premium."</string>
-    <string name="agreement_text">"        \tTerima kasih telah memilih InviZible Pro. Saya harap ini bermanfaat untuk privasi Anda dan kenyamanan penggunaan Internet.
-        
-\tInviZible Pro menyisipkan Tor, DNSCrypt dan Purple I2P sebagai modul.
-        
-\tInviZible Pro dapat menggunakan hak akses root, jika perangkat anda mempunyai akses root, atau dengan VPN lokal untuk mengirimkan lalu lintas Internet ke jaringan Tor, DNSCrypt, dan I2P.
-        
-\tProduk ini diproduksi secara independen dari perangkat lunak Tor®, DNSCrypt, Purple I2P dan tidak memberikan jaminan dari The Above Projects mengenai kualitas, kesesuaian, atau apa pun.
-        
-\tInviZible Pro didistribusikan dengan harapan akan bermanfaat, tetapi TANPA GARANSI APA PUN; bahkan tanpa jaminan tersirat DAGANG atau KECOCOKAN UNTUK TUJUAN TERTENTU.
-        
-\tHak cipta © 2019-2021
-        
-\tGarmatin Oleksandr
-        
-\tinvizible.soft@gmail.com
-        
-\tinvizible.net/en/privacy
-        "</string>
     <string name="pref_itpd_use_HTTP_outproxy">"HTTP outproxy"</string>
     <string name="pref_itpd_HTTP_outproxy_address">"Alamat HTTP outproxy"</string>
     <string name="pref_itpd_use_Socks_outproxy">"SOCKS mengeluarkan proksi"</string>

@@ -54,7 +54,13 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 
+import javax.inject.Inject;
+
 public class ModulesKiller {
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
+
     private final Service service;
     private final String appDataDir;
     private final String busyboxPath;
@@ -69,9 +75,9 @@ public class ModulesKiller {
     private static Thread dnsCryptThread;
     private static Thread torThread;
     private static Thread itpdThread;
-    private final Lazy<PreferenceRepository> preferenceRepository;
 
     ModulesKiller(Service service, PathVars pathVars) {
+        App.getInstance().getDaggerComponent().inject(this);
         this.service = service;
         appDataDir = pathVars.getAppDataDir();
         busyboxPath = pathVars.getBusyboxPath();
@@ -80,7 +86,6 @@ public class ModulesKiller {
         itpdPath = pathVars.getITPDPath();
         modulesStatus = ModulesStatus.getInstance();
         reentrantLock = new ReentrantLock();
-        preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
     }
 
     public static void stopDNSCrypt(Context context) {

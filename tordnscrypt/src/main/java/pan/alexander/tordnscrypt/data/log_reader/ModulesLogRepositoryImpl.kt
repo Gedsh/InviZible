@@ -19,14 +19,17 @@
 
 package pan.alexander.tordnscrypt.data.log_reader
 
-import pan.alexander.tordnscrypt.App
+import android.content.Context
 import pan.alexander.tordnscrypt.domain.log_reader.ModulesLogRepository
 import pan.alexander.tordnscrypt.settings.PathVars
+import javax.inject.Inject
 
-class ModulesLogRepositoryImpl : ModulesLogRepository {
-    private val applicationContext = App.instance?.applicationContext
-    private val appDataDir = PathVars.getInstance(applicationContext).appDataDir
+class ModulesLogRepositoryImpl @Inject constructor(
+    val applicationContext: Context,
+    pathVars: PathVars
+) : ModulesLogRepository {
 
+    private val appDataDir = pathVars.appDataDir
     private var dnsCryptLogFileReader: OwnFileReader? = null
     private var torLogFileReader: OwnFileReader? = null
     private var itpdLogFileReader: OwnFileReader? = null

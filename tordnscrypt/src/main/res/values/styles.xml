@@ -42,6 +42,13 @@
         <item name="dialogCornerRadius">5dp</item>
     </style>
 
+    <style name="CustomTileDialogTheme" parent="CustomAlertDialogTheme">
+        <item name="android:background">@color/colorBackground</item>
+        <item name="background">@color/colorBackground</item>
+        <item name="android:textColor">@color/colorText</item>
+        <item name="android:textColorPrimary">@color/colorText</item>
+    </style>
+
     <style name="DialogButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
         <item name="android:textColor">@color/colorAccent</item>
     </style>

@@ -35,8 +35,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
@@ -48,7 +49,14 @@ import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
+import javax.inject.Inject;
+
 public class PreferencesITPDFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener {
+
+    @Inject
+    public Lazy<PathVars> pathVars;
+    @Inject
+    public CachedExecutor cachedExecutor;
 
     private ArrayList<String> key_itpd;
     private ArrayList<String> val_itpd;
@@ -59,6 +67,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        App.getInstance().getDaggerComponent().inject(this);
         super.onCreate(savedInstanceState);
 
         setRetainInstance(true);
@@ -144,8 +153,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
 
         activity.setTitle(R.string.drawer_menu_I2PDSettings);
 
-        PathVars pathVars = PathVars.getInstance(getActivity());
-        appDataDir = pathVars.getAppDataDir();
+        appDataDir = pathVars.get().getAppDataDir();
 
         isChanged = false;
 
@@ -391,7 +399,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                 return true;
             }
 
-            CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+            cachedExecutor.submit(() -> {
                 boolean successfully = false;
                 if (getActivity() != null) {
                     successfully = FileManager.deleteDirSynchronous(getActivity(), appDataDir + "/i2pd_data");

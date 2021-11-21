@@ -182,6 +182,29 @@
                 android:typeface="serif" />
 
             <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/privacyTitleTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="4dp"
+                android:text="@string/privacy_policy_title"
+                android:textAlignment="center"
+                android:textStyle="bold"
+                android:typeface="serif" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/privacyTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/privacy_policy"
+                android:typeface="serif" />
+
+            <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/textView11"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

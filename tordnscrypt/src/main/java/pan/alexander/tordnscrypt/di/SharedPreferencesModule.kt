@@ -27,12 +27,12 @@ import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
-class SharedPreferencesModule(private val context: Context) {
+class SharedPreferencesModule {
 
     @Provides
     @Singleton
     @Named(APP_PREFERENCES_NAME)
-    fun provideAppSharedPreferences(): SharedPreferences {
+    fun provideAppSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences(
             APP_PREFERENCES_NAME,
             Context.MODE_PRIVATE
@@ -42,7 +42,7 @@ class SharedPreferencesModule(private val context: Context) {
     @Provides
     @Singleton
     @Named(DEFAULT_PREFERENCES_NAME)
-    fun provideDefaultSharedPreferences(): SharedPreferences {
+    fun provideDefaultSharedPreferences(context: Context): SharedPreferences {
         return PreferenceManager.getDefaultSharedPreferences(context)
     }
 

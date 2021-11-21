@@ -76,7 +76,7 @@ public class Rule {
                 unlockAppsStr = CLEARNET_APPS;
             }
 
-            final PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
+            final PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
 
             Set<String> setUnlockApps = preferences.getStringSetPreference(unlockAppsStr);
 

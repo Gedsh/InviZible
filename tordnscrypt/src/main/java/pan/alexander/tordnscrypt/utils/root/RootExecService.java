@@ -18,6 +18,7 @@ package pan.alexander.tordnscrypt.utils.root;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE;
 import static pan.alexander.tordnscrypt.utils.root.RootServiceNotificationManager.DEFAULT_NOTIFICATION_ID;
 
 import android.app.NotificationManager;
@@ -26,9 +27,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -74,7 +73,6 @@ public class RootExecService extends Service {
 
     private ExecutorService executorService;
     private NotificationManager systemNotificationManager;
-    private Handler handler;
     private RootServiceNotificationManager serviceNotificationManager;
 
 
@@ -90,27 +88,18 @@ public class RootExecService extends Service {
         }
 
         executorService = Executors.newSingleThreadExecutor();
-
-        Looper looper = Looper.getMainLooper();
-        if (looper != null) {
-            handler = new Handler(looper);
-        }
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         executorService.shutdown();
-        if (handler != null) {
-            handler.removeCallbacksAndMessages(null);
-            handler = null;
-        }
     }
 
     public static void performAction(Context context, Intent intent) {
-        final PreferenceRepository preferences = App.instance.daggerComponent.getPreferenceRepository().get();
+        final PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
 
-        boolean rootIsAvailable = preferences.getBoolPreference("rootIsAvailable");
+        boolean rootIsAvailable = preferences.getBoolPreference(ROOT_IS_AVAILABLE);
         saveRootLogs = preferences.getBoolPreference("swRootCommandsLog");
 
         if ((intent == null) || Objects.equals(intent.getAction(), "") || !rootIsAvailable) return;

@@ -27,18 +27,25 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.inject.Inject;
+
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
 import pan.alexander.tordnscrypt.utils.root.RootExecService;
 
-class ContextUIDUpdater {
+public class ContextUIDUpdater {
+
+    @Inject
+    public PathVars pathVars;
+
     private final Context context;
     private final String appDataDir;
     private final String busyboxPath;
 
-    ContextUIDUpdater(Context context) {
+    public ContextUIDUpdater(Context context) {
+        App.getInstance().getDaggerComponent().inject(this);
         this.context = context;
-        PathVars pathVars = PathVars.getInstance(context);
         appDataDir = pathVars.getAppDataDir();
         busyboxPath = pathVars.getBusyboxPath();
     }

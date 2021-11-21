@@ -69,28 +69,94 @@
         tools:targetApi="q">
 
         <service
+            android:name=".tiles.TorTileService"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@drawable/ic_tor_tile"
+            android:label="Tor"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
+        </service>
+
+        <service
+            android:name=".tiles.DNSCryptTileService"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@drawable/ic_dns_tile"
+            android:label="DNSCrypt"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
+        </service>
+
+        <service
+            android:name=".tiles.ITPDTileService"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@drawable/ic_i2p_tile"
+            android:label="Purple I2P"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
+        </service>
+
+        <service
+            android:name=".tiles.ChangeTorIpTileService"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@drawable/ic_ip_tile"
+            android:label="@string/tile_change_tor_ip"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
+        </service>
+
+        <service
             android:name=".utils.appexit.AppExitDetectService"
             android:enabled="true"
             android:exported="false"
             android:stopWithTask="true" />
+
         <service
             android:name=".update.UpdateService"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
 
         <activity android:name=".help.HelpActivity" />
 
         <service
             android:name=".utils.root.RootExecService"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
         <service
             android:name=".modules.ModulesService"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
 
         <activity
             android:name=".MainActivity"
+            android:exported="true"
             android:label="@string/main_activity_label"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -112,11 +178,15 @@
                     android:host="invizible.net"
                     android:scheme="http" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
+            </intent-filter>
         </activity>
 
         <receiver
             android:name=".BootCompleteReceiver"
-            android:enabled="true">
+            android:enabled="true"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
@@ -135,19 +205,24 @@
         <activity
             android:name=".backup.BackupActivity"
             android:theme="@style/AppTheme" />
+
         <activity
-            android:name=".SettingsActivity"
+            android:name=".settings.SettingsActivity"
             android:label="@string/empty_string"
             android:theme="@style/AppTheme" />
-        <activity android:name=".AboutActivity" />
+        <activity android:name=".about.AboutActivity" />
 
         <service
             android:name=".utils.web.GetIPsJobService"
             android:enabled="true"
             android:exported="true"
+            android:foregroundServiceType="dataSync"
             android:permission="android.permission.BIND_JOB_SERVICE" />
+
         <service
             android:name=".vpn.service.ServiceVPN"
+            android:exported="true"
+            android:foregroundServiceType="dataSync"
             android:label="@string/app_name"
             android:permission="android.permission.BIND_VPN_SERVICE">
             <intent-filter>

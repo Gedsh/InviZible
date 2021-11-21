@@ -21,51 +21,24 @@ package pan.alexander.tordnscrypt.utils.executors
 
 import android.util.Log
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import java.lang.Exception
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.Future
+import javax.inject.Inject
+import javax.inject.Singleton
 
-object CachedExecutor {
+@Singleton
+class CachedExecutor @Inject constructor() {
 
-    @Volatile private var instance: ExecutorService? = null
+    val executorService: ExecutorService by lazy { Executors.newCachedThreadPool() }
 
-    fun getExecutorService(): ExecutorService {
-
-        if (instance == null || instance?.isShutdown == true) {
-            synchronized(CachedExecutor::class.java) {
-                if (instance == null || instance?.isShutdown == true) {
-                    instance = Executors.newCachedThreadPool()
-                    Log.i(LOG_TAG, "CachedExecutor is restarted")
-                }
-            }
+    @Synchronized
+    fun submit(block: Runnable): Future<*>? =
+        try {
+            executorService.submit(block)
+        } catch (e: Exception) {
+            Log.e(LOG_TAG, "CachedExecutor ${e.javaClass} ${e.message} ${e.cause}")
+            null
         }
-
-        return instance ?: Executors.newCachedThreadPool()
-    }
-
-    fun startExecutorService() {
-        if (instance == null || instance?.isShutdown == true) {
-            synchronized(CachedExecutor::class.java) {
-                if (instance == null || instance?.isShutdown == true) {
-                    instance = Executors.newCachedThreadPool()
-                    Log.i(LOG_TAG, "CachedExecutor is started")
-                }
-            }
-        }
-    }
-
-    fun stopExecutorService() {
-        Thread {
-            if (instance != null && instance?.isShutdown == false) {
-                instance?.shutdown()
-                try {
-                    instance?.awaitTermination(10, TimeUnit.SECONDS)
-                } catch (e: InterruptedException) {
-                    instance?.shutdownNow()
-                    Log.w(LOG_TAG, "CachedExecutor awaitTermination has interrupted " + e.message)
-                }
-                Log.i(LOG_TAG, "CachedExecutor is stopped")
-            }
-        }.start()
-    }
 }

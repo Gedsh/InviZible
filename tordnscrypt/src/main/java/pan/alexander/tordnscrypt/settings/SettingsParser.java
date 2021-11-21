@@ -34,7 +34,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.SettingsActivity;
 import pan.alexander.tordnscrypt.settings.dnscrypt_relays.DNSServerRelays;
 import pan.alexander.tordnscrypt.settings.dnscrypt_servers.PreferencesDNSCryptServers;
 import pan.alexander.tordnscrypt.settings.dnscrypt_settings.PreferencesDNSFragment;
@@ -51,11 +50,12 @@ import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.write
 
 public class SettingsParser implements OnTextFileOperationsCompleteListener {
     private final SettingsActivity settingsActivity;
-    private String appDataDir;
+    private final String appDataDir;
     private Bundle bundleForReadPublicResolversMdFunction;
 
-    public SettingsParser(SettingsActivity settingsActivity) {
+    public SettingsParser(SettingsActivity settingsActivity, String appDataDir) {
         this.settingsActivity = settingsActivity;
+        this.appDataDir = appDataDir;
     }
 
     private void readDnscryptProxyToml(List<String> lines) {
@@ -580,9 +580,6 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
     }
 
     public void activateSettingsParser() {
-        PathVars pathVars = PathVars.getInstance(settingsActivity);
-        appDataDir = pathVars.getAppDataDir();
-
         FileManager.setOnFileOperationCompleteListener(this);
     }
 

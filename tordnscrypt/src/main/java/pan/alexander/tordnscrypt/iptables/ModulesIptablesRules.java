@@ -53,29 +53,36 @@ import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.
 import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.UNLOCK_APPS;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
-import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_FOR_CLEARNET;
-import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFrag.IPS_TO_UNLOCK;
 import static pan.alexander.tordnscrypt.utils.Constants.DNS_OVER_TLS_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNG_41;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_42;
 import static pan.alexander.tordnscrypt.utils.Constants.HTTP_PORT;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR_CLEARNET;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_UNLOCK;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OWN_BRIDGES_OBFS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
+import javax.inject.Inject;
+
 public class ModulesIptablesRules extends IptablesRulesSender {
+
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
 
     String iptables = "iptables ";
     String ip6tables = "ip6tables ";
     String busybox = "busybox ";
-    private final Lazy<PreferenceRepository> preferenceRepository;
 
     public ModulesIptablesRules(Context context) {
-        super(context);
-
-        preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
+        super(context, App.getInstance().getDaggerComponent().getPathVars().get());
+        App.getInstance().getDaggerComponent().inject(this);
     }
 
     @Override
@@ -87,7 +94,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
         PreferenceRepository preferences = preferenceRepository.get();
-        runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+        runModulesWithRoot = shPref.getBoolean(RUN_MODULES_WITH_ROOT, false);
         routeAllThroughTor = shPref.getBoolean("pref_fast_all_through_tor", true);
         lan = shPref.getBoolean("Allow LAN", false);
         blockHttp = shPref.getBoolean("pref_fast_block_http", false);
@@ -164,7 +171,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             StringBuilder torAppsBypassFilterBuilder = new StringBuilder();
 
             for (String torClearnetIP : clearnetIPs) {
-                if (torClearnetIP.matches("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$")) {
+                if (torClearnetIP.matches(IPv4_REGEX)) {
                     torSitesBypassNatBuilder.append(iptables).append("-t nat -A tordnscrypt_nat_output -p all -d ").append(torClearnetIP).append(" -j RETURN; ");
                     torSitesBypassFilterBuilder.append(iptables).append("-A tordnscrypt -p all -d ").append(torClearnetIP).append(" -j RETURN; ");
                 }
@@ -188,7 +195,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             StringBuilder torAppsRejectNonTCPFilterBuilder = new StringBuilder();
 
             for (String unlockIP : unlockIPs) {
-                if (unlockIP.matches("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$")) {
+                if (unlockIP.matches(IPv4_REGEX)) {
                     torSitesRedirectNatBuilder.append(iptables).append("-t nat -A tordnscrypt_nat_output -p tcp -d ").append(unlockIP).append(" -j REDIRECT --to-port ").append(pathVars.getTorTransPort()).append("; ");
                     torSitesRejectNonTCPFilterBuilder.append(iptables).append("-A tordnscrypt ! -p tcp -d ").append(unlockIP).append(" -j REJECT; ");
                 }
@@ -254,8 +261,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         boolean torReady = modulesStatus.isTorReady();
         boolean useDefaultBridges = preferences.getBoolPreference("useDefaultBridges");
         boolean useOwnBridges = preferences.getBoolPreference("useOwnBridges");
-        boolean bridgesSnowflakeDefault = preferences.getStringPreference("defaultBridgesObfs").equals(snowFlakeBridgesDefault);
-        boolean bridgesSnowflakeOwn = preferences.getStringPreference("ownBridgesObfs").equals(snowFlakeBridgesOwn);
+        boolean bridgesSnowflakeDefault = preferences.getStringPreference(DEFAULT_BRIDGES_OBFS).equals(snowFlakeBridgesDefault);
+        boolean bridgesSnowflakeOwn = preferences.getStringPreference(OWN_BRIDGES_OBFS).equals(snowFlakeBridgesOwn);
 
         String torSystemDNSAllowedNat = "";
         String torSystemDNSAllowedFilter = "";
@@ -617,7 +624,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
     public List<String> fastUpdate() {
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+        runModulesWithRoot = shPref.getBoolean(RUN_MODULES_WITH_ROOT, false);
         String appUID = String.valueOf(Process.myUid());
         if (runModulesWithRoot) {
             appUID = "0";
@@ -661,7 +668,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         }
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+        runModulesWithRoot = shPref.getBoolean(RUN_MODULES_WITH_ROOT, false);
         String appUID = String.valueOf(Process.myUid());
         if (runModulesWithRoot) {
             appUID = "0";
@@ -709,12 +716,12 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         }
     }
 
-    public static void denySystemDNS(Context context) {
+    public static void denySystemDNS(Context context, PathVars pathVars) {
 
-        String iptables = PathVars.getInstance(context).getIptablesPath();
+        String iptables = pathVars.getIptablesPath();
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean runModulesWithRoot = shPref.getBoolean("swUseModulesRoot", false);
+        boolean runModulesWithRoot = shPref.getBoolean(RUN_MODULES_WITH_ROOT, false);
         String appUID = String.valueOf(Process.myUid());
         if (runModulesWithRoot) {
             appUID = "0";
@@ -737,8 +744,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         executeCommands(context, commands);
     }
 
-    public static String blockTethering(Context context) {
-        String iptables = PathVars.getInstance(context).getIptablesPath();
+    public static String blockTethering(Context context, PathVars pathVars) {
+        String iptables = pathVars.getIptablesPath();
 
         List<String> commands = new ArrayList<>(Collections.singletonList(
                 iptables + "-I FORWARD -j DROP"
@@ -749,8 +756,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         return vpnInterfaceName;
     }
 
-    public static void allowTethering(Context context, String oldVpnInterfaceName) {
-        String iptables = PathVars.getInstance(context).getIptablesPath();
+    public static void allowTethering(Context context, PathVars pathVars, String oldVpnInterfaceName) {
+        String iptables = pathVars.getIptablesPath();
 
 
         ArrayList<String> commands;

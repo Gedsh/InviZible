@@ -32,7 +32,7 @@ class PleaseWaitDialogBridgesRequest : ExtendedDialogFragment() {
 
     override fun assignBuilder(): AlertDialog.Builder? {
 
-        val activity = activity;
+        val activity = activity
         if (activity == null || activity.isFinishing) {
             return null
         }

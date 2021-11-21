@@ -47,7 +47,6 @@ import pan.alexander.tordnscrypt.BuildConfig;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.web.HttpsRequest;
 
 import static pan.alexander.tordnscrypt.TopFragment.appProcVersion;
@@ -65,7 +64,7 @@ public class UpdateCheck {
     public UpdateCheck(TopFragment topFragment) {
         this.topFragment = topFragment;
         this.context = topFragment.getContext();
-        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
+        this.preferenceRepository = App.getInstance().getDaggerComponent().getPreferenceRepository();
     }
 
     /*public byte[] RSAEncrypt(final String plain) throws NoSuchAlgorithmException, NoSuchPaddingException,
@@ -227,7 +226,7 @@ public class UpdateCheck {
             return null;
         }
 
-        return CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        return App.getInstance().getDaggerComponent().getCachedExecutor().submit(() -> {
             String serverAnswerEncoded = "";
             String serverAnswer = "";
 
@@ -252,7 +251,7 @@ public class UpdateCheck {
 
 
                 String url = domainName + "/ru/update/";
-                serverAnswerEncoded = HttpsRequest.post(context, url, HttpsRequest.hashMapToUrl(request));
+                serverAnswerEncoded = HttpsRequest.post(url, HttpsRequest.hashMapToUrl(request));
 
                 if (serverAnswerEncoded.isEmpty()) {
                     throw new IllegalStateException("requestUpdateData function fault - server answer is empty");

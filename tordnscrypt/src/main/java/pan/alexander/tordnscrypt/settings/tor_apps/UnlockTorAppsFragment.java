@@ -93,12 +93,15 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
 
     private String unlockAppsStr;
     private FutureTask<?> futureTask;
-    private Handler handler;
     private final ReentrantLock reentrantLock = new ReentrantLock();
     private volatile boolean appsListComplete = false;
     private String searchText;
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public CachedExecutor cachedExecutor;
+    @Inject
+    public Lazy<Handler> handler;
 
 
     public UnlockTorAppsFragment() {
@@ -106,6 +109,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        App.getInstance().getDaggerComponent().inject(this);
         super.onCreate(savedInstanceState);
 
         Context context = getActivity();
@@ -115,13 +119,6 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
         }
 
         setRetainInstance(true);
-
-        Looper looper = Looper.getMainLooper();
-        if (looper != null) {
-            handler = new Handler(looper);
-        }
-
-        App.instance.daggerComponent.inject(this);
 
         ////////////////////////////////////////////////////////////////////////////////////
         ///////////////////////Reverse logic when route all through Tor!///////////////////
@@ -195,7 +192,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
 
         getDeviceApps(context, setUnlockApps);
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        cachedExecutor.submit(() -> {
             try {
                 Verifier verifier = new Verifier(context);
                 String appSignAlt = verifier.getApkSignature();
@@ -279,9 +276,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
             return;
         }
 
-        if (handler != null) {
-            handler.removeCallbacksAndMessages(null);
-        }
+        handler.get().removeCallbacksAndMessages(null);
     }
 
     @Override
@@ -507,7 +502,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
 
         appsUnlock.add(0, application);
 
-        handler.post(() -> {
+        handler.get().post(() -> {
             if (rvListTorApps == null || mAdapter == null
                     || rvListTorApps.isComputingLayout() || appsListComplete) {
                 return;
@@ -532,7 +527,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
                 if (appsUnlock.isEmpty()) {
 
                     if (handler != null && pbTorApp != null) {
-                        handler.post(() -> {
+                        handler.get().post(() -> {
                             if (pbTorApp != null) {
                                 pbTorApp.setIndeterminate(true);
                                 pbTorApp.setVisibility(View.VISIBLE);
@@ -556,7 +551,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
                     appsUnlock.addAll(installedApps);
 
                     if (handler != null && pbTorApp != null) {
-                        handler.post(() -> {
+                        handler.get().post(() -> {
                             if (pbTorApp != null && mAdapter != null) {
                                 pbTorApp.setIndeterminate(false);
                                 pbTorApp.setVisibility(View.GONE);
@@ -592,7 +587,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
             return null;
         });
 
-        CachedExecutor.INSTANCE.getExecutorService().submit(futureTask);
+        cachedExecutor.submit(futureTask);
 
     }
 }
