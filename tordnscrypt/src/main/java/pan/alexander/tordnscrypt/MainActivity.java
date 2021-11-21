@@ -92,6 +92,7 @@ import pan.alexander.tordnscrypt.tor_fragment.TorRunFragment;
 import pan.alexander.tordnscrypt.utils.ThemeUtils;
 import pan.alexander.tordnscrypt.utils.ap.ApManager;
 import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.mode.AppModeManagerCallback;
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
 import pan.alexander.tordnscrypt.dialogs.Registration;
@@ -133,6 +134,8 @@ public class MainActivity extends LangAppCompatActivity
     public Provider<InternetSharingChecker> internetSharingChecker;
     @Inject
     public Lazy<ApManager> apManager;
+    @Inject
+    public Lazy<CachedExecutor> executor;
 
     public boolean childLockActive = false;
     public AccelerateDevelop accelerateDevelop;

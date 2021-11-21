@@ -398,10 +398,10 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             } else if (line.matches("(^| )server_names([ =]).+")) {
                 line = "server_names = ['ams-dnscrypt-nl', " +
                         "'ams-doh-nl', " +
-                        "'cs-tx', " +
+                        "'plan9-ns1', " +
                         "'dns.digitale-gesellschaft.ch', " +
                         "'dnscrypt.ca-1', " +
-                        "'doh-ibksturm', " +
+                        "'sth-doh-se', " +
                         "'libredns', " +
                         "'opennic-luggs', " +
                         "'publicarray-au-doh', " +

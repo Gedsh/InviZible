@@ -59,7 +59,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.crypto.Cipher;
 
 import dagger.Lazy;
-import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
@@ -83,13 +82,15 @@ public class AccelerateDevelop implements BillingClientStateListener {
     private volatile String signedData;
     private volatile String signature;
     private final Lazy<PreferenceRepository> preferenceRepository;
+    private final Lazy<CachedExecutor> executor;
 
     public AccelerateDevelop(MainActivity activity) {
         this.activity = activity;
         this.context = activity.getApplicationContext();
-        this.preferenceRepository = App.instance.daggerComponent.getPreferenceRepository();
+        this.preferenceRepository = activity.preferenceRepository;
         this.signedData = preferenceRepository.get().getStringPreference("gpData");
         this.signature = preferenceRepository.get().getStringPreference("gpSign");
+        this.executor = activity.executor;
     }
 
     public void removeActivity() {
@@ -324,7 +325,7 @@ public class AccelerateDevelop implements BillingClientStateListener {
     }
 
     private void startBillingConnection() {
-        CachedExecutor.INSTANCE.getExecutorService().submit(() -> {
+        executor.get().submit(() -> {
             try {
                 if (lock.tryLock()) {
                     mBillingClient.startConnection(AccelerateDevelop.this);

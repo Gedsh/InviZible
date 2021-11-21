@@ -66,8 +66,6 @@ class TilesLimiter @Inject constructor(
         !PathVars.isModulesInstalled(appPreferences.get())
     }
 
-    private var themeApplied = false
-
     fun <T : TileService> listenTile(service: T) {
         currentTilesSet.add(service.javaClass)
         activeTilesSet.add(service.javaClass)
@@ -100,8 +98,10 @@ class TilesLimiter @Inject constructor(
             if (!service.isSecure && (!doNotShow || showHelperMessages)) {
                 showDialog(service, getWarningDialog(service))
             }
-        } else if (service is ChangeTorIpTileService) {
-            if (appVersion.endsWith("e") && wrongRegistrationCode) {
+        } else {
+            if (appVersion.endsWith("e")
+                && wrongRegistrationCode
+                && service is ChangeTorIpTileService) {
                 showDialog(service, getDonateDialogForLite(service))
             } else if (appVersion.endsWith("p") && !accelerated) {
                 showDialog(service, getDonateDialogForGp(service))
@@ -180,6 +180,9 @@ class TilesLimiter @Inject constructor(
     }
 
     companion object {
+
+        private var themeApplied = false
+
         private val activeTilesSet by lazy {
             Collections.newSetFromMap(ConcurrentHashMap<Class<TileService>, Boolean>())
         }
