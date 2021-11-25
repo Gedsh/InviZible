@@ -16,6 +16,7 @@ import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import android.content.Context;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.util.Log;
 import android.util.Pair;
 
@@ -33,7 +34,7 @@ public class InternetSharingChecker {
 
     private static final String WIFI_AP_ADDRESSES_RANGE_EXTENDED = "192.168.0.0/16";
 
-    private static String apInterfaceNameFromReceiver;
+    private static volatile String apInterfaceNameFromReceiver;
 
     private String wifiAPAddressesRange = "192.168.43.0/24";
     private String usbModemAddressesRange = "192.168.42.0/24";
@@ -59,10 +60,15 @@ public class InternetSharingChecker {
         Pair<String, String> wifiInterfaceNameToAddressExtended = null;
         boolean gsmInternetIsUp = false;
         Pair<String, String> wifiInterfaceNameToAddressFuzzy = null;
+        boolean isLessAndroidR = Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q;
 
         try {
             for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
                  en.hasMoreElements(); ) {
+
+                if (Thread.currentThread().isInterrupted()) {
+                    return;
+                }
 
                 NetworkInterface networkInterface = en.nextElement();
 
@@ -81,7 +87,9 @@ public class InternetSharingChecker {
                 if (networkInterface.isPointToPoint()) {
                     continue;
                 }
-                if (networkInterface.getHardwareAddress() == null) {
+                if (networkInterface.getHardwareAddress() == null
+                        //https://developer.android.com/training/articles/user-data-ids#mac-addresses
+                        && isLessAndroidR) {
                     continue;
                 }
 
