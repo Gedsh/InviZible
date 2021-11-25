@@ -582,7 +582,7 @@ class ArpScanner private constructor(
             }
         }
 
-        if (containsNotEmptyLines && !notSupportedCounterFreeze) {
+        if (lines.isEmpty() || containsNotEmptyLines && !notSupportedCounterFreeze) {
             notSupportedCounter--
         }
     }
