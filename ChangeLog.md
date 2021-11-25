@@ -638,3 +638,8 @@
 * Optimized battery usage when network connection is unavailable.
 * Added tile to Android Quick Settings for changing Tor identity.
 * Fixed using Bypass LAN Addresses with socks5 proxy.
+
+**InviZible Pro beta 1.4.4**
+* Fixed internet sharing in Root mode on android 11.
+* Improved firewall.
+* Minor fixes.
