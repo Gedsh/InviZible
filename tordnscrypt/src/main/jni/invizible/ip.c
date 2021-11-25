@@ -326,12 +326,12 @@ void handle_ip(const struct arguments *args,
             redirect = NULL;
     }
 
-    if (args->fwd53 && dport == 53 && uid != own_uid
+    /*if (args->fwd53 && dport == 53 && uid != own_uid
         && (redirect == NULL || *redirect->raddr == 0 || redirect->rport == 0)) {
         allowed = 0;
         log_android(ANDROID_LOG_ERROR, "Direct DNS connection for v%d p%d %s/%u syn %d not allowed",
                     version, protocol, dest, dport, syn);
-    }
+    }*/
 
     // Handle allowed traffic
     if (allowed) {

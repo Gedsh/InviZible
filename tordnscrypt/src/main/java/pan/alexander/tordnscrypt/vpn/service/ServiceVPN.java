@@ -86,7 +86,6 @@ import pan.alexander.tordnscrypt.modules.UsageStatisticKt;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallNotification;
-import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.Constants;
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
@@ -109,6 +108,12 @@ import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFE
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStopServiceForeground;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
+import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_PORT_AGPS1;
+import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_PORT_AGPS2;
+import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_PORT_NTP;
+import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_UID_AGPS;
+import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_UID_KERNEL;
+import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_UID_NTP;
 import static pan.alexander.tordnscrypt.utils.Constants.DNS_OVER_TLS_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNG_41;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_42;
@@ -414,7 +419,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                 && !modulesStatus.isUseModulesWithRoot();
 
         // Subnet routing
-        if (subnet /*&& Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP*/) {
+        if (subnet && (!firewallEnabled || fixTTL)) {
             // Exclude IP ranges
             List<IPUtil.CIDR> listExclude = new ArrayList<>();
             listExclude.add(new IPUtil.CIDR("127.0.0.0", 8)); // localhost
@@ -893,7 +898,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         }
 
         if (uid == ownUID || destAddress.equals(itpdRedirectAddress) || destAddress.equals(LOOPBACK_ADDRESS)
-                || fixTTL || (compatibilityMode && uid == ApplicationData.SPECIAL_UID_KERNEL)) {
+                || fixTTL || (compatibilityMode && uid == SPECIAL_UID_KERNEL)) {
             return false;
         }
 
@@ -915,8 +920,8 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
             return true;
         }
 
-        if (uid == 1000 && destPort == ApplicationData.SPECIAL_PORT_NTP) {
-            return !(uidSpecialAllowed.contains(ApplicationData.SPECIAL_UID_NTP) || mapUidAllowed.containsKey(1000));
+        if (uid == 1000 && destPort == SPECIAL_PORT_NTP) {
+            return !(uidSpecialAllowed.contains(SPECIAL_UID_NTP) || mapUidAllowed.containsKey(1000));
         }
 
         List<Rule> listRule = ServiceVPNHandler.getAppsList();
@@ -942,7 +947,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         }
 
         if (uid == ownUID || destAddress.equals(itpdRedirectAddress) || destAddress.equals(LOOPBACK_ADDRESS)
-                || (fixTTL && !useProxy) || (compatibilityMode && uid == ApplicationData.SPECIAL_UID_KERNEL)) {
+                || (fixTTL && !useProxy) || (compatibilityMode && uid == SPECIAL_UID_KERNEL)) {
             return false;
         }
 
@@ -954,8 +959,8 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
             }
         }
 
-        if (uid == 1000 && destPort == ApplicationData.SPECIAL_PORT_NTP) {
-            return !(uidSpecialAllowed.contains(ApplicationData.SPECIAL_UID_NTP) || mapUidAllowed.containsKey(1000));
+        if (uid == 1000 && destPort == SPECIAL_PORT_NTP) {
+            return !(uidSpecialAllowed.contains(SPECIAL_UID_NTP) || mapUidAllowed.containsKey(1000));
         }
 
         return !setBypassProxy.contains(String.valueOf(uid));
@@ -981,21 +986,21 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
     private boolean isDestinationInSpecialRange(int uid, int destPort) {
         return uid == 0 && destPort == PLAINTEXT_DNS_PORT
-                || uid == ApplicationData.SPECIAL_UID_KERNEL
-                || destPort == ApplicationData.SPECIAL_PORT_NTP
-                || destPort == ApplicationData.SPECIAL_PORT_AGPS1
-                || destPort == ApplicationData.SPECIAL_PORT_AGPS2;
+                || uid == SPECIAL_UID_KERNEL
+                || destPort == SPECIAL_PORT_NTP
+                || destPort == SPECIAL_PORT_AGPS1
+                || destPort == SPECIAL_PORT_AGPS2;
     }
 
     private boolean isSpecialAllowed(int uid, int destPort) {
         if (uid == 0 && destPort == PLAINTEXT_DNS_PORT) {
             return true;
-        } else if (uid == ApplicationData.SPECIAL_UID_KERNEL) {
-            return uidSpecialAllowed.contains(ApplicationData.SPECIAL_UID_KERNEL);
-        } else if (uid == 1000 && destPort == ApplicationData.SPECIAL_PORT_NTP) {
-            return uidSpecialAllowed.contains(ApplicationData.SPECIAL_UID_NTP) || mapUidAllowed.containsKey(1000);
-        } else if (destPort == ApplicationData.SPECIAL_PORT_AGPS1 || destPort == ApplicationData.SPECIAL_PORT_AGPS2) {
-            return uidSpecialAllowed.contains(ApplicationData.SPECIAL_UID_AGPS);
+        } else if (uid == SPECIAL_UID_KERNEL) {
+            return uidSpecialAllowed.contains(SPECIAL_UID_KERNEL);
+        } else if (uid == 1000 && destPort == SPECIAL_PORT_NTP) {
+            return uidSpecialAllowed.contains(SPECIAL_UID_NTP) || mapUidAllowed.containsKey(1000);
+        } else if (destPort == SPECIAL_PORT_AGPS1 || destPort == SPECIAL_PORT_AGPS2) {
+            return uidSpecialAllowed.contains(SPECIAL_UID_AGPS);
         }
         return false;
     }
@@ -1088,7 +1093,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
             Log.w(LOG_TAG, "Block DNS over TLS " + packet);
         } else if ((vpnDnsSet.contains(packet.daddr) && packet.dport != PLAINTEXT_DNS_PORT) && ignoreSystemDNS) {
             Log.w(LOG_TAG, "Block DNS over HTTPS " + packet);
-        } else if ((packet.uid == ownUID || compatibilityMode && packet.uid == ApplicationData.SPECIAL_UID_KERNEL && !fixTTLForPacket)
+        } else if ((packet.uid == ownUID || compatibilityMode && packet.uid == SPECIAL_UID_KERNEL && !fixTTLForPacket)
                 && isSupported(packet.protocol)) {
             // Allow self
             packet.allowed = true;
@@ -1140,6 +1145,11 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                     packet.allowed = allow;
                     //Log.i(LOG_TAG, "Packet " + packet.toString() + " is allowed " + allow);
                 }
+            } else if(packet.dport == PLAINTEXT_DNS_PORT
+                    && packet.uid < 2000 && packet.uid != SPECIAL_UID_KERNEL
+                    && isSupported(packet.protocol)) {
+                //Allow connection check for system apps
+                packet.allowed = true;
             } else {
                 Log.w(LOG_TAG, "UID is not allowed or no rules for " + packet);
             }
@@ -1147,7 +1157,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
         Allowed allowed = null;
         if (packet.allowed) {
-            if (packet.uid == ownUID
+            if (packet.uid == ownUID && packet.dport != PLAINTEXT_DNS_PORT
                     || compatibilityMode && isPacketAllowedForCompatibilityMode(packet, fixTTLForPacket)) {
                 allowed = new Allowed();
             } else if (mapForwardPort.containsKey(packet.dport)) {
@@ -1179,7 +1189,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         boolean torReady = modulesStatus.isTorReady();
         boolean systemDNSAllowed = modulesStatus.isSystemDNSAllowed();
 
-        if (packet.uid == ApplicationData.SPECIAL_UID_KERNEL && !fixTTLForPacket
+        if (packet.uid == SPECIAL_UID_KERNEL && !fixTTLForPacket
                 && (packet.dport != PLAINTEXT_DNS_PORT && packet.dport != 0
                 || systemDNSAllowed
                 && ((dnsCryptState == RUNNING
@@ -1258,10 +1268,10 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         Log.i(LOG_TAG, "VPN Starting listening to network changes");
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkRequest.Builder builder = new NetworkRequest.Builder();
-        builder.addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        /*builder.addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             builder.addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
-        }
+        }*/
 
         ConnectivityManager.NetworkCallback nc = new ConnectivityManager.NetworkCallback() {
             private Boolean last_connected = null;

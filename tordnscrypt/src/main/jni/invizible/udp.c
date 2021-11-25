@@ -273,6 +273,14 @@ jboolean handle_udp(const struct arguments *args,
         return 0;
     }
 
+    if (ntohs(udphdr->dest) == 53 && redirect == NULL && uid != own_uid) {
+        log_android(
+                ANDROID_LOG_ERROR, "Direct DNS connection for %s/%u to %s/%u uid %uid not allowed",
+                source, ntohs(udphdr->source), dest, ntohs(udphdr->dest), uid
+        );
+        return 0;
+    }
+
     // Create new session if needed
     if (cur == NULL) {
         log_android(ANDROID_LOG_INFO, "UDP new session from %s/%u to %s/%u",

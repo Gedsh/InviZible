@@ -243,6 +243,35 @@ uint32_t get_receive_window(const struct ng_session *cur) {
     return total;
 }
 
+//TODO check this code
+// Connection refused
+void write_refused(const struct arguments *args,
+                   const struct ng_session *s,
+                   const int serr) {
+    struct icmp icmp;
+    memset(&icmp, 0, sizeof(struct icmp));
+    icmp.icmp_type = ICMP_UNREACH;
+    if (serr == ECONNREFUSED)
+        icmp.icmp_code = ICMP_UNREACH_PORT;
+    else
+        icmp.icmp_code = ICMP_UNREACH_HOST;
+    icmp.icmp_cksum = 0;
+    icmp.icmp_cksum = ~calc_checksum(0, (const uint8_t *) &icmp, 4);
+
+    struct icmp_session sicmp;
+    memset(&sicmp, 0, sizeof(struct icmp_session));
+    sicmp.version = s->tcp.version;
+    if (s->tcp.version == 4) {
+        sicmp.saddr.ip4 = (__be32) s->tcp.saddr.ip4;
+        sicmp.daddr.ip4 = (__be32) s->tcp.daddr.ip4;
+    } else {
+        memcpy(&sicmp.saddr.ip6, &s->tcp.saddr.ip6, 16);
+        memcpy(&sicmp.daddr.ip6, &s->tcp.daddr.ip6, 16);
+    }
+
+    write_icmp(args, &sicmp, (uint8_t *) &icmp, 8);
+}
+
 void check_tcp_socket(const struct arguments *args,
                       const struct epoll_event *ev,
                       const int epoll_fd) {
@@ -284,31 +313,8 @@ void check_tcp_socket(const struct arguments *args,
 
         write_rst(args, &s->tcp);
 
-        //TODO check this code
-        // Connection refused
         if (err >= 0 && (serr == ECONNREFUSED || serr == EHOSTUNREACH)) {
-            struct icmp icmp;
-            memset(&icmp, 0, sizeof(struct icmp));
-            icmp.icmp_type = ICMP_UNREACH;
-            if (serr == ECONNREFUSED)
-                icmp.icmp_code = ICMP_UNREACH_PORT;
-            else
-                icmp.icmp_code = ICMP_UNREACH_HOST;
-            icmp.icmp_cksum = 0;
-            icmp.icmp_cksum = ~calc_checksum(0, (const uint8_t *) &icmp, 4);
-
-            struct icmp_session sicmp;
-            memset(&sicmp, 0, sizeof(struct icmp_session));
-            sicmp.version = s->tcp.version;
-            if (s->tcp.version == 4) {
-                sicmp.saddr.ip4 = (__be32) s->tcp.saddr.ip4;
-                sicmp.daddr.ip4 = (__be32) s->tcp.daddr.ip4;
-            } else {
-                memcpy(&sicmp.saddr.ip6, &s->tcp.saddr.ip6, 16);
-                memcpy(&sicmp.daddr.ip6, &s->tcp.daddr.ip6, 16);
-            }
-
-            write_icmp(args, &sicmp, (uint8_t *) &icmp, 8);
+           write_refused(args, s, serr);
         }
     } else {
         // Assume socket okay
@@ -808,6 +814,16 @@ jboolean handle_tcp(const struct arguments *args,
                 s->tcp.forward->next = NULL;
             }
 
+            if (!allowed) {
+                log_android(ANDROID_LOG_WARN, "%s resetting blocked session", packet);
+
+                write_rst(args, &s->tcp);
+                write_refused(args, s, EHOSTDOWN);
+
+                ng_free(s, __FILE__, __LINE__);
+                return 0;
+            }
+
             // Open socket
             s->socket = open_tcp_socket(args, &s->tcp, redirect);
             if (s->socket < 0) {
@@ -831,11 +847,6 @@ jboolean handle_tcp(const struct arguments *args,
 
             s->next = args->ctx->ng_session;
             args->ctx->ng_session = s;
-
-            if (!allowed) {
-                log_android(ANDROID_LOG_WARN, "%s resetting blocked session", packet);
-                write_rst(args, &s->tcp);
-            }
         } else {
             log_android(ANDROID_LOG_WARN, "%s unknown session", packet);
 
