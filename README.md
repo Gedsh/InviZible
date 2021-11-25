@@ -2,18 +2,19 @@
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/gedsh/invizible?style=plastic)
 ![GitHub Releases](https://img.shields.io/github/downloads/gedsh/invizible/latest/total?color=blue&style=plastic)
-
-### [Google Play stable version](https://play.google.com/store/apps/details?id=pan.alexander.tordnscrypt.gp)
-
-### [Download the latest version from Github](https://github.com/Gedsh/InviZible/releases/latest)
+[![Translation status](https://hosted.weblate.org/widgets/invizible/-/invizible/svg-badge.svg)](https://hosted.weblate.org/engage/invizible/?utm_source=widget)
 
 ### [IzzyOnDroid F-Droid beta version](https://apt.izzysoft.de/fdroid/index/apk/pan.alexander.tordnscrypt)
 
 ### [F-Droid stable version](https://f-droid.org/packages/pan.alexander.tordnscrypt.stable/)
 
-## Android application for Internet privacy and security
+### [Google Play stable version](https://play.google.com/store/apps/details?id=pan.alexander.tordnscrypt.gp)
 
-*Keeps privacy, protects your device from dangerous sites, prevents tracking, gets access to blocked on-line resources*
+### [Download the latest version from GitHub](https://github.com/Gedsh/InviZible/releases/latest)
+
+## Internet privacy and security on Android
+
+*Keeps privacy, protects your device from dangerous sites, prevents tracking, provides access to blocked online resources*
 
 **InviZible Pro** includes well-known modules such as **DNSCrypt**, **Tor** and **Purple I2P**.
 They are used to achieve maximum security, privacy and comfortable use of the Internet.
@@ -26,60 +27,60 @@ They are used to achieve maximum security, privacy and comfortable use of the In
 * Can block "adult" sites *
 * Hides visited sites from your provider
 * Prevents some types of resource blocks
-* Open-source
+* Libre software
 
 **Depending on the selected dnscrypt server*
-**(Not available in Google Play version!)**
+**(Not available in the Google Play version!)**
 
 ### Tor
 * Encrypts Internet traffic
-* Prevents sites blocking
+* Prevents website blocking
 * Can provide privacy and anonymity
-* Provides access to "onion" sites
-* Open-source
+* Provides access to .onion websites
+* Libre software
 
 ### Purple I2P
 * Encrypts Internet traffic
-* Provides access to the hidden anonymous network Invisible Internet and "i2p" sites
-* Open-source
+* Provides access to the hidden anonymous network Invisible Internet and .i2p websites
+* Libre software
 
-To start using **InviZible Pro**, all you need is an android phone.
-Just run all three modules and enjoy safe and comfortable Internet surfing. However,
-if you want to get full control over the application and your Internet connection - no problem!
-There is access to a large number of both simple and professional settings.
-You can flexibly configure **InviZible Pro** itself, as well as its modules - **DNSCrypt**,
-**Tor** and **Purple I2P**, to satisfy the most non-standard requirements.
+To start using **InviZible Pro**, all you need is an Android device.
+Just run all three modules and enjoy safe and comfortable Internet surfing.
+However, if you want to get full control over the app and your Internet connection — no problem!
+A large number of simple and professional settings are accessible.
+You can flexibly set up **InviZible Pro** itself, as well as its modules — **DNSCrypt**,
+**Tor** and **Purple I2P**, to satisfy even the most non-standard requirements.
 
-**InviZible Pro** is an all-in-one application. After installation, you can remove all of your VPN applications and ad blockers.
+**InviZible Pro** is an all-in-one app.
+ After installation, you can remove all your VPN apps and ad blockers.
  In most cases, **InviZible Pro** works better, is more stable, and faster than free VPNs.
  It does not contain any ads, bloatware and does not spy upon its users.
  
-### Why InviZible Pro is better than other similar applications:
+### Why InviZible Pro is better than other similar apps:
 * There are no analogs))).
-* The only application that provides handy use of **DNSCrypt** on Android.
-* It is often more stable than the Orbot application, which also uses the Tor network.
+* The only app that provides handy use of **DNSCrypt** on Android.
+* It is often more stable than the Orbot app, which also allows use of the Tor network.
 * Much more handy than the official **Purple I2P** client.
-* Allows you to easily and flexibly configure which sites and applications will open through **Tor**,
- for anonymity or bypassing blocks.
-* Can transform your phone, or Android TV set-top box into a secure Wi-Fi access point,
- which can be used by any phone, without root access.
+* Allows easy and flexible setup, which websites and apps can open through **Tor**,
+ to bypass blocking.
+* Can transform your device, or Android TV set-top box into a secure Wi-Fi access point,
+ which can be used by any device, without root access.
 * Optimized interface for set-top boxes.
 * Replaces various VPNs and other tools to achieve privacy and anonymity.
-* Successfully combines **DNSCrypt**, **Tor** and **Purple I2P** features.
-* Free and open-source.
+* Combines **DNSCrypt**, **Tor** and **Purple I2P** features.
+* Gratis and libre software.
 
 ## Compatibility
 
 **InviZible Pro** can be used both with a rooted or non-rooted device.
 
-Please visit the [wiki](https://github.com/Gedsh/InviZible/wiki) to find out how to use it.
+Please do visit the [wiki](https://github.com/Gedsh/InviZible/wiki) to find out how to use it.
 
-Depending on the rooting method and device specifics, an application may be incompatible with some android phones.
-
+Depending on the rooting method and device specifics, the app may be incompatible with some Android devices.
 
 ## Support
 
-For questions, feature requests and bug reports, you can use GitHub.
+For questions, feature requests and bug-reports, you can use GitHub.
 
 **Official site: [invizible.net](https://invizible.net)**
 
@@ -95,7 +96,7 @@ Telegram channel: [InviZiblePro](https://t.me/InviZibleProRus)
 
 Telegram group: [InviZiblePro_Group](https://t.me/InviZibleProRus_Group)
 
-There is support for the latest version of **InviZible Pro** only.
+Only the latest version of **InviZible Pro** is supported.
 
 There is no support for things that are not directly related to **InviZible Pro**.
 
@@ -109,30 +110,30 @@ To clone a project, use the command:
 git clone --recursive https://github.com/Gedsh/InviZible
 ```
 
-To build **InviZible Pro** please use **Android Studio**.
+To build **InviZible Pro**, please use **Android Studio**.
 
 If you see something like this:
 _Illegal character in opaque part at index 2: C:\KStore\keystore.properties_
 
-Please comment lines of the settings.gradle file in the project root, as shown below:
+Please comment out this line in the settings.gradle file of the project root, as shown below:
 
 ```bash
 include ':tordnscrypt', ':filepicker'
 project(':filepicker').projectDir = new File('android-filepicker/filepicker')
-//Please comment line below if you are not the project owner
+//Please comment out the line below if you are not the project owner
 //project(':tordnscrypt').buildFileName = 'owner.gradle'
 ```
 
-It is expected that you can solve build problems yourself, so there is no support for building. 
-If you cannot build yourself, there are prebuilt versions of **InviZible Pro** available [here](https://github.com/Gedsh/InviZible/releases/latest).
+As is expected, if you can solve how to build problems for yourself, so there is no support for how you got there. :) 
+If you cannot build the app yourself, there are pre-built versions of **InviZible Pro** available [here](https://github.com/Gedsh/InviZible/releases/latest).
 
 #### Translating
 
-If you would like to translate this application into other languages,
-please send an email to the developer [invizible.soft@gmail.com](mailto:invizible.soft@gmail.com)
+[Translate InviZible on Hosted Weblate](https://hosted.weblate.org/engage/invizible/).
 
-Thanks to [POEditor](https://poeditor.com/), you can translate InviZible Pro into your language with pleasure and for free.
-Just follow this [link](https://poeditor.com/join/project/h6ulNL9gEd).
+[![Translation status](https://hosted.weblate.org/widgets/invizible/-/multi-auto.svg)](https://hosted.weblate.org/engage/invizible/?utm_source=widget)
+
+You can always add other lanuages.
 
 ## Attribution
 
@@ -148,7 +149,7 @@ InviZible Pro uses:
 * [meefik/busybox](https://github.com/meefik/busybox)
 
 This product is produced independently from the **Tor®**, **DNSCrypt**, **Purple I2P** software 
-and carries no guarantee from The Above Projects about quality, suitability or anything else.
+and carries no guarantee from the above projects about quality, suitability or anything else.
 
 ## Donations
 
@@ -166,9 +167,8 @@ and carries no guarantee from The Above Projects about quality, suitability or a
 
 [GNU General Public License version 3](https://www.gnu.org/licenses/gpl-3.0.txt)
 
-Copyright (c) 2019-2021 Garmatin Oleksandr invizible.soft@gmail.com
-
-All rights reserved
+Copyright © 2019–2021 Garmatin Oleksandr and contributors
+invizible.soft@gmail.com
 
 This file is part of **InviZible Pro**.
 
@@ -177,5 +177,3 @@ This file is part of **InviZible Pro**.
 **InviZible Pro** is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with **InviZible Pro**. If not, see [http://www.gnu.org/licenses/](https://www.gnu.org/licenses/)
-
-
