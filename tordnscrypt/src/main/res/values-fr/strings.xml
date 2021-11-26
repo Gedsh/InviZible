@@ -12,7 +12,7 @@
     <string name="tvITPDNotInstalled">"I2P n'est pas installé"</string>
     <string name="swRunOnBoot">"Lancement au démarrage du système"</string>
     <string name="root_available">"Vérifier si les Privilèges Administrateur sont disponible…"</string>
-    <string name="please_wait">"S'il vous plaît, patientez..."</string>
+    <string name="please_wait">Veuillez patienter…</string>
     <string name="dont_show">"Ne plus afficher"</string>
     <string name="tvDNSStop">"DNSCrypt est arrêté"</string>
     <string name="tvDNSInstalled">"DNSCrypt est installé"</string>
@@ -30,12 +30,12 @@
     <string name="tvTorRunning">"Tor en cours d'exécution"</string>
     <string name="tvTorStopping">"Arrêt de Tor"</string>
     <string name="cancel">"Annuler"</string>
-    <string name="error">"Erreur!"</string>
-    <string name="warning">"Attention!"</string>
+    <string name="error">Erreur !</string>
+    <string name="warning">Attention !</string>
     <string name="install">"Installer"</string>
     <string name="exit">"Sortir"</string>
-    <string name="done">"Fait"</string>
-    <string name="wrong">"Une erreur s'est produite!"</string>
+    <string name="done">Terminé</string>
+    <string name="wrong">Une erreur s\'est produite !</string>
     <string name="install_message">"Voulez-vous terminer l'installation?"</string>
     <string name="premium">"Version Premium"</string>
     <string name="agree">"J'approuve"</string>
@@ -495,4 +495,23 @@
     <string name="backupSaved">"Sauvegarde enregistré"</string>
     <string name="backupRestored">"Sauvegarde restauré"</string>
     <string name="thanks_for_donate_gp">"Le Projet InviZible Pro et son auteur vous expriment leur reconnaissance pour l'assistance."</string>
+    <string name="pref_tor_hardware_accel_summ">Essayez d\'utiliser l\'accélération matérielle cryptographique intégrée lorsqu\'elle est disponible.</string>
+    <string name="notification_waiting_network">En attente du réseau…</string>
+    <string name="tile_dialog_over_three_tiles_message">Vous avez ajouté plus de 3 tuiles aux Paramètres rapides. Veuillez n\'en laisser que 3. L\'ajout de plus de 3 tuiles peut entraîner des problèmes de contrôle de l\'application.</string>
+    <string name="notification_connecting">Connexion…</string>
+    <string name="tile_changing_tor_ip">Changement d\'IP de Tor</string>
+    <string name="agreement_text">\\ merci d\'avoir choisi InviZible Pro. J\'espère qu\'il vous sera utile pour le respect de votre vie privée et une utilisation confortable d\'Internet.
+\n
+\n\tInviZible Pro inclut Tor, DNSCrypt et Purple I2P comme modules.
+\n
+\n\tInviZible Pro peut utiliser root, si votre appareil possède des privilèges root, ou utiliser un RPV local pour acheminer le trafic Internet vers les réseaux Tor, DNSCrypt et I2P.
+\n
+\n\tPolitique de confidentialité :
+\n\tInviZible Pro ne collecte ni ne partage aucune donnée personnelle ou sensible des utilisateurs.
+\n
+\n\tCopyright © 2019-2021
+\n\tOleksandr Garmatin
+\n\tinvizible.soft@gmail.com
+\n\tinvizible.net/fr/privacy</string>
+    <string name="tile_change_tor_ip">Changer l\'IP de Tor</string>
 </resources>
