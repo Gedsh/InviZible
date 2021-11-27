@@ -440,7 +440,7 @@
     <string name="pref_tor_fascist_firewall_summ">Makes Tor create only outgoing connections to ORs running on ports that your firewall allows (defaults to 80 and 443).</string>
     <string name="pref_tor_new_circuit_period" translatable="false">New Circuit Period</string>
     <string name="pref_tor_new_circuit_period_summ">Considers builing a new circuit every set amount of seconds.</string>
-    <string name="pref_tor_max_circuit_dirtiness" translatable="false">Max. Circuit Dirtiness</string>
+    <string name="pref_tor_max_circuit_dirtiness" translatable="false">Max Circuit Dirtiness</string>
     <string name="pref_tor_max_circuit_dirtiness_summ">Reusable circuits first used at most the set amount of seconds ago, but never attach a new stream to a too old circuit.</string>
     <string name="pref_tor_enforce_distinct_subnets" translatable="false">Enforce Distinct Subnets</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">Makes Tor not put two servers whose IP addresses are "too close" (in the same /16 range) on the same circuit.</string>
@@ -511,7 +511,7 @@
         <item>>X</item>
     </string-array>
     <string name="pref_itpd_com_share" translatable="false">Share</string>
-    <string name="pref_itpd_com_share_summ">Max. % of bandwidth limit for transit. 0–100.</string>
+    <string name="pref_itpd_com_share_summ">Max % of bandwidth limit for transit. 0–100.</string>
     <string name="pref_itpd_com_ssu" translatable="false">SSU</string>
     <string name="pref_itpd_com_ssu_summ">Turn on SSU transport-protocol (uses UDP).</string>
     <string name="pref_itpd_com_ntcp" translatable="false">Ntcp</string>
