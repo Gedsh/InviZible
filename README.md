@@ -124,7 +124,7 @@ project(':filepicker').projectDir = new File('android-filepicker/filepicker')
 //project(':tordnscrypt').buildFileName = 'owner.gradle'
 ```
 
-As is expected, if you can solve how to build problems for yourself, so there is no support for how you got there. :) 
+There is no support offered for building the app yourself, as this is an advanced option.
 If you cannot build the app yourself, there are pre-built versions of **InviZible Pro** available [here](https://github.com/Gedsh/InviZible/releases/latest).
 
 #### Translating
