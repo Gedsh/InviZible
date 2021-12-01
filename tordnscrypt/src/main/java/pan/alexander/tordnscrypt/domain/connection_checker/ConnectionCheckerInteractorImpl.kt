@@ -37,9 +37,10 @@ import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
 
-const val INTERNET_CONNECTION_CHECK_INTERVAL_SEC = 10
-const val INTERNET_CONNECTION_ADDITIONAL_DELAY_SEC = 30
-const val INTERNET_CONNECTION_CHECK_SOCKET_TIMEOUT_SEC = 20
+private const val CHECK_INTERVAL_SEC = 10
+private const val ADDITIONAL_DELAY_SEC = 30
+private const val CHECK_SOCKET_TIMEOUT_SEC = 20
+private const val CHECK_CANCEL_TIMEOUT_MINT = 20
 
 @Singleton
 class ConnectionCheckerInteractorImpl @Inject constructor(
@@ -116,20 +117,22 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
         }
 
         task = coroutineScope.launch {
-            while (isActive && !internetAvailable) {
-                try {
-                    check(via)
-                } catch (e: SocketTimeoutException) {
-                    logException(via, e)
-                } catch (e: IOException) {
-                    logException(via, e)
-                    checking.getAndSet(false)
-                    makeDelay(INTERNET_CONNECTION_ADDITIONAL_DELAY_SEC)
-                } catch (e: Exception) {
-                    logException(via, e)
-                } finally {
-                    checking.compareAndSet(true, false)
-                    makeDelay(INTERNET_CONNECTION_CHECK_INTERVAL_SEC)
+            withTimeout(CHECK_CANCEL_TIMEOUT_MINT * 60_000L) {
+                while (isActive && !internetAvailable) {
+                    try {
+                        check(via)
+                    } catch (e: SocketTimeoutException) {
+                        logException(via, e)
+                    } catch (e: IOException) {
+                        logException(via, e)
+                        checking.getAndSet(false)
+                        makeDelay(ADDITIONAL_DELAY_SEC)
+                    } catch (e: Exception) {
+                        logException(via, e)
+                    } finally {
+                        checking.compareAndSet(true, false)
+                        makeDelay(CHECK_INTERVAL_SEC)
+                    }
                 }
             }
         }
@@ -155,7 +158,7 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
                 dnsRepository.resolveDomainUDP(
                     TOR_SITE_ADDRESS,
                     pathVars.torDNSPort.toInt(),
-                    INTERNET_CONNECTION_CHECK_SOCKET_TIMEOUT_SEC
+                    CHECK_SOCKET_TIMEOUT_SEC
                 ).isNotEmpty()
             }
             Via.DIRECT -> {
