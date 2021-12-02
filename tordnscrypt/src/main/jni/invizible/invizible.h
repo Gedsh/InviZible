@@ -474,6 +474,10 @@ ssize_t write_tcp(const struct arguments *args, const struct tcp_session *cur,
                   const uint8_t *data, size_t datalen,
                   int syn, int ack, int fin, int rst);
 
+void write_connection_unreach(const struct arguments *args,
+                              const struct ng_session *s,
+                              const int serr);
+
 uint8_t char2nible(const char c);
 
 void hex2bytes(const char *hex, uint8_t *buffer);

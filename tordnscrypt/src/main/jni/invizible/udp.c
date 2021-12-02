@@ -228,6 +228,8 @@ void block_udp(const struct arguments *args,
     s->udp.state = UDP_BLOCKED;
     s->socket = -1;
 
+    write_connection_unreach(args, s, EHOSTDOWN);
+
     s->next = args->ctx->ng_session;
     args->ctx->ng_session = s;
 }
@@ -265,6 +267,11 @@ jboolean handle_udp(const struct arguments *args,
     } else {
         inet_ntop(AF_INET6, &ip6->ip6_src, source, sizeof(source));
         inet_ntop(AF_INET6, &ip6->ip6_dst, dest, sizeof(dest));
+    }
+
+    if (cur != NULL && cur->socket < 0) {
+        write_connection_unreach(args, cur, EHOSTDOWN);
+        return 0;
     }
 
     if (cur != NULL && cur->udp.state != UDP_ACTIVE) {
