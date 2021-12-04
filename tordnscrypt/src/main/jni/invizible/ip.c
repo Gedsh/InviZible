@@ -315,7 +315,7 @@ void handle_ip(const struct arguments *args,
         allowed = 1; // could be a lingering/blocked session
     else if (protocol == IPPROTO_TCP
              && (!syn || (!args->fwd53 && uid == 0 && dport == 53))
-             && strcmp(dest, "10.191.0.1") != 0)
+             /*&& strcmp(dest, "10.191.0.1") != 0*/)
         allowed = 1; // assume existing session
     else {
         jobject objPacket = create_packet(
