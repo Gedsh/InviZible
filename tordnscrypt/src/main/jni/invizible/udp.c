@@ -24,6 +24,7 @@
 #include "invizible.h"
 
 extern int own_uid;
+extern int tor_dns_port;
 
 int get_udp_timeout(const struct udp_session *u, int sessions, int maxsessions) {
     int timeout = (ntohs(u->dest) == 53 ? UDP_TIMEOUT_53 : UDP_TIMEOUT_ANY);
@@ -356,6 +357,43 @@ jboolean handle_udp(const struct arguments *args,
                 source, ntohs(udphdr->source), dest, ntohs(udphdr->dest), datalen);
 
     cur->udp.time = time(NULL);
+
+    //handle onion websites
+    if (ntohs(udphdr->dest) == 53 && tor_dns_port > 0) {
+        struct dns_header *dns = (struct dns_header *) data;
+        int qcount = ntohs(dns->q_count);
+        if (dns->qr == 0 && dns->opcode == 0 && qcount > 0) {
+            // http://tools.ietf.org/html/rfc1035
+            char qname[DNS_QNAME_MAX + 1];
+            int32_t off = sizeof(struct dns_header);
+
+            uint16_t qtype;
+            uint16_t qclass;
+
+            for (int q = 0; q < 1; q++) {
+                off = get_qname(data, datalen, (uint16_t) off, qname);
+                if (off > 0 && off + 4 <= datalen) {
+                    // TODO multiple qnames?
+                    if (q == 0) {
+                        qtype = ntohs(*((uint16_t *) (data + off)));
+                        qclass = ntohs(*((uint16_t *) (data + off + 2)));
+                        log_android(ANDROID_LOG_INFO,
+                                    "DNS question %d qtype %d qclass %d qname %s",
+                                    q, qtype, qclass, qname);
+                    }
+                    off += 4;
+                } else {
+                    log_android(ANDROID_LOG_WARN,
+                                "DNS request Q invalid off %d datalen %d", off, datalen);
+                }
+            }
+
+            char *suffix = strrchr(qname, '.');
+            if (redirect != NULL && suffix != NULL && strcmp(suffix, ".onion") == 0) {
+                redirect->rport = tor_dns_port;
+            }
+        }
+    }
 
     int rversion;
     struct sockaddr_in addr4;

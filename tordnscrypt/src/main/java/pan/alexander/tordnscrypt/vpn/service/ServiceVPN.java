@@ -255,7 +255,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     private native int jni_get_mtu();
 
     @Keep
-    private native void jni_socks5_for_tor(String addr, int port, String username, String password);
+    private native void jni_socks5_for_tor(String addr, int port, String username, String password, int dnsPort);
 
     @Keep
     private native void jni_socks5_for_proxy(String addr, int port, String username, String password);
@@ -540,6 +540,13 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
         torVirtualAddressNetwork = pathVars.get().getTorVirtAdrNet();
 
+        int torDNSPort = 5400;
+        try {
+            torDNSPort = Integer.parseInt(pathVars.get().getTorDNSPort());
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "VPN Redirect Ports Parse Exception " + e.getMessage() + " " + e.getCause());
+        }
+
         SharedPreferences prefs = defaultPreferences.get();
 
         blockHttp = prefs.getBoolean("pref_fast_block_http", false);
@@ -600,11 +607,10 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
         if ((modulesStatus.getTorState() == RUNNING
                 || modulesStatus.getTorState() == STARTING
-                || modulesStatus.getTorState() == RESTARTING)
-                && !fixTTL) {
-            jni_socks5_for_tor(LOOPBACK_ADDRESS, torSOCKSPort, "", "");
+                || modulesStatus.getTorState() == RESTARTING)) {
+            jni_socks5_for_tor(LOOPBACK_ADDRESS, torSOCKSPort, "", "", torDNSPort);
         } else {
-            jni_socks5_for_tor("", 0, "", "");
+            jni_socks5_for_tor("", 0, "", "", 0);
         }
 
         if (useProxy && !proxyAddress.isEmpty() && proxyPort != 0) {
@@ -1102,7 +1108,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                 Log.w(LOG_TAG, "Allowing self " + packet);
             }
         } else if (arpSpoofingDetection && blockInternetWhenArpAttackDetected
-                && (ArpScanner.INSTANCE.getArpAttackDetected() || ArpScanner.INSTANCE.getDhcpGatewayAttackDetected())) {
+                && (ArpScanner.Companion.getArpAttackDetected() || ArpScanner.Companion.getDhcpGatewayAttackDetected())) {
             // MITM attack detected
             Log.w(LOG_TAG, "Block due to mitm attack " + packet);
         } else if (reloading) {

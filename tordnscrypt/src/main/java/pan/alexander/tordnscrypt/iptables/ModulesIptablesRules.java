@@ -113,7 +113,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
         boolean arpSpoofingDetection = shPref.getBoolean("pref_common_arp_spoofing_detection", false);
         boolean blockInternetWhenArpAttackDetected = shPref.getBoolean("pref_common_arp_block_internet", false);
-        boolean mitmDetected = ArpScanner.INSTANCE.getArpAttackDetected() || ArpScanner.INSTANCE.getDhcpGatewayAttackDetected();
+        boolean mitmDetected = ArpScanner.getArpAttackDetected() || ArpScanner.getDhcpGatewayAttackDetected();
 
         List<String> commands = new ArrayList<>();
 
@@ -338,6 +338,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         dnsCryptSystemDNSAllowedNat,
                         dnsCryptRootDNSAllowedNat,
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
+                        //handle onion websites
+                        iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -m string --algo bm --from 16 --to 128 --hex-string '|056f6e696f6e00|' -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort() + " 2> /dev/null || true",
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
@@ -349,6 +351,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-N tordnscrypt 2> /dev/null",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
+                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
                         dnsCryptSystemDNSAllowedFilter,
                         dnsCryptRootDNSAllowedFilter,
                         iptables + "-A tordnscrypt -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
@@ -395,6 +398,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         dnsCryptSystemDNSAllowedNat,
                         dnsCryptRootDNSAllowedNat,
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
+                        //handle onion websites
+                        iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -m string --algo bm --from 16 --to 128 --hex-string '|056f6e696f6e00|' -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort() + " 2> /dev/null || true",
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A tordnscrypt_nat_output -m owner --uid-owner $TOR_UID -j RETURN",
@@ -413,6 +418,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-N tordnscrypt 2> /dev/null",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
+                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p all -j RETURN",
                         iptables + "-A tordnscrypt -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                         iptables + "-A tordnscrypt -m owner --uid-owner $TOR_UID -j RETURN",
