@@ -5,24 +5,20 @@
     <string name="action_settings">"تنظیمات"</string>
     <string name="tvITPDStop">"I2P متوقف شد"</string>
     <string name="tvITPDRunning">"I2P در حال اجرا"</string>
-
     <!-- در حال شروع کردن l2P -->
     <string name="tvITPDStarting">"I2P در حال راه‌اندازی"</string>
     <string name="tvITPDStopping">"I2P در حال توقف"</string>
     <string name="tvITPDInstalling">"I2P در حال نصب"</string>
     <string name="tvITPDInstalled">"I2P نصب شد"</string>
     <string name="tvITPDNotInstalled">"I2P نصب نشد"</string>
-
     <!-- شروع پس از راه اندازی -->
     <string name="swRunOnBoot">"شروع پس از راه‌اندازی"</string>
-
     <!-- ...بررسی در دسترس بودن روت -->
     <string name="root_available">"بررسی روت بودن دستگاه..."</string>
     <string name="please_wait">"لطفاً صبر کنید..."</string>
     <string name="dont_show">"مجدداً نشان داده نشود"</string>
     <string name="tvDNSStop">"DNSCrypt متوقف شد"</string>
     <string name="tvDNSInstalled">"DNSCrypt نصب شد"</string>
-
     <!-- DNSCrypt در حال نصب -->
     <string name="tvDNSInstalling">"نصب DNSCrypt"</string>
     <string name="tvDNSNotInstalled">"DNSCrypt نصب نشد"</string>
@@ -37,14 +33,12 @@
     <string name="tvTorConnecting">"در حال اتصال"</string>
     <string name="tvTorRunning">"در حال اجرای TOR"</string>
     <string name="tvTorStopping">"در حال توقف TOR"</string>
-
     <!-- لغو -->
     <string name="cancel">"لغو"</string>
     <string name="error">"خطا!"</string>
     <string name="warning">"هشدار!"</string>
     <string name="install">"نصب"</string>
     <string name="exit">"خروج"</string>
-
     <!-- انجام شده -->
     <string name="done">"انجام"</string>
     <string name="wrong">"مشکلی پیش آمد!"</string>
@@ -54,7 +48,6 @@
     <string name="disagree">"نمی‌پذیرم"</string>
     <string name="message_no_root_used">"شما می‌توانید با استفاده از InviZible Pro  تمام دستگاه خود را در حالت VPN تونل کنید، یا در حالت پروکسی داخلی در برنامه‌ها استفاده کنید."</string>
     <string name="message_no_root_used_kitkat">"شما می‌توانید از برنامه‌های دارای پراکسی و VPN داخلی، روی InviZible Pro در حالت پراکسی استفاده کنید."</string>
-
     <!-- مشکل در ذخیره‌ی فایل -->
     <string name="write_file_error">"مشکل در ذخیره فایل!"</string>
     <string name="drawer_menu_commonSettings">"تنظیمات عمومی"</string>
@@ -65,7 +58,6 @@
     <string name="drawer_menu_backup">"پشتیبان‌گیری و بازیابی"</string>
     <string name="drawer_menu_about">"درباره"</string>
     <string name="drawer_menu_help">"گزارش‌ها"</string>
-
     <!-- اهدا -->
     <string name="drawer_menu_donate">"کمک مالی"</string>
     <string name="btnRestoreBackup">"بازیابی همه"</string>
@@ -74,13 +66,10 @@
     <string name="backupFolder">"انتخاب پوشه پشتیبان‌گیری:"</string>
     <string name="title_activity_settings">"تنظیمات"</string>
     <string name="pref_fast_categ_autostart">"شروع خودکار"</string>
-
     <!-- هنگام راه اندازی DNSCrypt شروع -->
     <string name="pref_fast_dns_autostart">"فعال‌سازی DNSCrypt هنگام راه‌اندازی"</string>
-
     <!-- هنگام راه اندازی Tor شروع -->
     <string name="pref_fast_tor_autostart">"شروع TOR هنگام راه‌اندازی مجدد"</string>
-
     <!-- هنگام راه اندازی I2P شروع -->
     <string name="pref_fast_itpd_autostart">"شروع I2P هنگام راه‌اندازی مجدد"</string>
     <string name="pref_fast_autostart_delay">"تأخیر"</string>
@@ -93,7 +82,6 @@
     <string name="pref_fast_all_through_ipro">"انتقال کل ترافیک از طریق InviZible"</string>
     <string name="pref_fast_unlock_with_tor">"انتخاب وب‌سایت‌ها"</string>
     <string name="pref_fast_unlock_with_tor_summ">"این لیست وب سایتها با TOR باز می شوند. این ویژگی برای سایتهای پشت CDN کار نمی کند!"</string>
-
     <!-- انتخاب برنامه ها -->
     <string name="pref_fast_unlock_apps_with_tor">"برنامه‌ها را انتخاب کنید"</string>
     <string name="pref_fast_unlock_apps_with_tor_summ">"برنامه‌هایی که با TOR می‌توان استفاده کرد"</string>
@@ -274,7 +262,6 @@
     <string name="country_select_unselect_all">"پاک کردن موارد انتخاب شده"</string>
     <string name="pref_itpd_common">"تنظیمات عمومی"</string>
     <string name="pref_itpd_com_incom_connect">"اجازه دادن به اتصالات ورودی"</string>
-
     <!-- پورتی برای شنیدن ورودی اتصالات -->
     <string name="pref_itpd_com_port_summ">"پورت برای شنود اتصالات ورودی."</string>
     <string name="pref_itpd_com_host_summ">"آی پی خارجی روتر برای اتصالات ورودی."</string>
@@ -304,7 +291,6 @@
     <string name="pref_itpd_elgamal_summ">"از جداول از پیش محاسبه شده ElGamal استفاده کنید."</string>
     <string name="pref_itpd_UPNP_summ">"فعال‌کردن یا غیرفعال‌کردن UPnP."</string>
     <string name="pref_itpd_ntcp2_enabled">"ntcp2 فعال شد"</string>
-
     <!-- در حال تحقیق -->
     <string name="pref_itpd_reseeding">"Reseeding"</string>
     <string name="pref_itpd_reseeding_summ">"امضای su3. را تأیید کنید."</string>
@@ -312,11 +298,9 @@
     <string name="pref_itpd_limits_transittunnels_summ">"حداکثر تعداد تونل‌های ترانزیت را نادیده بگیرید. 2500 به‌صورت پیش‌فرض."</string>
     <string name="pref_itpd_limits_openfiles_summ">"تعداد توصیف‌کننده‌های فایل باز (صفر - استفاده از محدودیت سیستم) محدود کنید."</string>
     <string name="pref_itpd_limits_coresize_summ">"حداکثر اندازه فایل اصلی در واحد Kb (صفر - استفاده از محدودیت سیستم)."</string>
-
     <!-- دفترچه آدرس -->
     <string name="pref_itpd_addressbook">"Addressbook"</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">"URL اشتراک کتابچه آدرس برای تنظیم اولیه."</string>
-
     <!-- های مشترک url دفترچه آدرس -->
     <string name="pref_itpd_addressbook_subscriptions_summ">"URLهای اشتراک کتابچه آدرس."</string>
     <string name="pref_itpd_not_exist">"اولویت در i2pd.conf وجود ندارد!"</string>
@@ -333,7 +317,6 @@
     <string name="action_mode_dialog_unlocked">"کنترل باز شد"</string>
     <string name="action_mode_dialog_locked">"کنترل قفل شد"</string>
     <string name="action_mode_hotspot">"هات اسپات"</string>
-
     <!-- ذخیره گزارشها -->
     <string name="help_activity_save_logs">"ذخیره وقایع"</string>
     <string name="help_activity_path">"مسیر وقایع:"</string>
@@ -341,10 +324,8 @@
     <string name="update_core_title">"بروزرسانی"</string>
     <string name="update_core_message">"برخی از ماژول‌های InviZible برای بروزرسانی آماده هستند. آیا می‌خواهید آن را بروزرسانی نمایید؟ این تنظیمات ماژول‌های شما را بازنویسی می‌کنند!"</string>
     <string name="update_core_yes">"بروزرسانی"</string>
-
     <!-- بعدا -->
     <string name="update_core_no">"بعداً"</string>
-
     <!-- مجدد سوال نکنید -->
     <string name="update_core_not_show_again">"مجدداً پرسیده نشود"</string>
     <string name="update_core_restart">"لطفا InviZible Pro را مجدداً راه‌اندازی نمایید و اجازه دهید تا کاملاً نصب شود! بعد از نصب اگر از هات‌اسپات استفاده می‌نمایید، آن را مجدداً تنظیم نمایید!"</string>
@@ -528,4 +509,5 @@
     <string name="backupSaved">"Backup saved"</string>
     <string name="backupRestored">"Backup restored"</string>
     <string name="thanks_for_donate_gp">"InviZible Pro Project and its author express appreciation for the assistance."</string>
+    <string name="notification_connecting">درحال اتصال…</string>
 </resources>
