@@ -62,6 +62,7 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionDismissNotification;
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionRecoverService;
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionRestartDnsCrypt;
@@ -82,6 +83,7 @@ import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.slowdownLo
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.speedupLoop;
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.startArpScanner;
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.stopArpScanner;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
@@ -92,6 +94,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 public class ModulesService extends Service {
     public static final int DEFAULT_NOTIFICATION_ID = 101102;
@@ -107,6 +110,8 @@ public class ModulesService extends Service {
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultSharedPreferences;
     @Inject
     public Lazy<ConnectionCheckerInteractor> internetCheckerInteractor;
 
@@ -164,7 +169,9 @@ public class ModulesService extends Service {
 
         startModulesThreadsTimer();
 
-        startArpScanner();
+        if (defaultSharedPreferences.get().getBoolean(ARP_SPOOFING_DETECTION, false)) {
+            startArpScanner();
+        }
     }
 
 
@@ -1013,7 +1020,7 @@ public class ModulesService extends Service {
         if (modulesStatus.getMode() == ROOT_MODE
                 && !modulesStatus.isUseModulesWithRoot()
                 && modulesBroadcastReceiver == null) {
-            modulesBroadcastReceiver = new ModulesBroadcastReceiver(this, arpScanner);
+            modulesBroadcastReceiver = new ModulesBroadcastReceiver(this);
             modulesBroadcastReceiver.registerReceivers();
             internetCheckerInteractor.get().addListener(modulesBroadcastReceiver);
         } else if (modulesStatus.getMode() != ROOT_MODE
@@ -1122,13 +1129,15 @@ public class ModulesService extends Service {
     }
 
     private void startArpScanner() {
-        arpScanner = ArpScanner.INSTANCE.getInstance(this.getApplicationContext(), handler.get());
-        arpScanner.start(this.getApplicationContext());
+        arpScanner = ArpScanner.getArpComponent().get();
+        arpScanner.start();
     }
 
     private void stopArpScanner() {
         if (arpScanner != null) {
-            arpScanner.stop(this);
+            arpScanner.stop();
+            arpScanner = null;
+            ArpScanner.Companion.releaseArpComponent();
         }
     }
 

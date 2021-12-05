@@ -615,9 +615,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
     private void checkRootDirAccessible() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            cachedExecutor.submit(() -> {
-                rootDirAccessible = Utils.INSTANCE.isLogsDirAccessible();
-            });
+            cachedExecutor.submit(() -> rootDirAccessible = Utils.INSTANCE.isLogsDirAccessible());
         }
     }
 

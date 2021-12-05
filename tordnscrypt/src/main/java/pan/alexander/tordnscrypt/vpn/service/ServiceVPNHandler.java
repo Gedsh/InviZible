@@ -56,7 +56,9 @@ import pan.alexander.tordnscrypt.vpn.Rule;
 import pan.alexander.tordnscrypt.vpn.NetworkUtils;
 
 import static android.content.Context.CONNECTIVITY_SERVICE;
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -65,12 +67,15 @@ import static pan.alexander.tordnscrypt.vpn.service.ServiceVPN.EXTRA_COMMAND;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPN.EXTRA_REASON;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 
 public class ServiceVPNHandler extends Handler {
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepositoryLazy;
+    @Inject @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultSharedPreferences;
     @Inject
     public Lazy<PathVars> pathVars;
 
@@ -79,7 +84,6 @@ public class ServiceVPNHandler extends Handler {
     @Nullable
     private final ServiceVPN serviceVPN;
     private ServiceVPN.Builder last_builder = null;
-    private ArpScanner arpScanner;
 
     private ServiceVPNHandler(Looper looper, @Nullable ServiceVPN serviceVPN) {
         super(looper);
@@ -184,8 +188,6 @@ public class ServiceVPNHandler extends Handler {
         if (serviceVPN == null) {
             return;
         }
-
-        arpScanner = ArpScanner.INSTANCE.getInstance(serviceVPN.getApplicationContext(), null);
 
         if (serviceVPN.vpn == null) {
 
@@ -301,10 +303,11 @@ public class ServiceVPNHandler extends Handler {
 
         serviceVPN.reloading = false;
 
-        arpScanner.reset(
-                serviceVPN,
-                serviceVPN.isNetworkAvailable() || serviceVPN.isInternetAvailable()
-        );
+        if (defaultSharedPreferences.get().getBoolean(ARP_SPOOFING_DETECTION, false)) {
+            ArpScanner.getArpComponent().get().reset(
+                    serviceVPN.isNetworkAvailable() || serviceVPN.isInternetAvailable()
+            );
+        }
     }
 
     private void stop() {

@@ -130,6 +130,8 @@ import static pan.alexander.tordnscrypt.utils.Constants.VPN_DNS_2;
 import static pan.alexander.tordnscrypt.utils.bootcomplete.BootCompleteManager.ALWAYS_ON_VPN;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_BLOCK_INTERNET;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR_CLEARNET;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_UNLOCK;
@@ -553,9 +555,9 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         routeAllThroughTor = prefs.getBoolean("pref_fast_all_through_tor", true);
         torTethering = prefs.getBoolean("pref_common_tor_tethering", false);
         blockIPv6 = prefs.getBoolean("block_ipv6", true);
-        arpSpoofingDetection = prefs.getBoolean("pref_common_arp_spoofing_detection", false);
+        arpSpoofingDetection = prefs.getBoolean(ARP_SPOOFING_DETECTION, false);
         dnsRebindProtection = prefs.getBoolean("pref_common_dns_rebind_protection", false);
-        blockInternetWhenArpAttackDetected = prefs.getBoolean("pref_common_arp_block_internet", false);
+        blockInternetWhenArpAttackDetected = prefs.getBoolean(ARP_SPOOFING_BLOCK_INTERNET, false);
         firewallEnabled = preferenceRepository.get().getBoolPreference("FirewallEnabled");
         ignoreSystemDNS = prefs.getBoolean(IGNORE_SYSTEM_DNS, false);
 

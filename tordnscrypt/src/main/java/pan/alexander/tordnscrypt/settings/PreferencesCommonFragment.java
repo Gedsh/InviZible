@@ -35,6 +35,7 @@ import androidx.preference.PreferenceManager;
 import androidx.preference.PreferenceScreen;
 import androidx.preference.SwitchPreference;
 
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -73,6 +74,9 @@ import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorF
 import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.ISOLATE_DEST_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_BLOCK_INTERNET;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_NOT_SUPPORTED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
@@ -94,6 +98,10 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     public Lazy<PathVars> pathVars;
     @Inject
     public CachedExecutor cachedExecutor;
+    @Inject
+    public Lazy<Handler> handler;
+
+    private static final int ARP_SCANNER_CHANGE_STATE_DELAY_SEC = 5;
 
     private String torTransPort;
     private String torSocksPort;
@@ -186,10 +194,19 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         }
 
         PreferenceCategory mitmCategory = findPreference("pref_common_mitm_categ");
-        Preference mitmDetection = findPreference("pref_common_arp_spoofing_detection");
-        Preference mitmBlockInternet = findPreference("pref_common_arp_block_internet");
+        Preference mitmDetection = findPreference(ARP_SPOOFING_DETECTION);
+        Preference mitmBlockInternet = findPreference(ARP_SPOOFING_BLOCK_INTERNET);
         if (mitmCategory != null && mitmDetection != null && mitmBlockInternet != null) {
             mitmDetection.setOnPreferenceChangeListener(this);
+
+            if (preferenceRepository.get().getBoolPreference(ARP_SPOOFING_NOT_SUPPORTED)) {
+                mitmDetection.setTitle(R.string.pref_common_rogue_dhcp_detection);
+                mitmDetection.setSummary(R.string.pref_common_rogue_dhcp_detection_summ);
+            } else {
+                mitmDetection.setTitle(R.string.pref_common_arp_spoofing_detection);
+                mitmDetection.setSummary(R.string.pref_common_arp_spoofing_detection_summ);
+            }
+
             if (modulesStatus.getMode() == PROXY_MODE) {
                 mitmCategory.removePreference(mitmBlockInternet);
             } else {
@@ -288,7 +305,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
             } catch (Exception e) {
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                       context, getString(R.string.verifier_error), "5804");
+                        context, getString(R.string.verifier_error), "5804");
                 if (notificationHelper != null && isAdded()) {
                     notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
                 }
@@ -374,14 +391,26 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             case "swWakelock":
                 ModulesAux.requestModulesStatusUpdate(context);
                 break;
-            case "pref_common_arp_spoofing_detection":
+            case ARP_SPOOFING_DETECTION:
                 if (Boolean.parseBoolean(newValue.toString())) {
                     ModulesAux.startArpDetection(context);
                 } else {
                     ModulesAux.stopArpDetection(context);
                 }
+                handler.get().postDelayed(() -> {
+                    ModulesStatus status = ModulesStatus.getInstance();
+                    boolean fixTTL = status.isFixTTL() && (status.getMode() == ROOT_MODE)
+                            && !status.isUseModulesWithRoot();
+                    if (fixTTL) {
+                        //Manually reload the VPN service because setIptablesRulesUpdateRequested does not do this in case of an ARP attack detected
+                        ServiceVPNHelper.reload("Internet blocking settings for ARP attacks changed", context);
+                    }
+                    ModulesStatus.getInstance()
+                            .setIptablesRulesUpdateRequested(context, true);
+
+                }, ARP_SCANNER_CHANGE_STATE_DELAY_SEC * 1000);
                 break;
-            case "pref_common_arp_block_internet":
+            case ARP_SPOOFING_BLOCK_INTERNET:
                 modulesStatus = ModulesStatus.getInstance();
                 boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
                         && !modulesStatus.isUseModulesWithRoot();

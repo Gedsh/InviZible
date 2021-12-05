@@ -56,17 +56,23 @@ import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
 import pan.alexander.tordnscrypt.utils.privatedns.PrivateDnsProxyManager;
 import pan.alexander.tordnscrypt.vpn.NetworkUtils;
 
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
 
 public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInternetConnectionCheckedListener {
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultSharedPreferences;
     @Inject
     public Lazy<ConnectionCheckerInteractor> connectionCheckerInteractor;
     @Inject
@@ -87,13 +93,11 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
     private static final String TETHER_STATE_FILTER_ACTION = "android.net.conn.TETHER_STATE_CHANGED";
     private static final String SHUTDOWN_FILTER_ACTION = "android.intent.action.ACTION_SHUTDOWN";
     private static final String POWER_OFF_FILTER_ACTION = "android.intent.action.QUICKBOOT_POWEROFF";
-    private final ArpScanner arpScanner;
     private volatile Future<?> checkTetheringTask;
 
-    public ModulesBroadcastReceiver(Context context, ArpScanner arpScanner) {
+    public ModulesBroadcastReceiver(Context context) {
         App.getInstance().getDaggerComponent().inject(this);
         this.context = context;
-        this.arpScanner = arpScanner;
     }
 
     @Override
@@ -462,14 +466,14 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
     }
 
     private void resetArpScanner(boolean connectionAvailable) {
-        if (arpScanner != null) {
-            arpScanner.reset(context, connectionAvailable);
+        if (defaultSharedPreferences.get().getBoolean(ARP_SPOOFING_DETECTION, false)) {
+            ArpScanner.getArpComponent().get().reset(connectionAvailable);
         }
     }
 
     private void resetArpScanner() {
-        if (arpScanner != null && context != null) {
-            arpScanner.reset(context, NetworkUtils.isConnected(context));
+        if (context != null && defaultSharedPreferences.get().getBoolean(ARP_SPOOFING_DETECTION, false)) {
+            ArpScanner.getArpComponent().get().reset(NetworkUtils.isConnected(context));
         }
     }
 

@@ -17,18 +17,19 @@
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.di
+package pan.alexander.tordnscrypt.di.arp
 
-import dagger.Module
-import pan.alexander.tordnscrypt.di.arp.ArpSubcomponent
-import pan.alexander.tordnscrypt.di.logreader.LogReaderSubcomponent
-import pan.alexander.tordnscrypt.di.tiles.TilesSubcomponent
+import dagger.Subcomponent
+import pan.alexander.tordnscrypt.arp.ArpScanner
 
-@Module(
-    subcomponents = [
-        LogReaderSubcomponent::class,
-        TilesSubcomponent::class,
-        ArpSubcomponent::class
-    ]
-)
-class AppSubcomponentModule
+@ArpScope
+@Subcomponent
+interface ArpSubcomponent {
+
+    @Subcomponent.Factory
+    interface Factory {
+        fun create(): ArpSubcomponent
+    }
+
+    fun get(): ArpScanner
+}

@@ -295,7 +295,7 @@ public class MainActivity extends LangAppCompatActivity
 
         Intent intent = getIntent();
         if (intent.getBooleanExtra(ArpScannerKt.MITM_ATTACK_WARNING, false)
-                && (ArpScanner.INSTANCE.getArpAttackDetected() || ArpScanner.INSTANCE.getDhcpGatewayAttackDetected())) {
+                && (ArpScanner.getArpAttackDetected() || ArpScanner.getDhcpGatewayAttackDetected())) {
 
             handler.postDelayed(() -> {
                 DialogFragment commandResult = NotificationDialogFragment.newInstance(getString(R.string.notification_mitm));
@@ -373,8 +373,8 @@ public class MainActivity extends LangAppCompatActivity
         PreferenceRepository preferences = preferenceRepository.get();
         boolean busyBoxIsAvailable = preferences.getBoolPreference("bbOK");
 
-        boolean mitmDetected = ArpScanner.INSTANCE.getArpAttackDetected()
-                || ArpScanner.INSTANCE.getDhcpGatewayAttackDetected();
+        boolean mitmDetected = ArpScanner.getArpAttackDetected()
+                || ArpScanner.getDhcpGatewayAttackDetected();
 
         fixTTL = fixTTL && !useModulesWithRoot;
 
@@ -847,8 +847,8 @@ public class MainActivity extends LangAppCompatActivity
     private void showInfoAboutRoot() {
         boolean rootIsAvailable = preferenceRepository.get().getBoolPreference(ROOT_IS_AVAILABLE);
         boolean busyBoxIsAvailable = preferenceRepository.get().getBoolPreference("bbOK");
-        boolean mitmDetected = ArpScanner.INSTANCE.getArpAttackDetected()
-                || ArpScanner.INSTANCE.getDhcpGatewayAttackDetected();
+        boolean mitmDetected = ArpScanner.getArpAttackDetected()
+                || ArpScanner.getDhcpGatewayAttackDetected();
 
         if (mitmDetected) {
             DialogFragment commandResult = NotificationDialogFragment.newInstance(getString(R.string.notification_mitm));

@@ -30,6 +30,8 @@ public interface PreferenceKeys {
 
     String TILES_LIMIT_DIALOG_NOT_SHOW = "tilesLimitDialogNotShow";
 
+    String ARP_SPOOFING_NOT_SUPPORTED = "arpSpoofingNotSupported";
+
     //VPN
     String VPN_SERVICE_ENABLED = "VPNServiceEnabled";
 
@@ -37,6 +39,8 @@ public interface PreferenceKeys {
     String SITES_IPS_REFRESH_INTERVAL = "pref_fast_site_refresh_interval";
 
     //Common Settings
+    String ARP_SPOOFING_DETECTION = "pref_common_arp_spoofing_detection";
+    String ARP_SPOOFING_BLOCK_INTERNET = "pref_common_arp_block_internet";
     String ALWAYS_SHOW_HELP_MESSAGES = "pref_common_show_help";
     String RUN_MODULES_WITH_ROOT = "swUseModulesRoot";
     String FIX_TTL = "pref_common_fix_ttl";

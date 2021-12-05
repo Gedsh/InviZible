@@ -159,7 +159,7 @@
     <string name="pref_dnscrypt_require_nofilter_summ">"サーバーが自身のブラックリストを強制しないようにします(ペアレンタルコントロール、広告ブロックなど)"</string>
     <string name="pref_dnscrypt_force_tcp_categ">"アップストリームのサーバーへの接続に常にTCPを使用する"</string>
     <string name="pref_dnscrypt_force_tcp_summ">"This can be can be useful if you need to route everything through Tor.
-Otherwise, leave this to false, as it doesn't improve security (dnscrypt-proxy will always encrypt everything even using UDP), and can only increase latency. Do not enable if you want to use Tor onion sites!"</string>
+Otherwise, leave this to false, as it doesn't improve security (dnscrypt-proxy will always encrypt everything even using UDP), and can only increase latency."</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"Socksプロキシ"</string>
     <string name="pref_dnscrypt_use_proxy">"プロキシを有効化"</string>
     <string name="pref_dnscrypt_proxy_summ">"Route all TCP connections to a local Tor node. Tor doesn't support UDP, so set force_tcp to true as well."</string>

@@ -190,6 +190,8 @@
     <string name="pref_common_mitm_categ">MITM attack detection</string>
     <string name="pref_common_arp_spoofing_detection">ARP spoofing detection</string>
     <string name="pref_common_arp_spoofing_detection_summ">Detect Man-in-the-middle ARP spoofing and rogue DHCP attacks in Wi-Fi networks.</string>
+    <string name="pref_common_rogue_dhcp_detection">Rogue DHCP detection</string>
+    <string name="pref_common_rogue_dhcp_detection_summ">Detect Man-in-the-middle rogue DHCP attacks in Wi-Fi networks.</string>
     <string name="pref_common_arp_block_internet">Block internet when an attack is detected</string>
     <string name="pref_common_arp_block_internet_summ">Internet connection will be blocked during attack</string>
     <string name="pref_common_dns_rebind_protection">DNS rebinding protection</string>
@@ -300,7 +302,7 @@
     <string name="pref_dnscrypt_force_tcp_categ">Always use TCP to connect to upstream servers.</string>
     <string name="pref_dnscrypt_force_tcp_summ"> This can be can be useful if you need to route everything through Tor.\n
         Otherwise, leave this to false, as it doesn\'t improve security (dnscrypt-proxy will always encrypt everything even using UDP), and can only increase latency.
-        Do not enable if you want to use Tor onion sites!</string>
+    </string>
     <string name="pref_dnscrypt_force_tcp" translatable="false">force_tcp</string>
 
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS proxy.</string>

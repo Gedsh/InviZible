@@ -165,7 +165,7 @@
     <string name="pref_dnscrypt_require_nofilter_summ">"服务器必须不强制应用自己的黑名单（家长控制，广告拦截…）。"</string>
     <string name="pref_dnscrypt_force_tcp_categ">"总是使用 TCP 连接上游服务器。"</string>
     <string name="pref_dnscrypt_force_tcp_summ">"当您需要路由所有流量通过 Tor 时有用。
-否则置为 false，因为它并不提高安全性（dnscrypt-proxy 将加密所有流量，即使使用 UDP），并只会提高延迟。 如果您想要使用 Tor onion 网站，不要启用！"</string>
+否则置为 false，因为它并不提高安全性（dnscrypt-proxy 将加密所有流量，即使使用 UDP），并只会提高延迟。"</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"SOCKS 代理。"</string>
     <string name="pref_dnscrypt_use_proxy">"启用代理"</string>
     <string name="pref_dnscrypt_proxy_summ">"路由全部 TCP 连接到本地 Tor 节点。 Tor 不支持 UDP，因此也设置 force_tcp 为 true。"</string>

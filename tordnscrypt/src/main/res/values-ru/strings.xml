@@ -143,8 +143,7 @@
     <string name="pref_dnscrypt_require_nofilter_summ">Сервера не должны использовать черный список (для родительского контроля, блокировки рекламы…).</string>
     <string name="pref_dnscrypt_force_tcp_categ">Всегда использовать TCP протокол, для соединения с серверами.</string>
     <string name="pref_dnscrypt_force_tcp_summ">Это может быть полезным, когда вы перенаправляете весь трафик через Tor.
-        Иначе не активируйте, так как это не улучшит безопасность. DNSCrypt и так шифрует все запросы, даже через UDP. А задержки могут увеличиться.
-        Не включайте если хотите пользоваться onion сайтами Tor!</string>
+        Иначе не активируйте, так как это не улучшит безопасность. DNSCrypt и так шифрует все запросы, даже через UDP. А задержки могут увеличиться.</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS прокси.</string>
     <string name="pref_dnscrypt_use_proxy">Включить прокси</string>
     <string name="pref_dnscrypt_proxy_summ">Перенаправить все TCP соединения на Tor. Tor не поддерживает UDP, поэтому обязательно активируйте force_tcp.</string>
@@ -520,4 +519,6 @@
     <string name="tile_changing_tor_ip">Смена Tor IP</string>
     <string name="tile_dialog_over_three_tiles_message">Вы добавили более 3-х ярлыков в быстрые настройки.
          Оставьте только 3. Добавление более 3-х ярлыков может вызвать проблемы с управлением приложением.</string>
+    <string name="pref_common_rogue_dhcp_detection">Обнаружение мошеннических DHCP</string>
+    <string name="pref_common_rogue_dhcp_detection_summ">Обнаружение мошеннических DHCP в Wi-Fi сетях.</string>
 </resources>

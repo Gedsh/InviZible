@@ -177,8 +177,7 @@ Sistem Operasi seperti MIUI membutuhkan langkah khusus."</string>
     <string name="pref_dnscrypt_require_nofilter_summ">"Server tidak boleh menerapkan daftar hitamnya sendiri (untuk kontrol orang tua, pemblokiran iklan ...)."</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Selalu gunakan TCP untuk terhubung ke server upstream."</string>
     <string name="pref_dnscrypt_force_tcp_summ">" Hal ini akan berguna jika anda ingin mengalihkan semua lalu lintas data melalui Tor.
-         Atau anda bisa mengabaikan fitur tersebut, karena tak serta-merta meningkatkan keamanan (dnscrypt-proxy akan mengenkripsi apapun, bahkan UDP sekalipun), yang ada malah menambah latensi.
-Jangan hidupkan fitur ini jika anda mengakses situs onion Tor!"</string>
+         Atau anda bisa mengabaikan fitur tersebut, karena tak serta-merta meningkatkan keamanan (dnscrypt-proxy akan mengenkripsi apapun, bahkan UDP sekalipun), yang ada malah menambah latensi."</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"Proxy HTTP / SOCKS."</string>
     <string name="pref_dnscrypt_use_proxy">"Aktifkan proxy"</string>
     <string name="pref_dnscrypt_proxy_summ">"Mengalihkan semua koneksi TCP ke node Tor lokal.

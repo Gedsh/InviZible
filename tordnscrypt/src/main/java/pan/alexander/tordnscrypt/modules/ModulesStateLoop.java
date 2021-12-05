@@ -381,8 +381,8 @@ public class ModulesStateLoop implements Runnable,
                     ServiceVPNHelper.stop("All modules stopped", modulesService);
                 } else if (vpnServiceEnabled
                         /*Do not reload service during ARP attack to prevent loop*/
-                        && !ArpScanner.INSTANCE.getDhcpGatewayAttackDetected()
-                        && !ArpScanner.INSTANCE.getArpAttackDetected()) {
+                        && !ArpScanner.getDhcpGatewayAttackDetected()
+                        && !ArpScanner.getArpAttackDetected()) {
                     ServiceVPNHelper.reload("TTL is fixed", modulesService);
                 } else {
                     startVPNService();

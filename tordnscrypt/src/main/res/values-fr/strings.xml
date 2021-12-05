@@ -163,8 +163,7 @@
     <string name="pref_dnscrypt_require_nofilter_summ">"Le serveur ne doit pas appliquer sa propre liste noire (pour le contrôle parental, le blocage des publicités...)."</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Utilisez toujours le protocole TCP pour vous connecter aux serveurs en amont."</string>
     <string name="pref_dnscrypt_force_tcp_summ">" Cela peut être utile si vous avez besoin de tout faire passer par Tor.
-                Sinon, laissez cela sur faux (false), car cela n'améliore pas la sécurité (dnscrypt-proxy chiffrera toujours tout, même en utilisant l'UDP), et ne peut qu'augmenter la latence.
-                Ne l'activez pas si vous voulez utiliser les sites Tor en onion!"</string>
+                Sinon, laissez cela sur faux (false), car cela n'améliore pas la sécurité (dnscrypt-proxy chiffrera toujours tout, même en utilisant l'UDP), et ne peut qu'augmenter la latence."</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"Mandataire SOCKS."</string>
     <string name="pref_dnscrypt_use_proxy">"Activer le mandataire"</string>
     <string name="pref_dnscrypt_proxy_summ">"Router toutes les connexions TCP vers un noeud Tor local.

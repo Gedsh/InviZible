@@ -26,6 +26,7 @@ import pan.alexander.tordnscrypt.MainActivity
 import pan.alexander.tordnscrypt.TopFragment
 import pan.alexander.tordnscrypt.backup.BackupFragment
 import pan.alexander.tordnscrypt.backup.BackupHelper
+import pan.alexander.tordnscrypt.di.arp.ArpSubcomponent
 import pan.alexander.tordnscrypt.di.logreader.LogReaderSubcomponent
 import pan.alexander.tordnscrypt.di.tiles.TilesSubcomponent
 import pan.alexander.tordnscrypt.dialogs.*
@@ -77,6 +78,7 @@ import javax.inject.Singleton
 interface AppComponent {
     fun logReaderSubcomponent(): LogReaderSubcomponent.Factory
     fun tilesSubcomponent(): TilesSubcomponent.Factory
+    fun arpSubcomponent(): ArpSubcomponent.Factory
 
     fun getPathVars(): dagger.Lazy<PathVars>
     fun getPreferenceRepository(): dagger.Lazy<PreferenceRepository>
