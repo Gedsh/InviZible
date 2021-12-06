@@ -1,5 +1,9 @@
 # InviZible Pro
 
+Proudly presented by Garmatin Oleksandr, \
+in the belief that Privacy and anonymity software should be libre, \
+with appreciation for the help of all contributors.
+
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/gedsh/invizible?style=plastic)
 ![GitHub Releases](https://img.shields.io/github/downloads/gedsh/invizible/latest/total?color=blue&style=plastic)
 [![Translation status](https://hosted.weblate.org/widgets/invizible/-/invizible/svg-badge.svg)](https://hosted.weblate.org/engage/invizible/?utm_source=widget)
