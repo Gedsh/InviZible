@@ -33,7 +33,7 @@ They are used to achieve maximum security, privacy and comfortable use of the In
 * Prevents some types of resource blocks
 * Libre software
 
-**Depending on the selected dnscrypt server*
+**Depending on the selected DNSCrypt server*
 **(Not available in the Google Play version!)**
 
 ### Tor
@@ -90,20 +90,16 @@ For questions, feature requests and bug-reports, you can use GitHub.
 
 ### International:
  
-Telegram channel: [InviZiblePro](https://t.me/InviZiblePro)
-
+Telegram channel: [InviZiblePro](https://t.me/InviZiblePro) \
 Telegram group: [InviZiblePro_Group](https://t.me/InviZiblePro_Group)
 
 ### For Russian-speaking users:
 
-Telegram channel: [InviZiblePro](https://t.me/InviZibleProRus)
-
+Telegram channel: [InviZiblePro](https://t.me/InviZibleProRus) \
 Telegram group: [InviZiblePro_Group](https://t.me/InviZibleProRus_Group)
 
-Only the latest version of **InviZible Pro** is supported.
-
-There is no support for things that are not directly related to **InviZible Pro**.
-
+Only the latest version of **InviZible Pro** is supported. \
+There is no support for things that are not directly related to **InviZible Pro**. \
 There is no support for building and developing things by yourself.
 
 ## Contributing
@@ -128,7 +124,7 @@ project(':filepicker').projectDir = new File('android-filepicker/filepicker')
 //project(':tordnscrypt').buildFileName = 'owner.gradle'
 ```
 
-There is no support offered for building the app yourself, as this is an advanced option.
+There is no support offered for building the app yourself, as this is an advanced option. \
 If you cannot build the app yourself, there are pre-built versions of **InviZible Pro** available [here](https://github.com/Gedsh/InviZible/releases/latest).
 
 #### Translating
@@ -152,7 +148,7 @@ InviZible Pro uses:
 * [Angads25/android-filepicker](https://github.com/Angads25/android-filepicker)
 * [meefik/busybox](https://github.com/meefik/busybox)
 
-This product is produced independently from the **Tor®**, **DNSCrypt**, **Purple I2P** software 
+This product is produced independently from the **Tor®**, **DNSCrypt**, **Purple I2P** software \
 and carries no guarantee from the above projects about quality, suitability or anything else.
 
 ## Donations
@@ -171,7 +167,7 @@ and carries no guarantee from the above projects about quality, suitability or a
 
 [GNU General Public License version 3](https://www.gnu.org/licenses/gpl-3.0.txt)
 
-Copyright © 2019–2021 Garmatin Oleksandr and contributors
+Copyright © 2019–2021 Garmatin Oleksandr and contributors \
 invizible.soft@gmail.com
 
 This file is part of **InviZible Pro**.
