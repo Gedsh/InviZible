@@ -18,7 +18,9 @@ package pan.alexander.tordnscrypt.di
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.content.Context
 import androidx.annotation.Keep
+import dagger.BindsInstance
 import dagger.Component
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import pan.alexander.tordnscrypt.BootCompleteReceiver
@@ -71,8 +73,7 @@ import javax.inject.Singleton
 @Component(
     modules = [SharedPreferencesModule::class, RepositoryModule::class,
         DataSourcesModule::class, HelpersModule::class, CoroutinesModule::class,
-        HandlerModule::class, ContextModule::class, InteractorsModule::class,
-        AppSubcomponentModule::class]
+        HandlerModule::class, InteractorsModule::class, AppSubcomponentModule::class]
 )
 @Keep
 interface AppComponent {
@@ -83,6 +84,13 @@ interface AppComponent {
     fun getPathVars(): dagger.Lazy<PathVars>
     fun getPreferenceRepository(): dagger.Lazy<PreferenceRepository>
     fun getCachedExecutor(): CachedExecutor
+
+    @Component.Builder
+    interface Builder {
+        @BindsInstance
+        fun appContext(context: Context): Builder
+        fun build(): AppComponent
+    }
 
     fun inject(activity: MainActivity)
     fun inject(activity: SettingsActivity)

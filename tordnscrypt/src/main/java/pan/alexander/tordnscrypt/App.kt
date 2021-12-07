@@ -98,10 +98,7 @@ class App : Application() {
     private fun initDaggerComponent() {
         daggerComponent = DaggerAppComponent
             .builder()
-            .sharedPreferencesModule(SharedPreferencesModule())
-            .coroutinesModule(CoroutinesModule())
-            .handlerModule(HandlerModule())
-            .contextModule(ContextModule(this))
+            .appContext(applicationContext)
             .build()
     }
 
