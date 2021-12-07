@@ -75,7 +75,7 @@
     <string name="pref_fast_unlock_apps_with_tor_summ">"Liste der Apps die mit Tor geöffnet werden"</string>
     <string name="pref_fast_unlock_apps_with_ipro_summ">"Liste der Apps die mit InviZible geöffnet werden"</string>
     <string name="pref_fast_exclude_from_tor">"Webseiten ausschliessen"</string>
-    <string name="pref_fast_exclude_from_tor_summ">"Webseiten die  direkt geöffnet werden"</string>
+    <string name="pref_fast_exclude_from_tor_summ">Webseiten die direkt geöffnet werden</string>
     <string name="pref_fast_exclude_apps_from_tor">"Applikationen ausschliessen"</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">"Liste der Apps die direkt geöffnet werden"</string>
     <string name="pref_fast_site_refresh_interval">"Aktualisierungsintervall"</string>
@@ -150,7 +150,7 @@ Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="tvSettings_text">"Bitte warten…"</string>
     <string name="toastSettings_saved">"Einstellungen gespeichert"</string>
     <string name="pref_dnscrypt_global_settings_categ">"GLOBALE EINSTELLUNGEN"</string>
-    <string name="pref_advanced">" Nur für fortgeschrittene Benutzer!"</string>
+    <string name="pref_advanced">Nur für fortgeschrittene Benutzer!</string>
     <string name="pref_dnscrypt_select_server_names">"Wähle mindestens einen Server!"</string>
     <string name="pref_dnscrypt_local_port_summ">"Lokaler Port auf dem gelauscht wird."</string>
     <string name="pref_dnscrypt_require_servers_categ">"Benötige Server (von statischen + Remote Quellen) um spezielle Eigenschaften zu erfüllen."</string>
@@ -161,8 +161,8 @@ Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="pref_dnscrypt_require_nolog_summ">"Server darf Useranfragen nicht speichern(deklarativ)."</string>
     <string name="pref_dnscrypt_require_nofilter_summ">"Server darf keine eigene Blacklist erzwingen (Elterliche Kontrolle, Blockieren von Werbung…)."</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Benutze immer TCP um zu Upstream Servern zu verbinden."</string>
-    <string name="pref_dnscrypt_force_tcp_summ">" Dies kann nützlich sein, wenn du jeglichen Datenverkehr durch Tor schicken musst.
- Andernfalls belasse dies auf \"Deaktiviert\", da es die Sicherheit nicht verbessert und nur die Latenz erhöht.(Dnscrypt-Proxy wird immer alles (auch UDP) verschlüsseln)"</string>
+    <string name="pref_dnscrypt_force_tcp_summ">Dies kann nützlich sein, wenn du jeglichen Datenverkehr durch Tor schicken musst.
+\nAndernfalls belasse dies auf \"Deaktiviert\", da es die Sicherheit nicht verbessert und nur die Latenz erhöht.(DNSCrypt-Proxy wird immer alles (auch UDP) verschlüsseln)</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"HTTP / SOCKS Proxy."</string>
     <string name="pref_dnscrypt_use_proxy">"Proxy aktivieren"</string>
     <string name="pref_dnscrypt_proxy_summ">"Route alle TCP Verbindungen zu einem lokalen Tor Knoten.
