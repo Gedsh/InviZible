@@ -2,6 +2,7 @@
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/gedsh/invizible?style=plastic)
 ![GitHub Releases](https://img.shields.io/github/downloads/gedsh/invizible/latest/total?color=blue&style=plastic)
+[![Translation status](https://hosted.weblate.org/widgets/invizible/-/invizible/svg-badge.svg)](https://hosted.weblate.org/engage/invizible/?utm_source=widget)
 
 ### [Google Play stable version](https://play.google.com/store/apps/details?id=pan.alexander.tordnscrypt.gp)
 
@@ -128,11 +129,11 @@ If you cannot build yourself, there are prebuilt versions of **InviZible Pro** a
 
 #### Translating
 
-If you would like to translate this application into other languages,
-please send an email to the developer [invizible.soft@gmail.com](mailto:invizible.soft@gmail.com)
+[Translate InviZible on Hosted Weblate](https://hosted.weblate.org/engage/invizible/).
 
-Thanks to [POEditor](https://poeditor.com/), you can translate InviZible Pro into your language with pleasure and for free.
-Just follow this [link](https://poeditor.com/join/project/h6ulNL9gEd).
+[![Translation status](https://hosted.weblate.org/widgets/invizible/-/multi-auto.svg)](https://hosted.weblate.org/engage/invizible/?utm_source=widget)
+
+[Translate InviZible on POEditor](https://poeditor.com/join/project/h6ulNL9gEd).
 
 ## Attribution
 
