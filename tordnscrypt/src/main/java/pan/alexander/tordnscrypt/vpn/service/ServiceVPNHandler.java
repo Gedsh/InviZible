@@ -74,7 +74,8 @@ public class ServiceVPNHandler extends Handler {
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepositoryLazy;
-    @Inject @Named(DEFAULT_PREFERENCES_NAME)
+    @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
     public Lazy<SharedPreferences> defaultSharedPreferences;
     @Inject
     public Lazy<PathVars> pathVars;
@@ -337,7 +338,7 @@ public class ServiceVPNHandler extends Handler {
             interactor.checkInternetConnection();
         }
 
-        //if (serviceVPN.isNetworkAvailable() || serviceVPN.isInternetAvailable()) {
+        if (serviceVPN.isNetworkAvailable() || serviceVPN.isInternetAvailable()) {
 
             PreferenceRepository preferences = preferenceRepositoryLazy.get();
 
@@ -352,7 +353,7 @@ public class ServiceVPNHandler extends Handler {
             } else if (NetworkUtils.isRoaming(serviceVPN)) {
                 listAllowed.addAll(preferences.getStringSetPreference(FirewallFragmentKt.APPS_ALLOW_ROAMING));
             }
-        //}
+        }
 
         Log.i(LOG_TAG, "VPN Handler Allowed " + listAllowed.size() + " of " + listRule.size());
         return listAllowed;

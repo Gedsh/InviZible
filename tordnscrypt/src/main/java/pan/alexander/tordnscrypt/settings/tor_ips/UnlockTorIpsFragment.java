@@ -73,6 +73,8 @@ public class UnlockTorIpsFragment extends Fragment {
     public Lazy<CoroutineExecutor> coroutineExecutor;
     @Inject
     public CachedExecutor cachedExecutor;
+    @Inject
+    ViewModelProvider.Factory viewModelFactory;
 
     public UnlockTorIpsViewModel viewModel;
 
@@ -84,7 +86,7 @@ public class UnlockTorIpsFragment extends Fragment {
         App.getInstance().getDaggerComponent().inject(this);
         super.onCreate(savedInstanceState);
 
-        viewModel = new ViewModelProvider(this).get(UnlockTorIpsViewModel.class);
+        viewModel = new ViewModelProvider(this, viewModelFactory).get(UnlockTorIpsViewModel.class);
 
         Activity activity = getActivity();
         if (activity == null) {

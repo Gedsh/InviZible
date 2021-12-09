@@ -22,7 +22,6 @@ import android.content.Context
 import androidx.annotation.Keep
 import dagger.BindsInstance
 import dagger.Component
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import pan.alexander.tordnscrypt.BootCompleteReceiver
 import pan.alexander.tordnscrypt.MainActivity
 import pan.alexander.tordnscrypt.TopFragment
@@ -56,7 +55,6 @@ import pan.alexander.tordnscrypt.settings.tor_bridges.BridgeAdapter
 import pan.alexander.tordnscrypt.settings.tor_bridges.GetNewBridges
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges
 import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFragment
-import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsViewModel
 import pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment
 import pan.alexander.tordnscrypt.tor_fragment.TorFragmentReceiver
 import pan.alexander.tordnscrypt.update.DownloadTask
@@ -73,7 +71,8 @@ import javax.inject.Singleton
 @Component(
     modules = [SharedPreferencesModule::class, RepositoryModule::class,
         DataSourcesModule::class, HelpersModule::class, CoroutinesModule::class,
-        HandlerModule::class, InteractorsModule::class, AppSubcomponentModule::class]
+        HandlerModule::class, InteractorsModule::class, ViewModelModule::class,
+        AppSubcomponentModule::class]
 )
 @Keep
 interface AppComponent {
@@ -127,8 +126,6 @@ interface AppComponent {
     fun inject(dialogFragment: RequestIgnoreBatteryOptimizationDialog)
     fun inject(dialogFragment: AskForceClose)
     fun inject(dialogFragment: SendCrashReport)
-    @ObsoleteCoroutinesApi
-    fun inject(viewModel: UnlockTorIpsViewModel)
     fun inject(usageStatistic: UsageStatistic)
     fun inject(modulesKiller: ModulesKiller)
     fun inject(contextUIDUpdater: ContextUIDUpdater)
