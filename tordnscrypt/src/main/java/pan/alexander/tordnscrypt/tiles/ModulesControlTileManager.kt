@@ -42,7 +42,6 @@ import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.Constants.DEFAULT_SITES_IPS_REFRESH_INTERVAL
 import pan.alexander.tordnscrypt.utils.Utils
 import pan.alexander.tordnscrypt.utils.Utils.isInterfaceLocked
-import pan.alexander.tordnscrypt.utils.Utils.shortenTooLongSnowflakeLog
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.filemanager.FileShortener
@@ -290,7 +289,7 @@ class ModulesControlTileManager @Inject constructor(
 
         Utils.startAppExitDetectService(context)
 
-        shortenTooLongSnowflakeLog(context, preferenceRepository, pathVars)
+        //shortenTooLongSnowflakeLog(context, preferenceRepository, pathVars)
     }
 
     private fun manageTor() {

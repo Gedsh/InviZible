@@ -161,7 +161,7 @@ public class BootCompleteManager {
         }
 
         if (autoStartITPD) {
-            shortenTooLongITPDLog();
+            //shortenTooLongITPDLog();
         }
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
