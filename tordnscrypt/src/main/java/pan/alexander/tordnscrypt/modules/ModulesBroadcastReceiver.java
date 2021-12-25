@@ -54,7 +54,6 @@ import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
 import pan.alexander.tordnscrypt.utils.privatedns.PrivateDnsProxyManager;
-import pan.alexander.tordnscrypt.vpn.NetworkUtils;
 
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
@@ -473,7 +472,9 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
 
     private void resetArpScanner() {
         if (context != null && defaultSharedPreferences.get().getBoolean(ARP_SPOOFING_DETECTION, false)) {
-            ArpScanner.getArpComponent().get().reset(NetworkUtils.isConnected(context));
+            ConnectionCheckerInteractor interactor = connectionCheckerInteractor.get();
+            interactor.checkNetworkConnection();
+            ArpScanner.getArpComponent().get().reset(interactor.getNetworkConnectionResult());
         }
     }
 

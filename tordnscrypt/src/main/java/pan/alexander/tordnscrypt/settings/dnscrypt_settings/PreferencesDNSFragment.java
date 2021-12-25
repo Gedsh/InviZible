@@ -59,12 +59,13 @@ import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.DNSCryptRulesVariant;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
-import pan.alexander.tordnscrypt.vpn.service.ServiceVPN;
+import pan.alexander.tordnscrypt.vpn.service.VpnBuilder;
 
 import static android.provider.DocumentsContract.EXTRA_INITIAL_URI;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BLOCK_IPv6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -136,7 +137,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         preferences.add(findPreference("refresh_delay_relays"));
         preferences.add(findPreference("block_unqualified"));
         preferences.add(findPreference("block_undelegated"));
-        preferences.add(findPreference("block_ipv6"));
+        preferences.add(findPreference(BLOCK_IPv6));
 
         for (Preference preference : preferences) {
             if (preference != null) {
@@ -330,8 +331,8 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                     val_toml.set(key_toml.indexOf("netprobe_address"), val);
                 }
 
-                if (ServiceVPN.vpnDnsSet != null) {
-                    ServiceVPN.vpnDnsSet.clear();
+                if (VpnBuilder.vpnDnsSet != null) {
+                    VpnBuilder.vpnDnsSet.clear();
                 }
                 return true;
             } else if (Objects.equals(preference.getKey(), "proxy_port")) {

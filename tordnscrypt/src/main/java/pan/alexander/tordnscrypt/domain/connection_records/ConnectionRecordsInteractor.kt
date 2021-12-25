@@ -23,12 +23,15 @@ import android.util.Log
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.lang.Exception
+import javax.inject.Inject
 import kotlin.collections.HashSet
 
-class ConnectionRecordsInteractor(private val connectionRecordsRepository: ConnectionRecordsRepository) {
+class ConnectionRecordsInteractor @Inject constructor(
+    private val connectionRecordsRepository: ConnectionRecordsRepository,
+    private val converter: dagger.Lazy<ConnectionRecordsConverter>
+) {
     private val applicationContext = App.instance.applicationContext
     private val listeners: HashSet<OnConnectionRecordsUpdatedListener?> = HashSet()
-    private var converter: ConnectionRecordsConverter? = null
     private var parser: ConnectionRecordsParser? = null
 
     fun addListener(listener: OnConnectionRecordsUpdatedListener) {
@@ -62,8 +65,7 @@ class ConnectionRecordsInteractor(private val connectionRecordsRepository: Conne
     fun stopConverter(forceStop: Boolean = false) {
         if (listeners.isEmpty() || forceStop) {
             connectionRecordsRepository.connectionRawRecordsNoMoreRequired()
-            converter?.onStop()
-            converter = null
+            converter.get().onStop()
             parser = null
         }
     }
@@ -75,7 +77,6 @@ class ConnectionRecordsInteractor(private val connectionRecordsRepository: Conne
             return
         }
 
-        converter = converter ?: ConnectionRecordsConverter(context)
         parser = parser ?: ConnectionRecordsParser(context)
 
         var rawConnections: List<ConnectionRecord?> = emptyList()
@@ -83,7 +84,10 @@ class ConnectionRecordsInteractor(private val connectionRecordsRepository: Conne
         try {
             rawConnections = connectionRecordsRepository.getRawConnectionRecords()
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "ConnectionRecordsInteractor getRawConnectionRecords exception ${e.message} ${e.cause}")
+            Log.e(
+                LOG_TAG,
+                "ConnectionRecordsInteractor getRawConnectionRecords exception ${e.message} ${e.cause}"
+            )
         }
 
         if (rawConnections.isEmpty()) {
@@ -93,9 +97,12 @@ class ConnectionRecordsInteractor(private val connectionRecordsRepository: Conne
         var connectionRecords: List<ConnectionRecord>? = emptyList()
 
         try {
-            connectionRecords = converter?.convertRecords(rawConnections)
+            connectionRecords = converter.get().convertRecords(rawConnections)
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "ConnectionRecordsInteractor convertRecords exception ${e.message} ${e.cause}")
+            Log.e(
+                LOG_TAG,
+                "ConnectionRecordsInteractor convertRecords exception ${e.message} ${e.cause}"
+            )
         }
 
         if (connectionRecords?.isEmpty() == true) {
@@ -106,7 +113,10 @@ class ConnectionRecordsInteractor(private val connectionRecordsRepository: Conne
         try {
             records = parser?.formatLines(connectionRecords ?: emptyList())
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "ConnectionRecordsInteractor formatLines exception ${e.message} ${e.cause}")
+            Log.e(
+                LOG_TAG,
+                "ConnectionRecordsInteractor formatLines exception ${e.message} ${e.cause}"
+            )
         }
 
         if (records.isNullOrBlank()) {

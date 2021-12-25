@@ -87,7 +87,7 @@ public class BackupHelper {
 
         cachedExecutor.submit(() -> {
             try {
-                convertSharedPreferencesUIDsToPackageNames(activity);
+                convertSharedPreferencesUIDsToPackageNames();
 
                 SharedPreferences defaultSharedPref = PreferenceManager.getDefaultSharedPreferences(activity);
                 saveSharedPreferencesToFile(defaultSharedPref, cacheDir + "/defaultSharedPref");
@@ -204,9 +204,10 @@ public class BackupHelper {
         }
     }
 
-    private void convertSharedPreferencesUIDsToPackageNames(Context context) {
-        InstalledApplicationsManager installedApplicationsManager = new InstalledApplicationsManager(context, Collections.emptySet());
-        List<ApplicationData> applications = installedApplicationsManager.getInstalledApps(false);
+    private void convertSharedPreferencesUIDsToPackageNames() {
+        List<ApplicationData> applications = new InstalledApplicationsManager.Builder()
+                .build()
+                .getInstalledApps();
 
         for (String tag : TAGS_TO_CONVERT) {
             convertUIDsToPackageNames(applications, tag);

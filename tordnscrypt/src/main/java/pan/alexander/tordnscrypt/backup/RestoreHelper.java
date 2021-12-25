@@ -59,7 +59,7 @@ import pan.alexander.tordnscrypt.installer.Installer;
 
 import static pan.alexander.tordnscrypt.backup.BackupFragment.CODE_READ;
 import static pan.alexander.tordnscrypt.backup.BackupFragment.TAGS_TO_CONVERT;
-import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_NEWLY_INSTALLED;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_NEWLY_INSTALLED;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 class RestoreHelper extends Installer {
@@ -142,7 +142,7 @@ class RestoreHelper extends Installer {
                 SharedPreferences sharedPreferences = activity.getSharedPreferences(SharedPreferencesModule.APP_PREFERENCES_NAME, Context.MODE_PRIVATE);
                 restoreSharedPreferencesFromFile(sharedPreferences, appDataDir + "/sharedPreferences");
 
-                convertSharedPreferencesPackageNamesToUIDs(activity);
+                convertSharedPreferencesPackageNamesToUIDs();
 
                 FileManager.deleteFile(activity, appDataDir, "defaultSharedPref", "defaultSharedPref");
                 FileManager.deleteFile(activity, appDataDir, "sharedPreferences", "sharedPreferences");
@@ -311,9 +311,10 @@ class RestoreHelper extends Installer {
         }
     }
 
-    private void convertSharedPreferencesPackageNamesToUIDs(Context context) {
-        InstalledApplicationsManager installedApplicationsManager = new InstalledApplicationsManager(context, Collections.emptySet());
-        List<ApplicationData> applications = installedApplicationsManager.getInstalledApps(false);
+    private void convertSharedPreferencesPackageNamesToUIDs() {
+        List<ApplicationData> applications = new InstalledApplicationsManager.Builder()
+                .build()
+                .getInstalledApps();
 
         for (String tag : TAGS_TO_CONVERT) {
             convertPackageNamesToUIDs(applications, tag);

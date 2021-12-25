@@ -35,7 +35,6 @@ import pan.alexander.tordnscrypt.di.*
 import pan.alexander.tordnscrypt.di.logreader.LogReaderSubcomponent
 import pan.alexander.tordnscrypt.language.Language
 import pan.alexander.tordnscrypt.utils.multidex.MultidexActivator
-import java.lang.ref.WeakReference
 
 const val ANDROID_CHANNEL_ID = "InviZible"
 const val FIREWALL_CHANNEL_ID = "Firewall"
@@ -43,7 +42,7 @@ const val AUX_CHANNEL_ID = "Auxiliary"
 
 class App : Application() {
 
-    var currentActivity: WeakReference<Activity>? = null
+    //var currentActivity: WeakReference<Activity>? = null
 
     lateinit var daggerComponent: AppComponent
     private set

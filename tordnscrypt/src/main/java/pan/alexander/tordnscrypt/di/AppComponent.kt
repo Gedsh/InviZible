@@ -33,7 +33,6 @@ import pan.alexander.tordnscrypt.di.tiles.TilesSubcomponent
 import pan.alexander.tordnscrypt.dialogs.*
 
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptFragmentReceiver
-import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsConverter
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.help.HelpActivity
 import pan.alexander.tordnscrypt.help.HelpActivityReceiver
@@ -141,5 +140,4 @@ interface AppComponent {
     fun inject(modulesIptablesRules: ModulesIptablesRules)
     fun inject(serviceVPNHandler: ServiceVPNHandler)
     fun inject(installer: Installer)
-    fun inject(converter: ConnectionRecordsConverter)
 }

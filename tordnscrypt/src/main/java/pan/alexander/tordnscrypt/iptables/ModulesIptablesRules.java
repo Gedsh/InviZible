@@ -43,7 +43,7 @@ import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
 import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
-import pan.alexander.tordnscrypt.vpn.NetworkUtils;
+import pan.alexander.tordnscrypt.vpn.VpnUtils;
 
 import static pan.alexander.tordnscrypt.iptables.Tethering.usbModemAddressesRange;
 import static pan.alexander.tordnscrypt.iptables.Tethering.vpnInterfaceName;
@@ -58,14 +58,18 @@ import static pan.alexander.tordnscrypt.utils.Constants.G_DNG_41;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_42;
 import static pan.alexander.tordnscrypt.utils.Constants.HTTP_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_BLOCK_INTERNET;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BLOCK_HTTP;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BYPASS_LAN;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR_CLEARNET;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_UNLOCK;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OWN_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -97,9 +101,9 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
         PreferenceRepository preferences = preferenceRepository.get();
         runModulesWithRoot = shPref.getBoolean(RUN_MODULES_WITH_ROOT, false);
-        routeAllThroughTor = shPref.getBoolean("pref_fast_all_through_tor", true);
-        lan = shPref.getBoolean("Allow LAN", false);
-        blockHttp = shPref.getBoolean("pref_fast_block_http", false);
+        routeAllThroughTor = shPref.getBoolean(ALL_THROUGH_TOR, true);
+        lan = shPref.getBoolean(BYPASS_LAN, false);
+        blockHttp = shPref.getBoolean(BLOCK_HTTP, false);
         ignoreSystemDNS = shPref.getBoolean(IGNORE_SYSTEM_DNS, false);
         apIsOn = preferences.getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON);
         modemIsOn = preferences.getBoolPreference(PreferenceKeys.USB_MODEM_IS_ON);
@@ -111,7 +115,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
         boolean ttlFix = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE) && !modulesStatus.isUseModulesWithRoot();
-        boolean useProxy = shPref.getBoolean("swUseProxy", false);
+        boolean useProxy = shPref.getBoolean(USE_PROXY, false);
 
         boolean arpSpoofingDetection = shPref.getBoolean(ARP_SPOOFING_DETECTION, false);
         boolean blockInternetWhenArpAttackDetected = shPref.getBoolean(ARP_SPOOFING_BLOCK_INTERNET, false);
@@ -128,7 +132,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         String bypassLanFilter = "";
         if (lan) {
             StringBuilder nonTorRanges = new StringBuilder();
-            for (String address : NetworkUtils.nonTorList) {
+            for (String address : VpnUtils.nonTorList) {
                 nonTorRanges.append(address).append(" ");
             }
             nonTorRanges.deleteCharAt(nonTorRanges.lastIndexOf(" "));

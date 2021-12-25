@@ -32,11 +32,23 @@ public interface PreferenceKeys {
 
     String ARP_SPOOFING_NOT_SUPPORTED = "arpSpoofingNotSupported";
 
+    String FIREWALL_WAS_STARTED = "FirewallWasStarted";
+    String FIREWALL_ENABLED = "FirewallEnabled";
+    String APPS_ALLOW_LAN_PREF = "appsAllowLan";
+    String APPS_ALLOW_WIFI_PREF = "appsAllowWifi";
+    String APPS_ALLOW_GSM_PREF = "appsAllowGsm";
+    String APPS_ALLOW_ROAMING = "appsAllowRoaming";
+    String APPS_ALLOW_VPN = "appsAllowVpn";
+    String APPS_NEWLY_INSTALLED = "appsNewlyInstalled";
+
     //VPN
     String VPN_SERVICE_ENABLED = "VPNServiceEnabled";
 
     //Fast Settings
     String SITES_IPS_REFRESH_INTERVAL = "pref_fast_site_refresh_interval";
+    String BLOCK_HTTP = "pref_fast_block_http";
+    String ALL_THROUGH_TOR = "pref_fast_all_through_tor";
+    String BYPASS_LAN = "Allow LAN";
 
     //Common Settings
     String ARP_SPOOFING_DETECTION = "pref_common_arp_spoofing_detection";
@@ -44,4 +56,20 @@ public interface PreferenceKeys {
     String ALWAYS_SHOW_HELP_MESSAGES = "pref_common_show_help";
     String RUN_MODULES_WITH_ROOT = "swUseModulesRoot";
     String FIX_TTL = "pref_common_fix_ttl";
+    String TOR_TETHERING = "pref_common_tor_tethering";
+    String COMPATIBILITY_MODE = "swCompatibilityMode";
+    String DNS_REBIND_PROTECTION = "pref_common_dns_rebind_protection";
+    String USE_PROXY = "swUseProxy";
+    String PROXY_ADDRESS = "ProxyServer";
+    String PROXY_PORT = "ProxyPort";
+    String MULTI_USER_SUPPORT = "pref_common_multi_user";
+
+    //DNSCrypt Settings
+    String BLOCK_IPv6 = "block_ipv6";
+
+    //Tor Settings
+    String SNOWFLAKE_RENDEZVOUS = "SnowflakeRendezvous";
+
+    //Firewall Settings
+    String FIREWALL_SHOWS_ALL_APPS = "FirewallShowsAllApps";
 }

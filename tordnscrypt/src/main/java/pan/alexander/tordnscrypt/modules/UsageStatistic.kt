@@ -75,7 +75,8 @@ class UsageStatistic(private val context: Context) {
     @JvmOverloads
     fun startUpdate(period: Int = 3) {
 
-        if (period == updatePeriod) {
+        if (period == updatePeriod
+            && scheduledFuture?.isCancelled == false) {
             return
         }
 

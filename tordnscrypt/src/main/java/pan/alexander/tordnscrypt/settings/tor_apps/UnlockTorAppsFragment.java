@@ -22,7 +22,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -66,6 +65,7 @@ import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
@@ -125,7 +125,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
         //////////////////////////////////////////////////////////////////////////////////
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean routeAllThroughTorDevice = shPref.getBoolean("pref_fast_all_through_tor", true);
+        boolean routeAllThroughTorDevice = shPref.getBoolean(ALL_THROUGH_TOR, true);
         boolean bypassAppsProxy = getArguments() != null && getArguments().getBoolean("proxy");
 
         if (bypassAppsProxy) {
@@ -537,9 +537,11 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
 
                     appsListComplete = false;
 
-                    InstalledApplicationsManager installedApplicationsManager = new InstalledApplicationsManager(context, unlockAppsArrListSaved);
-                    installedApplicationsManager.setOnAppAddListener(UnlockTorAppsFragment.this);
-                    List<ApplicationData> installedApps = installedApplicationsManager.getInstalledApps(false);
+                    List<ApplicationData> installedApps = new InstalledApplicationsManager.Builder()
+                            .setOnAppAddListener(this)
+                            .activeApps(unlockAppsArrListSaved)
+                            .build()
+                            .getInstalledApps();
 
                     while (rvListTorApps != null && rvListTorApps.isComputingLayout()) {
                         TimeUnit.MILLISECONDS.sleep(100);

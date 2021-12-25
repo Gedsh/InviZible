@@ -19,6 +19,8 @@ package pan.alexander.tordnscrypt.dialogs;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TETHERING;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -110,7 +112,7 @@ public class DialogSaveConfigChanges extends ExtendedDialogFragment {
             ModulesRestarter.restartITPD(context);
 
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-            boolean torTethering = sharedPreferences.getBoolean("pref_common_tor_tethering", false) && torRunning;
+            boolean torTethering = sharedPreferences.getBoolean(TOR_TETHERING, false) && torRunning;
             boolean itpdTethering = sharedPreferences.getBoolean("pref_common_itpd_tethering", false);
             boolean routeAllThroughTorTether = sharedPreferences.getBoolean("pref_common_tor_route_all", false);
 

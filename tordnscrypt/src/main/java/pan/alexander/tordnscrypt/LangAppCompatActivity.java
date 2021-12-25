@@ -28,16 +28,13 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.lang.ref.WeakReference;
-import java.util.Objects;
-
 import pan.alexander.tordnscrypt.language.Language;
 
 
 public abstract class LangAppCompatActivity extends AppCompatActivity {
 
     private final boolean DEVELOPER_MODE = false;
-    private App applicationContext;
+    //private App applicationContext;
 
     @RequiresApi(api = Build.VERSION_CODES.P)
     @Override
@@ -63,19 +60,19 @@ public abstract class LangAppCompatActivity extends AppCompatActivity {
 
         Language.setFromPreference(this, "pref_fast_language");
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && getApplicationContext() instanceof App) {
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && getApplicationContext() instanceof App) {
             applicationContext = (App) getApplicationContext();
-        }
+        }*/
     }
 
-    @Override
+    /*@Override
     protected void onStart() {
         super.onStart();
 
         if (applicationContext != null) {
             applicationContext.setCurrentActivity(new WeakReference<>(this));
         }
-    }
+    }*/
 
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
@@ -94,7 +91,7 @@ public abstract class LangAppCompatActivity extends AppCompatActivity {
         super.applyOverrideConfiguration(overrideConfiguration);
     }
 
-    @Override
+    /*@Override
     protected void onStop() {
 
         clearCurrentActivity();
@@ -115,5 +112,5 @@ public abstract class LangAppCompatActivity extends AppCompatActivity {
                 && Objects.equals(applicationContext.getCurrentActivity().get(), this)) {
             applicationContext.setCurrentActivity(null);
         }
-    }
+    }*/
 }

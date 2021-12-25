@@ -37,13 +37,15 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.Constants;
 import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
-import pan.alexander.tordnscrypt.vpn.NetworkUtils;
+import pan.alexander.tordnscrypt.vpn.VpnUtils;
 
 import static pan.alexander.tordnscrypt.utils.Constants.HTTP_PORT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BYPASS_LAN;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR_CLEARNET_TETHER;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_UNLOCK_TETHER;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TETHERING;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -99,12 +101,12 @@ public class Tethering {
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
         PreferenceRepository preferences = preferenceRepository.get();
-        boolean torTethering = shPref.getBoolean("pref_common_tor_tethering", false) && torRunning;
+        boolean torTethering = shPref.getBoolean(TOR_TETHERING, false) && torRunning;
         boolean itpdTethering = shPref.getBoolean("pref_common_itpd_tethering", false) && itpdRunning;
         boolean routeAllThroughTorTether = shPref.getBoolean("pref_common_tor_route_all", false);
         boolean blockHotspotHttp = shPref.getBoolean("pref_common_block_http", false);
         addressLocalPC = shPref.getString("pref_common_local_eth_device_addr", Constants.STANDARD_ADDRESS_LOCAL_PC);
-        boolean lan = shPref.getBoolean("Allow LAN", false);
+        boolean lan = shPref.getBoolean(BYPASS_LAN, false);
         boolean ttlFix = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE) && !modulesStatus.isUseModulesWithRoot();
         apIsOn = preferences.getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON);
         Set<String> ipsToUnlockTether = preferences.getStringSetPreference(IPS_TO_UNLOCK_TETHER);
@@ -116,7 +118,7 @@ public class Tethering {
         String bypassLanForward = "";
         if (lan) {
             StringBuilder nonTorRanges = new StringBuilder();
-            for (String address : NetworkUtils.nonTorList) {
+            for (String address : VpnUtils.nonTorList) {
                 nonTorRanges.append(address).append(" ");
             }
             nonTorRanges.deleteCharAt(nonTorRanges.lastIndexOf(" "));

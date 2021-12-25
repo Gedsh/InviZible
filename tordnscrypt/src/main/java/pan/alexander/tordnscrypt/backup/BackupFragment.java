@@ -68,13 +68,13 @@ import pan.alexander.tordnscrypt.utils.filemanager.OnBinaryFileOperationsComplet
 
 import static android.app.Activity.RESULT_OK;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
-import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_ALLOW_GSM_PREF;
-import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_ALLOW_LAN_PREF;
-import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_ALLOW_ROAMING;
-import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_ALLOW_VPN;
-import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_ALLOW_WIFI_PREF;
 import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.CLEARNET_APPS;
 import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.UNLOCK_APPS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_GSM_PREF;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_LAN_PREF;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_ROAMING;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_VPN;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_WIFI_PREF;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.deleteFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;

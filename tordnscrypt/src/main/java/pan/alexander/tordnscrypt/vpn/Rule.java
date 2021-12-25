@@ -24,10 +24,10 @@ import android.content.pm.PackageInfo;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
@@ -37,6 +37,7 @@ import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
 import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.CLEARNET_APPS;
 import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.UNLOCK_APPS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class Rule {
@@ -46,15 +47,15 @@ public class Rule {
     public boolean apply = true;
 
     private static boolean isSystem(String packageName, Context context) {
-        return NetworkUtils.isSystem(packageName, context);
+        return VpnUtils.isSystem(packageName, context);
     }
 
     private static boolean hasInternet(String packageName, Context context) {
-        return NetworkUtils.hasInternet(packageName, context);
+        return VpnUtils.hasInternet(packageName, context);
     }
 
     private static boolean isEnabled(PackageInfo info, Context context) {
-        return NetworkUtils.isEnabled(info, context);
+        return VpnUtils.isEnabled(info, context);
     }
 
     private Rule(ApplicationData info) {
@@ -67,7 +68,7 @@ public class Rule {
         synchronized (context.getApplicationContext()) {
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            boolean routeAllThroughIniZible = prefs.getBoolean("pref_fast_all_through_tor", true);
+            boolean routeAllThroughIniZible = prefs.getBoolean(ALL_THROUGH_TOR, true);
 
             String unlockAppsStr;
             if (!routeAllThroughIniZible) {
@@ -83,10 +84,11 @@ public class Rule {
             Set<String> setBypassProxy = preferences.getStringSetPreference(CLEARNET_APPS_FOR_PROXY);
 
             // Build rule list
-            List<Rule> listRules = new CopyOnWriteArrayList<>();
+            List<Rule> listRules = new ArrayList<>();
 
-            InstalledApplicationsManager installedApplicationsManager = new InstalledApplicationsManager(context, Collections.emptySet());
-            List<ApplicationData> installedApps = installedApplicationsManager.getInstalledApps(false);
+            List<ApplicationData> installedApps = new InstalledApplicationsManager.Builder()
+                    .build()
+                    .getInstalledApps();
 
 
             for (ApplicationData info : installedApps)

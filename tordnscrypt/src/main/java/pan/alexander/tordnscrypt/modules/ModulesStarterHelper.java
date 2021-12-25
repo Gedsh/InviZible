@@ -19,7 +19,6 @@ package pan.alexander.tordnscrypt.modules;
     Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
@@ -31,7 +30,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.jrummyapps.android.shell.CommandResult;
 import com.jrummyapps.android.shell.Shell;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -48,6 +46,7 @@ import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DNSCRYPT_KEYWORD;
 import static pan.alexander.tordnscrypt.modules.ModulesService.ITPD_KEYWORD;
 import static pan.alexander.tordnscrypt.modules.ModulesService.TOR_KEYWORD;
+import static pan.alexander.tordnscrypt.utils.AppExtension.getApp;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.DNSCryptRunFragmentMark;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.I2PDRunFragmentMark;
@@ -235,7 +234,7 @@ public class ModulesStarterHelper {
                 Log.e(LOG_TAG, "Error Tor: " + shellResult.exitCode
                         + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
 
-                if (!isActivityActive() && modulesStatus.getTorState() == RUNNING) {
+                if (!getApp(context).isAppForeground() && modulesStatus.getTorState() == RUNNING) {
                     System.exit(0);
                 }
 
@@ -250,7 +249,7 @@ public class ModulesStarterHelper {
         };
     }
 
-    private boolean isActivityActive() {
+    /*private boolean isActivityActive() {
 
         App app = App.Companion.getInstance();
 
@@ -265,7 +264,7 @@ public class ModulesStarterHelper {
         }
 
         return !activity.isFinishing();
-    }
+    }*/
 
     Runnable getITPDStarterRunnable() {
         return () -> {

@@ -54,6 +54,7 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
@@ -97,7 +98,7 @@ public class UnlockTorIpsFragment extends Fragment {
         ///////////////////////Reverse logic when route all through Tor!///////////////////
         //////////////////////////////////////////////////////////////////////////////////
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(activity);
-        boolean routeAllThroughTorDevice = shPref.getBoolean("pref_fast_all_through_tor", true);
+        boolean routeAllThroughTorDevice = shPref.getBoolean(ALL_THROUGH_TOR, true);
         boolean routeAllThroughTorTether = shPref.getBoolean("pref_common_tor_route_all", false);
 
         String deviceOrTether = null;

@@ -89,6 +89,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATI
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_READY_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TETHERING;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -582,7 +583,7 @@ public class TopFragment extends Fragment {
         preferences.setStringPreference("DNSCrypt Servers", "");
         SharedPreferences sPref = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = sPref.edit();
-        editor.putBoolean("pref_common_tor_tethering", false);
+        editor.putBoolean(TOR_TETHERING, false);
         editor.putBoolean("pref_common_itpd_tethering", false);
         editor.apply();
 

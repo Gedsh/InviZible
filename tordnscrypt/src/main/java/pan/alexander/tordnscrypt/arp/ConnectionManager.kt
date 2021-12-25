@@ -21,7 +21,7 @@ package pan.alexander.tordnscrypt.arp
 
 import android.content.Context
 import pan.alexander.tordnscrypt.di.arp.ArpScope
-import pan.alexander.tordnscrypt.vpn.NetworkUtils
+import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker
 import javax.inject.Inject
 
 @ArpScope
@@ -38,9 +38,9 @@ class ConnectionManager @Inject constructor(
     var ethernetActive = false
 
     fun updateActiveNetworks() {
-        cellularActive = NetworkUtils.isCellularActive(context)
-        wifiActive = NetworkUtils.isWifiActive(context)
-        ethernetActive = NetworkUtils.isEthernetActive(context)
+        cellularActive = NetworkChecker.isCellularActive(context)
+        wifiActive = NetworkChecker.isWifiActive(context)
+        ethernetActive = NetworkChecker.isEthernetActive(context)
     }
 
     fun clearActiveNetworks() {
@@ -49,5 +49,5 @@ class ConnectionManager @Inject constructor(
         ethernetActive = false
     }
 
-    fun isConnected(): Boolean = NetworkUtils.isConnected(context)
+    fun isConnected(): Boolean = NetworkChecker.isNetworkAvailable(context)
 }

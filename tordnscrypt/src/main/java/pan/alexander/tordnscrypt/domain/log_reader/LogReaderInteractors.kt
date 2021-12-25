@@ -22,7 +22,6 @@ package pan.alexander.tordnscrypt.domain.log_reader
 import pan.alexander.tordnscrypt.di.logreader.LogReaderScope
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsInteractor
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsInteractorInterface
-import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsRepository
 import pan.alexander.tordnscrypt.domain.connection_records.OnConnectionRecordsUpdatedListener
 import pan.alexander.tordnscrypt.domain.log_reader.dnscrypt.DNSCryptInteractor
 import pan.alexander.tordnscrypt.domain.log_reader.dnscrypt.OnDNSCryptLogUpdatedListener
@@ -37,7 +36,7 @@ import javax.inject.Inject
 @LogReaderScope
 class LogReaderInteractors @Inject constructor(
     modulesLogRepository: ModulesLogRepository,
-    connectionsRepository: ConnectionRecordsRepository
+    private val connectionRecordsInteractor: ConnectionRecordsInteractor
 ) :
     DNSCryptInteractorInterface,
     TorInteractorInterface,
@@ -48,7 +47,6 @@ class LogReaderInteractors @Inject constructor(
     private val torInteractor = TorInteractor(modulesLogRepository)
     private val itpdInteractor = ITPDInteractor(modulesLogRepository)
     private val itpdHtmlInteractor = ITPDHtmlInteractor(modulesLogRepository)
-    private val connectionRecordsInteractor = ConnectionRecordsInteractor(connectionsRepository)
 
     private val logReaderLoop = LogReaderLoop(
         dnsCryptInteractor,
