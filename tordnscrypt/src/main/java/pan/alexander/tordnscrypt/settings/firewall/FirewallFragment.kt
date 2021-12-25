@@ -20,138 +20,108 @@ package pan.alexander.tordnscrypt.settings.firewall
 */
 
 import android.annotation.SuppressLint
-import android.content.Context
+import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.CompoundButton
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.SimpleItemAnimator
 import com.google.android.material.chip.ChipGroup
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.databinding.FragmentFirewallBinding
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
-import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.settings.firewall.adapter.FirewallAdapter
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import java.util.*
-import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.Future
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.locks.ReentrantLock
+import java.util.concurrent.ConcurrentSkipListSet
 import javax.inject.Inject
-import kotlin.Comparator
-
-
-const val APPS_ALLOW_LAN_PREF = "appsAllowLan"
-const val APPS_ALLOW_WIFI_PREF = "appsAllowWifi"
-const val APPS_ALLOW_GSM_PREF = "appsAllowGsm"
-const val APPS_ALLOW_ROAMING = "appsAllowRoaming"
-const val APPS_ALLOW_VPN = "appsAllowVpn"
-const val APPS_NEWLY_INSTALLED = "appsNewlyInstalled"
 
 @SuppressLint("NotifyDataSetChanged")
-class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListener,
+class FirewallFragment : Fragment(),
     View.OnClickListener,
-    SearchView.OnQueryTextListener, ChipGroup.OnCheckedChangeListener,
+    SearchView.OnQueryTextListener,
+    ChipGroup.OnCheckedChangeListener,
     CompoundButton.OnCheckedChangeListener {
 
     @Inject
     lateinit var preferenceRepository: dagger.Lazy<PreferenceRepository>
+
     @Inject
-    lateinit var cachedExecutor: CachedExecutor
-    @Inject
-    lateinit var handler: dagger.Lazy<Handler>
+    lateinit var viewModelFactory: ViewModelProvider.Factory
+    val viewModel by lazy {
+        ViewModelProvider(this, viewModelFactory).get(FirewallViewModel::class.java)
+    }
 
     private var _binding: FragmentFirewallBinding? = null
     private val binding get() = _binding!!
 
     private val modulesStatus = ModulesStatus.getInstance()
-    private var futureTask: Future<*>? = null
-    private var firewallAdapter: RecyclerView.Adapter<FirewallAdapter.FirewallViewHolder>? = null
+
+    private var firewallAdapter: FirewallAdapter? = null
     private var lastVisibleAdapterPosition: Int = 0
 
-    var firewallSwitch: SwitchCompat? = null
+    private var firewallSwitch: SwitchCompat? = null
 
-    @Volatile
-    var appsList = CopyOnWriteArrayList<FirewallAppModel>()
-    private val appsNewlyInstalledList by lazy { ArrayList<FirewallAppModel>() }
-    var savedAppsListWhenSearch: CopyOnWriteArrayList<FirewallAppModel>? = null
+    private val appsCurrentSet = ConcurrentSkipListSet<FirewallAppModel>()
 
-    private val reentrantLock = ReentrantLock()
+    private var allowLanForAll = false
+    private var allowWifiForAll = false
+    private var allowGsmForAll = false
+    private var allowRoamingForAll = false
+    private var allowVPNForAll = false
 
-    private var appsAllowLan = mutableSetOf<Int>()
-    private var appsAllowWifi = mutableSetOf<Int>()
-    private var appsAllowGsm = mutableSetOf<Int>()
-    private var appsAllowRoaming = mutableSetOf<Int>()
-    private var appsAllowVpn = mutableSetOf<Int>()
-
-    @Volatile
-    var allowLanForAll = false
-
-    @Volatile
-    var allowWifiForAll = false
-
-    @Volatile
-    var allowGsmForAll = false
-
-    @Volatile
-    var allowRoamingForAll = false
-
-    @Volatile
-    var allowVPNForAll = false
-
-    @Volatile
-    var appsListComplete = false
+    private var appsListComplete = false
 
     private var searchText: String? = null
 
     var firewallEnabled = false
 
-    private var comparatorWithName: Comparator<FirewallAppModel>? = null
-
-    private var comparatorWithUID: Comparator<FirewallAppModel>? = null
-
-    @Suppress("deprecation")
     override fun onCreate(savedInstanceState: Bundle?) {
         App.instance.daggerComponent.inject(this)
 
         super.onCreate(savedInstanceState)
 
-        retainInstance = true
+        setHasOptionsMenu(true)
 
-        firewallEnabled = preferenceRepository.get().getBoolPreference("FirewallEnabled")
-
-        initComparators()
+        firewallEnabled = preferenceRepository.get().getBoolPreference(FIREWALL_ENABLED)
     }
 
-    @SuppressLint("ResourceType")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        val context = activity ?: return null
+    ): View {
 
         _binding = FragmentFirewallBinding.inflate(inflater, container, false)
 
+        firewallAdapter = FirewallAdapter(
+            requireContext(),
+            preferenceRepository.get(),
+            ::allowLan,
+            ::allowWifi,
+            ::allowGsm,
+            ::allowRoaming,
+            ::allowVpn,
+            ::onSortFinished
+        )
+
+        (binding.rvFirewallApps.itemAnimator as SimpleItemAnimator)
+            .supportsChangeAnimations = false
+        binding.rvFirewallApps.adapter = firewallAdapter
+
         if (firewallEnabled) {
-            enableFirewall(context)
+            enableFirewall()
         } else {
             disableFirewall()
         }
-
-        binding.rvFirewallApps.setHasFixedSize(true)
 
         binding.btnTopLanFirewall.setOnClickListener(this)
         binding.btnTopWifiFirewall.setOnClickListener(this)
@@ -174,41 +144,85 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
         searchText = null
 
         when {
-            binding.chipFirewallSystem.isChecked -> chipSelectSystemApps(context)
-            binding.chipFirewallUser.isChecked -> chipSelectUserApps(context)
-            binding.chipFirewallAll.isChecked -> chipSelectAllApps(context)
-            else -> updateTopIcons(context)
+            binding.chipFirewallSystem.isChecked -> chipSelectSystemApps()
+            binding.chipFirewallUser.isChecked -> chipSelectUserApps()
+            binding.chipFirewallAll.isChecked -> chipSelectAllApps()
+            else -> updateTopIcons()
         }
 
         return binding.root
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        observeFirewallState()
+    }
+
+    private fun observeFirewallState() {
+        viewModel.firewallStateLiveData.observe(viewLifecycleOwner) {
+            when (it) {
+                FirewallState.Preparing -> firewallPreparing()
+                FirewallState.Ready -> firewallReady()
+            }
+        }
+    }
+
+    private fun firewallPreparing() {
+        binding.pbFirewallApp.isIndeterminate = true
+        binding.pbFirewallApp.visibility = View.VISIBLE
+        appsListComplete = false
+
+        if (!binding.rvFirewallApps.isComputingLayout) {
+            firewallAdapter?.updateItems(viewModel.appsCompleteSet, getSortMethod())
+        }
+    }
+
+    private fun firewallReady() {
+        val appListSize = appsCurrentSet.size
+        allowLanForAll = viewModel.appsAllowLan.size == appListSize
+        allowWifiForAll = viewModel.appsAllowWifi.size == appListSize
+        allowGsmForAll = viewModel.appsAllowGsm.size == appListSize
+        allowRoamingForAll = viewModel.appsAllowRoaming.size == appListSize
+        allowVPNForAll = viewModel.appsAllowVpn.size == appListSize
+
+        binding.pbFirewallApp.isIndeterminate = false
+        binding.pbFirewallApp.visibility = View.GONE
+        appsListComplete = true
+
+        val preferences = preferenceRepository.get()
+        val firewallFirstStart = !preferences.getBoolPreference(FIREWALL_WAS_STARTED)
+        if (firewallFirstStart) {
+            preferences.setBoolPreference(FIREWALL_WAS_STARTED, true)
+        }
+
+        if (firewallFirstStart) {
+            activateAll(true)
+            viewModel.activateAllFirsStart()
+        }
+
+        when {
+            binding.chipFirewallSystem.isChecked -> chipSelectSystemApps()
+            binding.chipFirewallUser.isChecked -> chipSelectUserApps()
+            else -> chipSelectAllApps()
+        }
+
+        if (allowLanForAll || allowWifiForAll || allowGsmForAll
+            || allowRoamingForAll || allowVPNForAll
+        ) {
+            updateTopIcons()
+        }
+    }
+
     override fun onResume() {
         super.onResume()
 
-        val context = activity ?: return
-
-        val manager = LinearLayoutManager(context)
-        firewallAdapter = FirewallAdapter(this)
-        firewallAdapter?.setHasStableIds(true)
-
-        binding.rvFirewallApps.apply {
-            layoutManager = manager
-            adapter = firewallAdapter
-        }
-
-        if (appsListComplete || !firewallEnabled) {
-            binding.pbFirewallApp.isIndeterminate = false
-            binding.pbFirewallApp.visibility = View.GONE
-        } else {
-            binding.pbFirewallApp.isIndeterminate = true
-            binding.pbFirewallApp.visibility = View.VISIBLE
-        }
+        activity?.title = ""
 
         if (searchText != null && appsListComplete && !binding.rvFirewallApps.isComputingLayout) {
             updateTopIconsData()
-            updateTopIcons(context)
-            firewallAdapter?.notifyDataSetChanged()
+            updateTopIcons()
+            firewallAdapter?.updateItems(appsCurrentSet, getSortMethod())
         }
 
         if (lastVisibleAdapterPosition > 0 && appsListComplete) {
@@ -218,16 +232,48 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
         }
     }
 
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        return inflater.inflate(R.menu.firewall_menu, menu)
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu) {
+
+        (menu.findItem(R.id.firewall_search)?.actionView as? SearchView)?.setOnQueryTextListener(
+            this
+        )
+        (menu.findItem(R.id.firewall_switch_item)
+            ?.actionView?.findViewById<SwitchCompat>(R.id.menu_switch))?.let {
+
+                firewallSwitch = it
+                it.isChecked = firewallEnabled
+                it.setOnCheckedChangeListener(this)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    it.tooltipText = getString(R.string.firewall_switch)
+                }
+            }
+
+        super.onPrepareOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.firewall_settings) {
+            parentFragmentManager.beginTransaction()
+                .replace(android.R.id.content, FirewallPreferencesFragment())
+                .addToBackStack(null)
+                .commit()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
     override fun onPause() {
         super.onPause()
 
-        if (appsList.isNotEmpty() && appsListComplete) {
-
-            binding.pbFirewallApp.isIndeterminate = true
-            binding.pbFirewallApp.visibility = View.VISIBLE
+        if (appsCurrentSet.isNotEmpty() && appsListComplete) {
 
             lastVisibleAdapterPosition =
-                (binding.rvFirewallApps.layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition()
+                (binding.rvFirewallApps.layoutManager as LinearLayoutManager)
+                    .findFirstCompletelyVisibleItemPosition()
         }
     }
 
@@ -235,229 +281,7 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
         super.onDestroyView()
 
         _binding = null
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-
-        futureTask?.cancel(true)
-        handler.get().removeCallbacksAndMessages(null)
-    }
-
-    private fun initComparators() {
-
-        val rootMode = modulesStatus.mode == OperationMode.ROOT_MODE
-
-        comparatorWithName = compareBy({
-            !(it.allowLan
-                    || it.allowWifi
-                    || it.allowGsm
-                    || it.allowRoaming
-                    || it.allowVPN && rootMode)
-        },
-            { it.applicationData.names.first() })
-
-        comparatorWithUID = compareBy({
-            !(it.allowLan
-                    || it.allowWifi
-                    || it.allowGsm
-                    || it.allowRoaming
-                    || it.allowVPN && rootMode)
-        },
-            { it.applicationData.uid })
-    }
-
-    private fun getDeviceApps(context: Context) {
-
-        if (appsList.isNotEmpty()) {
-            return
-        }
-
-        appsListComplete = false
-
-        futureTask = cachedExecutor.submit {
-
-            try {
-
-                reentrantLock.lockInterruptibly()
-
-                if (appsList.isEmpty()) {
-
-                    handler.get().post {
-                        if (_binding != null) {
-                            binding.pbFirewallApp.isIndeterminate = true
-                            binding.pbFirewallApp.visibility = View.VISIBLE
-                        }
-                    }
-
-                    val preferences = preferenceRepository.get()
-
-                    val firewallFirstStart = !preferences.getBoolPreference("FirewallWasStarted")
-                    if (firewallFirstStart) {
-                        preferences.setBoolPreference("FirewallWasStarted", true)
-                    }
-
-                    appsAllowLan.addAll(
-                        stringSetToIntSet(
-                            preferences.getStringSetPreference(APPS_ALLOW_LAN_PREF)
-                        )
-                    )
-                    appsAllowWifi.addAll(
-                        stringSetToIntSet(
-                            preferences.getStringSetPreference(APPS_ALLOW_WIFI_PREF)
-                        )
-                    )
-                    appsAllowGsm.addAll(
-                        stringSetToIntSet(
-                            preferences.getStringSetPreference(APPS_ALLOW_GSM_PREF)
-                        )
-                    )
-                    appsAllowRoaming.addAll(
-                        stringSetToIntSet(
-                            preferences.getStringSetPreference(APPS_ALLOW_ROAMING)
-                        )
-                    )
-                    appsAllowVpn.addAll(
-                        stringSetToIntSet(
-                            preferences.getStringSetPreference(APPS_ALLOW_VPN)
-                        )
-                    )
-
-                    val appsNewlyInstalledSavedSet =
-                        stringSetToIntSet(
-                            preferences.getStringSetPreference(APPS_NEWLY_INSTALLED)
-                        )
-
-                    val installedApplications = InstalledApplicationsManager(context, setOf())
-                    installedApplications.setOnAppAddListener(this@FirewallFragment)
-                    val installedApps = installedApplications.getInstalledApps(true)
-
-                    while (_binding?.rvFirewallApps?.isComputingLayout == true) {
-                        TimeUnit.MILLISECONDS.sleep(100)
-                    }
-
-                    appsListComplete = true
-
-                    appsList.clear()
-
-                    for (applicationData: ApplicationData in installedApps) {
-                        val uid = applicationData.uid
-
-                        if (appsNewlyInstalledSavedSet.contains(uid)) {
-                            appsNewlyInstalledList.add(
-                                0, FirewallAppModel(
-                                    applicationData,
-                                    appsAllowLan.contains(uid),
-                                    appsAllowWifi.contains(uid),
-                                    appsAllowGsm.contains(uid),
-                                    appsAllowRoaming.contains(uid),
-                                    appsAllowVpn.contains(uid)
-                                )
-                            )
-                        } else {
-                            appsList.add(
-                                FirewallAppModel(
-                                    applicationData,
-                                    appsAllowLan.contains(uid),
-                                    appsAllowWifi.contains(uid),
-                                    appsAllowGsm.contains(uid),
-                                    appsAllowRoaming.contains(uid),
-                                    appsAllowVpn.contains(uid)
-                                )
-                            )
-                        }
-                    }
-
-                    preferences.setStringSetPreference(APPS_NEWLY_INSTALLED, setOf())
-
-                    val appListSize = appsList.size
-                    allowLanForAll = appsAllowLan.size == appListSize
-                    allowWifiForAll = appsAllowWifi.size == appListSize
-                    allowGsmForAll = appsAllowGsm.size == appListSize
-                    allowRoamingForAll = appsAllowRoaming.size == appListSize
-                    allowVPNForAll = appsAllowVpn.size == appListSize
-
-                    while (_binding?.rvFirewallApps?.isComputingLayout == true) {
-                        TimeUnit.MILLISECONDS.sleep(100)
-                    }
-
-                    handler.get().post {
-
-                        if (_binding != null) {
-                            binding.pbFirewallApp.isIndeterminate = false
-                            binding.pbFirewallApp.visibility = View.GONE
-
-                            if (firewallFirstStart) {
-                                activateAllFirsStart(context)
-                            }
-
-                            if (binding.chipFirewallSortUid.isChecked) {
-                                sortByUid()
-                            } else {
-                                sortByName()
-                            }
-
-                            appsNewlyInstalledList.forEach {
-                                appsList.add(0, it)
-                            }
-                            appsNewlyInstalledList.clear()
-
-                            if (binding.chipFirewallSystem.isChecked) {
-                                chipSelectSystemApps(context)
-                            } else if (binding.chipFirewallUser.isChecked) {
-                                chipSelectUserApps(context)
-                            }
-
-                            if (allowLanForAll || allowWifiForAll || allowGsmForAll
-                                || allowRoamingForAll || allowVPNForAll
-                            ) {
-                                updateTopIcons(context)
-                            }
-
-                            firewallAdapter?.notifyDataSetChanged()
-                        }
-                    }
-                }
-
-            } catch (e: Exception) {
-                appsListComplete = true
-                Log.e(
-                    LOG_TAG,
-                    "FirewallFragment getDeviceApps exception ${e.message} ${e.cause} ${
-                        Arrays.toString(e.stackTrace)
-                    }"
-                )
-            } finally {
-                if (reentrantLock.isLocked) {
-                    reentrantLock.unlock()
-                }
-            }
-        }
-    }
-
-    override fun onAppAdded(application: ApplicationData) {
-        if (appsListComplete || _binding?.rvFirewallApps?.isComputingLayout == true) {
-            return
-        }
-
-        val uid = application.uid
-        appsList.add(
-            0,
-            FirewallAppModel(
-                application,
-                appsAllowLan.contains(uid),
-                appsAllowWifi.contains(uid),
-                appsAllowGsm.contains(uid),
-                appsAllowRoaming.contains(uid),
-                appsAllowVpn.contains(uid)
-            )
-        )
-
-        handler.get().post {
-            if (!appsListComplete && _binding?.rvFirewallApps?.isComputingLayout == false) {
-                firewallAdapter?.notifyDataSetChanged()
-            }
-        }
+        firewallAdapter = null
     }
 
     override fun onClick(v: View?) {
@@ -468,18 +292,18 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
         }
 
         when (v.id) {
-            R.id.btnTopLanFirewall -> activateAllLan(v.context)
-            R.id.btnTopWifiFirewall -> activateAllWifi(v.context)
-            R.id.btnTopGsmFirewall -> activateAllGsm(v.context)
-            R.id.btnTopRoamingFirewall -> activateAllRoaming(v.context)
-            R.id.btnTopVpnFirewall -> activateAllVpn(v.context)
-            R.id.btnTopCheckAllFirewall -> activateAll(v.context, true)
-            R.id.btnTopUnCheckAllFirewall -> activateAll(v.context, false)
+            R.id.btnTopLanFirewall -> activateAllLan()
+            R.id.btnTopWifiFirewall -> activateAllWifi()
+            R.id.btnTopGsmFirewall -> activateAllGsm()
+            R.id.btnTopRoamingFirewall -> activateAllRoaming()
+            R.id.btnTopVpnFirewall -> activateAllVpn()
+            R.id.btnTopCheckAllFirewall -> activateAll(true)
+            R.id.btnTopUnCheckAllFirewall -> activateAll(false)
             R.id.btnPowerFirewall -> {
-                enableFirewall(v.context)
+                enableFirewall()
                 modulesStatus.setIptablesRulesUpdateRequested(context, true)
             }
-            else -> Log.e(LOG_TAG, "FirewallFragment onClick unknown id: ${v.id}")
+            else -> loge("FirewallFragment onClick unknown id: ${v.id}")
         }
     }
 
@@ -490,7 +314,7 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
         }
 
         searchApps(query)
-        firewallAdapter?.notifyDataSetChanged()
+        firewallAdapter?.updateItems(appsCurrentSet, getSortMethod())
 
         return true
     }
@@ -502,28 +326,25 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
         }
 
         searchApps(newText)
-        firewallAdapter?.notifyDataSetChanged()
+        firewallAdapter?.updateItems(appsCurrentSet, getSortMethod())
 
         return true
     }
 
     override fun onCheckedChanged(group: ChipGroup?, checkedId: Int) {
-        val context = group?.context ?: return
 
         if (!appsListComplete || binding.rvFirewallApps.isComputingLayout) {
             return
         }
 
         when (checkedId) {
-            R.id.chipFirewallAll -> chipSelectAllApps(context)
-            R.id.chipFirewallSystem -> chipSelectSystemApps(context)
-            R.id.chipFirewallUser -> chipSelectUserApps(context)
+            R.id.chipFirewallAll -> chipSelectAllApps()
+            R.id.chipFirewallSystem -> chipSelectSystemApps()
+            R.id.chipFirewallUser -> chipSelectUserApps()
             R.id.chipFirewallSortName -> sortByName()
             R.id.chipFirewallSortUid -> sortByUid()
-            else -> Log.e(LOG_TAG, "FirewallFragment chipGroup onCheckedChanged wrong id: $id")
+            else -> loge("FirewallFragment chipGroup onCheckedChanged wrong id: $id")
         }
-
-        firewallAdapter?.notifyDataSetChanged()
     }
 
     override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
@@ -531,7 +352,7 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
 
         if (buttonView.id == R.id.menu_switch) {
             if (isChecked) {
-                enableFirewall(context)
+                enableFirewall()
             } else {
                 disableFirewall()
             }
@@ -539,190 +360,12 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
         }
     }
 
-    fun isFirewallChangesSavingRequired(): Boolean {
-        if (!appsListComplete) {
-            return false
-        }
-
-        savedAppsListWhenSearch?.let {
-            if (it.isNotEmpty()) {
-                appsList = it
-                savedAppsListWhenSearch = null
-            }
-        }
-
-        val appsAllowLanToSave = mutableSetOf<Int>()
-        val appsAllowWifiToSave = mutableSetOf<Int>()
-        val appsAllowGsmToSave = mutableSetOf<Int>()
-        val appsAllowRoamingToSave = mutableSetOf<Int>()
-        val appsAllowVpnToSave = mutableSetOf<Int>()
-
-        for (firewallAppModel: FirewallAppModel in appsList) {
-            val uid = firewallAppModel.applicationData.uid
-            if (firewallAppModel.allowLan) {
-                appsAllowLanToSave.add(uid)
-            }
-            if (firewallAppModel.allowWifi) {
-                appsAllowWifiToSave.add(uid)
-            }
-            if (firewallAppModel.allowGsm) {
-                appsAllowGsmToSave.add(uid)
-            }
-            if (firewallAppModel.allowRoaming) {
-                appsAllowRoamingToSave.add(uid)
-            }
-            if (firewallAppModel.allowVPN) {
-                appsAllowVpnToSave.add(uid)
-            }
-        }
-
-        var iptablesUpdateRequired = false
-
-        if (appsAllowLanToSave.size != appsAllowLan.size || !appsAllowLanToSave.containsAll(
-                appsAllowLan
-            )
-        ) {
-            iptablesUpdateRequired = true
-        }
-        if (appsAllowWifiToSave.size != appsAllowWifi.size || !appsAllowWifiToSave.containsAll(
-                appsAllowWifi
-            )
-        ) {
-            iptablesUpdateRequired = true
-        }
-        if (appsAllowGsmToSave.size != appsAllowGsm.size || !appsAllowGsmToSave.containsAll(
-                appsAllowGsm
-            )
-        ) {
-            iptablesUpdateRequired = true
-        }
-        if (appsAllowRoamingToSave.size != appsAllowRoaming.size || !appsAllowRoamingToSave.containsAll(
-                appsAllowRoaming
-            )
-        ) {
-            iptablesUpdateRequired = true
-        }
-        if (appsAllowVpnToSave.size != appsAllowVpn.size || !appsAllowVpnToSave.containsAll(
-                appsAllowVpn
-            )
-        ) {
-            iptablesUpdateRequired = true
-        }
-
-        return iptablesUpdateRequired
-    }
-
-    fun saveFirewallChanges() {
-
-        val context = context ?: return
-
-        savedAppsListWhenSearch?.let {
-            if (it.isNotEmpty()) {
-                appsList = it
-                savedAppsListWhenSearch = null
-            }
-        }
-
-        val appsAllowLanToSave = mutableSetOf<Int>()
-        val appsAllowWifiToSave = mutableSetOf<Int>()
-        val appsAllowGsmToSave = mutableSetOf<Int>()
-        val appsAllowRoamingToSave = mutableSetOf<Int>()
-        val appsAllowVpnToSave = mutableSetOf<Int>()
-
-        for (firewallAppModel: FirewallAppModel in appsList) {
-            val uid = firewallAppModel.applicationData.uid
-            if (firewallAppModel.allowLan) {
-                appsAllowLanToSave.add(uid)
-            }
-            if (firewallAppModel.allowWifi) {
-                appsAllowWifiToSave.add(uid)
-            }
-            if (firewallAppModel.allowGsm) {
-                appsAllowGsmToSave.add(uid)
-            }
-            if (firewallAppModel.allowRoaming) {
-                appsAllowRoamingToSave.add(uid)
-            }
-            if (firewallAppModel.allowVPN) {
-                appsAllowVpnToSave.add(uid)
-            }
-        }
-
-        var iptablesUpdateRequired = false
-        val preferences = preferenceRepository.get()
-
-
-        if (appsAllowLanToSave.size != appsAllowLan.size || !appsAllowLanToSave.containsAll(
-                appsAllowLan
-            )
-        ) {
-            appsAllowLan = appsAllowLanToSave
-            preferences.setStringSetPreference(APPS_ALLOW_LAN_PREF, intSetToStringSet(appsAllowLan))
-            iptablesUpdateRequired = true
-        }
-        if (appsAllowWifiToSave.size != appsAllowWifi.size || !appsAllowWifiToSave.containsAll(
-                appsAllowWifi
-            )
-        ) {
-            appsAllowWifi = appsAllowWifiToSave
-            preferences.setStringSetPreference(
-                APPS_ALLOW_WIFI_PREF,
-                intSetToStringSet(appsAllowWifi)
-            )
-            iptablesUpdateRequired = true
-        }
-        if (appsAllowGsmToSave.size != appsAllowGsm.size || !appsAllowGsmToSave.containsAll(
-                appsAllowGsm
-            )
-        ) {
-            appsAllowGsm = appsAllowGsmToSave
-            preferences.setStringSetPreference(APPS_ALLOW_GSM_PREF, intSetToStringSet(appsAllowGsm))
-            iptablesUpdateRequired = true
-        }
-        if (appsAllowRoamingToSave.size != appsAllowRoaming.size || !appsAllowRoamingToSave.containsAll(
-                appsAllowRoaming
-            )
-        ) {
-            appsAllowRoaming = appsAllowRoamingToSave
-            preferences.setStringSetPreference(
-                APPS_ALLOW_ROAMING,
-                intSetToStringSet(appsAllowRoaming)
-            )
-            iptablesUpdateRequired = true
-        }
-        if (appsAllowVpnToSave.size != appsAllowVpn.size || !appsAllowVpnToSave.containsAll(
-                appsAllowVpn
-            )
-        ) {
-            appsAllowVpn = appsAllowVpnToSave
-            preferences.setStringSetPreference(APPS_ALLOW_VPN, intSetToStringSet(appsAllowVpn))
-            iptablesUpdateRequired = true
-        }
-
-        if (iptablesUpdateRequired) {
-            modulesStatus.setIptablesRulesUpdateRequested(context, true)
-        }
-    }
-
-    private fun stringSetToIntSet(stringSet: Set<String>): Set<Int> {
-        val intSet = mutableSetOf<Int>()
-        stringSet.forEach { intSet.add(it.toInt()) }
-        return intSet
-    }
-
-    private fun intSetToStringSet(intSet: MutableSet<Int>): Set<String> {
-        val stringSet = mutableSetOf<String>()
-        intSet.forEach { stringSet.add(it.toString()) }
-        return stringSet
-    }
-
     private fun sortByName() {
         if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
         }
 
-        comparatorWithName?.let { appsList.sortListWith(it) }
-        comparatorWithName?.let { savedAppsListWhenSearch?.sortListWith(it) }
+        firewallAdapter?.sortByName()
     }
 
     private fun sortByUid() {
@@ -730,39 +373,21 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
             return
         }
 
-        comparatorWithUID?.let { appsList.sortListWith(it) }
-        comparatorWithUID?.let { savedAppsListWhenSearch?.sortListWith(it) }
+        firewallAdapter?.sortByUid()
     }
 
-    @SuppressLint("unused")
-    private inline fun <T, R : Comparable<R>> CopyOnWriteArrayList<T>.sortListBy(crossinline selector: (T) -> R?) {
-        if (size > 1) {
-            val list = ArrayList(this)
-            list.sortBy(selector)
-            clear()
-            addAll(list)
-        }
-    }
-
-    private fun <T> CopyOnWriteArrayList<T>.sortListWith(comparator: Comparator<T>) {
-        if (size > 1) {
-            val list = ArrayList(this)
-            list.sortWith(comparator)
-            clear()
-            addAll(list)
-        }
-    }
-
-    private fun enableFirewall(context: Context) {
+    private fun enableFirewall() {
         firewallEnabled = true
-        preferenceRepository.get().setBoolPreference("FirewallEnabled", true)
+        preferenceRepository.get().setBoolPreference(FIREWALL_ENABLED, true)
 
         binding.llFirewallPower.visibility = View.GONE
         binding.llFirewallTop.visibility = View.VISIBLE
         binding.llFirewallMain.visibility = View.VISIBLE
         binding.rvFirewallApps.visibility = View.VISIBLE
 
-        getDeviceApps(context)
+        if (viewModel.appsCompleteSet.isEmpty()) {
+            viewModel.getDeviceApps()
+        }
 
         firewallSwitch?.isChecked = true
 
@@ -771,7 +396,7 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
 
     private fun disableFirewall() {
         firewallEnabled = false
-        preferenceRepository.get().setBoolPreference("FirewallEnabled", false)
+        preferenceRepository.get().setBoolPreference(FIREWALL_ENABLED, false)
 
         binding.llFirewallPower.visibility = View.VISIBLE
         binding.llFirewallTop.visibility = View.GONE
@@ -785,9 +410,8 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
     }
 
     private fun searchApps(text: String?) {
-        val context = context ?: return
 
-        searchText = text
+        searchText = text?.trim()?.lowercase()
 
         if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
@@ -797,90 +421,80 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
         val systemAppsSelected = binding.chipFirewallSystem.isChecked
         val userAppsSelected = binding.chipFirewallUser.isChecked
 
-        if (text == null || text.isEmpty()) {
+        if (text?.isEmpty() == true) {
 
-            savedAppsListWhenSearch?.let {
-                appsList = it
-                savedAppsListWhenSearch = null
-            }
+            appsCurrentSet.clear()
+            appsCurrentSet.addAll(viewModel.appsCompleteSet)
 
             if (systemAppsSelected) {
-                chipSelectSystemApps(context)
+                chipSelectSystemApps()
             } else if (userAppsSelected) {
-                chipSelectUserApps(context)
+                chipSelectUserApps()
             }
 
             return
         }
 
-        if (savedAppsListWhenSearch == null) {
-            savedAppsListWhenSearch = CopyOnWriteArrayList<FirewallAppModel>(appsList)
-        }
+        appsCurrentSet.clear()
 
-        appsList.clear()
-
-        savedAppsListWhenSearch?.forEach { savedApp ->
-            if (savedApp.applicationData.toString().lowercase(Locale.ROOT)
-                    .contains(text.lowercase(Locale.ROOT).trim())
+        viewModel.appsCompleteSet.forEach { completeSet ->
+            if (completeSet.applicationData.toString().lowercase().contains(searchText ?: "")
+                || completeSet.applicationData.pack.lowercase().contains(searchText ?: "")
             ) {
                 if (allAppsSelected
-                    || systemAppsSelected && savedApp.applicationData.system
-                    || userAppsSelected && !savedApp.applicationData.system
+                    || systemAppsSelected && completeSet.applicationData.system
+                    || userAppsSelected && !completeSet.applicationData.system
                 ) {
-                    appsList.add(savedApp)
+                    appsCurrentSet.add(completeSet)
                 }
 
             }
         }
 
         updateTopIconsData()
-        updateTopIcons(context)
+        updateTopIcons()
     }
 
-    private fun chipSelectAllApps(context: Context) {
+    private fun chipSelectAllApps() {
         if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
         }
 
-        savedAppsListWhenSearch?.let { savedAppsList ->
+        appsCurrentSet.clear()
 
-            if (searchText == null || searchText?.isBlank() == true) {
-                appsList = savedAppsList
-                savedAppsListWhenSearch = null
+        if (searchText == null || searchText?.isBlank() == true) {
+            appsCurrentSet.addAll(viewModel.appsCompleteSet)
 
-                updateTopIconsData()
-                updateTopIcons(context)
+            updateTopIconsData()
+            updateTopIcons()
 
-            } else {
-                searchText?.let { text ->
-                    searchApps(text)
-                }
-
+        } else {
+            searchText?.let { text ->
+                searchApps(text)
             }
+
         }
+
+        firewallAdapter?.updateItems(appsCurrentSet, getSortMethod())
     }
 
-    private fun chipSelectSystemApps(context: Context) {
+    private fun chipSelectSystemApps() {
         if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
         }
 
-        if (savedAppsListWhenSearch == null) {
-            savedAppsListWhenSearch = CopyOnWriteArrayList<FirewallAppModel>(appsList)
-        }
+        appsCurrentSet.clear()
 
-        appsList.clear()
-
-        savedAppsListWhenSearch?.forEach { savedApp ->
+        viewModel.appsCompleteSet.forEach { savedApp ->
             if (savedApp.applicationData.system) {
                 if (searchText == null || searchText?.isBlank() == true) {
-                    appsList.add(savedApp)
+                    appsCurrentSet.add(savedApp)
                 } else {
                     searchText?.let {
                         if (savedApp.applicationData.toString().lowercase(Locale.ROOT)
                                 .contains(it.lowercase(Locale.ROOT).trim())
                         ) {
-                            appsList.add(savedApp)
+                            appsCurrentSet.add(savedApp)
                         }
                     }
 
@@ -889,30 +503,28 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
         }
 
         updateTopIconsData()
-        updateTopIcons(context)
+        updateTopIcons()
+
+        firewallAdapter?.updateItems(appsCurrentSet, getSortMethod())
     }
 
-    private fun chipSelectUserApps(context: Context) {
+    private fun chipSelectUserApps() {
         if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
         }
 
-        if (savedAppsListWhenSearch == null) {
-            savedAppsListWhenSearch = CopyOnWriteArrayList<FirewallAppModel>(appsList)
-        }
+        appsCurrentSet.clear()
 
-        appsList.clear()
-
-        savedAppsListWhenSearch?.forEach { savedApp ->
+        viewModel.appsCompleteSet.forEach { savedApp ->
             if (!savedApp.applicationData.system) {
                 if (searchText == null || searchText?.isBlank() == true) {
-                    appsList.add(savedApp)
+                    appsCurrentSet.add(savedApp)
                 } else {
                     searchText?.let {
                         if (savedApp.applicationData.toString().lowercase(Locale.ROOT)
                                 .contains(it.lowercase(Locale.ROOT).trim())
                         ) {
-                            appsList.add(savedApp)
+                            appsCurrentSet.add(savedApp)
                         }
                     }
 
@@ -921,103 +533,102 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
         }
 
         updateTopIconsData()
-        updateTopIcons(context)
+        updateTopIcons()
+
+        firewallAdapter?.updateItems(appsCurrentSet, getSortMethod())
     }
 
     private fun updateTopIconsData() {
-        val appListSize = appsList.size
+        val appListSize = appsCurrentSet.size
         if (appListSize == 0) {
             return
         }
 
-        allowLanForAll = appsList.count { it.allowLan } == appListSize
+        allowLanForAll = appsCurrentSet.count { it.allowLan } == appListSize
 
-        allowWifiForAll = appsList.count { it.allowWifi } == appListSize
+        allowWifiForAll = appsCurrentSet.count { it.allowWifi } == appListSize
 
-        allowGsmForAll = appsList.count { it.allowGsm } == appListSize
+        allowGsmForAll = appsCurrentSet.count { it.allowGsm } == appListSize
 
-        allowRoamingForAll = appsList.count { it.allowRoaming } == appListSize
+        allowRoamingForAll = appsCurrentSet.count { it.allowRoaming } == appListSize
 
-        allowVPNForAll = appsList.count { it.allowVPN } == appListSize
+        allowVPNForAll = appsCurrentSet.count { it.allowVPN } == appListSize
     }
 
-    private fun updateTopIcons(context: Context) {
-        updateLanIcon(context)
-        updateWifiIcon(context)
-        updateGsmIcon(context)
-        updateRoamingIcon(context)
-        updateVpnIcon(context)
+    private fun updateTopIcons() {
+        updateLanIcon()
+        updateWifiIcon()
+        updateGsmIcon()
+        updateRoamingIcon()
+        updateVpnIcon()
     }
 
-    private fun activateAllLan(context: Context) {
+    private fun activateAllLan() {
         if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
         }
 
-        val activatedApps = CopyOnWriteArrayList<FirewallAppModel>()
+        val activatedApps = hashSetOf<FirewallAppModel>()
 
         allowLanForAll = !allowLanForAll
 
-        updateLanIcon(context)
+        updateLanIcon()
 
-        for (firewallAppModel: FirewallAppModel in appsList) {
+        for (firewallAppModel: FirewallAppModel in appsCurrentSet) {
             firewallAppModel.apply {
                 allowLan = allowLanForAll
                 activatedApps.add(this)
             }
         }
-        appsList = activatedApps
+        appsCurrentSet.clear()
+        appsCurrentSet.addAll(activatedApps)
 
-        firewallAdapter?.notifyDataSetChanged()
+        firewallAdapter?.updateItems(appsCurrentSet, getSortMethod())
     }
 
-    fun updateLanIcon(context: Context?) {
-        if (context == null) {
-            return
-        }
-
-        val icFirewallLan = ContextCompat.getDrawable(context, R.drawable.ic_firewall_lan)
-        val icFirewallLanGreen =
-            ContextCompat.getDrawable(context, R.drawable.ic_firewall_lan_green)
-
+    private fun updateLanIcon() {
         if (allowLanForAll) {
+            val icFirewallLanGreen =
+                ContextCompat.getDrawable(requireContext(), R.drawable.ic_firewall_lan_green)
             binding.btnTopLanFirewall.setImageDrawable(icFirewallLanGreen)
         } else {
+            val icFirewallLan =
+                ContextCompat.getDrawable(requireContext(), R.drawable.ic_firewall_lan)
             binding.btnTopLanFirewall.setImageDrawable(icFirewallLan)
         }
     }
 
-    private fun activateAllWifi(context: Context) {
+    private fun activateAllWifi() {
         if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
         }
 
-        val activatedApps = CopyOnWriteArrayList<FirewallAppModel>()
+        val activatedApps = hashSetOf<FirewallAppModel>()
 
         allowWifiForAll = !allowWifiForAll
 
-        updateWifiIcon(context)
+        updateWifiIcon()
 
-        for (firewallAppModel: FirewallAppModel in appsList) {
+        for (firewallAppModel: FirewallAppModel in appsCurrentSet) {
             firewallAppModel.apply {
                 allowWifi = allowWifiForAll
                 activatedApps.add(this)
             }
         }
-        appsList = activatedApps
+        appsCurrentSet.clear()
+        appsCurrentSet.addAll(activatedApps)
 
-        firewallAdapter?.notifyDataSetChanged()
+        firewallAdapter?.updateItems(appsCurrentSet, getSortMethod())
     }
 
-    fun updateWifiIcon(context: Context?) {
-        if (context == null) {
-            return
-        }
+    private val icFirewallWifiGreen by lazy {
+        ContextCompat.getDrawable(requireContext(), R.drawable.ic_firewall_wifi_green_24)
+    }
+    private val icFirewallWifi by lazy {
+        ContextCompat.getDrawable(requireContext(), R.drawable.ic_firewall_wifi_24)
+    }
 
-        val icFirewallWifi = ContextCompat.getDrawable(context, R.drawable.ic_firewall_wifi_24)
-        val icFirewallWifiGreen =
-            ContextCompat.getDrawable(context, R.drawable.ic_firewall_wifi_green_24)
-
+    private fun updateWifiIcon() {
         if (allowWifiForAll) {
             binding.btnTopWifiFirewall.setImageDrawable(icFirewallWifiGreen)
         } else {
@@ -1025,37 +636,37 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
         }
     }
 
-    private fun activateAllGsm(context: Context) {
+    private fun activateAllGsm() {
         if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
         }
 
-        val activatedApps = CopyOnWriteArrayList<FirewallAppModel>()
+        val activatedApps = hashSetOf<FirewallAppModel>()
 
         allowGsmForAll = !allowGsmForAll
 
-        updateGsmIcon(context)
+        updateGsmIcon()
 
-        for (firewallAppModel: FirewallAppModel in appsList) {
+        for (firewallAppModel: FirewallAppModel in appsCurrentSet) {
             firewallAppModel.apply {
                 allowGsm = allowGsmForAll
                 activatedApps.add(this)
             }
         }
-        appsList = activatedApps
+        appsCurrentSet.clear()
+        appsCurrentSet.addAll(activatedApps)
 
-        firewallAdapter?.notifyDataSetChanged()
+        firewallAdapter?.updateItems(appsCurrentSet, getSortMethod())
     }
 
-    fun updateGsmIcon(context: Context?) {
-        if (context == null) {
-            return
-        }
+    private val icFirewallGsmGreen by lazy {
+        ContextCompat.getDrawable(requireContext(), R.drawable.ic_firewall_gsm_green_24)
+    }
+    private val icFirewallGsm by lazy {
+        ContextCompat.getDrawable(requireContext(), R.drawable.ic_firewall_gsm_24)
+    }
 
-        val icFirewallGsm = ContextCompat.getDrawable(context, R.drawable.ic_firewall_gsm_24)
-        val icFirewallGsmGreen =
-            ContextCompat.getDrawable(context, R.drawable.ic_firewall_gsm_green_24)
-
+    private fun updateGsmIcon() {
         if (allowGsmForAll) {
             binding.btnTopGsmFirewall.setImageDrawable(icFirewallGsmGreen)
         } else {
@@ -1063,89 +674,92 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
         }
     }
 
-    private fun activateAllRoaming(context: Context) {
+    private fun activateAllRoaming() {
         if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
         }
 
-        val activatedApps = CopyOnWriteArrayList<FirewallAppModel>()
+        val activatedApps = hashSetOf<FirewallAppModel>()
 
         allowRoamingForAll = !allowRoamingForAll
 
-        updateRoamingIcon(context)
+        updateRoamingIcon()
 
-        for (firewallAppModel: FirewallAppModel in appsList) {
+        for (firewallAppModel: FirewallAppModel in appsCurrentSet) {
             firewallAppModel.apply {
                 allowRoaming = allowRoamingForAll
                 activatedApps.add(this)
             }
         }
-        appsList = activatedApps
+        appsCurrentSet.clear()
+        appsCurrentSet.addAll(activatedApps)
 
-        firewallAdapter?.notifyDataSetChanged()
+        firewallAdapter?.updateItems(appsCurrentSet, getSortMethod())
     }
 
-    fun updateRoamingIcon(context: Context?) {
-        if (context == null) {
-            return
-        }
+    private val icFirewallRoamingGreen by lazy {
+        ContextCompat.getDrawable(requireContext(), R.drawable.ic_firewall_roaming_green_24)
+    }
+    private val icFirewallRoaming by lazy {
+        ContextCompat.getDrawable(requireContext(), R.drawable.ic_firewall_roaming_24)
+    }
 
-        val icFirewallRoaming =
-            ContextCompat.getDrawable(context, R.drawable.ic_firewall_roaming_24)
-        val icFirewallRoamingGreen =
-            ContextCompat.getDrawable(context, R.drawable.ic_firewall_roaming_green_24)
-
+    private fun updateRoamingIcon() {
         if (allowRoamingForAll) {
+
             binding.btnTopRoamingFirewall.setImageDrawable(icFirewallRoamingGreen)
         } else {
+
             binding.btnTopRoamingFirewall.setImageDrawable(icFirewallRoaming)
         }
     }
 
-    private fun activateAllVpn(context: Context) {
+    private fun activateAllVpn() {
         if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
         }
 
-        val activatedApps = CopyOnWriteArrayList<FirewallAppModel>()
+        val activatedApps = hashSetOf<FirewallAppModel>()
 
         allowVPNForAll = !allowVPNForAll
 
-        updateVpnIcon(context)
+        updateVpnIcon()
 
-        for (firewallAppModel: FirewallAppModel in appsList) {
+        for (firewallAppModel: FirewallAppModel in appsCurrentSet) {
             firewallAppModel.apply {
                 allowVPN = allowVPNForAll
                 activatedApps.add(this)
             }
         }
-        appsList = activatedApps
+        appsCurrentSet.clear()
+        appsCurrentSet.addAll(activatedApps)
 
-        firewallAdapter?.notifyDataSetChanged()
+        firewallAdapter?.updateItems(appsCurrentSet, getSortMethod())
     }
 
-    fun updateVpnIcon(context: Context?) {
-        if (context == null) {
-            return
-        }
+    private val icFirewallVpnGreen by lazy {
+        ContextCompat.getDrawable(requireContext(), R.drawable.ic_firewall_vpn_key_green_24)
+    }
+    private val icFirewallVpn by lazy {
+        ContextCompat.getDrawable(requireContext(), R.drawable.ic_firewall_vpn_key_24)
+    }
 
-        val icFirewallVpn = ContextCompat.getDrawable(context, R.drawable.ic_firewall_vpn_key_24)
-        val icFirewallVpnGreen =
-            ContextCompat.getDrawable(context, R.drawable.ic_firewall_vpn_key_green_24)
-
+    private fun updateVpnIcon() {
         if (allowVPNForAll) {
+
             binding.btnTopVpnFirewall.setImageDrawable(icFirewallVpnGreen)
         } else {
+
             binding.btnTopVpnFirewall.setImageDrawable(icFirewallVpn)
         }
     }
 
-    private fun activateAll(context: Context, activate: Boolean) {
+    private fun activateAll(activate: Boolean) {
         if (binding.rvFirewallApps.isComputingLayout || !appsListComplete) {
             return
         }
 
-        val activatedApps = CopyOnWriteArrayList<FirewallAppModel>()
+        val activatedApps = hashSetOf<FirewallAppModel>()
 
         allowLanForAll = activate
         allowWifiForAll = activate
@@ -1153,9 +767,9 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
         allowRoamingForAll = activate
         allowVPNForAll = activate
 
-        updateTopIcons(context)
+        updateTopIcons()
 
-        for (firewallAppModel: FirewallAppModel in appsList) {
+        for (firewallAppModel: FirewallAppModel in appsCurrentSet) {
             firewallAppModel.apply {
                 allowLan = activate
                 allowWifi = activate
@@ -1165,31 +779,124 @@ class FirewallFragment : Fragment(), InstalledApplicationsManager.OnAppAddListen
                 activatedApps.add(this)
             }
         }
-        appsList = activatedApps
+        appsCurrentSet.clear()
+        appsCurrentSet.addAll(activatedApps)
 
-        firewallAdapter?.notifyDataSetChanged()
+        firewallAdapter?.updateItems(appsCurrentSet, getSortMethod())
     }
 
-    private fun activateAllFirsStart(context: Context) {
-        activateAll(context, true)
+    private fun allowLan(uid: Int) {
+        appsCurrentSet.find { it.applicationData.uid == uid }?.let { app ->
+            app.allowLan = !app.allowLan
+            setItem(app)
 
-        for (firewallAppModel: FirewallAppModel in appsList) {
-            val uid = firewallAppModel.applicationData.uid
-            appsAllowLan.add(uid)
-            appsAllowWifi.add(uid)
-            appsAllowGsm.add(uid)
-            appsAllowRoaming.add(uid)
-            appsAllowVpn.add(uid)
+            if (allowLanForAll) {
+                allowLanForAll = false
+                updateLanIcon()
+            } else if (appsCurrentSet.count { it.allowLan } == appsCurrentSet.size) {
+                allowLanForAll = true
+                updateLanIcon()
+            }
+        }
+    }
+
+    private fun allowWifi(uid: Int) {
+        appsCurrentSet.find { it.applicationData.uid == uid }?.let { app ->
+            app.allowWifi = !app.allowWifi
+            setItem(app)
+
+            if (allowWifiForAll) {
+                allowWifiForAll = false
+                updateWifiIcon()
+            } else if (appsCurrentSet.count { it.allowWifi } == appsCurrentSet.size) {
+                allowWifiForAll = true
+                updateWifiIcon()
+            }
+        }
+    }
+
+    private fun allowGsm(uid: Int) {
+        appsCurrentSet.find { it.applicationData.uid == uid }?.let { app ->
+            app.allowGsm = !app.allowGsm
+            setItem(app)
+
+            if (allowGsmForAll) {
+                allowGsmForAll = false
+                updateGsmIcon()
+            } else if (appsCurrentSet.count { it.allowGsm } == appsCurrentSet.size) {
+                allowGsmForAll = true
+                updateGsmIcon()
+            }
+        }
+    }
+
+    private fun allowRoaming(uid: Int) {
+        appsCurrentSet.find { it.applicationData.uid == uid }?.let { app ->
+            app.allowRoaming = !app.allowRoaming
+            setItem(app)
+
+            if (allowRoamingForAll) {
+                allowRoamingForAll = false
+                updateRoamingIcon()
+            } else if (appsCurrentSet.count { it.allowRoaming } == appsCurrentSet.size) {
+                allowRoamingForAll = true
+                updateRoamingIcon()
+            }
+        }
+    }
+
+    private fun allowVpn(uid: Int) {
+        appsCurrentSet.find { it.applicationData.uid == uid }?.let { app ->
+            app.allowVPN = !app.allowVPN
+            setItem(app)
+
+            if (allowVPNForAll) {
+                allowVPNForAll = false
+                updateVpnIcon()
+            } else if (appsCurrentSet.count { it.allowVPN } == appsCurrentSet.size) {
+                allowVPNForAll = true
+                updateVpnIcon()
+            }
+        }
+    }
+
+    private fun setItem(firewallAppModel: FirewallAppModel) {
+        appsCurrentSet.remove(firewallAppModel)
+        appsCurrentSet.add(firewallAppModel)
+
+        viewModel.appsCompleteSet.remove(firewallAppModel)
+        viewModel.appsCompleteSet.add(firewallAppModel)
+    }
+
+    private fun getSortMethod(): FirewallAdapter.SortMethod =
+        when {
+            binding.chipFirewallSortName.isChecked -> FirewallAdapter.SortMethod.BY_NAME
+            binding.chipFirewallSortUid.isChecked -> FirewallAdapter.SortMethod.BY_UID
+            else -> FirewallAdapter.SortMethod.BY_NAME
         }
 
-        val preferences = preferenceRepository.get()
+    private fun onSortFinished() {
+        binding.rvFirewallApps.scrollToPosition(0)
+    }
 
-        preferences.setStringSetPreference(APPS_ALLOW_LAN_PREF, intSetToStringSet(appsAllowLan))
-        preferences.setStringSetPreference(APPS_ALLOW_WIFI_PREF, intSetToStringSet(appsAllowWifi))
-        preferences.setStringSetPreference(APPS_ALLOW_GSM_PREF, intSetToStringSet(appsAllowGsm))
-        preferences.setStringSetPreference(APPS_ALLOW_ROAMING, intSetToStringSet(appsAllowRoaming))
-        if (modulesStatus.isRootAvailable) {
-            preferences.setStringSetPreference(APPS_ALLOW_VPN, intSetToStringSet(appsAllowVpn))
+    fun onBackPressed(): Boolean {
+        if (isVisible) {
+            val savingFirewallChangesRequired: Boolean = viewModel.isFirewallChangesSavingRequired()
+            val saveFirewallChangesFragmentIsDisplayed =
+                parentFragmentManager.findFragmentByTag(SaveFirewallChangesDialog.TAG) != null
+            if (savingFirewallChangesRequired && !saveFirewallChangesFragmentIsDisplayed) {
+                SaveFirewallChangesDialog().show(
+                    parentFragmentManager,
+                    SaveFirewallChangesDialog.TAG
+                )
+                return true
+            }
+            return false
         }
+        return false
+    }
+
+    companion object {
+        const val TAG = "pan.alexander.tordnscrypt.settings.FIREWALL_FRAGMENT"
     }
 }

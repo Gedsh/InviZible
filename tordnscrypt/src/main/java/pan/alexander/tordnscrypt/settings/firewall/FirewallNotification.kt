@@ -39,6 +39,7 @@ import pan.alexander.tordnscrypt.FIREWALL_CHANNEL_ID
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.settings.SettingsActivity
 import pan.alexander.tordnscrypt.modules.ModulesStatus
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 
 const val ALLOW_ACTION = "pan.alexander.tordnscrypt.ALLOW_APP_FOR_FIREWALL"
@@ -74,7 +75,7 @@ class FirewallNotification : BroadcastReceiver() {
 
     override fun onReceive(context: Context?, intent: Intent?) {
 
-        if (context == null || !preferenceRepository.get().getBoolPreference("FirewallEnabled")) {
+        if (context == null || !preferenceRepository.get().getBoolPreference(FIREWALL_ENABLED)) {
             return
         }
 

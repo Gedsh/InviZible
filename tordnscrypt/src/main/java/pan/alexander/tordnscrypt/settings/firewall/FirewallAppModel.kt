@@ -26,4 +26,23 @@ data class FirewallAppModel(val applicationData: ApplicationData,
                             var allowWifi: Boolean,
                             var allowGsm: Boolean,
                             var allowRoaming: Boolean,
-                            var allowVPN: Boolean)
+                            var allowVPN: Boolean): Comparable<FirewallAppModel> {
+
+    override fun compareTo(other: FirewallAppModel): Int {
+        return applicationData.uid.compareTo(other.applicationData.uid)
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (javaClass != other?.javaClass) return false
+
+        other as FirewallAppModel
+
+        if (applicationData.uid != other.applicationData.uid) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return applicationData.uid.hashCode()
+    }
+}

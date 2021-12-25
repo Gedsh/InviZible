@@ -25,6 +25,7 @@ import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.ObsoleteCoroutinesApi
+import pan.alexander.tordnscrypt.settings.firewall.FirewallViewModel
 import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsViewModel
 
 @Module
@@ -41,5 +42,12 @@ abstract class ViewModelModule {
     @ObsoleteCoroutinesApi
     abstract fun provideUnlockTorIpsViewModel(
         translationViewModel: UnlockTorIpsViewModel
+    ): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(FirewallViewModel::class)
+    abstract fun provideFirewallViewModel(
+        firewallViewModel: FirewallViewModel
     ): ViewModel
 }
