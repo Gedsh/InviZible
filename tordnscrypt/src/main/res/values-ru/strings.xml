@@ -513,4 +513,9 @@
          Оставьте только 3. Добавление более 3-х ярлыков может вызвать проблемы с управлением приложением.</string>
     <string name="pref_common_rogue_dhcp_detection">Обнаружение мошеннических DHCP</string>
     <string name="pref_common_rogue_dhcp_detection_summ">Обнаружение мошеннических DHCP в Wi-Fi сетях.</string>
+    <string name="pref_tor_snowflake_select_rendezvous">Выбрать точку рандеву</string>
+    <string name="pref_tor_snowflake_select_rendezvous_summ">Скрывает доменное имя брокера, который используется для установки соединения, от интернет-провайдера.</string>
+    <string name="pref_firewall_show_all_apps">Показывать все приложения</string>
+    <string name="pref_firewall_show_all_apps_on_summ">Показываются все приложения независимо от того, может ли приложение подключаться к Интернету или нет.</string>
+    <string name="pref_firewall_show_all_apps_off_summ">Показаны только те приложения, которые могут подключаться к Интернету.</string>
 </resources>
