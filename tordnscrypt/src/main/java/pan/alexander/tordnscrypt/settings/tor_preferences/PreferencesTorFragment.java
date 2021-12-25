@@ -47,11 +47,14 @@ import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.ConfigEditorFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.settings.tor_bridges.SnowflakeConfigurator;
 import pan.alexander.tordnscrypt.settings.tor_countries.CountrySelectFragment;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SNOWFLAKE_RENDEZVOUS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TETHERING;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -80,6 +83,8 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
     public Lazy<PathVars> pathVars;
     @Inject
     public CachedExecutor cachedExecutor;
+    @Inject
+    public Lazy<SnowflakeConfigurator> snowflakeConfigurator;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -130,6 +135,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         preferences.add(findPreference("Socks5Proxy"));
         preferences.add(findPreference("pref_tor_isolate_dest_address"));
         preferences.add(findPreference("pref_tor_isolate_dest_port"));
+        preferences.add(findPreference("SnowflakeRendezvous"));
 
         for (Preference preference : preferences) {
             if (preference != null) {
@@ -288,7 +294,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         boolean isolateDestAddress = sharedPreferences.getBoolean("pref_tor_isolate_dest_address", false);
         boolean isolateDestPort = sharedPreferences.getBoolean("pref_tor_isolate_dest_port", false);
-        boolean allowTorTethering = sharedPreferences.getBoolean("pref_common_tor_tethering", false);
+        boolean allowTorTethering = sharedPreferences.getBoolean(TOR_TETHERING, false);
 
         if (Objects.equals(preference.getKey(), "ExcludeExitNodes")) {
             if (Boolean.parseBoolean(newValue.toString()) && key_tor.contains("#ExcludeExitNodes")) {
@@ -368,21 +374,43 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             ModifyForwardingRules modifyForwardingRules = new ModifyForwardingRules(context,
                     "onion 127.0.0.1:" + newValue.toString().trim());
             cachedExecutor.submit(modifyForwardingRules.getRunnable());
+        } else if (Objects.equals(preference.getKey(), SNOWFLAKE_RENDEZVOUS)) {
+
+            if (!key_tor.contains("ClientTransportPlugin")) {
+                return true;
+            }
+
+            int index = key_tor.indexOf("ClientTransportPlugin");
+
+            if (val_tor.get(index).contains("snowflake")) {
+                val_tor.set(index, snowflakeConfigurator.get()
+                        .getConfiguration(Integer.parseInt(newValue.toString())));
+            }
+            return true;
         } else if (Objects.equals(preference.getKey(), "pref_tor_snowflake_stun")) {
 
-            if (newValue.toString().trim().isEmpty()) {
+            String serversStr = newValue.toString().trim();
+
+            if (serversStr.isEmpty()) {
                 return false;
             }
 
-            if (key_tor.contains("ClientTransportPlugin")) {
-                boolean saveExtendedLogs = preferenceRepository.get().getBoolPreference("swRootCommandsLog");
-                String saveLogsString = "";
-                if (saveExtendedLogs) {
-                    saveLogsString = " -log " + appDataDir + "/logs/Snowflake.log";
+            String[] servers = serversStr.split(", ?");
+            for (String server: servers) {
+                if (!server.matches(".+\\..+:\\d+")) {
+                    return false;
                 }
-                int index = key_tor.indexOf("ClientTransportPlugin");
-                String clientTransportPlugin = val_tor.get(index);
-                val_tor.set(index, clientTransportPlugin.replaceAll("stun:.+", "stun:" + newValue.toString().trim() + saveLogsString));
+            }
+
+            if (!key_tor.contains("ClientTransportPlugin")) {
+                return true;
+            }
+
+            int index = key_tor.indexOf("ClientTransportPlugin");
+
+            if (val_tor.get(index).contains("snowflake")) {
+                val_tor.set(index, snowflakeConfigurator.get()
+                        .getConfiguration(serversStr));
             }
             return true;
         } else if (Objects.equals(preference.getKey(), "SOCKSPort")

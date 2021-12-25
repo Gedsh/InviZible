@@ -21,19 +21,16 @@ package pan.alexander.tordnscrypt.settings.tor_bridges;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AlertDialog;
-import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -82,7 +79,6 @@ import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteL
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OWN_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
@@ -127,7 +123,6 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
     private String appDataDir;
     private String obfsPath;
-    private String snowflakePath;
     private String currentBridgesFilePath;
     private String bridgesDefaultFilePath;
     private String bridgesCustomFilePath;
@@ -145,7 +140,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     public CachedExecutor cachedExecutor;
     @Inject
     public Lazy<Handler> handlerLazy;
-
+    @Inject
+    public Lazy<SnowflakeConfigurator> snowflakeConfigurator;
 
     public PreferencesTorBridges() {
     }
@@ -160,13 +156,12 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         Context context = getActivity();
 
-        if (context== null) {
+        if (context == null) {
             return;
         }
 
         appDataDir = pathVars.get().getAppDataDir();
         obfsPath = pathVars.get().getObfsPath();
-        snowflakePath = pathVars.get().getSnowflakePath();
 
         currentBridgesFilePath = appDataDir + "/app_data/tor/bridges_default.lst";
         bridgesDefaultFilePath = appDataDir + "/app_data/tor/bridges_default.lst";
@@ -354,50 +349,6 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             currentBridgesTypeToSave = currentBridgesType.toString();
         }
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean saveExtendedLogs = sharedPreferences.getBoolean(ALWAYS_SHOW_HELP_MESSAGES, false);
-        String saveLogsString = "";
-        if (saveExtendedLogs) {
-            saveLogsString = " -log " + appDataDir + "/logs/Snowflake.log";
-        }
-
-        String stunServer;
-        stunServer = sharedPreferences.getString("pref_tor_snowflake_stun",
-                "stun.l.google.com:19302," +
-                        "stun.voip.blackberry.com:3478," +
-                        "stun.altar.com.pl:3478," +
-                        "stun.antisip.com:3478," +
-                        "stun.bluesip.net:3478," +
-                        "stun.dus.net:3478," +
-                        "stun.epygi.com:3478," +
-                        "stun.sonetel.com:3478," +
-                        "stun.sonetel.net:3478," +
-                        "stun.stunprotocol.org:3478," +
-                        "stun.uls.co.za:3478," +
-                        "stun.voipgate.com:3478," +
-                        "stun.voys.nl:3478");
-
-        if (stunServer != null && stunServer.equals("stun.l.google.com:19302")) {
-            stunServer = null;
-        }
-
-        if (stunServer == null) {
-            stunServer = "stun.l.google.com:19302," +
-                    "stun.voip.blackberry.com:3478," +
-                    "stun.altar.com.pl:3478," +
-                    "stun.antisip.com:3478," +
-                    "stun.bluesip.net:3478," +
-                    "stun.dus.net:3478," +
-                    "stun.epygi.com:3478," +
-                    "stun.sonetel.com:3478," +
-                    "stun.sonetel.net:3478," +
-                    "stun.stunprotocol.org:3478," +
-                    "stun.uls.co.za:3478," +
-                    "stun.voipgate.com:3478," +
-                    "stun.voys.nl:3478";
-            sharedPreferences.edit().putString("pref_tor_snowflake_stun", stunServer).apply();
-        }
-
         if (!currentBridges.isEmpty() && !currentBridgesType.equals(undefined)) {
 
             torConfCleaned.add("UseBridges 1");
@@ -406,28 +357,16 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
                 String clientTransportPlugin;
                 if (currentBridgesType.equals(snowflake)) {
-                    StringBuilder stunServers = new StringBuilder();
-                    String[] stunServersArr = stunServer.split(", ?");
-
-                    for (String server : stunServersArr) {
-                        stunServers.append("stun:").append(server.trim()).append(",");
-                    }
-
-                    stunServers.deleteCharAt(stunServers.lastIndexOf(","));
-
-                    clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
-                            + snowflakePath + " -url https://snowflake-broker.torproject.net.global.prod.fastly.net/" +
-                            " -front cdn.sstatic.net -ice " + stunServers.toString() + " -max 1" + saveLogsString;
+                    clientTransportPlugin = snowflakeConfigurator.get().getConfiguration();
                 } else {
                     clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
                             + obfsPath;
                 }
 
-
                 torConfCleaned.add(clientTransportPlugin);
             }
 
-            for (String currentBridge: currentBridges) {
+            for (String currentBridge : currentBridges) {
 
                 if (currentBridgesType == vanilla) {
                     if (!currentBridge.isEmpty() && !currentBridge.contains(obfs4.toString())
@@ -801,7 +740,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     tor_conf.clear();
                     currentBridges.clear();
 
-                    for (String line: lines) {
+                    for (String line : lines) {
                         if (!line.trim().isEmpty()) {
                             tor_conf.add(line);
                         }
@@ -842,7 +781,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 }
                 case defaultBridgesOperationTag: {
                     final List<String> savedDefaultBridges = lines;
-                    if (handler != null &&  savedDefaultBridges != null) {
+                    if (handler != null && savedDefaultBridges != null) {
                         handler.post(() -> defaultBridgesOperation(savedDefaultBridges));
                     }
                     break;
@@ -1015,9 +954,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     }
 
     private void saveUseBridgesPreferences(
-                                        boolean useNoBridges,
-                                        boolean useDefaultBridges,
-                                        boolean useOwnBridges
+            boolean useNoBridges,
+            boolean useDefaultBridges,
+            boolean useOwnBridges
     ) {
         preferenceRepository.get().setBoolPreference("useNoBridges", useNoBridges);
         preferenceRepository.get().setBoolPreference("useDefaultBridges", useDefaultBridges);
