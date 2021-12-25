@@ -38,6 +38,7 @@ import androidx.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
@@ -49,16 +50,19 @@ import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt;
+import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.VPNCommand;
 import pan.alexander.tordnscrypt.vpn.Rule;
-import pan.alexander.tordnscrypt.vpn.NetworkUtils;
 
 import static android.content.Context.CONNECTIVITY_SERVICE;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_GSM_PREF;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_ROAMING;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_WIFI_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_ENABLED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -73,15 +77,16 @@ import javax.inject.Named;
 public class ServiceVPNHandler extends Handler {
 
     @Inject
-    public Lazy<PreferenceRepository> preferenceRepositoryLazy;
+    public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
     @Named(DEFAULT_PREFERENCES_NAME)
     public Lazy<SharedPreferences> defaultSharedPreferences;
     @Inject
     public Lazy<PathVars> pathVars;
+    @Inject
+    public Lazy<VpnBuilder> vpnBuilder;
 
-    private static ServiceVPNHandler serviceVPNHandler;
-    private static List<Rule> listRule;
+    private final static List<Rule> listRule = new CopyOnWriteArrayList<>();
     @Nullable
     private final ServiceVPN serviceVPN;
     private ServiceVPN.Builder last_builder = null;
@@ -93,17 +98,17 @@ public class ServiceVPNHandler extends Handler {
     }
 
     static ServiceVPNHandler getInstance(Looper looper, ServiceVPN serviceVPN) {
-        return serviceVPNHandler = new ServiceVPNHandler(looper, serviceVPN);
+        return new ServiceVPNHandler(looper, serviceVPN);
     }
 
     void queue(Intent intent) {
         VPNCommand cmd = (VPNCommand) intent.getSerializableExtra(EXTRA_COMMAND);
-        Message msg = serviceVPNHandler.obtainMessage();
+        Message msg = obtainMessage();
         msg.obj = intent;
         if (cmd != null) {
             msg.what = cmd.ordinal();
-            serviceVPNHandler.removeMessages(msg.what);
-            serviceVPNHandler.sendMessage(msg);
+            removeMessages(msg.what);
+            sendMessage(msg);
         }
     }
 
@@ -153,8 +158,8 @@ public class ServiceVPNHandler extends Handler {
             }
 
             // Stop service if needed
-            if (!serviceVPNHandler.hasMessages(VPNCommand.START.ordinal()) &&
-                    !serviceVPNHandler.hasMessages(VPNCommand.RELOAD.ordinal()) &&
+            if (!hasMessages(VPNCommand.START.ordinal()) &&
+                    !hasMessages(VPNCommand.RELOAD.ordinal()) &&
                     !prefs.getBoolean(VPN_SERVICE_ENABLED, false))
                 stopServiceVPN();
 
@@ -192,17 +197,18 @@ public class ServiceVPNHandler extends Handler {
 
         if (serviceVPN.vpn == null) {
 
-            listRule = Rule.getRules(serviceVPN);
-            List<String> listAllowed = getAllowedRules(listRule);
+            listRule.clear();
+            listRule.addAll(Rule.getRules(serviceVPN));
+            List<String> listAllowed = getAllowedRules();
 
-            last_builder = serviceVPN.getBuilder(listAllowed, listRule);
+            last_builder = vpnBuilder.get().getBuilder(serviceVPN, listAllowed, listRule);
             serviceVPN.vpn = startVPN(last_builder);
 
             if (serviceVPN.vpn == null) {
                 throw new StartFailedException("VPN Handler Start VPN Service Failed");
             }
 
-            serviceVPN.startNative(serviceVPN.vpn, listAllowed, listRule);
+            serviceVPN.startNative(serviceVPN.vpn, listAllowed);
         }
     }
 
@@ -223,10 +229,11 @@ public class ServiceVPNHandler extends Handler {
             oldVpnInterfaceName = ModulesIptablesRules.blockTethering(serviceVPN, pathVars.get());
         }
 
-        listRule = Rule.getRules(serviceVPN);
-        List<String> listAllowed = getAllowedRules(listRule);
+        listRule.clear();
+        listRule.addAll(Rule.getRules(serviceVPN));
+        List<String> listAllowed = getAllowedRules();
 
-        ServiceVPN.Builder builder = serviceVPN.getBuilder(listAllowed, listRule);
+        ServiceVPN.Builder builder = vpnBuilder.get().getBuilder(serviceVPN, listAllowed, listRule);
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP_MR1) {
             last_builder = builder;
@@ -292,7 +299,7 @@ public class ServiceVPNHandler extends Handler {
         if (serviceVPN.vpn == null)
             throw new StartFailedException("VPN Handler Start VPN Service Failed");
 
-        serviceVPN.startNative(serviceVPN.vpn, listAllowed, listRule);
+        serviceVPN.startNative(serviceVPN.vpn, listAllowed);
 
         if (fixTTL) {
             String finalOldVpnInterfaceName = oldVpnInterfaceName;
@@ -316,13 +323,14 @@ public class ServiceVPNHandler extends Handler {
             serviceVPN.stopNative();
             stopVPN(serviceVPN.vpn);
             serviceVPN.vpn = null;
-            serviceVPN.unPrepare();
+            serviceVPN.vpnRulesHolder.get().unPrepare();
+            listRule.clear();
         }
 
         stopServiceVPN();
     }
 
-    private List<String> getAllowedRules(List<Rule> listRule) {
+    private List<String> getAllowedRules() {
         List<String> listAllowed = new ArrayList<>();
 
         if (serviceVPN == null) {
@@ -340,22 +348,22 @@ public class ServiceVPNHandler extends Handler {
 
         if (serviceVPN.isNetworkAvailable() || serviceVPN.isInternetAvailable()) {
 
-            PreferenceRepository preferences = preferenceRepositoryLazy.get();
+            PreferenceRepository preferences = preferenceRepository.get();
 
-            if (!preferences.getBoolPreference("FirewallEnabled")) {
-                for (Rule rule : listRule) {
+            if (!preferences.getBoolPreference(FIREWALL_ENABLED)) {
+                for (Rule rule : ServiceVPNHandler.listRule) {
                     listAllowed.add(String.valueOf(rule.uid));
                 }
-            } else if (NetworkUtils.isWifiActive(serviceVPN) || NetworkUtils.isEthernetActive(serviceVPN)) {
-                listAllowed.addAll(preferences.getStringSetPreference(FirewallFragmentKt.APPS_ALLOW_WIFI_PREF));
-            } else if (NetworkUtils.isCellularActive(serviceVPN)) {
-                listAllowed.addAll(preferences.getStringSetPreference(FirewallFragmentKt.APPS_ALLOW_GSM_PREF));
-            } else if (NetworkUtils.isRoaming(serviceVPN)) {
-                listAllowed.addAll(preferences.getStringSetPreference(FirewallFragmentKt.APPS_ALLOW_ROAMING));
+            } else if (NetworkChecker.isWifiActive(serviceVPN) || NetworkChecker.isEthernetActive(serviceVPN)) {
+                listAllowed.addAll(preferences.getStringSetPreference(APPS_ALLOW_WIFI_PREF));
+            } else if (NetworkChecker.isRoaming(serviceVPN)) {
+                listAllowed.addAll(preferences.getStringSetPreference(APPS_ALLOW_ROAMING));
+            } else if (NetworkChecker.isCellularActive(serviceVPN)) {
+                listAllowed.addAll(preferences.getStringSetPreference(APPS_ALLOW_GSM_PREF));
             }
         }
 
-        Log.i(LOG_TAG, "VPN Handler Allowed " + listAllowed.size() + " of " + listRule.size());
+        Log.i(LOG_TAG, "VPN Handler Allowed " + listAllowed.size() + " of " + ServiceVPNHandler.listRule.size());
         return listAllowed;
     }
 
