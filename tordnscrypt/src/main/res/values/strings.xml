@@ -470,7 +470,7 @@
     <string name="pref_tor_snowflake_categ" translatable="false">Snowflake</string>
     <string name="pref_tor_snowflake_select_rendezvous">Select rendezvous</string>
     <string name="pref_tor_snowflake_select_rendezvous_summ">
-       Hides the broker\'s domain name, which is used to establish the connection, from the Internet provider.</string>
+       Hides the broker\'s domain name from the Internet provider. The broker is used to establish a connection.</string>
     <string name="pref_tor_snowflake_amp" translatable="false">AMP</string>
     <string name="pref_tor_snowflake_fastly" translatable="false">Fastly</string>
     <string name="pref_tor_snowflake_stun">STUN servers for SnowFlake bridges</string>
