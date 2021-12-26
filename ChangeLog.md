@@ -652,3 +652,13 @@
 * Improved firewall.
 * Fixed using onion websites with DNSCrypt force_tcp enabled.
 * Improved the Arp Spoofing attack detector.
+
+**InviZible Pro beta 1.4.6**
+* Updated Tor to version 4.6.9.
+* Updated Tor Snowflake bridge.
+* Updated Tor geoip and default bridges.
+* Added the option to firewall settings to display all applications regardless of app internet permission.
+* Added the option to select Snowflake communication via AMP or Fastly.
+* Improved firewall.
+* Improved traffic and speed statistics in notification.
+* Fixes and optimizations.
