@@ -35,36 +35,38 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-var savedTitle = ""
-var savedMessage = ""
-var startTime = 0L
+@Volatile var savedTitle = ""
+@Volatile var savedMessage = ""
+@Volatile var startTime = 0L
 
 class UsageStatistic(private val context: Context) {
 
     @Inject
     lateinit var connectionCheckerInteractor: dagger.Lazy<ConnectionCheckerInteractor>
 
-    var serviceNotification: ModulesServiceNotificationManager? = null
+    @Volatile var serviceNotification: ModulesServiceNotificationManager? = null
 
-    private var timer: ScheduledExecutorService? = null
+    @Volatile private var timer: ScheduledExecutorService? = null
     private val modulesStatus = ModulesStatus.getInstance()
 
     private val uid = Process.myUid()
+    private val updating = AtomicBoolean(false)
 
-    private var scheduledFuture: ScheduledFuture<*>? = null
-    private var updatePeriod = 0
-    private var counter = 0
+    @Volatile private var task: ScheduledFuture<*>? = null
+    @Volatile private var updatePeriod = 0
+    @Volatile private var counter = 0
 
-    private var savedMode = OperationMode.UNDEFINED
-    private var startRX = 0L
-    private var startTX = 0L
-    private var savedTime = 0L
-    private var savedRX = 0L
-    private var savedTX = 0L
+    @Volatile private var savedMode = OperationMode.UNDEFINED
+    @Volatile private var startRX = 0L
+    @Volatile private var startTX = 0L
+    @Volatile private var savedTime = 0L
+    @Volatile private var savedRX = 0L
+    @Volatile private var savedTX = 0L
 
     init {
         initModulesLogsTimer()
@@ -75,8 +77,7 @@ class UsageStatistic(private val context: Context) {
     @JvmOverloads
     fun startUpdate(period: Int = 3) {
 
-        if (period == updatePeriod
-            && scheduledFuture?.isCancelled == false) {
+        if (period == updatePeriod && task?.isCancelled == false) {
             return
         }
 
@@ -84,39 +85,43 @@ class UsageStatistic(private val context: Context) {
 
         initModulesLogsTimer()
 
-        if (scheduledFuture != null && scheduledFuture?.isCancelled == false) {
-            scheduledFuture?.cancel(false)
+        if (task != null && task?.isCancelled == false) {
+            task?.cancel(false)
         }
 
+        task = timer?.scheduleWithFixedDelay({
+            if (updating.compareAndSet(false, true)) {
+                tryUpdate()
+            }
+        }, 1, period.toLong(), TimeUnit.SECONDS)
+    }
 
+    private fun tryUpdate() {
+        try {
 
-        scheduledFuture = timer?.scheduleWithFixedDelay({
+            val currentTime = System.currentTimeMillis()
 
-            try {
+            val title = getTitle()
 
-                val currentTime = System.currentTimeMillis()
+            val message = getMessage(currentTime)
 
-                val title = getTitle()
-
-                val message = getMessage(currentTime)
-
-                if (title != savedTitle || message != savedMessage) {
-                    serviceNotification?.updateNotification(title, message)
-                    savedTitle = title
-                    savedMessage = message
-                }
-
-                if (counter > 100) {
-                    startUpdate(5)
-                    counter = -1
-                } else if (counter >= 0) {
-                    counter++
-                }
-            } catch (exception: Exception) {
-                Log.e(LOG_TAG, "UsageStatistics exception " + exception.message + " " + exception.cause)
+            if (title != savedTitle || message != savedMessage) {
+                serviceNotification?.updateNotification(title, message)
+                savedTitle = title
+                savedMessage = message
             }
 
-        }, 1, period.toLong(), TimeUnit.SECONDS)
+            if (counter > 100) {
+                startUpdate(5)
+                counter = -1
+            } else if (counter >= 0) {
+                counter++
+            }
+        } catch (exception: Exception) {
+            Log.e(LOG_TAG, "UsageStatistics exception " + exception.message + " " + exception.cause)
+        } finally {
+            updating.compareAndSet(true, false)
+        }
     }
 
     fun stopUpdate() {
