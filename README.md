@@ -1,6 +1,6 @@
 # InviZible Pro
 
-Proudly presented by Garmatin Oleksandr, \
+Proudly coded by Garmatin Oleksandr, \
 in the belief that Privacy and anonymity software should be libre, \
 with appreciation for the help of all contributors.
 
