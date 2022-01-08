@@ -19,11 +19,7 @@
 
 package pan.alexander.tordnscrypt.utils.connectionchecker
 
-import android.util.Log
-import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
 import pan.alexander.tordnscrypt.utils.Constants.TOR_BROWSER_USER_AGENT
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.net.HttpURLConnection
 import java.net.InetSocketAddress
 import java.net.Proxy
@@ -31,45 +27,37 @@ import java.net.URL
 import javax.inject.Inject
 import javax.net.ssl.HttpsURLConnection
 
-private const val READ_TIMEOUT_SEC = 15
+private const val READ_TIMEOUT_SEC = 50
 private const val CONNECT_TIMEOUT_SEC = 50
 private const val USER_AGENT_PROPERTY = "User-Agent"
 private const val REQUEST_METHOD_GET = "GET"
 
-class HttpInternetChecker @Inject constructor(
-    private val pathVars: PathVars
-) {
+class HttpInternetChecker @Inject constructor() {
 
     private var connection: HttpURLConnection? = null
 
-    fun checkConnectionAvailability(site: String): Boolean {
+    fun checkConnectionAvailability(site: String, proxyAddress: String, proxyPort: Int): Boolean {
         var result = false
 
         try {
-            result = checkConnection(site, false)
+            result = checkConnection(site, proxyAddress, proxyPort)
             return result
-        } catch (e: Exception) {
-            Log.w(LOG_TAG, "HttpInternetChecker check connection failed ${e.message} ${e.cause}")
         } finally {
             if (result) {
                 connection?.disconnect()
             }
         }
-
-        return false
     }
 
-    //Warning!!! Using this method with Tor may produce NullPointerException
-    // com.android.okhttp.internal.Util.closeQuietly(Util.java:95)
-    private fun checkConnection(site: String, withTor: Boolean): Boolean {
+    private fun checkConnection(site: String, proxyAddress: String, proxyPort: Int): Boolean {
         val url = URL(site)
 
-        connection = if (withTor) {
+        connection = if (proxyAddress.isNotBlank() && proxyPort != 0) {
             val proxy = Proxy(
                 Proxy.Type.SOCKS,
                 InetSocketAddress(
-                    LOOPBACK_ADDRESS,
-                    pathVars.torSOCKSPort.toInt()
+                    proxyAddress,
+                    proxyPort
                 )
             )
 

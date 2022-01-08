@@ -19,15 +19,17 @@
 
 package pan.alexander.tordnscrypt.domain.connection_checker
 
-import android.util.Log
+import android.content.SharedPreferences
 import kotlinx.coroutines.*
 import pan.alexander.tordnscrypt.di.CoroutinesModule.Companion.SUPERVISOR_JOB_IO_DISPATCHER_SCOPE
+import pan.alexander.tordnscrypt.di.SharedPreferencesModule
 import pan.alexander.tordnscrypt.domain.dns_resolver.DnsRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.Constants.*
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import java.io.IOException
 import java.lang.ref.WeakReference
 import java.net.SocketTimeoutException
@@ -48,7 +50,9 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
     private val pathVars: PathVars,
     @Named(SUPERVISOR_JOB_IO_DISPATCHER_SCOPE)
     private val baseCoroutineScope: CoroutineScope,
-    private val dnsRepository: DnsRepository
+    private val dnsRepository: DnsRepository,
+    @Named(SharedPreferencesModule.DEFAULT_PREFERENCES_NAME)
+    private val defaultPreferences: SharedPreferences
 ) : ConnectionCheckerInteractor {
 
     private val coroutineScope = baseCoroutineScope + CoroutineName("ConnectionCheckerInteractor")
@@ -146,10 +150,7 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
     }
 
     private fun logException(via: Via, e: Exception) {
-        Log.e(
-            LOG_TAG, "CheckConnectionInteractor checkConnection via $via" +
-                    " ${e.javaClass} ${e.message} ${e.cause}"
-        )
+        loge("CheckConnectionInteractor checkConnection via $via", e)
     }
 
     private suspend fun check(via: Via) = coroutineScope {
@@ -162,11 +163,34 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
                 ).isNotEmpty()
             }
             Via.DIRECT -> {
-                checkerRepository.checkInternetAvailableOverSocks(
-                    pathVars.dnsCryptFallbackRes,
-                    PLAINTEXT_DNS_PORT,
-                    false
-                )
+                val proxyAddress =
+                    defaultPreferences.getString(PROXY_ADDRESS, "") ?: ""
+                val proxyPort = defaultPreferences.getString(PROXY_PORT, "").let {
+                    if (it?.matches(Regex(NUMBER_REGEX)) == true) {
+                        it.toInt()
+                    } else {
+                        1080
+                    }
+                }
+                val useProxy = defaultPreferences.getBoolean(USE_PROXY, false)
+                        && proxyAddress.isNotBlank()
+                        && proxyPort != 0
+
+                if (useProxy) {
+                   checkerRepository.checkInternetAvailableOverHttp(
+                       sequenceOf(DNS_QUAD9, DNS_MOZILLA).shuffled().first(),
+                       proxyAddress,
+                       proxyPort
+                   )
+                } else {
+                    checkerRepository.checkInternetAvailableOverSocks(
+                        pathVars.dnsCryptFallbackRes,
+                        PLAINTEXT_DNS_PORT,
+                        "",
+                        0
+                    )
+                }
+
             }
         }
 

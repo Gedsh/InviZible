@@ -24,14 +24,32 @@ import javax.inject.Inject
 
 class ConnectionCheckerRepositoryImpl @Inject constructor(
     private val connectionCheckerDataSource: ConnectionCheckerDataSource,
-): ConnectionCheckerRepository {
+) : ConnectionCheckerRepository {
 
-    override fun checkInternetAvailableOverHttp(site: String): Boolean {
-        return connectionCheckerDataSource.checkInternetAvailableOverHttp(site)
+    override fun checkInternetAvailableOverHttp(
+        site: String,
+        proxyAddress: String,
+        proxyPort: Int
+    ): Boolean {
+        return connectionCheckerDataSource.checkInternetAvailableOverHttp(
+            site,
+            proxyAddress,
+            proxyPort
+        )
     }
 
-    override fun checkInternetAvailableOverSocks(ip: String, port: Int, withTor: Boolean): Boolean {
-        return connectionCheckerDataSource.checkInternetAvailableOverSocks(ip, port, withTor)
+    override fun checkInternetAvailableOverSocks(
+        ip: String,
+        port: Int,
+        proxyAddress: String,
+        proxyPort: Int
+    ): Boolean {
+        return connectionCheckerDataSource.checkInternetAvailableOverSocks(
+            ip,
+            port,
+            proxyAddress,
+            proxyPort
+        )
     }
 
     override fun checkNetworkAvailable(): Boolean {

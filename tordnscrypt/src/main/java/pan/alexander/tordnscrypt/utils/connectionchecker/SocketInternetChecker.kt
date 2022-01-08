@@ -19,51 +19,47 @@
 
 package pan.alexander.tordnscrypt.utils.connectionchecker
 
-import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.utils.Constants
 import java.lang.Exception
 import java.net.*
 import javax.inject.Inject
 
 private const val CONNECT_TIMEOUT_SEC = 50
 
-class SocketInternetChecker @Inject constructor(
-    pathVars: PathVars
-) {
-    private val torSocksPort: String = pathVars.torSOCKSPort
+class SocketInternetChecker @Inject constructor() {
 
-    private var socket: Socket? = null
+    fun checkConnectionAvailability(
+        ip: String,
+        port: Int,
+        proxyAddress: String,
+        proxyPort: Int
+    ): Boolean {
 
-    fun checkConnectionAvailability(ip: String, port: Int, withTor: Boolean): Boolean {
-        return try {
-            tryCheckConnection(ip, port, withTor)
-        } finally {
-            tryCloseSocket()
-        }
-    }
+        var socket: Socket? = null
 
-    private fun tryCheckConnection(ip: String, port: Int, withTor: Boolean): Boolean {
-        socket = if (withTor) {
-            val proxySockAdr: SocketAddress = InetSocketAddress(
-                Constants.LOOPBACK_ADDRESS, torSocksPort.toInt()
-            )
-            val proxy = Proxy(Proxy.Type.SOCKS, proxySockAdr)
-            Socket(proxy)
-        } else {
-            Socket()
-        }
-
-        val sockAddress: SocketAddress =
-            InetSocketAddress(InetAddress.getByName(ip), port)
-        socket?.connect(sockAddress, CONNECT_TIMEOUT_SEC * 1000)
-
-        return socket?.isConnected == true
-    }
-
-    private fun tryCloseSocket() {
         try {
-            socket?.close()
-        } catch (ignored: Exception) {
+            socket = if (proxyAddress.isNotBlank() && proxyPort != 0) {
+                val proxySockAdr: SocketAddress = InetSocketAddress(
+                    proxyAddress,
+                    proxyPort
+                )
+                val proxy = Proxy(Proxy.Type.SOCKS, proxySockAdr)
+                Socket(proxy)
+            } else {
+                Socket()
+            }
+
+            val sockAddress: SocketAddress =
+                InetSocketAddress(InetAddress.getByName(ip), port)
+
+            socket.connect(sockAddress, CONNECT_TIMEOUT_SEC * 1000)
+
+            return socket.isConnected
+        } finally {
+            try {
+                socket?.close()
+            } catch (ignored: Exception) {
+            }
         }
     }
+
 }
