@@ -55,6 +55,7 @@ class FirewallNotification : BroadcastReceiver() {
     private var newAppsAreAllowed = false
 
     companion object {
+        @JvmStatic
         fun registerFirewallReceiver(context: Context): FirewallNotification {
             val firewallNotification = FirewallNotification()
 
@@ -68,6 +69,7 @@ class FirewallNotification : BroadcastReceiver() {
             return firewallNotification
         }
 
+        @JvmStatic
         fun unregisterFirewallReceiver(context: Context, receiver: FirewallNotification?) {
             receiver?.let { context.unregisterReceiver(it) }
         }

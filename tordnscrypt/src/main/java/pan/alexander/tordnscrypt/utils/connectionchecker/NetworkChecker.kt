@@ -21,12 +21,17 @@ package pan.alexander.tordnscrypt.utils.connectionchecker
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.LinkProperties
+import android.net.Network
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.telephony.TelephonyManager
 import androidx.annotation.RequiresApi
 import androidx.core.net.ConnectivityManagerCompat
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+
+private const val DEFAULT_MTU = 1400
+private val MTU_REGEX = Regex("\\d{4}")
 
 @Suppress("deprecation")
 object NetworkChecker {
@@ -240,6 +245,54 @@ object NetworkChecker {
         } catch (e: Exception) {
             loge("NetworkChecker isMeteredNetwork", e)
             true
+        }
+
+    @JvmStatic
+    fun isVpnActive(context: Context): Boolean =
+        try {
+            val connectivityManager = context.getConnectivityManager()
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && connectivityManager != null) {
+                connectivityManager.allNetworks.let {
+                    for (network in it) {
+                        val networkCapabilities = connectivityManager.getNetworkCapabilities(network)
+                        if (networkCapabilities != null && hasVpnTransport(networkCapabilities)) {
+                            return true
+                        }
+                    }
+                    return false
+                }
+
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            loge("NetworkChecker isVpnActive", e)
+            false
+        }
+
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    private fun hasVpnTransport(capabilities: NetworkCapabilities): Boolean =
+                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
+
+    @JvmStatic
+    fun getMtu(context: Context, network: Network): Int =
+        try {
+            val connectivityManager = context.getConnectivityManager()
+            var linkProperties: LinkProperties? = null
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && connectivityManager != null) {
+               linkProperties = connectivityManager.getLinkProperties(network)
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && linkProperties != null) {
+                val mtu = linkProperties.mtu
+                if (MTU_REGEX.matches(mtu.toString())) mtu else DEFAULT_MTU
+            } else {
+                DEFAULT_MTU
+            }
+        } catch (e: Exception) {
+            loge("NetworkChecker isEthernetActive", e)
+            DEFAULT_MTU
         }
 
 

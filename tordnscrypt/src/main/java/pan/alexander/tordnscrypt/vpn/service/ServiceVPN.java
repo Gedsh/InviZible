@@ -36,6 +36,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.Keep;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.net.InetSocketAddress;
 import java.util.HashSet;
@@ -55,7 +56,6 @@ import pan.alexander.tordnscrypt.domain.connection_checker.OnInternetConnectionC
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecord;
 import pan.alexander.tordnscrypt.domain.dns_resolver.DnsInteractor;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
-import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.modules.ModulesServiceNotificationManager;
 import pan.alexander.tordnscrypt.modules.UsageStatisticKt;
@@ -73,6 +73,8 @@ import pan.alexander.tordnscrypt.vpn.VpnUtils;
 import static java.net.IDN.ALLOW_UNASSIGNED;
 import static java.net.IDN.toUnicode;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.modules.ModulesReceiver.VPN_REVOKED_EXTRA;
+import static pan.alexander.tordnscrypt.modules.ModulesReceiver.VPN_REVOKE_ACTION;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStopServiceForeground;
 import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_PORT_NTP;
@@ -88,7 +90,6 @@ import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper.reload;
 import static pan.alexander.tordnscrypt.vpn.service.VpnBuilder.vpnDnsSet;
@@ -126,8 +127,6 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     public Lazy<Handler> handler;
     @Inject
     public Lazy<CachedExecutor> cachedExecutor;
-    @Inject
-    public Lazy<VpnReceiver> vpnReceiver;
     @Inject
     public Provider<VpnPreferenceHolder> vpnPreferenceHolder;
     volatile VpnPreferenceHolder vpnPreferences;
@@ -298,7 +297,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     // Called from native code
     @Keep
     public void nativeError(int error, String message) {
-        Log.e(LOG_TAG, "VPN Native error " + error + ": " + message);
+        loge("VPN Native error " + error + ": " + message);
     }
 
     // Called from native code
@@ -579,26 +578,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
         connectionCheckerInteractor.get().addListener(this);
 
-        VpnReceiver receiver = vpnReceiver.get();
-
-        // Listen for idle mode state changes
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            receiver.listenIdleStateChanged(this);
-        }
-
-        // Listen for added/removed applications
-        receiver.listenAddRemoveApp(this);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            try {
-                receiver.listenNetworkChanges(this);
-            } catch (Throwable ex) {
-                logw(ex.toString() + "\n" + Log.getStackTraceString(ex));
-                receiver.listenConnectivityChanges(this);
-            }
-        } else {
-            receiver.listenConnectivityChanges(this);
-        }
+        sendRevokeBroadcast(false);
     }
 
     @Override
@@ -711,13 +691,18 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     public void onRevoke() {
         logi("VPN Revoke");
 
-        // Disable firewall (will result in stop command)
         SharedPreferences prefs = defaultPreferences.get();
         prefs.edit().putBoolean(VPN_SERVICE_ENABLED, false).apply();
 
-        ModulesAux.stopModulesIfRunning(this.getApplicationContext());
+        sendRevokeBroadcast(true);
 
         super.onRevoke();
+    }
+
+    private void sendRevokeBroadcast(boolean revoked) {
+        Intent intent = new Intent(VPN_REVOKE_ACTION);
+        intent.putExtra(VPN_REVOKED_EXTRA, revoked);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
     @Override
@@ -728,16 +713,6 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
         for (VPNCommand command : VPNCommand.values())
             commandHandler.removeMessages(command.ordinal());
-
-        VpnReceiver receiver = vpnReceiver.get();
-
-        receiver.unlistenIdleStateChanged(this);
-
-        receiver.unlistenAddRemoveApp(this);
-
-        receiver.unlistenNetworkChanges(this);
-
-        receiver.unlistenConnectivityChanges(this);
 
         if (vpnDnsSet != null) {
             vpnDnsSet.clear();
@@ -756,7 +731,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                     vpnRulesHolder.get().unPrepare();
                 }
             } catch (Throwable ex) {
-                Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+                loge(ex.toString() + "\n" + Log.getStackTraceString(ex));
             }
 
             logi("VPN Destroy context=" + jni_context);
@@ -838,7 +813,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                 }
 
             } catch (Exception e) {
-                loge("ServiseVPN clearDnsQueryRawRecords exception", e);
+                loge("ServiceVPN clearDnsQueryRawRecords", e);
             } finally {
                 if (lock.isWriteLockedByCurrentThread()) {
                     lock.writeLock().unlock();
@@ -855,7 +830,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                 this.lock.readLock().unlock();
             }
         } catch (Exception e) {
-            loge("ServiseVPN lockDnsQueryRawRecordsListForRead exception", e);
+            loge("ServiseVPN lockDnsQueryRawRecordsListForRead", e);
         }
     }
 
@@ -889,7 +864,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
             }
 
         } catch (Exception e) {
-            loge("ServiseVPN addUIDtoDNSQueryRawRecords exception", e);
+            loge("ServiceVPN addUIDtoDNSQueryRawRecords", e);
         } finally {
             if (lock.isWriteLockedByCurrentThread()) {
                 lock.writeLock().unlock();
@@ -901,6 +876,6 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     @Override
     public void onLowMemory() {
         clearDnsQueryRawRecords();
-        loge("ServiseVPN low memory");
+        loge("ServiceVPN low memory");
     }
 }
