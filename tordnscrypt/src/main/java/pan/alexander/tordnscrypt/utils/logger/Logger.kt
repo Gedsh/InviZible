@@ -41,11 +41,11 @@ object Logger {
 
     @JvmStatic
     fun loge(message: String, e: Throwable) {
-        Log.i(LOG_TAG, "$message ${e.javaClass.canonicalName} ${e.message} ${e.cause ?: ""}")
+        Log.e(LOG_TAG, "$message ${e.javaClass.canonicalName} ${e.message} ${e.cause ?: ""}")
     }
 
     @JvmStatic
     fun loge(message: String) {
-        Log.i(LOG_TAG, message)
+        Log.e(LOG_TAG, message)
     }
 }

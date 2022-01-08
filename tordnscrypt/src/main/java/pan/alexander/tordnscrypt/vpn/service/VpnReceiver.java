@@ -20,7 +20,9 @@
 package pan.alexander.tordnscrypt.vpn.service;
 
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REFRESH_RULES;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper.reload;
 
 import android.annotation.TargetApi;
@@ -122,11 +124,11 @@ public class VpnReceiver {
         @Override
         @TargetApi(Build.VERSION_CODES.M)
         public void onReceive(Context context, Intent intent) {
-            Log.i(LOG_TAG, "VPN Received " + intent);
+            logi("VPN Received " + intent);
 
             PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
             if (pm != null) {
-                Log.i(LOG_TAG, "VPN device idle=" + pm.isDeviceIdleMode());
+                logi("VPN device idle=" + pm.isDeviceIdleMode());
             }
 
             // Reload rules when coming from idle mode
@@ -146,7 +148,7 @@ public class VpnReceiver {
                 return;
 
             // Reload rules
-            Log.i(LOG_TAG, "VPN Received " + intent);
+            logi("VPN Received " + intent);
             setInternetAvailable(false);
             reload("Connectivity changed", context);
         }
@@ -155,7 +157,7 @@ public class VpnReceiver {
     private final BroadcastReceiver packageChangedReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.i(LOG_TAG, "VPN Received " + intent);
+            logi("VPN Received " + intent);
 
             try {
                 if (Intent.ACTION_PACKAGE_ADDED.equals(intent.getAction())) {
@@ -164,7 +166,7 @@ public class VpnReceiver {
                     reload("VPN Package deleted", context);
                 }
             } catch (Throwable ex) {
-                Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+                loge(ex.toString() + "\n" + Log.getStackTraceString(ex));
             }
         }
     };
@@ -172,7 +174,7 @@ public class VpnReceiver {
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     void listenNetworkChanges(ServiceVPN vpn) {
         // Listen for network changes
-        Log.i(LOG_TAG, "VPN Starting listening to network changes");
+        logi("VPN Starting listening to network changes");
         ConnectivityManager cm = (ConnectivityManager) vpn.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkRequest.Builder builder = new NetworkRequest.Builder();
         /*builder.addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
@@ -187,7 +189,7 @@ public class VpnReceiver {
 
             @Override
             public void onAvailable(@NonNull Network network) {
-                Log.i(LOG_TAG, "VPN Available network=" + network);
+                logi("VPN Available network=" + network);
                 connectionCheckerInteractor.get().checkNetworkConnection();
                 last_connected = isNetworkAvailable();
 
@@ -214,12 +216,12 @@ public class VpnReceiver {
                 SharedPreferences prefs = defaultPreferences.get();
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
                         ? !same(last_dns, dns)
-                        : prefs.getBoolean("swRefreshRules", false)) {
-                    Log.i(LOG_TAG, "VPN Changed link properties=" + linkProperties +
+                        : prefs.getBoolean(REFRESH_RULES, false)) {
+                    logi("VPN Changed link properties=" + linkProperties +
                             "DNS cur=" + TextUtils.join(",", dns) +
                             "DNS prv=" + (last_dns == null ? null : TextUtils.join(",", last_dns)));
                     last_dns = dns;
-                    Log.i(LOG_TAG, "VPN Changed link properties=" + linkProperties);
+                    logi("VPN Changed link properties=" + linkProperties);
 
                     if (network.hashCode() != last_network) {
                         last_network = network.hashCode();
@@ -247,12 +249,12 @@ public class VpnReceiver {
 
                 last_network = network.hashCode();
 
-                Log.i(LOG_TAG, "VPN Changed capabilities=" + network);
+                logi("VPN Changed capabilities=" + network);
             }
 
             @Override
             public void onLost(@NonNull Network network) {
-                Log.i(LOG_TAG, "VPN Lost network=" + network);
+                logi("VPN Lost network=" + network);
                 connectionCheckerInteractor.get().checkNetworkConnection();
                 last_connected = isNetworkAvailable();
 
@@ -299,7 +301,7 @@ public class VpnReceiver {
 
     void listenConnectivityChanges(ServiceVPN vpn) {
         // Listen for connectivity updates
-        Log.i(LOG_TAG, "VPN Starting listening to connectivity changes");
+        logi("VPN Starting listening to connectivity changes");
         IntentFilter ifConnectivity = new IntentFilter();
         ifConnectivity.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         vpn.registerReceiver(connectivityChangedReceiver, ifConnectivity);

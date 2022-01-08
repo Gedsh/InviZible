@@ -27,12 +27,11 @@ import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.proxy.CLEARNET_APPS_FOR_PROXY
 import pan.alexander.tordnscrypt.settings.PathVars
+import pan.alexander.tordnscrypt.utils.Constants.NUMBER_REGEX
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import javax.inject.Inject
 import javax.inject.Named
-
-private val NUMBER_REGEX = Regex("\\d+")
 
 class VpnPreferenceHolder @Inject constructor(
     @Named(DEFAULT_PREFERENCES_NAME)
@@ -68,7 +67,7 @@ class VpnPreferenceHolder @Inject constructor(
 
     val proxyAddress = defaultPreferences.getString(PROXY_ADDRESS, "") ?: ""
     val proxyPort = defaultPreferences.getString(PROXY_PORT, "").let {
-        if (it?.matches(NUMBER_REGEX) == true) {
+        if (it?.matches(Regex(NUMBER_REGEX)) == true) {
             it.toInt()
         } else {
             1080
@@ -80,7 +79,7 @@ class VpnPreferenceHolder @Inject constructor(
             && proxyPort != 0
 
     val torDNSPort = pathVars.torDNSPort.let {
-        if (it.matches(NUMBER_REGEX)) {
+        if (it.matches(Regex(NUMBER_REGEX))) {
             it.toInt()
         } else {
             5400
@@ -88,7 +87,7 @@ class VpnPreferenceHolder @Inject constructor(
     }
 
     val torSOCKSPort = pathVars.torSOCKSPort.let {
-        if (it.matches(NUMBER_REGEX)) {
+        if (it.matches(Regex(NUMBER_REGEX))) {
             it.toInt()
         } else {
             9050

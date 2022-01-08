@@ -346,7 +346,7 @@ public class ServiceVPNHandler extends Handler {
             interactor.checkInternetConnection();
         }
 
-        if (serviceVPN.isNetworkAvailable() || serviceVPN.isInternetAvailable()) {
+        //if (serviceVPN.isNetworkAvailable() || serviceVPN.isInternetAvailable()) {
 
             PreferenceRepository preferences = preferenceRepository.get();
 
@@ -361,7 +361,7 @@ public class ServiceVPNHandler extends Handler {
             } else if (NetworkChecker.isCellularActive(serviceVPN)) {
                 listAllowed.addAll(preferences.getStringSetPreference(APPS_ALLOW_GSM_PREF));
             }
-        }
+        //}
 
         Log.i(LOG_TAG, "VPN Handler Allowed " + listAllowed.size() + " of " + ServiceVPNHandler.listRule.size());
         return listAllowed;

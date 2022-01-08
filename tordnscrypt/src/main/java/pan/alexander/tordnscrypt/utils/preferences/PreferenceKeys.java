@@ -63,6 +63,7 @@ public interface PreferenceKeys {
     String PROXY_ADDRESS = "ProxyServer";
     String PROXY_PORT = "ProxyPort";
     String MULTI_USER_SUPPORT = "pref_common_multi_user";
+    String REFRESH_RULES = "swRefreshRules";
 
     //DNSCrypt Settings
     String BLOCK_IPv6 = "block_ipv6";

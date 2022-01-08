@@ -119,7 +119,6 @@ interface AppComponent {
     fun inject(receiver: DNSCryptFragmentReceiver)
     fun inject(receiver: TorFragmentReceiver)
     fun inject(receiver: ITPDFragmentReceiver)
-    fun inject(receiver: ModulesBroadcastReceiver)
     fun inject(receiver: HelpActivityReceiver)
     fun inject(receiver: IptablesReceiver)
     fun inject(dialogFragment: RequestIgnoreBatteryOptimizationDialog)

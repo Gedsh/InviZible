@@ -57,6 +57,7 @@ import pan.alexander.tordnscrypt.utils.privatedns.PrivateDnsProxyManager;
 
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REFRESH_RULES;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
@@ -95,7 +96,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
     private volatile Future<?> checkTetheringTask;
 
     public ModulesBroadcastReceiver(Context context) {
-        App.getInstance().getDaggerComponent().inject(this);
+        //App.getInstance().getDaggerComponent().inject(this);
         this.context = context;
     }
 
@@ -432,7 +433,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
     private void updateIptablesRules(boolean forceUpdate) {
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean refreshRules = sharedPreferences.getBoolean("swRefreshRules", false);
+        boolean refreshRules = sharedPreferences.getBoolean(REFRESH_RULES, false);
 
         if (!refreshRules && !forceUpdate) {
             return;

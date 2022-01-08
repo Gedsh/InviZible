@@ -114,7 +114,7 @@ public class VpnBuilder {
                 || prefs.getString(PROXY_PORT, "").isEmpty())) {
             useProxy = false;
         }
-        boolean compatibilityMode = false;
+        boolean compatibilityMode;
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
             compatibilityMode = true;
         } else {
@@ -170,10 +170,9 @@ public class VpnBuilder {
             listExclude.add(new IPUtil.CIDR("192.168.49.0", 24));
         }
 
-        // Broadcast
-        if (lan) {
-            listExclude.add(new IPUtil.CIDR("224.0.0.0", 4));
-        }
+        //if (!firewallEnabled || lan) {
+            listExclude.add(new IPUtil.CIDR("224.0.0.0", 4)); // Broadcast
+        //}
         // Subnet routing
         if (!listExclude.isEmpty()) {
 
