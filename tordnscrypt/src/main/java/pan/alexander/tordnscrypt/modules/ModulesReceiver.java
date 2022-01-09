@@ -308,24 +308,24 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             @Override
             public void onAvailable(@NonNull Network network) {
 
-                logi("ModulesReceiver available network=" + network);
-
                 last_connected = isNetworkAvailable();
+
+                logi("ModulesReceiver available network=" + network + " connected=" + last_connected);
 
                 if (!last_connected) {
                     last_connected = true;
 
-                    if (isVpnMode() && !vpnRevoked) {
+                    if (isVpnMode() || isRootMode()) {
                         setInternetAvailable(true);
-                        reload("Network available", context);
-                    } else if (isRootMode() || vpnRevoked) {
-                        updateIptablesRules(false);
-                        resetArpScanner(true);
-                        checkInternetConnection();
                     }
                 }
 
-                if (isProxyMode()) {
+                if (isVpnMode() && !vpnRevoked) {
+                    reload("Network available", context);
+                } else if (isRootMode() || vpnRevoked) {
+                    updateIptablesRules(false);
+                    resetArpScanner(true);
+                } else if (isProxyMode()) {
                     resetArpScanner(true);
                 }
 
@@ -353,6 +353,10 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
                     last_dns = dns;
 
+                    if (isRootMode()) {
+                        updateIptablesRules(false);
+                    }
+
                     if (network.hashCode() != last_network) {
                         last_network = network.hashCode();
 
@@ -360,7 +364,6 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                             setInternetAvailable(false);
                             reload("Link properties changed", context);
                         } else if (isRootMode() || vpnRevoked) {
-                            updateIptablesRules(false);
                             resetArpScanner();
                             checkInternetConnection();
                         } else if (isProxyMode()) {
@@ -386,19 +389,22 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
                     last_connected = true;
 
-                    if (last_network != network.hashCode()) {
-                        if (isVpnMode() && !vpnRevoked) {
-                            setInternetAvailable(false);
-                            reload("Connected state changed", context);
-                        } else if (isRootMode() || vpnRevoked) {
-                            updateIptablesRules(false);
+                    if (isVpnMode()) {
+                        if (vpnRevoked) {
                             resetArpScanner();
                             checkInternetConnection();
+                        } else {
+                            setInternetAvailable(false);
+                            reload("Connected state changed", context);
                         }
                     }
                 }
 
-                if (isProxyMode()) {
+                if (isRootMode() && last_network != network.hashCode()) {
+                    updateIptablesRules(false);
+                    resetArpScanner();
+                    checkInternetConnection();
+                } else if (isProxyMode()) {
                     resetArpScanner();
                 }
 
@@ -409,19 +415,19 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             @Override
             public void onLost(@NonNull Network network) {
 
-                logi("ModulesReceiver lost network=" + network);
+                last_connected = false;
 
-                last_connected = isNetworkAvailable();
+                logi("ModulesReceiver lost network=" + network + " connected=false");
 
                 if (isVpnMode() && !vpnRevoked) {
                     setInternetAvailable(false);
                     reload("Network lost", context);
                 } else if (isRootMode() || vpnRevoked) {
+                    setInternetAvailable(false);
                     updateIptablesRules(false);
-                    resetArpScanner();
-                    checkInternetConnection();
+                    resetArpScanner(false);
                 } else if (isProxyMode()) {
-                    resetArpScanner();
+                    resetArpScanner(false);
                 }
 
                 last_network = 0;
@@ -737,7 +743,6 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         }
     }
 
-    @SuppressWarnings("SameParameterValue")
     private void resetArpScanner(boolean connectionAvailable) {
         if (defaultPreferences.get().getBoolean(ARP_SPOOFING_DETECTION, false)) {
             ArpScanner.getArpComponent().get().reset(connectionAvailable);
@@ -756,6 +761,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         ConnectionCheckerInteractor interactor = connectionCheckerInteractor.get();
         interactor.setInternetConnectionResult(available);
         interactor.checkNetworkConnection();
+        interactor.checkInternetConnection();
     }
 
     private void checkInternetConnection() {
