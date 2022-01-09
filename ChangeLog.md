@@ -662,3 +662,10 @@
 * Improved firewall.
 * Improved traffic and speed statistics in notification.
 * Fixes and optimizations.
+
+**InviZible Pro beta 1.4.7**
+* Pausing InviZible instead of completely shutting down when using another VPN.
+* Improved internet connection checking when only DNSCrypt is running and Use socks5 proxy enabled.
+* Added Greek translation.
+* Updated French translation.
+* A lot of fixes and optimizations.
