@@ -108,6 +108,7 @@ class BuilderVPN extends VpnService.Builder {
         return this;
     }
 
+    @SuppressWarnings("SameParameterValue")
     void setFixTTL(boolean fixTTL) {
         this.fixTTL = fixTTL;
     }

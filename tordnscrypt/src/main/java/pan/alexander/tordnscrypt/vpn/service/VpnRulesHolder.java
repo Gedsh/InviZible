@@ -414,6 +414,7 @@ public class VpnRulesHolder {
         lock.writeLock().unlock();
     }
 
+    @SuppressWarnings("SameParameterValue")
     private void addForwardPortRule(int protocol, int dport, String raddr, int rport, int ruid) {
         Forward fwd = new Forward();
         fwd.protocol = protocol;
@@ -425,6 +426,7 @@ public class VpnRulesHolder {
         logi("VPN Forward " + fwd);
     }
 
+    @SuppressWarnings("SameParameterValue")
     private void addForwardAddressRule(int protocol, String daddr, String raddr, int rport, int ruid) {
         Forward fwd = new Forward();
         fwd.protocol = protocol;
