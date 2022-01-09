@@ -234,15 +234,22 @@ public class ModulesStarterHelper {
                 Log.e(LOG_TAG, "Error Tor: " + shellResult.exitCode
                         + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
 
-                if (!getApp(context).isAppForeground() && modulesStatus.getTorState() == RUNNING) {
-                    System.exit(0);
+                if (!getApp(context).isAppForeground()
+                        && modulesStatus.getTorState() == RUNNING) {
+                    if (modulesStatus.isTorReady()) {
+                        ModulesRunner.runTor(context);
+                        modulesStatus.setTorReady(false);
+                    } else {
+                        System.exit(0);
+                    }
+                } else {
+                    modulesStatus.setTorState(STOPPED);
+
+                    ModulesAux.makeModulesStateExtraLoop(context);
+
+                    sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
                 }
 
-                modulesStatus.setTorState(STOPPED);
-
-                ModulesAux.makeModulesStateExtraLoop(context);
-
-                sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
             }
 
             Thread.currentThread().interrupt();
