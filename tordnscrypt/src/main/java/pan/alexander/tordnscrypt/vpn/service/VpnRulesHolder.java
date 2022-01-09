@@ -241,6 +241,7 @@ public class VpnRulesHolder {
         Allowed allowed = null;
         if (packet.allowed) {
             if (packet.uid == vpnPreferences.getOwnUID()
+                    && (packet.dport != PLAINTEXT_DNS_PORT || vpnPreferences.getCompatibilityMode())
                     || vpnPreferences.getCompatibilityMode()
                     && isPacketAllowedForCompatibilityMode(packet, fixTTLForPacket)) {
                 allowed = new Allowed();
