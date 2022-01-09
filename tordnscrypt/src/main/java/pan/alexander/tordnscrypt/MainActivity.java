@@ -567,7 +567,7 @@ public class MainActivity extends LangAppCompatActivity
         } else if (id == R.id.item_root) {
             showInfoAboutRoot();
         } else if (id == R.id.item_new_identity) {
-            newTorIdentity();
+            newTorIdentity(item);
         } else if (id == R.id.menu_root_mode) {
             switchToRootMode(item);
         } else if (id == R.id.menu_vpn_mode) {
@@ -600,7 +600,7 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     @SuppressLint("InflateParams")
-    private void newTorIdentity() {
+    private void newTorIdentity(MenuItem newIdentityMenuItem) {
         if (modulesStatus != null && newIdentityMenuItem != null && modulesStatus.getTorState() == RUNNING) {
 
             if (rotateAnimation == null || animatingImage == null) {
@@ -624,7 +624,7 @@ public class MainActivity extends LangAppCompatActivity
             }
 
             handler.postDelayed(() -> {
-                if (!isFinishing() && newIdentityMenuItem != null && newIdentityMenuItem.getActionView() != null) {
+                if (!isFinishing() && newIdentityMenuItem.getActionView() != null) {
                     Toast.makeText(this, this.getText(R.string.toast_new_tor_identity), Toast.LENGTH_SHORT).show();
                     newIdentityMenuItem.getActionView().clearAnimation();
                     newIdentityMenuItem.setActionView(null);
