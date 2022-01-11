@@ -25,18 +25,20 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import java.lang.Exception
+import java.lang.ref.WeakReference
 
 class TorInteractor(private val modulesLogRepository: ModulesLogRepository) {
-    private val listeners: HashSet<OnTorLogUpdatedListener?> = HashSet()
+    private val listeners: HashMap<Class<*>, WeakReference<OnTorLogUpdatedListener>> = hashMapOf()
     private var parser: TorLogParser? = null
     private val modulesStatus = ModulesStatus.getInstance()
 
-    fun addListener (listener: OnTorLogUpdatedListener?) {
-        listeners.add(listener)
+    fun <T: OnTorLogUpdatedListener> addListener (listener: T?) {
+        listener?.let { listeners[listener.javaClass] = WeakReference(it) }
     }
 
-    fun removeListener (listener: OnTorLogUpdatedListener?) {
-        listeners.remove(listener)
+    fun <T: OnTorLogUpdatedListener> removeListener (listener: T?) {
+
+        listener?.let { listeners.remove(it.javaClass) }
 
         if (listeners.isEmpty()) {
             resetParserState()
@@ -75,13 +77,11 @@ class TorInteractor(private val modulesLogRepository: ModulesLogRepository) {
 
         val torLogData = parser?.parseLog()
 
-        val listeners = listeners.toHashSet()
-
         listeners.forEach { listener ->
-            if (listener?.isActive() == true) {
-                torLogData?.let { listener.onTorLogUpdated(it) }
+            if (listener.value.get()?.isActive() == true) {
+                torLogData?.let { listener.value.get()?.onTorLogUpdated(it) }
             } else {
-                listener?.let { removeListener(it) }
+                removeListener(listener.value.get())
             }
         }
     }

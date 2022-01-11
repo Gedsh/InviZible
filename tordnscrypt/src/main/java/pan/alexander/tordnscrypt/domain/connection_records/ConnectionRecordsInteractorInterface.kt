@@ -20,7 +20,7 @@
 package pan.alexander.tordnscrypt.domain.connection_records
 
 interface ConnectionRecordsInteractorInterface {
-    fun addOnConnectionRecordsUpdatedListener(onConnectionRecordsUpdatedListener: OnConnectionRecordsUpdatedListener)
-    fun removeOnConnectionRecordsUpdatedListener(onConnectionRecordsUpdatedListener: OnConnectionRecordsUpdatedListener)
+    fun <T: OnConnectionRecordsUpdatedListener> addOnConnectionRecordsUpdatedListener(onConnectionRecordsUpdatedListener: T)
+    fun <T: OnConnectionRecordsUpdatedListener> removeOnConnectionRecordsUpdatedListener(onConnectionRecordsUpdatedListener: T)
     fun clearConnectionRecords()
 }

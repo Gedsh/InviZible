@@ -56,48 +56,48 @@ class LogReaderInteractors @Inject constructor(
         connectionRecordsInteractor
     )
 
-    override fun addOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: OnDNSCryptLogUpdatedListener) {
+    override fun <T: OnDNSCryptLogUpdatedListener> addOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: T) {
         dnsCryptInteractor.addListener(onDNSCryptLogUpdatedListener)
         logReaderLoop.startLogsParser()
     }
 
-    override fun removeOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: OnDNSCryptLogUpdatedListener) {
+    override fun <T: OnDNSCryptLogUpdatedListener> removeOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: T) {
         dnsCryptInteractor.removeListener(onDNSCryptLogUpdatedListener)
     }
 
-    override fun addOnTorLogUpdatedListener(onTorLogUpdatedListener: OnTorLogUpdatedListener) {
+    override fun <T: OnTorLogUpdatedListener> addOnTorLogUpdatedListener(onTorLogUpdatedListener: T) {
         torInteractor.addListener(onTorLogUpdatedListener)
         logReaderLoop.startLogsParser()
     }
 
-    override fun removeOnTorLogUpdatedListener(onTorLogUpdatedListener: OnTorLogUpdatedListener) {
+    override fun <T: OnTorLogUpdatedListener> removeOnTorLogUpdatedListener(onTorLogUpdatedListener: T) {
         torInteractor.removeListener(onTorLogUpdatedListener)
     }
 
-    override fun addOnITPDLogUpdatedListener(onITPDLogUpdatedListener: OnITPDLogUpdatedListener) {
+    override fun <T: OnITPDLogUpdatedListener> addOnITPDLogUpdatedListener(onITPDLogUpdatedListener: T) {
         itpdInteractor.addListener(onITPDLogUpdatedListener)
         logReaderLoop.startLogsParser()
     }
 
-    override fun removeOnITPDLogUpdatedListener(onITPDLogUpdatedListener: OnITPDLogUpdatedListener) {
+    override fun <T: OnITPDLogUpdatedListener> removeOnITPDLogUpdatedListener(onITPDLogUpdatedListener: T) {
         itpdInteractor.removeListener(onITPDLogUpdatedListener)
     }
 
-    override fun addOnITPDHtmlUpdatedListener(onITPDHtmlUpdatedListener: OnITPDHtmlUpdatedListener) {
+    override fun <T: OnITPDHtmlUpdatedListener> addOnITPDHtmlUpdatedListener(onITPDHtmlUpdatedListener: T) {
         itpdHtmlInteractor.addListener(onITPDHtmlUpdatedListener)
         logReaderLoop.startLogsParser()
     }
 
-    override fun removeOnITPDHtmlUpdatedListener(onITPDHtmlUpdatedListener: OnITPDHtmlUpdatedListener) {
+    override fun <T: OnITPDHtmlUpdatedListener> removeOnITPDHtmlUpdatedListener(onITPDHtmlUpdatedListener: T) {
         itpdHtmlInteractor.removeListener(onITPDHtmlUpdatedListener)
     }
 
-    override fun addOnConnectionRecordsUpdatedListener(onConnectionRecordsUpdatedListener: OnConnectionRecordsUpdatedListener) {
+    override fun <T: OnConnectionRecordsUpdatedListener> addOnConnectionRecordsUpdatedListener(onConnectionRecordsUpdatedListener: T) {
         connectionRecordsInteractor.addListener(onConnectionRecordsUpdatedListener)
         logReaderLoop.startLogsParser()
     }
 
-    override fun removeOnConnectionRecordsUpdatedListener(onConnectionRecordsUpdatedListener: OnConnectionRecordsUpdatedListener) {
+    override fun <T: OnConnectionRecordsUpdatedListener> removeOnConnectionRecordsUpdatedListener(onConnectionRecordsUpdatedListener: T) {
         connectionRecordsInteractor.removeListener(onConnectionRecordsUpdatedListener)
     }
 

@@ -22,6 +22,6 @@ package pan.alexander.tordnscrypt.domain.log_reader
 import pan.alexander.tordnscrypt.domain.log_reader.tor.OnTorLogUpdatedListener
 
 interface TorInteractorInterface {
-    fun addOnTorLogUpdatedListener(onTorLogUpdatedListener: OnTorLogUpdatedListener)
-    fun removeOnTorLogUpdatedListener(onTorLogUpdatedListener: OnTorLogUpdatedListener)
+    fun <T: OnTorLogUpdatedListener> addOnTorLogUpdatedListener(onTorLogUpdatedListener: T)
+    fun <T: OnTorLogUpdatedListener> removeOnTorLogUpdatedListener(onTorLogUpdatedListener: T)
 }

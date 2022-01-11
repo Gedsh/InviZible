@@ -22,6 +22,6 @@ package pan.alexander.tordnscrypt.domain.log_reader
 import pan.alexander.tordnscrypt.domain.log_reader.dnscrypt.OnDNSCryptLogUpdatedListener
 
 interface DNSCryptInteractorInterface {
-    fun addOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: OnDNSCryptLogUpdatedListener)
-    fun removeOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: OnDNSCryptLogUpdatedListener)
+    fun <T: OnDNSCryptLogUpdatedListener> addOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: T)
+    fun <T: OnDNSCryptLogUpdatedListener> removeOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: T)
 }

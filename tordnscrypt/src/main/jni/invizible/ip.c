@@ -31,8 +31,7 @@ extern bool can_filter;
 
 uint16_t get_mtu() {
     //return 10000;
-    //return 1500;
-    return 1400;
+    return 1500;
 }
 
 uint16_t get_default_mss(int version) {

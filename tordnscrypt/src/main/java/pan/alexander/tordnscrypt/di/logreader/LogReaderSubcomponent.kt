@@ -19,11 +19,14 @@
 
 package pan.alexander.tordnscrypt.di.logreader
 
+import android.content.Context
+import dagger.BindsInstance
 import dagger.Subcomponent
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptFragmentPresenter
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDFragmentPresenter
 import pan.alexander.tordnscrypt.modules.ModulesStateLoop
 import pan.alexander.tordnscrypt.tor_fragment.TorFragmentPresenter
+import javax.inject.Named
 
 @LogReaderScope
 @Subcomponent(modules = [LogReaderRepositoryModule::class, LogReaderInteractorsModule::class])
@@ -31,11 +34,15 @@ interface LogReaderSubcomponent {
 
     @Subcomponent.Factory
     interface Factory {
-        fun create(): LogReaderSubcomponent
+        fun create(@BindsInstance @Named(LOG_READER_CONTEXT) context: Context): LogReaderSubcomponent
     }
 
     fun inject(presenter: DNSCryptFragmentPresenter)
     fun inject(presenter: TorFragmentPresenter)
     fun inject(presenter: ITPDFragmentPresenter)
     fun inject(modulesStateLoop: ModulesStateLoop)
+
+    companion object {
+        const val LOG_READER_CONTEXT = "LogReaderContext"
+    }
 }

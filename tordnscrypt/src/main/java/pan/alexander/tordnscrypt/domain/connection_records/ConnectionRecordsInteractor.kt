@@ -23,23 +23,23 @@ import android.util.Log
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.lang.Exception
+import java.lang.ref.WeakReference
 import javax.inject.Inject
-import kotlin.collections.HashSet
 
 class ConnectionRecordsInteractor @Inject constructor(
     private val connectionRecordsRepository: ConnectionRecordsRepository,
     private val converter: dagger.Lazy<ConnectionRecordsConverter>
 ) {
     private val applicationContext = App.instance.applicationContext
-    private val listeners: HashSet<OnConnectionRecordsUpdatedListener?> = HashSet()
+    private val listeners: HashMap<Class<*>, WeakReference<OnConnectionRecordsUpdatedListener>> = hashMapOf()
     private var parser: ConnectionRecordsParser? = null
 
-    fun addListener(listener: OnConnectionRecordsUpdatedListener) {
-        listeners.add(listener)
+    fun <T: OnConnectionRecordsUpdatedListener> addListener(listener: T?) {
+        listener?.let { listeners[it.javaClass] = WeakReference(it) }
     }
 
-    fun removeListener(listener: OnConnectionRecordsUpdatedListener) {
-        listeners.remove(listener)
+    fun <T: OnConnectionRecordsUpdatedListener> removeListener(listener: T?) {
+        listener?.let { listeners.remove(it.javaClass) }
         stopConverter()
     }
 
@@ -123,13 +123,11 @@ class ConnectionRecordsInteractor @Inject constructor(
             return
         }
 
-        val listeners = listeners.toHashSet()
-
         listeners.forEach { listener ->
-            if (listener?.isActive() == true) {
-                listener.onConnectionRecordsUpdated(records)
+            if (listener.value.get()?.isActive() == true) {
+                listener.value.get()?.onConnectionRecordsUpdated(records)
             } else {
-                listener?.let { removeListener(it) }
+                removeListener(listener.value.get())
 
             }
         }

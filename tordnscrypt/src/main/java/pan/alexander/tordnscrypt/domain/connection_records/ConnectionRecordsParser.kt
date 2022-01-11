@@ -43,8 +43,10 @@ class ConnectionRecordsParser(private val applicationContext: Context) {
     private val apIsOn = App.instance.daggerComponent.getPreferenceRepository().get()
         .getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON)
     private val localEthernetDeviceAddress =
-        sharedPreferences.getString("pref_common_local_eth_device_addr", Constants.STANDARD_ADDRESS_LOCAL_PC)
-            ?: Constants.STANDARD_ADDRESS_LOCAL_PC
+        sharedPreferences.getString(
+            "pref_common_local_eth_device_addr",
+            Constants.STANDARD_ADDRESS_LOCAL_PC
+        ) ?: Constants.STANDARD_ADDRESS_LOCAL_PC
 
     fun formatLines(connectionRecords: List<ConnectionRecord>): String {
 
@@ -52,13 +54,17 @@ class ConnectionRecordsParser(private val applicationContext: Context) {
             modulesStatus.isFixTTL && modulesStatus.mode == OperationMode.ROOT_MODE && !modulesStatus.isUseModulesWithRoot
 
         val apAddresses = if (Tethering.wifiAPAddressesRange.lastIndexOf(".") > 0) {
-            Tethering.wifiAPAddressesRange.substring(0, Tethering.wifiAPAddressesRange.lastIndexOf("."))
+            Tethering.wifiAPAddressesRange.substring(
+                0, Tethering.wifiAPAddressesRange.lastIndexOf(".")
+            )
         } else {
             Constants.STANDARD_AP_INTERFACE_RANGE
         }
 
         val usbAddresses = if (Tethering.usbModemAddressesRange.lastIndexOf(".") > 0) {
-            Tethering.usbModemAddressesRange.substring(0, Tethering.usbModemAddressesRange.lastIndexOf("."))
+            Tethering.usbModemAddressesRange.substring(
+                0, Tethering.usbModemAddressesRange.lastIndexOf(".")
+            )
         } else {
             Constants.STANDARD_USB_MODEM_INTERFACE_RANGE
         }
@@ -110,7 +116,8 @@ class ConnectionRecordsParser(private val applicationContext: Context) {
                     appName =
                         applicationContext.packageManager.getNameForUid(record.uid) ?: "Undefined"
                 }
-                if (apIsOn && fixTTL && record.saddr.contains(apAddresses)) {
+
+                if (Tethering.apIsOn && fixTTL && record.saddr.contains(apAddresses)) {
                     lines.append("<b>").append("WiFi").append("</b>").append(" -> ")
                 } else if (Tethering.usbTetherOn && fixTTL && record.saddr.contains(usbAddresses)) {
                     lines.append("<b>").append("USB").append("</b>").append(" -> ")

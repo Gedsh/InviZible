@@ -25,18 +25,19 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import java.lang.Exception
+import java.lang.ref.WeakReference
 
 class ITPDHtmlInteractor(private val modulesLogRepository: ModulesLogRepository) {
-    private val listeners: HashSet<OnITPDHtmlUpdatedListener?> = HashSet()
+    private val listeners: HashMap<Class<*>, WeakReference<OnITPDHtmlUpdatedListener>> = hashMapOf()
     private var parser: ITPDHtmlParser? = null
     private val modulesStatus = ModulesStatus.getInstance()
 
-    fun addListener (listener: OnITPDHtmlUpdatedListener?) {
-        listeners.add(listener)
+    fun <T: OnITPDHtmlUpdatedListener> addListener (listener: T?) {
+        listener?.let { listeners[it.javaClass] = WeakReference(it) }
     }
 
-    fun removeListener (listener: OnITPDHtmlUpdatedListener?) {
-        listeners.remove(listener)
+    fun <T: OnITPDHtmlUpdatedListener> removeListener (listener: T?) {
+        listener?.let { listeners.remove(it.javaClass) }
 
         if (listeners.isEmpty()) {
             resetParserState()
@@ -75,13 +76,11 @@ class ITPDHtmlInteractor(private val modulesLogRepository: ModulesLogRepository)
 
         val itpdHtmlData = parser?.parseHtmlLines()
 
-        val listeners = listeners.toHashSet()
-
         listeners.forEach { listener ->
-            if (listener?.isActive() == true) {
-                itpdHtmlData?.let { listener.onITPDHtmlUpdated(it) }
+            if (listener.value.get()?.isActive() == true) {
+                itpdHtmlData?.let { listener.value.get()?.onITPDHtmlUpdated(it) }
             } else {
-                listener?.let { removeListener(it) }
+                removeListener(listener.value.get())
             }
         }
     }

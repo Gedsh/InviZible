@@ -25,18 +25,19 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import java.lang.Exception
+import java.lang.ref.WeakReference
 
 class ITPDInteractor(private val modulesLogRepository: ModulesLogRepository) {
-    private val listeners: HashSet<OnITPDLogUpdatedListener?> = HashSet()
+    private val listeners: HashMap<Class<*>, WeakReference<OnITPDLogUpdatedListener>> = hashMapOf()
     private var parser: ITPDLogParser? = null
     private val modulesStatus = ModulesStatus.getInstance()
 
-    fun addListener(listener: OnITPDLogUpdatedListener?) {
-        listeners.add(listener)
+    fun <T: OnITPDLogUpdatedListener> addListener(listener: T?) {
+        listener?.let { listeners[listener.javaClass] = WeakReference(listener) }
     }
 
-    fun removeListener(listener: OnITPDLogUpdatedListener?) {
-        listeners.remove(listener)
+    fun <T: OnITPDLogUpdatedListener> removeListener(listener: T?) {
+        listener?.let { listeners.remove(listener.javaClass) }
 
         if (listeners.isEmpty()) {
             resetParserState()
@@ -75,13 +76,11 @@ class ITPDInteractor(private val modulesLogRepository: ModulesLogRepository) {
 
         val itpdLogData = parser?.parseLog()
 
-        val listeners = listeners.toHashSet()
-
         listeners.forEach { listener ->
-            if (listener?.isActive() == true) {
-                itpdLogData?.let { listener.onITPDLogUpdated(it) }
+            if (listener.value.get()?.isActive() == true) {
+                itpdLogData?.let { listener.value.get()?.onITPDLogUpdated(it) }
             } else {
-                listener?.let { removeListener(it) }
+                removeListener(listener.value.get())
             }
         }
     }

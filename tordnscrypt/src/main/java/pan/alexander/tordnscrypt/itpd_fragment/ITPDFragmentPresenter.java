@@ -99,7 +99,9 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
 
 
     public ITPDFragmentPresenter(ITPDFragmentView view) {
-        App.getInstance().initLogReaderDaggerSubcomponent().inject(this);
+        App.getInstance()
+                .initLogReaderDaggerSubcomponent(view.getFragmentActivity())
+                .inject(this);
         this.view = view;
     }
 

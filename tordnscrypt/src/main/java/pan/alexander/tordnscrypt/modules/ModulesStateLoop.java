@@ -114,7 +114,9 @@ public class ModulesStateLoop implements Runnable,
     private int savedIptablesCommandsHash = 0;
 
     ModulesStateLoop(ModulesService modulesService) {
-        App.getInstance().initLogReaderDaggerSubcomponent().inject(this);
+        App.getInstance()
+                .initLogReaderDaggerSubcomponent(modulesService)
+                .inject(this);
 
         //Delay in sec before service can stop
         stopCounter = STOP_COUNTER_DELAY;
@@ -189,7 +191,8 @@ public class ModulesStateLoop implements Runnable,
             if (handler != null) {
                 handler.get().post(() -> Toast.makeText(modulesService, R.string.wrong, Toast.LENGTH_SHORT).show());
             }
-            Log.e(LOG_TAG, "ModulesStateLoop exception " + e.getMessage() + " " + e.getCause());
+            Log.e(LOG_TAG, "ModulesStateLoop exception " + e.getMessage() + " "
+                    + e.getCause() + "\n" + Log.getStackTraceString(e));
         }
 
     }

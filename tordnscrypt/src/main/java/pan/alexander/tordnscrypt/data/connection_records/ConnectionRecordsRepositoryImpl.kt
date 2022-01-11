@@ -23,20 +23,20 @@ import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsRepo
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecord
 import javax.inject.Inject
 
-class ConnectionRecordsRepositoryImpl @Inject constructor(): ConnectionRecordsRepository {
-    private var connectionRecordsGetter: ConnectionRecordsGetter? = null
+class ConnectionRecordsRepositoryImpl @Inject constructor(
+    private val connectionRecordsGetter: ConnectionRecordsGetter
+): ConnectionRecordsRepository {
 
     override fun getRawConnectionRecords(): List<ConnectionRecord?> {
-        connectionRecordsGetter = connectionRecordsGetter ?: ConnectionRecordsGetter()
-        return connectionRecordsGetter?.getConnectionRawRecords() ?: emptyList()
+        return connectionRecordsGetter.getConnectionRawRecords()
     }
 
     override fun clearConnectionRawRecords() {
-        connectionRecordsGetter?.clearConnectionRawRecords()
+        connectionRecordsGetter.clearConnectionRawRecords()
     }
 
     override fun connectionRawRecordsNoMoreRequired() {
-        connectionRecordsGetter?.connectionRawRecordsNoMoreRequired()
+        connectionRecordsGetter.connectionRawRecordsNoMoreRequired()
     }
 
 }

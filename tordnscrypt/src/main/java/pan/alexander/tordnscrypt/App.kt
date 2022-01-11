@@ -102,8 +102,8 @@ class App : Application() {
     }
 
     @MainThread
-    fun initLogReaderDaggerSubcomponent() = logReaderDaggerSubcomponent ?:
-        daggerComponent.logReaderSubcomponent().create().also {
+    fun initLogReaderDaggerSubcomponent(context: Context) = logReaderDaggerSubcomponent ?:
+        daggerComponent.logReaderSubcomponent().create(context).also {
             logReaderDaggerSubcomponent = it
         }
 

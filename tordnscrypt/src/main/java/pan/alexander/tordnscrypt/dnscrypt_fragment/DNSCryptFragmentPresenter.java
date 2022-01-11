@@ -94,7 +94,9 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
     private ScaleGestureDetector scaleGestureDetector;
 
     public DNSCryptFragmentPresenter(DNSCryptFragmentView view) {
-        App.getInstance().initLogReaderDaggerSubcomponent().inject(this);
+        App.getInstance()
+                .initLogReaderDaggerSubcomponent(view.getFragmentActivity())
+                .inject(this);
         this.view = view;
     }
 
