@@ -669,3 +669,9 @@
 * Added Greek translation.
 * Updated French translation.
 * A lot of fixes and optimizations.
+
+**InviZible Pro beta 1.4.8**
+* Optimized modules logs parser.
+* Fixed and improved Fix TTL feature.
+* Updated German translation.
+* Minor fixes.
