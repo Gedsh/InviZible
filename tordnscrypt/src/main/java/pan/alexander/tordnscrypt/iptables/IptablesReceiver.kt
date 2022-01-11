@@ -64,7 +64,7 @@ class IptablesReceiver : BroadcastReceiver() {
         val result = StringBuilder()
         if (comResult != null) {
             for (com in comResult.commands) {
-                Log.i(LOG_TAG, com!!)
+                Log.i(LOG_TAG, com)
                 result.append(com).append("\n")
             }
         }
@@ -98,7 +98,8 @@ class IptablesReceiver : BroadcastReceiver() {
             } else if (refreshRules
                 && (resultStr.contains(" -w ")
                 || resultStr.contains("Exit code=4")
-                || resultStr.contains("try again"))) {
+                || resultStr.contains("try again")) ||
+                resultStr.matches(Regex(".*tun\\d+.*"))) {
                 it.postDelayed({ ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true) }, 5000)
             }
             if (showToastWithCommandsResultError) {

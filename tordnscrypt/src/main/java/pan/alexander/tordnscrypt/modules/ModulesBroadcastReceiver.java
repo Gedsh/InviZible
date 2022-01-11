@@ -40,6 +40,7 @@ import androidx.preference.PreferenceManager;
 
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -366,9 +367,9 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
                 InternetSharingChecker checker = internetSharingChecker.get();
                 if (tetherList != null) {
                     if (tetherList.isEmpty()) {
-                        checker.setTetherInterfaceName("");
+                        checker.setTetherInterfaceName(Collections.emptyList());
                     } else {
-                        checker.setTetherInterfaceName(tetherList.get(0).trim());
+                        checker.setTetherInterfaceName(tetherList);
                     }
                 } else if (TETHER_STATE_FILTER_ACTION.equals(action)) {
                     checker.setTetherInterfaceName(null);

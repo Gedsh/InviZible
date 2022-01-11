@@ -31,6 +31,7 @@ import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REFRESH_RULES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.WIFI_ACCESS_POINT_IS_ON;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper.reload;
 
 import android.annotation.TargetApi;
@@ -142,7 +143,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         }
 
         logi("ModulesReceiver received " + intent
-                + (intent.getExtras().isEmpty() ? "" : " " + intent.getExtras()));
+                + (intent.getExtras().isEmpty() ? "" : " " + intent.getExtras().toString()));
 
         OperationMode mode = modulesStatus.getMode();
         if (savedOperationMode != mode) {
@@ -221,6 +222,11 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
         if (firewallNotificationReceiver != null) {
             unregisterFirewallReceiver();
+        }
+
+        if (vpnConnectivityReceiver != null) {
+            unlistenVpnConnectivityChanges();
+            vpnRevoked = false;
         }
     }
 
@@ -322,10 +328,10 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
                 if (isVpnMode() && !vpnRevoked) {
                     reload("Network available", context);
-                } else if (isRootMode() || vpnRevoked) {
+                } else if (isRootMode()) {
                     updateIptablesRules(false);
                     resetArpScanner(true);
-                } else if (isProxyMode()) {
+                } else if (isProxyMode() || vpnRevoked) {
                     resetArpScanner(true);
                 }
 
@@ -422,7 +428,10 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                 if (isVpnMode() && !vpnRevoked) {
                     setInternetAvailable(false);
                     reload("Network lost", context);
-                } else if (isRootMode() || vpnRevoked) {
+                } else if (isVpnMode() && vpnRevoked) {
+                    setInternetAvailable(false);
+                    resetArpScanner(false);
+                }  else if (isRootMode()) {
                     setInternetAvailable(false);
                     updateIptablesRules(false);
                     resetArpScanner(false);
@@ -516,15 +525,15 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void unlistenVpnConnectivityChanges() {
 
-        logi("ModulesReceiver stop listening to vpn connectivity changes");
-
         if (vpnConnectivityReceiver != null) {
+            logi("ModulesReceiver stop listening to vpn connectivity changes");
             try {
                 context.unregisterReceiver(vpnConnectivityReceiver);
             } catch (Exception e) {
                 logw("ModulesReceiver unlistenVpnConnectivityChanges", e);
+            } finally {
+                vpnConnectivityReceiver = null;
             }
-            vpnConnectivityReceiver = null;
         }
     }
 
@@ -543,7 +552,10 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             if (isVpnMode() && !vpnRevoked) {
                 setInternetAvailable(false);
                 reload("Idle state changed", context);
-            } else if (isRootMode() || vpnRevoked) {
+            } else if (isVpnMode() && vpnRevoked) {
+                resetArpScanner();
+                checkInternetConnection();
+            } else if (isRootMode()) {
                 updateIptablesRules(false);
                 resetArpScanner();
                 checkInternetConnection();
@@ -562,10 +574,14 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             if (networkType == ConnectivityManager.TYPE_VPN)
                 return;
 
-            setInternetAvailable(false);
-            if (!vpnRevoked) {
+            if (vpnRevoked) {
+                resetArpScanner();
+                checkInternetConnection();
+            } else {
+                setInternetAvailable(false);
                 reload("Connectivity changed", context);
             }
+
         } else if (isRootMode()) {
             updateIptablesRules(false);
             resetArpScanner();
@@ -603,11 +619,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
                 InternetSharingChecker checker = internetSharingChecker.get();
                 if (tetherList != null) {
-                    if (tetherList.isEmpty()) {
-                        checker.setTetherInterfaceName("");
-                    } else {
-                        checker.setTetherInterfaceName(tetherList.get(0).trim());
-                    }
+                    checker.setTetherInterfaceName(tetherList);
                 } else if (TETHER_STATE_FILTER_ACTION.equals(action)) {
                     checker.setTetherInterfaceName(null);
                 }
@@ -623,11 +635,11 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
             PreferenceRepository preferences = preferenceRepository.get();
 
-            if (wifiAccessPointOn && !preferences.getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON)) {
-                preferences.setBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON, true);
+            if (wifiAccessPointOn && !preferences.getBoolPreference(WIFI_ACCESS_POINT_IS_ON)) {
+                preferences.setBoolPreference(WIFI_ACCESS_POINT_IS_ON, true);
                 modulesStatus.setIptablesRulesUpdateRequested(context, true);
-            } else if (!wifiAccessPointOn && preferences.getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON)) {
-                preferences.setBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON, false);
+            } else if (!wifiAccessPointOn && preferences.getBoolPreference(WIFI_ACCESS_POINT_IS_ON)) {
+                preferences.setBoolPreference(WIFI_ACCESS_POINT_IS_ON, false);
                 modulesStatus.setIptablesRulesUpdateRequested(context, true);
             }
 
@@ -707,13 +719,10 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
     private void updateIptablesRules(boolean forceUpdate) {
 
-        if (vpnRevoked) {
-            return;
-        }
-
         boolean refreshRules = defaultPreferences.get().getBoolean(REFRESH_RULES, false);
+        boolean fixTTL = modulesStatus.isFixTTL();
 
-        if (!refreshRules && !forceUpdate) {
+        if (!refreshRules && !forceUpdate && !fixTTL) {
             return;
         }
 

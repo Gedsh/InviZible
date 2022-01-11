@@ -41,6 +41,6 @@ public class Packet {
     @NonNull
     @Override
     public String toString() {
-        return "uid=" + uid + " v" + version + " p" + protocol + " " + daddr + "/" + dport;
+        return "uid=" + uid + " v" + version + " p" + protocol + " " + saddr + "/" + sport + " " + daddr + "/" + dport;
     }
 }

@@ -350,7 +350,8 @@ public class ServiceVPNHandler extends Handler {
 
             PreferenceRepository preferences = preferenceRepository.get();
 
-            if (!preferences.getBoolPreference(FIREWALL_ENABLED)) {
+            if (!preferences.getBoolPreference(FIREWALL_ENABLED)
+                    || ModulesStatus.getInstance().getMode() == ROOT_MODE) {
                 for (Rule rule : ServiceVPNHandler.listRule) {
                     listAllowed.add(String.valueOf(rule.uid));
                 }

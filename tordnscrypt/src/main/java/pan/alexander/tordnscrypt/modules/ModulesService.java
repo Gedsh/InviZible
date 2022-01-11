@@ -957,7 +957,7 @@ public class ModulesService extends Service {
             handler.get().removeCallbacksAndMessages(null);
         }
 
-        InternetSharingChecker.resetTetherInterfaceName();
+        InternetSharingChecker.resetTetherInterfaceNames();
 
         serviceIsRunning = false;
 
