@@ -150,6 +150,13 @@ public class VpnRulesHolder {
         // https://android.googlesource.com/platform/system/core/+/master/include/private/android_filesystem_config.h
         if ((!vpn.canFilter) && isSupported(packet.protocol)) {
             packet.allowed = true;
+        } else if (packet.dport == DNS_OVER_TLS_PORT
+                && vpnPreferences.getIgnoreSystemDNS()) {
+            logw("Block DNS over TLS " + packet);
+        } else if (vpnDnsSet.contains(packet.daddr)
+                && packet.dport != PLAINTEXT_DNS_PORT
+                && vpnPreferences.getIgnoreSystemDNS()) {
+            logw("Block DNS over HTTPS " + packet);
         } else if ((packet.uid == vpnPreferences.getOwnUID()
                 || vpnPreferences.getCompatibilityMode()
                 && packet.uid == SPECIAL_UID_KERNEL
@@ -160,13 +167,6 @@ public class VpnRulesHolder {
             if (!vpnPreferences.getCompatibilityMode()) {
                 logw("Allowing self " + packet);
             }
-        } else if (packet.dport == DNS_OVER_TLS_PORT
-                && vpnPreferences.getIgnoreSystemDNS()) {
-            logw("Block DNS over TLS " + packet);
-        } else if (vpnDnsSet.contains(packet.daddr)
-                && packet.dport != PLAINTEXT_DNS_PORT
-                && vpnPreferences.getIgnoreSystemDNS()) {
-            logw("Block DNS over HTTPS " + packet);
         } else if (vpnPreferences.getArpSpoofingDetection()
                 && vpnPreferences.getBlockInternetWhenArpAttackDetected()
                 && (ArpScanner.Companion.getArpAttackDetected()

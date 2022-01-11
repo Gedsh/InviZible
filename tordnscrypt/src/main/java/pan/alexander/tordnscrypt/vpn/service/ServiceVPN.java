@@ -762,10 +762,14 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
     @Override
     public boolean onUnbind(Intent intent) {
-
         logi("ServiceVPN onUnbind");
+        return true;
+    }
 
-        return super.onUnbind(intent);
+    @Override
+    public void onRebind(Intent intent) {
+        logi("ServiceVPN onRebind");
+        super.onRebind(intent);
     }
 
     @Override
@@ -877,5 +881,31 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     public void onLowMemory() {
         clearDnsQueryRawRecords();
         loge("ServiceVPN low memory");
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+
+        try {
+            notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
+            stopForeground(true);
+        } catch (Exception e) {
+            loge("VPNService onTaskRemoved", e);
+        }
+
+        stopSelf();
+
+        try {
+            Thread.sleep(100);
+        } catch (Exception ignored) {
+        } finally {
+            defaultPreferences.get().edit().putBoolean(VPN_SERVICE_ENABLED, true).apply();
+            ServiceVPNHelper.start(
+                    "ModulesReceiver start VPN service after task removed",
+                    this
+            );
+        }
+
+        super.onTaskRemoved(rootIntent);
     }
 }

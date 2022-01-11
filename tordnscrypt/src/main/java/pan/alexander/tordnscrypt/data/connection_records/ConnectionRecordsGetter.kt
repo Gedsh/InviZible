@@ -42,28 +42,39 @@ class ConnectionRecordsGetter @Inject constructor(
 
     private val bound = AtomicBoolean(false)
 
-    @Volatile
-    private var serviceConnection: ServiceConnection? = null
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            if (service is VPNBinder) {
+                serviceVPN = WeakReference(service.service)
+            }
+        }
+
+        override fun onServiceDisconnected(name: ComponentName) {
+            if (bound.compareAndSet(true, false)) {
+                serviceVPN = null
+            }
+        }
+    }
+
     @Volatile
     private var serviceVPN: WeakReference<ServiceVPN?>? = null
 
     fun getConnectionRawRecords(): List<ConnectionRecord?> {
-        if (serviceVPN == null && serviceConnection == null
-            && bound.compareAndSet(false, true)
-        ) {
+        if (bound.compareAndSet(false, true)) {
             logi("ConnectionRecordsGetter bind to VPN service")
             bindToVPNService()
         }
 
-        if (!bound.get()) {
-            return emptyList()
-        }
-
         lockConnectionRawRecordsListForRead(true)
 
-        val rawRecords = ArrayList<ConnectionRecord?>(
-            serviceVPN?.get()?.dnsQueryRawRecords ?: emptyList()
-        )
+        val rawRecords = try {
+            ArrayList<ConnectionRecord?>(
+                serviceVPN?.get()?.dnsQueryRawRecords ?: emptyList()
+            )
+        } catch (e: Exception) {
+            logw("ConnectionRecordsGetter getConnectionRawRecords", e)
+            emptyList()
+        }
 
         lockConnectionRawRecordsListForRead(false)
 
@@ -71,7 +82,11 @@ class ConnectionRecordsGetter @Inject constructor(
     }
 
     fun clearConnectionRawRecords() {
-        serviceVPN?.get()?.clearDnsQueryRawRecords()
+        try {
+            serviceVPN?.get()?.clearDnsQueryRawRecords()
+        } catch (e: java.lang.Exception) {
+            logw("ConnectionRecordsGetter clearConnectionRawRecords", e)
+        }
     }
 
     fun connectionRawRecordsNoMoreRequired() {
@@ -79,26 +94,17 @@ class ConnectionRecordsGetter @Inject constructor(
     }
 
     private fun lockConnectionRawRecordsListForRead(lock: Boolean) {
-        serviceVPN?.get()?.lockDnsQueryRawRecordsListForRead(lock)
+        try {
+            serviceVPN?.get()?.lockDnsQueryRawRecordsListForRead(lock)
+        } catch (e: Exception) {
+            logw("ConnectionRecordsGetter lockConnectionRawRecordsListForRead", e)
+        }
     }
 
     @Synchronized
     private fun bindToVPNService() {
-        serviceConnection = object : ServiceConnection {
-            override fun onServiceConnected(name: ComponentName, service: IBinder) {
-                if (service is VPNBinder) {
-                    serviceVPN = WeakReference(service.service)
-                }
-            }
-
-            override fun onServiceDisconnected(name: ComponentName) {
-                serviceVPN = null
-                serviceConnection = null
-            }
-        }
-
         val intent = Intent(context, ServiceVPN::class.java)
-        serviceConnection?.let {
+        serviceConnection.let {
             context.bindService(intent, it, Context.BIND_IMPORTANT)
         }
     }
@@ -106,8 +112,9 @@ class ConnectionRecordsGetter @Inject constructor(
     private fun unbindVPNService() {
         if (bound.compareAndSet(true, false)) {
             logi("ConnectionRecordsGetter unbind VPN service")
+
             try {
-                serviceConnection?.let { context.unbindService(it) }
+                serviceConnection.let { context.unbindService(it) }
             } catch (e: Exception) {
                 logw(
                     "ConnectionRecordsGetter unbindVPNService exception "
