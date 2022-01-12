@@ -47,6 +47,7 @@ import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.net.VpnService;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.text.TextUtils;
@@ -142,8 +143,13 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             return;
         }
 
-        logi("ModulesReceiver received " + intent
-                + (intent.getExtras().isEmpty() ? "" : " " + intent.getExtras().toString()));
+        Bundle extras = intent.getExtras();
+        if (extras != null) {
+            logi("ModulesReceiver received " + intent
+                    + (extras.isEmpty() ? "" : " " + extras.toString()));
+        } else {
+            logi("ModulesReceiver received " + intent);
+        }
 
         OperationMode mode = modulesStatus.getMode();
         if (savedOperationMode != mode) {
