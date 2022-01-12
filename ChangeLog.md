@@ -675,3 +675,6 @@
 * Fixed and improved Fix TTL feature.
 * Updated German translation.
 * Minor fixes.
+
+**InviZible Pro beta 1.4.9**
+* Fixed crash when device comes out of idle mode.
