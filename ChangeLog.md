@@ -678,3 +678,8 @@
 
 **InviZible Pro beta 1.4.9**
 * Fixed crash when device comes out of idle mode.
+
+**InviZible Pro beta 1.5.0**
+* Implemented a kill switch for Root mode.
+* Improved internet connection checking when only DNSCrypt is running and Use socks5 proxy enabled.
+* Updated Greek translation.
