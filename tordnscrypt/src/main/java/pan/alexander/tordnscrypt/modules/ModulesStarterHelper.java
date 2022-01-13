@@ -22,7 +22,6 @@ package pan.alexander.tordnscrypt.modules;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -47,10 +46,12 @@ import static pan.alexander.tordnscrypt.modules.ModulesService.DNSCRYPT_KEYWORD;
 import static pan.alexander.tordnscrypt.modules.ModulesService.ITPD_KEYWORD;
 import static pan.alexander.tordnscrypt.modules.ModulesService.TOR_KEYWORD;
 import static pan.alexander.tordnscrypt.utils.AppExtension.getApp;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.DNSCryptRunFragmentMark;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.I2PDRunFragmentMark;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.TopFragmentMark;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.TorRunFragmentMark;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
@@ -149,15 +150,23 @@ public class ModulesStarterHelper {
                     sendAskForceCloseBroadcast(context, "DNSCrypt");
                 }
 
-                Log.e(LOG_TAG, "Error DNSCrypt: "
+                loge("Error DNSCrypt: "
                         + shellResult.exitCode + " ERR=" + shellResult.getStderr()
                         + " OUT=" + shellResult.getStdout());
 
-                modulesStatus.setDnsCryptState(STOPPED);
+                if (!getApp(context).isAppForeground()
+                        && modulesStatus.getDnsCryptState() == RUNNING
+                        && modulesStatus.isDnsCryptReady()) {
+                    ModulesRestarter.restartDNSCrypt(context);
+                    logw("Trying to restart DNSCrypt");
+                } else {
+                    modulesStatus.setDnsCryptState(STOPPED);
 
-                ModulesAux.makeModulesStateExtraLoop(context);
+                    ModulesAux.makeModulesStateExtraLoop(context);
 
-                sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
+                    sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
+                }
+
             }
 
             Thread.currentThread().interrupt();
@@ -231,15 +240,16 @@ public class ModulesStarterHelper {
                     }
                 }
 
-                Log.e(LOG_TAG, "Error Tor: " + shellResult.exitCode
+                loge("Error Tor: " + shellResult.exitCode
                         + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
 
                 if (!getApp(context).isAppForeground()
                         && modulesStatus.getTorState() == RUNNING) {
                     if (modulesStatus.isTorReady()) {
-                        ModulesRunner.runTor(context);
-                        modulesStatus.setTorReady(false);
+                        ModulesRestarter.restartTor(context);
+                        logw("Trying to restart Tor");
                     } else {
+                        loge("Using System.exit() to ask Android to restart everything from scratch");
                         System.exit(0);
                     }
                 } else {
@@ -332,14 +342,21 @@ public class ModulesStarterHelper {
                     sendAskForceCloseBroadcast(context, "I2P");
                 }
 
-                Log.e(LOG_TAG, "Error ITPD: " + shellResult.exitCode + " ERR="
+                loge("Error ITPD: " + shellResult.exitCode + " ERR="
                         + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
 
-                modulesStatus.setItpdState(STOPPED);
+                if (!getApp(context).isAppForeground()
+                        && modulesStatus.getItpdState() == RUNNING
+                        && modulesStatus.isItpdReady()) {
+                    ModulesRestarter.restartITPD(context);
+                    logw("Trying to restart Purple I2P");
+                } else {
+                    modulesStatus.setItpdState(STOPPED);
 
-                ModulesAux.makeModulesStateExtraLoop(context);
+                    ModulesAux.makeModulesStateExtraLoop(context);
 
-                sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
+                    sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
+                }
             }
 
             Thread.currentThread().interrupt();
@@ -412,7 +429,7 @@ public class ModulesStarterHelper {
 
                 FileManager.writeTextFileSynchronous(context, torConfPath, lines);
 
-                Log.i(LOG_TAG, "ModulesService Tor Obfs module path is corrected");
+                logi("ModulesService Tor Obfs module path is corrected");
             }
         }
     }

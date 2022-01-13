@@ -80,6 +80,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPO
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.COMPATIBILITY_MODE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNS_REBIND_PROTECTION;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.KILL_SWITCH;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MULTI_USER_SUPPORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PORT;
@@ -149,11 +150,11 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         activity.setTitle(R.string.drawer_menu_commonSettings);
 
-        PreferenceCategory others = findPreference("common_other");
+        PreferenceCategory otherCategory = findPreference("common_other");
         Preference swShowNotification = findPreference("swShowNotification");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (others != null && swShowNotification != null) {
-                others.removePreference(swShowNotification);
+            if (otherCategory != null && swShowNotification != null) {
+                otherCategory.removePreference(swShowNotification);
             }
         } else {
             if (swShowNotification != null) {
@@ -163,8 +164,8 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
 
         Preference swCompatibilityMode = findPreference(COMPATIBILITY_MODE);
-        if (modulesStatus.getMode() != VPN_MODE && others != null && swCompatibilityMode != null) {
-            others.removePreference(swCompatibilityMode);
+        if (modulesStatus.getMode() != VPN_MODE && otherCategory != null && swCompatibilityMode != null) {
+            otherCategory.removePreference(swCompatibilityMode);
         } else if (swCompatibilityMode != null) {
             swCompatibilityMode.setOnPreferenceChangeListener(this);
         }
@@ -190,7 +191,6 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             }
         }
 
-        PreferenceCategory otherCategory = findPreference("common_other");
         Preference multiUser = findPreference(MULTI_USER_SUPPORT);
         if (otherCategory != null && multiUser != null) {
             if (modulesStatus.getMode() == PROXY_MODE) {
@@ -238,7 +238,6 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         manageLANDeviceAddressPreference(fixTTL);
 
-        PreferenceCategory otherSettingsCategory = findPreference("common_other");
         Preference shellControl = findPreference("pref_common_shell_control");
 
         if (appVersion.startsWith("g")) {
@@ -248,8 +247,8 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 hotspotSettingsCategory.removePreference(blockHTTP);
             }
 
-            if (otherSettingsCategory != null && shellControl != null) {
-                otherSettingsCategory.removePreference(shellControl);
+            if (otherCategory != null && shellControl != null) {
+                otherCategory.removePreference(shellControl);
             }
 
         } else if (shellControl != null) {
@@ -393,6 +392,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             case COMPATIBILITY_MODE:
             case MULTI_USER_SUPPORT:
             case DNS_REBIND_PROTECTION:
+            case KILL_SWITCH:
                 ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
                 break;
             case "swWakelock":
@@ -671,6 +671,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         preferences.add(findPreference(RUN_MODULES_WITH_ROOT));
         preferences.add(findPreference("swWakelock"));
         preferences.add(findPreference("pref_common_local_eth_device_addr"));
+        preferences.add(findPreference(KILL_SWITCH));
 
         for (Preference preference : preferences) {
             if (preference != null) {
@@ -732,11 +733,16 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         PreferenceCategory categoryOther = findPreference("common_other");
         Preference selectIptables = findPreference("pref_common_use_iptables");
         Preference selectBusybox = findPreference("pref_common_use_busybox");
+        Preference killSwitch = findPreference(KILL_SWITCH);
+
         if (categoryOther != null && selectIptables != null) {
             categoryOther.removePreference(selectIptables);
         }
         if (categoryOther != null && selectBusybox != null) {
             categoryOther.removePreference(selectBusybox);
+        }
+        if (categoryOther != null && killSwitch != null) {
+            categoryOther.removePreference(killSwitch);
         }
     }
 

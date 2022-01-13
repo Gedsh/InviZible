@@ -58,6 +58,7 @@ import static pan.alexander.tordnscrypt.utils.Constants.G_DNG_41;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_42;
 import static pan.alexander.tordnscrypt.utils.Constants.HTTP_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_BLOCK_INTERNET;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
@@ -67,6 +68,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR_CLEARNET;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_UNLOCK;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.KILL_SWITCH;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OWN_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
@@ -81,6 +83,9 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Lazy<KillSwitchNotification> killSwitchNotification;
+    private static boolean killSwitchActive;
 
     String iptables = "iptables ";
     String ip6tables = "ip6tables ";
@@ -120,6 +125,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         boolean arpSpoofingDetection = shPref.getBoolean(ARP_SPOOFING_DETECTION, false);
         boolean blockInternetWhenArpAttackDetected = shPref.getBoolean(ARP_SPOOFING_BLOCK_INTERNET, false);
         boolean mitmDetected = ArpScanner.getArpAttackDetected() || ArpScanner.getDhcpGatewayAttackDetected();
+
+        boolean killSwitch = shPref.getBoolean(KILL_SWITCH, false);
 
         List<String> commands = new ArrayList<>();
 
@@ -299,7 +306,11 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             proxyAppsBypassFilter = removeRedundantSymbols(proxyAppsBypassFilterBuilder);
         }
 
-        if (arpSpoofingDetection && blockInternetWhenArpAttackDetected && mitmDetected) {
+        if (arpSpoofingDetection && blockInternetWhenArpAttackDetected && mitmDetected
+                || killSwitch && dnsCryptState != RUNNING && torState != RUNNING && itpdState != RUNNING) {
+
+            showKillSwitchNotification();
+
             commands = new ArrayList<>(Arrays.asList(
                     "TOR_UID=" + appUID,
                     iptables + "-I OUTPUT -j DROP",
@@ -319,7 +330,10 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     blockHOTSPOT,
                     iptables + "-D OUTPUT -j DROP 2> /dev/null || true"
             ));
+
         } else if (dnsCryptState == RUNNING && torState == RUNNING) {
+
+            cancelKillSwitchNotificationIfNeeded();
 
             if (!routeAllThroughTor) {
 
@@ -450,6 +464,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                 commands.addAll(commandsTether);
         } else if (dnsCryptState == RUNNING && torState == STOPPED) {
 
+            cancelKillSwitchNotificationIfNeeded();
+
             commands = new ArrayList<>(Arrays.asList(
                     "TOR_UID=" + appUID,
                     iptables + "-I OUTPUT -j DROP",
@@ -496,6 +512,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                 commands.addAll(commandsTether);
         } else if (dnsCryptState == STOPPED && torState == STOPPED) {
 
+            cancelKillSwitchNotificationIfNeeded();
+
             commands = new ArrayList<>(Arrays.asList(
                     "TOR_UID=" + appUID,
                     ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
@@ -512,6 +530,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             if (commandsTether.size() > 0)
                 commands.addAll(commandsTether);
         } else if (dnsCryptState == STOPPED && torState == RUNNING) {
+
+            cancelKillSwitchNotificationIfNeeded();
 
             if (!routeAllThroughTor) {
                 commands = new ArrayList<>(Arrays.asList(
@@ -626,6 +646,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             if (commandsTether.size() > 0)
                 commands.addAll(commandsTether);
         } else if (itpdState == RUNNING) {
+            cancelKillSwitchNotificationIfNeeded();
             commands = tethering.activateTethering(false);
         }
 
@@ -678,6 +699,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         if (modulesStatus.isFixTTL()) {
             modulesStatus.setIptablesRulesUpdateRequested(context, true);
         }
+
+        cancelKillSwitchNotificationIfNeeded();
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
         runModulesWithRoot = shPref.getBoolean(RUN_MODULES_WITH_ROOT, false);
@@ -803,5 +826,19 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         intent.putExtra("Commands", rootCommands);
         intent.putExtra("Mark", RootExecService.NullMark);
         RootExecService.performAction(context, intent);
+    }
+
+    private void showKillSwitchNotification() {
+        killSwitchNotification.get().send();
+        killSwitchActive = true;
+        logi("Kill switch activated");
+    }
+
+    private void cancelKillSwitchNotificationIfNeeded() {
+        if (killSwitchActive) {
+            killSwitchNotification.get().cancel();
+            killSwitchActive = false;
+            logi("Kill switch disabled");
+        }
     }
 }

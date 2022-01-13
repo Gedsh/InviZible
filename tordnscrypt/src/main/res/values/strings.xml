@@ -199,6 +199,8 @@
     <string name="pref_common_proxy_categ">Proxy</string>
     <string name="pref_common_proxy">Use socks5 proxy</string>
     <string name="pref_common_proxy_summ">InviZible Pro will make all connections through the SOCKS5 proxy</string>
+    <string name="pref_common_kill_switch">Kill switch</string>
+    <string name="pref_common_kill_switch_summ">Block internet connection when Tor, DNSCrypt and Purple I2P are stopped</string>
     <string name="pref_common_refresh_rules">Refresh rules</string>
     <string name="pref_common_refresh_rules_summ">Update rules on every connectivity change</string>
     <string name="pref_common_show_notification">Show notification</string>
@@ -268,6 +270,8 @@
     <string name="notification_temp_text">Executing Root commands…</string>
     <string name="notification_connecting">Connecting…</string>
     <string name="notification_waiting_network">Waiting for network…</string>
+
+    <string name="notification_internet_blocked_message">Internet blocked due to the Kill switch. Start Tor, DNSCrypt or I2P to allow the connection. Or disable the Kill switch in Common Settings.</string>
 
     <string name="tvSettings_text">Please wait…</string>
     <string name="toastSettings_saved">Settings saved</string>

@@ -123,6 +123,12 @@
             android:summary="@string/pref_common_notification_summ"
             android:title="@string/pref_common_show_notification" />
         <SwitchPreference
+            android:id="@+id/swKillSwitch"
+            android:defaultValue="false"
+            android:key="swKillSwitch"
+            android:summary="@string/pref_common_kill_switch_summ"
+            android:title="@string/pref_common_kill_switch" />
+        <SwitchPreference
             android:id="@+id/swRefreshRules"
             android:defaultValue="false"
             android:key="swRefreshRules"
