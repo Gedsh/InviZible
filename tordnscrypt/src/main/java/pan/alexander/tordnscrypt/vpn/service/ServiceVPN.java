@@ -58,7 +58,7 @@ import pan.alexander.tordnscrypt.domain.dns_resolver.DnsInteractor;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.modules.ModulesServiceNotificationManager;
-import pan.alexander.tordnscrypt.modules.UsageStatisticKt;
+import pan.alexander.tordnscrypt.modules.UsageStatistics;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.Utils;
@@ -551,15 +551,15 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
             String title = getString(R.string.app_name);
             String message = getString(R.string.notification_text);
-            if (!UsageStatisticKt.getSavedTitle().isEmpty() && !UsageStatisticKt.getSavedMessage().isEmpty()) {
-                title = UsageStatisticKt.getSavedTitle();
-                message = UsageStatisticKt.getSavedMessage();
+            if (!UsageStatistics.getSavedTitle().isEmpty() && !UsageStatistics.getSavedMessage().isEmpty()) {
+                title = UsageStatistics.getSavedTitle();
+                message = UsageStatistics.getSavedMessage();
             }
 
             ModulesServiceNotificationManager notification = new ModulesServiceNotificationManager(
                     this,
                     notificationManager,
-                    UsageStatisticKt.getStartTime()
+                    UsageStatistics.getStartTime()
             );
             notification.sendNotification(title, message);
         }
@@ -607,16 +607,16 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         if (showNotification) {
             String title = getString(R.string.app_name);
             String message = getString(R.string.notification_text);
-            if (!UsageStatisticKt.getSavedTitle().isEmpty()
-                    && !UsageStatisticKt.getSavedMessage().isEmpty()) {
-                title = UsageStatisticKt.getSavedTitle();
-                message = UsageStatisticKt.getSavedMessage();
+            if (!UsageStatistics.getSavedTitle().isEmpty()
+                    && !UsageStatistics.getSavedMessage().isEmpty()) {
+                title = UsageStatistics.getSavedTitle();
+                message = UsageStatistics.getSavedMessage();
             }
 
             ModulesServiceNotificationManager notification = new ModulesServiceNotificationManager(
                     this,
                     notificationManager,
-                    UsageStatisticKt.getStartTime()
+                    UsageStatistics.getStartTime()
             );
             notification.sendNotification(title, message);
         }

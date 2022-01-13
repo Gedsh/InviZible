@@ -1,3 +1,5 @@
+@file:JvmName("UsageStatistics")
+
 package pan.alexander.tordnscrypt.modules
 
 /*
@@ -29,6 +31,7 @@ import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInte
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.text.CharacterIterator
 import java.text.StringCharacterIterator
 import java.util.concurrent.Executors
@@ -76,24 +79,31 @@ class UsageStatistic(private val context: Context) {
 
     @JvmOverloads
     fun startUpdate(period: Int = 3) {
+        tryStartUpdate(period)
+    }
 
-        if (period == updatePeriod && task?.isCancelled == false) {
-            return
-        }
-
-        updatePeriod = period
-
-        initModulesLogsTimer()
-
-        if (task != null && task?.isCancelled == false) {
-            task?.cancel(false)
-        }
-
-        task = timer?.scheduleWithFixedDelay({
-            if (updating.compareAndSet(false, true)) {
-                tryUpdate()
+    private fun tryStartUpdate(period: Int) {
+        try {
+            if (period == updatePeriod && task?.isDone == false) {
+                return
             }
-        }, 1, period.toLong(), TimeUnit.SECONDS)
+
+            updatePeriod = period
+
+            initModulesLogsTimer()
+
+            if (task != null && task?.isCancelled == false) {
+                task?.cancel(false)
+            }
+
+            task = timer?.scheduleWithFixedDelay({
+                if (updating.compareAndSet(false, true)) {
+                    tryUpdate()
+                }
+            }, 1, period.toLong(), TimeUnit.SECONDS)
+        } catch (e: Exception) {
+            loge("UsageStatistic tryStartUpdate", e)
+        }
     }
 
     private fun tryUpdate() {
@@ -125,15 +135,23 @@ class UsageStatistic(private val context: Context) {
     }
 
     fun stopUpdate() {
-        if (timer != null && timer?.isShutdown == false) {
-            timer?.shutdown()
+        tryStopUpdate()
+    }
+
+    private fun tryStopUpdate() {
+        try {
+            if (timer != null && timer?.isShutdown == false) {
+                timer?.shutdown()
+            }
+
+            startRX = 0
+            startTX = 0
+
+            savedTitle = ""
+            savedMessage = ""
+        } catch (e: Exception) {
+            loge("UsageStatistic tryStopUpdate", e)
         }
-
-        startRX = 0
-        startTX = 0
-
-        savedTitle = ""
-        savedMessage = ""
     }
 
     @Synchronized
@@ -160,50 +178,76 @@ class UsageStatistic(private val context: Context) {
     }
 
     @Synchronized
-    fun getMessage(currentTime: Long): String {
+    fun getMessage(currentTime: Long): String =
+        tryGetMessage(currentTime)
 
-        if (uid == Process.INVALID_UID) {
-            return context.getString(R.string.notification_text)
-        }
-
-        val mode = modulesStatus.mode ?: return context.getString(R.string.notification_text)
-
-        if (savedMode != mode) {
-            savedMode = mode
-
-            startRX = TrafficStats.getTotalRxBytes() - TrafficStats.getUidRxBytes(uid)
-            startTX = TrafficStats.getTotalTxBytes() - TrafficStats.getUidTxBytes(uid)
-        }
-
-        val timePeriod = (currentTime - savedTime) / 1000L
-        val currentRX = TrafficStats.getTotalRxBytes() - TrafficStats.getUidRxBytes(uid) - startRX
-        val currentTX = TrafficStats.getTotalTxBytes() - TrafficStats.getUidTxBytes(uid) - startTX
-
-        val connectionChecker = connectionCheckerInteractor.get()
-        val message = if ((mode == OperationMode.VPN_MODE
-                    || mode == OperationMode.ROOT_MODE && !modulesStatus.isUseModulesWithRoot)
-            && !connectionChecker.getInternetConnectionResult()) {
-            if (connectionChecker.getNetworkConnectionResult()) {
-                context.getString(R.string.notification_connecting)
-            } else {
-                context.getString(R.string.notification_waiting_network)
+    private fun tryGetMessage(currentTime: Long): String {
+        return try {
+            if (uid == Process.INVALID_UID) {
+                return context.getString(R.string.notification_text)
             }
-        } else {
-            "▼ ${getReadableSpeedString(currentRX - savedRX, timePeriod)} ${humanReadableByteCountBin(currentRX)}  " +
-                    "▲ ${getReadableSpeedString(currentTX - savedTX, timePeriod)} ${humanReadableByteCountBin(currentTX)}"
+
+            val mode = modulesStatus.mode ?: return context.getString(R.string.notification_text)
+
+            if (savedMode != mode) {
+                savedMode = mode
+
+                startRX = TrafficStats.getTotalRxBytes() - TrafficStats.getUidRxBytes(uid)
+                startTX = TrafficStats.getTotalTxBytes() - TrafficStats.getUidTxBytes(uid)
+            }
+
+            val timePeriod = (currentTime - savedTime) / 1000L
+            val currentRX =
+                TrafficStats.getTotalRxBytes() - TrafficStats.getUidRxBytes(uid) - startRX
+            val currentTX =
+                TrafficStats.getTotalTxBytes() - TrafficStats.getUidTxBytes(uid) - startTX
+
+            val connectionChecker = connectionCheckerInteractor.get()
+            val message = if ((mode == OperationMode.VPN_MODE
+                        || mode == OperationMode.ROOT_MODE && !modulesStatus.isUseModulesWithRoot)
+                && !connectionChecker.getInternetConnectionResult()
+            ) {
+                if (connectionChecker.getNetworkConnectionResult()) {
+                    context.getString(R.string.notification_connecting)
+                } else {
+                    context.getString(R.string.notification_waiting_network)
+                }
+            } else {
+                "▼ ${
+                    getReadableSpeedString(
+                        currentRX - savedRX,
+                        timePeriod
+                    )
+                } ${humanReadableByteCountBin(currentRX)}  " +
+                        "▲ ${
+                            getReadableSpeedString(
+                                currentTX - savedTX,
+                                timePeriod
+                            )
+                        } ${humanReadableByteCountBin(currentTX)}"
+            }
+
+            savedRX = currentRX
+            savedTX = currentTX
+            savedTime = currentTime
+
+            message
+
+        } catch (e: Exception) {
+            loge("UsageStatistic tryGetMessage", e)
+            ""
+        }
+    }
+
+    fun isStatisticAllowed(): Boolean =
+        try {
+            TrafficStats.getTotalRxBytes() != TrafficStats.UNSUPPORTED.toLong()
+                    && TrafficStats.getTotalTxBytes() != TrafficStats.UNSUPPORTED.toLong()
+        } catch (e: Exception) {
+            loge("UsageStatistic isStatisticAllowed", e)
+            false
         }
 
-        savedRX = currentRX
-        savedTX = currentTX
-        savedTime = currentTime
-
-        return message
-    }
-
-    fun isStatisticAllowed(): Boolean {
-        return TrafficStats.getTotalRxBytes() != TrafficStats.UNSUPPORTED.toLong()
-                && TrafficStats.getTotalTxBytes() != TrafficStats.UNSUPPORTED.toLong()
-    }
 
     private fun initModulesLogsTimer() {
         if (timer == null || timer?.isShutdown == true) {

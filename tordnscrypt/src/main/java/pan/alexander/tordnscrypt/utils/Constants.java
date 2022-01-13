@@ -40,6 +40,7 @@ public interface Constants {
     String G_DNS_42 = "8.8.4.4";
     String G_DNS_61 = "2001:4860:4860::8888";
     String G_DNS_62 = "2001:4860:4860::8844";
+    String DNS_GOOGLE = "https://dns.google";
     String DNS_QUAD9 = "https://dns9.quad9.net";
     String DNS_MOZILLA = "https://mozilla.cloudflare-dns.com";
 

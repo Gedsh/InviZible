@@ -158,7 +158,11 @@ public class ModulesService extends Service {
                 message = usageStatistic.getMessage(System.currentTimeMillis());
             }
 
-            ModulesServiceNotificationManager serviceNotificationManager = new ModulesServiceNotificationManager(this, systemNotificationManager, UsageStatisticKt.getStartTime());
+            ModulesServiceNotificationManager serviceNotificationManager = new ModulesServiceNotificationManager(
+                    this,
+                    systemNotificationManager,
+                    UsageStatistics.getStartTime()
+            );
             serviceNotificationManager.sendNotification(title, message);
         }
 
@@ -199,7 +203,11 @@ public class ModulesService extends Service {
                 message = usageStatistic.getMessage(System.currentTimeMillis());
             }
 
-            ModulesServiceNotificationManager notification = new ModulesServiceNotificationManager(this, systemNotificationManager, UsageStatisticKt.getStartTime());
+            ModulesServiceNotificationManager notification = new ModulesServiceNotificationManager(
+                    this,
+                    systemNotificationManager,
+                    UsageStatistics.getStartTime()
+            );
             notification.sendNotification(title, message);
             usageStatistic.setServiceNotification(notification);
 

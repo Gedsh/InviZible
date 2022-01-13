@@ -28,7 +28,9 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.Constants.*
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
+import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import java.io.IOException
 import java.lang.ref.WeakReference
@@ -65,6 +67,7 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
 
     @Volatile
     private var internetAvailable = false
+
     @Volatile
     private var networkAvailable = false
 
@@ -156,6 +159,7 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
     private suspend fun check(via: Via) = coroutineScope {
         val available = when (via) {
             Via.TOR -> {
+                logi("Checking connection via Tor")
                 dnsRepository.resolveDomainUDP(
                     TOR_SITE_ADDRESS,
                     pathVars.torDNSPort.toInt(),
@@ -176,13 +180,18 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
                         && proxyAddress.isNotBlank()
                         && proxyPort != 0
 
-                if (useProxy) {
-                   checkerRepository.checkInternetAvailableOverHttp(
-                       sequenceOf(DNS_QUAD9, DNS_MOZILLA).shuffled().first(),
-                       proxyAddress,
-                       proxyPort
-                   )
+                if (useProxy && modulesStatus.mode == OperationMode.VPN_MODE) {
+                    val site = sequenceOf(DNS_GOOGLE, DNS_QUAD9, DNS_MOZILLA).shuffled().first()
+
+                    logi("Checking connection via Socks Proxy $proxyAddress:$proxyPort $site")
+
+                    checkerRepository.checkInternetAvailableOverHttp(
+                        site,
+                        proxyAddress,
+                        proxyPort
+                    )
                 } else {
+                    logi("Checking connection directly using ${pathVars.dnsCryptFallbackRes}")
                     checkerRepository.checkInternetAvailableOverSocks(
                         pathVars.dnsCryptFallbackRes,
                         PLAINTEXT_DNS_PORT,
@@ -193,6 +202,8 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
 
             }
         }
+
+        logi("Internet is ${if(available) "available" else "not available"}")
 
         ensureActive()
 

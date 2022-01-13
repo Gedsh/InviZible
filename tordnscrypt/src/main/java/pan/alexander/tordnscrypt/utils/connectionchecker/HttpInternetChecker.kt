@@ -27,8 +27,8 @@ import java.net.URL
 import javax.inject.Inject
 import javax.net.ssl.HttpsURLConnection
 
-private const val READ_TIMEOUT_SEC = 50
-private const val CONNECT_TIMEOUT_SEC = 50
+private const val READ_TIMEOUT_SEC = 30
+private const val CONNECT_TIMEOUT_SEC = 30
 private const val USER_AGENT_PROPERTY = "User-Agent"
 private const val REQUEST_METHOD_GET = "GET"
 
@@ -76,7 +76,6 @@ class HttpInternetChecker @Inject constructor() {
             connect()
         }
 
-        val code = connection.responseCode
-        return code == HttpURLConnection.HTTP_OK
+        return true
     }
 }

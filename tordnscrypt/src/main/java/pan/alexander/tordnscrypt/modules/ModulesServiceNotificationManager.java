@@ -34,6 +34,7 @@ import pan.alexander.tordnscrypt.MainActivity;
 
 import static pan.alexander.tordnscrypt.AppKt.ANDROID_CHANNEL_ID;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 public class ModulesServiceNotificationManager {
     private final Service service;
@@ -75,10 +76,22 @@ public class ModulesServiceNotificationManager {
     }
 
     private int getIconResource() {
-        int iconResource = service.getResources().getIdentifier("ic_service_notification", "drawable", service.getPackageName());
-        if (iconResource == 0) {
-            iconResource = android.R.drawable.ic_menu_view;
+
+        int iconResource = android.R.drawable.ic_menu_view;
+
+        try {
+            iconResource = service.getResources().getIdentifier(
+                    "ic_service_notification",
+                    "drawable",
+                    service.getPackageName()
+            );
+            if (iconResource == 0) {
+                iconResource = android.R.drawable.ic_menu_view;
+            }
+        } catch (Exception e) {
+            loge("ModulesServiceNotificationManager getIconResource", e);
         }
+
         return iconResource;
     }
 
