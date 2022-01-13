@@ -135,7 +135,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         preferences.add(findPreference("Socks5Proxy"));
         preferences.add(findPreference("pref_tor_isolate_dest_address"));
         preferences.add(findPreference("pref_tor_isolate_dest_port"));
-        preferences.add(findPreference("SnowflakeRendezvous"));
+        preferences.add(findPreference(SNOWFLAKE_RENDEZVOUS));
 
         for (Preference preference : preferences) {
             if (preference != null) {
