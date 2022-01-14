@@ -75,12 +75,14 @@ object NetworkChecker {
                         || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))
 
 
-    @JvmStatic
-    fun isCellularActive(context: Context): Boolean =
+    @JvmStatic @JvmOverloads
+    fun isCellularActive(context: Context, checkAllNetworks: Boolean = false): Boolean =
         try {
             val connectivityManager = context.getConnectivityManager()
             var capabilities: NetworkCapabilities? = null
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && connectivityManager != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && connectivityManager != null
+                && !checkAllNetworks) {
                 capabilities = connectivityManager.getNetworkCapabilities(
                     connectivityManager.activeNetwork
                 )
@@ -160,12 +162,14 @@ object NetworkChecker {
                 capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
                 && !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_ROAMING)
 
-    @JvmStatic
-    fun isWifiActive(context: Context): Boolean =
+    @JvmStatic @JvmOverloads
+    fun isWifiActive(context: Context, checkAllNetworks: Boolean = false): Boolean =
         try {
             val connectivityManager = context.getConnectivityManager()
             var capabilities: NetworkCapabilities? = null
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && connectivityManager != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && connectivityManager != null
+                && !checkAllNetworks) {
                 capabilities = connectivityManager.getNetworkCapabilities(
                     connectivityManager.activeNetwork
                 )

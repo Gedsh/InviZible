@@ -29,9 +29,13 @@ import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.GSM_ON_REQUESTED;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.KILL_SWITCH;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REFRESH_RULES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.WIFI_ACCESS_POINT_IS_ON;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.WIFI_ON_REQUESTED;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper.reload;
 
 import android.annotation.TargetApi;
@@ -57,6 +61,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -77,6 +82,7 @@ import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
 import pan.alexander.tordnscrypt.utils.privatedns.PrivateDnsProxyManager;
+import pan.alexander.tordnscrypt.utils.root.RootCommands;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 public class ModulesReceiver extends BroadcastReceiver implements OnInternetConnectionCheckedListener {
@@ -87,6 +93,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     private static final String AP_STATE_FILTER_ACTION = "android.net.wifi.WIFI_AP_STATE_CHANGED";
     private static final String TETHER_STATE_FILTER_ACTION = "android.net.conn.TETHER_STATE_CHANGED";
     private static final String SHUTDOWN_FILTER_ACTION = "android.intent.action.ACTION_SHUTDOWN";
+    private static final String REBOOT_FILTER_ACTION = "android.intent.action.REBOOT";
     private static final String POWER_OFF_FILTER_ACTION = "android.intent.action.QUICKBOOT_POWEROFF";
 
     private final static int DELAY_BEFORE_CHECKING_INTERNET_SHARING_SEC = 5;
@@ -171,7 +178,8 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                 || action.equalsIgnoreCase(TETHER_STATE_FILTER_ACTION))) {
             checkInternetSharingState(intent);
         } else if (isRootMode() && (action.equalsIgnoreCase(POWER_OFF_FILTER_ACTION)
-                || action.equalsIgnoreCase(SHUTDOWN_FILTER_ACTION))) {
+                || action.equalsIgnoreCase(SHUTDOWN_FILTER_ACTION)
+                || action.equalsIgnoreCase(REBOOT_FILTER_ACTION))) {
             powerOFFDetected();
         } else if (isVpnMode() && action.equals(VPN_REVOKE_ACTION)) {
             vpnRevoked(intent.getBooleanExtra(VPN_REVOKED_EXTRA, false));
@@ -276,6 +284,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         IntentFilter powerOFF = new IntentFilter();
         powerOFF.addAction(SHUTDOWN_FILTER_ACTION);
         powerOFF.addAction(POWER_OFF_FILTER_ACTION);
+        powerOFF.addAction(REBOOT_FILTER_ACTION);
         context.registerReceiver(this, powerOFF);
         rootReceiversRegistered = true;
     }
@@ -664,6 +673,32 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     }
 
     private void powerOFFDetected() {
+
+        boolean killSwitch = defaultPreferences.get().getBoolean(KILL_SWITCH, false);
+        if (killSwitch) {
+
+            List<String> commands = new ArrayList<>(2);
+            commands.add("svc wifi disable");
+            commands.add("svc data disable");
+
+            boolean networkAvailable = false;
+
+            if (NetworkChecker.isWifiActive(context, true)) {
+                networkAvailable = true;
+                preferenceRepository.get().setBoolPreference(WIFI_ON_REQUESTED, true);
+                logi("Disabling WiFi due to a kill switch");
+            }
+            if (NetworkChecker.isCellularActive(context, true)) {
+                networkAvailable = true;
+                preferenceRepository.get().setBoolPreference(GSM_ON_REQUESTED, true);
+                logi("Disabling GSM due to a kill switch");
+            }
+
+            if (networkAvailable) {
+                RootCommands.execute(context, commands, NULL_MARK);
+            }
+        }
+
         ModulesAux.saveDNSCryptStateRunning(false);
         ModulesAux.saveTorStateRunning(false);
         ModulesAux.saveITPDStateRunning(false);

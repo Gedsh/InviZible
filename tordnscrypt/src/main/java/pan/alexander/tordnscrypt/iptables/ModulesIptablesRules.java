@@ -20,7 +20,6 @@ package pan.alexander.tordnscrypt.iptables;
 */
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Process;
 import android.util.Log;
@@ -41,7 +40,6 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
-import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.vpn.VpnUtils;
 
@@ -65,6 +63,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPO
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BLOCK_HTTP;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BYPASS_LAN;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.GSM_ON_REQUESTED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR_CLEARNET;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_UNLOCK;
@@ -72,6 +71,8 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.KILL_SW
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OWN_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.WIFI_ON_REQUESTED;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -820,12 +821,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
     }
 
     private static void executeCommands(Context context, List<String> commands) {
-        RootCommands rootCommands = new RootCommands(commands);
-        Intent intent = new Intent(context, RootExecService.class);
-        intent.setAction(RootExecService.RUN_COMMAND);
-        intent.putExtra("Commands", rootCommands);
-        intent.putExtra("Mark", RootExecService.NullMark);
-        RootExecService.performAction(context, intent);
+        RootCommands.execute(context, commands, NULL_MARK);
     }
 
     private void showKillSwitchNotification() {
@@ -839,6 +835,29 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             killSwitchNotification.get().cancel();
             killSwitchActive = false;
             logi("Kill switch disabled");
+        }
+        enableInternetIfRequired();
+    }
+
+    private void enableInternetIfRequired() {
+
+        PreferenceRepository preferences = preferenceRepository.get();
+        boolean wifiOnRequested = preferences.getBoolPreference(WIFI_ON_REQUESTED);
+        boolean gsmOnRequested = preferences.getBoolPreference(GSM_ON_REQUESTED);
+
+        List<String> commands = new ArrayList<>(2);
+        if (wifiOnRequested) {
+            commands.add("svc wifi enable");
+            preferences.setBoolPreference(WIFI_ON_REQUESTED, false);
+            logi("Enabling WiFi due to a kill switch");
+        }
+        if (gsmOnRequested) {
+            commands.add("svc data enable");
+            preferences.setBoolPreference(GSM_ON_REQUESTED, false);
+            logi("Enabling GSM due to a kill switch");
+        }
+        if (!commands.isEmpty()) {
+            RootCommands.execute(context, commands, NULL_MARK);
         }
     }
 }

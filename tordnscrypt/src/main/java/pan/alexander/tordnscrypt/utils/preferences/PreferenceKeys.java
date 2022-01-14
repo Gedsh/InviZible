@@ -41,6 +41,9 @@ public interface PreferenceKeys {
     String APPS_ALLOW_VPN = "appsAllowVpn";
     String APPS_NEWLY_INSTALLED = "appsNewlyInstalled";
 
+    String WIFI_ON_REQUESTED = "wifiOnRequested";
+    String GSM_ON_REQUESTED = "gsmOnRequested";
+
     //VPN
     String VPN_SERVICE_ENABLED = "VPNServiceEnabled";
 
