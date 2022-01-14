@@ -27,6 +27,7 @@ import android.util.Log;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
 import pan.alexander.tordnscrypt.utils.root.RootExecService;
 
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.INSTALLER_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class InstallerReceiver extends BroadcastReceiver {
@@ -92,6 +93,6 @@ public class InstallerReceiver extends BroadcastReceiver {
             return false;
         }
 
-        return intent.getIntExtra("Mark", 0) == RootExecService.InstallerMark;
+        return intent.getIntExtra("Mark", 0) == INSTALLER_MARK;
     }
 }

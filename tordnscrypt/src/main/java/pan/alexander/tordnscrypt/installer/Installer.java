@@ -48,12 +48,11 @@ import pan.alexander.tordnscrypt.modules.ModulesVersions;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
-import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.INSTALLER_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.InstallerMark;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
@@ -450,12 +449,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
                 busyboxNative + "echo 'checkModulesRunning' 2> /dev/null"
         ));
 
-        RootCommands rootCommands = new RootCommands(commandsInstall);
-        Intent intent = new Intent(activity, RootExecService.class);
-        intent.setAction(RootExecService.RUN_COMMAND);
-        intent.putExtra("Commands", rootCommands);
-        intent.putExtra("Mark", InstallerMark);
-        RootExecService.performAction(activity, intent);
+        RootCommands.execute(activity, commandsInstall, INSTALLER_MARK);
     }
 
     protected void stopAllRunningModulesWithNoRootCommand() {
@@ -496,7 +490,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         RootCommands comResult = new RootCommands(new ArrayList<>(Collections.singletonList(result)));
         Intent intent = new Intent(COMMAND_RESULT);
         intent.putExtra("CommandsResult", comResult);
-        intent.putExtra("Mark", InstallerMark);
+        intent.putExtra("Mark", INSTALLER_MARK);
         LocalBroadcastManager.getInstance(activity).sendBroadcast(intent);
     }
 

@@ -46,6 +46,7 @@ import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.HELP_ACTIVITY_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
@@ -229,7 +230,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
             return false;
         }
 
-        return intent.getIntExtra("Mark", 0) == RootExecService.HelpActivityMark;
+        return intent.getIntExtra("Mark", 0) == HELP_ACTIVITY_MARK;
     }
 
     private void closeProgressDialog() {

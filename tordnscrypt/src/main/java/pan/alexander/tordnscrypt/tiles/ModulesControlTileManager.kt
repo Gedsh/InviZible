@@ -48,6 +48,7 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileShortener
 import pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.stopRefreshTorUnlockIPs
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.utils.root.RootCommands
+import pan.alexander.tordnscrypt.utils.root.RootCommandsMark.*
 import pan.alexander.tordnscrypt.utils.root.RootExecService.*
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper
 import javax.inject.Inject
@@ -133,7 +134,7 @@ class ModulesControlTileManager @Inject constructor(
             }
             ModuleState.RUNNING -> {
                 refreshModuleInterfaceIfAppLaunched(
-                    TorRunFragmentMark,
+                    TOR_RUN_FRAGMENT_MARK,
                     TOR_KEYWORD,
                     pathVars.torPath
                 )
@@ -165,7 +166,7 @@ class ModulesControlTileManager @Inject constructor(
             }
             ModuleState.RUNNING -> {
                 refreshModuleInterfaceIfAppLaunched(
-                    DNSCryptRunFragmentMark,
+                    DNSCRYPT_RUN_FRAGMENT_MARK,
                     DNSCRYPT_KEYWORD,
                     pathVars.dnsCryptPath
                 )
@@ -197,7 +198,7 @@ class ModulesControlTileManager @Inject constructor(
             }
             ModuleState.RUNNING -> {
                 refreshModuleInterfaceIfAppLaunched(
-                    I2PDRunFragmentMark,
+                    I2PD_RUN_FRAGMENT_MARK,
                     ITPD_KEYWORD,
                     pathVars.itpdPath
                 )

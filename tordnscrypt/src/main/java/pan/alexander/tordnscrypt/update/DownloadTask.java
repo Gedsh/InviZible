@@ -67,8 +67,8 @@ import static pan.alexander.tordnscrypt.update.UpdateService.UPDATE_RESULT;
 import static pan.alexander.tordnscrypt.utils.AppExtension.getApp;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.TOR_BROWSER_USER_AGENT;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.TOP_FRAGMENT_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.TopFragmentMark;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 
 public class DownloadTask extends Thread {
@@ -308,7 +308,7 @@ public class DownloadTask extends Thread {
             makeDelay(5);
 
             Intent intent = new Intent(UPDATE_RESULT);
-            intent.putExtra("Mark", TopFragmentMark);
+            intent.putExtra("Mark", TOP_FRAGMENT_MARK);
             LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
         }
     }

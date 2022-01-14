@@ -41,6 +41,7 @@ import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import static pan.alexander.tordnscrypt.TopFragment.ITPDVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.modules.ModulesService.ITPD_KEYWORD;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.I2PD_RUN_FRAGMENT_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -83,8 +84,9 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
 
         if (intent != null) {
             final String action = intent.getAction();
-            if (action == null || action.equals("") || ((intent.getIntExtra("Mark", 0) !=
-                    RootExecService.I2PDRunFragmentMark) &&
+            if (action == null
+                    || action.equals("")
+                    || ((intent.getIntExtra("Mark", 0) != I2PD_RUN_FRAGMENT_MARK) &&
                     !action.equals(TOP_BROADCAST))) return;
             Log.i(LOG_TAG, "I2PDFragment onReceive");
 
@@ -168,12 +170,8 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
                     busyboxPath + "echo 'ITPD_version' 2> /dev/null",
                     itpdPath + " --version 2> /dev/null"
             ));
-            RootCommands rootCommands = new RootCommands(commandsCheck);
-            Intent intent = new Intent(context, RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands", rootCommands);
-            intent.putExtra("Mark", RootExecService.I2PDRunFragmentMark);
-            RootExecService.performAction(context, intent);
+
+            RootCommands.execute(context, commandsCheck, I2PD_RUN_FRAGMENT_MARK);
 
             view.setITPDProgressBarIndeterminate(true);
         }

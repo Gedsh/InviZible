@@ -49,11 +49,11 @@ import static pan.alexander.tordnscrypt.utils.AppExtension.getApp;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.DNSCRYPT_RUN_FRAGMENT_MARK;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.I2PD_RUN_FRAGMENT_MARK;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.TOP_FRAGMENT_MARK;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.TOR_RUN_FRAGMENT_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.DNSCryptRunFragmentMark;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.I2PDRunFragmentMark;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.TopFragmentMark;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.TorRunFragmentMark;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -118,9 +118,9 @@ public class ModulesStarterHelper {
                 preferenceRepository.get().setBoolPreference("DNSCryptStartedWithRoot", true);
 
                 if (shellResult.getStdout().contains(dnscryptPath)) {
-                    sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, dnscryptPath);
+                    sendResultIntent(DNSCRYPT_RUN_FRAGMENT_MARK, DNSCRYPT_KEYWORD, dnscryptPath);
                 } else {
-                    sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
+                    sendResultIntent(DNSCRYPT_RUN_FRAGMENT_MARK, DNSCRYPT_KEYWORD, "");
                 }
 
             } else {
@@ -164,7 +164,7 @@ public class ModulesStarterHelper {
 
                     ModulesAux.makeModulesStateExtraLoop(context);
 
-                    sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
+                    sendResultIntent(DNSCRYPT_RUN_FRAGMENT_MARK, DNSCRYPT_KEYWORD, "");
                 }
 
             }
@@ -196,9 +196,9 @@ public class ModulesStarterHelper {
                 preferenceRepository.get().setBoolPreference("TorStartedWithRoot", true);
 
                 if (shellResult.getStdout().contains(torPath)) {
-                    sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, torPath);
+                    sendResultIntent(TOR_RUN_FRAGMENT_MARK, TOR_KEYWORD, torPath);
                 } else {
-                    sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
+                    sendResultIntent(TOR_RUN_FRAGMENT_MARK, TOR_KEYWORD, "");
                 }
 
             } else {
@@ -257,7 +257,7 @@ public class ModulesStarterHelper {
 
                     ModulesAux.makeModulesStateExtraLoop(context);
 
-                    sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
+                    sendResultIntent(TOR_RUN_FRAGMENT_MARK, TOR_KEYWORD, "");
                 }
 
             }
@@ -309,9 +309,9 @@ public class ModulesStarterHelper {
                 preferenceRepository.get().setBoolPreference("ITPDStartedWithRoot", true);
 
                 if (shellResult.getStdout().contains(itpdPath)) {
-                    sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, itpdPath);
+                    sendResultIntent(I2PD_RUN_FRAGMENT_MARK, ITPD_KEYWORD, itpdPath);
                 } else {
-                    sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
+                    sendResultIntent(I2PD_RUN_FRAGMENT_MARK, ITPD_KEYWORD, "");
                 }
 
             } else {
@@ -355,7 +355,7 @@ public class ModulesStarterHelper {
 
                     ModulesAux.makeModulesStateExtraLoop(context);
 
-                    sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
+                    sendResultIntent(I2PD_RUN_FRAGMENT_MARK, ITPD_KEYWORD, "");
                 }
             }
 
@@ -462,7 +462,7 @@ public class ModulesStarterHelper {
 
     private void sendAskForceCloseBroadcast(Context context, String module) {
         Intent intent = new Intent(ASK_FORCE_CLOSE);
-        intent.putExtra("Mark", TopFragmentMark);
+        intent.putExtra("Mark", TOP_FRAGMENT_MARK);
         intent.putExtra(MODULE_NAME, module);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }

@@ -19,8 +19,9 @@ package pan.alexander.tordnscrypt.modules;
     Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK;
+
 import android.content.Context;
-import android.content.Intent;
 import android.os.Process;
 
 import java.util.ArrayList;
@@ -32,7 +33,6 @@ import javax.inject.Inject;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
-import pan.alexander.tordnscrypt.utils.root.RootExecService;
 
 public class ContextUIDUpdater {
 
@@ -85,11 +85,6 @@ public class ContextUIDUpdater {
             ));
         }
 
-        RootCommands rootCommands = new RootCommands(commands);
-        Intent intent = new Intent(context, RootExecService.class);
-        intent.setAction(RootExecService.RUN_COMMAND);
-        intent.putExtra("Commands", rootCommands);
-        intent.putExtra("Mark", RootExecService.NullMark);
-        RootExecService.performAction(context, intent);
+        RootCommands.execute(context, commands, NULL_MARK);
     }
 }

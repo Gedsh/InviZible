@@ -74,7 +74,6 @@ import pan.alexander.tordnscrypt.update.UpdateCheck;
 import pan.alexander.tordnscrypt.update.UpdateService;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.dialogs.Registration;
-import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
@@ -90,6 +89,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_READY_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TETHERING;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.TOP_FRAGMENT_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -899,7 +899,7 @@ public class TopFragment extends Fragment {
             return false;
         }
 
-        return intent.getIntExtra("Mark", 0) == RootExecService.TopFragmentMark;
+        return intent.getIntExtra("Mark", 0) == TOP_FRAGMENT_MARK;
     }
 
     private void registerReceiver(Context context) {

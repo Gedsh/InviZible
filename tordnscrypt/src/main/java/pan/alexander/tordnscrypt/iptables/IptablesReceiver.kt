@@ -31,6 +31,7 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REFRESH_RULES
 import pan.alexander.tordnscrypt.utils.root.RootCommands
+import pan.alexander.tordnscrypt.utils.root.RootCommandsMark.IPTABLES_MARK
 import pan.alexander.tordnscrypt.utils.root.RootExecService.*
 import java.util.*
 import javax.inject.Inject
@@ -53,7 +54,7 @@ class IptablesReceiver : BroadcastReceiver() {
         val action = intent.action
 
         if (action == null || action.isBlank() || action != COMMAND_RESULT
-                || intent.getIntExtra("Mark", 0) != IptablesMark) {
+                || intent.getIntExtra("Mark", 0) != IPTABLES_MARK) {
             return
         }
 

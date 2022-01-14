@@ -44,11 +44,11 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DNSCRYPT_KEYWORD;
 import static pan.alexander.tordnscrypt.modules.ModulesService.ITPD_KEYWORD;
 import static pan.alexander.tordnscrypt.modules.ModulesService.TOR_KEYWORD;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.DNSCRYPT_RUN_FRAGMENT_MARK;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.I2PD_RUN_FRAGMENT_MARK;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.TOR_RUN_FRAGMENT_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.DNSCryptRunFragmentMark;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.I2PDRunFragmentMark;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.TorRunFragmentMark;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -183,7 +183,7 @@ public class ModulesKiller {
                         if (modulesStatus.getDnsCryptState() != RESTARTING) {
                             ModulesAux.saveDNSCryptStateRunning(true);
                             makeDelay(1);
-                            sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, dnscryptPath);
+                            sendResultIntent(DNSCRYPT_RUN_FRAGMENT_MARK, DNSCRYPT_KEYWORD, dnscryptPath);
                         }
 
                         modulesStatus.setDnsCryptState(RUNNING);
@@ -195,7 +195,7 @@ public class ModulesKiller {
                             ModulesAux.saveDNSCryptStateRunning(false);
                             modulesStatus.setDnsCryptState(STOPPED);
                             makeDelay(1);
-                            sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
+                            sendResultIntent(DNSCRYPT_RUN_FRAGMENT_MARK, DNSCRYPT_KEYWORD, "");
                         }
                     }
                 } else {
@@ -204,7 +204,7 @@ public class ModulesKiller {
                         if (modulesStatus.getDnsCryptState() != RESTARTING) {
                             ModulesAux.saveDNSCryptStateRunning(true);
                             makeDelay(1);
-                            sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, dnscryptPath);
+                            sendResultIntent(DNSCRYPT_RUN_FRAGMENT_MARK, DNSCRYPT_KEYWORD, dnscryptPath);
                         }
 
                         modulesStatus.setDnsCryptState(RUNNING);
@@ -216,7 +216,7 @@ public class ModulesKiller {
                             ModulesAux.saveDNSCryptStateRunning(false);
                             modulesStatus.setDnsCryptState(STOPPED);
                             makeDelay(1);
-                            sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
+                            sendResultIntent(DNSCRYPT_RUN_FRAGMENT_MARK, DNSCRYPT_KEYWORD, "");
                         }
                     }
                 }
@@ -270,7 +270,7 @@ public class ModulesKiller {
                         if (modulesStatus.getTorState() != RESTARTING) {
                             ModulesAux.saveTorStateRunning(true);
                             makeDelay(1);
-                            sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, torPath);
+                            sendResultIntent(TOR_RUN_FRAGMENT_MARK, TOR_KEYWORD, torPath);
                         }
 
                         modulesStatus.setTorState(RUNNING);
@@ -282,7 +282,7 @@ public class ModulesKiller {
                             ModulesAux.saveTorStateRunning(false);
                             modulesStatus.setTorState(STOPPED);
                             makeDelay(1);
-                            sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
+                            sendResultIntent(TOR_RUN_FRAGMENT_MARK, TOR_KEYWORD, "");
                         }
                     }
                 } else {
@@ -291,7 +291,7 @@ public class ModulesKiller {
                         if (modulesStatus.getTorState() != RESTARTING) {
                             ModulesAux.saveTorStateRunning(true);
                             makeDelay(1);
-                            sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, torPath);
+                            sendResultIntent(TOR_RUN_FRAGMENT_MARK, TOR_KEYWORD, torPath);
                         }
 
                         modulesStatus.setTorState(RUNNING);
@@ -303,7 +303,7 @@ public class ModulesKiller {
                             ModulesAux.saveTorStateRunning(false);
                             modulesStatus.setTorState(STOPPED);
                             makeDelay(1);
-                            sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
+                            sendResultIntent(TOR_RUN_FRAGMENT_MARK, TOR_KEYWORD, "");
                         }
                     }
                 }
@@ -355,7 +355,7 @@ public class ModulesKiller {
                         if (modulesStatus.getItpdState() != RESTARTING) {
                             ModulesAux.saveITPDStateRunning(true);
                             makeDelay(1);
-                            sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, itpdPath);
+                            sendResultIntent(I2PD_RUN_FRAGMENT_MARK, ITPD_KEYWORD, itpdPath);
                         }
 
                         modulesStatus.setItpdState(RUNNING);
@@ -367,7 +367,7 @@ public class ModulesKiller {
                             ModulesAux.saveITPDStateRunning(false);
                             modulesStatus.setItpdState(STOPPED);
                             makeDelay(1);
-                            sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
+                            sendResultIntent(I2PD_RUN_FRAGMENT_MARK, ITPD_KEYWORD, "");
                         }
 
                     }
@@ -378,7 +378,7 @@ public class ModulesKiller {
                     if (modulesStatus.getItpdState() != RESTARTING) {
                         ModulesAux.saveITPDStateRunning(true);
                         makeDelay(1);
-                        sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, itpdPath);
+                        sendResultIntent(I2PD_RUN_FRAGMENT_MARK, ITPD_KEYWORD, itpdPath);
                     }
 
                     modulesStatus.setItpdState(RUNNING);
@@ -390,7 +390,7 @@ public class ModulesKiller {
                         ModulesAux.saveITPDStateRunning(false);
                         modulesStatus.setItpdState(STOPPED);
                         makeDelay(1);
-                        sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
+                        sendResultIntent(I2PD_RUN_FRAGMENT_MARK, ITPD_KEYWORD, "");
                     }
                 }
             } catch (Exception e){
