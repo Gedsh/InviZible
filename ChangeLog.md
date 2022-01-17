@@ -683,3 +683,7 @@
 * Implemented a kill switch for Root mode.
 * Improved internet connection checking when only DNSCrypt is running and Use socks5 proxy enabled.
 * Updated Greek translation.
+
+**InviZible Pro beta 1.5.1**
+* Internet is disconnected before the device is turned off if the Kill switch is enabled in Root mode.
+* Fixes and optimizations.
