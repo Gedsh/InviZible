@@ -21,11 +21,13 @@ package pan.alexander.tordnscrypt.domain.connection_records
 
 import android.util.Log
 import pan.alexander.tordnscrypt.App
+import pan.alexander.tordnscrypt.di.logreader.LogReaderScope
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.lang.Exception
 import java.lang.ref.WeakReference
 import javax.inject.Inject
 
+@LogReaderScope
 class ConnectionRecordsInteractor @Inject constructor(
     private val connectionRecordsRepository: ConnectionRecordsRepository,
     private val converter: dagger.Lazy<ConnectionRecordsConverter>
@@ -40,7 +42,7 @@ class ConnectionRecordsInteractor @Inject constructor(
 
     fun <T: OnConnectionRecordsUpdatedListener> removeListener(listener: T?) {
         listener?.let { listeners.remove(it.javaClass) }
-        stopConverter()
+        //stopConverter()
     }
 
     fun hasAnyListener(): Boolean {
