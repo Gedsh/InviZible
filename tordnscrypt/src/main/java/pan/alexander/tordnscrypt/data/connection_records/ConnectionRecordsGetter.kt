@@ -25,7 +25,6 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
-import pan.alexander.tordnscrypt.di.logreader.LogReaderSubcomponent.Companion.LOG_READER_CONTEXT
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecord
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
@@ -34,10 +33,9 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPN.VPNBinder
 import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
-import javax.inject.Named
 
 class ConnectionRecordsGetter @Inject constructor(
-    @Named(LOG_READER_CONTEXT) private val context: Context
+    private val context: Context
 ) {
 
     private val bound = AtomicBoolean(false)
