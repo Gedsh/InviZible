@@ -115,7 +115,7 @@ public class ModulesStateLoop implements Runnable,
 
     ModulesStateLoop(ModulesService modulesService) {
         App.getInstance()
-                .initLogReaderDaggerSubcomponent(modulesService)
+                .initLogReaderDaggerSubcomponent()
                 .inject(this);
 
         //Delay in sec before service can stop

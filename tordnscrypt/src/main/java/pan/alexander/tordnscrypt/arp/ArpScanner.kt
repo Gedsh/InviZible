@@ -18,11 +18,12 @@ package pan.alexander.tordnscrypt.arp
     Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.util.Log
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.di.arp.ArpScope
 import pan.alexander.tordnscrypt.di.arp.ArpSubcomponent
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.delegates.MutableLazy
+import pan.alexander.tordnscrypt.utils.logger.Logger.logi
+import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -52,8 +53,8 @@ class ArpScanner @Inject constructor(
 
         if (!connections.wifiActive
             && !connections.ethernetActive
-            && (connections.cellularActive
-                    || !connections.connectionAvailable)) {
+            && (connections.cellularActive || !connections.connectionAvailable)
+        ) {
             return
         }
 
@@ -65,7 +66,7 @@ class ArpScanner @Inject constructor(
 
         arpScannerHelper.get().makePause(false, resetInternalValues = true)
 
-        Log.i(LOG_TAG, "Start ArpScanner")
+        logi("Start ArpScanner")
 
         scheduledExecutorService?.scheduleWithFixedDelay({
 
@@ -108,7 +109,8 @@ class ArpScanner @Inject constructor(
         if (connectionAvailable
             && (connections.wifiActive
                     || connections.ethernetActive
-                    || !connections.cellularActive)) {
+                    || !connections.cellularActive)
+        ) {
             if (scheduledExecutorService?.isShutdown == false) {
                 arpScannerHelper.get().makePause(false, resetInternalValues = false)
 
@@ -116,7 +118,7 @@ class ArpScanner @Inject constructor(
                     arpScannerHelper.get().resetArpScannerState()
                 }
 
-                Log.i(LOG_TAG, "ArpScanner reset due to connectivity changed")
+                logi("ArpScanner reset due to connectivity changed")
             } else {
                 start()
             }
@@ -144,29 +146,33 @@ class ArpScanner @Inject constructor(
                     uiUpdater.get().stopUpdates()
                 }
 
-                Log.i(LOG_TAG, "Stopping ArpScanner")
+                logi("Stopping ArpScanner")
             } catch (e: java.lang.Exception) {
-                Log.w(LOG_TAG, "ArpScanner stop exception ${e.message}\n${e.cause}\n${e.stackTrace}")
+                logw("ArpScanner stop exception ${e.message}\n${e.cause}\n${e.stackTrace}")
             }
         }
 
     }
 
     companion object {
-        @Volatile @JvmStatic
+        @Volatile
+        @JvmStatic
         var arpAttackDetected = false
 
-        @Volatile @JvmStatic
+        @Volatile
+        @JvmStatic
         var dhcpGatewayAttackDetected = false
 
-        private var arpSubcomponent: ArpSubcomponent? = null
-        @Synchronized @JvmStatic
-        fun getArpComponent(): ArpSubcomponent {
-            return arpSubcomponent ?: App.instance.daggerComponent.arpSubcomponent().create()
-                .also { arpSubcomponent = it }
+        private var arpSubcomponent: ArpSubcomponent? by MutableLazy {
+            App.instance.daggerComponent.arpSubcomponent().create()
         }
 
-        @Synchronized
+        @JvmStatic
+        fun getArpComponent(): ArpSubcomponent {
+            return arpSubcomponent!!
+        }
+
+        @JvmStatic
         fun releaseArpComponent() {
             arpSubcomponent = null
         }

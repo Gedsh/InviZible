@@ -26,6 +26,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
@@ -62,7 +63,7 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
     private CopyOnWriteArrayList<DNSServerRelays> routesCurrent;
     private RecyclerView.Adapter<DNSRelaysAdapter.DNSRelaysViewHolder> adapter;
     private OnRoutesChangeListener onRoutesChangeListener;
-    private static DialogFragment pleaseWaitDialog;
+    private DialogFragment pleaseWaitDialog;
     private boolean serverIPv6;
 
 
@@ -91,35 +92,41 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
 
         Activity activity = getActivity();
         if (activity == null) {
-            return;
-        }
-
-        FileManager.setOnFileOperationCompleteListener(this);
-
-        if (dnsRelayItems.isEmpty()) {
-            FileManager.readTextFile(activity, pathVars.get().getAppDataDir() + "/app_data/dnscrypt-proxy/relays.md", "relays.md");
+            return null;
         }
 
         activity.setTitle(R.string.pref_dnscrypt_relays_title);
 
-        RecyclerView rvDNSRelay = activity.findViewById(R.id.rvDNSRelays);
+        View view = inflater.inflate(R.layout.fragment_preferences_dnscrypt_relays, container, false);
+
+        RecyclerView rvDNSRelay = view.findViewById(R.id.rvDNSRelays);
 
         RecyclerView.LayoutManager manager = new LinearLayoutManager(activity);
         rvDNSRelay.setLayoutManager(manager);
 
         adapter = new DNSRelaysAdapter(activity, dnsRelayItems);
         rvDNSRelay.setAdapter(adapter);
+
+        return view;
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_preferences_dnscrypt_relays, container, false);
+    public void onResume() {
+        super.onResume();
+
+        FileManager.setOnFileOperationCompleteListener(this);
+
+        if (dnsRelayItems.isEmpty()) {
+            FileManager.readTextFile(
+                    requireContext(),
+                    pathVars.get().getAppDataDir() + "/app_data/dnscrypt-proxy/relays.md", "relays.md"
+            );
+        }
     }
 
     @Override
@@ -154,6 +161,14 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
         CopyOnWriteArrayList<DNSServerRelays> routesNew = updateRelaysListForAllServers(dnsServerRelaysNew);
 
         callbackToPreferencesDNSCryptServers(routesNew);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+
+        adapter = null;
+        pleaseWaitDialog = null;
     }
 
     @SuppressWarnings("unchecked")
@@ -301,6 +316,7 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
         if (pleaseWaitDialog != null) {
             try {
                 pleaseWaitDialog.dismiss();
+                pleaseWaitDialog = null;
             } catch (Exception e) {
                 Log.w(LOG_TAG, "PreferencesDNSCryptRelays closePleaseWaitDialog Exception: " + e.getMessage() + " " + e.getCause());
             }

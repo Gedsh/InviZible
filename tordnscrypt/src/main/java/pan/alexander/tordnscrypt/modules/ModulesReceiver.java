@@ -57,7 +57,6 @@ import android.os.PowerManager;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.io.Serializable;
 import java.net.InetAddress;
@@ -404,8 +403,6 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             @Override
             public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities networkCapabilities) {
 
-                logi("ModulesReceiver changed capabilities=" + network);
-
                 if (isNetworkAvailable() && (last_connected == null || !last_connected)) {
 
                     last_connected = true;
@@ -418,6 +415,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                             setInternetAvailable(false);
                             reload("Connected state changed", context);
                         }
+                        logi("ModulesReceiver changed capabilities=" + network);
                     }
                 }
 
@@ -425,8 +423,10 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                     updateIptablesRules(false);
                     resetArpScanner();
                     checkInternetConnection();
+                    logi("ModulesReceiver changed capabilities=" + network);
                 } else if (isProxyMode()) {
                     resetArpScanner();
+                    logi("ModulesReceiver changed capabilities=" + network);
                 }
 
                 last_network = network.hashCode();
@@ -511,7 +511,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     private void registerVpnRevokeReceiver() {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(VPN_REVOKE_ACTION);
-        LocalBroadcastManager.getInstance(context).registerReceiver(this, intentFilter);
+        context.registerReceiver(this, intentFilter);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -795,7 +795,11 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
     private void resetArpScanner(boolean connectionAvailable) {
         if (defaultPreferences.get().getBoolean(ARP_SPOOFING_DETECTION, false)) {
-            ArpScanner.getArpComponent().get().reset(connectionAvailable);
+            try {
+                ArpScanner.getArpComponent().get().reset(connectionAvailable);
+            } catch (Exception e) {
+                loge("ModulesReceiver resetArpScanner", e);
+            }
         }
     }
 
@@ -803,7 +807,11 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         if (context != null && defaultPreferences.get().getBoolean(ARP_SPOOFING_DETECTION, false)) {
             ConnectionCheckerInteractor interactor = connectionCheckerInteractor.get();
             interactor.checkNetworkConnection();
-            ArpScanner.getArpComponent().get().reset(interactor.getNetworkConnectionResult());
+            try {
+                ArpScanner.getArpComponent().get().reset(interactor.getNetworkConnectionResult());
+            } catch (Exception e) {
+                loge("ModulesReceiver resetArpScanner", e);
+            }
         }
     }
 

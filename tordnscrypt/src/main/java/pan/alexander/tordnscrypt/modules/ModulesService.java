@@ -84,6 +84,7 @@ import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.speedupLoo
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.startArpScanner;
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.stopArpScanner;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
@@ -1134,15 +1135,19 @@ public class ModulesService extends Service {
     }
 
     private void startArpScanner() {
-        arpScanner = ArpScanner.getArpComponent().get();
-        arpScanner.start();
+        try {
+            arpScanner = ArpScanner.getArpComponent().get();
+            arpScanner.start();
+        } catch (Exception e) {
+            loge("ModulesService startArpScanner", e);
+        }
     }
 
     private void stopArpScanner() {
         if (arpScanner != null) {
             arpScanner.stop();
             arpScanner = null;
-            ArpScanner.Companion.releaseArpComponent();
+            ArpScanner.releaseArpComponent();
         }
     }
 

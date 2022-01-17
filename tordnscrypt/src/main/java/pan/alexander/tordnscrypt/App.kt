@@ -25,7 +25,6 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
-import androidx.annotation.MainThread
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat.getSystemService
@@ -34,6 +33,7 @@ import pan.alexander.tordnscrypt.crash_handling.TopExceptionHandler
 import pan.alexander.tordnscrypt.di.*
 import pan.alexander.tordnscrypt.di.logreader.LogReaderSubcomponent
 import pan.alexander.tordnscrypt.language.Language
+import pan.alexander.tordnscrypt.utils.delegates.MutableLazy
 import pan.alexander.tordnscrypt.utils.multidex.MultidexActivator
 
 const val ANDROID_CHANNEL_ID = "InviZible"
@@ -47,7 +47,9 @@ class App : Application() {
     lateinit var daggerComponent: AppComponent
     private set
 
-    private var logReaderDaggerSubcomponent: LogReaderSubcomponent? = null
+    private var logReaderDaggerSubcomponent: LogReaderSubcomponent? by MutableLazy {
+        daggerComponent.logReaderSubcomponent().create(this)
+    }
 
     var isAppForeground: Boolean = false
 
@@ -101,11 +103,7 @@ class App : Application() {
             .build()
     }
 
-    @MainThread
-    fun initLogReaderDaggerSubcomponent(context: Context) = logReaderDaggerSubcomponent ?:
-        daggerComponent.logReaderSubcomponent().create(context).also {
-            logReaderDaggerSubcomponent = it
-        }
+    fun initLogReaderDaggerSubcomponent() = logReaderDaggerSubcomponent!!
 
     fun releaseLogReaderScope() {
         logReaderDaggerSubcomponent = null

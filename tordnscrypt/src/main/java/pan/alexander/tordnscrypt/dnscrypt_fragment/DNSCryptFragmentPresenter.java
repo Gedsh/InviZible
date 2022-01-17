@@ -95,7 +95,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
     public DNSCryptFragmentPresenter(DNSCryptFragmentView view) {
         App.getInstance()
-                .initLogReaderDaggerSubcomponent(view.getFragmentActivity())
+                .initLogReaderDaggerSubcomponent()
                 .inject(this);
         this.view = view;
     }
@@ -432,7 +432,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             return;
         }
 
-        if (connectionRecords.equals(savedConnectionRecords)) {
+        if (connectionRecords.equals(savedConnectionRecords) && !savedLogLines.isEmpty()) {
             return;
         }
 
@@ -447,7 +447,9 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
                 if (htmlLines != null && dnsCryptLogAutoScroll) {
                     view.setDNSCryptLogViewText(htmlLines);
                     view.scrollDNSCryptLogViewToBottom();
-                    savedConnectionRecords = connectionRecords;
+                    if (!savedLogLines.isEmpty()) {
+                        savedConnectionRecords = connectionRecords;
+                    }
                 }
             } else {
                 savedConnectionRecords = "";

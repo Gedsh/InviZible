@@ -58,6 +58,7 @@ import pan.alexander.tordnscrypt.vpn.Rule;
 import static android.content.Context.CONNECTIVITY_SERVICE;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_GSM_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_ROAMING;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_WIFI_PREF;
@@ -312,9 +313,13 @@ public class ServiceVPNHandler extends Handler {
         serviceVPN.reloading = false;
 
         if (defaultSharedPreferences.get().getBoolean(ARP_SPOOFING_DETECTION, false)) {
-            ArpScanner.getArpComponent().get().reset(
-                    serviceVPN.isNetworkAvailable() || serviceVPN.isInternetAvailable()
-            );
+            try {
+                ArpScanner.getArpComponent().get().reset(
+                        serviceVPN.isNetworkAvailable() || serviceVPN.isInternetAvailable()
+                );
+            } catch (Exception e) {
+                loge("ServiceVPNHandler Arp Scanner reset exception", e);
+            }
         }
     }
 
