@@ -283,7 +283,7 @@ Die Anfragen können das Vorhandensein von Malware, kaputten Applikationen oder 
     <string name="pref_itpd_limits_transittunnels_summ">"Setze maximale Anzahl von Transit Tunnels ausser Kraft. 2500 Standard."</string>
     <string name="pref_itpd_limits_openfiles_summ">"Begrenze die Anzahl an offenen Dateien (0 - Benutze Systemgrenze)."</string>
     <string name="pref_itpd_limits_coresize_summ">"Maximale Grösse der Kerndatei in Kb (0 - Benutze Systemgrenze)."</string>
-    <string name="pref_itpd_addressbook">"Addressbook"</string>
+    <string name="pref_itpd_addressbook">"Addressbuch"</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">"Addressbuch Bereitstellungs URL für die Ersteinrichtung."</string>
     <string name="pref_itpd_addressbook_subscriptions_summ">"Addressbuch Bereitstellungs URLs."</string>
     <string name="pref_itpd_not_exist">"Voreinstellung existiert nicht in i2pd.conf!"</string>
@@ -436,7 +436,7 @@ Dies beschleunigt Abläufe, wenn keine IPv6 Konnektivität vorhanden ist, kann a
     <string name="pref_common_proxy_summ">"InviZible Pro wird alle Verbindungen durch den SOCKS5 Proxy leiten"</string>
     <string name="pref_common_compatibility_mode">"Kompatibilitätsmodus"</string>
     <string name="pref_common_compatibility_mode_summ">"Aktivieren falls du ein Gerät mit Custom-ROM nutzt, bei dem die Verbindung abbricht sobald du den START Knopf drückst"</string>
-    <string name="pref_common_shell_control">"Aktivere Script Kontrolle"</string>
+    <string name="pref_common_shell_control">"Aktiviere Skript Kontrolle"</string>
     <string name="pref_common_shell_control_summ">"Nutze den folgenden Befehl um Module zu verwalten:
 \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
         --ei dnscrypt 1 --ei tor 1 --ei i2p 1 -n %s/.BootCompleteReceiver\"
@@ -505,7 +505,7 @@ WLAN aus- und kurz darauf wieder anschalten. Die Verwendung des derzeitigen Hots
     <string name="firewall_btnTopUnCheckAllFirewall_tooltip">"Alle abwählen"</string>
     <string name="firewall_item_button_tooltip">"Grün - Erlauben, Weiss - Verweigern von Verbindungen"</string>
     <string name="pref_firewall_title">"Firewall Einstellungen"</string>
-    <string name="pref_firewall_allow_internet_for_new_apps">"Erlaube Verbindungen für neue Apps"</string>
+    <string name="pref_firewall_allow_internet_for_new_apps">"Voreinstellung für neue Apps"</string>
     <string name="pref_firewall_allow_internet_for_new_apps_on_summ">"Erlaube Internet Verbindungen für neu installierte Apps"</string>
     <string name="pref_firewall_allow_internet_for_new_apps_off_summ">"Blockiere Internet Verbindungen für neu installierte Apps"</string>
     <string name="helper_dnscrypt_proxy_wifi">"Bitte deaktiviere den Proxy in den Android WiFi Netzwerkeinstellungen. Diese Option beeinträchtigt InviZible."</string>
@@ -525,12 +525,15 @@ WLAN aus- und kurz darauf wieder anschalten. Die Verwendung des derzeitigen Hots
     <string name="notification_waiting_network">"Warten auf Verbindung..."</string>
     <string name="tile_change_tor_ip">"Wechsle Tor IP"</string>
     <string name="tile_changing_tor_ip">"Tor IP wird gewechselt"</string>
-    <string name="tile_dialog_over_three_tiles_message">"Du hast mehr als 3 Kacheln zu den Schnelleinstellungen hinzugefügt. Bitte belasse es bei 3. Das Hinzufügen von mehr als 3 Kacheln kann zu Problemen verursachen."</string>
+    <string name="tile_dialog_over_three_tiles_message">"Du hast mehr als 3 Kacheln zu den Schnelleinstellungen hinzugefügt. Bitte belasse es bei 3. Das Hinzufügen von mehr als 3 Kacheln kann Probleme verursachen."</string>
     <string name="pref_common_rogue_dhcp_detection">"Erkennung von bösartigem DHCP"</string>
     <string name="pref_common_rogue_dhcp_detection_summ">"Erkenne bösartige Man-in-the-middle DHCP Attacken in Wi-Fi Netzwerken."</string>
     <string name="pref_tor_snowflake_select_rendezvous">"Wähle ein Rendezvous"</string>
     <string name="pref_tor_snowflake_select_rendezvous_summ">"Versteckt den Domänennamen des Brokers vor dem ISP. Der Broker wird verwendet, um eine Verbindung aufzubauen."</string>
-    <string name="pref_firewall_show_all_apps">"Zeige alle Apps"</string>
+    <string name="pref_firewall_show_all_apps">"Voreinstellung für App Anzeige"</string>
     <string name="pref_firewall_show_all_apps_on_summ">"Apps werden unabhängig von ihrem Internet Status angezeigt."</string>
     <string name="pref_firewall_show_all_apps_off_summ">"Nur Apps mit Internet Erlaubnis werden angezeigt."</string>
+    <string name="pref_common_kill_switch">"Aus-Schalter"</string>
+    <string name="pref_common_kill_switch_summ">"Blockiere die Internet Verbindung sobald Tor, DNSCrypt oder I2P gestoppt wurden."</string>
+    <string name="notification_internet_blocked_message">"Die Internet Verbindung wurde aufgrund des Aus-Schalters blockiert. Starte Tor, DNSCrypt oder I2P um sie zu reaktivieren. Alternativ kann der Aus-Schalter in den Einstellungen deaktiviert werden."</string>
 </resources>
