@@ -21,6 +21,7 @@ package pan.alexander.tordnscrypt.iptables;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Handler;
 import android.os.Process;
 import android.util.Log;
 
@@ -82,8 +83,12 @@ import javax.inject.Inject;
 
 public class ModulesIptablesRules extends IptablesRulesSender {
 
+    private static final int DELAY_ENABLING_INTERNET_SEC = 3;
+
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Lazy<Handler> handler;
     @Inject
     public Lazy<KillSwitchNotification> killSwitchNotification;
     private static boolean killSwitchActive;
@@ -857,7 +862,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             logi("Enabling GSM due to a kill switch");
         }
         if (!commands.isEmpty()) {
-            RootCommands.execute(context, commands, NULL_MARK);
+            handler.get().postDelayed(() -> RootCommands.execute(context, commands, NULL_MARK),
+                    DELAY_ENABLING_INTERNET_SEC * 1000);
         }
     }
 }
