@@ -495,9 +495,9 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
     @Override
     public void onConnectionChecked(boolean available) {
         if (available) {
-            Log.i(LOG_TAG, "Network is available due to confirmation.");
+            Log.i(LOG_TAG, "Internet is available due to confirmation.");
         } else {
-            Log.i(LOG_TAG, "Network is not available due to confirmation.");
+            Log.i(LOG_TAG, "Internet is not available due to confirmation.");
         }
     }
 

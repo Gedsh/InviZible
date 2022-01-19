@@ -62,6 +62,7 @@ import pan.alexander.tordnscrypt.dialogs.SendCrashReport;
 import pan.alexander.tordnscrypt.dialogs.UpdateModulesDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.CheckUpdatesDialog;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.RootCheckingProgressDialog;
+import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.installer.Installer;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
@@ -134,6 +135,8 @@ public class TopFragment extends Fragment {
     public CachedExecutor cachedExecutor;
     @Inject
     public Lazy<ModulesVersions> modulesVersions;
+    @Inject
+    public Lazy<ConnectionCheckerInteractor> connectionChecker;
 
     private OperationMode mode = UNDEFINED;
     private boolean runModulesWithRoot = false;
@@ -484,6 +487,8 @@ public class TopFragment extends Fragment {
 
                     /////////////////////////////DONATION////////////////////////////////////////////
                     topFragment.showDonDialog(activity);
+
+                    topFragment.checkInternetConnectionIfRequired();
                 }
 
             } catch (Exception e) {
@@ -956,6 +961,15 @@ public class TopFragment extends Fragment {
         if (timer != null && !timer.isShutdown()) {
             timer.shutdownNow();
             timer = null;
+        }
+    }
+
+    private void checkInternetConnectionIfRequired() {
+        if (modulesStatus.getDnsCryptState() == RUNNING || modulesStatus.getTorState() == RUNNING) {
+            ConnectionCheckerInteractor checker = connectionChecker.get();
+            if (!checker.getInternetConnectionResult()) {
+                checker.checkInternetConnection();
+            }
         }
     }
 

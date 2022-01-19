@@ -835,9 +835,9 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         }
 
         if (available) {
-            logi("Network is available due to confirmation.");
+            logi("ModulesReceiver - Internet is available due to confirmation.");
         } else {
-            logi("Network is not available due to confirmation.");
+            logi("ModulesReceiver - Internet is not available due to confirmation.");
         }
     }
 

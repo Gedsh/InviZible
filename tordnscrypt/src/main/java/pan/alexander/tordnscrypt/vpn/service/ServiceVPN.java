@@ -776,10 +776,10 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     public void onConnectionChecked(boolean available) {
         if (available) {
             if (!savedInternetAvailable) {
-                reload("Network is available due to confirmation.", this);
+                reload("VPN - Internet is available due to confirmation.", this);
             }
         } else {
-            logi("Network is not available due to confirmation.");
+            logi("VPN - Internet is not available due to confirmation.");
         }
         savedInternetAvailable = available;
     }

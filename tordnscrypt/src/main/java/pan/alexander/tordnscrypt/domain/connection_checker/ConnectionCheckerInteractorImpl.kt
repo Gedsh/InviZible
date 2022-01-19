@@ -44,7 +44,8 @@ import javax.inject.Singleton
 private const val CHECK_INTERVAL_SEC = 10
 private const val ADDITIONAL_DELAY_SEC = 30
 private const val CHECK_SOCKET_TIMEOUT_SEC = 20
-private const val CHECK_CANCEL_TIMEOUT_MINT = 20
+private const val CHECKING_LOOP_TIMEOUT_MINT = 20
+private const val CHECKING_TIMEOUT_SEC = 120
 
 @Singleton
 class ConnectionCheckerInteractorImpl @Inject constructor(
@@ -71,14 +72,15 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
     @Volatile
     private var networkAvailable = false
 
+    @Volatile
     private var task: Job? = null
-        @Synchronized get
-        @Synchronized set
 
+    @Synchronized
     override fun <T : OnInternetConnectionCheckedListener> addListener(listener: T) {
         listenersMap[listener.javaClass.name] = WeakReference(listener)
     }
 
+    @Synchronized
     override fun <T : OnInternetConnectionCheckedListener> removeListener(listener: T) {
 
         listenersMap.remove(listener.javaClass.name)
@@ -117,6 +119,7 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
         }
     }
 
+    @Synchronized
     private fun checkConnection(via: Via) {
 
         if (task?.isCompleted == false) {
@@ -124,23 +127,63 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
         }
 
         task = coroutineScope.launch {
-            withTimeout(CHECK_CANCEL_TIMEOUT_MINT * 60_000L) {
+            tryCheckConnection(via)
+        }
+    }
+
+    private suspend fun tryCheckConnection(via: Via) {
+        try {
+            withTimeout(CHECKING_LOOP_TIMEOUT_MINT * 60_000L) {
                 while (isActive && !internetAvailable) {
-                    try {
-                        check(via)
+                    val available = try {
+                        withTimeout(CHECKING_TIMEOUT_SEC * 1000L) {
+                            check(via)
+                        }
                     } catch (e: SocketTimeoutException) {
                         logException(via, e)
+                        false
                     } catch (e: IOException) {
                         logException(via, e)
                         checking.getAndSet(false)
                         makeDelay(ADDITIONAL_DELAY_SEC)
+                        false
                     } catch (e: Exception) {
                         logException(via, e)
+                        false
                     } finally {
                         checking.compareAndSet(true, false)
+                    }
+
+                    ensureActive()
+
+                    logi("Internet is ${if (available) "available" else "not available"}")
+
+                    internetAvailable = available
+
+                    informListeners(available)
+
+                    if (!available) {
                         makeDelay(CHECK_INTERVAL_SEC)
                     }
                 }
+            }
+        } catch (e: Exception) {
+            if (e !is CancellationException) {
+                loge("ConnectionCheckerInteractor tryCheckConnection", e)
+            }
+        } finally {
+            checking.compareAndSet(true, false)
+        }
+    }
+
+    private fun informListeners(available: Boolean) {
+        val iterator = listenersMap.iterator()
+        while (iterator.hasNext()) {
+            val entry = iterator.next()
+            if (entry.value.get()?.isActive() == true) {
+                entry.value.get()?.onConnectionChecked(available)
+            } else {
+                iterator.remove()
             }
         }
     }
@@ -156,8 +199,8 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
         loge("CheckConnectionInteractor checkConnection via $via", e)
     }
 
-    private suspend fun check(via: Via) = coroutineScope {
-        val available = when (via) {
+    private suspend fun check(via: Via): Boolean = coroutineScope {
+        when (via) {
             Via.TOR -> {
                 logi("Checking connection via Tor")
                 dnsRepository.resolveDomainUDP(
@@ -200,22 +243,6 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
                     )
                 }
 
-            }
-        }
-
-        logi("Internet is ${if(available) "available" else "not available"}")
-
-        ensureActive()
-
-        internetAvailable = available
-
-        val iterator = listenersMap.iterator()
-        while (iterator.hasNext()) {
-            val entry = iterator.next()
-            if (entry.value.get()?.isActive() == true) {
-                entry.value.get()?.onConnectionChecked(available)
-            } else {
-                iterator.remove()
             }
         }
 
