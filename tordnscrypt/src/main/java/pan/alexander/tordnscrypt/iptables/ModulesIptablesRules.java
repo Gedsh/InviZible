@@ -312,37 +312,21 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             proxyAppsBypassFilter = removeRedundantSymbols(proxyAppsBypassFilterBuilder);
         }
 
-        if (arpSpoofingDetection && blockInternetWhenArpAttackDetected && mitmDetected
-                || killSwitch && dnsCryptState != RUNNING && torState != RUNNING && itpdState != RUNNING) {
+        if (arpSpoofingDetection && blockInternetWhenArpAttackDetected && mitmDetected) {
+
+            commands = getBlockingRules(appUID, blockHOTSPOT, unblockHOTSPOT);
+
+        } else if (killSwitch && dnsCryptState != RUNNING && torState != RUNNING && itpdState != RUNNING) {
 
             showKillSwitchNotification();
 
-            commands = new ArrayList<>(Arrays.asList(
-                    "TOR_UID=" + appUID,
-                    iptables + "-I OUTPUT -j DROP",
-                    ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
-                    ip6tables + "-D OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT 2> /dev/null || true",
-                    ip6tables + "-I OUTPUT -j DROP",
-                    ip6tables + "-I OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT",
-                    iptables + "-t nat -F tordnscrypt_nat_output 2> /dev/null",
-                    iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output 2> /dev/null || true",
-                    iptables + "-F tordnscrypt 2> /dev/null",
-                    iptables + "-D OUTPUT -j tordnscrypt 2> /dev/null || true",
-                    busybox + "sleep 1",
-                    iptables + "-N tordnscrypt 2> /dev/null",
-                    iptables + "-A tordnscrypt -m owner ! --uid-owner $TOR_UID -j REJECT",
-                    iptables + "-I OUTPUT -j tordnscrypt",
-                    unblockHOTSPOT,
-                    blockHOTSPOT,
-                    iptables + "-D OUTPUT -j DROP 2> /dev/null || true"
-            ));
+            commands = getBlockingRules(appUID, blockHOTSPOT, unblockHOTSPOT);
 
         } else if (dnsCryptState == RUNNING && torState == RUNNING) {
 
             cancelKillSwitchNotificationIfNeeded();
 
             if (!routeAllThroughTor) {
-
 
                 commands = new ArrayList<>(Arrays.asList(
                         "TOR_UID=" + appUID,
@@ -657,6 +641,28 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         }
 
         return commands;
+    }
+
+    public List<String> getBlockingRules(String appUID, String blockHOTSPOT, String unblockHOTSPOT) {
+        return new ArrayList<>(Arrays.asList(
+                "TOR_UID=" + appUID,
+                iptables + "-I OUTPUT -j DROP",
+                ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
+                ip6tables + "-D OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT 2> /dev/null || true",
+                ip6tables + "-I OUTPUT -j DROP",
+                ip6tables + "-I OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT",
+                iptables + "-t nat -F tordnscrypt_nat_output 2> /dev/null",
+                iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output 2> /dev/null || true",
+                iptables + "-F tordnscrypt 2> /dev/null",
+                iptables + "-D OUTPUT -j tordnscrypt 2> /dev/null || true",
+                busybox + "sleep 1",
+                iptables + "-N tordnscrypt 2> /dev/null",
+                iptables + "-A tordnscrypt -m owner ! --uid-owner $TOR_UID -j REJECT",
+                iptables + "-I OUTPUT -j tordnscrypt",
+                unblockHOTSPOT,
+                blockHOTSPOT,
+                iptables + "-D OUTPUT -j DROP 2> /dev/null || true"
+        ));
     }
 
     @Override
