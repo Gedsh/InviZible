@@ -162,7 +162,12 @@ class App : Application() {
     }
 
     private fun setExceptionHandler() {
-        Thread.setDefaultUncaughtExceptionHandler(TopExceptionHandler())
+        Thread.setDefaultUncaughtExceptionHandler(
+            TopExceptionHandler(getSharedPreferences(
+                SharedPreferencesModule.APP_PREFERENCES_NAME,
+                Context.MODE_PRIVATE
+            ))
+        )
     }
 
     private fun initAppLifecycleListener() {

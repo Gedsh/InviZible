@@ -19,11 +19,13 @@ package pan.alexander.tordnscrypt.crash_handling
     Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.content.SharedPreferences
 import android.util.Log
-import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 
-class TopExceptionHandler : Thread.UncaughtExceptionHandler {
+class TopExceptionHandler(
+    private val sharedPreferences: SharedPreferences
+) : Thread.UncaughtExceptionHandler {
 
     private val defaultUEH = Thread.getDefaultUncaughtExceptionHandler()
 
@@ -58,7 +60,6 @@ class TopExceptionHandler : Thread.UncaughtExceptionHandler {
     }
 
     private fun saveReport(report: String) {
-        App.instance.daggerComponent.getPreferenceRepository().get()
-            .setStringPreference("CrashReport", report)
+        sharedPreferences.edit().putString("CrashReport", report).commit()
     }
 }
