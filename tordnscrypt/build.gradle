@@ -54,7 +54,7 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 31
-        versionCode 151
+        versionCode 152
 
         resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt-rBR", "el"
 
@@ -155,7 +155,7 @@ dependencies {
     implementation 'eu.chainfire:libsuperuser:1.1.0.+'
     implementation 'com.jrummyapps:android-shell:1.0.1'
     implementation "androidx.core:core-ktx:1.7.0"
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation project(':filepicker')
 
