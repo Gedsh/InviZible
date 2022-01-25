@@ -687,3 +687,10 @@
 **InviZible Pro beta 1.5.1**
 * Internet is disconnected before the device is turned off if the Kill switch is enabled in Root mode.
 * Fixes and optimizations.
+
+**InviZible Pro beta 1.5.2**
+* Fixed infinite connecting status in notification.
+* Fixed display of notifications on Android 4.4.2
+* Fixed display of a kill switch notification when an ARP spoofing attack is detected.
+* Updated German translation.
+* Minor fixes and optimizations.
