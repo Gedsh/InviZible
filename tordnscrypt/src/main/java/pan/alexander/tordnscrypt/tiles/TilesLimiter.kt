@@ -39,6 +39,7 @@ import pan.alexander.tordnscrypt.dialogs.Registration.wrongRegistrationCode
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.ThemeUtils
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TILES_LIMIT_DIALOG_NOT_SHOW
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
@@ -111,8 +112,12 @@ class TilesLimiter @Inject constructor(
 
     private fun applyAppTheme(service: TileService) {
         if (!themeApplied) {
-            ThemeUtils.setDayNightTheme(service)
-            themeApplied = true
+            try {
+                ThemeUtils.setDayNightTheme(service)
+                themeApplied = true
+            } catch (e: Exception) {
+                loge("TilesLimiter applyAppTheme", e)
+            }
         }
     }
 

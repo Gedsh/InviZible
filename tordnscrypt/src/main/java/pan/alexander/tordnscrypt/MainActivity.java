@@ -104,6 +104,7 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.utils.Utils.isInterfaceLocked;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATION_MODE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE;
@@ -267,7 +268,11 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     private void setDayNightTheme() {
-        ThemeUtils.setDayNightTheme(this);
+        try {
+            ThemeUtils.setDayNightTheme(this);
+        } catch (Exception e) {
+            loge("MainActivity setDayNightTheme", e);
+        }
     }
 
     private void checkUpdates() {

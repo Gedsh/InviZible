@@ -56,6 +56,7 @@ import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.startRefreshTorUnlockIPs;
 import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.stopRefreshTorUnlockIPs;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BLOCK_HTTP;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BYPASS_LAN;
@@ -253,8 +254,12 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         }
 
         handler.get().post(() -> {
-            ThemeUtils.setDayNightTheme(context);
-            activityCurrentRecreate();
+            try {
+                ThemeUtils.setDayNightTheme(context);
+                activityCurrentRecreate();
+            } catch (Exception e) {
+                loge("PreferencesFastFragment changeTheme", e);
+            }
         });
 
     }
