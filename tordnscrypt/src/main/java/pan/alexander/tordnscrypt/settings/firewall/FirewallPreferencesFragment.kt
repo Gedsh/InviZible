@@ -41,8 +41,8 @@ class FirewallPreferencesFragment : PreferenceFragmentCompat(),
         setPreferencesFromResource(R.xml.preferences_firewall, rootKey)
     }
 
-    override fun onPreferenceChange(preference: Preference?, newValue: Any?): Boolean {
-        if (preference?.key == FIREWALL_SHOWS_ALL_APPS) {
+    override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+        if (preference.key == FIREWALL_SHOWS_ALL_APPS) {
             (parentFragmentManager.findFragmentByTag(FirewallFragment.TAG) as? FirewallFragment)
                 ?.apply {
                     viewModel.showAllApps = newValue?.toString()?.toBoolean()

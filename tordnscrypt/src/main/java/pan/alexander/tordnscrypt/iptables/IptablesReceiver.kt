@@ -47,7 +47,7 @@ class IptablesReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         App.instance.daggerComponent.inject(this)
 
-        if (intent == null) {
+        if (context == null || intent == null) {
             return
         }
 
