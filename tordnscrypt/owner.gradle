@@ -148,6 +148,8 @@ android {
     }
 
     packagingOptions{
+        jniLibs.useLegacyPackaging = true
+
         doNotStrip '*/*/libdnscrypt-proxy.so'
         doNotStrip '*/*/libobfs4proxy.so'
         doNotStrip '*/*/libsnowflake.so'
