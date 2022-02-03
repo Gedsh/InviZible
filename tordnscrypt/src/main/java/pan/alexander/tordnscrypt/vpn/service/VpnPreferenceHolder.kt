@@ -61,7 +61,7 @@ class VpnPreferenceHolder @Inject constructor(
     val blockInternetWhenArpAttackDetected =
         defaultPreferences.getBoolean(ARP_SPOOFING_BLOCK_INTERNET, false)
     val dnsRebindProtection = defaultPreferences.getBoolean(DNS_REBIND_PROTECTION, false)
-    val lan = defaultPreferences.getBoolean(BYPASS_LAN, false)
+    val lan = defaultPreferences.getBoolean(BYPASS_LAN, true)
     val firewallEnabled = preferenceRepository.getBoolPreference(FIREWALL_ENABLED)
     val ignoreSystemDNS = defaultPreferences.getBoolean(IGNORE_SYSTEM_DNS, false)
 

@@ -34,6 +34,9 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BLOCK_IPv6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BYPASS_LAN;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.COMPATIBILITY_MODE;
@@ -41,7 +44,6 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWAL
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import android.annotation.SuppressLint;
 import android.app.PendingIntent;
@@ -51,7 +53,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.text.TextUtils;
-import android.util.Log;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -104,7 +105,7 @@ public class VpnBuilder {
     @SuppressLint("UnspecifiedImmutableFlag")
     BuilderVPN getBuilder(ServiceVPN vpn, List<String> listAllowed, List<Rule> listRule) {
         SharedPreferences prefs = defaultPreferences.get();
-        boolean lan = prefs.getBoolean(BYPASS_LAN, false);
+        boolean lan = prefs.getBoolean(BYPASS_LAN, true);
         boolean blockIPv6 = prefs.getBoolean(BLOCK_IPv6, true);
         boolean apIsOn = preferenceRepository.get().getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON);
         boolean modemIsOn = preferenceRepository.get().getBoolPreference(PreferenceKeys.USB_MODEM_IS_ON);
@@ -138,16 +139,16 @@ public class VpnBuilder {
         if (vpn4 == null) {
             vpn4 = "10.1.10.1";
         }
-        Log.i(LOG_TAG, "VPN Using VPN4=" + vpn4);
+        logi("VPN Using VPN4=" + vpn4);
         builder.addAddress(vpn4, 32);
 
         String vpn6 = prefs.getString("vpn6", "fd00:1:fd00:1:fd00:1:fd00:1");
-        Log.i(LOG_TAG, "VPN Using VPN6=" + vpn6);
+        logi("VPN Using VPN6=" + vpn6);
         builder.addAddress(vpn6, 128);
 
         // DNS address
         for (InetAddress dns : getDns()) {
-            Log.i(LOG_TAG, "VPN Using DNS=" + dns);
+            logi("VPN Using DNS=" + dns);
             builder.addDnsServer(dns);
         }
 
@@ -187,7 +188,7 @@ public class VpnBuilder {
                         try {
                             builder.addRoute(include.address, include.prefix);
                         } catch (Throwable ex) {
-                            Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+                            loge("VPNBuilder", ex, true);
                         }
                     start = IPUtil.plus1(exclude.getEnd());
                 }
@@ -196,10 +197,10 @@ public class VpnBuilder {
                     try {
                         builder.addRoute(include.address, include.prefix);
                     } catch (Throwable ex) {
-                        Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+                        loge("VPNBuilder", ex, true);
                     }
             } catch (UnknownHostException ex) {
-                Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+                loge("VPNBuilder", ex, true);
             }
         } else {
             builder.addRoute(META_ADDRESS, 0);
@@ -213,7 +214,7 @@ public class VpnBuilder {
 
         // MTU
         int mtu = vpn.jni_get_mtu();
-        Log.i(LOG_TAG, "VPN MTU=" + mtu);
+        logi("VPN MTU=" + mtu);
         builder.setMtu(mtu);
 
         // Add list of allowed applications
@@ -223,7 +224,7 @@ public class VpnBuilder {
                 builder.addDisallowedApplication(context.getPackageName());
                 //Log.i(LOG_TAG, "VPN Not routing " + getPackageName());
             } catch (PackageManager.NameNotFoundException ex) {
-                Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+                loge("VPNBuilder", ex, true);
             }
 
             if (fixTTL) {
@@ -235,14 +236,14 @@ public class VpnBuilder {
                             //Log.i(LOG_TAG, "VPN Not routing " + rule.packageName);
                             builder.addDisallowedApplication(rule.packageName);
                         } catch (PackageManager.NameNotFoundException ex) {
-                            Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+                            loge("VPNBuilder", ex, true);
                         }
                     }
                 } else {
                     try {
                         builder.addDisallowedApplication(context.getPackageName());
                     } catch (PackageManager.NameNotFoundException ex) {
-                        Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+                        loge("VPNBuilder", ex, true);
                     }
                 }
 
@@ -268,7 +269,7 @@ public class VpnBuilder {
         // Get custom DNS servers
         boolean ip6 = defaultPreferences.get().getBoolean("ipv6", false);
         vpnDns1 = App.getInstance().getDaggerComponent().getPathVars().get().getDNSCryptFallbackRes();
-        Log.i(LOG_TAG, "VPN DNS system=" + TextUtils.join(",", sysDns) + " config=" + vpnDns1 + "," + VPN_DNS_2);
+        logi("VPN DNS system=" + TextUtils.join(",", sysDns) + " config=" + vpnDns1 + "," + VPN_DNS_2);
 
         if (vpnDns1 != null) {
             try {
@@ -290,9 +291,9 @@ public class VpnBuilder {
                         vpnDnsSet.addAll(dnsInteractor.get().resolveDomain("https://" + name));
                     }
                 }
-                Log.i(LOG_TAG, "ServiceVPN vpnDnsSet " + vpnDnsSet);
+                logi("VPNBuilder vpnDnsSet " + vpnDnsSet);
             } catch (Exception e) {
-                Log.w(LOG_TAG, "ServiceVPN getDns exception " + e.getMessage() + " " + e.getCause());
+                logw("VPNBuilder getDns", e);
             }
         }
 
@@ -304,7 +305,7 @@ public class VpnBuilder {
                 vpnDnsSet.add(VPN_DNS_2);
             }
         } catch (Throwable ex) {
-            Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+            loge("VPNBuilder", ex, true);
         }
 
         if (vpnDns1 == null) {
@@ -337,7 +338,7 @@ public class VpnBuilder {
                     vpnDnsSet.add(def_dns);
                 }
             } catch (Throwable ex) {
-                Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+                loge("VPNBuilder", ex, true);
             }
 
         // Always set DNS servers
@@ -350,10 +351,10 @@ public class VpnBuilder {
                     listDns.add(InetAddress.getByName(G_DNS_62));
                 }
             } catch (Throwable ex) {
-                Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+                loge("VPNBuilder", ex, true);
             }
 
-        Log.i(LOG_TAG, "VPN Get DNS=" + TextUtils.join(",", listDns));
+        logi("VPN Get DNS=" + TextUtils.join(",", listDns));
 
         return listDns;
     }

@@ -106,7 +106,7 @@ public class Tethering {
         boolean routeAllThroughTorTether = shPref.getBoolean("pref_common_tor_route_all", false);
         boolean blockHotspotHttp = shPref.getBoolean("pref_common_block_http", false);
         addressLocalPC = shPref.getString("pref_common_local_eth_device_addr", Constants.STANDARD_ADDRESS_LOCAL_PC);
-        boolean lan = shPref.getBoolean(BYPASS_LAN, false);
+        boolean lan = shPref.getBoolean(BYPASS_LAN, true);
         boolean ttlFix = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE) && !modulesStatus.isUseModulesWithRoot();
         apIsOn = preferences.getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON);
         Set<String> ipsToUnlockTether = preferences.getStringSetPreference(IPS_TO_UNLOCK_TETHER);

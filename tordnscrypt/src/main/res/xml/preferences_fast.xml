@@ -93,7 +93,7 @@
                 android:targetPackage="@string/package_name" />
         </Preference>
         <SwitchPreference
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="Allow LAN"
             android:summary="@string/pref_fast_tor_bypass_lan_summ"
             android:title="@string/pref_fast_tor_bypass_lan" />

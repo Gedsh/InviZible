@@ -113,7 +113,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         PreferenceRepository preferences = preferenceRepository.get();
         runModulesWithRoot = shPref.getBoolean(RUN_MODULES_WITH_ROOT, false);
         routeAllThroughTor = shPref.getBoolean(ALL_THROUGH_TOR, true);
-        lan = shPref.getBoolean(BYPASS_LAN, false);
+        lan = shPref.getBoolean(BYPASS_LAN, true);
         blockHttp = shPref.getBoolean(BLOCK_HTTP, false);
         ignoreSystemDNS = shPref.getBoolean(IGNORE_SYSTEM_DNS, false);
         apIsOn = preferences.getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON);
