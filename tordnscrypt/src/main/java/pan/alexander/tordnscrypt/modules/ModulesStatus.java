@@ -45,6 +45,7 @@ public final class ModulesStatus {
     private volatile boolean dnsCryptReady;
     private volatile boolean torReady;
     private volatile boolean itpdReady;
+    private volatile boolean deviceInteractive = true;
 
     private static volatile ModulesStatus modulesStatus;
 
@@ -183,5 +184,13 @@ public final class ModulesStatus {
 
     public void setItpdReady(boolean itpdReady) {
         this.itpdReady = itpdReady;
+    }
+
+    public boolean isDeviceInteractive() {
+        return deviceInteractive;
+    }
+
+    public void setDeviceInteractive(boolean interactive) {
+        this.deviceInteractive = interactive;
     }
 }

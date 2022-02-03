@@ -47,6 +47,9 @@ import kotlin.math.roundToInt
 @Volatile var savedMessage = ""
 @Volatile var startTime = 0L
 
+private const val NOTIFICATION_UPDATE_SHORT_PERIOD_SEC = 3
+private const val NOTIFICATION_UPDATE_LONG_PERIOD_SEC = 5
+
 class UsageStatistic(private val context: Context) {
 
     @Inject
@@ -78,7 +81,7 @@ class UsageStatistic(private val context: Context) {
     }
 
     @JvmOverloads
-    fun startUpdate(period: Int = 3) {
+    fun startUpdate(period: Int = NOTIFICATION_UPDATE_SHORT_PERIOD_SEC) {
         tryStartUpdate(period)
     }
 
@@ -115,14 +118,15 @@ class UsageStatistic(private val context: Context) {
 
             val message = getMessage(currentTime)
 
-            if (title != savedTitle || message != savedMessage) {
+            if (modulesStatus.isDeviceInteractive
+                && (title != savedTitle || message != savedMessage)) {
                 serviceNotification?.updateNotification(title, message)
                 savedTitle = title
                 savedMessage = message
             }
 
             if (counter > 100) {
-                startUpdate(5)
+                startUpdate(NOTIFICATION_UPDATE_LONG_PERIOD_SEC)
                 counter = -1
             } else if (counter >= 0) {
                 counter++

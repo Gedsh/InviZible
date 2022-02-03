@@ -94,6 +94,8 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     private static final String SHUTDOWN_FILTER_ACTION = "android.intent.action.ACTION_SHUTDOWN";
     private static final String REBOOT_FILTER_ACTION = "android.intent.action.REBOOT";
     private static final String POWER_OFF_FILTER_ACTION = "android.intent.action.QUICKBOOT_POWEROFF";
+    private static final String SCREEN_ON_ACTION = "android.intent.action.SCREEN_ON";
+    private static final String SCREEN_OFF_ACTION = "android.intent.action.SCREEN_OFF";
 
     private final static int DELAY_BEFORE_CHECKING_INTERNET_SHARING_SEC = 5;
     private final static int DELAY_BEFORE_UPDATING_IPTABLES_RULES_SEC = 5;
@@ -152,7 +154,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         Bundle extras = intent.getExtras();
         if (extras != null) {
             logi("ModulesReceiver received " + intent
-                    + (extras.isEmpty() ? "" : " " + extras.toString()));
+                    + (extras.isEmpty() ? "" : " " + extras));
         } else {
             logi("ModulesReceiver received " + intent);
         }
@@ -173,6 +175,9 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         } else if (action.equalsIgnoreCase(Intent.ACTION_PACKAGE_ADDED)
                 || action.equalsIgnoreCase(Intent.ACTION_PACKAGE_REMOVED)) {
             packageChanged(intent);
+        } else if (action.equalsIgnoreCase(SCREEN_ON_ACTION)
+                || action.equalsIgnoreCase(SCREEN_OFF_ACTION)) {
+            interactiveStateChanged(intent);
         } else if (isRootMode() && (action.equalsIgnoreCase(AP_STATE_FILTER_ACTION)
                 || action.equalsIgnoreCase(TETHER_STATE_FILTER_ACTION))) {
             checkInternetSharingState(intent);
@@ -195,6 +200,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             registerIdleStateChanged();
             registerConnectivityChanges();
             registerPackageChanged();
+            registerInteractiveStateReceiver();
             registerVpnRevokeReceiver();
         }
 
@@ -446,7 +452,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                 } else if (isVpnMode() && vpnRevoked) {
                     setInternetAvailable(false);
                     resetArpScanner(false);
-                }  else if (isRootMode()) {
+                } else if (isRootMode()) {
                     setInternetAvailable(false);
                     updateIptablesRules(false);
                     resetArpScanner(false);
@@ -552,6 +558,14 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         }
     }
 
+    private void registerInteractiveStateReceiver() {
+        IntentFilter screenIntentFilter = new IntentFilter();
+        screenIntentFilter.addAction(SCREEN_ON_ACTION);
+        screenIntentFilter.addAction(SCREEN_OFF_ACTION);
+        context.registerReceiver(this, screenIntentFilter);
+        commonReceiversRegistered = true;
+    }
+
     private void idleStateChanged() {
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
@@ -603,6 +617,24 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             checkInternetConnection();
         } else if (isProxyMode()) {
             resetArpScanner();
+        }
+    }
+
+    private void interactiveStateChanged(Intent intent) {
+
+        if (SCREEN_ON_ACTION.equals(intent.getAction())) {
+
+            modulesStatus.setDeviceInteractive(true);
+
+            ConnectionCheckerInteractor interactor = connectionCheckerInteractor.get();
+            if (!interactor.getNetworkConnectionResult()) {
+                interactor.checkNetworkConnection();
+            }
+            if (!interactor.getInternetConnectionResult()) {
+                interactor.checkInternetConnection();
+            }
+        } else if (SCREEN_OFF_ACTION.equals(intent.getAction())) {
+            modulesStatus.setDeviceInteractive(false);
         }
     }
 
