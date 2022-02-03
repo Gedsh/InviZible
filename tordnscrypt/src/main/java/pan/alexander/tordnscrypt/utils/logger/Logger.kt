@@ -45,6 +45,15 @@ object Logger {
     }
 
     @JvmStatic
+    fun loge(message: String, e: Throwable, printStackTrace: Boolean) {
+        Log.e(
+            LOG_TAG,
+            "$message ${e.javaClass.canonicalName} ${e.message} ${e.cause ?: ""}" +
+                    if (printStackTrace) "\n" + Log.getStackTraceString(e) else ""
+        )
+    }
+
+    @JvmStatic
     fun loge(message: String) {
         Log.e(LOG_TAG, message)
     }
