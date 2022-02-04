@@ -21,14 +21,13 @@ package pan.alexander.tordnscrypt.patches
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
 import androidx.annotation.WorkerThread
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.BuildConfig
+import pan.alexander.tordnscrypt.TopFragment.appVersion
 import pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
-import java.lang.Exception
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.util.concurrent.atomic.AtomicBoolean
 
 private const val SAVED_VERSION_CODE = "SAVED_VERSION_CODE"
@@ -71,6 +70,7 @@ class Patch(private val context: Context) {
                 updateITPDAddressBookDefaultUrl()
                 fallbackResolverToBootstrapResolvers()
                 removeDNSCryptDaemonize()
+                enableDNSCryptRequireNoFilterByDefault(currentVersionSaved)
 
                 if (dnsCryptConfigPatches.isNotEmpty()) {
                     configUtil.patchDNSCryptConfig(dnsCryptConfigPatches)
@@ -88,10 +88,7 @@ class Patch(private val context: Context) {
 
                 preferenceRepository.get().setIntPreference(SAVED_VERSION_CODE, currentVersion)
             } catch (e: Exception) {
-                Log.e(
-                    LOG_TAG,
-                    "Patch checkPatches exception ${e.message} ${e.cause} ${e.stackTrace}"
-                )
+                loge("Patch checkPatches", e, true)
             }
 
         } else if (currentVersionSaved == 0) {
@@ -241,6 +238,24 @@ class Patch(private val context: Context) {
                 Regex("daemonize.+"), ""
             )
         )
+    }
+
+    private fun enableDNSCryptRequireNoFilterByDefault(savedVersion: Int) {
+        if (appVersion.endsWith("p") && (savedVersion <= 2143 || savedVersion <= 3143)) {
+
+            PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putBoolean("require_nofilter", true)
+                .apply()
+
+            dnsCryptConfigPatches.add(
+                PatchLine(
+                    "",
+                    Regex("require_nofilter ?=.+"),
+                    "require_nofilter = true"
+                )
+            )
+        }
     }
 
 }

@@ -219,7 +219,7 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
             if (dnsServer.isNofilter()) {
                 sb.append("<font color='#728FCE'>Non-Filtering </font>");
             } else {
-                sb.append("<font color='#4C787E'>AD-Filtering </font>");
+                sb.append("<font color='#4C787E'>Filtering </font>");
             }
             if (dnsServer.isNolog()) {
                 sb.append("<font color='#4863A0'>Non-Logging </font>");

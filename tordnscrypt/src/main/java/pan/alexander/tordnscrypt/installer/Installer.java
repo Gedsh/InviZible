@@ -23,6 +23,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import androidx.fragment.app.FragmentManager;
@@ -51,16 +52,20 @@ import pan.alexander.tordnscrypt.utils.root.RootCommands;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.INSTALLER_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 public class Installer implements TopFragment.OnActivityChangeListener {
 
     @Inject
     public Lazy<PathVars> pathVars;
+    @Inject @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultPreferences;
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
@@ -285,7 +290,8 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
         boolean result = true;
         try {
-            countDownLatch.await();
+            //noinspection ResultOfMethodCallIgnored
+            countDownLatch.await(10, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             Log.e(LOG_TAG, "Installer CountDownLatch interrupted");
             result = false;
@@ -375,14 +381,12 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
     @SuppressLint("SdCardPath")
     private List<String> prepareDNSCryptForGP(List<String> lines) {
+
+        defaultPreferences.get().edit().putBoolean("require_nofilter", true).apply();
+
         ArrayList<String> prepared = new ArrayList<>();
 
         for (String line : lines) {
-            /*if (line.contains("block_unqualified")) {
-                line = "block_unqualified = false";
-            } else if (line.contains("block_undelegated")) {
-                line = "block_undelegated = false";
-            } else */
 
             if (line.contains("blacklist_file")) {
                 line = "";
@@ -405,6 +409,8 @@ public class Installer implements TopFragment.OnActivityChangeListener {
                         "'opennic-luggs', " +
                         "'publicarray-au-doh', " +
                         "'scaleway-fr']";
+            } else if (line.contains("require_nofilter")) {
+                line = "require_nofilter = true";
             }
 
             if (!line.isEmpty()) {

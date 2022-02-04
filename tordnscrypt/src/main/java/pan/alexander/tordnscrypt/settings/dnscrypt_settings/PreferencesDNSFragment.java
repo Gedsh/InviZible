@@ -29,6 +29,7 @@ import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
@@ -63,6 +64,7 @@ import pan.alexander.tordnscrypt.vpn.service.VpnBuilder;
 
 import static android.provider.DocumentsContract.EXTRA_INITIAL_URI;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
+import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BLOCK_IPv6;
@@ -297,7 +299,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
 
     @Override
-    public boolean onPreferenceChange(Preference preference, Object newValue) {
+    public boolean onPreferenceChange(@NonNull Preference preference, Object newValue) {
 
         Context context = getActivity();
         if (context == null || val_toml == null || key_toml == null) {
@@ -315,7 +317,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                         || (!useModulesWithRoot && Integer.parseInt(newValue.toString()) < 1024)) {
                     return false;
                 }
-                String val = "['127.0.0.1:" + newValue.toString() + "']";
+                String val = "['127.0.0.1:" + newValue + "']";
                 val_toml.set(key_toml.indexOf("listen_addresses"), val);
                 return true;
             } else if (Objects.equals(preference.getKey(), "bootstrap_resolvers")) {
@@ -324,9 +326,9 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                     return false;
                 }
 
-                String val = "['" + newValue.toString() + ":53']";
+                String val = "['" + newValue + ":53']";
                 val_toml.set(key_toml.indexOf("bootstrap_resolvers"), val);
-                val = "'" + newValue.toString() + ":53'";
+                val = "'" + newValue + ":53'";
                 if (key_toml.indexOf("netprobe_address") > 0) {
                     val_toml.set(key_toml.indexOf("netprobe_address"), val);
                 }
@@ -342,7 +344,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                         || (!useModulesWithRoot && Integer.parseInt(newValue.toString()) < 1024)) {
                     return false;
                 }
-                String val = "'socks5://127.0.0.1:" + newValue.toString() + "'";
+                String val = "'socks5://127.0.0.1:" + newValue + "'";
                 val_toml.set(key_toml.indexOf("proxy"), val);
                 return true;
             } else if (Objects.equals(preference.getKey(), "Sources")) {
@@ -429,7 +431,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
     }
 
     @Override
-    public boolean onPreferenceClick(Preference preference) {
+    public boolean onPreferenceClick(@NonNull Preference preference) {
         Activity activity = getActivity();
         if (activity == null || !isAdded()) {
             return false;
@@ -595,7 +597,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         PreferenceCategory requireServersCategory = findPreference("dnscrypt_require_servers_prop_summ");
         Preference requireNofilter = findPreference("require_nofilter");
 
-        if (requireServersCategory != null && requireNofilter != null) {
+        if (!accelerated && requireServersCategory != null && requireNofilter != null) {
             requireServersCategory.removePreference(requireNofilter);
         }
 

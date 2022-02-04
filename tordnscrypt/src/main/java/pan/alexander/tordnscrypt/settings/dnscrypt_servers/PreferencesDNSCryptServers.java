@@ -722,7 +722,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
                     || (dnsServerItem.isNofilter() && searchText.toLowerCase().contains("non-filtering"))
                     || (dnsServerItem.isNolog() && searchText.toLowerCase().contains("non-logging"))
                     || (!dnsServerItem.isNolog() && searchText.toLowerCase().contains("keep logs"))
-                    || (!dnsServerItem.isNofilter() && searchText.toLowerCase().contains("ad-filtering"))) {
+                    || (!dnsServerItem.isNofilter() && searchText.toLowerCase().contains("filtering"))) {
                 list_dns_servers.add(dnsServerItem);
             }
         }

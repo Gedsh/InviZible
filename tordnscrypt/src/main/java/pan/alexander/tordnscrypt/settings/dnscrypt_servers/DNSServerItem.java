@@ -19,6 +19,8 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_servers;
     Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Base64;
@@ -61,7 +63,7 @@ public class DNSServerItem implements Comparable<DNSServerItem> {
         boolean use_ipv4_servers = sp.getBoolean("ipv4_servers", true);
         boolean use_ipv6_servers = sp.getBoolean("ipv6_servers", false);
 
-        if (context.getText(R.string.package_name).toString().contains(".gp")) {
+        if (!accelerated && context.getText(R.string.package_name).toString().contains(".gp")) {
             require_nofilter = true;
         }
 
