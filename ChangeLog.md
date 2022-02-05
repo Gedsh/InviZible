@@ -694,3 +694,8 @@
 * Fixed display of a kill switch notification when an ARP spoofing attack is detected.
 * Updated German translation.
 * Minor fixes and optimizations.
+
+**InviZible Pro beta 1.5.3**
+* Updated Tor to version 4.6.10.
+* Fixed infinite connecting status in notification.
+* Minor fixes and optimizations.
