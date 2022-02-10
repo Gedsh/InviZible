@@ -19,7 +19,7 @@ public interface Constants {
 
     String[] STANDARD_ETHERNET_INTERFACE_NAMES = {"eth+"};
 
-    String[] STANDARD_WIFI_INTERFACE_NAMES = {"wlan+", "tiwlan+", "ra+", "bnep+"};
+    String[] STANDARD_WIFI_INTERFACE_NAMES = {"wlan+", "swlan+", "tiwlan+", "ra+", "bnep+"};
 
     String[] STANDARD_3G_INTERFACE_NAMES = {"rmnet+", "pdp+", "uwbr+", "wimax+", "vsnet+",
             "rmnet_sdio+", "ccmni+", "qmi+", "svnet0+", "ccemni+",
