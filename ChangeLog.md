@@ -699,3 +699,8 @@
 * Updated Tor to version 4.6.10.
 * Fixed infinite connecting status in notification.
 * Minor fixes and optimizations.
+
+**InviZible Pro beta 1.5.4**
+* Fixed Purple I2P not starting on some devices.
+* Fixed internet sharing on some Samsung devices.
+* Fixed displaying a firewall notification to control app connection after it is installed.
