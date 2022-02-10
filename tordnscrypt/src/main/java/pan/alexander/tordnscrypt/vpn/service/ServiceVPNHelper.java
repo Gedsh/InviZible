@@ -24,7 +24,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -35,8 +34,8 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.utils.enums.VPNCommand;
 
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
@@ -104,15 +103,13 @@ public class ServiceVPNHelper {
                 ((MainActivity) activity).prepareVPNService();
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "ServiceVPNHelper prepareVPNServiceIfRequired exception " + e.getMessage() + e.getCause());
+            loge("ServiceVPNHelper prepareVPNServiceIfRequired", e);
         } finally {
             reentrantLock.unlock();
         }
     }
 
     private static void sendIntent(Context context, Intent intent) {
-
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             intent.putExtra("showNotification", true);
             context.startForegroundService(intent);

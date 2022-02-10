@@ -32,7 +32,6 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.ParcelFileDescriptor;
 import android.os.Process;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.Keep;
@@ -349,10 +348,10 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                     if (isIpInDNSRebindRange(destAddress)) {
                         dnsRebindHosts.add(qname);
                         DNSRebindProtection.INSTANCE.sendNotification(this, qname);
-                        logw("ServiseVPN DNS rebind attack detected " + rr.toString());
+                        logw("ServiseVPN DNS rebind attack detected " + rr);
                     } else if ((destAddress.equals(META_ADDRESS) || destAddress.equals(LOOPBACK_ADDRESS))
                             && rr.Rcode == 0 && !rr.HInfo.contains("dnscrypt")) {
-                        logw("ServiseVPN DNS rebind attack detected " + rr.toString());
+                        logw("ServiseVPN DNS rebind attack detected " + rr);
                         dnsRebindHosts.add(qname);
                     }
                 }
@@ -731,7 +730,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                     vpnRulesHolder.get().unPrepare();
                 }
             } catch (Throwable ex) {
-                loge(ex.toString() + "\n" + Log.getStackTraceString(ex));
+                loge("VPN Destroy", ex, true);
             }
 
             logi("VPN Destroy context=" + jni_context);

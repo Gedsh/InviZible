@@ -37,6 +37,7 @@ import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
 import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.CLEARNET_APPS;
 import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.UNLOCK_APPS;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
@@ -105,7 +106,7 @@ public class Rule {
 
                     listRules.add(rule);
                 } catch (Throwable ex) {
-                    Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+                    loge("Rule getRules", ex, true);
                 }
 
             return listRules;

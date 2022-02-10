@@ -29,7 +29,6 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.ParcelFileDescriptor;
 import android.os.Process;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -59,13 +58,14 @@ import static android.content.Context.CONNECTIVITY_SERVICE;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_GSM_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_ROAMING;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_WIFI_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_ENABLED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPN.EXTRA_COMMAND;
@@ -120,7 +120,7 @@ public class ServiceVPNHandler extends Handler {
             handleIntent((Intent) msg.obj);
             //}
         } catch (Throwable ex) {
-            Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+            loge("ServiceVPNHandler handleMessage", ex, true);
         }
     }
 
@@ -135,7 +135,7 @@ public class ServiceVPNHandler extends Handler {
         VPNCommand cmd = (VPNCommand) intent.getSerializableExtra(EXTRA_COMMAND);
         String reason = intent.getStringExtra(EXTRA_REASON);
 
-        Log.i(LOG_TAG, "VPN Handler Executing intent=" + intent + " command=" + cmd + " reason=" + reason +
+        logi("VPN Handler Executing intent=" + intent + " command=" + cmd + " reason=" + reason +
                 " vpn=" + (serviceVPN.vpn != null) + " user=" + (Process.myUid() / 100000));
 
         try {
@@ -154,7 +154,7 @@ public class ServiceVPNHandler extends Handler {
                         break;
 
                     default:
-                        Log.e(LOG_TAG, "VPN Handler Unknown command=" + cmd);
+                        loge("VPN Handler Unknown command=" + cmd);
                 }
             }
 
@@ -167,13 +167,13 @@ public class ServiceVPNHandler extends Handler {
             // Request garbage collection
             System.gc();
         } catch (Throwable ex) {
-            Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+            loge("ServiceVPNHandler handleIntent", ex, true);
 
             serviceVPN.reloading = false;
 
             if (cmd == VPNCommand.START || cmd == VPNCommand.RELOAD) {
                 if (VpnService.prepare(serviceVPN) == null) {
-                    Log.w(LOG_TAG, "VPN Handler prepared connected=" + serviceVPN.isNetworkAvailable());
+                    logw("VPN Handler prepared connected=" + serviceVPN.isNetworkAvailable());
                     if (serviceVPN.isNetworkAvailable() && !(ex instanceof StartFailedException)) {
                         Toast.makeText(serviceVPN, serviceVPN.getText(R.string.vpn_mode_error), Toast.LENGTH_SHORT).show();
                     }
@@ -238,7 +238,7 @@ public class ServiceVPNHandler extends Handler {
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP_MR1) {
             last_builder = builder;
-            Log.i(LOG_TAG, "VPN Handler Legacy restart");
+            logi("VPN Handler Legacy restart");
 
             if (serviceVPN.vpn != null) {
                 serviceVPN.stopNative();
@@ -253,7 +253,7 @@ public class ServiceVPNHandler extends Handler {
 
         } else {
             if (serviceVPN.vpn != null && builder.equals(last_builder)) {
-                Log.i(LOG_TAG, "VPN Handler Native restart");
+                logi("VPN Handler Native restart");
                 serviceVPN.stopNative();
 
             } else {
@@ -261,7 +261,7 @@ public class ServiceVPNHandler extends Handler {
 
                 SharedPreferences prefs = serviceVPN.defaultPreferences.get();
                 boolean handover = prefs.getBoolean("VPN handover", true);
-                Log.i(LOG_TAG, "VPN Handler restart handover=" + handover);
+                logi("VPN Handler restart handover=" + handover);
 
                 if (handover) {
                     // Attempt seamless handover
@@ -269,7 +269,7 @@ public class ServiceVPNHandler extends Handler {
                     serviceVPN.vpn = startVPN(builder);
 
                     if (prev != null && serviceVPN.vpn == null) {
-                        Log.w(LOG_TAG, "VPN Handler Handover failed");
+                        logw("VPN Handler Handover failed");
                         serviceVPN.stopNative();
                         stopVPN(prev);
                         prev = null;
@@ -369,7 +369,7 @@ public class ServiceVPNHandler extends Handler {
             }
         //}
 
-        Log.i(LOG_TAG, "VPN Handler Allowed " + listAllowed.size() + " of " + ServiceVPNHandler.listRule.size());
+        logi("VPN Handler Allowed " + listAllowed.size() + " of " + ServiceVPNHandler.listRule.size());
         return listAllowed;
     }
 
@@ -382,13 +382,13 @@ public class ServiceVPNHandler extends Handler {
                 ConnectivityManager cm = (ConnectivityManager) serviceVPN.getSystemService(CONNECTIVITY_SERVICE);
                 Network active = (cm == null ? null : cm.getActiveNetwork());
                 if (active != null) {
-                    Log.i(LOG_TAG, "VPN Handler Setting underlying network=" + cm.getNetworkInfo(active));
+                    logi("VPN Handler Setting underlying network=" + cm.getNetworkInfo(active));
                     serviceVPN.setUnderlyingNetworks(new Network[]{active});
                 } else if (!serviceVPN.isNetworkAvailable() && !serviceVPN.isInternetAvailable()) {
-                    Log.i(LOG_TAG, "VPN Handler Setting underlying network=empty");
+                    logi("VPN Handler Setting underlying network=empty");
                     serviceVPN.setUnderlyingNetworks(new Network[]{});
                 } else {
-                    Log.i(LOG_TAG, "VPN Handler Setting underlying network=default");
+                    logi("VPN Handler Setting underlying network=default");
                     serviceVPN.setUnderlyingNetworks(null);
                 }
             }
@@ -397,17 +397,17 @@ public class ServiceVPNHandler extends Handler {
         } catch (SecurityException ex) {
             throw ex;
         } catch (Throwable ex) {
-            Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+            loge("ServiceVPNHandler startVPN", ex, true);
             return null;
         }
     }
 
     void stopVPN(ParcelFileDescriptor pfd) {
-        Log.i(LOG_TAG, "VPN Handler Stopping");
+        logi("VPN Handler Stopping");
         try {
             pfd.close();
         } catch (IOException ex) {
-            Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+            loge("ServiceVPNHandler stopVPN", ex, true);
         }
     }
 
@@ -422,7 +422,7 @@ public class ServiceVPNHandler extends Handler {
                 serviceVPN.notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
                 serviceVPN.stopForeground(true);
             } catch (Exception e) {
-                Log.e(LOG_TAG, "ServiceVPNHandler stopServiceVPN exception " + e.getMessage() + " " + e.getCause());
+                loge("ServiceVPNHandler stopServiceVPN", e);
             }
         }
 

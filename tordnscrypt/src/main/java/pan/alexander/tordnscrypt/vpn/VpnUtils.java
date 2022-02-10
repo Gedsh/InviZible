@@ -27,7 +27,6 @@ import android.net.LinkProperties;
 import android.net.Network;
 import android.os.Build;
 import android.provider.Settings;
-import android.util.Log;
 
 import androidx.annotation.Keep;
 
@@ -40,7 +39,9 @@ import java.util.List;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPN;
 
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 
 public class VpnUtils {
 
@@ -111,7 +112,7 @@ public class VpnUtils {
                     for (InetAddress d : dns) {
                         String host = d.getHostAddress();
                         if (host != null) {
-                            Log.i(LOG_TAG, "DNS from LP: " + host);
+                            logi("DNS from LP: " + host);
                             listDns.add(host.split("%")[0]);
                         }
                     }
@@ -155,7 +156,7 @@ public class VpnUtils {
             setting = pm.getApplicationEnabledSetting(info.packageName);
         } catch (IllegalArgumentException ex) {
             setting = PackageManager.COMPONENT_ENABLED_STATE_DEFAULT;
-            Log.w(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+            logw("VpnUtils isEnabled", ex);
         }
         if (setting == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT)
             return info.applicationInfo.enabled;
@@ -212,7 +213,7 @@ public class VpnUtils {
 
     public static boolean isPrivateDns(Context context) {
         String dns_mode = Settings.Global.getString(context.getContentResolver(), "private_dns_mode");
-        Log.i(LOG_TAG, "Private DNS mode=" + dns_mode);
+        logi("Private DNS mode=" + dns_mode);
         if (dns_mode == null) {
             dns_mode = "off";
         }
@@ -243,7 +244,7 @@ public class VpnUtils {
             final int m = (65280 >> p) & 255;
             result = (ipBin[i] & m) == (netBin[i] & m);
         } catch (Exception e) {
-            Log.e(LOG_TAG, "VPN UTIL isIpInSubnet exception " + e.getMessage() + e.getCause());
+            loge("VpnUtils isIpInSubnet", e);
         }
 
         return result;
