@@ -5,14 +5,14 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 obfs4proxy_version=f638c33f6c6f697498150d5f0dfbf26453759262
 dnscryptproxy_version=2.1.1
 snowflake_version=v2.0.1
-tor_openssl_version=OpenSSL_1_1_1l
+tor_openssl_version=OpenSSL_1_1_1m
 libevent_version=release-2.1.12-stable
 zstd_version=v1.4.9
 xz_version=v5.2.4
 tor_version=release-0.4.6
-i2pd_openssl_version=OpenSSL_1_1_1l
+i2pd_openssl_version=OpenSSL_1_1_1m
 miniupnpc_version=c2818392e12f42901ab5abf145f43d69825a38c9
-i2pd_version=2.40.0
+i2pd_version=c9a1066
 
 git clone https://github.com/Yawning/obfs4
 pushd obfs4
@@ -45,5 +45,8 @@ git checkout -f $miniupnpc_version -b $miniupnpc_version
 popd
 git clone https://github.com/PurpleI2P/android-ifaddrs.git
 popd
-git clone --single-branch --branch $i2pd_version https://github.com/PurpleI2P/i2pd.git
+git clone https://github.com/PurpleI2P/i2pd.git
+pushd i2pd/
+git checkout -f $i2pd_version -b $i2pd_version
+popd
 popd
