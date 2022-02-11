@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.data.connection_records
@@ -23,20 +23,20 @@ import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsRepo
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecord
 import javax.inject.Inject
 
-class ConnectionRecordsRepositoryImpl @Inject constructor(): ConnectionRecordsRepository {
-    private var connectionRecordsGetter: ConnectionRecordsGetter? = null
+class ConnectionRecordsRepositoryImpl @Inject constructor(
+    private val connectionRecordsGetter: ConnectionRecordsGetter
+): ConnectionRecordsRepository {
 
     override fun getRawConnectionRecords(): List<ConnectionRecord?> {
-        connectionRecordsGetter = connectionRecordsGetter ?: ConnectionRecordsGetter()
-        return connectionRecordsGetter?.getConnectionRawRecords() ?: emptyList()
+        return connectionRecordsGetter.getConnectionRawRecords()
     }
 
     override fun clearConnectionRawRecords() {
-        connectionRecordsGetter?.clearConnectionRawRecords()
+        connectionRecordsGetter.clearConnectionRawRecords()
     }
 
     override fun connectionRawRecordsNoMoreRequired() {
-        connectionRecordsGetter?.connectionRawRecordsNoMoreRequired()
+        connectionRecordsGetter.connectionRawRecordsNoMoreRequired()
     }
 
 }

@@ -496,4 +496,29 @@
         <item>ZM</item>
         <item>ZW</item>
     </string-array>
+
+    <string-array name="pref_tor_snowflake_rendezvous_titles">
+        <item>@string/pref_tor_snowflake_amp</item>
+        <item>@string/pref_tor_snowflake_fastly</item>
+    </string-array>
+    <string-array name="pref_tor_snowflake_rendezvous_values">
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
+    <string-array name="tor_snowflake_stun_servers">
+        <item>stun.l.google.com:19302</item>
+        <item>stun.voip.blackberry.com:3478</item>
+        <item>stun.altar.com.pl:3478</item>
+        <item>stun.antisip.com:3478</item>
+        <item>stun.bluesip.net:3478</item>
+        <item>stun.dus.net:3478</item>
+        <item>stun.epygi.com:3478</item>
+        <item>stun.sonetel.com:3478</item>
+        <item>stun.sonetel.net:3478</item>
+        <item>stun.stunprotocol.org:3478</item>
+        <item>stun.uls.co.za:3478</item>
+        <item>stun.voipgate.com:3478</item>
+        <item>stun.voys.nl:3478</item>
+    </string-array>
 </resources>

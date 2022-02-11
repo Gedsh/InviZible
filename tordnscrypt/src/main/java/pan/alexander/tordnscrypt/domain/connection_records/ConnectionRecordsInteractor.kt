@@ -14,30 +14,35 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.domain.connection_records
 
 import android.util.Log
 import pan.alexander.tordnscrypt.App
+import pan.alexander.tordnscrypt.di.logreader.LogReaderScope
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.lang.Exception
-import kotlin.collections.HashSet
+import java.lang.ref.WeakReference
+import javax.inject.Inject
 
-class ConnectionRecordsInteractor(private val connectionRecordsRepository: ConnectionRecordsRepository) {
+@LogReaderScope
+class ConnectionRecordsInteractor @Inject constructor(
+    private val connectionRecordsRepository: ConnectionRecordsRepository,
+    private val converter: dagger.Lazy<ConnectionRecordsConverter>
+) {
     private val applicationContext = App.instance.applicationContext
-    private val listeners: HashSet<OnConnectionRecordsUpdatedListener?> = HashSet()
-    private var converter: ConnectionRecordsConverter? = null
+    private val listeners: HashMap<Class<*>, WeakReference<OnConnectionRecordsUpdatedListener>> = hashMapOf()
     private var parser: ConnectionRecordsParser? = null
 
-    fun addListener(listener: OnConnectionRecordsUpdatedListener) {
-        listeners.add(listener)
+    fun <T: OnConnectionRecordsUpdatedListener> addListener(listener: T?) {
+        listener?.let { listeners[it.javaClass] = WeakReference(it) }
     }
 
-    fun removeListener(listener: OnConnectionRecordsUpdatedListener) {
-        listeners.remove(listener)
-        stopConverter()
+    fun <T: OnConnectionRecordsUpdatedListener> removeListener(listener: T?) {
+        listener?.let { listeners.remove(it.javaClass) }
+        //stopConverter()
     }
 
     fun hasAnyListener(): Boolean {
@@ -62,8 +67,7 @@ class ConnectionRecordsInteractor(private val connectionRecordsRepository: Conne
     fun stopConverter(forceStop: Boolean = false) {
         if (listeners.isEmpty() || forceStop) {
             connectionRecordsRepository.connectionRawRecordsNoMoreRequired()
-            converter?.onStop()
-            converter = null
+            converter.get().onStop()
             parser = null
         }
     }
@@ -75,7 +79,6 @@ class ConnectionRecordsInteractor(private val connectionRecordsRepository: Conne
             return
         }
 
-        converter = converter ?: ConnectionRecordsConverter(context)
         parser = parser ?: ConnectionRecordsParser(context)
 
         var rawConnections: List<ConnectionRecord?> = emptyList()
@@ -83,7 +86,10 @@ class ConnectionRecordsInteractor(private val connectionRecordsRepository: Conne
         try {
             rawConnections = connectionRecordsRepository.getRawConnectionRecords()
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "ConnectionRecordsInteractor getRawConnectionRecords exception ${e.message} ${e.cause}")
+            Log.e(
+                LOG_TAG,
+                "ConnectionRecordsInteractor getRawConnectionRecords exception ${e.message} ${e.cause}"
+            )
         }
 
         if (rawConnections.isEmpty()) {
@@ -93,9 +99,12 @@ class ConnectionRecordsInteractor(private val connectionRecordsRepository: Conne
         var connectionRecords: List<ConnectionRecord>? = emptyList()
 
         try {
-            connectionRecords = converter?.convertRecords(rawConnections)
+            connectionRecords = converter.get().convertRecords(rawConnections)
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "ConnectionRecordsInteractor convertRecords exception ${e.message} ${e.cause}")
+            Log.e(
+                LOG_TAG,
+                "ConnectionRecordsInteractor convertRecords exception ${e.message} ${e.cause}"
+            )
         }
 
         if (connectionRecords?.isEmpty() == true) {
@@ -106,20 +115,21 @@ class ConnectionRecordsInteractor(private val connectionRecordsRepository: Conne
         try {
             records = parser?.formatLines(connectionRecords ?: emptyList())
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "ConnectionRecordsInteractor formatLines exception ${e.message} ${e.cause}")
+            Log.e(
+                LOG_TAG,
+                "ConnectionRecordsInteractor formatLines exception ${e.message} ${e.cause}"
+            )
         }
 
         if (records.isNullOrBlank()) {
             return
         }
 
-        val listeners = listeners.toHashSet()
-
         listeners.forEach { listener ->
-            if (listener?.isActive() == true) {
-                listener.onConnectionRecordsUpdated(records)
+            if (listener.value.get()?.isActive() == true) {
+                listener.value.get()?.onConnectionRecordsUpdated(records)
             } else {
-                listener?.let { removeListener(it) }
+                removeListener(listener.value.get())
 
             }
         }

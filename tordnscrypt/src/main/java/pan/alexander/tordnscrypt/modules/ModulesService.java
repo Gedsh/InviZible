@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.modules;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.NotificationManager;
@@ -62,6 +62,7 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionDismissNotification;
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionRecoverService;
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionRestartDnsCrypt;
@@ -82,6 +83,9 @@ import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.slowdownLo
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.speedupLoop;
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.startArpScanner;
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.stopArpScanner;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
@@ -92,11 +96,12 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 public class ModulesService extends Service {
     public static final int DEFAULT_NOTIFICATION_ID = 101102;
 
-    public static boolean serviceIsRunning = false;
+    public static volatile boolean serviceIsRunning = false;
 
     private final static int TIMER_HIGH_SPEED = 1000;
     private final static int TIMER_LOW_SPEED = 30000;
@@ -107,12 +112,14 @@ public class ModulesService extends Service {
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultSharedPreferences;
     @Inject
     public Lazy<ConnectionCheckerInteractor> internetCheckerInteractor;
+    @Inject
+    public Lazy<ModulesReceiver> modulesReceiver;
 
     private static WakeLocksManager wakeLocksManager;
-
-    ModulesBroadcastReceiver modulesBroadcastReceiver;
 
     @Inject
     public volatile Lazy<Handler> handler;
@@ -152,7 +159,11 @@ public class ModulesService extends Service {
                 message = usageStatistic.getMessage(System.currentTimeMillis());
             }
 
-            ModulesServiceNotificationManager serviceNotificationManager = new ModulesServiceNotificationManager(this, systemNotificationManager, UsageStatisticKt.getStartTime());
+            ModulesServiceNotificationManager serviceNotificationManager = new ModulesServiceNotificationManager(
+                    this,
+                    systemNotificationManager,
+                    UsageStatistics.getStartTime()
+            );
             serviceNotificationManager.sendNotification(title, message);
         }
 
@@ -164,7 +175,9 @@ public class ModulesService extends Service {
 
         startModulesThreadsTimer();
 
-        startArpScanner();
+        if (defaultSharedPreferences.get().getBoolean(ARP_SPOOFING_DETECTION, false)) {
+            startArpScanner();
+        }
     }
 
 
@@ -191,7 +204,11 @@ public class ModulesService extends Service {
                 message = usageStatistic.getMessage(System.currentTimeMillis());
             }
 
-            ModulesServiceNotificationManager notification = new ModulesServiceNotificationManager(this, systemNotificationManager, UsageStatisticKt.getStartTime());
+            ModulesServiceNotificationManager notification = new ModulesServiceNotificationManager(
+                    this,
+                    systemNotificationManager,
+                    UsageStatistics.getStartTime()
+            );
             notification.sendNotification(title, message);
             usageStatistic.setServiceNotification(notification);
 
@@ -949,7 +966,7 @@ public class ModulesService extends Service {
             handler.get().removeCallbacksAndMessages(null);
         }
 
-        InternetSharingChecker.resetTetherInterfaceName();
+        InternetSharingChecker.resetTetherInterfaceNames();
 
         serviceIsRunning = false;
 
@@ -1010,28 +1027,24 @@ public class ModulesService extends Service {
     }
 
     private void setBroadcastReceiver() {
-        if (modulesStatus.getMode() == ROOT_MODE
-                && !modulesStatus.isUseModulesWithRoot()
-                && modulesBroadcastReceiver == null) {
-            modulesBroadcastReceiver = new ModulesBroadcastReceiver(this, arpScanner);
-            modulesBroadcastReceiver.registerReceivers();
-            internetCheckerInteractor.get().addListener(modulesBroadcastReceiver);
-        } else if (modulesStatus.getMode() != ROOT_MODE
-                && modulesBroadcastReceiver != null) {
+        ModulesReceiver receiver = modulesReceiver.get();
+        OperationMode mode = modulesStatus.getMode();
+        if ((mode == VPN_MODE || mode == PROXY_MODE
+                || mode == ROOT_MODE && !modulesStatus.isUseModulesWithRoot())) {
+            receiver.registerReceivers(this);
+            internetCheckerInteractor.get().addListener(receiver);
+        } else {
             unregisterModulesBroadcastReceiver();
-            internetCheckerInteractor.get().removeListener(modulesBroadcastReceiver);
-            modulesBroadcastReceiver = null;
+            internetCheckerInteractor.get().removeListener(receiver);
         }
 
     }
 
     private void unregisterModulesBroadcastReceiver() {
-        if (modulesBroadcastReceiver != null) {
-            try {
-                modulesBroadcastReceiver.unregisterReceivers();
-            } catch (Exception e) {
-                Log.i(LOG_TAG, "ModulesService unregister receiver exception " + e.getMessage());
-            }
+        try {
+            modulesReceiver.get().unregisterReceivers();
+        } catch (Exception e) {
+            Log.i(LOG_TAG, "ModulesService unregister receiver exception " + e.getMessage());
         }
     }
 
@@ -1122,13 +1135,19 @@ public class ModulesService extends Service {
     }
 
     private void startArpScanner() {
-        arpScanner = ArpScanner.INSTANCE.getInstance(this.getApplicationContext(), handler.get());
-        arpScanner.start(this.getApplicationContext());
+        try {
+            arpScanner = ArpScanner.getArpComponent().get();
+            arpScanner.start();
+        } catch (Exception e) {
+            loge("ModulesService startArpScanner", e);
+        }
     }
 
     private void stopArpScanner() {
         if (arpScanner != null) {
-            arpScanner.stop(this);
+            arpScanner.stop();
+            arpScanner = null;
+            ArpScanner.releaseArpComponent();
         }
     }
 

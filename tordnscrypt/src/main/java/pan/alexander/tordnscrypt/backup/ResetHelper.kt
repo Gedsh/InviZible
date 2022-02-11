@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.backup
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Activity
@@ -44,7 +44,9 @@ class ResetHelper(
         cachedExecutor.submit {
             try {
 
-                registerReceiver(activityWeakReference.get())
+                val activity = activityWeakReference.get() ?: return@submit
+
+                registerReceiver(activity)
 
                 if (ModulesStatus.getInstance().isUseModulesWithRoot) {
                     stopAllRunningModulesWithRootCommand()
@@ -56,7 +58,7 @@ class ResetHelper(
 
                 check(!interruptInstallation) { "Installation interrupted" }
 
-                unRegisterReceiver(activityWeakReference.get())
+                unRegisterReceiver(activity)
 
                 removeInstallationDirsIfExists()
                 createLogsDir()
@@ -71,17 +73,17 @@ class ResetHelper(
 
                 correctAppDir()
 
-                val code = saveSomeOldInfo(activityWeakReference.get())
-                val defaultSharedPref = PreferenceManager.getDefaultSharedPreferences(activityWeakReference.get())
+                val code = saveSomeOldInfo(activity)
+                val defaultSharedPref = PreferenceManager.getDefaultSharedPreferences(activity)
                 resetSharedPreferences(defaultSharedPref)
-                val sharedPreferences = activityWeakReference.get()?.getSharedPreferences(
+                val sharedPreferences = activity.getSharedPreferences(
                     SharedPreferencesModule.APP_PREFERENCES_NAME, Context.MODE_PRIVATE)
                 resetSharedPreferences(sharedPreferences)
-                restoreOldInfo(activityWeakReference.get(), code)
+                restoreOldInfo(activity, code)
 
                 savePreferencesModulesInstalled(true)
 
-                refreshModulesStatus(activityWeakReference.get())
+                refreshModulesStatus(activity)
 
             } catch (e: Exception) {
                 backupFragmentWeakReference.get()?.showToast(activityWeakReference.get()?.getString(R.string.wrong))

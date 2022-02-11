@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.data.connection_checker
@@ -24,14 +24,32 @@ import javax.inject.Inject
 
 class ConnectionCheckerRepositoryImpl @Inject constructor(
     private val connectionCheckerDataSource: ConnectionCheckerDataSource,
-): ConnectionCheckerRepository {
+) : ConnectionCheckerRepository {
 
-    override fun checkInternetAvailableOverHttp(site: String): Boolean {
-        return connectionCheckerDataSource.checkInternetAvailableOverHttp(site)
+    override fun checkInternetAvailableOverHttp(
+        site: String,
+        proxyAddress: String,
+        proxyPort: Int
+    ): Boolean {
+        return connectionCheckerDataSource.checkInternetAvailableOverHttp(
+            site,
+            proxyAddress,
+            proxyPort
+        )
     }
 
-    override fun checkInternetAvailableOverSocks(ip: String, port: Int, withTor: Boolean): Boolean {
-        return connectionCheckerDataSource.checkInternetAvailableOverSocks(ip, port, withTor)
+    override fun checkInternetAvailableOverSocks(
+        ip: String,
+        port: Int,
+        proxyAddress: String,
+        proxyPort: Int
+    ): Boolean {
+        return connectionCheckerDataSource.checkInternetAvailableOverSocks(
+            ip,
+            port,
+            proxyAddress,
+            proxyPort
+        )
     }
 
     override fun checkNetworkAvailable(): Boolean {

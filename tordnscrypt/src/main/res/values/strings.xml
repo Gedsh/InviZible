@@ -190,6 +190,8 @@
     <string name="pref_common_mitm_categ">MITM attack detection</string>
     <string name="pref_common_arp_spoofing_detection">ARP spoofing detection</string>
     <string name="pref_common_arp_spoofing_detection_summ">Detect Man-in-the-middle ARP spoofing and rogue DHCP attacks in Wi-Fi networks.</string>
+    <string name="pref_common_rogue_dhcp_detection">Rogue DHCP detection</string>
+    <string name="pref_common_rogue_dhcp_detection_summ">Detect Man-in-the-middle rogue DHCP attacks in Wi-Fi networks.</string>
     <string name="pref_common_arp_block_internet">Block internet when an attack is detected</string>
     <string name="pref_common_arp_block_internet_summ">Internet connection will be blocked during attack</string>
     <string name="pref_common_dns_rebind_protection">DNS rebinding protection</string>
@@ -197,6 +199,8 @@
     <string name="pref_common_proxy_categ">Proxy</string>
     <string name="pref_common_proxy">Use socks5 proxy</string>
     <string name="pref_common_proxy_summ">InviZible Pro will make all connections through the SOCKS5 proxy</string>
+    <string name="pref_common_kill_switch">Kill switch</string>
+    <string name="pref_common_kill_switch_summ">Block internet connection when Tor, DNSCrypt and Purple I2P are stopped</string>
     <string name="pref_common_refresh_rules">Refresh rules</string>
     <string name="pref_common_refresh_rules_summ">Update rules on every connectivity change</string>
     <string name="pref_common_show_notification">Show notification</string>
@@ -267,6 +271,8 @@
     <string name="notification_connecting">Connecting…</string>
     <string name="notification_waiting_network">Waiting for network…</string>
 
+    <string name="notification_internet_blocked_message">Internet blocked due to the Kill switch. Start Tor, DNSCrypt or I2P to allow the connection. Or disable the Kill switch in Common Settings.</string>
+
     <string name="tvSettings_text">Please wait…</string>
     <string name="toastSettings_saved">Settings saved</string>
 
@@ -300,7 +306,7 @@
     <string name="pref_dnscrypt_force_tcp_categ">Always use TCP to connect to upstream servers.</string>
     <string name="pref_dnscrypt_force_tcp_summ"> This can be can be useful if you need to route everything through Tor.\n
         Otherwise, leave this to false, as it doesn\'t improve security (dnscrypt-proxy will always encrypt everything even using UDP), and can only increase latency.
-        Do not enable if you want to use Tor onion sites!</string>
+    </string>
     <string name="pref_dnscrypt_force_tcp" translatable="false">force_tcp</string>
 
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS proxy.</string>
@@ -465,6 +471,12 @@
     <string name="pref_tor_clearnet">Host or IP for bypass</string>
     <string name="pref_tor_unlock_edit">Edit Host or IP</string>
     <string name="pref_tor_unlock_disabled">Disabled</string>
+    <string name="pref_tor_snowflake_categ" translatable="false">Snowflake</string>
+    <string name="pref_tor_snowflake_select_rendezvous">Select rendezvous</string>
+    <string name="pref_tor_snowflake_select_rendezvous_summ">
+       Hides the broker\'s domain name from the Internet provider. The broker is used to establish a connection.</string>
+    <string name="pref_tor_snowflake_amp" translatable="false">AMP</string>
+    <string name="pref_tor_snowflake_fastly" translatable="false">Fastly</string>
     <string name="pref_tor_snowflake_stun">STUN servers for SnowFlake bridges</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">Enable SOCKS output proxy</string>
     <string name="pref_tor_SOCKS_output_address" translatable="false">Socks5Proxy</string>
@@ -599,7 +611,7 @@
     <string name="about_app_ver" translatable="false">Application Version:</string>
     <string name="about_build_date" translatable="false">Build Date:</string>
     <string name="about_proc_ver" translatable="false">Processor Version:</string>
-    <string name="about_own_copyright" translatable="false">Copyright (C) 2019-2021 Garmatin Oleksandr\n All Rights Reserved\n Web Site:</string>
+    <string name="about_own_copyright" translatable="false">Copyright (C) 2019-2022 Garmatin Oleksandr\n All Rights Reserved\n Web Site:</string>
     <string name="privacy_policy_title" translatable="false">Privacy Policy</string>
     <string name="privacy_policy" translatable="false">\tInviZible Pro does not collect or share any personal or sensitive user data.
         InviZible Pro forwards internet traffic to Tor, DNSCrypt and I2P networks.
@@ -689,7 +701,7 @@
         \n\n\tInviZible Pro can use root, if your device has root privileges, or uses a local VPN to deliver Internet traffic to Tor, DNSCrypt and I2P networks.
         \n\n\tPrivacy Policy:
         \n\tInviZible Pro does not collect or share any personal or sensitive user data.
-        \n\n\tCopyright © 2019-2021
+        \n\n\tCopyright © 2019-2022
         \n\tGarmatin Oleksandr
         \n\tinvizible.soft@gmail.com
         \n\tinvizible.net/en/privacy
@@ -754,6 +766,9 @@
     <string name="pref_firewall_allow_internet_for_new_apps">Allow connections for new apps</string>
     <string name="pref_firewall_allow_internet_for_new_apps_on_summ">Internet connections for newly installed apps are allowed.</string>
     <string name="pref_firewall_allow_internet_for_new_apps_off_summ">Internet connections for newly installed applications are blocked.</string>
+    <string name="pref_firewall_show_all_apps">Show all apps</string>
+    <string name="pref_firewall_show_all_apps_on_summ">Apps are shown regardless of whether the app can connect to the Internet or not.</string>
+    <string name="pref_firewall_show_all_apps_off_summ">Only apps that can connect to the Internet are shown.</string>
     <string name="tile_change_tor_ip">Change Tor IP</string>
     <string name="tile_changing_tor_ip">Tor IP changing</string>
     <string name="tile_dialog_over_three_tiles_message">You have added more than 3 tiles to Quick Settings.

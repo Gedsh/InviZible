@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_servers;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Activity;
@@ -722,7 +722,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
                     || (dnsServerItem.isNofilter() && searchText.toLowerCase().contains("non-filtering"))
                     || (dnsServerItem.isNolog() && searchText.toLowerCase().contains("non-logging"))
                     || (!dnsServerItem.isNolog() && searchText.toLowerCase().contains("keep logs"))
-                    || (!dnsServerItem.isNofilter() && searchText.toLowerCase().contains("ad-filtering"))) {
+                    || (!dnsServerItem.isNofilter() && searchText.toLowerCase().contains("filtering"))) {
                 list_dns_servers.add(dnsServerItem);
             }
         }

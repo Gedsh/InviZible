@@ -176,7 +176,7 @@ Por favor, exclua o InviZible Pro da optimização da bateria de androd. Caso co
     <string name="pref_dnscrypt_require_nofilter_summ">"O servidor não deve forçar sua própria blacklist (para controle parental, bloqueio de propaganda…)"</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Sempre usar TCP para conectar com os servidores upstream."</string>
     <string name="pref_dnscrypt_force_tcp_summ">"Isso pode ser útil se você precisar rotear tudo através do Tor.
-Caso contrário, deixe como false, pois isso não melhora a segurança (dnscrypt-proxy sempre criptografará tudo, mesmo usando UDP) e só pode aumentar a latência. Não habilite se quiser usar sites Tor onion!"</string>
+Caso contrário, deixe como false, pois isso não melhora a segurança (dnscrypt-proxy sempre criptografará tudo, mesmo usando UDP) e só pode aumentar a latência."</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"Proxy HTTP/SOCKS"</string>
     <string name="pref_dnscrypt_use_proxy">"Ativar proxy"</string>
     <string name="pref_dnscrypt_proxy_summ">"Roteie todas as conexões TCP para um nó Tor local. Tor não suporta UDP, então defina force_tcp como true também."</string>

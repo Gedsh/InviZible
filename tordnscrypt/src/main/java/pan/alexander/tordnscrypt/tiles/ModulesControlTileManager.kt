@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.tiles
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context
@@ -42,13 +42,13 @@ import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.Constants.DEFAULT_SITES_IPS_REFRESH_INTERVAL
 import pan.alexander.tordnscrypt.utils.Utils
 import pan.alexander.tordnscrypt.utils.Utils.isInterfaceLocked
-import pan.alexander.tordnscrypt.utils.Utils.shortenTooLongSnowflakeLog
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.filemanager.FileShortener
 import pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.stopRefreshTorUnlockIPs
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.utils.root.RootCommands
+import pan.alexander.tordnscrypt.utils.root.RootCommandsMark.*
 import pan.alexander.tordnscrypt.utils.root.RootExecService.*
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper
 import javax.inject.Inject
@@ -134,7 +134,7 @@ class ModulesControlTileManager @Inject constructor(
             }
             ModuleState.RUNNING -> {
                 refreshModuleInterfaceIfAppLaunched(
-                    TorRunFragmentMark,
+                    TOR_RUN_FRAGMENT_MARK,
                     TOR_KEYWORD,
                     pathVars.torPath
                 )
@@ -166,7 +166,7 @@ class ModulesControlTileManager @Inject constructor(
             }
             ModuleState.RUNNING -> {
                 refreshModuleInterfaceIfAppLaunched(
-                    DNSCryptRunFragmentMark,
+                    DNSCRYPT_RUN_FRAGMENT_MARK,
                     DNSCRYPT_KEYWORD,
                     pathVars.dnsCryptPath
                 )
@@ -198,7 +198,7 @@ class ModulesControlTileManager @Inject constructor(
             }
             ModuleState.RUNNING -> {
                 refreshModuleInterfaceIfAppLaunched(
-                    I2PDRunFragmentMark,
+                    I2PD_RUN_FRAGMENT_MARK,
                     ITPD_KEYWORD,
                     pathVars.itpdPath
                 )
@@ -290,7 +290,7 @@ class ModulesControlTileManager @Inject constructor(
 
         Utils.startAppExitDetectService(context)
 
-        shortenTooLongSnowflakeLog(context, preferenceRepository, pathVars)
+        //shortenTooLongSnowflakeLog(context, preferenceRepository, pathVars)
     }
 
     private fun manageTor() {

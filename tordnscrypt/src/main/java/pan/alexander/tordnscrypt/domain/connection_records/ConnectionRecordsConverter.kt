@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.domain.connection_records
@@ -24,22 +24,19 @@ import android.content.SharedPreferences
 import android.os.Build
 import android.util.Log
 import androidx.preference.PreferenceManager
-import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.domain.dns_resolver.DnsInteractor
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.settings.firewall.APPS_ALLOW_GSM_PREF
-import pan.alexander.tordnscrypt.settings.firewall.APPS_ALLOW_LAN_PREF
-import pan.alexander.tordnscrypt.settings.firewall.APPS_ALLOW_ROAMING
-import pan.alexander.tordnscrypt.settings.firewall.APPS_ALLOW_WIFI_PREF
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
 import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
 import pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS
+import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
-import pan.alexander.tordnscrypt.vpn.NetworkUtils
-import pan.alexander.tordnscrypt.vpn.service.ServiceVPN
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
+import pan.alexander.tordnscrypt.vpn.VpnUtils
+import pan.alexander.tordnscrypt.vpn.service.VpnBuilder
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Future
 import javax.inject.Inject
@@ -47,25 +44,19 @@ import javax.inject.Inject
 private const val REVERSE_LOOKUP_QUEUE_CAPACITY = 100
 private const val IP_TO_HOST_ADDRESS_MAP_SIZE = 500
 
-class ConnectionRecordsConverter(context: Context) {
-
-    @Inject
-    lateinit var preferenceRepository: dagger.Lazy<PreferenceRepository>
-    @Inject
-    lateinit var dnsInteractor: dagger.Lazy<DnsInteractor>
-    @Inject
-    lateinit var cachedExecutor: CachedExecutor
-
-    init {
-        App.instance.daggerComponent.inject(this)
-    }
+class ConnectionRecordsConverter @Inject constructor(
+    context: Context,
+    preferenceRepository: PreferenceRepository,
+    private val dnsInteractor: dagger.Lazy<DnsInteractor>,
+    private val cachedExecutor: CachedExecutor
+) {
 
     private val sharedPreferences: SharedPreferences =
         PreferenceManager.getDefaultSharedPreferences(context)
-    private val blockIPv6: Boolean = sharedPreferences.getBoolean("block_ipv6", true)
-    private var compatibilityMode = sharedPreferences.getBoolean("swCompatibilityMode", false)
-    private val meteredNetwork = NetworkUtils.isMeteredNetwork(context)
-    private val vpnDNS = ServiceVPN.vpnDnsSet
+    private val blockIPv6: Boolean = sharedPreferences.getBoolean(BLOCK_IPv6, true)
+    private var compatibilityMode = sharedPreferences.getBoolean(COMPATIBILITY_MODE, false)
+    private val meteredNetwork = NetworkChecker.isMeteredNetwork(context)
+    private val vpnDNS = VpnBuilder.vpnDnsSet
     private val modulesStatus = ModulesStatus.getInstance()
     private val fixTTL = (modulesStatus.isFixTTL && modulesStatus.mode == OperationMode.ROOT_MODE
             && !modulesStatus.isUseModulesWithRoot)
@@ -76,22 +67,22 @@ class ConnectionRecordsConverter(context: Context) {
     private val ipToHostAddressMap = mutableMapOf<String, String>()
     private var futureTask: Future<*>? = null
 
-    private val firewallEnabled = preferenceRepository.get().getBoolPreference("FirewallEnabled")
+    private val firewallEnabled = preferenceRepository.getBoolPreference(FIREWALL_ENABLED)
     private var appsAllowed = mutableSetOf<Int>()
     private val appsLanAllowed = mutableListOf<Int>()
 
     init {
         if (firewallEnabled) {
-            preferenceRepository.get().getStringSetPreference(APPS_ALLOW_LAN_PREF)
+            preferenceRepository.getStringSetPreference(APPS_ALLOW_LAN_PREF)
                 .forEach { appsLanAllowed.add(it.toInt()) }
 
             var tempSet: MutableSet<String>? = null
-            if (NetworkUtils.isWifiActive(context) || NetworkUtils.isEthernetActive(context)) {
-                tempSet = preferenceRepository.get().getStringSetPreference(APPS_ALLOW_WIFI_PREF)
-            } else if (NetworkUtils.isCellularActive(context)) {
-                tempSet = preferenceRepository.get().getStringSetPreference(APPS_ALLOW_GSM_PREF)
-            } else if (NetworkUtils.isRoaming(context)) {
-                tempSet = preferenceRepository.get().getStringSetPreference(APPS_ALLOW_ROAMING)
+            if (NetworkChecker.isWifiActive(context) || NetworkChecker.isEthernetActive(context)) {
+                tempSet = preferenceRepository.getStringSetPreference(APPS_ALLOW_WIFI_PREF)
+            } else if (NetworkChecker.isCellularActive(context)) {
+                tempSet = preferenceRepository.getStringSetPreference(APPS_ALLOW_GSM_PREF)
+            } else if (NetworkChecker.isRoaming(context)) {
+                tempSet = preferenceRepository.getStringSetPreference(APPS_ALLOW_ROAMING)
             }
 
             tempSet?.forEach { appsAllowed.add(it.toInt()) }
@@ -229,7 +220,7 @@ class ConnectionRecordsConverter(context: Context) {
         }
 
         if (dnsQueryLogRecordsSublist.isNotEmpty()) {
-            dnsQueryLogRecords.removeAll(dnsQueryLogRecordsSublist)
+            dnsQueryLogRecords.removeAll(dnsQueryLogRecordsSublist.toSet())
             dnsQueryLogRecords.addAll(dnsQueryLogRecordsSublist.reversed())
         }
     }
@@ -283,7 +274,7 @@ class ConnectionRecordsConverter(context: Context) {
             || dnsQueryRawRecord.rCode != 0
         ) {
 
-            dnsQueryRawRecord.blockedByIpv6 = (dnsQueryRawRecord.hInfo.contains("block_ipv6")
+            dnsQueryRawRecord.blockedByIpv6 = (dnsQueryRawRecord.hInfo.contains(BLOCK_IPv6)
                     || dnsQueryRawRecord.daddr == "::"
                     || dnsQueryRawRecord.daddr.contains(":") && blockIPv6)
 
@@ -317,8 +308,8 @@ class ConnectionRecordsConverter(context: Context) {
             return false
         }
 
-        for (address in NetworkUtils.nonTorList) {
-            if (NetworkUtils.isIpInSubnet(destAddress, address)) {
+        for (address in VpnUtils.nonTorList) {
+            if (VpnUtils.isIpInSubnet(destAddress, address)) {
                 return true
             }
         }

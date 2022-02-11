@@ -1,0 +1,4 @@
+**InviZible Pro beta 1.4.4**
+* Fixed internet sharing in Root mode on android 11.
+* Improved firewall.
+* Minor fixes.

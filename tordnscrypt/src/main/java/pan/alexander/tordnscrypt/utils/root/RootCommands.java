@@ -16,9 +16,12 @@ package pan.alexander.tordnscrypt.utils.root;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+
+import android.content.Context;
+import android.content.Intent;
 
 import java.io.Serializable;
 import java.util.List;
@@ -34,5 +37,14 @@ public class RootCommands implements Serializable {
 
     public List<String> getCommands() {
         return this.commands;
+    }
+
+    public static void execute(Context context, List<String> commands, @RootCommandsMark int mark) {
+        RootCommands rootCommands = new RootCommands(commands);
+        Intent intent = new Intent(context, RootExecService.class);
+        intent.setAction(RootExecService.RUN_COMMAND);
+        intent.putExtra("Commands", rootCommands);
+        intent.putExtra("Mark", mark);
+        RootExecService.performAction(context, intent);
     }
 }

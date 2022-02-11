@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
@@ -104,6 +104,7 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.utils.Utils.isInterfaceLocked;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATION_MODE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE;
@@ -267,7 +268,11 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     private void setDayNightTheme() {
-        ThemeUtils.setDayNightTheme(this);
+        try {
+            ThemeUtils.setDayNightTheme(this);
+        } catch (Exception e) {
+            loge("MainActivity setDayNightTheme", e);
+        }
     }
 
     private void checkUpdates() {
@@ -295,7 +300,7 @@ public class MainActivity extends LangAppCompatActivity
 
         Intent intent = getIntent();
         if (intent.getBooleanExtra(ArpScannerKt.MITM_ATTACK_WARNING, false)
-                && (ArpScanner.INSTANCE.getArpAttackDetected() || ArpScanner.INSTANCE.getDhcpGatewayAttackDetected())) {
+                && (ArpScanner.getArpAttackDetected() || ArpScanner.getDhcpGatewayAttackDetected())) {
 
             handler.postDelayed(() -> {
                 DialogFragment commandResult = NotificationDialogFragment.newInstance(getString(R.string.notification_mitm));
@@ -373,8 +378,8 @@ public class MainActivity extends LangAppCompatActivity
         PreferenceRepository preferences = preferenceRepository.get();
         boolean busyBoxIsAvailable = preferences.getBoolPreference("bbOK");
 
-        boolean mitmDetected = ArpScanner.INSTANCE.getArpAttackDetected()
-                || ArpScanner.INSTANCE.getDhcpGatewayAttackDetected();
+        boolean mitmDetected = ArpScanner.getArpAttackDetected()
+                || ArpScanner.getDhcpGatewayAttackDetected();
 
         fixTTL = fixTTL && !useModulesWithRoot;
 
@@ -567,7 +572,7 @@ public class MainActivity extends LangAppCompatActivity
         } else if (id == R.id.item_root) {
             showInfoAboutRoot();
         } else if (id == R.id.item_new_identity) {
-            newTorIdentity();
+            newTorIdentity(item);
         } else if (id == R.id.menu_root_mode) {
             switchToRootMode(item);
         } else if (id == R.id.menu_vpn_mode) {
@@ -600,7 +605,7 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     @SuppressLint("InflateParams")
-    private void newTorIdentity() {
+    private void newTorIdentity(MenuItem newIdentityMenuItem) {
         if (modulesStatus != null && newIdentityMenuItem != null && modulesStatus.getTorState() == RUNNING) {
 
             if (rotateAnimation == null || animatingImage == null) {
@@ -624,7 +629,7 @@ public class MainActivity extends LangAppCompatActivity
             }
 
             handler.postDelayed(() -> {
-                if (!isFinishing() && newIdentityMenuItem != null && newIdentityMenuItem.getActionView() != null) {
+                if (!isFinishing() && newIdentityMenuItem.getActionView() != null) {
                     Toast.makeText(this, this.getText(R.string.toast_new_tor_identity), Toast.LENGTH_SHORT).show();
                     newIdentityMenuItem.getActionView().clearAnimation();
                     newIdentityMenuItem.setActionView(null);
@@ -847,8 +852,8 @@ public class MainActivity extends LangAppCompatActivity
     private void showInfoAboutRoot() {
         boolean rootIsAvailable = preferenceRepository.get().getBoolPreference(ROOT_IS_AVAILABLE);
         boolean busyBoxIsAvailable = preferenceRepository.get().getBoolPreference("bbOK");
-        boolean mitmDetected = ArpScanner.INSTANCE.getArpAttackDetected()
-                || ArpScanner.INSTANCE.getDhcpGatewayAttackDetected();
+        boolean mitmDetected = ArpScanner.getArpAttackDetected()
+                || ArpScanner.getDhcpGatewayAttackDetected();
 
         if (mitmDetected) {
             DialogFragment commandResult = NotificationDialogFragment.newInstance(getString(R.string.notification_mitm));

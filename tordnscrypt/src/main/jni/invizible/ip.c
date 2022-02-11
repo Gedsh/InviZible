@@ -18,7 +18,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 #include "invizible.h"
@@ -315,7 +315,7 @@ void handle_ip(const struct arguments *args,
         allowed = 1; // could be a lingering/blocked session
     else if (protocol == IPPROTO_TCP
              && (!syn || (!args->fwd53 && uid == 0 && dport == 53))
-             && strcmp(dest, "10.191.0.1") != 0)
+             /*&& strcmp(dest, "10.191.0.1") != 0*/)
         allowed = 1; // assume existing session
     else {
         jobject objPacket = create_packet(
@@ -326,12 +326,12 @@ void handle_ip(const struct arguments *args,
             redirect = NULL;
     }
 
-    if (args->fwd53 && dport == 53 && uid != own_uid
+    /*if (args->fwd53 && dport == 53 && uid != own_uid
         && (redirect == NULL || *redirect->raddr == 0 || redirect->rport == 0)) {
         allowed = 0;
         log_android(ANDROID_LOG_ERROR, "Direct DNS connection for v%d p%d %s/%u syn %d not allowed",
                     version, protocol, dest, dport, syn);
-    }
+    }*/
 
     // Handle allowed traffic
     if (allowed) {

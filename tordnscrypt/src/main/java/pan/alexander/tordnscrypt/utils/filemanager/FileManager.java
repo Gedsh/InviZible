@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.utils.filemanager;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
@@ -65,6 +65,7 @@ import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveB
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.writeToTextFile;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.FILE_OPERATIONS_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
@@ -90,8 +91,10 @@ public class FileManager {
         public void onReceive(Context context, Intent intent) {
             if (intent != null) {
                 final String action = intent.getAction();
-                if (action == null || action.equals("") || ((intent.getIntExtra("Mark", 0) !=
-                        RootExecService.FileOperationsMark))) return;
+                if (action == null
+                        || action.equals("")
+                        || ((intent.getIntExtra("Mark", 0) != FILE_OPERATIONS_MARK))) return;
+
                 Log.i(LOG_TAG, "FileOperations onReceive");
 
                 if (action.equals(RootExecService.COMMAND_RESULT)) {
@@ -1000,12 +1003,8 @@ public class FileManager {
                     "restorecon " + filePath + " 2> /dev/null",
                     pathVars.getBusyboxPath() + "sleep 1 2> /dev/null"
             ));
-            RootCommands rootCommands = new RootCommands(commands);
-            Intent intent = new Intent(context, RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands", rootCommands);
-            intent.putExtra("Mark", RootExecService.FileOperationsMark);
-            RootExecService.performAction(context, intent);
+
+            RootCommands.execute(context, commands, FILE_OPERATIONS_MARK);
 
             waitRestoreAccessWithRoot();
         }

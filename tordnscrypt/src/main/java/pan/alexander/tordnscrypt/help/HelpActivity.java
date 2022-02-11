@@ -15,11 +15,10 @@ package pan.alexander.tordnscrypt.help;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
-import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Build;
@@ -70,6 +69,7 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.deleteFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.HELP_ACTIVITY_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
@@ -250,12 +250,8 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                 busyboxPath + "chmod -R 755 logs_dir 2> /dev/null",
                 busyboxPath + "echo 'Logs Saved' 2> /dev/null"
         ));
-        RootCommands rootCommands = new RootCommands(logcatCommands);
-        Intent intent = new Intent(this, RootExecService.class);
-        intent.setAction(RootExecService.RUN_COMMAND);
-        intent.putExtra("Commands", rootCommands);
-        intent.putExtra("Mark", RootExecService.HelpActivityMark);
-        RootExecService.performAction(this, intent);
+
+        RootCommands.execute(this, logcatCommands, HELP_ACTIVITY_MARK);
     }
 
 

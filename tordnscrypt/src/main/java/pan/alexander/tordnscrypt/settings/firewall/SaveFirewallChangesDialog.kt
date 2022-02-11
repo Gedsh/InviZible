@@ -1,5 +1,3 @@
-package pan.alexander.tordnscrypt.dialogs
-
 /*
     This file is part of InviZible Pro.
 
@@ -16,38 +14,23 @@ package pan.alexander.tordnscrypt.dialogs
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
-*/
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
+ */
+
+package pan.alexander.tordnscrypt.settings.firewall
 
 import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import pan.alexander.tordnscrypt.R
+import pan.alexander.tordnscrypt.dialogs.ExtendedDialogFragment
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.settings.firewall.*
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import java.lang.Exception
-import java.lang.ref.WeakReference
 
-private var instance: SaveFirewallChanges? = null
-private var firewallFragmentWeakReference: WeakReference<FirewallFragment>? = null
-
-class SaveFirewallChanges private constructor() : ExtendedDialogFragment() {
+class SaveFirewallChangesDialog : ExtendedDialogFragment() {
 
     val modulesStatus = ModulesStatus.getInstance()
-
-    companion object INSTANCE {
-        fun getInstance(_firewallFragment: FirewallFragment): SaveFirewallChanges? {
-
-            firewallFragmentWeakReference = WeakReference<FirewallFragment>(_firewallFragment)
-
-            if (instance == null) {
-                instance = SaveFirewallChanges()
-            }
-
-            return instance
-        }
-    }
 
     override fun assignBuilder(): AlertDialog.Builder? {
 
@@ -56,9 +39,12 @@ class SaveFirewallChanges private constructor() : ExtendedDialogFragment() {
             return null
         }
 
+        val firewallFragment = parentFragmentManager.findFragmentByTag(FirewallFragment.TAG)
+                as? FirewallFragment ?: return null
+
         val modulesRunning = modulesStatus.dnsCryptState == ModuleState.RUNNING
                 || modulesStatus.torState == ModuleState.RUNNING
-        val firewallEnabled = firewallFragmentWeakReference?.get()?.firewallEnabled ?: false
+        val firewallEnabled = firewallFragment.firewallEnabled
 
         val message = if (!firewallEnabled || firewallEnabled && modulesRunning) {
             activity.getString(R.string.ask_save_changes)
@@ -74,7 +60,7 @@ class SaveFirewallChanges private constructor() : ExtendedDialogFragment() {
 
         builder.setPositiveButton(R.string.ok) { _, _ ->
             try {
-                firewallFragmentWeakReference?.get()?.saveFirewallChanges()
+                firewallFragment.viewModel.saveFirewallChanges()
             } catch (e: Exception) {
                 Log.e(LOG_TAG, "SaveFirewallChanges exception ${e.message} ${e.cause}")
             } finally {
@@ -96,10 +82,7 @@ class SaveFirewallChanges private constructor() : ExtendedDialogFragment() {
         return builder
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-
-        instance = null
-        firewallFragmentWeakReference = null
+    companion object {
+        const val TAG = "pan.alexander.tordnscrypt.settings.firewall.SaveFirewallChangesDialog"
     }
 }

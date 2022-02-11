@@ -16,12 +16,12 @@ package pan.alexander.tordnscrypt.iptables;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Handler;
 import android.os.Process;
 import android.util.Log;
 
@@ -41,9 +41,8 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
-import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
-import pan.alexander.tordnscrypt.vpn.NetworkUtils;
+import pan.alexander.tordnscrypt.vpn.VpnUtils;
 
 import static pan.alexander.tordnscrypt.iptables.Tethering.usbModemAddressesRange;
 import static pan.alexander.tordnscrypt.iptables.Tethering.vpnInterfaceName;
@@ -58,12 +57,23 @@ import static pan.alexander.tordnscrypt.utils.Constants.G_DNG_41;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_42;
 import static pan.alexander.tordnscrypt.utils.Constants.HTTP_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_BLOCK_INTERNET;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BLOCK_HTTP;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BYPASS_LAN;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.GSM_ON_REQUESTED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR_CLEARNET;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_UNLOCK;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.KILL_SWITCH;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OWN_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.WIFI_ON_REQUESTED;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -73,8 +83,15 @@ import javax.inject.Inject;
 
 public class ModulesIptablesRules extends IptablesRulesSender {
 
+    private static final int DELAY_ENABLING_INTERNET_SEC = 3;
+
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    public Lazy<Handler> handler;
+    @Inject
+    public Lazy<KillSwitchNotification> killSwitchNotification;
+    private static boolean killSwitchActive;
 
     String iptables = "iptables ";
     String ip6tables = "ip6tables ";
@@ -95,9 +112,9 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
         PreferenceRepository preferences = preferenceRepository.get();
         runModulesWithRoot = shPref.getBoolean(RUN_MODULES_WITH_ROOT, false);
-        routeAllThroughTor = shPref.getBoolean("pref_fast_all_through_tor", true);
-        lan = shPref.getBoolean("Allow LAN", false);
-        blockHttp = shPref.getBoolean("pref_fast_block_http", false);
+        routeAllThroughTor = shPref.getBoolean(ALL_THROUGH_TOR, true);
+        lan = shPref.getBoolean(BYPASS_LAN, true);
+        blockHttp = shPref.getBoolean(BLOCK_HTTP, false);
         ignoreSystemDNS = shPref.getBoolean(IGNORE_SYSTEM_DNS, false);
         apIsOn = preferences.getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON);
         modemIsOn = preferences.getBoolPreference(PreferenceKeys.USB_MODEM_IS_ON);
@@ -109,11 +126,13 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
         boolean ttlFix = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE) && !modulesStatus.isUseModulesWithRoot();
-        boolean useProxy = shPref.getBoolean("swUseProxy", false);
+        boolean useProxy = shPref.getBoolean(USE_PROXY, false);
 
-        boolean arpSpoofingDetection = shPref.getBoolean("pref_common_arp_spoofing_detection", false);
-        boolean blockInternetWhenArpAttackDetected = shPref.getBoolean("pref_common_arp_block_internet", false);
-        boolean mitmDetected = ArpScanner.INSTANCE.getArpAttackDetected() || ArpScanner.INSTANCE.getDhcpGatewayAttackDetected();
+        boolean arpSpoofingDetection = shPref.getBoolean(ARP_SPOOFING_DETECTION, false);
+        boolean blockInternetWhenArpAttackDetected = shPref.getBoolean(ARP_SPOOFING_BLOCK_INTERNET, false);
+        boolean mitmDetected = ArpScanner.getArpAttackDetected() || ArpScanner.getDhcpGatewayAttackDetected();
+
+        boolean killSwitch = shPref.getBoolean(KILL_SWITCH, false);
 
         List<String> commands = new ArrayList<>();
 
@@ -126,7 +145,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         String bypassLanFilter = "";
         if (lan) {
             StringBuilder nonTorRanges = new StringBuilder();
-            for (String address : NetworkUtils.nonTorList) {
+            for (String address : VpnUtils.nonTorList) {
                 nonTorRanges.append(address).append(" ");
             }
             nonTorRanges.deleteCharAt(nonTorRanges.lastIndexOf(" "));
@@ -294,29 +313,20 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         }
 
         if (arpSpoofingDetection && blockInternetWhenArpAttackDetected && mitmDetected) {
-            commands = new ArrayList<>(Arrays.asList(
-                    "TOR_UID=" + appUID,
-                    iptables + "-I OUTPUT -j DROP",
-                    ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
-                    ip6tables + "-D OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT 2> /dev/null || true",
-                    ip6tables + "-I OUTPUT -j DROP",
-                    ip6tables + "-I OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT",
-                    iptables + "-t nat -F tordnscrypt_nat_output 2> /dev/null",
-                    iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output 2> /dev/null || true",
-                    iptables + "-F tordnscrypt 2> /dev/null",
-                    iptables + "-D OUTPUT -j tordnscrypt 2> /dev/null || true",
-                    busybox + "sleep 1",
-                    iptables + "-N tordnscrypt 2> /dev/null",
-                    iptables + "-A tordnscrypt -m owner ! --uid-owner $TOR_UID -j REJECT",
-                    iptables + "-I OUTPUT -j tordnscrypt",
-                    unblockHOTSPOT,
-                    blockHOTSPOT,
-                    iptables + "-D OUTPUT -j DROP 2> /dev/null || true"
-            ));
+
+            commands = getBlockingRules(appUID, blockHOTSPOT, unblockHOTSPOT);
+
+        } else if (killSwitch && dnsCryptState != RUNNING && torState != RUNNING && itpdState != RUNNING) {
+
+            showKillSwitchNotification();
+
+            commands = getBlockingRules(appUID, blockHOTSPOT, unblockHOTSPOT);
+
         } else if (dnsCryptState == RUNNING && torState == RUNNING) {
 
-            if (!routeAllThroughTor) {
+            cancelKillSwitchNotificationIfNeeded();
 
+            if (!routeAllThroughTor) {
 
                 commands = new ArrayList<>(Arrays.asList(
                         "TOR_UID=" + appUID,
@@ -338,6 +348,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         dnsCryptSystemDNSAllowedNat,
                         dnsCryptRootDNSAllowedNat,
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
+                        //handle onion websites
+                        iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -m string --algo bm --from 16 --to 128 --hex-string '|056f6e696f6e00|' -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort() + " 2> /dev/null || true",
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
@@ -349,6 +361,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-N tordnscrypt 2> /dev/null",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
+                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
                         dnsCryptSystemDNSAllowedFilter,
                         dnsCryptRootDNSAllowedFilter,
                         iptables + "-A tordnscrypt -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
@@ -395,6 +408,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         dnsCryptSystemDNSAllowedNat,
                         dnsCryptRootDNSAllowedNat,
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
+                        //handle onion websites
+                        iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -m string --algo bm --from 16 --to 128 --hex-string '|056f6e696f6e00|' -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort() + " 2> /dev/null || true",
                         iptables + "-t nat -A tordnscrypt_nat_output -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A tordnscrypt_nat_output -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A tordnscrypt_nat_output -m owner --uid-owner $TOR_UID -j RETURN",
@@ -413,6 +428,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-N tordnscrypt 2> /dev/null",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
+                        iptables + "-A tordnscrypt -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
                         iptables + "-A tordnscrypt -d 127.0.0.1/32 -p all -j RETURN",
                         iptables + "-A tordnscrypt -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner $TOR_UID -j ACCEPT",
                         iptables + "-A tordnscrypt -m owner --uid-owner $TOR_UID -j RETURN",
@@ -437,6 +453,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             if (commandsTether.size() > 0)
                 commands.addAll(commandsTether);
         } else if (dnsCryptState == RUNNING && torState == STOPPED) {
+
+            cancelKillSwitchNotificationIfNeeded();
 
             commands = new ArrayList<>(Arrays.asList(
                     "TOR_UID=" + appUID,
@@ -484,6 +502,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                 commands.addAll(commandsTether);
         } else if (dnsCryptState == STOPPED && torState == STOPPED) {
 
+            cancelKillSwitchNotificationIfNeeded();
+
             commands = new ArrayList<>(Arrays.asList(
                     "TOR_UID=" + appUID,
                     ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
@@ -500,6 +520,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             if (commandsTether.size() > 0)
                 commands.addAll(commandsTether);
         } else if (dnsCryptState == STOPPED && torState == RUNNING) {
+
+            cancelKillSwitchNotificationIfNeeded();
 
             if (!routeAllThroughTor) {
                 commands = new ArrayList<>(Arrays.asList(
@@ -614,10 +636,33 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             if (commandsTether.size() > 0)
                 commands.addAll(commandsTether);
         } else if (itpdState == RUNNING) {
+            cancelKillSwitchNotificationIfNeeded();
             commands = tethering.activateTethering(false);
         }
 
         return commands;
+    }
+
+    public List<String> getBlockingRules(String appUID, String blockHOTSPOT, String unblockHOTSPOT) {
+        return new ArrayList<>(Arrays.asList(
+                "TOR_UID=" + appUID,
+                iptables + "-I OUTPUT -j DROP",
+                ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
+                ip6tables + "-D OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT 2> /dev/null || true",
+                ip6tables + "-I OUTPUT -j DROP",
+                ip6tables + "-I OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT",
+                iptables + "-t nat -F tordnscrypt_nat_output 2> /dev/null",
+                iptables + "-t nat -D OUTPUT -j tordnscrypt_nat_output 2> /dev/null || true",
+                iptables + "-F tordnscrypt 2> /dev/null",
+                iptables + "-D OUTPUT -j tordnscrypt 2> /dev/null || true",
+                busybox + "sleep 1",
+                iptables + "-N tordnscrypt 2> /dev/null",
+                iptables + "-A tordnscrypt -m owner ! --uid-owner $TOR_UID -j REJECT",
+                iptables + "-I OUTPUT -j tordnscrypt",
+                unblockHOTSPOT,
+                blockHOTSPOT,
+                iptables + "-D OUTPUT -j DROP 2> /dev/null || true"
+        ));
     }
 
     @Override
@@ -666,6 +711,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         if (modulesStatus.isFixTTL()) {
             modulesStatus.setIptablesRulesUpdateRequested(context, true);
         }
+
+        cancelKillSwitchNotificationIfNeeded();
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
         runModulesWithRoot = shPref.getBoolean(RUN_MODULES_WITH_ROOT, false);
@@ -785,11 +832,44 @@ public class ModulesIptablesRules extends IptablesRulesSender {
     }
 
     private static void executeCommands(Context context, List<String> commands) {
-        RootCommands rootCommands = new RootCommands(commands);
-        Intent intent = new Intent(context, RootExecService.class);
-        intent.setAction(RootExecService.RUN_COMMAND);
-        intent.putExtra("Commands", rootCommands);
-        intent.putExtra("Mark", RootExecService.NullMark);
-        RootExecService.performAction(context, intent);
+        RootCommands.execute(context, commands, NULL_MARK);
+    }
+
+    private void showKillSwitchNotification() {
+        killSwitchNotification.get().send();
+        killSwitchActive = true;
+        logi("Kill switch activated");
+    }
+
+    private void cancelKillSwitchNotificationIfNeeded() {
+        if (killSwitchActive) {
+            killSwitchNotification.get().cancel();
+            killSwitchActive = false;
+            logi("Kill switch disabled");
+        }
+        enableInternetIfRequired();
+    }
+
+    private void enableInternetIfRequired() {
+
+        PreferenceRepository preferences = preferenceRepository.get();
+        boolean wifiOnRequested = preferences.getBoolPreference(WIFI_ON_REQUESTED);
+        boolean gsmOnRequested = preferences.getBoolPreference(GSM_ON_REQUESTED);
+
+        List<String> commands = new ArrayList<>(2);
+        if (wifiOnRequested) {
+            commands.add("svc wifi enable");
+            preferences.setBoolPreference(WIFI_ON_REQUESTED, false);
+            logi("Enabling WiFi due to a kill switch");
+        }
+        if (gsmOnRequested) {
+            commands.add("svc data enable");
+            preferences.setBoolPreference(GSM_ON_REQUESTED, false);
+            logi("Enabling GSM due to a kill switch");
+        }
+        if (!commands.isEmpty()) {
+            handler.get().postDelayed(() -> RootCommands.execute(context, commands, NULL_MARK),
+                    DELAY_ENABLING_INTERNET_SEC * 1000);
+        }
     }
 }

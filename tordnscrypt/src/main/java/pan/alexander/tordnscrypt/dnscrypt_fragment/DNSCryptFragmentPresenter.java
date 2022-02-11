@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.dnscrypt_fragment;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Activity;
@@ -94,7 +94,9 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
     private ScaleGestureDetector scaleGestureDetector;
 
     public DNSCryptFragmentPresenter(DNSCryptFragmentView view) {
-        App.getInstance().initLogReaderDaggerSubcomponent().inject(this);
+        App.getInstance()
+                .initLogReaderDaggerSubcomponent()
+                .inject(this);
         this.view = view;
     }
 
@@ -430,7 +432,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             return;
         }
 
-        if (connectionRecords.equals(savedConnectionRecords)) {
+        if (connectionRecords.equals(savedConnectionRecords) && !savedLogLines.isEmpty()) {
             return;
         }
 
@@ -445,7 +447,9 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
                 if (htmlLines != null && dnsCryptLogAutoScroll) {
                     view.setDNSCryptLogViewText(htmlLines);
                     view.scrollDNSCryptLogViewToBottom();
-                    savedConnectionRecords = connectionRecords;
+                    if (!savedLogLines.isEmpty()) {
+                        savedConnectionRecords = connectionRecords;
+                    }
                 }
             } else {
                 savedConnectionRecords = "";

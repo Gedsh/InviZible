@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.tor_fragment;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.BroadcastReceiver;
@@ -40,6 +40,7 @@ import pan.alexander.tordnscrypt.utils.root.RootExecService;
 
 import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
 import static pan.alexander.tordnscrypt.modules.ModulesService.TOR_KEYWORD;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.TOR_RUN_FRAGMENT_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -82,8 +83,9 @@ public class TorFragmentReceiver extends BroadcastReceiver {
 
         if (intent != null) {
             final String action = intent.getAction();
-            if (action == null || action.equals("") || ((intent.getIntExtra("Mark", 0) !=
-                    RootExecService.TorRunFragmentMark) &&
+            if (action == null
+                    || action.equals("")
+                    || ((intent.getIntExtra("Mark", 0) != TOR_RUN_FRAGMENT_MARK) &&
                     !action.equals(TopFragment.TOP_BROADCAST))) return;
             Log.i(LOG_TAG, "TorRunFragment onReceive");
             if (action.equals(RootExecService.COMMAND_RESULT)) {
@@ -170,12 +172,8 @@ public class TorFragmentReceiver extends BroadcastReceiver {
                     busyboxPath + "echo 'Tor_version' 2> /dev/null",
                     torPath + " --version 2> /dev/null"
             ));
-            RootCommands rootCommands = new RootCommands(commandsCheck);
-            Intent intent = new Intent(context, RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands", rootCommands);
-            intent.putExtra("Mark", RootExecService.TorRunFragmentMark);
-            RootExecService.performAction(context, intent);
+
+            RootCommands.execute(context, commandsCheck, TOR_RUN_FRAGMENT_MARK);
 
             view.setTorProgressBarIndeterminate(true);
         }

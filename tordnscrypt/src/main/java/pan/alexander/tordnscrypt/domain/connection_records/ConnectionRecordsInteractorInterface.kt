@@ -14,13 +14,13 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.domain.connection_records
 
 interface ConnectionRecordsInteractorInterface {
-    fun addOnConnectionRecordsUpdatedListener(onConnectionRecordsUpdatedListener: OnConnectionRecordsUpdatedListener)
-    fun removeOnConnectionRecordsUpdatedListener(onConnectionRecordsUpdatedListener: OnConnectionRecordsUpdatedListener)
+    fun <T: OnConnectionRecordsUpdatedListener> addOnConnectionRecordsUpdatedListener(onConnectionRecordsUpdatedListener: T)
+    fun <T: OnConnectionRecordsUpdatedListener> removeOnConnectionRecordsUpdatedListener(onConnectionRecordsUpdatedListener: T)
     fun clearConnectionRecords()
 }

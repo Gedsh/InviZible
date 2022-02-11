@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Activity;
@@ -62,6 +62,7 @@ import pan.alexander.tordnscrypt.dialogs.SendCrashReport;
 import pan.alexander.tordnscrypt.dialogs.UpdateModulesDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.CheckUpdatesDialog;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.RootCheckingProgressDialog;
+import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.installer.Installer;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
@@ -74,7 +75,6 @@ import pan.alexander.tordnscrypt.update.UpdateCheck;
 import pan.alexander.tordnscrypt.update.UpdateService;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.dialogs.Registration;
-import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
@@ -89,6 +89,8 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATI
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_READY_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TETHERING;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.TOP_FRAGMENT_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -133,6 +135,8 @@ public class TopFragment extends Fragment {
     public CachedExecutor cachedExecutor;
     @Inject
     public Lazy<ModulesVersions> modulesVersions;
+    @Inject
+    public Lazy<ConnectionCheckerInteractor> connectionChecker;
 
     private OperationMode mode = UNDEFINED;
     private boolean runModulesWithRoot = false;
@@ -483,6 +487,8 @@ public class TopFragment extends Fragment {
 
                     /////////////////////////////DONATION////////////////////////////////////////////
                     topFragment.showDonDialog(activity);
+
+                    topFragment.checkInternetConnectionIfRequired();
                 }
 
             } catch (Exception e) {
@@ -582,7 +588,7 @@ public class TopFragment extends Fragment {
         preferences.setStringPreference("DNSCrypt Servers", "");
         SharedPreferences sPref = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = sPref.edit();
-        editor.putBoolean("pref_common_tor_tethering", false);
+        editor.putBoolean(TOR_TETHERING, false);
         editor.putBoolean("pref_common_itpd_tethering", false);
         editor.apply();
 
@@ -898,7 +904,7 @@ public class TopFragment extends Fragment {
             return false;
         }
 
-        return intent.getIntExtra("Mark", 0) == RootExecService.TopFragmentMark;
+        return intent.getIntExtra("Mark", 0) == TOP_FRAGMENT_MARK;
     }
 
     private void registerReceiver(Context context) {
@@ -955,6 +961,15 @@ public class TopFragment extends Fragment {
         if (timer != null && !timer.isShutdown()) {
             timer.shutdownNow();
             timer = null;
+        }
+    }
+
+    private void checkInternetConnectionIfRequired() {
+        if (modulesStatus.getDnsCryptState() == RUNNING || modulesStatus.getTorState() == RUNNING) {
+            ConnectionCheckerInteractor checker = connectionChecker.get();
+            if (!checker.getInternetConnectionResult()) {
+                checker.checkInternetConnection();
+            }
         }
     }
 

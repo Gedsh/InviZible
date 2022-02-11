@@ -1,0 +1,6 @@
+**InviZible Pro beta 1.5.2**
+* Fixed infinite connecting status in notification.
+* Fixed display of notifications on Android 4.4.2
+* Fixed display of a kill switch notification when an ARP spoofing attack is detected.
+* Updated German translation.
+* Minor fixes and optimizations.

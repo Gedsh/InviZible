@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.vpn;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
@@ -25,15 +25,10 @@ import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.LinkProperties;
 import android.net.Network;
-import android.net.NetworkCapabilities;
-import android.net.NetworkInfo;
 import android.os.Build;
 import android.provider.Settings;
-import android.telephony.TelephonyManager;
-import android.util.Log;
 
 import androidx.annotation.Keep;
-import androidx.core.net.ConnectivityManagerCompat;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -44,9 +39,11 @@ import java.util.List;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPN;
 
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 
-public class NetworkUtils {
+public class VpnUtils {
 
     public static final ArrayList<String> nonTorList = new ArrayList<>(Arrays.asList(
             /*LAN destinations that shouldn't be routed through Tor*/
@@ -99,116 +96,6 @@ public class NetworkUtils {
         }
     }
 
-    public static boolean isConnected(Context context) {
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork());
-
-            if (capabilities != null) {
-                if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                    return true;
-                } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                    return true;
-                } else return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET);
-            }
-
-            return false;
-        } else {
-            NetworkInfo ni = (connectivityManager == null ? null : connectivityManager.getActiveNetworkInfo());
-            return (ni != null && ni.isConnected());
-        }
-    }
-
-    @SuppressWarnings("deprecation")
-    public static boolean isCellularActive(Context context) {
-
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkCapabilities capabilities = null;
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && connectivityManager != null) {
-            capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork());
-        }
-
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && capabilities != null) {
-            return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
-        } else {
-            NetworkInfo ni = (connectivityManager == null ? null : connectivityManager.getActiveNetworkInfo());
-            return (ni != null && ni.getType() == ConnectivityManager.TYPE_MOBILE);
-        }
-    }
-
-    @SuppressWarnings("deprecation")
-    public static boolean isRoaming(Context context) {
-
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkCapabilities capabilities = null;
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && connectivityManager != null) {
-            capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork());
-        }
-
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && capabilities != null) {
-
-            return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
-                    && !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_ROAMING);
-        } else {
-            NetworkInfo ni = (connectivityManager == null ? null : connectivityManager.getActiveNetworkInfo());
-            if (ni == null) {
-                TelephonyManager telephony = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-                return telephony != null && telephony.isNetworkRoaming();
-            }
-            return ni.getType() == ConnectivityManager.TYPE_MOBILE && ni.isRoaming();
-        }
-    }
-
-    @SuppressWarnings("deprecation")
-    public static boolean isWifiActive(Context context) {
-
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkCapabilities capabilities = null;
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && connectivityManager != null) {
-            capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork());
-        }
-
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && capabilities != null) {
-
-            return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
-        } else {
-            NetworkInfo ni = (connectivityManager == null ? null : connectivityManager.getActiveNetworkInfo());
-            return ni != null && ni.getType() == ConnectivityManager.TYPE_WIFI;
-        }
-    }
-
-    @SuppressWarnings("deprecation")
-    public static boolean isEthernetActive(Context context) {
-
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkCapabilities capabilities = null;
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && connectivityManager != null) {
-            capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork());
-        }
-
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && capabilities != null) {
-
-            return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET);
-        } else {
-            NetworkInfo ni = (connectivityManager == null ? null : connectivityManager.getActiveNetworkInfo());
-            return ni != null && ni.getType() == ConnectivityManager.TYPE_ETHERNET;
-        }
-    }
-
-    public static boolean isCaptivePortalDetected(Context context) {
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            if (connectivityManager != null) {
-                Network activeNetwork = connectivityManager.getActiveNetwork();
-                NetworkCapabilities networkCapabilities = activeNetwork == null ? null : connectivityManager.getNetworkCapabilities(activeNetwork);
-                return networkCapabilities != null && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL);
-            }
-        }
-
-        return false;
-    }
-
     public static List<String> getDefaultDNS(Context context) {
         List<String> listDns = new ArrayList<>();
 
@@ -225,7 +112,7 @@ public class NetworkUtils {
                     for (InetAddress d : dns) {
                         String host = d.getHostAddress();
                         if (host != null) {
-                            Log.i(LOG_TAG, "DNS from LP: " + host);
+                            logi("DNS from LP: " + host);
                             listDns.add(host.split("%")[0]);
                         }
                     }
@@ -269,7 +156,7 @@ public class NetworkUtils {
             setting = pm.getApplicationEnabledSetting(info.packageName);
         } catch (IllegalArgumentException ex) {
             setting = PackageManager.COMPONENT_ENABLED_STATE_DEFAULT;
-            Log.w(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+            logw("VpnUtils isEnabled", ex);
         }
         if (setting == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT)
             return info.applicationInfo.enabled;
@@ -326,16 +213,11 @@ public class NetworkUtils {
 
     public static boolean isPrivateDns(Context context) {
         String dns_mode = Settings.Global.getString(context.getContentResolver(), "private_dns_mode");
-        Log.i(LOG_TAG, "Private DNS mode=" + dns_mode);
+        logi("Private DNS mode=" + dns_mode);
         if (dns_mode == null) {
             dns_mode = "off";
         }
         return (!"off".equals(dns_mode));
-    }
-
-    public static boolean isMeteredNetwork(Context context) {
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        return (cm != null && ConnectivityManagerCompat.isActiveNetworkMetered(cm));
     }
 
     public synchronized static boolean isIpInSubnet(final String ip, final String network) {
@@ -362,7 +244,7 @@ public class NetworkUtils {
             final int m = (65280 >> p) & 255;
             result = (ipBin[i] & m) == (netBin[i] & m);
         } catch (Exception e) {
-            Log.e(LOG_TAG, "VPN UTIL isIpInSubnet exception " + e.getMessage() + e.getCause());
+            loge("VpnUtils isIpInSubnet", e);
         }
 
         return result;

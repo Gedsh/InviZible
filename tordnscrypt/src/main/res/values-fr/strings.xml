@@ -12,7 +12,7 @@
     <string name="tvITPDNotInstalled">"I2P n'est pas installé"</string>
     <string name="swRunOnBoot">"Lancement au démarrage du système"</string>
     <string name="root_available">"Vérifier si les Privilèges Administrateur sont disponible…"</string>
-    <string name="please_wait">"S'il vous plaît, patientez..."</string>
+    <string name="please_wait">"Veuillez patienter…"</string>
     <string name="dont_show">"Ne plus afficher"</string>
     <string name="tvDNSStop">"DNSCrypt est arrêté"</string>
     <string name="tvDNSInstalled">"DNSCrypt est installé"</string>
@@ -30,12 +30,12 @@
     <string name="tvTorRunning">"Tor en cours d'exécution"</string>
     <string name="tvTorStopping">"Arrêt de Tor"</string>
     <string name="cancel">"Annuler"</string>
-    <string name="error">"Erreur!"</string>
-    <string name="warning">"Attention!"</string>
+    <string name="error">"Erreur !"</string>
+    <string name="warning">"Attention !"</string>
     <string name="install">"Installer"</string>
     <string name="exit">"Sortir"</string>
-    <string name="done">"Fait"</string>
-    <string name="wrong">"Une erreur s'est produite!"</string>
+    <string name="done">"Terminé"</string>
+    <string name="wrong">"Une erreur s'est produite !"</string>
     <string name="install_message">"Voulez-vous terminer l'installation?"</string>
     <string name="premium">"Version Premium"</string>
     <string name="agree">"J'approuve"</string>
@@ -163,8 +163,7 @@
     <string name="pref_dnscrypt_require_nofilter_summ">"Le serveur ne doit pas appliquer sa propre liste noire (pour le contrôle parental, le blocage des publicités...)."</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Utilisez toujours le protocole TCP pour vous connecter aux serveurs en amont."</string>
     <string name="pref_dnscrypt_force_tcp_summ">" Cela peut être utile si vous avez besoin de tout faire passer par Tor.
-                Sinon, laissez cela sur faux (false), car cela n'améliore pas la sécurité (dnscrypt-proxy chiffrera toujours tout, même en utilisant l'UDP), et ne peut qu'augmenter la latence.
-                Ne l'activez pas si vous voulez utiliser les sites Tor en onion!"</string>
+                Sinon, laissez cela sur faux (false), car cela n'améliore pas la sécurité (dnscrypt-proxy chiffrera toujours tout, même en utilisant l'UDP), et ne peut qu'augmenter la latence."</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"Mandataire SOCKS."</string>
     <string name="pref_dnscrypt_use_proxy">"Activer le mandataire"</string>
     <string name="pref_dnscrypt_proxy_summ">"Router toutes les connexions TCP vers un noeud Tor local.
@@ -363,6 +362,19 @@
     <string name="buy_premium_gp">"Le Projet InviZible Pro a besoin de votre aide. Appuyez sur OK pour acheter les fonctionnalités premium."</string>
     <string name="wrong_purchase_signature_gp">"Désolé, mais il est impossible de confirmer votre achat. Vous serez remboursé au bout de 3 jours."</string>
     <string name="only_premium_feature">"Malheureusement, cette fonctionnalité n'est disponible que dans la version premium."</string>
+    <string name="agreement_text">"\ merci d'avoir choisi InviZible Pro. J'espère qu'il vous sera utile pour le respect de votre vie privée et une utilisation confortable d'Internet.
+
+\tInviZible Pro inclut Tor, DNSCrypt et Purple I2P comme modules.
+
+\tInviZible Pro peut utiliser root, si votre appareil possède des privilèges root, ou utiliser un RPV local pour acheminer le trafic Internet vers les réseaux Tor, DNSCrypt et I2P.
+
+\tPolitique de confidentialité :
+\tInviZible Pro ne collecte ni ne partage aucune donnée personnelle ou sensible des utilisateurs.
+
+\tCopyright © 2019-2022
+\tOleksandr Garmatin
+\tinvizible.soft@gmail.com
+\tinvizible.net/fr/privacy"</string>
     <string name="pref_itpd_use_HTTP_outproxy">"Mandataire HTTP sortant"</string>
     <string name="pref_itpd_HTTP_outproxy_address">"Adresse du mandataire HTTP sortant"</string>
     <string name="pref_itpd_use_Socks_outproxy">"Mandataire SOCKS sortant"</string>
@@ -495,4 +507,17 @@
     <string name="backupSaved">"Sauvegarde enregistré"</string>
     <string name="backupRestored">"Sauvegarde restauré"</string>
     <string name="thanks_for_donate_gp">"Le Projet InviZible Pro et son auteur vous expriment leur reconnaissance pour l'assistance."</string>
+    <string name="pref_tor_hardware_accel_summ">"Essayez d'utiliser l'accélération matérielle cryptographique intégrée lorsqu'elle est disponible."</string>
+    <string name="notification_connecting">"Connexion…"</string>
+    <string name="notification_waiting_network">"En attente du réseau…"</string>
+    <string name="tile_change_tor_ip">"Changer l'IP de Tor"</string>
+    <string name="tile_changing_tor_ip">"Changement d'IP de Tor"</string>
+    <string name="tile_dialog_over_three_tiles_message">"Vous avez ajouté plus de 3 tuiles aux Paramètres rapides. Veuillez n'en laisser que 3. L'ajout de plus de 3 tuiles peut entraîner des problèmes de contrôle de l'application."</string>
+    <string name="pref_common_rogue_dhcp_detection">"Découverte DHCP non autorisée"</string>
+    <string name="pref_common_rogue_dhcp_detection_summ">"Détecter les attaques DHCP de type Homme du milieu (Man-in-the-middle) dans les réseaux Wi-Fi."</string>
+    <string name="pref_tor_snowflake_select_rendezvous">"Choisir le rendez-vous"</string>
+    <string name="pref_tor_snowflake_select_rendezvous_summ">"Cache le nom de domaine de l'intermédiaire (broker) au fournisseur d'accès Internet. L'intermédiaire est utilisé pour établir une connexion."</string>
+    <string name="pref_firewall_show_all_apps">"Afficher toutes les applications"</string>
+    <string name="pref_firewall_show_all_apps_on_summ">"Les applications sont affichées, que l'application puisse se connecter à l'Internet ou non."</string>
+    <string name="pref_firewall_show_all_apps_off_summ">"Seules les applications qui peuvent se connecter à Internet sont affichées."</string>
 </resources>

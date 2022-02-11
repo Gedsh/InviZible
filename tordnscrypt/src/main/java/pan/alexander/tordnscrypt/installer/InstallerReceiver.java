@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.installer;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.BroadcastReceiver;
@@ -27,6 +27,7 @@ import android.util.Log;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
 import pan.alexander.tordnscrypt.utils.root.RootExecService;
 
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.INSTALLER_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class InstallerReceiver extends BroadcastReceiver {
@@ -92,6 +93,6 @@ public class InstallerReceiver extends BroadcastReceiver {
             return false;
         }
 
-        return intent.getIntExtra("Mark", 0) == RootExecService.InstallerMark;
+        return intent.getIntExtra("Mark", 0) == INSTALLER_MARK;
     }
 }

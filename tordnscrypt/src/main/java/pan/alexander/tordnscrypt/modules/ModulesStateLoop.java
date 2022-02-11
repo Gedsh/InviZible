@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.modules;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Intent;
@@ -114,7 +114,9 @@ public class ModulesStateLoop implements Runnable,
     private int savedIptablesCommandsHash = 0;
 
     ModulesStateLoop(ModulesService modulesService) {
-        App.getInstance().initLogReaderDaggerSubcomponent().inject(this);
+        App.getInstance()
+                .initLogReaderDaggerSubcomponent()
+                .inject(this);
 
         //Delay in sec before service can stop
         stopCounter = STOP_COUNTER_DELAY;
@@ -189,7 +191,8 @@ public class ModulesStateLoop implements Runnable,
             if (handler != null) {
                 handler.get().post(() -> Toast.makeText(modulesService, R.string.wrong, Toast.LENGTH_SHORT).show());
             }
-            Log.e(LOG_TAG, "ModulesStateLoop exception " + e.getMessage() + " " + e.getCause());
+            Log.e(LOG_TAG, "ModulesStateLoop exception " + e.getMessage() + " "
+                    + e.getCause() + "\n" + Log.getStackTraceString(e));
         }
 
     }
@@ -381,8 +384,8 @@ public class ModulesStateLoop implements Runnable,
                     ServiceVPNHelper.stop("All modules stopped", modulesService);
                 } else if (vpnServiceEnabled
                         /*Do not reload service during ARP attack to prevent loop*/
-                        && !ArpScanner.INSTANCE.getDhcpGatewayAttackDetected()
-                        && !ArpScanner.INSTANCE.getArpAttackDetected()) {
+                        && !ArpScanner.getDhcpGatewayAttackDetected()
+                        && !ArpScanner.getArpAttackDetected()) {
                     ServiceVPNHelper.reload("TTL is fixed", modulesService);
                 } else {
                     startVPNService();

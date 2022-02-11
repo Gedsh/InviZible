@@ -16,22 +16,41 @@ package pan.alexander.tordnscrypt.settings.firewall
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.os.Bundle
+import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.SwitchPreference
 import pan.alexander.tordnscrypt.R
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_SHOWS_ALL_APPS
 
-class FirewallPreferencesFragment : PreferenceFragmentCompat() {
+class FirewallPreferencesFragment : PreferenceFragmentCompat(),
+    Preference.OnPreferenceChangeListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         activity?.setTitle(R.string.pref_firewall_title)
+
+        findPreference<SwitchPreference>(FIREWALL_SHOWS_ALL_APPS)?.onPreferenceChangeListener = this
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences_firewall, rootKey)
+    }
+
+    override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+        if (preference.key == FIREWALL_SHOWS_ALL_APPS) {
+            (parentFragmentManager.findFragmentByTag(FirewallFragment.TAG) as? FirewallFragment)
+                ?.apply {
+                    viewModel.showAllApps = newValue?.toString()?.toBoolean()
+                    viewModel.getDeviceApps()
+                }
+
+            return true
+        }
+        return false
     }
 }

@@ -14,20 +14,24 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.domain.connection_checker
 
-import android.util.Log
+import android.content.SharedPreferences
 import kotlinx.coroutines.*
 import pan.alexander.tordnscrypt.di.CoroutinesModule.Companion.SUPERVISOR_JOB_IO_DISPATCHER_SCOPE
+import pan.alexander.tordnscrypt.di.SharedPreferencesModule
 import pan.alexander.tordnscrypt.domain.dns_resolver.DnsRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.Constants.*
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.enums.OperationMode
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+import pan.alexander.tordnscrypt.utils.logger.Logger.logi
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import java.io.IOException
 import java.lang.ref.WeakReference
 import java.net.SocketTimeoutException
@@ -37,9 +41,11 @@ import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
 
-const val INTERNET_CONNECTION_CHECK_INTERVAL_SEC = 10
-const val INTERNET_CONNECTION_ADDITIONAL_DELAY_SEC = 30
-const val INTERNET_CONNECTION_CHECK_SOCKET_TIMEOUT_SEC = 20
+private const val CHECK_INTERVAL_SEC = 10
+private const val ADDITIONAL_DELAY_SEC = 30
+private const val CHECK_SOCKET_TIMEOUT_SEC = 20
+private const val CHECKING_LOOP_TIMEOUT_MINT = 20
+private const val CHECKING_TIMEOUT_SEC = 120
 
 @Singleton
 class ConnectionCheckerInteractorImpl @Inject constructor(
@@ -47,7 +53,9 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
     private val pathVars: PathVars,
     @Named(SUPERVISOR_JOB_IO_DISPATCHER_SCOPE)
     private val baseCoroutineScope: CoroutineScope,
-    private val dnsRepository: DnsRepository
+    private val dnsRepository: DnsRepository,
+    @Named(SharedPreferencesModule.DEFAULT_PREFERENCES_NAME)
+    private val defaultPreferences: SharedPreferences
 ) : ConnectionCheckerInteractor {
 
     private val coroutineScope = baseCoroutineScope + CoroutineName("ConnectionCheckerInteractor")
@@ -60,17 +68,19 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
 
     @Volatile
     private var internetAvailable = false
+
     @Volatile
     private var networkAvailable = false
 
+    @Volatile
     private var task: Job? = null
-        @Synchronized get
-        @Synchronized set
 
+    @Synchronized
     override fun <T : OnInternetConnectionCheckedListener> addListener(listener: T) {
         listenersMap[listener.javaClass.name] = WeakReference(listener)
     }
 
+    @Synchronized
     override fun <T : OnInternetConnectionCheckedListener> removeListener(listener: T) {
 
         listenersMap.remove(listener.javaClass.name)
@@ -109,6 +119,7 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
         }
     }
 
+    @Synchronized
     private fun checkConnection(via: Via) {
 
         if (task?.isCompleted == false) {
@@ -116,21 +127,63 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
         }
 
         task = coroutineScope.launch {
-            while (isActive && !internetAvailable) {
-                try {
-                    check(via)
-                } catch (e: SocketTimeoutException) {
-                    logException(via, e)
-                } catch (e: IOException) {
-                    logException(via, e)
-                    checking.getAndSet(false)
-                    makeDelay(INTERNET_CONNECTION_ADDITIONAL_DELAY_SEC)
-                } catch (e: Exception) {
-                    logException(via, e)
-                } finally {
-                    checking.compareAndSet(true, false)
-                    makeDelay(INTERNET_CONNECTION_CHECK_INTERVAL_SEC)
+            tryCheckConnection(via)
+        }
+    }
+
+    private suspend fun tryCheckConnection(via: Via) {
+        try {
+            withTimeout(CHECKING_LOOP_TIMEOUT_MINT * 60_000L) {
+                while (isActive && !internetAvailable) {
+                    val available = try {
+                        withTimeout(CHECKING_TIMEOUT_SEC * 1000L) {
+                            check(via)
+                        }
+                    } catch (e: SocketTimeoutException) {
+                        logException(via, e)
+                        false
+                    } catch (e: IOException) {
+                        logException(via, e)
+                        checking.getAndSet(false)
+                        makeDelay(ADDITIONAL_DELAY_SEC)
+                        false
+                    } catch (e: Exception) {
+                        logException(via, e)
+                        false
+                    } finally {
+                        checking.compareAndSet(true, false)
+                    }
+
+                    ensureActive()
+
+                    logi("Internet is ${if (available) "available" else "not available"}")
+
+                    internetAvailable = available
+
+                    informListeners(available)
+
+                    if (!available) {
+                        makeDelay(CHECK_INTERVAL_SEC)
+                    }
                 }
+            }
+        } catch (e: Exception) {
+            if (e !is CancellationException) {
+                loge("ConnectionCheckerInteractor tryCheckConnection", e)
+            }
+        } finally {
+            checking.compareAndSet(true, false)
+        }
+    }
+
+    private fun informListeners(available: Boolean) {
+        val iterator = listenersMap.iterator()
+        while (iterator.hasNext()) {
+            val entry = iterator.next()
+            if (entry.value.get()?.isActive() == true) {
+                entry.value.get()?.onConnectionChecked(available)
+            } else {
+                iterator.remove()
             }
         }
     }
@@ -143,41 +196,53 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
     }
 
     private fun logException(via: Via, e: Exception) {
-        Log.e(
-            LOG_TAG, "CheckConnectionInteractor checkConnection via $via" +
-                    " ${e.javaClass} ${e.message} ${e.cause}"
-        )
+        loge("CheckConnectionInteractor checkConnection via $via", e)
     }
 
-    private suspend fun check(via: Via) = coroutineScope {
-        val available = when (via) {
+    private suspend fun check(via: Via): Boolean = coroutineScope {
+        when (via) {
             Via.TOR -> {
+                logi("Checking connection via Tor")
                 dnsRepository.resolveDomainUDP(
                     TOR_SITE_ADDRESS,
                     pathVars.torDNSPort.toInt(),
-                    INTERNET_CONNECTION_CHECK_SOCKET_TIMEOUT_SEC
+                    CHECK_SOCKET_TIMEOUT_SEC
                 ).isNotEmpty()
             }
             Via.DIRECT -> {
-                checkerRepository.checkInternetAvailableOverSocks(
-                    pathVars.dnsCryptFallbackRes,
-                    PLAINTEXT_DNS_PORT,
-                    false
-                )
-            }
-        }
+                val proxyAddress =
+                    defaultPreferences.getString(PROXY_ADDRESS, "") ?: ""
+                val proxyPort = defaultPreferences.getString(PROXY_PORT, "").let {
+                    if (it?.matches(Regex(NUMBER_REGEX)) == true) {
+                        it.toInt()
+                    } else {
+                        1080
+                    }
+                }
+                val useProxy = defaultPreferences.getBoolean(USE_PROXY, false)
+                        && proxyAddress.isNotBlank()
+                        && proxyPort != 0
 
-        ensureActive()
+                if (useProxy && modulesStatus.mode == OperationMode.VPN_MODE) {
+                    val site = sequenceOf(DNS_GOOGLE, DNS_QUAD9, DNS_MOZILLA).shuffled().first()
 
-        internetAvailable = available
+                    logi("Checking connection via Socks Proxy $proxyAddress:$proxyPort $site")
 
-        val iterator = listenersMap.iterator()
-        while (iterator.hasNext()) {
-            val entry = iterator.next()
-            if (entry.value.get()?.isActive() == true) {
-                entry.value.get()?.onConnectionChecked(available)
-            } else {
-                iterator.remove()
+                    checkerRepository.checkInternetAvailableOverHttp(
+                        site,
+                        proxyAddress,
+                        proxyPort
+                    )
+                } else {
+                    logi("Checking connection directly using ${pathVars.dnsCryptFallbackRes}")
+                    checkerRepository.checkInternetAvailableOverSocks(
+                        pathVars.dnsCryptFallbackRes,
+                        PLAINTEXT_DNS_PORT,
+                        "",
+                        0
+                    )
+                }
+
             }
         }
 

@@ -15,10 +15,12 @@ package pan.alexander.tordnscrypt.utils.root;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.BOOT_BROADCAST_MARK;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootServiceNotificationManager.DEFAULT_NOTIFICATION_ID;
 
 import android.app.NotificationManager;
@@ -54,16 +56,6 @@ public class RootExecService extends Service {
     public RootExecService() {
     }
 
-    public static final int DNSCryptRunFragmentMark = 100;
-    public static final int TorRunFragmentMark = 200;
-    public static final int I2PDRunFragmentMark = 300;
-    public static final int HelpActivityMark = 400;
-    public static final int BootBroadcastMark = 500;
-    public static final int NullMark = 600;
-    public static final int FileOperationsMark = 700;
-    public static final int InstallerMark = 800;
-    public static final int TopFragmentMark = 900;
-    public static final int IptablesMark = 1000;
     public static final String RUN_COMMAND = "pan.alexander.tordnscrypt.action.RUN_COMMAND";
     public static final String COMMAND_RESULT = "pan.alexander.tordnscrypt.action.COMMANDS_RESULT";
     public static final String LOG_TAG = "pan.alexander.TPDCLogs";
@@ -232,7 +224,7 @@ public class RootExecService extends Service {
 
     private void sendResult(List<String> commandsResult, int mark) {
 
-        if (commandsResult == null || mark == NullMark) {
+        if (commandsResult == null || mark == NULL_MARK) {
             return;
         }
 
@@ -261,7 +253,7 @@ public class RootExecService extends Service {
 
         @Override
         public void run() {
-            if (mark == BootBroadcastMark) {
+            if (mark == BOOT_BROADCAST_MARK) {
                 if (!autoStartDelay.equals("0")) {
                     try {
                         Thread.sleep(Integer.parseInt(autoStartDelay));

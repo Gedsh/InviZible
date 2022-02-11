@@ -16,11 +16,10 @@ package pan.alexander.tordnscrypt.update;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -42,7 +41,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.ref.WeakReference;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
@@ -66,10 +64,11 @@ import static pan.alexander.tordnscrypt.update.UpdateService.STOP_DOWNLOAD_ACTIO
 import static pan.alexander.tordnscrypt.update.UpdateService.UPDATE_CHANNEL_ID;
 import static pan.alexander.tordnscrypt.update.UpdateService.UPDATE_CHANNEL_NOTIFICATION_ID;
 import static pan.alexander.tordnscrypt.update.UpdateService.UPDATE_RESULT;
+import static pan.alexander.tordnscrypt.utils.AppExtension.getApp;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.TOR_BROWSER_USER_AGENT;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.TOP_FRAGMENT_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.TopFragmentMark;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 
 public class DownloadTask extends Thread {
@@ -132,9 +131,7 @@ public class DownloadTask extends Thread {
                 if (fileToDownload.contains("InviZible")) {
                     allowSendBroadcastAfterUpdate = false;
 
-                    boolean activityActive = isActivityActive();
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !activityActive) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !getApp(context).isAppForeground()) {
                         //Required for androidQ because even if the service is in the foreground we cannot start an activity if no activity is visible
                         preferences.setStringPreference("RequiredAppUpdateForQ", outputFile.getCanonicalPath());
                     } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -245,7 +242,7 @@ public class DownloadTask extends Thread {
         return outputFile;
     }
 
-    private boolean isActivityActive() {
+    /*private boolean isActivityActive() {
 
         App app = App.Companion.getInstance();
 
@@ -260,7 +257,7 @@ public class DownloadTask extends Thread {
         }
 
         return !activity.isFinishing();
-    }
+    }*/
 
     private void installApkForNougatAndHigher(File outputFile) {
         Uri apkUri = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", outputFile);
@@ -311,7 +308,7 @@ public class DownloadTask extends Thread {
             makeDelay(5);
 
             Intent intent = new Intent(UPDATE_RESULT);
-            intent.putExtra("Mark", TopFragmentMark);
+            intent.putExtra("Mark", TOP_FRAGMENT_MARK);
             LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
         }
     }

@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.vpn.service;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
@@ -108,6 +108,7 @@ class BuilderVPN extends VpnService.Builder {
         return this;
     }
 
+    @SuppressWarnings("SameParameterValue")
     void setFixTTL(boolean fixTTL) {
         this.fixTTL = fixTTL;
     }

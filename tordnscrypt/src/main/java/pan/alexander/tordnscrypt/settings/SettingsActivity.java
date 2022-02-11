@@ -15,13 +15,12 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
-import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.fragment.app.Fragment;
@@ -31,7 +30,6 @@ import android.content.ClipData;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 
 import androidx.preference.PreferenceManager;
@@ -47,13 +45,11 @@ import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.LangAppCompatActivity;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.dialogs.SaveFirewallChanges;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.proxy.ProxyFragment;
 import pan.alexander.tordnscrypt.settings.dnscrypt_settings.PreferencesDNSFragment;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallFragment;
-import pan.alexander.tordnscrypt.settings.firewall.FirewallPreferencesFragment;
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges;
 import pan.alexander.tordnscrypt.settings.show_rules.ShowRulesRecycleFrag;
 import pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment;
@@ -87,9 +83,7 @@ public class SettingsActivity extends LangAppCompatActivity {
     public PreferencesTorFragment preferencesTorFragment;
     private SettingsParser settingsParser;
     private PreferencesDNSFragment preferencesDNSFragment;
-    private FirewallFragment firewallFragment;
     private UnlockTorAppsFragment unlockTorAppsFragment;
-    private Fragment currentFragment;
     private boolean showMenu;
 
 
@@ -134,7 +128,7 @@ public class SettingsActivity extends LangAppCompatActivity {
             fSupportTrans.replace(android.R.id.content, new PreferencesCommonFragment());
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "firewall")) {
-            fSupportTrans.replace(android.R.id.content, new FirewallFragment());
+            fSupportTrans.replace(android.R.id.content, new FirewallFragment(), FirewallFragment.TAG);
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "DNS_servers_Pref")) {
             dialogFragment = PleaseWaitProgressDialog.getInstance();
@@ -223,9 +217,6 @@ public class SettingsActivity extends LangAppCompatActivity {
             unlockTorAppsFragment.setArguments(bundle);
             fSupportTrans.replace(android.R.id.content, unlockTorAppsFragment);
             fSupportTrans.commit();
-        } else if (Objects.equals(intent.getAction(), "firewall_pref")) {
-            fSupportTrans.replace(android.R.id.content, new FirewallPreferencesFragment(), "PreferencesFirewallFragment");
-            fSupportTrans.commit();
         }
 
     }
@@ -243,13 +234,9 @@ public class SettingsActivity extends LangAppCompatActivity {
             preferencesDNSFragment = (PreferencesDNSFragment) fragment;
         } else if (fragment instanceof PreferencesTorFragment) {
             preferencesTorFragment = (PreferencesTorFragment) fragment;
-        } else if (fragment instanceof FirewallFragment) {
-            firewallFragment = (FirewallFragment) fragment;
         } else if (fragment instanceof UnlockTorAppsFragment) {
             unlockTorAppsFragment = (UnlockTorAppsFragment) fragment;
         }
-
-        currentFragment = fragment;
     }
 
     @Override
@@ -317,9 +304,7 @@ public class SettingsActivity extends LangAppCompatActivity {
         preferencesTorFragment = null;
         settingsParser = null;
         preferencesDNSFragment = null;
-        firewallFragment = null;
         unlockTorAppsFragment = null;
-        currentFragment = null;
     }
 
     @Override
@@ -331,8 +316,7 @@ public class SettingsActivity extends LangAppCompatActivity {
             action = intent.getAction();
         }
 
-        if (Objects.equals(action, "firewall")
-                || Objects.equals(action, "tor_apps_unlock")
+        if (Objects.equals(action, "tor_apps_unlock")
                 || Objects.equals(action, "proxy_apps_exclude")) {
             getMenuInflater().inflate(R.menu.settings_menu, menu);
             showMenu = true;
@@ -353,46 +337,22 @@ public class SettingsActivity extends LangAppCompatActivity {
         }
 
         SearchView menuSearchView;
-        MenuItem switchItem;
-        SwitchCompat menuSwitch;
-        MenuItem menuSettingsItem;
 
         if (showMenu) {
             MenuItem menuSearch = menu.findItem(R.id.menu_search);
             menuSearchView = (SearchView) menuSearch.getActionView();
-
-            switchItem = menu.findItem(R.id.menu_switch_item);
-            menuSwitch = switchItem.getActionView().findViewById(R.id.menu_switch);
-
-            menuSettingsItem = menu.findItem(R.id.menu_settings);
         } else {
             return super.onPrepareOptionsMenu(menu);
         }
 
-        if (menuSearchView == null || menuSwitch == null || menuSettingsItem == null) {
+        if (menuSearchView == null) {
             return super.onPrepareOptionsMenu(menu);
         }
 
-        if (Objects.equals(action, "firewall") && firewallFragment != null) {
-            menuSearchView.setOnQueryTextListener(firewallFragment);
-
-            boolean firewallEnabled = preferenceRepository.get().getBoolPreference("FirewallEnabled");
-            menuSwitch.setChecked(firewallEnabled);
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                menuSwitch.setTooltipText(getString(R.string.firewall_switch));
-            }
-            menuSwitch.setOnCheckedChangeListener(firewallFragment);
-
-            firewallFragment.setFirewallSwitch(menuSwitch);
-
-            menuSettingsItem.setVisible(true);
-        } else if ((Objects.equals(action, "tor_apps_unlock")
+        if ((Objects.equals(action, "tor_apps_unlock")
                 || Objects.equals(action, "proxy_apps_exclude"))
                 && unlockTorAppsFragment != null) {
             menuSearchView.setOnQueryTextListener(unlockTorAppsFragment);
-
-            switchItem.setVisible(false);
         }
 
         return super.onPrepareOptionsMenu(menu);
@@ -403,10 +363,6 @@ public class SettingsActivity extends LangAppCompatActivity {
         int id = item.getItemId();
         if (id == android.R.id.home) {// API 5+ solution
             onBackPressed();
-        } else if (id == R.id.menu_settings) {
-            Intent intent = new Intent(this, SettingsActivity.class);
-            intent.setAction("firewall_pref");
-            startActivity(intent);
         } else {
             return super.onOptionsItemSelected(item);
         }
@@ -416,25 +372,15 @@ public class SettingsActivity extends LangAppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (currentFragment == null) {
-            super.onBackPressed();
+
+        FirewallFragment firewallFragment = (FirewallFragment) getSupportFragmentManager()
+                .findFragmentByTag(FirewallFragment.TAG);
+
+        if (firewallFragment != null && firewallFragment.onBackPressed()) {
+            return;
         }
 
-        if (currentFragment instanceof FirewallFragment) {
-            boolean savingFirewallChangesRequired = firewallFragment.isFirewallChangesSavingRequired();
-            SaveFirewallChanges saveFirewallChanges = null;
-            boolean saveFirewallChangesFragmentIsDisplayed = getSupportFragmentManager().findFragmentByTag("SaveFirewallChanges") != null;
+        super.onBackPressed();
 
-            if (savingFirewallChangesRequired && !saveFirewallChangesFragmentIsDisplayed) {
-                saveFirewallChanges = SaveFirewallChanges.INSTANCE.getInstance(firewallFragment);
-            }
-            if (saveFirewallChanges != null && !isFinishing()) {
-                saveFirewallChanges.show(getSupportFragmentManager(), "SaveFirewallChanges");
-            } else {
-                super.onBackPressed();
-            }
-        } else {
-            super.onBackPressed();
-        }
     }
 }

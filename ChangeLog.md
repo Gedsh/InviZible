@@ -638,3 +638,69 @@
 * Optimized battery usage when network connection is unavailable.
 * Added tile to Android Quick Settings for changing Tor identity.
 * Fixed using Bypass LAN Addresses with socks5 proxy.
+
+**InviZible Pro beta 1.4.4**
+* Fixed internet sharing in Root mode on android 11.
+* Improved firewall.
+* Minor fixes.
+
+**InviZible Pro beta 1.4.5**
+* Updated Tor to version 4.6.8 (onion v2 services are no longer supported).
+* Updated Tor snowflake bridge to version 2.0.1.
+* Updated Purple I2P to version 2.40.0.
+* Optimized battery usage.
+* Improved firewall.
+* Fixed using onion websites with DNSCrypt force_tcp enabled.
+* Improved the Arp Spoofing attack detector.
+
+**InviZible Pro beta 1.4.6**
+* Updated Tor to version 4.6.9.
+* Updated Tor Snowflake bridge.
+* Updated Tor geoip and default bridges.
+* Added the option to firewall settings to display all applications regardless of app internet permission.
+* Added the option to select Snowflake communication via AMP or Fastly.
+* Improved firewall.
+* Improved traffic and speed statistics in notification.
+* Fixes and optimizations.
+
+**InviZible Pro beta 1.4.7**
+* Pausing InviZible instead of completely shutting down when using another VPN.
+* Improved internet connection checking when only DNSCrypt is running and Use socks5 proxy enabled.
+* Added Greek translation.
+* Updated French translation.
+* A lot of fixes and optimizations.
+
+**InviZible Pro beta 1.4.8**
+* Optimized modules logs parser.
+* Fixed and improved Fix TTL feature.
+* Updated German translation.
+* Minor fixes.
+
+**InviZible Pro beta 1.4.9**
+* Fixed crash when device comes out of idle mode.
+
+**InviZible Pro beta 1.5.0**
+* Implemented a kill switch for Root mode.
+* Improved internet connection checking when only DNSCrypt is running and Use socks5 proxy enabled.
+* Updated Greek translation.
+
+**InviZible Pro beta 1.5.1**
+* Internet is disconnected before the device is turned off if the Kill switch is enabled in Root mode.
+* Fixes and optimizations.
+
+**InviZible Pro beta 1.5.2**
+* Fixed infinite connecting status in notification.
+* Fixed display of notifications on Android 4.4.2
+* Fixed display of a kill switch notification when an ARP spoofing attack is detected.
+* Updated German translation.
+* Minor fixes and optimizations.
+
+**InviZible Pro beta 1.5.3**
+* Updated Tor to version 4.6.10.
+* Fixed infinite connecting status in notification.
+* Minor fixes and optimizations.
+
+**InviZible Pro beta 1.5.4**
+* Fixed Purple I2P not starting on some devices.
+* Fixed internet sharing on some Samsung devices.
+* Fixed displaying a firewall notification to control app connection after it is installed.

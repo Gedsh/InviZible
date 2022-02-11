@@ -1,5 +1,3 @@
-package pan.alexander.tordnscrypt.di
-
 /*
     This file is part of InviZible Pro.
 
@@ -16,18 +14,14 @@ package pan.alexander.tordnscrypt.di
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
-*/
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
+ */
+
+@file:JvmName("AppExtension")
+
+package pan.alexander.tordnscrypt.utils
 
 import android.content.Context
-import dagger.Module
-import dagger.Provides
-import javax.inject.Singleton
+import pan.alexander.tordnscrypt.App
 
-@Module
-class ContextModule(private val context: Context) {
-
-    @Provides
-    @Singleton
-    fun provideAppContext() = context
-}
+val Context.app get() = applicationContext as App

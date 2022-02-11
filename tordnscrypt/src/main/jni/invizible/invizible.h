@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 #include <jni.h>
 #include <stdio.h>
@@ -473,6 +473,10 @@ ssize_t write_udp(const struct arguments *args, const struct udp_session *cur,
 ssize_t write_tcp(const struct arguments *args, const struct tcp_session *cur,
                   const uint8_t *data, size_t datalen,
                   int syn, int ack, int fin, int rst);
+
+void write_connection_unreach(const struct arguments *args,
+                              const struct ng_session *s,
+                              const int serr);
 
 uint8_t char2nible(const char c);
 

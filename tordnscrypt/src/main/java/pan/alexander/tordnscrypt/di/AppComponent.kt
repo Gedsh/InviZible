@@ -15,23 +15,24 @@ package pan.alexander.tordnscrypt.di
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.content.Context
 import androidx.annotation.Keep
+import dagger.BindsInstance
 import dagger.Component
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import pan.alexander.tordnscrypt.BootCompleteReceiver
 import pan.alexander.tordnscrypt.MainActivity
 import pan.alexander.tordnscrypt.TopFragment
 import pan.alexander.tordnscrypt.backup.BackupFragment
 import pan.alexander.tordnscrypt.backup.BackupHelper
+import pan.alexander.tordnscrypt.di.arp.ArpSubcomponent
 import pan.alexander.tordnscrypt.di.logreader.LogReaderSubcomponent
 import pan.alexander.tordnscrypt.di.tiles.TilesSubcomponent
 import pan.alexander.tordnscrypt.dialogs.*
 
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptFragmentReceiver
-import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsConverter
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.help.HelpActivity
 import pan.alexander.tordnscrypt.help.HelpActivityReceiver
@@ -53,7 +54,6 @@ import pan.alexander.tordnscrypt.settings.tor_bridges.BridgeAdapter
 import pan.alexander.tordnscrypt.settings.tor_bridges.GetNewBridges
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges
 import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFragment
-import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsViewModel
 import pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment
 import pan.alexander.tordnscrypt.tor_fragment.TorFragmentReceiver
 import pan.alexander.tordnscrypt.update.DownloadTask
@@ -70,17 +70,25 @@ import javax.inject.Singleton
 @Component(
     modules = [SharedPreferencesModule::class, RepositoryModule::class,
         DataSourcesModule::class, HelpersModule::class, CoroutinesModule::class,
-        HandlerModule::class, ContextModule::class, InteractorsModule::class,
+        HandlerModule::class, InteractorsModule::class, ViewModelModule::class,
         AppSubcomponentModule::class]
 )
 @Keep
 interface AppComponent {
     fun logReaderSubcomponent(): LogReaderSubcomponent.Factory
     fun tilesSubcomponent(): TilesSubcomponent.Factory
+    fun arpSubcomponent(): ArpSubcomponent.Factory
 
     fun getPathVars(): dagger.Lazy<PathVars>
     fun getPreferenceRepository(): dagger.Lazy<PreferenceRepository>
     fun getCachedExecutor(): CachedExecutor
+
+    @Component.Builder
+    interface Builder {
+        @BindsInstance
+        fun appContext(context: Context): Builder
+        fun build(): AppComponent
+    }
 
     fun inject(activity: MainActivity)
     fun inject(activity: SettingsActivity)
@@ -111,14 +119,11 @@ interface AppComponent {
     fun inject(receiver: DNSCryptFragmentReceiver)
     fun inject(receiver: TorFragmentReceiver)
     fun inject(receiver: ITPDFragmentReceiver)
-    fun inject(receiver: ModulesBroadcastReceiver)
     fun inject(receiver: HelpActivityReceiver)
     fun inject(receiver: IptablesReceiver)
     fun inject(dialogFragment: RequestIgnoreBatteryOptimizationDialog)
     fun inject(dialogFragment: AskForceClose)
     fun inject(dialogFragment: SendCrashReport)
-    @ObsoleteCoroutinesApi
-    fun inject(viewModel: UnlockTorIpsViewModel)
     fun inject(usageStatistic: UsageStatistic)
     fun inject(modulesKiller: ModulesKiller)
     fun inject(contextUIDUpdater: ContextUIDUpdater)
@@ -134,5 +139,4 @@ interface AppComponent {
     fun inject(modulesIptablesRules: ModulesIptablesRules)
     fun inject(serviceVPNHandler: ServiceVPNHandler)
     fun inject(installer: Installer)
-    fun inject(converter: ConnectionRecordsConverter)
 }

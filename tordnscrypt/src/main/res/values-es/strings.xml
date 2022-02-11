@@ -163,7 +163,7 @@ En otros sistemas, como MIUI, se requieren ajustes adicionales."</string>
     <string name="pref_dnscrypt_require_nofilter_summ">"Requiere que los servidores no utilicen ningún tipo de filtro (anuncios, control parental, bloqueos...) para las peticiones DNS."</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Habilitar comunicación TCP para conectar a los servidores"</string>
     <string name="pref_dnscrypt_force_tcp_summ">"Esto es útil para redirigir todo el tráfico hacia Tor.
-Si no es lo que desea, por favor, deje éste valor desactivado, ya que no mejorará en ningún aspecto el nivel de seguridad (dnscrypt-proxy siempre utiliza cifrado de extremo a extremo, incluso con UDP). Si lo activa sin verdaderamente necesitarlo únicamente obtendra un incremento en la latencia de resolución de las peticiones DNS, lo que puede derivar en un impacto en el rendimiento de la conexión. ¡Tampoco lo active si necesita usar los sitios web .onion de Tor!"</string>
+Si no es lo que desea, por favor, deje éste valor desactivado, ya que no mejorará en ningún aspecto el nivel de seguridad (dnscrypt-proxy siempre utiliza cifrado de extremo a extremo, incluso con UDP). Si lo activa sin verdaderamente necesitarlo únicamente obtendra un incremento en la latencia de resolución de las peticiones DNS, lo que puede derivar en un impacto en el rendimiento de la conexión."</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"Proxy SOCKS"</string>
     <string name="pref_dnscrypt_use_proxy">"Activar proxy"</string>
     <string name="pref_dnscrypt_proxy_summ">"Redirige todas las conexiones TCP a traves del nodo local de Tor. Tor no soporta UDP, así que active force_tcp también."</string>

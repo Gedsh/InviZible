@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.tor_fragment;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Activity;
@@ -104,7 +104,9 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
 
     public TorFragmentPresenter(TorFragmentView view) {
-        App.getInstance().initLogReaderDaggerSubcomponent().inject(this);
+        App.getInstance()
+                .initLogReaderDaggerSubcomponent()
+                .inject(this);
         this.view = view;
     }
 
@@ -457,7 +459,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
         int percents = logData.getPercents();
 
         NotificationHelper notificationHelper;
-        if (percents <= 5) {
+        if (percents < 5) {
             notificationHelper = NotificationHelper.setHelperMessage(
                     context, context.getString(R.string.helper_dnscrypt_no_internet), "helper_dnscrypt_no_internet");
         } else {

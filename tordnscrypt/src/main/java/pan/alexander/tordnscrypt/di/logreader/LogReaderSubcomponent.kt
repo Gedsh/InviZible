@@ -14,16 +14,19 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.di.logreader
 
+import android.content.Context
+import dagger.BindsInstance
 import dagger.Subcomponent
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptFragmentPresenter
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDFragmentPresenter
 import pan.alexander.tordnscrypt.modules.ModulesStateLoop
 import pan.alexander.tordnscrypt.tor_fragment.TorFragmentPresenter
+import javax.inject.Named
 
 @LogReaderScope
 @Subcomponent(modules = [LogReaderRepositoryModule::class, LogReaderInteractorsModule::class])
@@ -31,11 +34,15 @@ interface LogReaderSubcomponent {
 
     @Subcomponent.Factory
     interface Factory {
-        fun create(): LogReaderSubcomponent
+        fun create(@BindsInstance @Named(LOG_READER_CONTEXT) context: Context): LogReaderSubcomponent
     }
 
     fun inject(presenter: DNSCryptFragmentPresenter)
     fun inject(presenter: TorFragmentPresenter)
     fun inject(presenter: ITPDFragmentPresenter)
     fun inject(modulesStateLoop: ModulesStateLoop)
+
+    companion object {
+        const val LOG_READER_CONTEXT = "LogReaderContext"
+    }
 }

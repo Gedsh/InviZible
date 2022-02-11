@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.modules;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
@@ -38,11 +38,11 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
 
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.DNSCRYPT_RUN_FRAGMENT_MARK;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.I2PD_RUN_FRAGMENT_MARK;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.TOR_RUN_FRAGMENT_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.DNSCryptRunFragmentMark;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.I2PDRunFragmentMark;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.TorRunFragmentMark;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -73,15 +73,15 @@ public class ModulesVersions {
             checkModulesVersionsModern(pathVars);
 
             if (isBinaryFileAccessible(pathVars.getDNSCryptPath()) && !dnsCryptVersion.isEmpty()) {
-                sendResult(context, dnsCryptVersion, DNSCryptRunFragmentMark);
+                sendResult(context, dnsCryptVersion, DNSCRYPT_RUN_FRAGMENT_MARK);
             }
 
             if (isBinaryFileAccessible(pathVars.getTorPath()) && !torVersion.isEmpty()) {
-                sendResult(context, torVersion, TorRunFragmentMark);
+                sendResult(context, torVersion, TOR_RUN_FRAGMENT_MARK);
             }
 
             if (isBinaryFileAccessible(pathVars.getITPDPath()) && !itpdVersion.isEmpty()) {
-                sendResult(context, itpdVersion, I2PDRunFragmentMark);
+                sendResult(context, itpdVersion, I2PD_RUN_FRAGMENT_MARK);
             }
 
             //closeCommandShell();

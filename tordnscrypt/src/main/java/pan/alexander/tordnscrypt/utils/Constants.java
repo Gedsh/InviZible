@@ -19,7 +19,7 @@ public interface Constants {
 
     String[] STANDARD_ETHERNET_INTERFACE_NAMES = {"eth+"};
 
-    String[] STANDARD_WIFI_INTERFACE_NAMES = {"eth+", "wlan+", "tiwlan+", "ra+", "bnep+"};
+    String[] STANDARD_WIFI_INTERFACE_NAMES = {"wlan+", "swlan+", "tiwlan+", "ra+", "bnep+"};
 
     String[] STANDARD_3G_INTERFACE_NAMES = {"rmnet+", "pdp+", "uwbr+", "wimax+", "vsnet+",
             "rmnet_sdio+", "ccmni+", "qmi+", "svnet0+", "ccemni+",
@@ -40,6 +40,9 @@ public interface Constants {
     String G_DNS_42 = "8.8.4.4";
     String G_DNS_61 = "2001:4860:4860::8888";
     String G_DNS_62 = "2001:4860:4860::8844";
+    String DNS_GOOGLE = "https://dns.google";
+    String DNS_QUAD9 = "https://dns9.quad9.net";
+    String DNS_MOZILLA = "https://mozilla.cloudflare-dns.com";
 
     String QUAD_DNS_41 = "9.9.9.9";
     String QUAD_DNS_42 = "149.112.112.112";
@@ -57,4 +60,6 @@ public interface Constants {
     String IPv4_REGEX = "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$";
 
     String IPv6_REGEX = "^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$";
+
+    String NUMBER_REGEX = "\\d+";
 }
