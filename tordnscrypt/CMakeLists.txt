@@ -23,4 +23,4 @@ find_library( log-lib
 target_link_libraries( invizible
                        ${log-lib} )
 
-target_compile_options(invizible PRIVATE "$<$<CONFIG:RELEASE>:-Ofast>")
+target_compile_options(invizible PRIVATE -Ofast -mfpu=neon -ftree-vectorize -fvectorize -fslp-vectorize -funroll-all-loops -fpeel-loops)
