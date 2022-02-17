@@ -60,6 +60,7 @@ import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BLOCK_HTTP;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BYPASS_LAN;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SITES_IPS_REFRESH_INTERVAL;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -281,7 +282,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         activity.overridePendingTransition(0, 0);
         startActivity(intent);
 
-        preferenceRepository.get().setBoolPreference("refresh_main_activity", true);
+        preferenceRepository.get().setBoolPreference(MAIN_ACTIVITY_RECREATE, true);
     }
 
     @Override

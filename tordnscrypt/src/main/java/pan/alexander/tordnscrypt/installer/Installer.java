@@ -53,6 +53,7 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.INSTALLER_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
@@ -522,7 +523,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             modulesVersions.get().refreshVersions(activity);
         }
 
-        preferenceRepository.get().setBoolPreference("refresh_main_activity", true);
+        preferenceRepository.get().setBoolPreference(MAIN_ACTIVITY_RECREATE, true);
     }
 
     protected void registerReceiver(Activity activity) {

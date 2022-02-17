@@ -81,6 +81,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.COMPATI
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNS_REBIND_PROTECTION;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.KILL_SWITCH;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MULTI_USER_SUPPORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PORT;
@@ -135,6 +136,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         addPreferencesFromResource(R.xml.preferences_common);
     }
 
+    @NonNull
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
@@ -323,7 +325,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     }
 
     @Override
-    public boolean onPreferenceChange(Preference preference, Object newValue) {
+    public boolean onPreferenceChange(@NonNull Preference preference, Object newValue) {
 
         Context context = getActivity();
 
@@ -443,7 +445,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     }
 
     @Override
-    public boolean onPreferenceClick(Preference preference) {
+    public boolean onPreferenceClick(@NonNull Preference preference) {
         Context context = getActivity();
 
         if (context == null) {
@@ -493,7 +495,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         activity.overridePendingTransition(0, 0);
         startActivity(intent);
 
-        preferenceRepository.get().setBoolPreference("refresh_main_activity", true);
+        preferenceRepository.get().setBoolPreference(MAIN_ACTIVITY_RECREATE, true);
     }
 
     private void readTorConf(Context context) {

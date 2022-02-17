@@ -44,6 +44,8 @@ public interface PreferenceKeys {
     String WIFI_ON_REQUESTED = "wifiOnRequested";
     String GSM_ON_REQUESTED = "gsmOnRequested";
 
+    String MAIN_ACTIVITY_RECREATE = "refresh_main_activity";
+
     //VPN
     String VPN_SERVICE_ENABLED = "VPNServiceEnabled";
 
