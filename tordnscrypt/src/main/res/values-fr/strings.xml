@@ -429,7 +429,7 @@
     <string name="pref_common_shell_control">"Activer le contrôle de script"</string>
     <string name="pref_common_shell_control_summ">"Utiliser la commande suivante pour gérer les modules d'application:
                 \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
-                --ei dnscrypt 1 --ei tor 1 --ei i2p 1 -n %s/.BootCompleteReceiver\". Où 1 - démarre, 0 - arrête le module."</string>
+                --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Où 1 - démarre, 0 - arrête le module."</string>
     <string name="pref_common_local_eth_device_addr">"Adresse IP du périphérique LAN"</string>
     <string name="pref_common_local_eth_device_addr_summ">"Activez Fixer la DDV et configurez le périphérique LAN pour qu'il se connecte à InviZible. Utilisez la passerelle par défaut: %s, serveur DNS: %s."</string>
     <string name="pref_common_multi_user">"Support multi-utilisateurs"</string>

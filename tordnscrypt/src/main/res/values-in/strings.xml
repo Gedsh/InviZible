@@ -434,7 +434,7 @@ Periksa pengaturan perangkat!"</string>
     <string name="pref_common_shell_control">"Hidupkan skrip kontrol"</string>
     <string name="pref_common_shell_control_summ">"Jalankan perintah berikut untuk mengatur modul aplikasi:
         \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
-        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 -n %s/.BootCompleteReceiver\". Where 1 - starts, 0 - stops the module."</string>
+        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Where 1 - starts, 0 - stops the module."</string>
     <string name="pref_common_local_eth_device_addr">"Alamat IP perangkat LAN"</string>
     <string name="pref_common_local_eth_device_addr_summ">"Hidupkan fitur perbaikan TTL dan atur LAN agar dapat terhubung ke InviZibleUse default gateway: %s, DNS server: %s."</string>
     <string name="pref_common_multi_user">"Dukungan multi-pengguna"</string>

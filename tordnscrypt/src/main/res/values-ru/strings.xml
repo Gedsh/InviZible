@@ -426,7 +426,7 @@
     <string name="pref_common_shell_control">Включить управление скриптами</string>
     <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">Используйте следующую команду для управления модулями:
         \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
-        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 -n %s/.BootCompleteReceiver\". Где 1 - запустить, 0 - остановить модуль.</string>
+        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Где 1 - запустить, 0 - остановить модуль.</string>
     <string name="notification_channel_services">Запущенные сервисы</string>
     <string name="notification_channel_update">Обновление</string>
     <string name="notification_channel_root">Команды Рут</string>

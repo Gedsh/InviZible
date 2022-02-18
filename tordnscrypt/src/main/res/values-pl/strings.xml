@@ -398,7 +398,7 @@ Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych 
     <string name="pref_common_compatibility_mode">"Tryb zgodnosci"</string>
     <string name="pref_common_compatibility_mode_summ">"Aktywuj jesli masz urzadzenie z modyfikowanym ROMem oraz jesli przycisniecie Start powoduje zerwanie polaczenia"</string>
     <string name="pref_common_shell_control">"Aktywuj skrypt kontrolny"</string>
-    <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">"Aby zarzadzac modulami, uzyj nastepujacej komendy: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 -n %s/.BootCompleteReceiver\". Gdzie 1 - uruchamia, 0 - zatrzymuje modul."</string>
+    <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">"Aby zarzadzac modulami, uzyj nastepujacej komendy: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Gdzie 1 - uruchamia, 0 - zatrzymuje modul."</string>
     <string name="pref_common_local_eth_device_addr">"Adres IP urzadzenia LAN"</string>
     <string name="pref_common_local_eth_device_addr_summ">"Aktywuj Fix TTL i skonfiguruj urzadzenie LAN dla polaczenia InviZible. Uzyj domyslnie: gateway: %s, Serwer DNS: %s"</string>
     <string name="pref_common_multi_user">"Wsparcie trybu multi-user"</string>

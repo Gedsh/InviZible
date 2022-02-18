@@ -439,7 +439,7 @@ Dies beschleunigt Abläufe, wenn keine IPv6 Konnektivität vorhanden ist, kann a
     <string name="pref_common_shell_control">"Aktiviere Skript Kontrolle"</string>
     <string name="pref_common_shell_control_summ">"Nutze den folgenden Befehl um Module zu verwalten:
 \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
-        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 -n %s/.BootCompleteReceiver\"
+        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\"
 1 = Modulstart, 0 = Modulstopp"</string>
     <string name="pref_common_local_eth_device_addr">"Lokale IP Adresse"</string>
     <string name="pref_common_local_eth_device_addr_summ">"Aktiviere Fix TTL und konfiguriere das LAN Gerät InviZible zu nutzen. Benutze den Standard Gateway: %s, DNS Server: %s."</string>

@@ -417,7 +417,7 @@
     <string name="pref_common_shell_control">"Enable script control"</string>
     <string name="pref_common_shell_control_summ">"Use the following command to manage application modules:
         \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
-        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 -n %s/.BootCompleteReceiver\". Where 1 - starts, 0 - stops the module."</string>
+        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Where 1 - starts, 0 - stops the module."</string>
     <string name="pref_common_local_eth_device_addr">"LAN device IP address"</string>
     <string name="pref_common_local_eth_device_addr_summ">"Enable Fix TTL and configure LAN device to connect to InviZible. Use default gateway: %s, DNS server: %s."</string>
     <string name="pref_common_multi_user">"Multi-user support"</string>
