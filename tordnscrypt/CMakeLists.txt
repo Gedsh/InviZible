@@ -23,4 +23,8 @@ find_library( log-lib
 target_link_libraries( invizible
                        ${log-lib} )
 
-target_compile_options(invizible PRIVATE -Ofast -mfpu=neon -ftree-vectorize -fvectorize -fslp-vectorize -funroll-all-loops -fpeel-loops)
+if(${CMAKE_ANDROID_ARCH_ABI} STREQUAL "arm64-v8a")
+    target_compile_options(invizible PRIVATE -Ofast -funsafe-math-optimizations -ftree-vectorize -fvectorize -fslp-vectorize)
+else()
+    target_compile_options(invizible PRIVATE -Ofast -march=armv7-a -mfpu=neon-vfpv4 -funsafe-math-optimizations -ftree-vectorize -fvectorize -fslp-vectorize)
+endif()
