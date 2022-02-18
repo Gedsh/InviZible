@@ -2,9 +2,9 @@
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
-obfs4proxy_version=f638c33f6c6f697498150d5f0dfbf26453759262
+obfs4proxy_version=cbf3f3cfa09cf48c42aebd1b96fd7952f1ddb25d
 dnscryptproxy_version=2.1.1
-snowflake_version=v2.0.1
+snowflake_version=v2.1.0
 tor_openssl_version=OpenSSL_1_1_1m
 libevent_version=release-2.1.12-stable
 zstd_version=v1.4.9
@@ -14,7 +14,7 @@ i2pd_openssl_version=OpenSSL_1_1_1m
 miniupnpc_version=c2818392e12f42901ab5abf145f43d69825a38c9
 i2pd_version=c9a1066
 
-git clone https://github.com/Yawning/obfs4
+git clone https://git.torproject.org/pluggable-transports/obfs4.git
 pushd obfs4
 git checkout -f $obfs4proxy_version -b $obfs4proxy_version
 popd
