@@ -157,7 +157,7 @@ public class VpnBuilder {
 
 
         List<IPUtil.CIDR> listExclude = new ArrayList<>();
-        if (!firewallEnabled || compatibilityMode) {
+        if (!firewallEnabled || compatibilityMode || fixTTL) {
             listExclude.add(new IPUtil.CIDR("127.0.0.0", 8)); // localhost
         }
 
