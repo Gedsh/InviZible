@@ -327,9 +327,9 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         }
 
         ConnectivityManager.NetworkCallback nc = new ConnectivityManager.NetworkCallback() {
-            private Boolean last_connected = null;
-            private List<InetAddress> last_dns = null;
-            private int last_network = 0;
+            private volatile Boolean last_connected = null;
+            private volatile List<InetAddress> last_dns = null;
+            private volatile int last_network = 0;
 
             @Override
             public void onAvailable(@NonNull Network network) {
@@ -422,17 +422,15 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                             reload("Connected state changed", context);
                         }
                         logi("ModulesReceiver changed capabilities=" + network);
+                    } else if (isRootMode() && last_network != network.hashCode()) {
+                        updateIptablesRules(false);
+                        resetArpScanner();
+                        checkInternetConnection();
+                        logi("ModulesReceiver changed capabilities=" + network);
+                    } else if (isProxyMode()) {
+                        resetArpScanner();
+                        logi("ModulesReceiver changed capabilities=" + network);
                     }
-                }
-
-                if (isRootMode() && last_network != network.hashCode()) {
-                    updateIptablesRules(false);
-                    resetArpScanner();
-                    checkInternetConnection();
-                    logi("ModulesReceiver changed capabilities=" + network);
-                } else if (isProxyMode()) {
-                    resetArpScanner();
-                    logi("ModulesReceiver changed capabilities=" + network);
                 }
 
                 last_network = network.hashCode();
