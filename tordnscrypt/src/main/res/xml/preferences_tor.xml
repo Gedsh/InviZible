@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory android:title="@string/pref_advanced"
-        android:key="tor_settings">
+    <PreferenceCategory
+        android:key="tor_settings"
+        android:layout="@layout/preferences_category_custom"
+        android:title="@string/pref_advanced">
 
         <SwitchPreference
             android:id="@+id/pref_tor_exclude_exit_nodes"
@@ -98,14 +100,14 @@
             android:id="@+id/pref_tor_isolate_dest_address"
             android:defaultValue="false"
             android:key="pref_tor_isolate_dest_address"
-            android:title="@string/pref_tor_isolate_dest_address"
-            android:summary="@string/pref_tor_isolate_dest_address_summ"/>
+            android:summary="@string/pref_tor_isolate_dest_address_summ"
+            android:title="@string/pref_tor_isolate_dest_address" />
         <SwitchPreference
             android:id="@+id/pref_tor_isolate_dest_port"
             android:defaultValue="false"
             android:key="pref_tor_isolate_dest_port"
-            android:title="@string/pref_tor_isolate_dest_port"
-            android:summary="@string/pref_tor_isolate_dest_port_summ"/>
+            android:summary="@string/pref_tor_isolate_dest_port_summ"
+            android:title="@string/pref_tor_isolate_dest_port" />
         <SwitchPreference
             android:id="@+id/pref_tor_enable_SOCKS_proxy"
             android:defaultValue="true"
@@ -172,15 +174,17 @@
             android:summary="@string/pref_tor_client_use_IPv6_summ"
             android:title="@string/pref_tor_client_use_IPv6" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_tor_snowflake_categ"
-        android:key="pref_tor_snowflake_categ">
+    <PreferenceCategory
+        android:key="pref_tor_snowflake_categ"
+        android:layout="@layout/preferences_category_custom"
+        android:title="@string/pref_tor_snowflake_categ">
         <ListPreference
             android:defaultValue="1"
-            android:key="SnowflakeRendezvous"
-            android:title="@string/pref_tor_snowflake_select_rendezvous"
-            android:summary="@string/pref_tor_snowflake_select_rendezvous_summ"
             android:entries="@array/pref_tor_snowflake_rendezvous_titles"
-            android:entryValues="@array/pref_tor_snowflake_rendezvous_values"/>
+            android:entryValues="@array/pref_tor_snowflake_rendezvous_values"
+            android:key="SnowflakeRendezvous"
+            android:summary="@string/pref_tor_snowflake_select_rendezvous_summ"
+            android:title="@string/pref_tor_snowflake_select_rendezvous" />
         <EditTextPreference
             android:id="@+id/pref_tor_snowflake_stun"
             android:defaultValue="stun.l.google.com:19302,stun.voip.blackberry.com:3478,stun.altar.com.pl:3478,stun.antisip.com:3478,stun.bluesip.net:3478,stun.dus.net:3478,stun.epygi.com:3478,stun.sonetel.com:3478,stun.sonetel.net:3478,stun.stunprotocol.org:3478,stun.uls.co.za:3478,stun.voipgate.com:3478,stun.voys.nl:3478"
@@ -189,8 +193,10 @@
             android:singleLine="true"
             android:title="@string/pref_tor_snowflake_stun" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_dnscrypt_HTTP_SOCKS_proxy_categ"
-        android:key="pref_tor_output_socks_proxy_categ">
+    <PreferenceCategory
+        android:key="pref_tor_output_socks_proxy_categ"
+        android:layout="@layout/preferences_category_custom"
+        android:title="@string/pref_dnscrypt_HTTP_SOCKS_proxy_categ">
 
         <SwitchPreference
             android:defaultValue="false"
@@ -198,22 +204,22 @@
             android:title="@string/pref_tor_enable_SOCKS_output_proxy" />
         <EditTextPreference
             android:defaultValue="127.0.0.1:1080"
+            android:dependency="Enable output Socks5Proxy"
             android:key="Socks5Proxy"
             android:selectAllOnFocus="true"
-            android:dependency="Enable output Socks5Proxy"
-            android:title="@string/pref_tor_SOCKS_output_address"
-            android:summary="@string/pref_tor_SOCKS_output_address_summ"/>
+            android:summary="@string/pref_tor_SOCKS_output_address_summ"
+            android:title="@string/pref_tor_SOCKS_output_address" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_common_categ_other"
-        android:key="pref_tor_other">
+    <PreferenceCategory
+        android:key="pref_tor_other"
+        android:layout="@layout/preferences_category_custom"
+        android:title="@string/pref_common_categ_other">
         <Preference
             android:key="editTorConfDirectly"
-            android:title="@string/pref_tor_edit_conf"
-            android:summary="@string/pref_advanced">
-        </Preference>
+            android:summary="@string/pref_advanced"
+            android:title="@string/pref_tor_edit_conf" />
         <Preference
             android:key="cleanTorFolder"
-            android:title="@string/pref_tor_clean_module_folder">
-        </Preference>
+            android:title="@string/pref_tor_clean_module_folder" />
     </PreferenceCategory>
 </androidx.preference.PreferenceScreen>
