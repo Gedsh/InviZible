@@ -575,7 +575,6 @@ public class TopFragment extends Fragment {
 
         PreferenceManager.setDefaultValues(context, R.xml.preferences_common, true);
         PreferenceManager.setDefaultValues(context, R.xml.preferences_dnscrypt, true);
-        PreferenceManager.setDefaultValues(context, R.xml.preferences_dnscrypt_servers, true);
         PreferenceManager.setDefaultValues(context, R.xml.preferences_fast, true);
         PreferenceManager.setDefaultValues(context, R.xml.preferences_tor, true);
         PreferenceManager.setDefaultValues(context, R.xml.preferences_i2pd, true);
