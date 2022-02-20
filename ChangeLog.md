@@ -704,3 +704,12 @@
 * Fixed Purple I2P not starting on some devices.
 * Fixed internet sharing on some Samsung devices.
 * Fixed displaying a firewall notification to control app connection after it is installed.
+
+**InviZible Pro beta 1.5.5**
+* Updated Tor.
+* Updated Tor obfs4proxy to version 0.0.12.
+* Updated Tor snowflake to version 2.1.0.
+* Updated Purple I2P to version 2.41.0.
+* Preventing frequent updating of iptables rules on unstable networks.
+* Fixed crashes on some MIUI phones.
+* Updated Persian translation.
