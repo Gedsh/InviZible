@@ -277,10 +277,8 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
             }
             tunnelThread = null;
 
-            try {
+            synchronized (jni_lock) {
                 jni_clear(jni_context);
-            } catch (Exception e) {
-                loge("VPN jni_clear", e);
             }
 
             logi("VPN Stopped tunnel thread");
