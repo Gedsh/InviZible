@@ -2,7 +2,7 @@
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
-obfs4proxy_version=cbf3f3cfa09cf48c42aebd1b96fd7952f1ddb25d
+obfs4proxy_version=e330d1b7
 dnscryptproxy_version=2.1.1
 snowflake_version=v2.1.0
 tor_openssl_version=OpenSSL_1_1_1m
