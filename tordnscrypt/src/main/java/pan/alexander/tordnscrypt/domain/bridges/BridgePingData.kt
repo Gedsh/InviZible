@@ -1,5 +1,3 @@
-package pan.alexander.tordnscrypt.settings.tor_bridges;
-
 /*
     This file is part of InviZible Pro.
 
@@ -17,19 +15,11 @@ package pan.alexander.tordnscrypt.settings.tor_bridges;
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
     Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
-*/
+ */
 
-import pan.alexander.tordnscrypt.utils.enums.BridgeType;
+package pan.alexander.tordnscrypt.domain.bridges
 
-public class ObfsBridge {
-    String bridge;
-    BridgeType obfsType;
-    int ping;
-    boolean active;
-
-    ObfsBridge(String bridge, BridgeType obfsType, boolean active) {
-        this.bridge = bridge;
-        this.obfsType = obfsType;
-        this.active = active;
-    }
-}
+data class BridgePingData(
+    val bridgeHash: Int,
+    val ping: Int
+)

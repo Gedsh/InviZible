@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/llBridge"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -32,7 +33,18 @@
                 android:layout_weight="1"
                 android:fontFamily="serif"
                 android:gravity="center"
-                android:textAlignment="gravity" />
+                android:textAlignment="gravity"
+                tools:text = "obfs4 100.100.100.100:1234"/>
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvBridgePing"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_margin="4dp"
+                android:fontFamily="serif"
+                android:gravity="center"
+                android:textAlignment="gravity"
+                tools:text = "100 ms"/>
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/swBridge"
