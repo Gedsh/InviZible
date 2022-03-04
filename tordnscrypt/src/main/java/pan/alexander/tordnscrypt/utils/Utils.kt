@@ -42,7 +42,6 @@ import java.io.File
 import java.io.PrintWriter
 import java.lang.IllegalArgumentException
 import java.net.Inet4Address
-import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
 import kotlin.math.roundToInt
@@ -217,9 +216,9 @@ object Utils {
     fun shortenTooLongSnowflakeLog(context: Context, preferences: PreferenceRepository, pathVars: PathVars) {
         try {
             val bridgesSnowflakeDefault =
-                preferences.getStringPreference(DEFAULT_BRIDGES_OBFS) == PreferencesTorBridges.snowFlakeBridgesDefault
+                preferences.getStringPreference(DEFAULT_BRIDGES_OBFS) == PreferencesTorBridges.SNOWFLAKE_BRIDGES_DEFAULT
             val bridgesSnowflakeOwn =
-                preferences.getStringPreference(OWN_BRIDGES_OBFS) == PreferencesTorBridges.snowFlakeBridgesOwn
+                preferences.getStringPreference(OWN_BRIDGES_OBFS) == PreferencesTorBridges.SNOWFLAKE_BRIDGES_OWN
             val shPref = PreferenceManager.getDefaultSharedPreferences(context)
             val showHelperMessages =
                 shPref.getBoolean(ALWAYS_SHOW_HELP_MESSAGES, false)

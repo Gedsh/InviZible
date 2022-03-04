@@ -50,8 +50,8 @@ import static pan.alexander.tordnscrypt.iptables.Tethering.wifiAPAddressesRange;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
 import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.CLEARNET_APPS;
 import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.UNLOCK_APPS;
-import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesDefault;
-import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.snowFlakeBridgesOwn;
+import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.SNOWFLAKE_BRIDGES_DEFAULT;
+import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.SNOWFLAKE_BRIDGES_OWN;
 import static pan.alexander.tordnscrypt.utils.Constants.DNS_OVER_TLS_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNG_41;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_42;
@@ -71,6 +71,8 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.KILL_SWITCH;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OWN_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_DEFAULT_BRIDGES;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_OWN_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.WIFI_ON_REQUESTED;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK;
@@ -278,10 +280,10 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         }
 
         boolean torReady = modulesStatus.isTorReady();
-        boolean useDefaultBridges = preferences.getBoolPreference("useDefaultBridges");
-        boolean useOwnBridges = preferences.getBoolPreference("useOwnBridges");
-        boolean bridgesSnowflakeDefault = preferences.getStringPreference(DEFAULT_BRIDGES_OBFS).equals(snowFlakeBridgesDefault);
-        boolean bridgesSnowflakeOwn = preferences.getStringPreference(OWN_BRIDGES_OBFS).equals(snowFlakeBridgesOwn);
+        boolean useDefaultBridges = preferences.getBoolPreference(USE_DEFAULT_BRIDGES);
+        boolean useOwnBridges = preferences.getBoolPreference(USE_OWN_BRIDGES);
+        boolean bridgesSnowflakeDefault = preferences.getStringPreference(DEFAULT_BRIDGES_OBFS).equals(SNOWFLAKE_BRIDGES_DEFAULT);
+        boolean bridgesSnowflakeOwn = preferences.getStringPreference(OWN_BRIDGES_OBFS).equals(SNOWFLAKE_BRIDGES_OWN);
 
         String torSystemDNSAllowedNat = "";
         String torSystemDNSAllowedFilter = "";

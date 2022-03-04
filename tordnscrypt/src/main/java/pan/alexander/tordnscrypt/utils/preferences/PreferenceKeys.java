@@ -46,6 +46,10 @@ public interface PreferenceKeys {
 
     String MAIN_ACTIVITY_RECREATE = "refresh_main_activity";
 
+    String USE_NO_BRIDGES = "useNoBridges";
+    String USE_DEFAULT_BRIDGES = "useDefaultBridges";
+    String USE_OWN_BRIDGES = "useOwnBridges";
+
     //VPN
     String VPN_SERVICE_ENABLED = "VPNServiceEnabled";
 
