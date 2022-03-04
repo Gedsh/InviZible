@@ -713,3 +713,8 @@
 * Preventing frequent updating of iptables rules on unstable networks.
 * Fixed crashes on some MIUI phones.
 * Updated Persian translation.
+
+**InviZible Pro beta 1.5.6**
+* Implemented bridges ping check if Tor is stopped.
+* Revert back to Tor obfs4proxy version 0.0.11.
+* Minor fixes.
