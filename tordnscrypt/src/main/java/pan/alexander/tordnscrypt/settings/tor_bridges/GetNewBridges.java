@@ -101,10 +101,10 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
                 Proxy proxy = null;
                 if (ModulesStatus.getInstance().getTorState() == RUNNING) {
                     proxy = new Proxy(
-                            Proxy.Type.HTTP,
+                            Proxy.Type.SOCKS,
                             new InetSocketAddress(
                                     LOOPBACK_ADDRESS,
-                                    Integer.parseInt(pathVars.get().getTorHTTPTunnelPort())
+                                    Integer.parseInt(pathVars.get().getTorSOCKSPort())
                             )
                     );
                 }
@@ -328,10 +328,10 @@ public class GetNewBridges implements GetNewBridgesCallbacks {
                 Proxy proxy = null;
                 if (ModulesStatus.getInstance().getTorState() == RUNNING) {
                     proxy = new Proxy(
-                            Proxy.Type.HTTP,
+                            Proxy.Type.SOCKS,
                             new InetSocketAddress(
                                     LOOPBACK_ADDRESS,
-                                    Integer.parseInt(pathVars.get().getTorHTTPTunnelPort())
+                                    Integer.parseInt(pathVars.get().getTorSOCKSPort())
                             )
                     );
                 }
