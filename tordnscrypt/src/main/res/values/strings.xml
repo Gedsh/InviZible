@@ -773,4 +773,5 @@
     <string name="tile_changing_tor_ip">Tor IP changing</string>
     <string name="tile_dialog_over_three_tiles_message">You have added more than 3 tiles to Quick Settings.
         Please leave only 3. Adding more than 3 tiles can cause issues with app control.</string>
+    <string name="list_is_empty">List is Empty</string>
 </resources>

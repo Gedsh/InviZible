@@ -140,21 +140,28 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:text="List is Empty"
+        android:text="@string/list_is_empty"
         android:textAlignment="center"
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/linearLayout6" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvBridges"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshBridges"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:scrollbars="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvBridgesListEmpty" />
+        app:layout_constraintTop_toBottomOf="@+id/tvBridgesListEmpty">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvBridges"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:scrollbars="vertical" />
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

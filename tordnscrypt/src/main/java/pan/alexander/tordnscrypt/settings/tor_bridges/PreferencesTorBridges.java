@@ -30,6 +30,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.os.Handler;
 import android.view.LayoutInflater;
@@ -101,7 +102,7 @@ import javax.inject.Inject;
 
 public class PreferencesTorBridges extends Fragment implements View.OnClickListener,
         CompoundButton.OnCheckedChangeListener, AdapterView.OnItemSelectedListener,
-        OnTextFileOperationsCompleteListener, PreferencesBridges {
+        OnTextFileOperationsCompleteListener, PreferencesBridges, SwipeRefreshLayout.OnRefreshListener {
     public final static String SNOWFLAKE_BRIDGES_DEFAULT = "3";
     public final static String SNOWFLAKE_BRIDGES_OWN = "4";
 
@@ -124,6 +125,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     private TextView tvBridgesListEmpty;
     private RecyclerView rvBridges;
     private BridgeAdapter bridgeAdapter;
+    private SwipeRefreshLayout swipeRefreshBridges;
 
     private String appDataDir;
     private String obfsPath;
@@ -207,6 +209,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(activity);
         rvBridges.setLayoutManager(mLayoutManager);
 
+        swipeRefreshBridges = view.findViewById(R.id.swipeRefreshBridges);
+        swipeRefreshBridges.setOnRefreshListener(this);
+
         FileManager.setOnFileOperationCompleteListener(this);
 
         FileManager.readTextFile(activity, appDataDir + "/app_data/tor/tor.conf", TOR_CONF_FLAG);
@@ -275,9 +280,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         spDefaultBridges.setOnItemSelectedListener(this);
         spOwnBridges.setOnItemSelectedListener(this);
 
-        if (modulesStatus.getTorState() == STOPPED) {
-            observeTimeouts();
-        }
+        observeTimeouts();
 
         cachedExecutor.submit(() -> {
             try {
@@ -432,6 +435,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         rvBridges = null;
         bridgeAdapter = null;
         savedBridgesSelector = null;
+        swipeRefreshBridges = null;
     }
 
     @Override
@@ -474,9 +478,30 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 if (rvBridges != null
                         && !rvBridges.isComputingLayout()
                         && bridgeAdapter != null) {
+                    sortBridgesByPing();
                     bridgeAdapter.notifyDataSetChanged();
                 }
             });
+        });
+    }
+
+    private void sortBridgesByPing() {
+        Collections.sort(bridgeList, (bridge1, bridge2) -> {
+            if (!bridge1.active && bridge2.active) {
+                return 1;
+            } else if (bridge1.active && !bridge2.active) {
+                return -1;
+            } else if (bridge1.active) {
+                return bridge1.ping - bridge2.ping;
+            } else if (bridge1.ping <= 0 && bridge2.ping > 0) {
+                return 1;
+            } else if (bridge1.ping > 0 && bridge2.ping <= 0) {
+                return -1;
+            } else if (bridge1.ping <= 0) {
+                return 0;
+            } else {
+                return bridge1.ping - bridge2.ping;
+            }
         });
     }
 
@@ -695,8 +720,10 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             }
         }
 
-        if (bridgeAdapter != null)
+        if (bridgeAdapter != null) {
+            sortBridgesByPing();
             bridgeAdapter.notifyDataSetChanged();
+        }
 
         if (bridgeList.isEmpty()) {
             tvBridgesListEmpty.setVisibility(View.VISIBLE);
@@ -743,8 +770,10 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             }
         }
 
-        if (bridgeAdapter != null)
+        if (bridgeAdapter != null) {
+            sortBridgesByPing();
             bridgeAdapter.notifyDataSetChanged();
+        }
 
         if (bridgeList.isEmpty()) {
             tvBridgesListEmpty.setVisibility(View.VISIBLE);
@@ -998,5 +1027,11 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         preferenceRepository.get().setBoolPreference(USE_NO_BRIDGES, useNoBridges);
         preferenceRepository.get().setBoolPreference(USE_DEFAULT_BRIDGES, useDefaultBridges);
         preferenceRepository.get().setBoolPreference(USE_OWN_BRIDGES, useOwnBridges);
+    }
+
+    @Override
+    public void onRefresh() {
+        viewModel.measureTimeouts(bridgeList);
+        swipeRefreshBridges.setRefreshing(false);
     }
 }
