@@ -144,6 +144,7 @@
         <item>obfs3</item>
         <item>meek_lite</item>
         <item>snowflake</item>
+        <item>vanilla</item>
     </string-array>
     <string-array name="tor_bridges_own_obfs">
         <item>obfs4</item>

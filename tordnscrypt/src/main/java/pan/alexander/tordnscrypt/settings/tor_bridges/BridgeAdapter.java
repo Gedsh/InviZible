@@ -19,6 +19,11 @@ package pan.alexander.tordnscrypt.settings.tor_bridges;
     Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import static pan.alexander.tordnscrypt.utils.enums.BridgeType.meek_lite;
+import static pan.alexander.tordnscrypt.utils.enums.BridgeType.obfs3;
+import static pan.alexander.tordnscrypt.utils.enums.BridgeType.obfs4;
+import static pan.alexander.tordnscrypt.utils.enums.BridgeType.scramblesuit;
+import static pan.alexander.tordnscrypt.utils.enums.BridgeType.snowflake;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_DEFAULT_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_NO_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_OWN_BRIDGES;
@@ -90,15 +95,15 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
 
     @Override
     public int getItemCount() {
-        return preferencesBridges.getBridgeList().size();
+        return preferencesBridges.getBridgesToDisplay().size();
     }
 
     private ObfsBridge getItem(int position) {
-        return preferencesBridges.getBridgeList().get(position);
+        return preferencesBridges.getBridgesToDisplay().get(position);
     }
 
     private void setActive(int position, boolean active) {
-        List<ObfsBridge> bridgeList = preferencesBridges.getBridgeList();
+        List<ObfsBridge> bridgeList = preferencesBridges.getBridgesToDisplay();
         ObfsBridge brg = bridgeList.get(position);
         brg.active = active;
         bridgeList.set(position, brg);
@@ -126,7 +131,7 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
         }
 
         private void bind(int position) {
-            List<ObfsBridge> bridgeList = preferencesBridges.getBridgeList();
+            List<ObfsBridge> bridgeList = preferencesBridges.getBridgesToDisplay();
 
             if (bridgeList == null || bridgeList.isEmpty()
                     || position < 0 || position >= bridgeList.size()) {
@@ -135,24 +140,27 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
 
             ObfsBridge obfsBridge = bridgeList.get(position);
 
-            String[] bridgeIP = obfsBridge.bridge.split(" ");
+            String[] bridgeComponents = obfsBridge.bridge.split(" ");
 
-            if (bridgeIP.length == 0) {
+            if (bridgeComponents.length == 0) {
                 return;
             }
 
             String tvBridgeText;
-            if ((bridgeIP[0].contains("obfs3") || bridgeIP[0].contains("obfs4")
-                    || bridgeIP[0].contains("scramblesuit") || bridgeIP[0].contains("meek_lite")
-                    || bridgeIP[0].contains("snowflake"))
-                    && bridgeIP.length > 1) {
-                tvBridgeText = bridgeIP[0] + " " + bridgeIP[1];
+            String obfsType = bridgeComponents[0];
+            if ((obfsType.contains(obfs4.toString())
+                    || obfsType.contains(obfs3.toString())
+                    || obfsType.contains(scramblesuit.toString())
+                    || obfsType.contains(meek_lite.toString())
+                    || obfsType.contains(snowflake.toString()))
+                    && bridgeComponents.length > 1) {
+                tvBridgeText = bridgeComponents[0] + " " + bridgeComponents[1];
             } else {
-                tvBridgeText = bridgeIP[0];
+                tvBridgeText = bridgeComponents[0];
             }
 
-            if (bridgeIP[0].contains("meek_lite")
-                    || bridgeIP[0].contains("snowflake")
+            if (obfsType.contains(meek_lite.toString())
+                    || obfsType.contains(snowflake.toString())
                     || obfsBridge.ping == 0) {
                 tvPing.setVisibility(View.GONE);
             } else {
@@ -179,7 +187,7 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
             if (position == RecyclerView.NO_POSITION) {
                 return;
             }
-            final Set<String> currentBridges = preferencesBridges.getCurrentBridges();
+            final Set<String> bridgesInUse = preferencesBridges.getBridgesInUse();
 
 
             if (isChecked) {
@@ -201,18 +209,33 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
 
                 BridgeType obfsType = getItem(position).obfsType;
                 if (!obfsType.equals(preferencesBridges.getCurrentBridgesType())) {
-                    currentBridges.clear();
+                    bridgesInUse.clear();
                     setCurrentBridgesType(obfsType);
                 }
 
                 if (!currentBridgesSelector.equals(preferencesBridges.getSavedBridgesSelector())) {
-                    currentBridges.clear();
+                    bridgesInUse.clear();
                     setSavedBridgesSelector(currentBridgesSelector);
                 }
 
-                currentBridges.add(getItem(position).bridge);
+                if (!preferencesBridges.areDefaultVanillaBridgesSelected()
+                        && preferencesBridges.areRelayBridgesWereRequested()) {
+                    preferencesBridges.saveRelayBridgesWereRequested(false);
+                }
+
+                if (preferencesBridges.areRelayBridgesWereRequested()) {
+                    bridgesInUse.clear();
+                    for (ObfsBridge bridge: preferencesBridges.getBridgesToDisplay()) {
+                        if (bridge.active) {
+                            bridgesInUse.add(bridge.bridge);
+                        }
+                    }
+                }
+
+                bridgesInUse.add(getItem(position).bridge);
+
             } else {
-                currentBridges.remove(getItem(position).bridge);
+                bridgesInUse.remove(getItem(position).bridge);
             }
 
             setActive(position, isChecked);
@@ -244,7 +267,7 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
         AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
         builder.setTitle(R.string.pref_fast_use_tor_bridges_edit);
 
-        List<ObfsBridge> bridgeList = preferencesBridges.getBridgeList();
+        List<ObfsBridge> bridgeList = preferencesBridges.getBridgesToDisplay();
         String bridges_file_path = preferencesBridges.getBridgesFilePath();
 
         if (bridgeList == null || position >= bridgeList.size()) {
@@ -278,11 +301,15 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
             bridgeList.set(position, brg);
             preferencesBridges.getBridgeAdapter().notifyItemChanged(position);
 
+            if (preferencesBridges.areDefaultVanillaBridgesSelected()) {
+                return;
+            }
+
             List<String> tmpList = new LinkedList<>();
             for (ObfsBridge tmpObfs : bridgeList) {
                 tmpList.add(tmpObfs.bridge);
             }
-            tmpList.addAll(preferencesBridges.getAnotherBridges());
+            tmpList.addAll(preferencesBridges.getBridgesInappropriateType());
             Collections.sort(tmpList);
             if (bridges_file_path != null)
                 FileManager.writeToTextFile(activity, bridges_file_path, tmpList, "ignored");
@@ -296,27 +323,31 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
             return;
         }
 
-        List<ObfsBridge> bridgeList = preferencesBridges.getBridgeList();
+        List<ObfsBridge> bridgesToDisplay = preferencesBridges.getBridgesToDisplay();
         String bridges_file_path = preferencesBridges.getBridgesFilePath();
 
-        if (bridgeList == null || position >= bridgeList.size()) {
+        if (bridgesToDisplay == null || position >= bridgesToDisplay.size()) {
             return;
         }
 
-        if (bridgeList.get(position).active && fragmentManager != null) {
+        if (bridgesToDisplay.get(position).active && fragmentManager != null) {
             DialogFragment commandResult
                     = NotificationDialogFragment.newInstance(activity.getString(R.string.pref_fast_use_tor_bridges_deactivate));
             commandResult.show(fragmentManager, "NotificationDialogFragment");
             return;
         }
-        bridgeList.remove(position);
+        bridgesToDisplay.remove(position);
         preferencesBridges.getBridgeAdapter().notifyItemRemoved(position);
 
+        if (preferencesBridges.areDefaultVanillaBridgesSelected()) {
+            return;
+        }
+
         List<String> tmpList = new ArrayList<>();
-        for (ObfsBridge tmpObfs : bridgeList) {
+        for (ObfsBridge tmpObfs : bridgesToDisplay) {
             tmpList.add(tmpObfs.bridge);
         }
-        tmpList.addAll(preferencesBridges.getAnotherBridges());
+        tmpList.addAll(preferencesBridges.getBridgesInappropriateType());
         Collections.sort(tmpList);
         if (bridges_file_path != null)
             FileManager.writeToTextFile(activity, bridges_file_path, tmpList, "ignored");

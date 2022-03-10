@@ -27,25 +27,27 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.onEach
-import pan.alexander.tordnscrypt.domain.bridges.BridgeCheckerInteractor
+import pan.alexander.tordnscrypt.domain.bridges.BridgeInteractor
 import pan.alexander.tordnscrypt.domain.bridges.BridgePingData
 import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
 class PreferencesTorBridgesViewModel
 @Inject constructor(
-    private val bridgeCheckerInteractor: BridgeCheckerInteractor
+    private val bridgeInteractor: BridgeInteractor
 ) : ViewModel() {
 
     private val timeouts = mutableListOf<BridgePingData>()
-
     private val timeoutMutableLiveData = MutableLiveData<List<BridgePingData>>()
-
     private var timeoutsMeasurementJob: Job? = null
-
     private var timeoutsObserveJob: Job? = null
-
     val timeoutLiveData: LiveData<List<BridgePingData>> get() = timeoutMutableLiveData
+
+
+    private val bridgesMutableLiveData = MutableLiveData<List<String>>()
+    val bridgesLiveData: LiveData<List<String>> get() = bridgesMutableLiveData
+    private var bridgesRequestJob: Job? = null
+
 
     fun measureTimeouts(bridges: List<ObfsBridge>) {
 
@@ -57,13 +59,13 @@ class PreferencesTorBridgesViewModel
         }
 
         timeoutsMeasurementJob = viewModelScope.launch {
-            bridgeCheckerInteractor.measureTimeouts(bridges.map { it.bridge })
+            bridgeInteractor.measureTimeouts(bridges.map { it.bridge })
         }
     }
 
     private fun initBridgeCheckerObserver() {
         timeoutsObserveJob = viewModelScope.launch {
-            bridgeCheckerInteractor.observeTimeouts()
+            bridgeInteractor.observeTimeouts()
                 .filter { it.ping != 0 }
                 .onEach {
                     timeouts.add(it)
@@ -71,5 +73,17 @@ class PreferencesTorBridgesViewModel
                 }
                 .collect()
         }
+    }
+
+    fun requestRelayBridges() {
+        bridgesRequestJob?.cancelChildren()
+        bridgesRequestJob = viewModelScope.launch {
+            bridgesMutableLiveData.value = bridgeInteractor.requestRelays()
+                .map { "${it.address}:${it.port} ${it.fingerprint}" }
+        }
+    }
+
+    fun cancelRequestingRelayBridges() {
+        bridgesRequestJob?.cancelChildren()
     }
 }

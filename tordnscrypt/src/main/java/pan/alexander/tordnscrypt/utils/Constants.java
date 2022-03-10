@@ -54,6 +54,8 @@ public interface Constants {
     String TOR_BROWSER_USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; rv:60.0) Gecko/20100101 Firefox/60.0";
     String TOR_SITE_ADDRESS = "https://www.torproject.org/";
 
+    String ONIONOO_SITE_ADDRESS = "https://onionoo.torproject.org/";
+
     int SITES_IPS_REFRESH_JOB_ID = 1;
     int DEFAULT_SITES_IPS_REFRESH_INTERVAL = 12;
 

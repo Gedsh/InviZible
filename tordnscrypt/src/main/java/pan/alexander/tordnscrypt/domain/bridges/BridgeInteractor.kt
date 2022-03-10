@@ -22,7 +22,11 @@ package pan.alexander.tordnscrypt.domain.bridges
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import pan.alexander.tordnscrypt.data.bridges.RelayAddressFingerprint
 import pan.alexander.tordnscrypt.di.CoroutinesModule
+import pan.alexander.tordnscrypt.modules.ModulesStatus
+import pan.alexander.tordnscrypt.settings.PathVars
+import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.lang.Exception
 import javax.inject.Inject
@@ -30,12 +34,17 @@ import javax.inject.Named
 
 private const val SIMULTANEOUS_CHECKS = 3
 
+private const val MAX_RELAY_COUNT = 30
+
 @ExperimentalCoroutinesApi
-class BridgeCheckerInteractor @Inject constructor(
-    private val repository: BridgeCheckerRepository,
+class BridgeInteractor @Inject constructor(
+    private val repository: BridgeRepository,
     @Named(CoroutinesModule.DISPATCHER_IO)
-    private val dispatcherIo: CoroutineDispatcher
+    private val dispatcherIo: CoroutineDispatcher,
+    private val pathVars: dagger.Lazy<PathVars>
 ) {
+
+    private val modulesStatus = ModulesStatus.getInstance()
 
     private val timeouts = MutableSharedFlow<BridgePingData>()
 
@@ -56,4 +65,22 @@ class BridgeCheckerInteractor @Inject constructor(
                 }
             }
         }
+
+    suspend fun requestRelays(): List<RelayAddressFingerprint> = withContext(dispatcherIo) {
+        try {
+            var host = ""
+            var port = 0
+            if (modulesStatus.isTorReady) {
+                host = LOOPBACK_ADDRESS
+                port = pathVars.get().torSOCKSPort.toInt()
+            }
+
+            repository.getRelaysWithFingerprintAndAddress(host, port)
+                .shuffled()
+                .take(MAX_RELAY_COUNT)
+        } catch (e: Exception) {
+            loge("BridgeCheckerInteractor requestRelays", e)
+            emptyList()
+        }
+    }
 }

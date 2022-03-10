@@ -1,5 +1,3 @@
-package pan.alexander.tordnscrypt.settings.tor_bridges;
-
 /*
     This file is part of InviZible Pro.
 
@@ -17,34 +15,30 @@ package pan.alexander.tordnscrypt.settings.tor_bridges;
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
     Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
-*/
+ */
 
-import java.util.Objects;
+package pan.alexander.tordnscrypt.settings.tor_bridges;
 
-import pan.alexander.tordnscrypt.utils.enums.BridgeType;
+import java.util.Comparator;
 
-public class ObfsBridge {
-    String bridge;
-    BridgeType obfsType;
-    int ping;
-    boolean active;
-
-    ObfsBridge(String bridge, BridgeType obfsType, boolean active) {
-        this.bridge = bridge;
-        this.obfsType = obfsType;
-        this.active = active;
-    }
+public class BridgePingComparator implements Comparator<ObfsBridge> {
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ObfsBridge bridge1 = (ObfsBridge) o;
-        return bridge.equals(bridge1.bridge) && obfsType == bridge1.obfsType;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(bridge, obfsType);
+    public int compare(ObfsBridge bridge1, ObfsBridge bridge2) {
+        if (!bridge1.active && bridge2.active) {
+            return 1;
+        } else if (bridge1.active && !bridge2.active) {
+            return -1;
+        } else if (bridge1.active) {
+            return bridge1.ping - bridge2.ping;
+        } else if (bridge1.ping <= 0 && bridge2.ping > 0) {
+            return 1;
+        } else if (bridge1.ping > 0 && bridge2.ping <= 0) {
+            return -1;
+        } else if (bridge1.ping <= 0) {
+            return 0;
+        } else {
+            return bridge1.ping - bridge2.ping;
+        }
     }
 }

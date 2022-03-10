@@ -17,8 +17,24 @@
     Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.domain.bridges
+package pan.alexander.tordnscrypt.data.bridges
 
-interface BridgeCheckerRepository {
-    fun getTimeout(bridgeLine: String): Int
+import pan.alexander.tordnscrypt.utils.Constants.ONIONOO_SITE_ADDRESS
+import pan.alexander.tordnscrypt.utils.web.OnionDataApi
+import javax.inject.Inject
+import javax.inject.Provider
+
+class BridgeDataSourceImpl @Inject constructor(
+    private val onionDataApi: Provider<OnionDataApi>
+) : BridgeDataSource {
+
+    override fun getRelaysWithFingerprintAndAddress(
+        proxyAddress: String,
+        proxyPort: Int
+    ): List<String> = onionDataApi.get().requestOnionData(
+            "${ONIONOO_SITE_ADDRESS}details?type=relay&running=true&fields=fingerprint,or_addresses",
+            proxyAddress,
+            proxyPort
+        )
+
 }

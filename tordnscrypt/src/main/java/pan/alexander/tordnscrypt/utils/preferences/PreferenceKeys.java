@@ -22,6 +22,7 @@ public interface PreferenceKeys {
 
     String DEFAULT_BRIDGES_OBFS = "defaultBridgesObfs";
     String OWN_BRIDGES_OBFS = "ownBridgesObfs";
+    String RELAY_BRIDGES_REQUESTED = "relayBridgesRequested";
 
     String IPS_TO_UNLOCK = "ipsToUnlock";
     String IPS_FOR_CLEARNET = "ipsForClearNet";

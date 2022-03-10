@@ -30,10 +30,12 @@ public interface PreferencesBridges {
     void  setCurrentBridgesType(BridgeType type);
     BridgesSelector getSavedBridgesSelector();
     void setSavedBridgesSelector(BridgesSelector selector);
-    Set<String> getCurrentBridges();
-    List<ObfsBridge> getBridgeList();
+    Set<String> getBridgesInUse();
+    List<ObfsBridge> getBridgesToDisplay();
     BridgeAdapter getBridgeAdapter();
-    List<String> getAnotherBridges();
+    List<String> getBridgesInappropriateType();
     String getBridgesFilePath();
-
+    boolean areDefaultVanillaBridgesSelected();
+    boolean areRelayBridgesWereRequested();
+    void saveRelayBridgesWereRequested(boolean requested);
 }
