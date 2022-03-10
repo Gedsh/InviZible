@@ -80,7 +80,7 @@
 
         <CheckBoxPreference
             android:id="@+id/force_tcp"
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="force_tcp"
             android:summary="@string/pref_dnscrypt_force_tcp_summ"
             android:title="@string/pref_dnscrypt_force_tcp" />

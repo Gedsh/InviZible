@@ -119,8 +119,6 @@ object ProxyHelper {
                 }
             } else if (enable && line.contains("force_tcp")) {
                 dnsCryptProxyToml[i] = "force_tcp = true"
-            } else if (!enable && line.contains("force_tcp")) {
-                dnsCryptProxyToml[i] = "force_tcp = false"
             }
         }
         FileManager.writeTextFileSynchronous(context, dnsCryptConfPath, dnsCryptProxyToml)
