@@ -718,3 +718,10 @@
 * Implemented bridges ping check if Tor is stopped.
 * Revert back to Tor obfs4proxy version 0.0.11.
 * Minor fixes.
+
+**InviZible Pro beta 1.5.7**
+* Updated Tor.
+* Implemented Tor bridges sorting and swipe to refresh bridges ping.
+* Implemented the use of Tor relays as default vanilla bridges.
+* Disable ntcp2 published option of Putple I2P if notransit is enabled.
+* Minor fixes.

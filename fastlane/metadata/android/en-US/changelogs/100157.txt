@@ -1,0 +1,6 @@
+**InviZible Pro beta 1.5.7**
+* Updated Tor.
+* Implemented Tor bridges sorting and swipe to refresh bridges ping.
+* Implemented the use of Tor relays as default vanilla bridges.
+* Disable ntcp2 published option of Putple I2P if notransit is enabled.
+* Minor fixes.
