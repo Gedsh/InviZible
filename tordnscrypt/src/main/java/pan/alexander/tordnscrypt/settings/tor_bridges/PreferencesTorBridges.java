@@ -470,31 +470,26 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         }
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     private void observeTimeouts() {
-        viewModel.getTimeoutLiveData().observe(getViewLifecycleOwner(), bridgePingData -> {
-            for (BridgePingData bridgePing : bridgePingData) {
-                for (ObfsBridge obfsBridge : bridgesToDisplay) {
-                    if (obfsBridge.bridge.hashCode() == bridgePing.getBridgeHash()) {
-                        obfsBridge.ping = bridgePing.getPing();
+        viewModel.getTimeoutLiveData().observe(getViewLifecycleOwner(), bridgePingData ->
+                doActionAndUpdateRecycler(() -> {
+
+                    for (BridgePingData bridgePing : bridgePingData) {
+                        for (ObfsBridge obfsBridge : bridgesToDisplay) {
+                            if (obfsBridge.bridge.hashCode() == bridgePing.getBridgeHash()) {
+                                obfsBridge.ping = bridgePing.getPing();
+                            }
+                        }
                     }
-                }
-            }
 
-            if (bridgePingData.size() == bridgesToDisplay.size()) {
-                sortBridgesByPing();
-                limitDisplayedBridgesInCaseOfDefaultVanillaBridges();
-            }
+                    if (bridgePingData.size() == bridgesToDisplay.size()) {
+                        sortBridgesByPing();
+                        limitDisplayedBridgesInCaseOfDefaultVanillaBridges();
+                    } else {
+                        sortBridgesByPing();
+                    }
 
-            handlerLazy.get().post(() -> {
-                if (rvBridges != null
-                        && !rvBridges.isComputingLayout()
-                        && bridgeAdapter != null) {
-                    sortBridgesByPing();
-                    bridgeAdapter.notifyDataSetChanged();
-                }
-            });
-        });
+                }));
     }
 
     private void limitDisplayedBridgesInCaseOfDefaultVanillaBridges() {
@@ -512,13 +507,12 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     }
 
     private void observeRequestedBridges() {
-        viewModel.getBridgesLiveData().observe(getViewLifecycleOwner(), bridges ->
-                handlerLazy.get().post(() -> {
+        viewModel.getBridgesLiveData().observe(getViewLifecycleOwner(), (bridges) -> {
                     swipeRefreshBridges.setRefreshing(false);
                     if (areDefaultVanillaBridgesSelected()) {
                         defaultBridgesOperation(bridges);
                     }
-                }));
+                });
     }
 
     private void sortBridgesByPing() {
@@ -701,88 +695,80 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         FileManager.readTextFile(getActivity(), currentBridgesFilePath, ADD_REQUESTED_BRIDGES_TAG);
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     private void noBridgesOperation() {
+        doActionAndUpdateRecycler(() -> {
+            checkNoBridgesRadioButton();
 
-        checkNoBridgesRadioButton();
+            cancelRequestingRelayBridgesIfRequired();
 
-        cancelRequestingRelayBridgesIfRequired();
+            viewModel.cancelRequestingRelayBridges();
 
-        viewModel.cancelRequestingRelayBridges();
+            bridgesToDisplay.clear();
+            bridgesInUse.clear();
 
-        bridgesToDisplay.clear();
-        bridgesInUse.clear();
-        if (bridgeAdapter != null)
-            bridgeAdapter.notifyDataSetChanged();
-
-        tvBridgesListEmpty.setVisibility(View.GONE);
+            tvBridgesListEmpty.setVisibility(View.GONE);
+        });
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     private void defaultBridgesOperation(List<String> bridgesDefault) {
+        doActionAndUpdateRecycler(() -> {
+            checkDefaultBridgesRadioButton();
 
-        checkDefaultBridgesRadioButton();
+            cancelRequestingRelayBridgesIfRequired();
 
-        cancelRequestingRelayBridgesIfRequired();
+            bridgesToDisplay.clear();
+            bridgesInappropriateType.clear();
 
-        bridgesToDisplay.clear();
-        bridgesInappropriateType.clear();
+            BridgeType obfsTypeSp = BridgeType.valueOf(spDefaultBridges.getSelectedItem().toString());
 
-        BridgeType obfsTypeSp = BridgeType.valueOf(spDefaultBridges.getSelectedItem().toString());
+            if (bridgesDefault == null)
+                return;
 
-        if (bridgesDefault == null)
-            return;
+            separateBridges(bridgesDefault, obfsTypeSp);
 
-        separateBridges(bridgesDefault, obfsTypeSp);
-
-        if (bridgeAdapter != null) {
             sortBridgesByPing();
-            bridgeAdapter.notifyDataSetChanged();
-        }
 
-        if (bridgesToDisplay.isEmpty()) {
-            tvBridgesListEmpty.setVisibility(View.VISIBLE);
-        } else {
-            tvBridgesListEmpty.setVisibility(View.GONE);
+            if (bridgesToDisplay.isEmpty()) {
+                tvBridgesListEmpty.setVisibility(View.VISIBLE);
+            } else {
+                tvBridgesListEmpty.setVisibility(View.GONE);
 
-            if (modulesStatus.getTorState() == STOPPED
-                    || areDefaultVanillaBridgesSelected()) {
-                viewModel.measureTimeouts(bridgesToDisplay);
+                if (modulesStatus.getTorState() == STOPPED
+                        || areDefaultVanillaBridgesSelected()) {
+                    viewModel.measureTimeouts(bridgesToDisplay);
+                }
             }
-        }
+        });
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     private void ownBridgesOperation(List<String> bridgesCustom) {
+        doActionAndUpdateRecycler(() -> {
+            checkOwnBridgesRadioButton();
 
-        checkOwnBridgesRadioButton();
+            cancelRequestingRelayBridgesIfRequired();
 
-        cancelRequestingRelayBridgesIfRequired();
+            bridgesToDisplay.clear();
+            bridgesInappropriateType.clear();
 
-        bridgesToDisplay.clear();
-        bridgesInappropriateType.clear();
+            BridgeType obfsTypeSp = BridgeType.valueOf(spOwnBridges.getSelectedItem().toString());
 
-        BridgeType obfsTypeSp = BridgeType.valueOf(spOwnBridges.getSelectedItem().toString());
+            if (bridgesCustom == null)
+                return;
 
-        if (bridgesCustom == null)
-            return;
+            separateBridges(bridgesCustom, obfsTypeSp);
 
-        separateBridges(bridgesCustom, obfsTypeSp);
-
-        if (bridgeAdapter != null) {
             sortBridgesByPing();
-            bridgeAdapter.notifyDataSetChanged();
-        }
 
-        if (bridgesToDisplay.isEmpty()) {
-            tvBridgesListEmpty.setVisibility(View.VISIBLE);
-        } else {
-            tvBridgesListEmpty.setVisibility(View.GONE);
+            if (bridgesToDisplay.isEmpty()) {
+                tvBridgesListEmpty.setVisibility(View.VISIBLE);
+            } else {
+                tvBridgesListEmpty.setVisibility(View.GONE);
 
-            if (modulesStatus.getTorState() == STOPPED) {
-                viewModel.measureTimeouts(bridgesToDisplay);
+                if (modulesStatus.getTorState() == STOPPED) {
+                    viewModel.measureTimeouts(bridgesToDisplay);
+                }
             }
-        }
+        });
     }
 
     private void cancelRequestingRelayBridgesIfRequired() {
@@ -1117,23 +1103,17 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         }
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     private void requestRelayBridges(boolean displayLoading) {
 
         if (displayLoading) {
             swipeRefreshBridges.setRefreshing(true);
         }
 
-        bridgesToDisplay.clear();
-        handlerLazy.get().post(() -> {
-            if (rvBridges != null
-                    && !rvBridges.isComputingLayout()
-                    && bridgeAdapter != null) {
-                bridgeAdapter.notifyDataSetChanged();
-            }
+        doActionAndUpdateRecycler(() -> {
+            bridgesToDisplay.clear();
+            viewModel.requestRelayBridges();
         });
 
-        viewModel.requestRelayBridges();
     }
 
     public void saveRelayBridgesWereRequested(boolean requested) {
@@ -1161,5 +1141,17 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 && !bridgeLine.contains(meek_lite.toString())
                 && !bridgeLine.contains(snowflake.toString())
                 && !bridgeLine.isEmpty();
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private void doActionAndUpdateRecycler(Runnable action) {
+        handlerLazy.get().post(() -> {
+            if (rvBridges != null
+                    && !rvBridges.isComputingLayout()
+                    && bridgeAdapter != null) {
+                action.run();
+                bridgeAdapter.notifyDataSetChanged();
+            }
+        });
     }
 }
