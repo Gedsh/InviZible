@@ -1,2 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
+<resources>
+    <string name="nav_header_subtitle">найкраще рішення для вашої конфіденційності</string>
+    <string name="action_settings">Налаштування</string>
+    <string name="tvITPDStarting">I2P запускається</string>
+    <string name="tvITPDNotInstalled">I2P не встановлено</string>
+    <string name="swRunOnBoot">Автозавантаження</string>
+    <string name="please_wait">Будь ласка зачекайте…</string>
+    <string name="dont_show">Більше не показувати</string>
+    <string name="tvDNSInstalled">DNSCrypt встановлено</string>
+    <string name="tvDNSInstalling">DNSCrypt встановлюється</string>
+    <string name="tvDNSNotInstalled">DNSCrypt не встановлено</string>
+    <string name="tvDNSStarting">DNSCrypt запускається</string>
+    <string name="tvDNSStopping">DNSCrypt зупиняється</string>
+    <string name="tvTorStop">Tor зупинено</string>
+    <string name="tvTorInstalled">Tor встановлено</string>
+    <string name="tvTorInstalling">Tor встановлюється</string>
+    <string name="tvTorNotInstalled">Tor не встановлено</string>
+    <string name="tvTorStarting">Tor запускається</string>
+    <string name="tvTorConnecting">Підключення</string>
+    <string name="tvTorRunning">Tor працює</string>
+    <string name="tvTorStopping">Tor зупиняється</string>
+    <string name="error">Помилка!</string>
+    <string name="install">Встановити</string>
+    <string name="exit">Вихід</string>
+    <string name="done">Готово</string>
+    <string name="wrong">Щось пішло не так!</string>
+    <string name="premium">Преміум версія</string>
+    <string name="agree">Я згоден</string>
+    <string name="save_changes">Зберегти зміни</string>
+    <string name="discard_changes">Скасувати зміни</string>
+    <string name="allow">Дозволити</string>
+    <string name="areYouSure">Ви впевнені\? Ця дія не може бути скасована!</string>
+    <string name="write_file_error">Помилка при збереженні файлу!</string>
+    <string name="nav_header_title">Tor, DNSCrypt та I2P</string>
+    <string name="tvITPDRunning">I2P працює</string>
+    <string name="tvITPDInstalled">I2P встановлено</string>
+    <string name="root_available">Перевірка наявності Root…</string>
+    <string name="tvITPDStop">I2P зупинено</string>
+    <string name="tvITPDInstalling">I2P встановлюється</string>
+    <string name="tvDNSStop">DNSCrypt зупинено</string>
+    <string name="tvDNSRunning">DNSCrypt працює</string>
+    <string name="cancel">Скасувати</string>
+    <string name="install_message">Ви бажаєте завершити встановлення\?</string>
+    <string name="warning">Попередження!</string>
+    <string name="message_no_root_used">Ви можете використовувати InviZible Pro в режимі локального VPN або спільно з програмами з функцією проксі або власним локальним VPN.</string>
+    <string name="message_no_root_used_kitkat">Ви можете використовувати InviZible Pro спільно з програмами з функцією проксі або власним локальним VPN.</string>
+</resources>
