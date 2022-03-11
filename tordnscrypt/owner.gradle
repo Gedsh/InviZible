@@ -92,7 +92,7 @@ android {
         targetSdkVersion 31
         versionCode 157
 
-        resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt-rBR", "el"
+        resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt-rBR", "el", "tr"
 
         externalNativeBuild {
             cmake {
