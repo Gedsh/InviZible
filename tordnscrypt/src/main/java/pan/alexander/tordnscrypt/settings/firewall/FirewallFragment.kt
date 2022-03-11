@@ -876,7 +876,7 @@ class FirewallFragment : Fragment(),
         }
 
     private fun onSortFinished() {
-        binding.rvFirewallApps.scrollToPosition(0)
+        _binding?.rvFirewallApps?.scrollToPosition(0)
     }
 
     fun onBackPressed(): Boolean {
