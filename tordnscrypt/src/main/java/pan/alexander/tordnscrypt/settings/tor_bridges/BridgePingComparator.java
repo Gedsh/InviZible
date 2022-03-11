@@ -29,8 +29,6 @@ public class BridgePingComparator implements Comparator<ObfsBridge> {
             return 1;
         } else if (bridge1.active && !bridge2.active) {
             return -1;
-        } else if (bridge1.active) {
-            return bridge1.ping - bridge2.ping;
         } else if (bridge1.ping <= 0 && bridge2.ping > 0) {
             return 1;
         } else if (bridge1.ping > 0 && bridge2.ping <= 0) {
