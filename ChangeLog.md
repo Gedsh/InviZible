@@ -725,5 +725,5 @@
 * Implemented the use of Tor relays as default vanilla bridges.
 * DNSCrypt force_tcp is enabled by default.
 * Updated default DNSCrypt servers.
-* Disable ntcp2 published option of Putple I2P if notransit is enabled.
+* Disable ntcp2 published option of Purple I2P if notransit is enabled.
 * Minor fixes.
