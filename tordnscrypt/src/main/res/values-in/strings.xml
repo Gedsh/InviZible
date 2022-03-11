@@ -38,7 +38,6 @@
     <string name="wrong">"Ada sesuatu yang salah!"</string>
     <string name="install_message">"Apakah anda ingin menyelesaikan pemasangan?"</string>
     <string name="premium">"Versi Premium"</string>
-
     <!-- "Saya setuju" are more closed with this -->
     <string name="agree">"Setuju"</string>
     <string name="disagree">"Tolak"</string>
@@ -69,11 +68,9 @@
     <string name="pref_fast_select_dns_server">"Pilih Server DNSCrypt"</string>
     <string name="pref_fast_tor">"Setelan Tor"</string>
     <string name="pref_fast_routing">"Setelan Rute"</string>
-
     <!-- Arahkan semua trafik melalui TOR -->
     <string name="pref_fast_all_through_tor">"Alihkan semua lalu lintas data melalui Tor"</string>
     <string name="pref_fast_all_through_ipro">"Alihkan semua lalu lintas data melalui InviZible"</string>
-
     <!-- Pilih Situs -->
     <string name="pref_fast_unlock_with_tor">"Pilih website"</string>
     <string name="pref_fast_unlock_with_tor_summ">"Daftar website dibuka dengan Tor"</string>
@@ -84,7 +81,6 @@
     <string name="pref_fast_exclude_from_tor_summ">"Daftar WebSites untuk membuka secara langsung"</string>
     <string name="pref_fast_exclude_apps_from_tor">"Kecualikan aplikasi"</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">"Daftar aplikasi untuk dibuka langsung"</string>
-
     <!-- Waktu interval penyegaran -->
     <string name="pref_fast_site_refresh_interval">"Segarkan Interval"</string>
     <string name="pref_fast_site_refresh_interval_summ">"Masukkan nilai (dalam jam) untuk menyegarkan alamat IP laman. Khusus versi Android 5.1 keatas, masukkan nilai nol untuk menghentikan penyegaran."</string>
@@ -109,10 +105,8 @@
     <string name="pref_fast_language">"Pilih bahasa"</string>
     <string name="pref_fast_block_http">"Blokir http"</string>
     <string name="pref_fast_block_http_summ">"Tolak koneksi ke http dengan porta 80"</string>
-
     <!-- Mutakhirkan -->
     <string name="pref_fast_categ_update">"Pembaruan"</string>
-
     <!-- Pemutakhiran otomatis -->
     <string name="pref_fast_auto_update">"Perbarui Otomatis"</string>
     <string name="pref_fast_auto_update_summ">"Cek InviZible Pro dan perbarui modul setiap hari"</string>
@@ -141,7 +135,6 @@ Sistem Operasi seperti MIUI membutuhkan langkah khusus."</string>
     <string name="pref_common_categ_hotspot">"Experimental-HOTSPOT"</string>
     <string name="pref_common_tethering_autostart">"Memulai Penambatan saat Boot"</string>
     <string name="pref_common_tor_tethering">"Ijinkan Penambatan Tor"</string>
-
     <!-- Alihkan semua arus melalui TOR -->
     <string name="pref_common_tor_route_all">"Alihkan semua lalu lintas melalui Tor"</string>
     <string name="pref_common_tor_route_all_summ">"Alihkan lalu lintas data yang masuk melalui Tor"</string>
@@ -271,7 +264,6 @@ Khusus warga Tiongkok, mungkin perlu menyetel alamat berikut : 114.114.114:53"</
     <string name="pref_itpd_com_bandwidth_summ">"Batas bandwidth dalam KBps."</string>
     <string name="pref_itpd_com_share_summ">"Maks % batas bandwidth untuk transit. 0–100."</string>
     <string name="pref_itpd_com_ssu_summ">"Aktifkan protokol transport SSU (gunakan UDP)."</string>
-
     <!-- Fuzzy -->
     <string name="pref_itpd_com_ntcp_summ">"Aktifkan protokol transport NTCP2 (gunakan TCP)."</string>
     <string name="pref_itpd_com_use_ntcpproxy">"Aktifkan ntcpproxy"</string>
@@ -512,4 +504,10 @@ Matikan dan hidupkan wifi beberapa saat, hotspot Wi-Fi yang anda akses saat ini 
     <string name="backupSaved">"Backup saved"</string>
     <string name="backupRestored">"Backup restored"</string>
     <string name="thanks_for_donate_gp">"Pengembang Invizible Pro menyampaikan apresiasi kepada anda atas dukungannya."</string>
+    <string name="notification_connecting">Menghubungkan…</string>
+    <string name="notification_waiting_network">Menunggu koneksi…</string>
+    <string name="tile_change_tor_ip">Ganti IP Tor</string>
+    <string name="pref_tor_hardware_accel_summ">Coba gunakan akselerasi perangkat keras kripto bawaan jika tersedia</string>
+    <string name="tile_changing_tor_ip">Mengganti IP Tor</string>
+    <string name="tile_dialog_over_three_tiles_message">Kamu sudah menambahkan lebih dari 3 ubin ke Pengaturan Cepat. Disarankan hanya menambahkan 3. Menambahkan lebih dari 3 ubin dapat menyebabkan masalah dengan kontrol aplikasi.</string>
 </resources>
