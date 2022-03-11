@@ -110,16 +110,16 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     private final Lazy<Handler> handler;
 
     private Context context;
-    private Object commonNetworkCallback;
-    private BroadcastReceiver vpnConnectivityReceiver;
-    private FirewallNotification firewallNotificationReceiver;
+    private volatile Object commonNetworkCallback;
+    private volatile BroadcastReceiver vpnConnectivityReceiver;
+    private volatile FirewallNotification firewallNotificationReceiver;
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
-    private OperationMode savedOperationMode = UNDEFINED;
-    private boolean commonReceiversRegistered = false;
-    private boolean rootReceiversRegistered = false;
+    private volatile OperationMode savedOperationMode = UNDEFINED;
+    private volatile boolean commonReceiversRegistered = false;
+    private volatile boolean rootReceiversRegistered = false;
     private volatile boolean lock = false;
     private volatile Future<?> checkTetheringTask;
-    private boolean vpnRevoked = false;
+    private volatile boolean vpnRevoked = false;
 
     @Inject
     public ModulesReceiver(
@@ -158,6 +158,23 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         } else {
             logi("ModulesReceiver received " + intent);
         }
+
+        PendingResult pendingResult = goAsync();
+
+        cachedExecutor.submit(() -> {
+            try {
+                intentOnReceive(intent, action);
+            } catch (Exception e) {
+                loge("ModulesReceiver onReceive", e, true);
+            } finally {
+                pendingResult.finish();
+            }
+        });
+
+
+    }
+
+    private void intentOnReceive(Intent intent, String action) {
 
         OperationMode mode = modulesStatus.getMode();
         if (savedOperationMode != mode) {
