@@ -159,6 +159,11 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             logi("ModulesReceiver received " + intent);
         }
 
+        if (this.context == null) {
+            logw("ModulesReceiver context is null");
+            return;
+        }
+
         PendingResult pendingResult = goAsync();
 
         cachedExecutor.submit(() -> {
@@ -209,7 +214,9 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
     void registerReceivers(Context context) {
 
-        this.context = context;
+        if (this.context == null) {
+            this.context = context;
+        }
 
         savedOperationMode = modulesStatus.getMode();
 
