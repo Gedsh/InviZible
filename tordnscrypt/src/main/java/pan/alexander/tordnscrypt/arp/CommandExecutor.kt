@@ -106,7 +106,7 @@ class CommandExecutor @Inject constructor() {
     fun closeRootCommandShell() {
         console?.let { console ->
             if (!console.isClosed) {
-                repeat(2) { console.run("exit") }
+                console.run("exit")
                 console.close()
             }
         }
