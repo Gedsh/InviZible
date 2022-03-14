@@ -38,10 +38,10 @@ class AppPreferenceHelperImpl @Inject constructor(
     @Named(APP_PREFERENCES_NAME)
     private val appSharedPreferences: SharedPreferences,
     @Named(CoroutinesModule.SUPERVISOR_JOB_MAIN_DISPATCHER_SCOPE)
-    private val _coroutineScope: CoroutineScope
+    coroutineScope: CoroutineScope
 ) : AppPreferenceHelper {
 
-    private val coroutineScope = _coroutineScope + CoroutineName(COROUTINE_NAME)
+    private val coroutineScope = coroutineScope + CoroutineName(COROUTINE_NAME)
     private val editor = appSharedPreferences.edit()
     private val keysToSaveSet by lazy { ConcurrentSkipListSet<String>() }
 

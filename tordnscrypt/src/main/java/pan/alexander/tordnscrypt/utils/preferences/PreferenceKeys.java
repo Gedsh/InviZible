@@ -59,6 +59,7 @@ public interface PreferenceKeys {
     String BLOCK_HTTP = "pref_fast_block_http";
     String ALL_THROUGH_TOR = "pref_fast_all_through_tor";
     String BYPASS_LAN = "Allow LAN";
+    String AUTO_START_DELAY = "pref_fast_autostart_delay";
 
     //Common Settings
     String ARP_SPOOFING_DETECTION = "pref_common_arp_spoofing_detection";
@@ -84,4 +85,7 @@ public interface PreferenceKeys {
 
     //Firewall Settings
     String FIREWALL_SHOWS_ALL_APPS = "FirewallShowsAllApps";
+
+    //Logs
+    String SAVE_ROOT_LOGS = "swRootCommandsLog";
 }

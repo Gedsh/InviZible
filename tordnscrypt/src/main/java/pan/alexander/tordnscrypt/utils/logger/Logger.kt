@@ -20,7 +20,8 @@
 package pan.alexander.tordnscrypt.utils.logger
 
 import android.util.Log
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+
+private const val LOG_TAG = "pan.alexander.TPDCLogs"
 
 object Logger {
 
