@@ -727,3 +727,11 @@
 * Updated default DNSCrypt servers.
 * Disable ntcp2 published option of Purple I2P if notransit is enabled.
 * Minor fixes.
+
+**InviZible Pro beta 1.5.8**
+* Improved root commands execution.
+* Fixed active bridges sorting.
+* Added Turkish translation.
+* Updated Spanish translation.
+* Updated Indonesian translation.
+* Fixes and optimizations.
