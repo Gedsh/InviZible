@@ -522,4 +522,5 @@
     <string name="pref_common_kill_switch_summ">Блокировать подключение к Интернету, когда Tor, DNSCrypt и Purple I2P остановлены</string>
     <string name="notification_internet_blocked_message">Интернет заблокирован Аварийным блокировщиком. Запустите Tor, DNSCrypt или Purple I2P, чтобы разрешить соединение. Либо выключите Аварийный блокировщик в Общих настройках.</string>
     <string name="list_is_empty">Список пустой</string>
+    <string name="pref_dnscrypt_forwarding_rules_categ">Правила переадресации</string>
 </resources>
