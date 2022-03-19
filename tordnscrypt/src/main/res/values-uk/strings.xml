@@ -45,4 +45,11 @@
     <string name="warning">Попередження!</string>
     <string name="message_no_root_used">Ви можете використовувати InviZible Pro в режимі локального VPN або спільно з програмами з функцією проксі або власним локальним VPN.</string>
     <string name="message_no_root_used_kitkat">Ви можете використовувати InviZible Pro спільно з програмами з функцією проксі або власним локальним VPN.</string>
+    <string name="deny">Заборонити</string>
+    <string name="drawer_menu_DNSSettings">Налаштування DNSCrypt</string>
+    <string name="drawer_menu_TorSettings">Налаштування Tor</string>
+    <string name="drawer_menu_I2PDSettings">Налаштування I2P</string>
+    <string name="tvITPDStopping">I2P зупиняється</string>
+    <string name="disagree">Не згоден</string>
+    <string name="drawer_menu_commonSettings">Загальні налаштування</string>
 </resources>
