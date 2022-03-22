@@ -110,7 +110,7 @@
     <string name="pref_fast_tor_autostart">Start Tor On Boot</string>
     <string name="pref_fast_itpd_autostart">Start I2P On Boot</string>
     <string name="pref_fast_autostart_delay">Delay</string>
-    <string name="pref_fast_autostart_delay_summ">Use delay (in sec) only if auto start works Not Correct</string>
+    <string name="pref_fast_autostart_delay_summ">Use a delay (secs) only if Autostart does not work correctly</string>
     <string name="pref_fast_dns_server">DNSCrypt servers</string>
     <string name="pref_fast_select_dns_server">Select DNSCrypt servers</string>
     <string name="pref_fast_tor">Tor Settings</string>
