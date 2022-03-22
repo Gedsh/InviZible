@@ -63,7 +63,7 @@
     <string name="pref_fast_tor_autostart">"Mulai Tor saat Boot"</string>
     <string name="pref_fast_itpd_autostart">"Mulai I2P saat Boot"</string>
     <string name="pref_fast_autostart_delay">"Tunda"</string>
-    <string name="pref_fast_autostart_delay_summ">"Masukkan nilai penundaan (dalam detik) jika fitur mulai otomatis tidak bekerja semestinya"</string>
+    <string name="pref_fast_autostart_delay_summ">Masukkan nilai penundaan (dalam detik) jika fitur mulai otomatis tidak bekerja dengan semestinya</string>
     <string name="pref_fast_dns_server">"Server DNSCrypt"</string>
     <string name="pref_fast_select_dns_server">"Pilih Server DNSCrypt"</string>
     <string name="pref_fast_tor">"Setelan Tor"</string>
@@ -173,19 +173,21 @@
     <string name="pref_dnscrypt_proxy">"proxy_port"</string>
     <string name="pref_dnscrypt_other_categ">"Setelan Lainnya."</string>
     <string name="pref_dnscrypt_fallback_resolver_summ">Bootstrap resolver. Ini adalah resolver DNS normal yang tidak terenkripsi, yang hanya akan digunakan untuk kueri sekali pakai saat mengambil daftar resolver awal, dan hanya jika konfigurasi DNS sistem tidak berfungsi. Itu tidak akan pernah digunakan jika daftar telah di-cache.</string>
-    <string name="pref_dnscrypt_ignore_system_dns_summ">"Jangan biarkan dnscrypt-proxy mencoba menggunakan pengaturan DNS sistem. Gunakan resolver fallback hanya untuk kondisi tertentu"</string>
+    <string name="pref_dnscrypt_ignore_system_dns_summ">Jangan biarkan dnscrypt-proxy mencoba menggunakan pengaturan DNS sistem. Gunakan resolver fallback hanya untuk kondisi tertentu..</string>
     <string name="pref_dnscrypt_filters_categ">"FILTERS"</string>
     <string name="pref_dnscrypt_forwarding_rules_categ">Aturan pemindahan</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">Merutekan query untuk domain tertentu ke dedicated server khusus.</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">Aturan paksa</string>
-    <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking mengembalikan alamat yang telah ditentukan untuk nama tertentu. Selain bertindak sebagai file HOSTS, ia juga dapat mengembalikan alamat IP dari nama yang berbeda. Ini juga akan melakukan perataan CNAME..</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking mengembalikan alamat yang telah ditentukan untuk nama tertentu.
+\n Selain bertindak sebagai file HOSTS, ia juga dapat mengembalikan alamat IP dari nama yang berbeda. Ini juga akan melakukan perataan CNAME..</string>
     <string name="pref_dnscrypt_query_log_categ">"Pencatatan kueri."</string>
     <string name="pref_dnscrypt_query_log_summ">"Catat permintaan klien ke file."</string>
     <string name="pref_dnscrypt_query_log">"Aktifkan Pencatatan kueri"</string>
-    <string name="pref_dnscrypt_ignored_qtypes_summ">"Jangan catat jenis kueri berikut. Kosongi bidang ini agar semua pesan log tercatat"</string>
+    <string name="pref_dnscrypt_ignored_qtypes_summ">Jangan catat jenis kueri berikut. Kosongi bidang ini agar semua pesan log tercatat.</string>
     <string name="open_query_log">"Buka Log Kueri"</string>
     <string name="pref_dnscrypt_nx_log_categ">"Pencatatan kueri yang mencurigakan."</string>
-    <string name="pref_dnscrypt_nx_log_summ">Catat kueri untuk zona yang tidak ada. Kueri ini dapat mengungkapkan keberadaan malware, aplikasi yang rusak / usang, dan perangkat yang memberi sinyal keberadaannya kepada pihak ketiga.</string>
+    <string name="pref_dnscrypt_nx_log_summ">Catatan kueri untuk zona yang tidak ada.
+\nKueri ini dapat mengungkapkan keberadaan malware, aplikasi yang rusak / usang, dan perangkat yang memberi sinyal keberadaannya kepada pihak ketiga.</string>
     <string name="pref_dnscrypt_nx_log">"Aktifkan Pencatatan yang Mencurigakan"</string>
     <string name="open_nx_log">"Buka Log Mencurigakan"</string>
     <string name="pref_dnscrypt_blacklist_categ">"Pemblokiran berbasis pola (daftar hitam)."</string>
@@ -199,18 +201,18 @@
     <string name="pref_dnscrypt_whitelist_summ">"Daftar putih mendukung pola yang sama dengan daftar hitam. Jika nama cocok dengan entri daftar putih, sesi yang sesuai akan memotong nama dan filter IP."</string>
     <string name="pref_dnscrypt_sources_categ">"Server"</string>
     <string name="pref_dnscrypt_sources">"Sumber"</string>
-    <string name="pref_dnscrypt_sources_summ">"Alamat remote daftar resolver DNSCrypt tersedia"</string>
-    <string name="pref_dnscrypt_refresh_delay_summ">"Segarkan daftar resolver DNS (dalam jam)"</string>
+    <string name="pref_dnscrypt_sources_summ">Alamat remote dari daftar yang tersedia.</string>
+    <string name="pref_dnscrypt_refresh_delay_summ">Segarkan daftar resolver DNS (dalam jam).</string>
     <string name="pref_dnscrypt_relays_categ">"Relai"</string>
     <string name="pref_dnscrypt_relays">"Sumber"</string>
-    <string name="pref_dnscrypt_relays_delay_summ">"Segarkan daftar Relai (dalam jam)"</string>
+    <string name="pref_dnscrypt_relays_delay_summ">Segarkan daftar Relai (dalam jam).</string>
     <string name="pref_dnscrypt_relays_title">"Relai DNSCrypt"</string>
     <string name="pref_dnscrypt_not_exist">"Preferensi tidak ada di berkas dnscrypt-proxy.toml!"</string>
     <string name="btn_dnscrypt_delete_log">"Hapus log"</string>
     <string name="title_dnscrypt_query_log">"Log Kueri DNSCrypt"</string>
     <string name="title_dnscrypt_nx_log">"DNSCrypt Log Mencurigakan"</string>
     <string name="dnscrypt_empty_log">"Log kosong"</string>
-    <string name="pref_dnscrypt_block_unqualified_summ">"Menanggapi kueri jenis A dan AAAA untuk nama host tanpa nama domain secepatnya"</string>
+    <string name="pref_dnscrypt_block_unqualified_summ">Menanggapi kueri jenis A dan AAAA untuk nama host tanpa nama domain secepatnya.</string>
     <string name="pref_dnscrypt_block_undelegated_summ">"Tanggapi kueri untuk zona lokal daripada membocorkannya ke resolver upstream (berakibat galat dan timeout secara sering)."</string>
     <string name="pref_tor_virtual_addr_network_IPv4_summ">"Ketika Tor perlu menetapkan alamat virtual (tidak digunakan) karena perintah MAPADDRESS dari pengontrol atau fitur AutomapHostsOnResolve, Tor mengambil alamat yang belum ditetapkan dari kisaran ini."</string>
     <string name="pref_tor_avoid_disc_writes_summ">"Jika bukan nol, cobalah untuk menulis ke disk lebih jarang."</string>
@@ -259,9 +261,7 @@
     <!-- Fuzzy -->
     <string name="pref_itpd_com_ntcp_summ">"Aktifkan protokol transport NTCP2 (gunakan TCP)."</string>
     <string name="pref_itpd_com_use_ntcpproxy">"Aktifkan ntcpproxy"</string>
-    <string name="pref_itpd_com_ntcpproxy_summ">"Atur proxy NTCP.
-Contoh pola alamat 
-http://alamat:porta atau socks://alamat:porta."</string>
+    <string name="pref_itpd_com_ntcpproxy_summ">Atur proxy NTCP. Contoh pola alamat http://alamat:porta atau socks://alamat:porta.</string>
     <string name="pref_itpd_HTTP_proxy">"Proxy HTTP"</string>
     <string name="pref_itpd_HTTP_proxy_enabled">"Proxy HTTP"</string>
     <string name="pref_itpd_HTTP_proxy_port">"Port proxy HTTP"</string>
@@ -289,22 +289,15 @@ http://alamat:porta atau socks://alamat:porta."</string>
     <string name="pref_itpd_addressbook_subscriptions_summ">"URL langganan AddressBook."</string>
     <string name="pref_itpd_not_exist">"Prererensi tidak ada di i2pd.conf!"</string>
     <string name="helper_dialog_title">"Info"</string>
-    <string name="helper_dnscrypt_stopped">"Sepertinya DNSCrypt dimatikan Sistem Android.
-Koneksi internet anda telah pulih. 
-Periksa pengaturan perangkat!"</string>
-    <string name="helper_tor_stopped">"Sepertinya Tor dimatikan Sistem Android. 
-
-Koneksi internet anda telah pulih. 
-Periksa pengaturan perangkat!"</string>
-    <string name="helper_itpd_stopped">"Sepertinya I2P dimatikan Sistem Android.
-Koneksi internet anda telah pulih. 
-Periksa pengaturan perangkat!"</string>
+    <string name="helper_dnscrypt_stopped">Sepertinya DNSCrypt dimatikan Sistem Android. Koneksi internet anda telah pulih. Periksa pengaturan perangkat!</string>
+    <string name="helper_tor_stopped">Sepertinya Tor dimatikan Sistem Android. Koneksi internet anda dipulihkan. Periksa pengaturan perangkat!</string>
+    <string name="helper_itpd_stopped">Sepertinya I2P dimatikan Sistem Android. Koneksi internet anda dipulihkan. Periksa pengaturan perangkat!</string>
     <string name="helper_dnscrypt_no_internet">"Sepertinya InviZible Pro TIDAK BISA terhubung ke INTERNET.
         Silakan periksa aturan FIREWALL, lalu Setujui perijinan koneksi untuk aplikasi InviZible Pro dan setujui akses ROOT."</string>
     <string name="helper_tor_use_bridges">"Sepertinya Tor TIDAK BISA terhubung ke INTERNET.
         Penyedia jasa Internet anda mungkin memblokir koneksi Tor. Aktifkan fitur Bridge di Tor dengan cara tekan Menu -&gt; Pengaturan Cepat -&gt; Bridge"</string>
     <string name="action_mode_child_lock">Kunci dini</string>
-    <string name="action_mode_dialog_message_lock">"Anda dapat mengunci kontrol aplikasi ini. Silakan masukkan kata sandi"</string>
+    <string name="action_mode_dialog_message_lock">Anda dapat mengunci kontrol aplikasi ini. Silakan masukkan kata sandi.</string>
     <string name="action_mode_dialog_message_unlock">"Silakan masukkan kata sandi."</string>
     <string name="action_mode_dialog_wrong_pass">"Kata sandi salah!"</string>
     <string name="action_mode_dialog_unlocked">"Kunci Kontrol Terbuka"</string>
@@ -312,7 +305,7 @@ Periksa pengaturan perangkat!"</string>
     <string name="action_mode_hotspot">"HOTSPOT"</string>
     <string name="help_activity_save_logs">"Simpan log"</string>
     <string name="help_activity_path">"Path untuk log:"</string>
-    <string name="help_activity_logs_saved">"Berkas log tersimpan. Silakan kirim berkas InvizibleLogs.txt ke pengembang. Berkas log tersimpan di folder"</string>
+    <string name="help_activity_logs_saved">Berkas log tersimpan. Silakan kirim berkas InvizibleLogs.txt ke pengembang. Berkas log tersimpan di folder:</string>
     <string name="update_core_title">"Memperbarui"</string>
     <string name="update_core_message">"Beberapa modul InviZible siap diperbarui. Apakah Anda ingin memperbarui? Ini akan menimpa pengaturan modul Anda!"</string>
     <string name="update_core_yes">"Memperbarui"</string>
@@ -346,8 +339,8 @@ Periksa pengaturan perangkat!"</string>
     <string name="donate_button">"Kunjungi"</string>
     <string name="enter_code_button">"Masukkan kode"</string>
     <string name="enter_code">"Masukkan kode"</string>
-    <string name="thanks_for_donate">"Pengembang Invizible Pro menyampaikan apresiasi kepada anda atas dukungannya. Apakah anda ingin meningkatkan ke versi PRO? Proses pembaruan akan berjalan di latar belakang"</string>
-    <string name="pref_dnscrypt_relays_summ">"Alamat remote daftar relai tersedia"</string>
+    <string name="thanks_for_donate">Pengembang Invizible Pro menyampaikan apresiasi kepada anda atas dukungannya. Apakah anda ingin meningkatkan ke versi PRO\? Proses pembaruan akan berjalan di latar belakang.</string>
+    <string name="pref_dnscrypt_relays_summ">Alamat remote daftar relai tersedia.</string>
     <string name="vpn_mode_active">"Modus VPN aktif"</string>
     <string name="vpn_mode_off">"Modus VPN tidak aktif"</string>
     <string name="vpn_mode_error">"Kesalahan mode VPN!"</string>
@@ -363,7 +356,7 @@ Periksa pengaturan perangkat!"</string>
     <string name="add_custom_server_error">"Konfigurasi server khusus tidak valid. Silakan periksa bidang SDNS."</string>
     <string name="pending_purchase">"Harap perhatikan bahwa Anda memiliki pembelian yang tertunda:"</string>
     <string name="buy_premium_gp">"Proyek Pro InviZible membutuhkan bantuan Anda. Tekan OK untuk membeli fitur premium."</string>
-    <string name="wrong_purchase_signature_gp">"Maaf, tetapi tidak mungkin untuk mengkonfirmasi pembelian Anda. Anda akan menerima pengembalian dana setelah 3 hari."</string>
+    <string name="wrong_purchase_signature_gp">Maaf, tetapi tidak mungkin untuk mengkonfirmasi pembelian mu. Anda akan menerima pengembalian dana setelah 3 hari.</string>
     <string name="only_premium_feature">"Sayangnya, fitur ini hanya tersedia untuk versi premium."</string>
     <string name="pref_itpd_use_HTTP_outproxy">Proxy keluar HTTP</string>
     <string name="pref_itpd_HTTP_outproxy_address">"Alamat HTTP outproxy"</string>
@@ -376,34 +369,34 @@ Periksa pengaturan perangkat!"</string>
     <string name="pref_tor_edit_conf">"Sunting tor.conf langsung"</string>
     <string name="pref_itpd_edit_conf">"Sunting i2pd.conf langsung"</string>
     <string name="pref_itpd_edit_tunnels">"Sunting tunnels.conf langsung"</string>
-    <string name="config_changes_dialog_message">"Apakah anda ingin menyimpan perubahan setelan? Hal ini akan merusak kinerja Invizible Pro"</string>
+    <string name="config_changes_dialog_message">Apakah anda ingin menyimpan perubahan setelan\? Hal ini akan merusak kinerja Invizible Pro.</string>
     <string name="pref_dnscrypt_ipv4_servers_summ">"Pakai server yang dapat dijangkau lewat IPv4"</string>
     <string name="pref_dnscrypt_ipv6_servers_summ">"Pakai server yang dapat dijangkau lewat IPv6"</string>
     <string name="pref_dnscrypt_import_forwarding_rules">"Muat aturan forwading"</string>
-    <string name="pref_dnscrypt_import_forwarding_rules_summ">"Muat berkas aturan forwarding. Anda dapat memilih berkas lebih dari satu, baris yang sama akan dihapus"</string>
+    <string name="pref_dnscrypt_import_forwarding_rules_summ">Muat berkas aturan forwarding. Anda dapat memilih berkas lebih dari satu, baris yang sama akan dihapus.</string>
     <string name="pref_dnscrypt_erase_forwarding_rules">"Hapus aturan forward"</string>
     <string name="pref_dnscrypt_import_cloaking_rules">"Muat aturan cloak"</string>
-    <string name="pref_dnscrypt_import_cloaking_rules_summ">"Muat berkas aturan cloak. Anda dapat memilih berkas lebih dari satu, baris yang sama akan dihapus"</string>
+    <string name="pref_dnscrypt_import_cloaking_rules_summ">Muat berkas aturan cloak. Anda dapat memilih berkas lebih dari satu, baris yang sama akan dihapus.</string>
     <string name="pref_dnscrypt_erase_cloaking_rules">"Hapus aturan cloaking"</string>
     <string name="pref_dnscrypt_import_blacklist">"Muat daftar blokir"</string>
-    <string name="pref_dnscrypt_import_blacklist_summ">"Muat daftar host atau daftar domain. Anda dapat memilih berkas lebih dari satu, baris yang sama akan dihapus"</string>
+    <string name="pref_dnscrypt_import_blacklist_summ">Muat daftar host atau daftar domain. Anda dapat memilih berkas lebih dari satu, baris yang sama akan dihapus.</string>
     <string name="pref_dnscrypt_erase_blacklist">"Hapus daftar hitam"</string>
     <string name="pref_dnscrypt_import_ipblacklist">"Muat daftar blokir IP"</string>
-    <string name="pref_dnscrypt_import_ipblacklist_summ">"Muat daftar blokir IP. Anda dapat memilih berkas lebih dari satu, baris yang sama akan dihapus"</string>
+    <string name="pref_dnscrypt_import_ipblacklist_summ">Muat daftar blokir IP. Anda dapat memilih berkas lebih dari satu, baris yang sama akan dihapus.</string>
     <string name="pref_dnscrypt_erase_ipblacklist">"Hapus daftar blokir IP"</string>
     <string name="pref_dnscrypt_import_whitelist">"Muat daftar putih"</string>
     <string name="pref_dnscrypt_import_whitelist_summ">"Muat daftar domain. Anda dapat memilih berkas lebih dari satu, baris yang sama akan dihapus."</string>
     <string name="pref_dnscrypt_erase_whitelist">"Hapus daftar putih"</string>
-    <string name="pref_dnscrypt_block_ipv6_summ">"Tanggapi kueri yang berhubungan dengan IPv6 dengan pesan kosong secepatnya. Fitur ini akan mempercepat koneksi namun juga menimbulkan masalah pada resolver tertentu"</string>
-    <string name="helper_dnscrypt_private_dns">"Mohon matikan \"DNS Pribadi\" di setelan jaringan Android. Opsi ini akan mengganggu fitur DNSCrypt"</string>
+    <string name="pref_dnscrypt_block_ipv6_summ">Tanggapi kueri yang berhubungan dengan IPv6 dengan pesan kosong secepatnya. Fitur ini akan mempercepat koneksi namun juga menimbulkan masalah pada resolver tertentu.</string>
+    <string name="helper_dnscrypt_private_dns">Mohon matikan \"DNS Pribadi\" di setelan jaringan Android. Opsi ini akan mengganggu fitur InviZible.</string>
     <string name="import_dnscrypt_rules_dialog_title">"Muat Aturan"</string>
     <string name="import_dnscrypt_rules_dialog_message">"Mohon tunggu… Memuat %d aturan."</string>
-    <string name="import_dnscrypt_rules_complete_dialog_message">"Selesai! %d aturan dimuat"</string>
-    <string name="erase_dnscrypt_rules_dialog_message">"Selesai! Aturan sudah dihapus"</string>
-    <string name="dnscrypt_many_rules_dialog_message">"Aturan terlalu banyak. Hanya 1000 aturan pertama saja yang ditampilkan"</string>
+    <string name="import_dnscrypt_rules_complete_dialog_message">Selesai! aturan %d akan dimuat.</string>
+    <string name="erase_dnscrypt_rules_dialog_message">Selesai! Aturan sudah dihapus.</string>
+    <string name="dnscrypt_many_rules_dialog_message">Aturan terlalu banyak. Hanya 1000 aturan pertama saja yang ditampilkan.</string>
     <string name="pref_tor_snowflake_stun">"Server STUN untuk bridge SnowFlake"</string>
-    <string name="pref_tor_isolate_dest_address_summ">"Jangan bagikan sirkuit dengan aliran yang menarget tujuan alamat yang berbeda"</string>
-    <string name="pref_tor_isolate_dest_port_summ">"Jangan bagikan sirkuit dengan aliran yang menarget tujuan porta yang berbeda"</string>
+    <string name="pref_tor_isolate_dest_address_summ">Jangan bagikan sirkuit dengan aliran yang menarget tujuan alamat yang berbeda.</string>
+    <string name="pref_tor_isolate_dest_port_summ">Jangan bagikan sirkuit dengan aliran yang menarget tujuan port yang berbeda.</string>
     <string name="dialog_new_tor_default_bridges_available">"Bridge Tor bawaan baru tersedia. Update sekarang?"</string>
     <string name="pref_common_mitm_categ">"Deteksi serangan MITM"</string>
     <string name="pref_common_arp_spoofing_detection">"Deteksi spoofing ARP"</string>
@@ -416,25 +409,23 @@ Periksa pengaturan perangkat!"</string>
     <string name="pref_common_compatibility_mode">"Modus kompabilitas"</string>
     <string name="pref_common_compatibility_mode_summ">"Hidupkan fitur ini jika perangkat anda terpasang ROM kustom dan koneksi hilang ketika menekan tombol START"</string>
     <string name="pref_common_shell_control">"Hidupkan skrip kontrol"</string>
-    <string name="pref_common_shell_control_summ">Jalankan perintah berikut untuk mengatur modul aplikasi:
-\n\"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
-\n--ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Where 1 - starts, 0 - stops the module.</string>
+    <string name="pref_common_shell_control_summ">Jalankan perintah berikut untuk mengatur modul aplikasi: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Where 1 - starts, 0 - stops the module.</string>
     <string name="pref_common_local_eth_device_addr">"Alamat IP perangkat LAN"</string>
     <string name="pref_common_local_eth_device_addr_summ">"Hidupkan fitur perbaikan TTL dan atur LAN agar dapat terhubung ke InviZibleUse default gateway: %1$s, DNS server: %2$s."</string>
     <string name="pref_common_multi_user">"Dukungan multi-pengguna"</string>
     <string name="pref_common_multi_user_summ">"Cocok untuk aplikasi profil kerja, misal MIUI, Island, Shelter, dsb"</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">"Hidupkan Proxy keluaran SOCKS"</string>
-    <string name="pref_tor_SOCKS_output_address_summ">"Tor akan mengalihkan semua koneksi melalui Proxy SOCKS5"</string>
+    <string name="pref_tor_SOCKS_output_address_summ">Tor akan mengalihkan semua koneksi melalui Proxy SOCKS5.</string>
     <string name="notification_channel_services">"Layanan yang berjalan"</string>
     <string name="notification_channel_update">"Pemberitahuan update"</string>
     <string name="notification_channel_root">"Pemberitahuan perintah root"</string>
     <string name="dialog_send_crash_report">"Laporan mogok telah dibuat. Apakah anda ingin mengirim laporan ke pengembang agar Invizible bekerja lebih baik?"</string>
     <string name="btn_new_tor_identity">"Identitas Tor baru"</string>
     <string name="toast_new_tor_identity">"Identitas Tor telah diganti"</string>
-    <string name="proxy_server_ip">"Server Proxy"</string>
-    <string name="proxy_server_port">"Porta Proxy"</string>
-    <string name="proxy_server_user_name">"Nama pengguna"</string>
-    <string name="proxy_server_user_pass">"Sandi"</string>
+    <string name="proxy_server_ip">Server Proxy:</string>
+    <string name="proxy_server_port">Port Proxy:</string>
+    <string name="proxy_server_user_name">Nama pengguna:</string>
+    <string name="proxy_server_user_pass">Kata sandi:</string>
     <string name="proxy_server_empty_field_hint">"Bidang ini bisa dikosongi"</string>
     <string name="proxy_exclude_apps_from_proxy">"Kecualikan aplikasi"</string>
     <string name="proxy_exclude_apps_from_proxy_summ">Aplikasi pada daftar ini akan terhubung ke internet langsung tanpa melalui Tor atau proxy!</string>
@@ -456,41 +447,41 @@ Matikan dan hidupkan wifi beberapa saat, hotspot Wi-Fi yang anda akses saat ini 
     <string name="pref_tor_entry_nodes_alt_summ">"Matikan brigde Tor jika anda ingin memilih noda masuk."</string>
     <string name="notification_channel_firewall">"Firewall notifications"</string>
     <string name="menu_firewall">"Firewall"</string>
-    <string name="firewall_all_apps">"All"</string>
+    <string name="firewall_all_apps">Semua</string>
     <string name="firewall_system_apps">"System"</string>
     <string name="firewall_user_apps">"User"</string>
-    <string name="firewall_sort_by_name">"Sort by Name"</string>
-    <string name="firewall_sort_by_uid">"Sort by UID"</string>
-    <string name="firewall_switch">"Firewall On/Off"</string>
-    <string name="ask_save_changes">"Do you want to save the changes?"</string>
-    <string name="firewall_warning_enable_module">"To activate the firewall, you should start at least DNSCrypt or Tor."</string>
-    <string name="firewall_notification_allow_app_title">"%s is installed"</string>
-    <string name="firewall_notification_allow_app">"Allow Internet for it?"</string>
+    <string name="firewall_sort_by_name">Sortir menurut nama</string>
+    <string name="firewall_sort_by_uid">Sortir menurut UID</string>
+    <string name="firewall_switch">Firewall hidup/mati</string>
+    <string name="ask_save_changes">Apakah anda ingin menyimpan perubahan\?</string>
+    <string name="firewall_warning_enable_module">Untuk mengaktifkan firewall, anda setidaknya harus mengaktifkan DNSCrypt atau Tor.</string>
+    <string name="firewall_notification_allow_app_title">%s telah terpasang</string>
+    <string name="firewall_notification_allow_app">Izinkan internet untuk ini\?</string>
     <string name="allow">Izinkan</string>
     <string name="deny">Tolak</string>
     <string name="pref_fast_theme_titles_day_mode">"Day Mode"</string>
     <string name="pref_fast_theme_titles_night_mode">Mode Malam</string>
     <string name="pref_fast_theme_titles_auto_mode">"Auto"</string>
     <string name="pref_fast_theme_titles_default_mode">"System default"</string>
-    <string name="firewall_btnTopLanFirewall_tooltip">"Allow connections to local network, onion and i2p sites"</string>
-    <string name="firewall_btnTopWifiFirewall_tooltip">"Allow connections in WiFi networks"</string>
-    <string name="firewall_btnTopGsmFirewall_tooltip">"Allow connections in GSM networks"</string>
-    <string name="firewall_btnTopRoamingFirewall_tooltip">"Allow connections while roaming"</string>
-    <string name="firewall_btnTopVpnFirewall_tooltip">"Allow connections with VPN enabled"</string>
-    <string name="firewall_btnTopCheckAllFirewall_tooltip">"Select all"</string>
-    <string name="firewall_btnTopUnCheckAllFirewall_tooltip">"Unselect all"</string>
-    <string name="firewall_item_button_tooltip">"Green - allow, white - deny connections"</string>
-    <string name="pref_firewall_title">"Firewall Settings"</string>
-    <string name="pref_firewall_allow_internet_for_new_apps">"Allow connections for new apps"</string>
-    <string name="pref_firewall_allow_internet_for_new_apps_on_summ">"Internet connections for newly installed apps are allowed."</string>
-    <string name="pref_firewall_allow_internet_for_new_apps_off_summ">"Internet connections for newly installed applications are blocked."</string>
-    <string name="helper_dnscrypt_proxy_wifi">"Please disable proxy in Android WiFi network settings. This option interferes with InviZible."</string>
-    <string name="helper_dnscrypt_proxy_gsm">"Please disable proxy in Android Mobile network APN settings. This option interferes with InviZible."</string>
-    <string name="notification_channel_auxiliary">"Auxiliary notifications"</string>
+    <string name="firewall_btnTopLanFirewall_tooltip">Izinkan koneksi ke jaringan lokal, onion dan situs i2p</string>
+    <string name="firewall_btnTopWifiFirewall_tooltip">Izinkan koneksi dari jaringan WiFi</string>
+    <string name="firewall_btnTopGsmFirewall_tooltip">Izinkan koneksi dari jaringan GSM</string>
+    <string name="firewall_btnTopRoamingFirewall_tooltip">Izinkan koneksi saat roaming</string>
+    <string name="firewall_btnTopVpnFirewall_tooltip">Izinkan koneksi saat VPN aktif</string>
+    <string name="firewall_btnTopCheckAllFirewall_tooltip">Pilih semua</string>
+    <string name="firewall_btnTopUnCheckAllFirewall_tooltip">Batal pilih semua</string>
+    <string name="firewall_item_button_tooltip">Hijau - izinkan, putih - tolak koneksi</string>
+    <string name="pref_firewall_title">Setelan Firewall</string>
+    <string name="pref_firewall_allow_internet_for_new_apps">Izinkan koneksi untuk aplikasi baru</string>
+    <string name="pref_firewall_allow_internet_for_new_apps_on_summ">Koneksi internet untuk aplikasi baru diizinkan.</string>
+    <string name="pref_firewall_allow_internet_for_new_apps_off_summ">Kondisi internet untuk aplikasi baru diblokir.</string>
+    <string name="helper_dnscrypt_proxy_wifi">Mohon matikan setelan proxy di jaringan WiFi, ini akan menggangu InviZible.</string>
+    <string name="helper_dnscrypt_proxy_gsm">Mohon matikan setelan proxy pada APN. Ini akan menggangu InviZible.</string>
+    <string name="notification_channel_auxiliary">Notifikasi bantuan</string>
     <string name="pref_common_dns_rebind_protection">Perlindungan ikat-ulang DNS</string>
     <string name="pref_common_dns_rebind_protection_summ">Blokir situs saat serangan ikat-ulang DNS terdeteksi</string>
-    <string name="notification_dns_rebinding_title">"DNS rebinding"</string>
-    <string name="notification_dns_rebinding_text">"Potential DNS Rebinding Attack Detected! Site %s has been blocked."</string>
+    <string name="notification_dns_rebinding_title">Kait ulang DNS</string>
+    <string name="notification_dns_rebinding_text">Potensi kait ulang DNS terdeteksi! Situs %s telah diblokir.</string>
     <string name="areYouSure">Apakah anda yakin\? Tindakan ini tidak bisa dibatalkan!</string>
     <string name="btnResetSettings">Reset Setelan</string>
     <string name="backupSaved">Cadangan tersimpan</string>
@@ -499,7 +490,7 @@ Matikan dan hidupkan wifi beberapa saat, hotspot Wi-Fi yang anda akses saat ini 
     <string name="notification_connecting">Menghubungkan…</string>
     <string name="notification_waiting_network">Menunggu koneksi…</string>
     <string name="tile_change_tor_ip">Ganti IP Tor</string>
-    <string name="pref_tor_hardware_accel_summ">Coba gunakan akselerasi perangkat keras kripto bawaan jika tersedia</string>
+    <string name="pref_tor_hardware_accel_summ">Coba gunakan akselerasi perangkat keras kripto bawaan jika tersedia.</string>
     <string name="tile_changing_tor_ip">Mengganti IP Tor</string>
     <string name="tile_dialog_over_three_tiles_message">Kamu sudah menambahkan lebih dari 3 ubin ke Pengaturan Cepat. Disarankan hanya menambahkan 3. Menambahkan lebih dari 3 ubin dapat menyebabkan masalah dengan kontrol aplikasi.</string>
     <string name="agreement_text">\\\tTerima kasih sudah memilih InviZible Pro. Saya harap ini dapat berguna untuk privasi dan kenyamanan berinternet anda.
