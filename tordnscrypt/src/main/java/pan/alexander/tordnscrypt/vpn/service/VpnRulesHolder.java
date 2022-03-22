@@ -80,12 +80,12 @@ public class VpnRulesHolder {
     @SuppressLint("UseSparseArrays")
     final Map<Integer, Boolean> mapUidAllowed = new HashMap<>();
     @SuppressLint("UseSparseArrays")
-    final Map<Integer, Integer> mapUidKnown = new HashMap<>();
+    private final Map<Integer, Integer> mapUidKnown = new HashMap<>();
     @SuppressLint("UseSparseArrays")
     final Map<Integer, Forward> mapForwardPort = new HashMap<>();
-    final Map<String, Forward> mapForwardAddress = new HashMap<>();
+    private final Map<String, Forward> mapForwardAddress = new HashMap<>();
     final Set<String> ipsForTor = new HashSet<>();
-    final Set<Integer> uidLanAllowed = new HashSet<>();
+    private final Set<Integer> uidLanAllowed = new HashSet<>();
     final Set<Integer> uidSpecialAllowed = new HashSet<>();
 
     @Inject
@@ -150,6 +150,8 @@ public class VpnRulesHolder {
         // https://android.googlesource.com/platform/system/core/+/master/include/private/android_filesystem_config.h
         if ((!vpn.canFilter) && isSupported(packet.protocol)) {
             packet.allowed = true;
+        } else if (!isSupported(packet.protocol)) {
+            logw("Protocol not supported " + packet);
         } else if (packet.dport == DNS_OVER_TLS_PORT
                 && vpnPreferences.getIgnoreSystemDNS()) {
             logw("Block DNS over TLS " + packet);
@@ -160,8 +162,7 @@ public class VpnRulesHolder {
         } else if ((packet.uid == vpnPreferences.getOwnUID()
                 || vpnPreferences.getCompatibilityMode()
                 && packet.uid == SPECIAL_UID_KERNEL
-                && !fixTTLForPacket)
-                && isSupported(packet.protocol)) {
+                && !fixTTLForPacket)) {
             packet.allowed = true;
 
             if (!vpnPreferences.getCompatibilityMode()) {
@@ -194,8 +195,7 @@ public class VpnRulesHolder {
                 !mapUidKnown.containsKey(packet.uid)
                 && (vpnPreferences.getFixTTL()
                 || !torIsRunning && !vpnPreferences.getUseProxy()
-                || packet.protocol == 6 && packet.dport == PLAINTEXT_DNS_PORT)
-                && isSupported(packet.protocol)) {
+                || packet.protocol == 6 && packet.dport == PLAINTEXT_DNS_PORT)) {
 
             // Allow unknown system traffic
             packet.allowed = true;
@@ -213,24 +213,20 @@ public class VpnRulesHolder {
                 && redirectToProxy) {
             logw("Disallowing non tcp traffic to proxy " + packet);
         } else if (vpnPreferences.getFirewallEnabled()
-                && isIpInLanRange(packet.daddr)
-                && isSupported(packet.protocol)) {
+                && isIpInLanRange(packet.daddr)) {
             packet.allowed = uidLanAllowed.contains(packet.uid);
-        } else if (vpnPreferences.getFirewallEnabled()
-                && isDestinationInSpecialRange(packet.uid, packet.dport)
-                && isSupported(packet.protocol)) {
+        } else if (isDestinationInSpecialRange(packet.uid, packet.dport)) {
             packet.allowed = isSpecialAllowed(packet.uid, packet.dport);
         } else {
 
             if (mapUidAllowed.containsKey(packet.uid)) {
                 Boolean allow = mapUidAllowed.get(packet.uid);
-                if (allow != null && isSupported(packet.protocol)) {
+                if (allow != null) {
                     packet.allowed = allow;
                     //Log.i(LOG_TAG, "Packet " + packet.toString() + " is allowed " + allow);
                 }
             } else if (packet.dport == PLAINTEXT_DNS_PORT
-                    && packet.uid < 2000 && packet.uid != SPECIAL_UID_KERNEL
-                    && isSupported(packet.protocol)) {
+                    && packet.uid < 2000 && packet.uid != SPECIAL_UID_KERNEL) {
                 //Allow connection check for system apps
                 packet.allowed = true;
             } else {
