@@ -492,6 +492,18 @@ jint get_uid_sub(const int version, const int protocol,
                  const char *source, const char *dest,
                  long now);
 
+jint restore_uid(const struct arguments *args,
+                 const int version,
+                 const int protocol,
+                 const void *saddr,
+                 const uint16_t sport,
+                 const void *daddr,
+                 const uint16_t dport,
+                 const char *source,
+                 const char *dest,
+                 const char *flags,
+                 const uint8_t *payload);
+
 int protect_socket(const struct arguments *args, int socket);
 
 uint16_t calc_checksum(uint16_t start, const uint8_t *buffer, size_t length);
