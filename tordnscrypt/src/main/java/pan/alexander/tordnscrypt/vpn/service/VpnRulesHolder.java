@@ -44,7 +44,6 @@ import static pan.alexander.tordnscrypt.vpn.service.VpnBuilder.vpnDnsSet;
 
 import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
-import android.os.Process;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -102,7 +101,9 @@ public class VpnRulesHolder {
 
     public Allowed isAddressAllowed(ServiceVPN vpn, Packet packet) {
 
-        if (packet.saddr == null || packet.daddr == null || vpn.vpnPreferences == null) {
+        if (packet.saddr == null || packet.sport == 0
+                || packet.daddr == null || packet.dport == 0
+                || vpn.vpnPreferences == null) {
             return null;
         }
 
@@ -374,7 +375,7 @@ public class VpnRulesHolder {
         ModuleState torState = modulesStatus.getTorState();
         ModuleState itpdState = modulesStatus.getItpdState();
 
-        int ownUID = Process.myUid();
+        int ownUID = pathVars.getAppUid();
 
         int dnsCryptPort = 5354;
         int torDNSPort = 5400;

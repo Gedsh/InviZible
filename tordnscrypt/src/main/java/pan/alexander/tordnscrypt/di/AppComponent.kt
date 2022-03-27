@@ -58,6 +58,7 @@ import pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment
 import pan.alexander.tordnscrypt.tor_fragment.TorFragmentReceiver
 import pan.alexander.tordnscrypt.update.DownloadTask
 import pan.alexander.tordnscrypt.update.UpdateService
+import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager
 import pan.alexander.tordnscrypt.utils.integrity.Verifier
@@ -141,4 +142,5 @@ interface AppComponent {
     fun inject(modulesIptablesRules: ModulesIptablesRules)
     fun inject(serviceVPNHandler: ServiceVPNHandler)
     fun inject(installer: Installer)
+    fun inject(installedApplicationsManager: InstalledApplicationsManager)
 }

@@ -21,6 +21,7 @@ package pan.alexander.tordnscrypt.utils.apps
 
 import android.Manifest
 import android.content.Context
+import android.content.SharedPreferences
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
@@ -29,8 +30,9 @@ import android.os.Build
 import android.os.Process
 import android.os.UserManager
 import androidx.core.content.ContextCompat
-import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.App
+import pan.alexander.tordnscrypt.di.SharedPreferencesModule
+import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
@@ -39,6 +41,8 @@ import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_SHOWS
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MULTI_USER_SUPPORT
 import java.util.concurrent.locks.ReentrantLock
 import java.util.regex.Pattern
+import javax.inject.Inject
+import javax.inject.Named
 
 private const val ON_APP_ADDED_REFRESH_PERIOD_MSEC = 250
 private val pattern: Pattern = Pattern.compile("UserHandle\\{(\\d+)\\}")
@@ -51,15 +55,25 @@ class InstalledApplicationsManager private constructor(
     private var showAllApps: Boolean?
 ) {
 
-    private val context = App.instance.applicationContext
-    private val ownUID = Process.myUid()
-    private var sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
-    private var multiUserSupport = sharedPreferences.getBoolean(MULTI_USER_SUPPORT, false)
-    private var savedTime = 0L
+    @Inject
+    lateinit var context: Context
+
+    @Inject
+    @Named(SharedPreferencesModule.DEFAULT_PREFERENCES_NAME)
+    lateinit var defaultPreferences: SharedPreferences
+
+    @Inject
+    lateinit var pathVars: PathVars
 
     init {
-        showAllApps = showAllApps ?: sharedPreferences.getBoolean(FIREWALL_SHOWS_ALL_APPS, false)
+        App.instance.daggerComponent.inject(this)
+
+        showAllApps = showAllApps ?: defaultPreferences.getBoolean(FIREWALL_SHOWS_ALL_APPS, false)
     }
+
+    private val ownUID = pathVars.appUid
+    private var multiUserSupport = defaultPreferences.getBoolean(MULTI_USER_SUPPORT, false)
+    private var savedTime = 0L
 
     fun getInstalledApps(): List<ApplicationData> {
 
@@ -273,7 +287,7 @@ class InstalledApplicationsManager private constructor(
 
     private fun getKnownApplications(): ArrayList<ApplicationData> {
         val defaultIcon = ContextCompat.getDrawable(context, android.R.drawable.sym_def_app_icon)
-        val userId = Process.myUid() / 100_000
+        val userId = ownUID / 100_000
         val adb = getUidForName("adb", 1011 + userId * 100_000)
         val media = getUidForName("media", 1013 + userId * 100_000)
         val vpn = getUidForName("vpn", 1016 + userId * 100_000)

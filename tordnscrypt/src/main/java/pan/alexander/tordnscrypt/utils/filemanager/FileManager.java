@@ -24,7 +24,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Process;
 import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -996,8 +995,8 @@ public class FileManager {
             IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
             LocalBroadcastManager.getInstance(context).registerReceiver(br, intentFilterBckgIntSer);
 
-            String appUID = String.valueOf(Process.myUid());
             PathVars pathVars = App.getInstance().getDaggerComponent().getPathVars().get();
+            String appUID = pathVars.getAppUidStr();
             List<String> commands = new ArrayList<>(Arrays.asList(
                     pathVars.getBusyboxPath()+ "chown -R " + appUID + "." + appUID + " " + filePath + " 2> /dev/null",
                     "restorecon " + filePath + " 2> /dev/null",

@@ -681,7 +681,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                 + " vpn="
                 + (vpn != null)
                 + " user="
-                + (Process.myUid() / 100000));
+                + (pathVars.get().getAppUid() / 100000));
 
         commandHandler.queue(intent);
 

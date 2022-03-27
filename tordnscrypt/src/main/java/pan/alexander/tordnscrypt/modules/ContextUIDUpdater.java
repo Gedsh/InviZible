@@ -22,7 +22,6 @@ package pan.alexander.tordnscrypt.modules;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK;
 
 import android.content.Context;
-import android.os.Process;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,7 +51,7 @@ public class ContextUIDUpdater {
 
     void updateModulesContextAndUID() {
 
-        String appUID = String.valueOf(Process.myUid());
+        String appUID = pathVars.getAppUidStr();
         List<String> commands;
         if (ModulesStatus.getInstance().isUseModulesWithRoot()) {
             commands = new ArrayList<>(Arrays.asList(

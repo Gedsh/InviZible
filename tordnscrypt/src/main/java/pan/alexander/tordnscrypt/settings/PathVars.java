@@ -22,6 +22,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Environment;
+import android.os.Process;
 import android.util.Log;
 
 import androidx.preference.PreferenceManager;
@@ -50,6 +51,8 @@ public class PathVars {
     private final String obfsPath;
     private final String snowflakePath;
     private final boolean bbOK;
+    private volatile int appUid = -1;
+    private volatile String appUidStr = "";
 
     @SuppressLint("SdCardPath")
     @Inject
@@ -365,5 +368,19 @@ public class PathVars {
 
     public String getItpdTunnelsPath () {
         return appDataDir + "/app_data/i2pd/tunnels.conf";
+    }
+
+    public synchronized int getAppUid() {
+        if (appUid < 0) {
+            appUid = Process.myUid();
+        }
+        return appUid;
+    }
+
+    public synchronized String getAppUidStr() {
+        if (appUidStr.isEmpty()) {
+            appUidStr = String.valueOf(getAppUid());
+        }
+        return appUidStr;
     }
 }
