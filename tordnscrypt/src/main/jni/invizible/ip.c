@@ -301,20 +301,20 @@ void handle_ip(const struct arguments *args,
         } else {
             uid = get_uid_q(args, version, protocol, source, sport, dest, dport);
         }
-    }
 
-    if (uid < 0) {
-        uid = restore_uid(args,
-                          version,
-                          protocol,
-                          saddr,
-                          sport,
-                          daddr,
-                          dport,
-                          source,
-                          dest,
-                          flags,
-                          payload);
+        if (uid < 0) {
+            uid = restore_uid(args,
+                              version,
+                              protocol,
+                              saddr,
+                              sport,
+                              daddr,
+                              dport,
+                              source,
+                              dest,
+                              flags,
+                              payload);
+        }
     }
 
     log_android(ANDROID_LOG_DEBUG,
@@ -325,12 +325,12 @@ void handle_ip(const struct arguments *args,
     int allowed = 0;
     struct allowed *redirect = NULL;
     if (protocol == IPPROTO_UDP
-        && has_udp_session(args, pkt, payload))
+        && has_udp_session(args, pkt, payload)) {
         allowed = 1; // could be a lingering/blocked session
-    else if (protocol == IPPROTO_TCP
-             && (!syn || (!args->fwd53 && uid == 0 && dport == 53)))
+    } else if (protocol == IPPROTO_TCP
+               && (!syn || (!args->fwd53 && uid == 0 && dport == 53))) {
         allowed = 1; // assume existing session
-    else {
+    } else {
         jobject objPacket = create_packet(
                 args, version, protocol, flags, source, sport, dest, dport, data, uid, 0);
         redirect = is_address_allowed(args, objPacket);
@@ -561,7 +561,7 @@ jint restore_uid(const struct arguments *args,
                !(cur->protocol == IPPROTO_TCP &&
                  cur->tcp.uid >= 0 &&
                  cur->tcp.version == version &&
-                 cur->tcp.source == htons(sport) && cur->tcp.dest == htons(dport) &&
+                 cur->tcp.dest == htons(dport) &&
                  (version == 4 ? cur->tcp.saddr.ip4 == *((int32_t *) saddr) &&
                                  cur->tcp.daddr.ip4 == *((int32_t *) daddr)
                                : memcmp(&cur->tcp.saddr.ip6, saddr, 16) == 0 &&
@@ -575,7 +575,7 @@ jint restore_uid(const struct arguments *args,
                !(cur->protocol == IPPROTO_UDP &&
                  cur->udp.uid >= 0 &&
                  cur->udp.version == version &&
-                 cur->udp.source == htons(sport) && cur->udp.dest == htons(dport) &&
+                 cur->udp.dest == htons(dport) &&
                  (version == 4 ? cur->udp.saddr.ip4 == *((int32_t *) saddr) &&
                                  cur->udp.daddr.ip4 == *((int32_t *) daddr)
                                : memcmp(&cur->udp.saddr.ip6, saddr, 16) == 0 &&
@@ -612,11 +612,11 @@ jint restore_uid(const struct arguments *args,
     }
 
     if (uid < 0) {
-        log_android(ANDROID_LOG_WARN,
+        log_android(ANDROID_LOG_ERROR,
                     "Packet uid can not be restored v%d %s/%u > %s/%u proto %d flags %s uid %d",
                     version, source, sport, dest, dport, protocol, flags, uid);
     } else {
-        log_android(ANDROID_LOG_WARN,
+        log_android(ANDROID_LOG_ERROR,
                     "Packet uid restored v%d %s/%u > %s/%u proto %d flags %s uid %d",
                     version, source, sport, dest, dport, protocol, flags, uid);
     }
