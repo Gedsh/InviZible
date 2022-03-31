@@ -56,7 +56,7 @@
     <string name="pref_fast_tor_autostart">Автозагрузка Tor</string>
     <string name="pref_fast_itpd_autostart">Автозагрузка I2P</string>
     <string name="pref_fast_autostart_delay">Задержка</string>
-    <string name="pref_fast_autostart_delay_summ">Используйте задержку автозагрузки (в сек) только если автозапуск работает некорректно</string>
+    <string name="pref_fast_autostart_delay_summ">Используйте задержку (сек) только в том случае, если автозапуск работает неправильно</string>
     <string name="pref_fast_dns_server">Сервера DNSCrypt</string>
     <string name="pref_fast_select_dns_server">Выбрать сервера DNSCrypt</string>
     <string name="pref_fast_tor">Настройки Tor</string>
@@ -152,7 +152,7 @@
     <string name="pref_dnscrypt_ignore_system_dns_summ">Не позволять dnscrypt-proxy использовать системные настройки DNS. Использовать сервер для восстановления..</string>
     <string name="pref_dnscrypt_fallback_resolver_summ">Сервер для начальной загрузки. Это обычный сервер, который не поддерживает шифрование. Используется только для скачивания списка серверов, которые поддерживают шифрование, если системный DNS сервер не работает. Он никогда не используется, если загружен список серверов, которые поддерживают шифрование.</string>
     <string name="pref_dnscrypt_filters_categ">ФИЛЬТРЫ</string>
-    <string name="pref_dnscrypt_forwarding_rules_summ">Перенаправить запросы к выбраным сайтам на определенные сервера.</string>
+    <string name="pref_dnscrypt_forwarding_rules_summ">Перенаправить запросы к выбранным сайтам на определенные сервера.</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking возвращает предопределенные адреса для выбранных сайтов.
 \n Работает как дополнительный HOSTS файл.</string>
     <string name="pref_dnscrypt_query_log_categ">Логировать запросы.</string>
