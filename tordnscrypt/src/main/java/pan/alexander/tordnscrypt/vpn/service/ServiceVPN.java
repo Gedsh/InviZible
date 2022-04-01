@@ -35,7 +35,6 @@ import android.os.Process;
 import android.widget.Toast;
 
 import androidx.annotation.Keep;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.net.InetSocketAddress;
 import java.util.HashSet;
@@ -81,6 +80,7 @@ import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIA
 import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_UID_NTP;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_DEFAULT_UID;
 import static pan.alexander.tordnscrypt.utils.Constants.PLAINTEXT_DNS_PORT;
 import static pan.alexander.tordnscrypt.utils.bootcomplete.BootCompleteManager.ALWAYS_ON_VPN;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
@@ -408,7 +408,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
             return true;
         }
 
-        if (vpnPreferences.getLan()) {
+        if (vpnPreferences.getLan() || uid == NETWORK_STACK_DEFAULT_UID) {
             for (String address : VpnUtils.nonTorList) {
                 if (VpnUtils.isIpInSubnet(destAddress, address)) {
                     return false;
@@ -457,7 +457,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
             return false;
         }
 
-        if (vpnPreferences.getLan()) {
+        if (vpnPreferences.getLan() || uid == NETWORK_STACK_DEFAULT_UID) {
             for (String address : VpnUtils.nonTorList) {
                 if (VpnUtils.isIpInSubnet(destAddress, address)) {
                     return false;
@@ -703,7 +703,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     private void sendRevokeBroadcast(boolean revoked) {
         Intent intent = new Intent(VPN_REVOKE_ACTION);
         intent.putExtra(VPN_REVOKED_EXTRA, revoked);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        sendBroadcast(intent);
     }
 
     @Override

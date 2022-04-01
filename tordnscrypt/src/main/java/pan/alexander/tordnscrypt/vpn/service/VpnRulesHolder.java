@@ -28,6 +28,7 @@ import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIA
 import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_UID_NTP;
 import static pan.alexander.tordnscrypt.utils.Constants.DNS_OVER_TLS_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_DEFAULT_UID;
 import static pan.alexander.tordnscrypt.utils.Constants.PLAINTEXT_DNS_PORT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -171,10 +172,14 @@ public class VpnRulesHolder {
             }
         } else if (vpnPreferences.getArpSpoofingDetection()
                 && vpnPreferences.getBlockInternetWhenArpAttackDetected()
-                && (ArpScanner.Companion.getArpAttackDetected()
-                || ArpScanner.Companion.getDhcpGatewayAttackDetected())) {
+                && (ArpScanner.getArpAttackDetected()
+                || ArpScanner.getDhcpGatewayAttackDetected())) {
             // MITM attack detected
             logw("Block due to mitm attack " + packet);
+        } else if (packet.uid == NETWORK_STACK_DEFAULT_UID
+                && isIpInLanRange(packet.daddr)) {
+            //Allow NetworkStack to connect to LAN to determine connection status
+            packet.allowed = true;
         } else if (vpn.reloading) {
             // Reload service
             logi("Block due to reloading " + packet);
