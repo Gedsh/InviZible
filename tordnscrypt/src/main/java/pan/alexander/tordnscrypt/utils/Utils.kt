@@ -26,6 +26,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Point
 import android.os.Environment
+import android.os.Process
 import android.util.Base64
 import android.util.Log
 import android.view.Display
@@ -33,9 +34,12 @@ import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesService
 import pan.alexander.tordnscrypt.settings.PathVars
+import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges
+import pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_PACKAGE
 import pan.alexander.tordnscrypt.utils.appexit.AppExitDetectService
 import pan.alexander.tordnscrypt.utils.filemanager.FileShortener
+import pan.alexander.tordnscrypt.utils.logger.Logger
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.io.File
@@ -213,7 +217,11 @@ object Utils {
     }
 
     @JvmStatic
-    fun shortenTooLongSnowflakeLog(context: Context, preferences: PreferenceRepository, pathVars: PathVars) {
+    fun shortenTooLongSnowflakeLog(
+        context: Context,
+        preferences: PreferenceRepository,
+        pathVars: PathVars
+    ) {
         try {
             val bridgesSnowflakeDefault =
                 preferences.getStringPreference(DEFAULT_BRIDGES_OBFS) == PreferencesTorBridges.SNOWFLAKE_BRIDGES_DEFAULT
@@ -230,4 +238,23 @@ object Utils {
         }
     }
 
+    fun getUidForName(name: String, defaultValue: Int): Int {
+        var uid = defaultValue
+        try {
+            val result = Process.getUidForName(name)
+            if (result > 0) {
+                uid = result
+            } else {
+                Logger.logw("No uid for $name, using default value $defaultValue")
+            }
+        } catch (e: Exception) {
+            Logger.logw("No uid for $name, using default value $defaultValue")
+        }
+        return uid
+    }
+
+    fun getCriticalSystemUids(apps: List<ApplicationData>, ownUid: Int): List<Int> =
+        apps.filter { it.pack.contains(NETWORK_STACK_PACKAGE, true) }
+            .map { it.uid }
+            .plus(getUidForName("dns", 1051 + ownUid / 100_000 * 100_000))
 }
