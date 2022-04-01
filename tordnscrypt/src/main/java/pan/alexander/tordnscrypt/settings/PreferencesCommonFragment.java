@@ -80,6 +80,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPO
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.COMPATIBILITY_MODE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNS_REBIND_PROTECTION;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ITPD_TETHERING;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.KILL_SWITCH;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MULTI_USER_SUPPORT;
@@ -87,6 +88,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_A
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TETHERING;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_IPTABLES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
@@ -345,7 +347,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 allowTorTether = Boolean.parseBoolean(newValue.toString());
                 readTorConf(context);
                 break;
-            case "pref_common_itpd_tethering":
+            case ITPD_TETHERING:
                 allowITPDtether = Boolean.parseBoolean(newValue.toString());
                 readITPDConf(context);
                 readITPDTunnelsConf(context);
@@ -668,7 +670,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         ArrayList<Preference> preferences = new ArrayList<>();
         preferences.add(findPreference(TOR_TETHERING));
         preferences.add(findPreference("pref_common_tor_route_all"));
-        preferences.add(findPreference("pref_common_itpd_tethering"));
+        preferences.add(findPreference(ITPD_TETHERING));
         preferences.add(findPreference("pref_common_block_http"));
         preferences.add(findPreference(RUN_MODULES_WITH_ROOT));
         preferences.add(findPreference("swWakelock"));
@@ -697,7 +699,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             preferencesHOTSPOT.add(findPreference("pref_common_tor_route_all"));
             preferencesHOTSPOT.add(findPreference("prefTorSiteUnlockTether"));
             preferencesHOTSPOT.add(findPreference("prefTorSiteExcludeTether"));
-            preferencesHOTSPOT.add(findPreference("pref_common_itpd_tethering"));
+            preferencesHOTSPOT.add(findPreference(ITPD_TETHERING));
             preferencesHOTSPOT.add(findPreference("pref_common_block_http"));
             preferencesHOTSPOT.add(findPreference(FIX_TTL));
             preferencesHOTSPOT.add(findPreference("pref_common_local_eth_device_addr"));
@@ -733,7 +735,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         }
 
         PreferenceCategory categoryOther = findPreference("common_other");
-        Preference selectIptables = findPreference("pref_common_use_iptables");
+        Preference selectIptables = findPreference(USE_IPTABLES);
         Preference selectBusybox = findPreference("pref_common_use_busybox");
         Preference killSwitch = findPreference(KILL_SWITCH);
 

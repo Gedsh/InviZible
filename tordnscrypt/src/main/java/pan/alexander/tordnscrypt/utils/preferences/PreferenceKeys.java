@@ -68,6 +68,7 @@ public interface PreferenceKeys {
     String RUN_MODULES_WITH_ROOT = "swUseModulesRoot";
     String FIX_TTL = "pref_common_fix_ttl";
     String TOR_TETHERING = "pref_common_tor_tethering";
+    String ITPD_TETHERING = "pref_common_itpd_tethering";
     String COMPATIBILITY_MODE = "swCompatibilityMode";
     String DNS_REBIND_PROTECTION = "pref_common_dns_rebind_protection";
     String USE_PROXY = "swUseProxy";
@@ -76,6 +77,7 @@ public interface PreferenceKeys {
     String MULTI_USER_SUPPORT = "pref_common_multi_user";
     String REFRESH_RULES = "swRefreshRules";
     String KILL_SWITCH = "swKillSwitch";
+    String USE_IPTABLES = "pref_common_use_iptables";
 
     //DNSCrypt Settings
     String BLOCK_IPv6 = "block_ipv6";

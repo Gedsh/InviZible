@@ -28,8 +28,7 @@ import android.widget.Toast
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES
-import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REFRESH_RULES
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.utils.root.RootCommands
 import pan.alexander.tordnscrypt.utils.root.RootCommandsMark.IPTABLES_MARK
 import pan.alexander.tordnscrypt.utils.root.RootExecService.*
@@ -94,7 +93,7 @@ class IptablesReceiver : BroadcastReceiver() {
             val refreshRules = sharedPreferences.getBoolean(REFRESH_RULES, false)
 
             if (resultStr.contains("unknown option \"-w\"")) {
-                sharedPreferences.edit().putString("pref_common_use_iptables", "2").apply()
+                sharedPreferences.edit().putString(USE_IPTABLES, "2").apply()
                 it.postDelayed({ ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true) }, 1000)
             } else if (refreshRules
                 && (resultStr.contains(" -w ")

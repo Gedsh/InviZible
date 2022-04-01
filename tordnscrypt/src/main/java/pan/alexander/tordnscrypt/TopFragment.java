@@ -85,6 +85,7 @@ import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongSnowflakeLog;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_READY_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ITPD_READY_PREF;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ITPD_TETHERING;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATION_MODE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_READY_PREF;
@@ -588,7 +589,7 @@ public class TopFragment extends Fragment {
         SharedPreferences sPref = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = sPref.edit();
         editor.putBoolean(TOR_TETHERING, false);
-        editor.putBoolean("pref_common_itpd_tethering", false);
+        editor.putBoolean(ITPD_TETHERING, false);
         editor.apply();
 
         startInstallation();
