@@ -206,7 +206,7 @@ class RestoreHelper extends Installer {
         } else {
             ArrayList<String> copy = new ArrayList<>(requiredFiles);
             copy.removeAll(zipEntries);
-            Log.e(LOG_TAG, "RestoreHelper isBackupExist backup file corrupted " + copy.toString());
+            Log.e(LOG_TAG, "RestoreHelper isBackupExist backup file corrupted " + copy);
         }
 
         return zipEntries.containsAll(requiredFiles);
