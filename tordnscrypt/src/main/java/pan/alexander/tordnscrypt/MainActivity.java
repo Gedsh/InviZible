@@ -480,7 +480,8 @@ public class MainActivity extends LangAppCompatActivity
             menuRootMode.setEnabled(false);
         }
 
-        if ((mode == PROXY_MODE || mode == ROOT_MODE) && firewallNavigationItem != null) {
+        if ((mode == PROXY_MODE || mode == ROOT_MODE && useModulesWithRoot)
+                && firewallNavigationItem != null) {
             firewallNavigationItem.setVisible(false);
         } else if (firewallNavigationItem != null) {
             firewallNavigationItem.setVisible(true);

@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Handler;
 import android.util.Log;
+import android.util.Pair;
 
 import androidx.preference.PreferenceManager;
 
@@ -60,6 +61,7 @@ import static pan.alexander.tordnscrypt.utils.Constants.G_DNG_41;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_42;
 import static pan.alexander.tordnscrypt.utils.Constants.HTTP_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
+import static pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_DEFAULT_UID;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_BLOCK_INTERNET;
@@ -67,6 +69,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPO
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BLOCK_HTTP;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BYPASS_LAN;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_ENABLED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.GSM_ON_REQUESTED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR_CLEARNET;
@@ -94,6 +97,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
     public Lazy<Handler> handler;
+    @Inject
+    public Lazy<IptablesFirewall> iptablesFirewall;
     @Inject
     public Lazy<KillSwitchNotification> killSwitchNotification;
     private static boolean killSwitchActive;
@@ -128,6 +133,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         Set<String> clearnetApps = preferences.getStringSetPreference(CLEARNET_APPS);
         Set<String> clearnetIPs = preferences.getStringSetPreference(IPS_FOR_CLEARNET);
         Set<String> clearnetAppsForProxy = preferences.getStringSetPreference(CLEARNET_APPS_FOR_PROXY);
+        boolean firewallEnabled = preferences.getBoolPreference(FIREWALL_ENABLED);
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
         boolean ttlFix = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE) && !modulesStatus.isUseModulesWithRoot();
@@ -139,6 +145,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
         boolean killSwitch = shPref.getBoolean(KILL_SWITCH, false);
 
+        IptablesFirewall firewall = iptablesFirewall.get();
+
         List<String> commands = new ArrayList<>();
 
         String appUID = pathVars.getAppUidStr();
@@ -146,24 +154,9 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             appUID = "0";
         }
 
-        String bypassLanNat = "";
-        String bypassLanFilter = "";
-        if (lan) {
-            StringBuilder nonTorRanges = new StringBuilder();
-            for (String address : VpnUtils.nonTorList) {
-                nonTorRanges.append(address).append(" ");
-            }
-            nonTorRanges.deleteCharAt(nonTorRanges.lastIndexOf(" "));
-
-            bypassLanNat = "non_tor=\"" + nonTorRanges + "\"; " +
-                    "for _lan in $non_tor; do " +
-                    iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -d $_lan -j RETURN; " +
-                    "done";
-            bypassLanFilter = "non_tor=\"" + nonTorRanges + "\"; " +
-                    "for _lan in $non_tor; do " +
-                    iptables + "-A " + FILTER_OUTPUT_CORE + " -d $_lan -j RETURN; " +
-                    "done";
-        }
+        Pair<String, String> bypassLanNatToBypassLanFilter = getBypassLanRules();
+        String bypassLanNat = bypassLanNatToBypassLanFilter.first;
+        String bypassLanFilter = bypassLanNatToBypassLanFilter.second;
 
         String kernelBypassNat = "";
         String kernelBypassFilter = "";
@@ -242,7 +235,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         String blockHttpRuleNatTCP = "";
         String blockHttpRuleNatUDP = "";
         if (blockHttp) {
-            blockRejectAddressFilter = iptables + "-A " + FILTER_OUTPUT_CORE + " -d +" + rejectAddress + " -j REJECT";
+            blockRejectAddressFilter = iptables + "-A " + FILTER_OUTPUT_CORE + " -d " + rejectAddress + " -j REJECT";
             blockHttpRuleNatTCP = iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp --dport " + HTTP_PORT + " -j DNAT --to-destination " + rejectAddress;
             blockHttpRuleNatUDP = iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport " + HTTP_PORT + " -j DNAT --to-destination " + rejectAddress;
         }
@@ -252,12 +245,12 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         String blockGDNSNat = "";
         if (ignoreSystemDNS) {
             if (!blockHttp) {
-                blockRejectAddressFilter = iptables + "-A " + FILTER_OUTPUT_CORE + " -d +" + rejectAddress + " -j REJECT";
+                blockRejectAddressFilter = iptables + "-A " + FILTER_OUTPUT_CORE + " -d " + rejectAddress + " -j REJECT";
             }
             blockTlsRuleNatTCP = iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp --dport " + DNS_OVER_TLS_PORT + " -j DNAT --to-destination " + rejectAddress;
             blockTlsRuleNatUDP = iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport " + DNS_OVER_TLS_PORT + " -j DNAT --to-destination " + rejectAddress;
-            blockGDNSNat = iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -d +" + G_DNG_41 + " -j DNAT --to-destination " + rejectAddress + "; "
-                    + iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -d +" + G_DNS_42 + " -j DNAT --to-destination " + rejectAddress;
+            blockGDNSNat = iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -d " + G_DNG_41 + " -j DNAT --to-destination " + rejectAddress + "; "
+                    + iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -d " + G_DNS_42 + " -j DNAT --to-destination " + rejectAddress;
         }
 
         String unblockHOTSPOT = iptables + "-D FORWARD -j DROP 2> /dev/null || true";
@@ -334,6 +327,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             if (!routeAllThroughTor) {
 
                 commands = new ArrayList<>(Arrays.asList(
+                        iptables + "-D OUTPUT -j DROP 2> /dev/null || true",
                         iptables + "-I OUTPUT -j DROP",
                         ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                         ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
@@ -393,6 +387,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             } else {
 
                 commands = new ArrayList<>(Arrays.asList(
+                        iptables + "-D OUTPUT -j DROP 2> /dev/null || true",
                         iptables + "-I OUTPUT -j DROP",
                         ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                         ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
@@ -453,13 +448,20 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             }
 
             List<String> commandsTether = tethering.activateTethering(false);
-            if (commandsTether.size() > 0)
+            if (commandsTether.size() > 0) {
                 commands.addAll(commandsTether);
+            }
+            if (firewallEnabled) {
+                commands.addAll(firewall.getFirewallRules());
+            } else {
+                commands.addAll(firewall.getClearFirewallRules());
+            }
         } else if (dnsCryptState == RUNNING && torState == STOPPED) {
 
             cancelKillSwitchNotificationIfNeeded();
 
             commands = new ArrayList<>(Arrays.asList(
+                    iptables + "-D OUTPUT -j DROP 2> /dev/null || true",
                     iptables + "-I OUTPUT -j DROP",
                     ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                     ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
@@ -500,13 +502,20 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             ));
 
             List<String> commandsTether = tethering.activateTethering(false);
-            if (commandsTether.size() > 0)
+            if (commandsTether.size() > 0) {
                 commands.addAll(commandsTether);
+            }
+            if (firewallEnabled) {
+                commands.addAll(firewall.getFirewallRules());
+            } else {
+                commands.addAll(firewall.getClearFirewallRules());
+            }
         } else if (dnsCryptState == STOPPED && torState == STOPPED) {
 
             cancelKillSwitchNotificationIfNeeded();
 
             commands = new ArrayList<>(Arrays.asList(
+                    iptables + "-D OUTPUT -j DROP 2> /dev/null || true",
                     ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                     ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
                     iptables + "-t nat -F " + NAT_OUTPUT_CORE + " 2> /dev/null || true",
@@ -518,14 +527,17 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             ));
 
             List<String> commandsTether = tethering.activateTethering(false);
-            if (commandsTether.size() > 0)
+            if (commandsTether.size() > 0) {
                 commands.addAll(commandsTether);
+            }
+            commands.addAll(firewall.getClearFirewallRules());
         } else if (dnsCryptState == STOPPED && torState == RUNNING) {
 
             cancelKillSwitchNotificationIfNeeded();
 
             if (!routeAllThroughTor) {
                 commands = new ArrayList<>(Arrays.asList(
+                        iptables + "-D OUTPUT -j DROP 2> /dev/null || true",
                         iptables + "-I OUTPUT -j DROP",
                         ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                         ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
@@ -578,6 +590,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                 ));
             } else {
                 commands = new ArrayList<>(Arrays.asList(
+                        iptables + "-D OUTPUT -j DROP 2> /dev/null || true",
                         iptables + "-I OUTPUT -j DROP",
                         ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                         ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
@@ -632,18 +645,32 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
 
             List<String> commandsTether = tethering.activateTethering(false);
-            if (commandsTether.size() > 0)
+            if (commandsTether.size() > 0) {
                 commands.addAll(commandsTether);
+            }
+            if (firewallEnabled) {
+                commands.addAll(firewall.getFirewallRules());
+            } else {
+                commands.addAll(firewall.getClearFirewallRules());
+            }
         } else if (itpdState == RUNNING) {
             cancelKillSwitchNotificationIfNeeded();
             commands = tethering.activateTethering(false);
+            if (firewallEnabled) {
+                commands.addAll(firewall.getFirewallRules());
+            } else {
+                commands.addAll(firewall.getClearFirewallRules());
+            }
         }
 
         return commands;
     }
 
     public List<String> getBlockingRules(String appUID, String blockHOTSPOT, String unblockHOTSPOT) {
+        Pair<String, String> bypassLanNatToBypassLanFilter = getBypassLanRules();
+        String bypassLanFilter = bypassLanNatToBypassLanFilter.second;
         return new ArrayList<>(Arrays.asList(
+                iptables + "-D OUTPUT -j DROP 2> /dev/null || true",
                 iptables + "-I OUTPUT -j DROP",
                 ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                 ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
@@ -655,6 +682,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                 iptables + "-D OUTPUT -j " + FILTER_OUTPUT_CORE + " 2> /dev/null || true",
                 busybox + "sleep 1",
                 iptables + "-N " + FILTER_OUTPUT_CORE + " 2> /dev/null",
+                bypassLanFilter,
                 iptables + "-A " + FILTER_OUTPUT_CORE + " -m owner ! --uid-owner " + appUID + " -j REJECT",
                 iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
                 unblockHOTSPOT,
@@ -672,6 +700,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         if (runModulesWithRoot) {
             appUID = "0";
         }
+        boolean firewallEnabled = preferenceRepository.get().getBoolPreference(FIREWALL_ENABLED);
 
         String unblockHOTSPOT = iptables + "-D FORWARD -j DROP 2> /dev/null || true";
         String blockHOTSPOT = iptables + "-I FORWARD -j DROP";
@@ -680,6 +709,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         }
 
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
+                iptables + "-D OUTPUT -j DROP 2> /dev/null || true",
                 iptables + "-I OUTPUT -j DROP",
                 ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                 ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
@@ -696,8 +726,13 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         ));
 
         List<String> commandsTether = tethering.fastUpdate();
-        if (commandsTether.size() > 0)
+        if (commandsTether.size() > 0) {
             commands.addAll(commandsTether);
+        }
+        IptablesFirewall firewall = iptablesFirewall.get();
+        if (firewallEnabled) {
+            commands.addAll(firewall.getFastUpdateFirewallRules());
+        }
 
         return commands;
     }
@@ -718,7 +753,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             appUID = "0";
         }
 
-        return new ArrayList<>(Arrays.asList(
+        ArrayList<String> commands = new ArrayList<>(Arrays.asList(
+                iptables + "-D OUTPUT -j DROP 2> /dev/null || true",
                 ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                 ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
                 iptables + "-t nat -F " + NAT_OUTPUT_CORE + " 2> /dev/null || true",
@@ -738,6 +774,10 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                 "ip rule delete from " + wifiAPAddressesRange + " lookup 63 2> /dev/null || true",
                 "ip rule delete from " + usbModemAddressesRange + " lookup 62 2> /dev/null || true"
         ));
+
+        commands.addAll(iptablesFirewall.get().getClearFirewallRules());
+
+        return commands;
     }
 
     @Override
@@ -825,6 +865,37 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         } else {
             return "";
         }
+    }
+
+    private Pair<String, String> getBypassLanRules() {
+        String bypassLanNat;
+        String bypassLanFilter;
+        StringBuilder nonTorRanges = new StringBuilder();
+        for (String address : VpnUtils.nonTorList) {
+            nonTorRanges.append(address).append(" ");
+        }
+        if (lan) {
+            nonTorRanges.deleteCharAt(nonTorRanges.lastIndexOf(" "));
+
+            bypassLanNat = "non_tor=\"" + nonTorRanges + "\"; " +
+                    "for _lan in $non_tor; do " +
+                    iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -d $_lan -j RETURN; " +
+                    "done";
+            bypassLanFilter = "non_tor=\"" + nonTorRanges + "\"; " +
+                    "for _lan in $non_tor; do " +
+                    iptables + "-A " + FILTER_OUTPUT_CORE + " -d $_lan -j RETURN; " +
+                    "done";
+        } else {
+            bypassLanNat = "non_tor=\"" + nonTorRanges + "\"; " +
+                    "for _lan in $non_tor; do " +
+                    iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -m owner --uid-owner " + NETWORK_STACK_DEFAULT_UID + " -d $_lan -j RETURN; " +
+                    "done";
+            bypassLanFilter = "non_tor=\"" + nonTorRanges + "\"; " +
+                    "for _lan in $non_tor; do " +
+                    iptables + "-A " + FILTER_OUTPUT_CORE + " -m owner --uid-owner " + NETWORK_STACK_DEFAULT_UID + " -d $_lan -j RETURN; " +
+                    "done";
+        }
+        return new Pair<>(bypassLanNat, bypassLanFilter);
     }
 
     private static void executeCommands(Context context, List<String> commands) {

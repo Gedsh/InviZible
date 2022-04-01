@@ -21,9 +21,10 @@ package pan.alexander.tordnscrypt.iptables;
 
 interface IptablesConstants {
     String FILTER_OUTPUT_CORE = "tordnscrypt";
-    String FILTER_OUTPUT_FIREWALL = "tordnscrypt_fwl_output";
+    String FILTER_OUTPUT_FIREWALL = "ipro_fwl_output";
+    String FILTER_FIREWALL_LAN = "ipro_fwl_lan";
     String NAT_OUTPUT_CORE = "tordnscrypt_nat_output";
     String FILTER_FORWARD_CORE = "tordnscrypt_forward";
-    String FILTER_FORWARD_FIREWALL = "tordnscrypt_fwl_forward";
+    String FILTER_FORWARD_FIREWALL = "ipro_fwl_forward";
     String NAT_PREROUTING_CORE = "tordnscrypt_prerouting";
 }

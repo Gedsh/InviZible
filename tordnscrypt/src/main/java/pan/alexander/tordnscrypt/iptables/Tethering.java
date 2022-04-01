@@ -97,7 +97,6 @@ public class Tethering {
         String busybox = pathVars.getBusyboxPath();
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
-        boolean dnsCryptRunning = modulesStatus.getDnsCryptState() == RUNNING;
         boolean torRunning = modulesStatus.getTorState() == RUNNING;
         boolean itpdRunning = modulesStatus.getItpdState() == RUNNING;
 
@@ -225,10 +224,13 @@ public class Tethering {
         boolean tetherIptablesRulesIsClean = preferences.getBoolPreference("TetherIptablesRulesIsClean");
         boolean ttlFixed = preferences.getBoolPreference("TTLisFixed");
 
-        if (!torTethering && !itpdTethering && ((!apIsOn && !usbTetherOn && !ethernetOn) || !dnsCryptRunning)) {
+        if (!torTethering && !itpdTethering && !apIsOn && !usbTetherOn) {
 
             if (tetherIptablesRulesIsClean) {
-                return tetheringCommands;
+                return new ArrayList<>(Arrays.asList(
+                        iptables + "-D FORWARD -j DROP 2> /dev/null || true",
+                        iptables + "-I FORWARD -j DROP"
+                ));
             }
 
             preferences.setBoolPreference("TetherIptablesRulesIsClean", true);
@@ -238,6 +240,8 @@ public class Tethering {
                     ip6tables + "-I INPUT -j DROP || true",
                     ip6tables + "-D FORWARD -j DROP 2> /dev/null || true",
                     ip6tables + "-I FORWARD -j DROP",
+                    iptables + "-D FORWARD -j DROP 2> /dev/null || true",
+                    iptables + "-I FORWARD -j DROP",
                     iptables + "-t nat -F " + NAT_PREROUTING_CORE + " 2> /dev/null",
                     iptables + "-F " + FILTER_FORWARD_CORE + " 2> /dev/null",
                     iptables + "-t nat -D PREROUTING -j " + NAT_PREROUTING_CORE + " 2> /dev/null || true",
@@ -254,6 +258,7 @@ public class Tethering {
 
             if (!torTethering && !itpdTethering) {
                 tetheringCommands = new ArrayList<>(Arrays.asList(
+                        iptables + "-D FORWARD -j DROP 2> /dev/null || true",
                         iptables + "-I FORWARD -j DROP",
                         ip6tables + "-D INPUT -j DROP 2> /dev/null || true",
                         ip6tables + "-I INPUT -j DROP || true",
@@ -300,6 +305,7 @@ public class Tethering {
 
             } else if (torTethering && routeAllThroughTorTether && itpdTethering) {
                 tetheringCommands = new ArrayList<>(Arrays.asList(
+                        iptables + "-D FORWARD -j DROP 2> /dev/null || true",
                         iptables + "-I FORWARD -j DROP",
                         ip6tables + "-D INPUT -j DROP 2> /dev/null || true",
                         ip6tables + "-I INPUT -j DROP || true",
@@ -374,6 +380,7 @@ public class Tethering {
 
             } else if (torTethering && itpdTethering) {
                 tetheringCommands = new ArrayList<>(Arrays.asList(
+                        iptables + "-D FORWARD -j DROP 2> /dev/null || true",
                         iptables + "-I FORWARD -j DROP",
                         ip6tables + "-D INPUT -j DROP 2> /dev/null || true",
                         ip6tables + "-I INPUT -j DROP || true",
@@ -437,6 +444,7 @@ public class Tethering {
 
             } else if (itpdTethering) {
                 tetheringCommands = new ArrayList<>(Arrays.asList(
+                        iptables + "-D FORWARD -j DROP 2> /dev/null || true",
                         iptables + "-I FORWARD -j DROP",
                         ip6tables + "-D INPUT -j DROP 2> /dev/null || true",
                         ip6tables + "-I INPUT -j DROP || true",
@@ -485,6 +493,7 @@ public class Tethering {
 
             } else if (routeAllThroughTorTether) {
                 tetheringCommands = new ArrayList<>(Arrays.asList(
+                        iptables + "-D FORWARD -j DROP 2> /dev/null || true",
                         iptables + "-I FORWARD -j DROP",
                         ip6tables + "-D INPUT -j DROP 2> /dev/null || true",
                         ip6tables + "-I INPUT -j DROP || true",
@@ -545,6 +554,7 @@ public class Tethering {
 
             } else {
                 tetheringCommands = new ArrayList<>(Arrays.asList(
+                        iptables + "-D FORWARD -j DROP 2> /dev/null || true",
                         iptables + "-I FORWARD -j DROP",
                         ip6tables + "-D INPUT -j DROP 2> /dev/null || true",
                         ip6tables + "-I INPUT -j DROP || true",
@@ -606,6 +616,7 @@ public class Tethering {
 
             if (torTethering) {
                 tetheringCommands = new ArrayList<>(Arrays.asList(
+                        iptables + "-D FORWARD -j DROP 2> /dev/null || true",
                         iptables + "-I FORWARD -j DROP",
                         ip6tables + "-D INPUT -j DROP 2> /dev/null || true",
                         ip6tables + "-I INPUT -j DROP || true",
@@ -677,6 +688,7 @@ public class Tethering {
                         ip6tables + "-I INPUT -j DROP || true",
                         ip6tables + "-D FORWARD -j DROP 2> /dev/null || true",
                         ip6tables + "-I FORWARD -j DROP",
+                        iptables + "-D FORWARD -j DROP 2> /dev/null || true",
                         iptables + "-t nat -F " + NAT_PREROUTING_CORE + " 2> /dev/null",
                         iptables + "-F " + FILTER_FORWARD_CORE + " 2> /dev/null",
                         iptables + "-t nat -D PREROUTING -j " + NAT_PREROUTING_CORE + " 2> /dev/null || true",
@@ -714,6 +726,7 @@ public class Tethering {
         String busybox = pathVarsLazy.get().getBusyboxPath();
 
         tetheringCommands.addAll(Arrays.asList(
+                iptables + "-D FORWARD -j DROP 2> /dev/null || true",
                 iptables + "-I FORWARD -j DROP",
                 ip6tables + "-D INPUT -j DROP 2> /dev/null || true",
                 ip6tables + "-I INPUT -j DROP || true",
@@ -750,6 +763,7 @@ public class Tethering {
         preferenceRepository.get().setBoolPreference("TTLisFixed", true);
 
         List<String> commands = new ArrayList<>(Arrays.asList(
+                iptables + "-D FORWARD -j DROP 2> /dev/null || true",
                 iptables + "-I FORWARD -j DROP",
                 "echo 64 > /proc/sys/net/ipv4/ip_default_ttl 2> /dev/null || true",
                 "ip rule delete from " + wifiAPAddressesRange + " lookup 63 2> /dev/null || true",
