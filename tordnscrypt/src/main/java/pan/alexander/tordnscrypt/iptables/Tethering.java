@@ -39,6 +39,7 @@ import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
 import pan.alexander.tordnscrypt.vpn.VpnUtils;
 
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.iptables.IptablesConstants.FILTER_FORWARD_CORE;
 import static pan.alexander.tordnscrypt.iptables.IptablesConstants.FILTER_OUTPUT_CORE;
 import static pan.alexander.tordnscrypt.iptables.IptablesConstants.NAT_PREROUTING_CORE;
@@ -48,9 +49,11 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BYPASS_LAN;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR_CLEARNET_TETHER;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_UNLOCK_TETHER;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ITPD_TETHERING;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TETHERING;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
 
 public class Tethering {
@@ -72,11 +75,16 @@ public class Tethering {
     @Inject
     public Lazy<PathVars> pathVarsLazy;
     @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultSharedPreferences;
+    @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
     public Provider<InternetSharingChecker> internetSharingChecker;
 
     private String iptables = "iptables ";
+
+    private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
     Tethering(Context context) {
         App.getInstance().getDaggerComponent().inject(this);
@@ -96,15 +104,14 @@ public class Tethering {
         String ip6tables = pathVars.getIp6tablesPath();
         String busybox = pathVars.getBusyboxPath();
 
-        ModulesStatus modulesStatus = ModulesStatus.getInstance();
         boolean torRunning = modulesStatus.getTorState() == RUNNING;
         boolean itpdRunning = modulesStatus.getItpdState() == RUNNING;
 
 
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences shPref = defaultSharedPreferences.get();
         PreferenceRepository preferences = preferenceRepository.get();
         boolean torTethering = shPref.getBoolean(TOR_TETHERING, false) && torRunning;
-        boolean itpdTethering = shPref.getBoolean("pref_common_itpd_tethering", false) && itpdRunning;
+        boolean itpdTethering = shPref.getBoolean(ITPD_TETHERING, false) && itpdRunning;
         boolean routeAllThroughTorTether = shPref.getBoolean("pref_common_tor_route_all", false);
         boolean blockHotspotHttp = shPref.getBoolean("pref_common_block_http", false);
         addressLocalPC = shPref.getString("pref_common_local_eth_device_addr", Constants.STANDARD_ADDRESS_LOCAL_PC);
@@ -224,7 +231,7 @@ public class Tethering {
         boolean tetherIptablesRulesIsClean = preferences.getBoolPreference("TetherIptablesRulesIsClean");
         boolean ttlFixed = preferences.getBoolPreference("TTLisFixed");
 
-        if (!torTethering && !itpdTethering && !apIsOn && !usbTetherOn) {
+        if (!isTetheringActive()) {
 
             if (tetherIptablesRulesIsClean) {
                 return new ArrayList<>(Arrays.asList(
@@ -883,5 +890,17 @@ public class Tethering {
         } else {
             return "";
         }
+    }
+
+    //Should be called after setInterfaceNames()
+    boolean isTetheringActive() {
+        boolean torRunning = modulesStatus.getTorState() == RUNNING;
+        boolean itpdRunning = modulesStatus.getItpdState() == RUNNING;
+
+        SharedPreferences shPref = defaultSharedPreferences.get();
+        boolean torTethering = shPref.getBoolean(TOR_TETHERING, false) && torRunning;
+        boolean itpdTethering = shPref.getBoolean(ITPD_TETHERING, false) && itpdRunning;
+
+        return torTethering || itpdTethering || apIsOn || usbTetherOn;
     }
 }

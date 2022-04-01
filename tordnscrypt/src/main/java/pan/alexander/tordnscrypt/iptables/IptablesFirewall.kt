@@ -33,6 +33,7 @@ import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPE
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_KERNEL
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_NTP
 import pan.alexander.tordnscrypt.utils.Constants.NUMBER_REGEX
+import pan.alexander.tordnscrypt.utils.Utils
 import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker.isCellularActive
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker.isEthernetActive
@@ -64,7 +65,7 @@ class IptablesFirewall @Inject constructor(
     private val uidSpecialAllowed by lazy { hashSetOf<Int>() }
     private val uidLanAllowed by lazy { hashSetOf<Int>() }
 
-    fun getFirewallRules(): List<String> {
+    fun getFirewallRules(tetheringActive: Boolean): List<String> {
         prepareUidAllowed()
         return sequenceOf(
             "$iptables -F $FILTER_OUTPUT_FIREWALL 2> /dev/null",
@@ -72,6 +73,8 @@ class IptablesFirewall @Inject constructor(
             "$iptables -N $FILTER_OUTPUT_FIREWALL 2> /dev/null",
             "$iptables -I OUTPUT 2 -j $FILTER_OUTPUT_FIREWALL",
             "$iptables -A $FILTER_OUTPUT_FIREWALL -m owner --uid-owner $ownUID -j RETURN"
+        ).plus(
+            getTetheringRules(tetheringActive)
         ).plus(
             getLanRules()
         ).plus(
@@ -129,8 +132,8 @@ class IptablesFirewall @Inject constructor(
             "$iptables -A $FILTER_OUTPUT_FIREWALL -m owner --uid-owner $it -j RETURN"
         }
 
-    private fun getSpecialRules(): List<String> {
-        return uidSpecialAllowed.flatMap {
+    private fun getSpecialRules(): List<String> =
+        uidSpecialAllowed.flatMap {
             when (it) {
                 SPECIAL_UID_KERNEL -> {
                     arrayListOf(
@@ -154,7 +157,17 @@ class IptablesFirewall @Inject constructor(
                 else -> emptyList()
             }
         }
-    }
+
+    private fun getTetheringRules(tetheringActive: Boolean): List<String> =
+        if (tetheringActive) {
+            val dnsTetherUid = Utils.getDnsTetherUid(ownUID)
+            arrayListOf(
+                "$iptables -A $FILTER_OUTPUT_FIREWALL -m owner --uid-owner $dnsTetherUid -p tcp --sport 53 -j RETURN",
+                "$iptables -A $FILTER_OUTPUT_FIREWALL -m owner --uid-owner $dnsTetherUid -p udp --sport 53 -j RETURN"
+            )
+        } else {
+            emptyList()
+        }
 
     private fun prepareUidAllowed() {
         clearAllowedUids()

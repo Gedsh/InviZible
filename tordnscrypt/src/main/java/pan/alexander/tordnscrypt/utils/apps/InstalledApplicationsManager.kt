@@ -300,6 +300,7 @@ class InstalledApplicationsManager private constructor(
         val mdns = getUidForName("mdns", 1020 + userId * 100_000)
         val gps = getUidForName("gps", 1021 + userId * 100_000)
         val dns = getUidForName("dns", 1051 + userId * 100_000)
+        val dnsTether = getUidForName("dns_tether", 1052 + userId * 100_000)
         val shell = getUidForName("shell", 2000 + userId * 100_000)
         val clat = getUidForName("clat", 1029 + userId * 100_000)
         val specialDataApps = arrayListOf(
@@ -360,6 +361,14 @@ class InstalledApplicationsManager private constructor(
                 defaultIcon,
                 true,
                 activeApps.contains(dns.toString())
+            ),
+            ApplicationData(
+                "DNS Tether",
+                "dns.tether",
+                dnsTether,
+                defaultIcon,
+                true,
+                activeApps.contains(dnsTether.toString())
             ),
             ApplicationData(
                 "Linux shell",

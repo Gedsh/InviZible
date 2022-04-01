@@ -257,4 +257,7 @@ object Utils {
         apps.filter { it.pack.contains(NETWORK_STACK_PACKAGE, true) }
             .map { it.uid }
             .plus(getUidForName("dns", 1051 + ownUid / 100_000 * 100_000))
+
+    fun getDnsTetherUid(ownUid: Int) =
+        getUidForName("dns_tether", 1052 + ownUid / 100_000 * 100_000)
 }

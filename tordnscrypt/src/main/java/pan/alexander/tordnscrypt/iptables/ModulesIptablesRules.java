@@ -452,7 +452,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                 commands.addAll(commandsTether);
             }
             if (firewallEnabled) {
-                commands.addAll(firewall.getFirewallRules());
+                commands.addAll(firewall.getFirewallRules(tethering.isTetheringActive()));
             } else {
                 commands.addAll(firewall.getClearFirewallRules());
             }
@@ -506,7 +506,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                 commands.addAll(commandsTether);
             }
             if (firewallEnabled) {
-                commands.addAll(firewall.getFirewallRules());
+                commands.addAll(firewall.getFirewallRules(tethering.isTetheringActive()));
             } else {
                 commands.addAll(firewall.getClearFirewallRules());
             }
@@ -649,7 +649,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                 commands.addAll(commandsTether);
             }
             if (firewallEnabled) {
-                commands.addAll(firewall.getFirewallRules());
+                commands.addAll(firewall.getFirewallRules(tethering.isTetheringActive()));
             } else {
                 commands.addAll(firewall.getClearFirewallRules());
             }
@@ -657,7 +657,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             cancelKillSwitchNotificationIfNeeded();
             commands = tethering.activateTethering(false);
             if (firewallEnabled) {
-                commands.addAll(firewall.getFirewallRules());
+                commands.addAll(firewall.getFirewallRules(tethering.isTetheringActive()));
             } else {
                 commands.addAll(firewall.getClearFirewallRules());
             }
