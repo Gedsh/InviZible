@@ -117,6 +117,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     private volatile OperationMode savedOperationMode = UNDEFINED;
     private volatile boolean commonReceiversRegistered = false;
     private volatile boolean rootReceiversRegistered = false;
+    private volatile boolean rootVpnReceiverRegistered = false;
     private volatile boolean lock = false;
     private volatile Future<?> checkTetheringTask;
     private volatile boolean vpnRevoked = false;
@@ -232,6 +233,19 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             registerAPisOn();
             registerUSBModemIsOn();
             registerPowerOFF();
+        }
+
+        if (isRootMode() && !modulesStatus.isUseModulesWithRoot()) {
+            if (rootVpnReceiverRegistered && modulesStatus.isFixTTL()) {
+                unlistenVpnConnectivityChanges();
+                rootVpnReceiverRegistered = false;
+            } else if (!rootVpnReceiverRegistered && !modulesStatus.isFixTTL()) {
+                listenVpnConnectivityChanges();
+                rootVpnReceiverRegistered = true;
+            }
+        } else if (rootVpnReceiverRegistered) {
+            unlistenVpnConnectivityChanges();
+            rootVpnReceiverRegistered = false;
         }
 
         if (isVpnMode() && firewallNotificationReceiver == null) {
@@ -555,7 +569,13 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                         ConnectivityManager.TYPE_DUMMY
                 );
                 if (networkType == ConnectivityManager.TYPE_VPN) {
-                    checkVpnRestoreAfterRevoke();
+                    if (isVpnMode()) {
+                        checkVpnRestoreAfterRevoke();
+                    } else if (isRootMode()
+                            && !modulesStatus.isUseModulesWithRoot()
+                            && !modulesStatus.isFixTTL()) {
+                        connectivityStateChanged(new Intent("VPN connectivity changed"));
+                    }
                 }
             }
         };
