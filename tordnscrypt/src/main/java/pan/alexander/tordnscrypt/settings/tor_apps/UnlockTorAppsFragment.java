@@ -540,6 +540,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
                     List<ApplicationData> installedApps = new InstalledApplicationsManager.Builder()
                             .setOnAppAddListener(this)
                             .activeApps(unlockAppsArrListSaved)
+                            .setIconRequired()
                             .build()
                             .getInstalledApps();
 

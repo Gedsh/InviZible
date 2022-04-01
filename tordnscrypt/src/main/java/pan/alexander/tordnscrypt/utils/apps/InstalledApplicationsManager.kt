@@ -27,13 +27,13 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.os.Build
-import android.os.Process
 import android.os.UserManager
 import androidx.core.content.ContextCompat
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
+import pan.alexander.tordnscrypt.utils.Utils.getUidForName
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
@@ -52,7 +52,8 @@ class InstalledApplicationsManager private constructor(
     private var onAppAddListener: OnAppAddListener?,
     private val activeApps: Set<String>,
     private val showSpecialApps: Boolean,
-    private var showAllApps: Boolean?
+    private var showAllApps: Boolean?,
+    private var iconIsRequired: Boolean
 ) {
 
     @Inject
@@ -124,7 +125,11 @@ class InstalledApplicationsManager private constructor(
 
                 val name =
                     packageManager.getApplicationLabel(applicationInfo)?.toString() ?: "Undefined"
-                val icon = packageManager.getApplicationIcon(applicationInfo)
+                val icon = if (iconIsRequired)  {
+                    packageManager.getApplicationIcon(applicationInfo)
+                } else {
+                    null
+                }
 
                 if (application == null) {
                     val uid = applicationInfo.uid
@@ -243,7 +248,7 @@ class InstalledApplicationsManager private constructor(
     private fun checkPartOfMultiUser(
         applicationInfo: ApplicationInfo,
         name: String,
-        icon: Drawable, uids: List<Int>,
+        icon: Drawable?, uids: List<Int>,
         packageManager: PackageManager,
         multiUserAppsMap: Map<Int, ApplicationData>
     ): Map<Int, ApplicationData> {
@@ -405,21 +410,6 @@ class InstalledApplicationsManager private constructor(
         return specialDataApps
     }
 
-    private fun getUidForName(name: String, defaultValue: Int): Int {
-        var uid = defaultValue
-        try {
-            val result = Process.getUidForName(name)
-            if (result > 0) {
-                uid = result
-            } else {
-                logw("No uid for $name, using default value $defaultValue")
-            }
-        } catch (e: Exception) {
-            logw("No uid for $name, using default value $defaultValue")
-        }
-        return uid
-    }
-
     interface OnAppAddListener {
         fun onAppAdded(application: ApplicationData)
     }
@@ -430,6 +420,7 @@ class InstalledApplicationsManager private constructor(
         private var activeApps = setOf<String>()
         private var showSpecialApps = false
         private var showAllApps: Boolean? = null
+        private var iconIsRequired = false
 
         fun setOnAppAddListener(onAppAddListener: OnAppAddListener): Builder {
             this.onAppAddListener = onAppAddListener
@@ -451,12 +442,18 @@ class InstalledApplicationsManager private constructor(
             return this
         }
 
+        fun setIconRequired(): Builder {
+            this.iconIsRequired = true
+            return this
+        }
+
         fun build(): InstalledApplicationsManager =
             InstalledApplicationsManager(
                 onAppAddListener,
                 activeApps,
                 showSpecialApps,
-                showAllApps
+                showAllApps,
+                iconIsRequired
             )
     }
 }
