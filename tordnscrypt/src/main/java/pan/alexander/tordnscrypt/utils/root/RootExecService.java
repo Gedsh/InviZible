@@ -155,7 +155,7 @@ public class RootExecService extends Service
     }
 
     private void moveServiceToForeground() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && systemNotificationManager != null) {
+        if (systemNotificationManager != null) {
             serviceNotificationManager.sendNotification(
                     getString(R.string.notification_temp_text),
                     ""
@@ -164,7 +164,7 @@ public class RootExecService extends Service
     }
 
     private void moveServiceToBackground() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && systemNotificationManager != null) {
+        if (systemNotificationManager != null) {
 
             systemNotificationManager.cancel(DEFAULT_NOTIFICATION_ID);
 
@@ -173,6 +173,8 @@ public class RootExecService extends Service
             } catch (Exception e) {
                 loge("RootExecService moveServiceToBackground", e);
             }
+
+            serviceNotificationManager.resetNotification();
         }
     }
 
@@ -182,7 +184,7 @@ public class RootExecService extends Service
     }
 
     private void updateNotificationProgress(int progress) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && systemNotificationManager != null) {
+        if (systemNotificationManager != null) {
             serviceNotificationManager.updateNotification(
                     getString(R.string.notification_temp_text),
                     "",

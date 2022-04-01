@@ -22,6 +22,9 @@ public class RootServiceNotificationManager {
 
     public static final String ROOT_CHANNEL_ID = "ROOT_COMMANDS_INVIZIBLE";
     public static final int DEFAULT_NOTIFICATION_ID = 102;
+    private static boolean rootNotificationChannelIsCreated;
+
+    private volatile int savedProgress;
 
     public RootServiceNotificationManager(Service service, NotificationManager notificationManager) {
         this.service = service;
@@ -30,14 +33,17 @@ public class RootServiceNotificationManager {
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     void createNotificationChannel() {
-        NotificationChannel notificationChannel = new NotificationChannel
-                (ROOT_CHANNEL_ID, service.getString(R.string.notification_channel_root), NotificationManager.IMPORTANCE_LOW);
-        notificationChannel.setDescription("");
-        notificationChannel.setSound(null, Notification.AUDIO_ATTRIBUTES_DEFAULT);
-        notificationChannel.enableLights(false);
-        notificationChannel.enableVibration(false);
-        notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-        notificationManager.createNotificationChannel(notificationChannel);
+        if (!rootNotificationChannelIsCreated) {
+            NotificationChannel notificationChannel = new NotificationChannel
+                    (ROOT_CHANNEL_ID, service.getString(R.string.notification_channel_root), NotificationManager.IMPORTANCE_LOW);
+            notificationChannel.setDescription("");
+            notificationChannel.setSound(null, Notification.AUDIO_ATTRIBUTES_DEFAULT);
+            notificationChannel.enableLights(false);
+            notificationChannel.enableVibration(false);
+            notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+            notificationManager.createNotificationChannel(notificationChannel);
+            rootNotificationChannelIsCreated = true;
+        }
 
         sendNotification(service.getString(R.string.notification_temp_text), "");
     }
@@ -53,7 +59,7 @@ public class RootServiceNotificationManager {
                 iconResource,
                 title,
                 text,
-                0
+                savedProgress
         );
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -64,6 +70,8 @@ public class RootServiceNotificationManager {
     }
 
     void updateNotification(String title, String text, int progress) {
+
+        savedProgress = progress;
 
         PendingIntent contentIntent = getContentIntent();
 
@@ -78,6 +86,10 @@ public class RootServiceNotificationManager {
         );
 
         notificationManager.notify(DEFAULT_NOTIFICATION_ID, notification);
+    }
+
+    void resetNotification() {
+        savedProgress = 0;
     }
 
     @SuppressLint("UnspecifiedImmutableFlag")
