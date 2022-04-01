@@ -177,7 +177,7 @@
             android:key="pref_common_use_busybox"
             android:title="@string/pref_common_use_busybox" />
         <androidx.preference.ListPreference
-            android:defaultValue="1"
+            android:defaultValue="2"
             android:entries="@array/pref_common_categ_use_iptables_titles"
             android:entryValues="@array/pref_common_use_iptables_values"
             android:key="pref_common_use_iptables"
