@@ -39,7 +39,7 @@ import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges
 import pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_PACKAGE
 import pan.alexander.tordnscrypt.utils.appexit.AppExitDetectService
 import pan.alexander.tordnscrypt.utils.filemanager.FileShortener
-import pan.alexander.tordnscrypt.utils.logger.Logger
+import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.io.File
@@ -245,10 +245,10 @@ object Utils {
             if (result > 0) {
                 uid = result
             } else {
-                Logger.logw("No uid for $name, using default value $defaultValue")
+                logw("No uid for $name, using default value $defaultValue")
             }
         } catch (e: Exception) {
-            Logger.logw("No uid for $name, using default value $defaultValue")
+            logw("No uid for $name, using default value $defaultValue")
         }
         return uid
     }
