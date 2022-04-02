@@ -735,3 +735,8 @@
 * Updated Spanish translation.
 * Updated Indonesian translation.
 * Fixes and optimizations.
+
+**InviZible Pro beta 1.5.9**
+* Implemented firewall for Root mode.
+* Optimized memory usage in VPN mode.
+* Fixes and optimizations.
