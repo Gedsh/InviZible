@@ -45,7 +45,7 @@ import kotlin.math.roundToInt
 private const val ATTEMPTS_TO_OPEN_ROOT_CONSOLE = 3
 private const val ATTEMPTS_TO_EXECUTE_COMMAND = 3
 private const val NOTIFICATION_UPDATE_INTERVAL_MSEC = 200L
-private const val MAX_EXECUTION_TIME_SEC = 60
+private const val MAX_EXECUTION_TIME_SEC = 300
 
 @ExperimentalCoroutinesApi
 class RootExecutor @Inject constructor(
@@ -80,8 +80,18 @@ class RootExecutor @Inject constructor(
                     withTimeout(MAX_EXECUTION_TIME_SEC * 1000L) {
                         executeCommands(it.commands, it.mark)
                     }
+                } catch (e: CancellationException) {
+                    loge("RootExecutor commands take too long", e)
+                    commandsDone(
+                        listOf("Commands take too long, more than $MAX_EXECUTION_TIME_SEC seconds"),
+                        it.mark
+                    )
                 } catch (e: Exception) {
                     loge("RootExecutor execute", e)
+                    commandsDone(
+                        listOf(e.message ?: ""),
+                        it.mark
+                    )
                 }
             }.collect()
         }
@@ -121,10 +131,19 @@ class RootExecutor @Inject constructor(
             var result: String
             var attempts = 0
             do {
-                delay(attempts * 100L)
+
+                if (!currentCoroutineContext().isActive) {
+                    throw CancellationException("Commands take too long. Next command $command")
+                }
+
+                if (attempts > 0) {
+                    delay(attempts * 100L)
+                }
+
                 result = executeCommand(command)?.let {
                     getResult(command, it)
                 } ?: "Root console error"
+
                 attempts++
             } while (
                 result.isNotBlank()
@@ -208,8 +227,13 @@ class RootExecutor @Inject constructor(
 
         do {
             runCatching {
-                delay(attempts * 100L)
+
+                if (attempts > 0) {
+                    delay(attempts * 100L)
+                }
+
                 console = Shell.SU.getConsole()
+
                 attempts++
             }.onFailure {
                 loge("RootExecutor openCommandShell", it)
