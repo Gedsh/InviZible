@@ -30,7 +30,9 @@ import android.os.Build
 import android.os.UserManager
 import androidx.core.content.ContextCompat
 import pan.alexander.tordnscrypt.App
+import pan.alexander.tordnscrypt.TopFragment.appVersion
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule
+import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
 import pan.alexander.tordnscrypt.utils.Utils.getUidForName
@@ -39,6 +41,8 @@ import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_SHOWS_ALL_APPS
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MULTI_USER_SUPPORT
+import pan.alexander.tordnscrypt.utils.root.RootCommands
+import pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK
 import java.util.concurrent.locks.ReentrantLock
 import java.util.regex.Pattern
 import javax.inject.Inject
@@ -79,6 +83,8 @@ class InstalledApplicationsManager private constructor(
     fun getInstalledApps(): List<ApplicationData> {
 
         try {
+
+            allowInteractAcrossUsersPermissionIfRequired()
 
             reentrantLock.lockInterruptibly()
 
@@ -210,7 +216,7 @@ class InstalledApplicationsManager private constructor(
 
             return applications.sorted()
         } catch (e: Exception) {
-            loge("InstalledApplications getInstalledApps")
+            loge("InstalledApplications getInstalledApps", e)
         } finally {
             onAppAddListener = null
             if (reentrantLock.isLocked && reentrantLock.isHeldByCurrentThread) {
@@ -282,7 +288,7 @@ class InstalledApplicationsManager private constructor(
                         }
                     }
                 } catch (e: Exception) {
-                    loge("InstalledApplications checkPartOfMultiUser")
+                    loge("InstalledApplications checkPartOfMultiUser", e)
                 }
             }
         }
@@ -418,6 +424,25 @@ class InstalledApplicationsManager private constructor(
 
         return specialDataApps
     }
+
+    private fun allowInteractAcrossUsersPermissionIfRequired() {
+        if (multiUserSupport
+            && !(appVersion.endsWith("p") || appVersion.startsWith("f"))
+            && ModulesStatus.getInstance().isRootAvailable
+            && !isInteractAcrossUsersPermissionGranted()) {
+            val allowAccessToWorkProfileApps = listOf(
+                "pm grant ${context.packageName} android.permission.INTERACT_ACROSS_USERS"
+            )
+            RootCommands.execute(context, allowAccessToWorkProfileApps, NULL_MARK)
+            logi("Grant INTERACT_ACROSS_USERS permission to access applications in work profile")
+        }
+    }
+
+    private fun isInteractAcrossUsersPermissionGranted() =
+        ContextCompat.checkSelfPermission(
+            context,
+            "android.permission.INTERACT_ACROSS_USERS"
+        ) == PackageManager.PERMISSION_GRANTED
 
     interface OnAppAddListener {
         fun onAppAdded(application: ApplicationData)
