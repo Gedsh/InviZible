@@ -302,7 +302,7 @@ void handle_ip(const struct arguments *args,
             uid = get_uid_q(args, version, protocol, source, sport, dest, dport);
         }
 
-        if (uid < 0) {
+        if (uid < 0 && dport != 53) {
             uid = restore_uid(args,
                               version,
                               protocol,
