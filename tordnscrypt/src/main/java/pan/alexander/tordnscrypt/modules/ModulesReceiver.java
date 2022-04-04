@@ -248,9 +248,9 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             rootVpnReceiverRegistered = false;
         }
 
-        if (isVpnMode() && firewallNotificationReceiver == null) {
+        if ((isVpnMode() || isRootMode()) && firewallNotificationReceiver == null) {
             registerFirewallReceiver();
-        } else if (!isVpnMode() && firewallNotificationReceiver != null) {
+        } else if (!(isVpnMode() || isRootMode()) && firewallNotificationReceiver != null) {
             unregisterFirewallReceiver();
         }
 
