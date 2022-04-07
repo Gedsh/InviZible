@@ -108,6 +108,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     private final Provider<InternetSharingChecker> internetSharingChecker;
     private final CachedExecutor cachedExecutor;
     private final Lazy<Handler> handler;
+    private final Lazy<TorRestarterReconnector> torRestarterReconnector;
 
     private Context context;
     private volatile Object commonNetworkCallback;
@@ -129,7 +130,8 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             Lazy<ConnectionCheckerInteractor> connectionCheckerInteractor,
             Provider<InternetSharingChecker> internetSharingChecker,
             CachedExecutor cachedExecutor,
-            Lazy<Handler> handler
+            Lazy<Handler> handler,
+            Lazy<TorRestarterReconnector> torRestarterReconnector
     ) {
         this.preferenceRepository = preferenceRepository;
         this.defaultPreferences = defaultSharedPreferences;
@@ -137,6 +139,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         this.internetSharingChecker = internetSharingChecker;
         this.cachedExecutor = cachedExecutor;
         this.handler = handler;
+        this.torRestarterReconnector = torRestarterReconnector;
     }
 
     @Override
@@ -904,6 +907,15 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
     @Override
     public void onConnectionChecked(boolean available) {
+
+        if (modulesStatus.getTorState() == RUNNING && modulesStatus.isTorReady()) {
+            if (available) {
+                torRestarterReconnector.get().stopRestarterCounter();
+            } else if (isNetworkAvailable()) {
+                torRestarterReconnector.get().startRestarterCounter();
+            }
+        }
+
         if (isVpnMode()) {
             return;
         }
