@@ -9,7 +9,7 @@ def keystoreProperties = new Properties()
 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 32
 
 
     flavorDimensions "version", "processor"
@@ -49,7 +49,7 @@ android {
 
         beta {
             applicationId "pan.alexander.tordnscrypt"
-            versionName "1.5.9"
+            versionName "1.6.0"
             dimension = 'version'
             signingConfig signingConfigs.betasign
             resValue 'string', 'package_name', applicationId
@@ -89,8 +89,8 @@ android {
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 31
-        versionCode 159
+        targetSdkVersion 32
+        versionCode 160
 
         resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt-rBR", "el", "tr"
 

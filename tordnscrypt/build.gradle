@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 32
 
 
     flavorDimensions "version", "processor"
@@ -53,8 +53,8 @@ android {
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 31
-        versionCode 159
+        targetSdkVersion 32
+        versionCode 160
 
         resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt-rBR", "el", "tr"
 
