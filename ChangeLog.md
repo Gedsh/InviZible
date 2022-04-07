@@ -740,3 +740,8 @@
 * Implemented firewall for Root mode.
 * Optimized memory usage in VPN mode.
 * Fixes and optimizations.
+
+**InviZible Pro beta 1.6.0**
+* Root firewall fixes and optimizations.
+* Fixed using Multi-user support on some devices.
+* Tor restarts if an internet connection cannot be established within one minute.
