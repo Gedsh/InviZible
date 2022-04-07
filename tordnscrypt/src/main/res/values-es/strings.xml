@@ -341,7 +341,7 @@ Con estas peticiones se puede descubrir la presencia de malware, aplicaciones de
     <string name="main_fragment_protect_dns">"Proteger DNS con DNSCRYPT"</string>
     <string name="main_fragment_access_i2p">"Acceso a sitios I2P con I2Pd"</string>
     <string name="ask_force_close_title">"Atención"</string>
-    <string name="ask_force_close_text">"¡InviZible Pro no puede arrancar %s! Por favor, comprueba la configuración de %s o intenta un Cierre Forzado de la aplicación. Si esto no ayuda, por favor, reinicia tu dispositivo."</string>
+    <string name="ask_force_close_text">"¡InviZible Pro no puede arrancar %1$s! Por favor, comprueba la configuración de %2$s o intenta un Cierre Forzado de la aplicación. Si esto no ayuda, por favor, reinicia tu dispositivo."</string>
     <string name="ask_force_close_btn">"Forzar Cierre"</string>
     <string name="add_custom_server_title">"Añadir servidor personalizado"</string>
     <string name="add_custom_server_error">"Configuración del servidor personalizado erronea. Por favor, comprueba el campo SDNS."</string>
@@ -416,7 +416,7 @@ invizible.net/en/privacy"</string>
     <string name="pref_common_shell_control_summ">"Utiliza éste comando para controlar los módulos de la aplicación: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\".
 Donde 1 - arranca el módulo, y 0 - lo para."</string>
     <string name="pref_common_local_eth_device_addr">"Dirección LAN IP del dispositivo"</string>
-    <string name="pref_common_local_eth_device_addr_summ">"Activa \"Establecer TTL\" y configura el dispositivo en LAN para que conecte a InviZible. Usa como router por defecto: %s, y como servidor DNS: %s."</string>
+    <string name="pref_common_local_eth_device_addr_summ">"Activa \"Establecer TTL\" y configura el dispositivo en LAN para que conecte a InviZible. Usa como router por defecto: %1$s, y como servidor DNS: %2$s."</string>
     <string name="pref_common_multi_user">"Modo Multi-usuario"</string>
     <string name="pref_common_multi_user_summ">"Busca e identifica apps de otros usuarios como apps duplicadas, duplicación MIUI, o en el perfil de trabajo, como en la app Insular."</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">"Activar proxy de salida SOCKS"</string>

@@ -354,7 +354,7 @@
     <string name="main_fragment_access_i2p">Доступ к I2P сайтам с помощью Purple I2P</string>
     <string name="tvTorConnecting">Подключение</string>
     <string name="ask_force_close_title">Внимание</string>
-    <string name="ask_force_close_text">InviZible Pro не может запустить %s! Пожалуйста, проверьте настройки %s или попробуйте Завершить приложение.
+    <string name="ask_force_close_text">InviZible Pro не может запустить %1$s! Пожалуйста, проверьте настройки %2$s или попробуйте Завершить приложение.
         Если это не помогает, перезагрузите ваше устройство.</string>
     <string name="ask_force_close_btn">Завершить</string>
     <string name="add_custom_server_title">Добавить сервер</string>
@@ -422,7 +422,7 @@
         Это ускоряет работу при отсутствии подключения по протоколу IPv6, но иногда может вызывать проблемы.</string>
     <string name="pref_common_local_eth_device_addr">IP адрес устройства в LAN</string>
     <string name="pref_common_local_eth_device_addr_summ">Включите Зафиксировать TTL и настройте устройство в LAN, чтобы подключиться к InviZible.
-        Используйте шлюз: %s, DNS сервер: %s.</string>
+        Используйте шлюз: %1$s, DNS сервер: %2$s.</string>
     <string name="pref_common_shell_control">Включить управление скриптами</string>
     <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">Используйте следующую команду для управления модулями:
         \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL

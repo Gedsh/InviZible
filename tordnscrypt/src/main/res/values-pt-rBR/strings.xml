@@ -376,7 +376,7 @@ Essas consultas podem revelar a presença de malware, aplicativos quebrados / ob
     <string name="main_fragment_protect_dns">"Proteger DNS com DNSCRYPT"</string>
     <string name="main_fragment_access_i2p">"Acessar sites com I2P"</string>
     <string name="ask_force_close_title">"Atenção"</string>
-    <string name="ask_force_close_text">"InviZible Pro não pode iniciar %s! Verifique as configurações de %s ou tente forçar o fechamento do aplicativo. Se isso não ajudar, reinicie seu dispositivo."</string>
+    <string name="ask_force_close_text">"InviZible Pro não pode iniciar %1$s! Verifique as configurações de %2$s ou tente forçar o fechamento do aplicativo. Se isso não ajudar, reinicie seu dispositivo."</string>
     <string name="ask_force_close_btn">"Força o fechamennto"</string>
     <string name="add_custom_server_title">"Adicionar servidor customizado"</string>
     <string name="add_custom_server_error">"Configuração de servidor personalizado inválida. Verifique o campo SDNS."</string>
@@ -437,7 +437,7 @@ Essas consultas podem revelar a presença de malware, aplicativos quebrados / ob
     <string name="pref_common_shell_control">"Habilitar controle de script"</string>
     <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">"Use o seguinte comando para gerenciar os módulos do aplicativo: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Onde 1 - inicia, 0 - para o módulo."</string>
     <string name="pref_common_local_eth_device_addr">"Endereço IP do dispositivo LAN"</string>
-    <string name="pref_common_local_eth_device_addr_summ">"Habilite Fix TTL e configure o dispositivo LAN para se conectar ao InviZible. Use o gateway padrão: %s, servidor DNS: %s."</string>
+    <string name="pref_common_local_eth_device_addr_summ">"Habilite Fix TTL e configure o dispositivo LAN para se conectar ao InviZible. Use o gateway padrão: %1$s, servidor DNS: %2$s."</string>
     <string name="pref_common_multi_user">"Suporte a Multi Usuarios"</string>
     <string name="pref_common_multi_user_summ">"Suporte para aplicativos duplos, MIUI, Island, Shelter e aplicativos de perfil de trabalho"</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">"Habilitar proxy de saída SOCKS"</string>

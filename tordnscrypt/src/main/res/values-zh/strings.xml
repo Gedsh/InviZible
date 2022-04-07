@@ -345,7 +345,7 @@
     <string name="main_fragment_protect_dns">"使用 DNSCRYPT 保护 DNS"</string>
     <string name="main_fragment_access_i2p">"使用 Purple I2P 访问 I2P 站点"</string>
     <string name="ask_force_close_title">"注意"</string>
-    <string name="ask_force_close_text">"InviZible Pro 无法启动 %s！请检查 %s 设置或尝试强制关闭应用。 如果不起作用，请重启您的设备。"</string>
+    <string name="ask_force_close_text">"InviZible Pro 无法启动 %1$s！请检查 %2$s 设置或尝试强制关闭应用。 如果不起作用，请重启您的设备。"</string>
     <string name="ask_force_close_btn">"强制关闭"</string>
     <string name="add_custom_server_title">"添加自定义服务器"</string>
     <string name="add_custom_server_error">"无效自定义服务器配置。请检查 SDNS 字段。"</string>
@@ -406,7 +406,7 @@
     <string name="pref_common_shell_control">"启用脚本控制"</string>
     <string name="pref_common_shell_control_summ">"使用以下命令管理应用模块： \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\"。其中 1 - 启动，0 - 停止模块。"</string>
     <string name="pref_common_local_eth_device_addr">"LAN 设备 IP 地址"</string>
-    <string name="pref_common_local_eth_device_addr_summ">"启用固定 TTL 并配置 LAN 设备连接到 InviZible。使用默认网关：%s，DNS 服务器：%s。"</string>
+    <string name="pref_common_local_eth_device_addr_summ">"启用固定 TTL 并配置 LAN 设备连接到 InviZible。使用默认网关：%1$s，DNS 服务器：%2$s。"</string>
     <string name="pref_common_multi_user">"多用户支持"</string>
     <string name="pref_common_multi_user_summ">"支持双应用，MIUI，Island，Shelter 和工作资料应用"</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">"启用 SOCKS 出站代理"</string>

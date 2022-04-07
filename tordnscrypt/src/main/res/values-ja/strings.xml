@@ -339,7 +339,7 @@ These queries can reveal the presence of malware, broken/obsolete applications, 
     <string name="main_fragment_protect_dns">"DNSCryptでDNSを保護する"</string>
     <string name="main_fragment_access_i2p">"Purple I2Pでeepsitesにアクセスする"</string>
     <string name="ask_force_close_title">"警告"</string>
-    <string name="ask_force_close_text">"Invizible Proは %s を開始できませんでした。 %s の設定を確認するか、このアプリを強制終了して再度お試しください。それでも解決しない場合、端末を再起動してみてください。"</string>
+    <string name="ask_force_close_text">"Invizible Proは %1$s を開始できませんでした。 %2$s の設定を確認するか、このアプリを強制終了して再度お試しください。それでも解決しない場合、端末を再起動してみてください。"</string>
     <string name="ask_force_close_btn">"強制終了"</string>
     <string name="add_custom_server_title">"カスタムサーバーを追加"</string>
     <string name="add_custom_server_error">"カスタムサーバー設定が無効です。SDNSの項目をご確認ください。"</string>
@@ -400,7 +400,7 @@ These queries can reveal the presence of malware, broken/obsolete applications, 
     <string name="pref_common_shell_control">"スクリプトコントロールを有効化"</string>
     <string name="pref_common_shell_control_summ">"Use the following command to manage application modules: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Where 1 - starts, 0 - stops the module."</string>
     <string name="pref_common_local_eth_device_addr">"LAN内デバイスのIPアドレス"</string>
-    <string name="pref_common_local_eth_device_addr_summ">"TTLを防止し、LAN内デバイスがInvizibleに接続するように設定します。デフォルトゲートウェイ:  %s DNSサーバー: %s"</string>
+    <string name="pref_common_local_eth_device_addr_summ">"TTLを防止し、LAN内デバイスがInvizibleに接続するように設定します。デフォルトゲートウェイ:  %1$s DNSサーバー: %2$s"</string>
     <string name="pref_common_multi_user">"マルチユーザーサポート"</string>
     <string name="pref_common_multi_user_summ">"Island、ShelterやMIUIのデュアルアプリ機能などで仕事用プロファイル内で利用できるようにします。"</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">"Socks出力プロキシを有効化"</string>
