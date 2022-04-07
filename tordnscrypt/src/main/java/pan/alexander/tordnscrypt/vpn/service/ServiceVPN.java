@@ -135,6 +135,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     NotificationManager notificationManager;
     private static final Object jni_lock = new Object();
     private static volatile long jni_context = 0;
+    private volatile long service_jni_context = 0;
 
     private volatile boolean savedInternetAvailable = false;
 
@@ -529,7 +530,9 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         logi("VPN Create version="
                 + VpnUtils.getSelfVersionName(this)
                 + "/"
-                + VpnUtils.getSelfVersionCode(this));
+                + VpnUtils.getSelfVersionCode(this)
+                + "/"
+                + this.hashCode());
 
         VpnUtils.canFilterAsynchronous(this);
 
@@ -544,6 +547,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
         // Native init
         jni_context = jni_init(Build.VERSION.SDK_INT);
+        service_jni_context = jni_context;
         logi("VPN Created context=" + jni_context);
 
         super.onCreate();
@@ -709,7 +713,8 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     @Override
     public void onDestroy() {
 
-        logi("VPN Destroy");
+        logi("VPN Destroy " + this.hashCode());
+
         commandLooper.quit();
 
         for (VPNCommand command : VPNCommand.values())
@@ -721,6 +726,8 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
         connectionCheckerInteractor.get().removeListener(this);
         handler.get().removeCallbacksAndMessages(null);
+
+        final long localJniContext = service_jni_context;
 
         cachedExecutor.get().submit(() -> {
 
@@ -735,10 +742,12 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                 loge("VPN Destroy", ex, true);
             }
 
-            logi("VPN Destroy context=" + jni_context);
             synchronized (jni_lock) {
-                jni_done(jni_context);
-                jni_context = 0;
+                if (localJniContext == jni_context) {
+                    jni_done(jni_context);
+                    logi("VPN Destroy context=" + jni_context);
+                    jni_context = 0;
+                }
             }
         });
 
@@ -763,13 +772,13 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
     @Override
     public boolean onUnbind(Intent intent) {
-        logi("ServiceVPN onUnbind");
+        logi("ServiceVPN onUnbind " + this.hashCode());
         return true;
     }
 
     @Override
     public void onRebind(Intent intent) {
-        logi("ServiceVPN onRebind");
+        logi("ServiceVPN onRebind " + this.hashCode());
         super.onRebind(intent);
     }
 
@@ -887,25 +896,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     @Override
     public void onTaskRemoved(Intent rootIntent) {
 
-        try {
-            notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
-            stopForeground(true);
-        } catch (Exception e) {
-            loge("VPNService onTaskRemoved", e);
-        }
-
-        stopSelf();
-
-        try {
-            Thread.sleep(100);
-        } catch (Exception ignored) {
-        } finally {
-            defaultPreferences.get().edit().putBoolean(VPN_SERVICE_ENABLED, true).apply();
-            ServiceVPNHelper.start(
-                    "ModulesReceiver start VPN service after task removed",
-                    this
-            );
-        }
+        loge("VPN service task removed " + this.hashCode());
 
         super.onTaskRemoved(rootIntent);
     }
