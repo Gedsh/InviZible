@@ -36,7 +36,7 @@
     <string name="wrong">Что-то пошло не так!</string>
     <string name="areYouSure">Вы уверены? Это действие не может быть отменено!</string>
     <string name="install_message">Вы хотите завершить установку?</string>
-    <string name="write_file_error">Ошибка при сохранении файла!</string>
+    <string name="write_file_error">Ошибка сохранения файла!</string>
     <string name="drawer_menu_commonSettings">Общие настройки</string>
     <string name="drawer_menu_DNSSettings">Настройки DNSCrypt</string>
     <string name="drawer_menu_TorSettings">Настройки Tor</string>
@@ -523,4 +523,6 @@
     <string name="notification_internet_blocked_message">Интернет заблокирован Аварийным блокировщиком. Запустите Tor, DNSCrypt или Purple I2P, чтобы разрешить соединение. Либо выключите Аварийный блокировщик в Общих настройках.</string>
     <string name="list_is_empty">Список пустой</string>
     <string name="pref_dnscrypt_forwarding_rules_categ">Правила переадресации</string>
+    <string name="pref_dnscrypt_cloaking_rules_categ">Правила маскировки</string>
+    <string name="pref_itpd_reseeding">Повторное заполнение</string>
 </resources>
