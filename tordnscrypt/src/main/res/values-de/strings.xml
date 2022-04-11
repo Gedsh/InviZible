@@ -536,4 +536,5 @@ WLAN aus- und kurz darauf wieder anschalten. Die Verwendung des derzeitigen Hots
     <string name="pref_common_kill_switch">"Aus-Schalter"</string>
     <string name="pref_common_kill_switch_summ">"Blockiere die Internet Verbindung sobald Tor, DNSCrypt oder I2P gestoppt wurden."</string>
     <string name="notification_internet_blocked_message">"Die Internet Verbindung wurde aufgrund des Aus-Schalters blockiert. Starte Tor, DNSCrypt oder I2P um sie zu reaktivieren. Alternativ kann der Aus-Schalter in den Einstellungen deaktiviert werden."</string>
+    <string name="list_is_empty">"Liste ist leer"</string>
 </resources>
