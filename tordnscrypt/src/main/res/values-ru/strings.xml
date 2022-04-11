@@ -42,7 +42,7 @@
     <string name="drawer_menu_TorSettings">Настройки Tor</string>
     <string name="drawer_menu_I2PDSettings">Настройки I2P</string>
     <string name="drawer_menu_fastSettings">Быстрые настройки</string>
-    <string name="drawer_menu_backup">Сохранить и восстановить</string>
+    <string name="drawer_menu_backup">Сохранить&amp;восстановить</string>
     <string name="drawer_menu_about">О программе</string>
     <string name="drawer_menu_help">Логи</string>
     <string name="btnRestoreBackup">Восстановить настройки</string>
@@ -56,7 +56,7 @@
     <string name="pref_fast_tor_autostart">Автозагрузка Tor</string>
     <string name="pref_fast_itpd_autostart">Автозагрузка I2P</string>
     <string name="pref_fast_autostart_delay">Задержка</string>
-    <string name="pref_fast_autostart_delay_summ">Используйте задержку (сек) только в том случае, если автозапуск работает неправильно</string>
+    <string name="pref_fast_autostart_delay_summ">Используйте задержку автозагрузки (сек) только в том случае, если автозапуск работает неправильно</string>
     <string name="pref_fast_dns_server">Сервера DNSCrypt</string>
     <string name="pref_fast_select_dns_server">Выбрать сервера DNSCrypt</string>
     <string name="pref_fast_tor">Настройки Tor</string>

@@ -495,4 +495,21 @@
     <string name="backupSaved">"Backup saved"</string>
     <string name="backupRestored">"Backup restored"</string>
     <string name="thanks_for_donate_gp">"InviZible Pro -projekti ja sen tekijä ilmaisee arvostustaan apuasi varten."</string>
+    <string name="pref_tor_hardware_accel_summ">"Try to use built-in crypto hardware acceleration when available."</string>
+    <string name="notification_connecting">"Connecting…"</string>
+    <string name="notification_waiting_network">"Waiting for network…"</string>
+    <string name="tile_change_tor_ip">"Change Tor IP"</string>
+    <string name="tile_changing_tor_ip">"Tor IP changing"</string>
+    <string name="tile_dialog_over_three_tiles_message">"You have added more than 3 tiles to Quick Settings. Please leave only 3. Adding more than 3 tiles can cause issues with app control."</string>
+    <string name="pref_common_rogue_dhcp_detection">"Rogue DHCP detection"</string>
+    <string name="pref_common_rogue_dhcp_detection_summ">"Detect Man-in-the-middle rogue DHCP attacks in Wi-Fi networks."</string>
+    <string name="pref_tor_snowflake_select_rendezvous">"Select rendezvous"</string>
+    <string name="pref_tor_snowflake_select_rendezvous_summ">"Hides the broker's domain name from the Internet provider. The broker is used to establish a connection."</string>
+    <string name="pref_firewall_show_all_apps">"Show all apps"</string>
+    <string name="pref_firewall_show_all_apps_on_summ">"Apps are shown regardless of whether the app can connect to the Internet or not."</string>
+    <string name="pref_firewall_show_all_apps_off_summ">"Only apps that can connect to the Internet are shown."</string>
+    <string name="pref_common_kill_switch">"Kill switch"</string>
+    <string name="pref_common_kill_switch_summ">"Block internet connection when Tor, DNSCrypt and Purple I2P are stopped"</string>
+    <string name="notification_internet_blocked_message">"Internet blocked due to the Kill switch. Start Tor, DNSCrypt or I2P to allow the connection. Or disable the Kill switch in Common Settings."</string>
+    <string name="list_is_empty">"List is Empty"</string>
 </resources>

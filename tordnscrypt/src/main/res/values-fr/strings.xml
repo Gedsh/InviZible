@@ -520,4 +520,8 @@
     <string name="pref_firewall_show_all_apps">"Afficher toutes les applications"</string>
     <string name="pref_firewall_show_all_apps_on_summ">"Les applications sont affichées, que l'application puisse se connecter à l'Internet ou non."</string>
     <string name="pref_firewall_show_all_apps_off_summ">"Seules les applications qui peuvent se connecter à Internet sont affichées."</string>
+    <string name="pref_common_kill_switch">"Kill switch"</string>
+    <string name="pref_common_kill_switch_summ">"Block internet connection when Tor, DNSCrypt and Purple I2P are stopped"</string>
+    <string name="notification_internet_blocked_message">"Internet blocked due to the Kill switch. Start Tor, DNSCrypt or I2P to allow the connection. Or disable the Kill switch in Common Settings."</string>
+    <string name="list_is_empty">"List is Empty"</string>
 </resources>

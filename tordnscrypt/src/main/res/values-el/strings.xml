@@ -530,4 +530,8 @@ Should it be named instead "Βασικές Ρυθμίσεις" (originating from
     <string name="pref_firewall_show_all_apps">"Εμφάνιση όλων των εφαρμογών"</string>
     <string name="pref_firewall_show_all_apps_on_summ">"Οι εφαρμογές εμφανίζονται ανεξάρτητα από το αν η εφαρμογή μπορεί να συνδεθεί στο Διαδίκτυο ή όχι."</string>
     <string name="pref_firewall_show_all_apps_off_summ">"Εμφανίζονται μόνο οι εφαρμογές που μπορούν να συνδεθούν στο Διαδίκτυο."</string>
+    <string name="pref_common_kill_switch">"Kill switch"</string>
+    <string name="pref_common_kill_switch_summ">"Block internet connection when Tor, DNSCrypt and Purple I2P are stopped"</string>
+    <string name="notification_internet_blocked_message">"Internet blocked due to the Kill switch. Start Tor, DNSCrypt or I2P to allow the connection. Or disable the Kill switch in Common Settings."</string>
+    <string name="list_is_empty">"List is Empty"</string>
 </resources>
