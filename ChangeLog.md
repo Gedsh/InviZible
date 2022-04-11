@@ -745,3 +745,8 @@
 * Root firewall fixes and optimizations.
 * Fixed using Multi-user support on some devices.
 * Tor restarts if an internet connection cannot be established within one minute.
+
+**InviZible Pro beta 1.6.1**
+* Updated Tor to version 4.7.6.
+* Updated Tor snowflake bridge.
+* Updated Indonesian translation.
