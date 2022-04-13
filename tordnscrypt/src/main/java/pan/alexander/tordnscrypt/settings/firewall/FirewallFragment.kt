@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.settings.firewall
 import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.view.*
 import android.widget.CompoundButton
 import androidx.appcompat.widget.SearchView
@@ -60,6 +61,9 @@ class FirewallFragment : Fragment(),
     val viewModel by lazy {
         ViewModelProvider(this, viewModelFactory).get(FirewallViewModel::class.java)
     }
+
+    @Inject
+    lateinit var handler: dagger.Lazy<Handler>
 
     private var _binding: FragmentFirewallBinding? = null
     private val binding get() = _binding!!
@@ -279,6 +283,8 @@ class FirewallFragment : Fragment(),
 
     override fun onDestroyView() {
         super.onDestroyView()
+
+        handler.get().removeCallbacksAndMessages(null)
 
         _binding = null
         firewallAdapter = null
@@ -794,7 +800,8 @@ class FirewallFragment : Fragment(),
                 allowLan = activate || viewModel.criticalSystemUids.contains(applicationData.uid)
                 allowWifi = activate || viewModel.criticalSystemUids.contains(applicationData.uid)
                 allowGsm = activate || viewModel.criticalSystemUids.contains(applicationData.uid)
-                allowRoaming = activate || viewModel.criticalSystemUids.contains(applicationData.uid)
+                allowRoaming =
+                    activate || viewModel.criticalSystemUids.contains(applicationData.uid)
                 allowVPN = activate || viewModel.criticalSystemUids.contains(applicationData.uid)
                 activatedApps.add(this)
             }
@@ -896,7 +903,7 @@ class FirewallFragment : Fragment(),
         }
 
     private fun onSortFinished() {
-        _binding?.rvFirewallApps?.scrollToPosition(0)
+        handler.get().post { _binding?.rvFirewallApps?.scrollToPosition(0) }
     }
 
     fun onBackPressed(): Boolean {
