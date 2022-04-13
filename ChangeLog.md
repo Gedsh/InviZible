@@ -750,3 +750,8 @@
 * Updated Tor to version 4.7.6.
 * Updated Tor snowflake bridge.
 * Updated Indonesian translation.
+
+**InviZible Pro beta 1.6.2**
+* Fixed using Root firewall when Refresh rules option is disabled.
+* Fixed the ARP spoofing detector false positives on some devices.
+* Minor fixes.
