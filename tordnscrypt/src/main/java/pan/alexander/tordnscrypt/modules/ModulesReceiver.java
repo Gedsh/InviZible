@@ -29,6 +29,7 @@ import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_ENABLED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.GSM_ON_REQUESTED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.KILL_SWITCH;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REFRESH_RULES;
@@ -840,7 +841,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         boolean refreshRules = defaultPreferences.get().getBoolean(REFRESH_RULES, false);
         boolean fixTTL = modulesStatus.isFixTTL();
 
-        if (!refreshRules && !forceUpdate && !fixTTL) {
+        if (!refreshRules && !forceUpdate && !fixTTL && !isFirewallEnabled()) {
             return;
         }
 
@@ -947,5 +948,9 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     private boolean isNetworkAvailable() {
         connectionCheckerInteractor.get().checkNetworkConnection();
         return connectionCheckerInteractor.get().getNetworkConnectionResult();
+    }
+
+    private boolean isFirewallEnabled() {
+        return preferenceRepository.get().getBoolPreference(FIREWALL_ENABLED);
     }
 }
