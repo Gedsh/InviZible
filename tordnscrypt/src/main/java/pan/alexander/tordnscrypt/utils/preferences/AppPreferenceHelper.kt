@@ -18,15 +18,10 @@ package pan.alexander.tordnscrypt.utils.preferences
     Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceType
 
 interface AppPreferenceHelper {
     fun getPreference(@PreferenceType type: Int, key: String): Any
-
-    @ObsoleteCoroutinesApi
-    @ExperimentalCoroutinesApi
     fun setPreference(key: String, value: Any): Job
 }
