@@ -327,8 +327,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             if (!routeAllThroughTor) {
 
                 commands = new ArrayList<>(Arrays.asList(
-                        iptables + "-D OUTPUT -j DROP 2> /dev/null || true",
-                        iptables + "-I OUTPUT -j DROP",
+                        iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true",
+                        iptables + "-I OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP",
                         ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                         ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
                         ip6tables + "-I OUTPUT -j DROP",
@@ -381,14 +381,13 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -m state --state ESTABLISHED,RELATED -j RETURN",
                         iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
                         unblockHOTSPOT,
-                        blockHOTSPOT,
-                        iptables + "-D OUTPUT -j DROP 2> /dev/null || true"
+                        blockHOTSPOT
                 ));
             } else {
 
                 commands = new ArrayList<>(Arrays.asList(
-                        iptables + "-D OUTPUT -j DROP 2> /dev/null || true",
-                        iptables + "-I OUTPUT -j DROP",
+                        iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true",
+                        iptables + "-I OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP",
                         ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                         ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
                         ip6tables + "-I OUTPUT -j DROP",
@@ -442,8 +441,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -j REJECT",
                         iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
                         unblockHOTSPOT,
-                        blockHOTSPOT,
-                        iptables + "-D OUTPUT -j DROP 2> /dev/null || true"
+                        blockHOTSPOT
                 ));
             }
 
@@ -456,13 +454,14 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             } else {
                 commands.addAll(firewall.getClearFirewallRules());
             }
+            commands.add(iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true");
         } else if (dnsCryptState == RUNNING && torState == STOPPED) {
 
             cancelKillSwitchNotificationIfNeeded();
 
             commands = new ArrayList<>(Arrays.asList(
-                    iptables + "-D OUTPUT -j DROP 2> /dev/null || true",
-                    iptables + "-I OUTPUT -j DROP",
+                    iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true",
+                    iptables + "-I OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP",
                     ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                     ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
                     ip6tables + "-I OUTPUT -j DROP",
@@ -497,8 +496,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     iptables + "-A " + FILTER_OUTPUT_CORE + " -m state --state ESTABLISHED,RELATED -j RETURN",
                     iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
                     unblockHOTSPOT,
-                    blockHOTSPOT,
-                    iptables + "-D OUTPUT -j DROP 2> /dev/null || true"
+                    blockHOTSPOT
             ));
 
             List<String> commandsTether = tethering.activateTethering(false);
@@ -510,12 +508,13 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             } else {
                 commands.addAll(firewall.getClearFirewallRules());
             }
+            commands.add(iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true");
         } else if (dnsCryptState == STOPPED && torState == STOPPED) {
 
             cancelKillSwitchNotificationIfNeeded();
 
             commands = new ArrayList<>(Arrays.asList(
-                    iptables + "-D OUTPUT -j DROP 2> /dev/null || true",
+                    iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true",
                     ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                     ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
                     iptables + "-t nat -F " + NAT_OUTPUT_CORE + " 2> /dev/null || true",
@@ -537,8 +536,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
             if (!routeAllThroughTor) {
                 commands = new ArrayList<>(Arrays.asList(
-                        iptables + "-D OUTPUT -j DROP 2> /dev/null || true",
-                        iptables + "-I OUTPUT -j DROP",
+                        iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true",
+                        iptables + "-I OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP",
                         ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                         ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
                         ip6tables + "-I OUTPUT -j DROP",
@@ -585,13 +584,12 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -m state --state ESTABLISHED,RELATED -j RETURN",
                         iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
                         unblockHOTSPOT,
-                        blockHOTSPOT,
-                        iptables + "-D OUTPUT -j DROP 2> /dev/null || true"
+                        blockHOTSPOT
                 ));
             } else {
                 commands = new ArrayList<>(Arrays.asList(
-                        iptables + "-D OUTPUT -j DROP 2> /dev/null || true",
-                        iptables + "-I OUTPUT -j DROP",
+                        iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true",
+                        iptables + "-I OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP",
                         ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                         ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
                         ip6tables + "-I OUTPUT -j DROP",
@@ -637,8 +635,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -j REJECT",
                         iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
                         unblockHOTSPOT,
-                        blockHOTSPOT,
-                        iptables + "-D OUTPUT -j DROP 2> /dev/null || true"
+                        blockHOTSPOT
                 ));
 
             }
@@ -653,14 +650,20 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             } else {
                 commands.addAll(firewall.getClearFirewallRules());
             }
+            commands.add(iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true");
         } else if (itpdState == RUNNING) {
             cancelKillSwitchNotificationIfNeeded();
+            commands.addAll(new ArrayList<>(Arrays.asList(
+                    iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true",
+                    iptables + "-I OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP"
+            )));
             commands = tethering.activateTethering(false);
             if (firewallEnabled) {
                 commands.addAll(firewall.getFirewallRules(tethering.isTetheringActive()));
             } else {
                 commands.addAll(firewall.getClearFirewallRules());
             }
+            commands.add(iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true");
         }
 
         return commands;
@@ -670,8 +673,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         Pair<String, String> bypassLanNatToBypassLanFilter = getBypassLanRules();
         String bypassLanFilter = bypassLanNatToBypassLanFilter.second;
         return new ArrayList<>(Arrays.asList(
-                iptables + "-D OUTPUT -j DROP 2> /dev/null || true",
-                iptables + "-I OUTPUT -j DROP",
+                iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true",
+                iptables + "-I OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP",
                 ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                 ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
                 ip6tables + "-I OUTPUT -j DROP",
@@ -687,7 +690,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                 iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
                 unblockHOTSPOT,
                 blockHOTSPOT,
-                iptables + "-D OUTPUT -j DROP 2> /dev/null || true"
+                iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true"
         ));
     }
 
@@ -709,8 +712,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         }
 
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
-                iptables + "-D OUTPUT -j DROP 2> /dev/null || true",
-                iptables + "-I OUTPUT -j DROP",
+                iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true",
+                iptables + "-I OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP",
                 ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                 ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
                 ip6tables + "-I OUTPUT -j DROP",
@@ -721,8 +724,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                 iptables + "-t nat -I OUTPUT -j " + NAT_OUTPUT_CORE,
                 iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
                 unblockHOTSPOT,
-                blockHOTSPOT,
-                iptables + "-D OUTPUT -j DROP 2> /dev/null || true"
+                blockHOTSPOT
         ));
 
         List<String> commandsTether = tethering.fastUpdate();
@@ -733,6 +735,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         if (firewallEnabled) {
             commands.addAll(firewall.getFastUpdateFirewallRules());
         }
+        commands.add(iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true");
 
         return commands;
     }
@@ -754,7 +757,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         }
 
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
-                iptables + "-D OUTPUT -j DROP 2> /dev/null || true",
+                iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true",
                 ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                 ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
                 iptables + "-t nat -F " + NAT_OUTPUT_CORE + " 2> /dev/null || true",
