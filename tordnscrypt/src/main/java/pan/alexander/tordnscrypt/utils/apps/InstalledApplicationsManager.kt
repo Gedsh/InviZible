@@ -21,24 +21,32 @@ package pan.alexander.tordnscrypt.utils.apps
 
 import android.Manifest
 import android.content.Context
+import android.content.SharedPreferences
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.os.Build
-import android.os.Process
 import android.os.UserManager
 import androidx.core.content.ContextCompat
-import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.App
+import pan.alexander.tordnscrypt.TopFragment.appVersion
+import pan.alexander.tordnscrypt.di.SharedPreferencesModule
+import pan.alexander.tordnscrypt.modules.ModulesStatus
+import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
+import pan.alexander.tordnscrypt.utils.Utils.getUidForName
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_SHOWS_ALL_APPS
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MULTI_USER_SUPPORT
+import pan.alexander.tordnscrypt.utils.root.RootCommands
+import pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK
 import java.util.concurrent.locks.ReentrantLock
 import java.util.regex.Pattern
+import javax.inject.Inject
+import javax.inject.Named
 
 private const val ON_APP_ADDED_REFRESH_PERIOD_MSEC = 250
 private val pattern: Pattern = Pattern.compile("UserHandle\\{(\\d+)\\}")
@@ -48,22 +56,35 @@ class InstalledApplicationsManager private constructor(
     private var onAppAddListener: OnAppAddListener?,
     private val activeApps: Set<String>,
     private val showSpecialApps: Boolean,
-    private var showAllApps: Boolean?
+    private var showAllApps: Boolean?,
+    private var iconIsRequired: Boolean
 ) {
 
-    private val context = App.instance.applicationContext
-    private val ownUID = Process.myUid()
-    private var sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
-    private var multiUserSupport = sharedPreferences.getBoolean(MULTI_USER_SUPPORT, false)
-    private var savedTime = 0L
+    @Inject
+    lateinit var context: Context
+
+    @Inject
+    @Named(SharedPreferencesModule.DEFAULT_PREFERENCES_NAME)
+    lateinit var defaultPreferences: SharedPreferences
+
+    @Inject
+    lateinit var pathVars: PathVars
 
     init {
-        showAllApps = showAllApps ?: sharedPreferences.getBoolean(FIREWALL_SHOWS_ALL_APPS, false)
+        App.instance.daggerComponent.inject(this)
+
+        showAllApps = showAllApps ?: defaultPreferences.getBoolean(FIREWALL_SHOWS_ALL_APPS, false)
     }
+
+    private val ownUID = pathVars.appUid
+    private var multiUserSupport = defaultPreferences.getBoolean(MULTI_USER_SUPPORT, false)
+    private var savedTime = 0L
 
     fun getInstalledApps(): List<ApplicationData> {
 
         try {
+
+            allowInteractAcrossUsersPermissionIfRequired()
 
             reentrantLock.lockInterruptibly()
 
@@ -110,7 +131,11 @@ class InstalledApplicationsManager private constructor(
 
                 val name =
                     packageManager.getApplicationLabel(applicationInfo)?.toString() ?: "Undefined"
-                val icon = packageManager.getApplicationIcon(applicationInfo)
+                val icon = if (iconIsRequired)  {
+                    packageManager.getApplicationIcon(applicationInfo)
+                } else {
+                    null
+                }
 
                 if (application == null) {
                     val uid = applicationInfo.uid
@@ -191,7 +216,7 @@ class InstalledApplicationsManager private constructor(
 
             return applications.sorted()
         } catch (e: Exception) {
-            loge("InstalledApplications getInstalledApps")
+            loge("InstalledApplications getInstalledApps", e)
         } finally {
             onAppAddListener = null
             if (reentrantLock.isLocked && reentrantLock.isHeldByCurrentThread) {
@@ -229,7 +254,7 @@ class InstalledApplicationsManager private constructor(
     private fun checkPartOfMultiUser(
         applicationInfo: ApplicationInfo,
         name: String,
-        icon: Drawable, uids: List<Int>,
+        icon: Drawable?, uids: List<Int>,
         packageManager: PackageManager,
         multiUserAppsMap: Map<Int, ApplicationData>
     ): Map<Int, ApplicationData> {
@@ -263,7 +288,7 @@ class InstalledApplicationsManager private constructor(
                         }
                     }
                 } catch (e: Exception) {
-                    loge("InstalledApplications checkPartOfMultiUser")
+                    loge("InstalledApplications checkPartOfMultiUser", e)
                 }
             }
         }
@@ -273,7 +298,7 @@ class InstalledApplicationsManager private constructor(
 
     private fun getKnownApplications(): ArrayList<ApplicationData> {
         val defaultIcon = ContextCompat.getDrawable(context, android.R.drawable.sym_def_app_icon)
-        val userId = Process.myUid() / 100_000
+        val userId = ownUID / 100_000
         val adb = getUidForName("adb", 1011 + userId * 100_000)
         val media = getUidForName("media", 1013 + userId * 100_000)
         val vpn = getUidForName("vpn", 1016 + userId * 100_000)
@@ -281,6 +306,7 @@ class InstalledApplicationsManager private constructor(
         val mdns = getUidForName("mdns", 1020 + userId * 100_000)
         val gps = getUidForName("gps", 1021 + userId * 100_000)
         val dns = getUidForName("dns", 1051 + userId * 100_000)
+        val dnsTether = getUidForName("dns_tether", 1052 + userId * 100_000)
         val shell = getUidForName("shell", 2000 + userId * 100_000)
         val clat = getUidForName("clat", 1029 + userId * 100_000)
         val specialDataApps = arrayListOf(
@@ -343,6 +369,14 @@ class InstalledApplicationsManager private constructor(
                 activeApps.contains(dns.toString())
             ),
             ApplicationData(
+                "DNS Tether",
+                "dns.tether",
+                dnsTether,
+                defaultIcon,
+                true,
+                activeApps.contains(dnsTether.toString())
+            ),
+            ApplicationData(
                 "Linux shell",
                 "shell",
                 shell,
@@ -391,20 +425,24 @@ class InstalledApplicationsManager private constructor(
         return specialDataApps
     }
 
-    private fun getUidForName(name: String, defaultValue: Int): Int {
-        var uid = defaultValue
-        try {
-            val result = Process.getUidForName(name)
-            if (result > 0) {
-                uid = result
-            } else {
-                logw("No uid for $name, using default value $defaultValue")
-            }
-        } catch (e: Exception) {
-            logw("No uid for $name, using default value $defaultValue")
+    private fun allowInteractAcrossUsersPermissionIfRequired() {
+        if (multiUserSupport
+            && !(appVersion.endsWith("p") || appVersion.startsWith("f"))
+            && ModulesStatus.getInstance().isRootAvailable
+            && !isInteractAcrossUsersPermissionGranted()) {
+            val allowAccessToWorkProfileApps = listOf(
+                "pm grant ${context.packageName} android.permission.INTERACT_ACROSS_USERS"
+            )
+            RootCommands.execute(context, allowAccessToWorkProfileApps, NULL_MARK)
+            logi("Grant INTERACT_ACROSS_USERS permission to access applications in work profile")
         }
-        return uid
     }
+
+    private fun isInteractAcrossUsersPermissionGranted() =
+        ContextCompat.checkSelfPermission(
+            context,
+            "android.permission.INTERACT_ACROSS_USERS"
+        ) == PackageManager.PERMISSION_GRANTED
 
     interface OnAppAddListener {
         fun onAppAdded(application: ApplicationData)
@@ -416,6 +454,7 @@ class InstalledApplicationsManager private constructor(
         private var activeApps = setOf<String>()
         private var showSpecialApps = false
         private var showAllApps: Boolean? = null
+        private var iconIsRequired = false
 
         fun setOnAppAddListener(onAppAddListener: OnAppAddListener): Builder {
             this.onAppAddListener = onAppAddListener
@@ -437,12 +476,18 @@ class InstalledApplicationsManager private constructor(
             return this
         }
 
+        fun setIconRequired(): Builder {
+            this.iconIsRequired = true
+            return this
+        }
+
         fun build(): InstalledApplicationsManager =
             InstalledApplicationsManager(
                 onAppAddListener,
                 activeApps,
                 showSpecialApps,
-                showAllApps
+                showAllApps,
+                iconIsRequired
             )
     }
 }

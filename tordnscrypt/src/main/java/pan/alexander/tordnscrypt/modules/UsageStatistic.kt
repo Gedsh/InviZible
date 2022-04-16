@@ -28,6 +28,7 @@ import android.util.Log
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor
+import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
@@ -54,13 +55,14 @@ class UsageStatistic(private val context: Context) {
 
     @Inject
     lateinit var connectionCheckerInteractor: dagger.Lazy<ConnectionCheckerInteractor>
+    @Inject
+    lateinit var pathVars: PathVars
 
     @Volatile var serviceNotification: ModulesServiceNotificationManager? = null
 
     @Volatile private var timer: ScheduledExecutorService? = null
     private val modulesStatus = ModulesStatus.getInstance()
 
-    private val uid = Process.myUid()
     private val updating = AtomicBoolean(false)
 
     @Volatile private var task: ScheduledFuture<*>? = null
@@ -79,6 +81,8 @@ class UsageStatistic(private val context: Context) {
         startTime = System.currentTimeMillis()
         App.instance.daggerComponent.inject(this)
     }
+
+    private val uid = pathVars.appUid
 
     @JvmOverloads
     fun startUpdate(period: Int = NOTIFICATION_UPDATE_SHORT_PERIOD_SEC) {

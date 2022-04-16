@@ -365,7 +365,7 @@ Should it be named instead "Βασικές Ρυθμίσεις" (originating from
     <string name="main_fragment_protect_dns">"Προστασία DNS μέσω DNSCRYPT"</string>
     <string name="main_fragment_access_i2p">"Πρόσβαση σε ιστοσελίδες I2P μέσω Purple I2P"</string>
     <string name="ask_force_close_title">"Προσοχή"</string>
-    <string name="ask_force_close_text">"Το InviZible Pro δεν μπορεί να ξεκινήσει %s! Ελέγξτε τις ρυθμίσεις %s ή προσπαθήστε να κλείσετε με εξαναγκασμό την εφαρμογή. Εάν αυτό δεν σας βοηθήσει, κάντε επανεκκίνηση της συσκευής σας."</string>
+    <string name="ask_force_close_text">"Το InviZible Pro δεν μπορεί να ξεκινήσει %1$s! Ελέγξτε τις ρυθμίσεις %2$s ή προσπαθήστε να κλείσετε με εξαναγκασμό την εφαρμογή. Εάν αυτό δεν σας βοηθήσει, κάντε επανεκκίνηση της συσκευής σας."</string>
     <string name="ask_force_close_btn">"Τερματισμός"</string>
     <string name="add_custom_server_title">"Προσθήκη προσαρμοσμένου διακομιστή"</string>
     <string name="add_custom_server_error">"Μη έγκυρη προσαρμοσμένη διαμόρφωση διακομιστή. Ελέγξτε το πεδίο SDNS."</string>
@@ -440,9 +440,9 @@ Should it be named instead "Βασικές Ρυθμίσεις" (originating from
     <!-- only simple curiousity, if the word "START" should be translated ? -->
     <string name="pref_common_compatibility_mode_summ">"Ενεργοποιήστε το εάν η συσκευή σας είναι με προσαρμοσμένη ROM και η σύνδεση χάνεται όταν πατήσετε το κουμπί START"</string>
     <string name="pref_common_shell_control">"Ενεργοποίηση ελέγχου κώδικα"</string>
-    <string name="pref_common_shell_control_summ">"Χρησιμοποιήστε την ακόλουθη εντολή για να διαχειριστείτε τις μονάδες της εφαρμογής: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 -n %s/.BootCompleteReceiver\". Όπου 1 - ξεκινά, 0 - σταματά τη μονάδα."</string>
+    <string name="pref_common_shell_control_summ">"Χρησιμοποιήστε την ακόλουθη εντολή για να διαχειριστείτε τις μονάδες της εφαρμογής: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Όπου 1 - ξεκινά, 0 - σταματά τη μονάδα."</string>
     <string name="pref_common_local_eth_device_addr">"Διεύθυνση IP συσκευής LAN"</string>
-    <string name="pref_common_local_eth_device_addr_summ">"Ενεργοποιήστε τη διόρθωση TTL και διαμορφώστε τη συσκευή LAN για σύνδεση στο InviZible. Χρησιμοποιήστε την προεπιλεγμένη πύλη: %s, και διακομιστή DNS: %s."</string>
+    <string name="pref_common_local_eth_device_addr_summ">"Ενεργοποιήστε τη διόρθωση TTL και διαμορφώστε τη συσκευή LAN για σύνδεση στο InviZible. Χρησιμοποιήστε την προεπιλεγμένη πύλη: %1$s, και διακομιστή DNS: %2$s."</string>
     <string name="pref_common_multi_user">"Υποστήριξη πολλών χρηστών"</string>
     <string name="pref_common_multi_user_summ">"Υποστήριξη για εφαρμογές Dual Apps, MIUI, Island, Shelter και προφίλ Work"</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">"Ενεργοποίηση διακομιστή μεσολάβησης εξόδου SOCKS"</string>
@@ -530,4 +530,8 @@ Should it be named instead "Βασικές Ρυθμίσεις" (originating from
     <string name="pref_firewall_show_all_apps">"Εμφάνιση όλων των εφαρμογών"</string>
     <string name="pref_firewall_show_all_apps_on_summ">"Οι εφαρμογές εμφανίζονται ανεξάρτητα από το αν η εφαρμογή μπορεί να συνδεθεί στο Διαδίκτυο ή όχι."</string>
     <string name="pref_firewall_show_all_apps_off_summ">"Εμφανίζονται μόνο οι εφαρμογές που μπορούν να συνδεθούν στο Διαδίκτυο."</string>
+    <string name="pref_common_kill_switch">"Kill switch"</string>
+    <string name="pref_common_kill_switch_summ">"Block internet connection when Tor, DNSCrypt and Purple I2P are stopped"</string>
+    <string name="notification_internet_blocked_message">"Internet blocked due to the Kill switch. Start Tor, DNSCrypt or I2P to allow the connection. Or disable the Kill switch in Common Settings."</string>
+    <string name="list_is_empty">"List is Empty"</string>
 </resources>

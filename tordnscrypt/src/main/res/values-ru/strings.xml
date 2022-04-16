@@ -36,7 +36,7 @@
     <string name="wrong">Что-то пошло не так!</string>
     <string name="areYouSure">Вы уверены? Это действие не может быть отменено!</string>
     <string name="install_message">Вы хотите завершить установку?</string>
-    <string name="write_file_error">Ошибка при сохранении файла!</string>
+    <string name="write_file_error">Ошибка сохранения файла!</string>
     <string name="drawer_menu_commonSettings">Общие настройки</string>
     <string name="drawer_menu_DNSSettings">Настройки DNSCrypt</string>
     <string name="drawer_menu_TorSettings">Настройки Tor</string>
@@ -56,7 +56,7 @@
     <string name="pref_fast_tor_autostart">Автозагрузка Tor</string>
     <string name="pref_fast_itpd_autostart">Автозагрузка I2P</string>
     <string name="pref_fast_autostart_delay">Задержка</string>
-    <string name="pref_fast_autostart_delay_summ">Используйте задержку автозагрузки (в сек) только если автозапуск работает некорректно</string>
+    <string name="pref_fast_autostart_delay_summ">Используйте задержку автозагрузки (сек) только в том случае, если автозапуск работает неправильно</string>
     <string name="pref_fast_dns_server">Сервера DNSCrypt</string>
     <string name="pref_fast_select_dns_server">Выбрать сервера DNSCrypt</string>
     <string name="pref_fast_tor">Настройки Tor</string>
@@ -152,7 +152,7 @@
     <string name="pref_dnscrypt_ignore_system_dns_summ">Не позволять dnscrypt-proxy использовать системные настройки DNS. Использовать сервер для восстановления..</string>
     <string name="pref_dnscrypt_fallback_resolver_summ">Сервер для начальной загрузки. Это обычный сервер, который не поддерживает шифрование. Используется только для скачивания списка серверов, которые поддерживают шифрование, если системный DNS сервер не работает. Он никогда не используется, если загружен список серверов, которые поддерживают шифрование.</string>
     <string name="pref_dnscrypt_filters_categ">ФИЛЬТРЫ</string>
-    <string name="pref_dnscrypt_forwarding_rules_summ">Перенаправить запросы к выбраным сайтам на определенные сервера.</string>
+    <string name="pref_dnscrypt_forwarding_rules_summ">Перенаправить запросы к выбранным сайтам на определенные сервера.</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking возвращает предопределенные адреса для выбранных сайтов.
 \n Работает как дополнительный HOSTS файл.</string>
     <string name="pref_dnscrypt_query_log_categ">Логировать запросы.</string>
@@ -354,7 +354,7 @@
     <string name="main_fragment_access_i2p">Доступ к I2P сайтам с помощью Purple I2P</string>
     <string name="tvTorConnecting">Подключение</string>
     <string name="ask_force_close_title">Внимание</string>
-    <string name="ask_force_close_text">InviZible Pro не может запустить %s! Пожалуйста, проверьте настройки %s или попробуйте Завершить приложение.
+    <string name="ask_force_close_text">InviZible Pro не может запустить %1$s! Пожалуйста, проверьте настройки %2$s или попробуйте Завершить приложение.
         Если это не помогает, перезагрузите ваше устройство.</string>
     <string name="ask_force_close_btn">Завершить</string>
     <string name="add_custom_server_title">Добавить сервер</string>
@@ -422,11 +422,11 @@
         Это ускоряет работу при отсутствии подключения по протоколу IPv6, но иногда может вызывать проблемы.</string>
     <string name="pref_common_local_eth_device_addr">IP адрес устройства в LAN</string>
     <string name="pref_common_local_eth_device_addr_summ">Включите Зафиксировать TTL и настройте устройство в LAN, чтобы подключиться к InviZible.
-        Используйте шлюз: %s, DNS сервер: %s.</string>
+        Используйте шлюз: %1$s, DNS сервер: %2$s.</string>
     <string name="pref_common_shell_control">Включить управление скриптами</string>
     <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">Используйте следующую команду для управления модулями:
         \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
-        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 -n %s/.BootCompleteReceiver\". Где 1 - запустить, 0 - остановить модуль.</string>
+        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Где 1 - запустить, 0 - остановить модуль.</string>
     <string name="notification_channel_services">Запущенные сервисы</string>
     <string name="notification_channel_update">Обновление</string>
     <string name="notification_channel_root">Команды Рут</string>
@@ -521,4 +521,8 @@
     <string name="pref_common_kill_switch">Аварийный блокировщик</string>
     <string name="pref_common_kill_switch_summ">Блокировать подключение к Интернету, когда Tor, DNSCrypt и Purple I2P остановлены</string>
     <string name="notification_internet_blocked_message">Интернет заблокирован Аварийным блокировщиком. Запустите Tor, DNSCrypt или Purple I2P, чтобы разрешить соединение. Либо выключите Аварийный блокировщик в Общих настройках.</string>
+    <string name="list_is_empty">Список пустой</string>
+    <string name="pref_dnscrypt_forwarding_rules_categ">Правила переадресации</string>
+    <string name="pref_dnscrypt_cloaking_rules_categ">Правила маскировки</string>
+    <string name="pref_itpd_reseeding">Повторное заполнение</string>
 </resources>

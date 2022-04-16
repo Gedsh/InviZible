@@ -32,6 +32,7 @@ import javax.inject.Inject
 private const val COMMAND_ARP = "ip neigh" //"ip neighbour show"
 private const val ARP_FILE_PATH = "/proc/net/arp"
 private const val NOT_SUPPORTED_DELAY_COUNTER = 10
+private const val zerosMac = "00:00:00:00:00:00"
 private val macPattern by lazy { Pattern.compile("([0-9a-fA-F]{2}[:]){5}([0-9a-fA-F]{2})") }
 
 @ArpScope
@@ -90,7 +91,9 @@ class ArpTableManager @Inject constructor(
 
                     gatewayMac = getMacFromLine(line)
 
-                    if (savedGatewayMac.isEmpty() && gatewayMac.isNotBlank()) {
+                    if (savedGatewayMac.isEmpty()
+                        && gatewayMac.isNotBlank()
+                        && gatewayMac != zerosMac) {
                         val macStared = gatewayMac.substring(0..gatewayMac.length - 7)
                             .replace(Regex("\\w+?"), "*")
                             .plus(gatewayMac.substring(gatewayMac.length - 6))
@@ -133,7 +136,9 @@ class ArpTableManager @Inject constructor(
 
                 gatewayMac = getMacFromLine(line)
 
-                if (savedGatewayMac.isEmpty() && gatewayMac.isNotBlank()) {
+                if (savedGatewayMac.isEmpty()
+                    && gatewayMac.isNotBlank()
+                    && gatewayMac != zerosMac) {
                     val macStared = gatewayMac.substring(0..gatewayMac.length - 7)
                         .replace(Regex("\\w+?"), "*")
                         .plus(gatewayMac.substring(gatewayMac.length - 6))

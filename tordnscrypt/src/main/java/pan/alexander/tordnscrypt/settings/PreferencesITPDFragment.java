@@ -22,13 +22,14 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import androidx.preference.PreferenceScreen;
 
-import android.util.Log;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -45,7 +46,7 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
@@ -116,7 +117,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
             if (preference != null) {
                 preference.setOnPreferenceChangeListener(this);
             } else if (!appVersion.startsWith("g")){
-                Log.e(LOG_TAG, "PreferencesITPDFragment preference is null exception");
+                loge("PreferencesITPDFragment preference is null exception");
             }
         }
 
@@ -251,7 +252,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
     }
 
     @Override
-    public boolean onPreferenceChange(Preference preference, Object newValue) {
+    public boolean onPreferenceChange(@NonNull Preference preference, Object newValue) {
 
         Context context = getActivity();
 
@@ -305,6 +306,11 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                     || Objects.equals(preference.getKey(), "defaulturl"))
                     && newValue.toString().trim().isEmpty()) {
                 return false;
+            } else if (Objects.equals(preference.getKey(), "notransit")) {
+                val_itpd.set(
+                        key_itpd.indexOf("published"),
+                        String.valueOf(!Boolean.parseBoolean(newValue.toString()))
+                );
             }
 
             if (key_itpd.contains(preference.getKey().trim())) {
@@ -314,7 +320,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                 Toast.makeText(context, R.string.pref_itpd_not_exist, Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "PreferencesITPDFragment onPreferenceChange exception " + e.getMessage() + " " + e.getCause());
+            loge("PreferencesITPDFragment onPreferenceChange", e);
             Toast.makeText(context, R.string.wrong, Toast.LENGTH_LONG).show();
         }
 
@@ -387,7 +393,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
     }
 
     @Override
-    public boolean onPreferenceClick(Preference preference) {
+    public boolean onPreferenceClick(@NonNull Preference preference) {
         if (getActivity() == null) {
             return false;
         }

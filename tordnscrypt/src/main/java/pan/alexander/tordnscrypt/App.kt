@@ -51,6 +51,7 @@ class App : Application() {
         daggerComponent.logReaderSubcomponent().create(this)
     }
 
+    @Volatile
     var isAppForeground: Boolean = false
 
     companion object {

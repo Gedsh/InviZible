@@ -110,7 +110,7 @@
     <string name="pref_fast_tor_autostart">Start Tor On Boot</string>
     <string name="pref_fast_itpd_autostart">Start I2P On Boot</string>
     <string name="pref_fast_autostart_delay">Delay</string>
-    <string name="pref_fast_autostart_delay_summ">Use delay (in sec) only if auto start works Not Correct</string>
+    <string name="pref_fast_autostart_delay_summ">Use a delay (secs) only if Autostart does not work correctly</string>
     <string name="pref_fast_dns_server">DNSCrypt servers</string>
     <string name="pref_fast_select_dns_server">Select DNSCrypt servers</string>
     <string name="pref_fast_tor">Tor Settings</string>
@@ -144,6 +144,7 @@
         <item>obfs3</item>
         <item>meek_lite</item>
         <item>snowflake</item>
+        <item>vanilla</item>
     </string-array>
     <string-array name="tor_bridges_own_obfs">
         <item>obfs4</item>
@@ -213,7 +214,7 @@
     <string name="pref_common_shell_control">Enable script control</string>
     <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">Use the following command to manage application modules:
         \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
-        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 -n %s/.BootCompleteReceiver\". Where 1 - starts, 0 - stops the module.</string>
+        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Where 1 - starts, 0 - stops the module.</string>
     <string name="pref_common_notification_helper">Please exclude InviZible Pro from android battery optimisation.
         Otherwise android will kill DNSCrypt, Tor or I2P at any time. On special systems,
         like MIUI, required some additional steps.</string>
@@ -245,7 +246,7 @@
         It can only be used in \"root mode\" with the \"Run Modules With Root\" option disabled.
         To fix TTL please start DNSCrypt or/and Tor.</string>
     <string name="pref_common_local_eth_device_addr">LAN device IP address</string>
-    <string name="pref_common_local_eth_device_addr_summ">Enable Fix TTL and configure LAN device to connect to InviZible. Use default gateway: %s, DNS server: %s.</string>
+    <string name="pref_common_local_eth_device_addr_summ">Enable Fix TTL and configure LAN device to connect to InviZible. Use default gateway: %1$s, DNS server: %2$s.</string>
     <string name="pref_common_tethering_settings">Open Tethering config</string>
     <string name="pref_common_restart_dnscrypt">Please restart DNSCrypt</string>
     <string name="pref_common_restart_tor">Please restart Tor</string>
@@ -684,7 +685,7 @@
     <string name="main_fragment_access_i2p">Access to I2P sites with Purple I2P</string>
 
     <string name="ask_force_close_title">Attention</string>
-    <string name="ask_force_close_text">InviZible Pro cannot start %s! Please check %s settings or try to Force Close the application.
+    <string name="ask_force_close_text">InviZible Pro cannot start %1$s! Please check %2$s settings or try to Force Close the application.
         If this does not help, please reboot your device.</string>
     <string name="ask_force_close_btn">Force close</string>
 
@@ -773,4 +774,5 @@
     <string name="tile_changing_tor_ip">Tor IP changing</string>
     <string name="tile_dialog_over_three_tiles_message">You have added more than 3 tiles to Quick Settings.
         Please leave only 3. Adding more than 3 tiles can cause issues with app control.</string>
+    <string name="list_is_empty">List is Empty</string>
 </resources>

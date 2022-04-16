@@ -20,8 +20,8 @@ package pan.alexander.tordnscrypt.di
 
 import dagger.Binds
 import dagger.Module
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.ObsoleteCoroutinesApi
+import pan.alexander.tordnscrypt.data.bridges.BridgeDataSource
+import pan.alexander.tordnscrypt.data.bridges.BridgeDataSourceImpl
 import pan.alexander.tordnscrypt.data.connection_checker.ConnectionCheckerDataSource
 import pan.alexander.tordnscrypt.data.connection_checker.ConnectionCheckerDataSourceImpl
 import pan.alexander.tordnscrypt.data.dns_resolver.DnsDataSource
@@ -31,8 +31,6 @@ import pan.alexander.tordnscrypt.data.preferences.PreferenceDataSourceImpl
 
 @Module
 abstract class DataSourcesModule {
-    @ObsoleteCoroutinesApi
-    @ExperimentalCoroutinesApi
     @Binds
     abstract fun providePreferencesDataSource(
         preferenceDataSource: PreferenceDataSourceImpl
@@ -47,4 +45,9 @@ abstract class DataSourcesModule {
     abstract fun provideInternetCheckerDataSource(
         internetCheckerDataSource: ConnectionCheckerDataSourceImpl
     ): ConnectionCheckerDataSource
+
+    @Binds
+    abstract fun provideBridgeDataSource(
+        bridgeDataSource: BridgeDataSourceImpl
+    ): BridgeDataSource
 }

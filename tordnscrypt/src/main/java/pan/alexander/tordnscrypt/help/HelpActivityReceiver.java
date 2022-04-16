@@ -46,6 +46,7 @@ import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SAVE_ROOT_LOGS;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.HELP_ACTIVITY_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
@@ -210,7 +211,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
     private void deleteRootExecLog(Context context) {
         File file = new File(appDataDir + "/logs/RootExec.log");
         if (preferenceRepository.get()
-                .getBoolPreference("swRootCommandsLog") && file.isFile()) {
+                .getBoolPreference(SAVE_ROOT_LOGS) && file.isFile()) {
             FileManager.deleteFileSynchronous(context, appDataDir + "/logs", "RootExec.log");
         }
     }

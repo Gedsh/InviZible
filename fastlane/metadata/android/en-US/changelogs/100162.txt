@@ -1,0 +1,4 @@
+**InviZible Pro beta 1.6.2**
+* Fixed using Root firewall when Refresh rules option is disabled.
+* Fixed the ARP spoofing detector false positives on some devices.
+* Minor fixes.

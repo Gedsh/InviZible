@@ -20,83 +20,51 @@ package pan.alexander.tordnscrypt.utils.preferences
 
 import android.content.SharedPreferences
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.actor
-import pan.alexander.tordnscrypt.di.CoroutinesModule
+import pan.alexander.tordnscrypt.di.CoroutinesModule.Companion.SUPERVISOR_JOB_MAIN_DISPATCHER_SCOPE
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule.Companion.APP_PREFERENCES_NAME
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceType
 import java.lang.UnsupportedOperationException
-import java.util.concurrent.ConcurrentSkipListSet
 import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
 
-private const val COROUTINE_NAME = "Preferences coroutine"
-private const val CHANNEL_BUFFER_CAPACITY = 10
-
 @Singleton
 class AppPreferenceHelperImpl @Inject constructor(
     @Named(APP_PREFERENCES_NAME)
-    private val appSharedPreferences: SharedPreferences,
-    @Named(CoroutinesModule.SUPERVISOR_JOB_MAIN_DISPATCHER_SCOPE)
-    private val _coroutineScope: CoroutineScope
+    private val appPreferences: SharedPreferences,
+    @Named(SUPERVISOR_JOB_MAIN_DISPATCHER_SCOPE)
+    private val mainCoroutineScope: CoroutineScope
 ) : AppPreferenceHelper {
 
-    private val coroutineScope = _coroutineScope + CoroutineName(COROUTINE_NAME)
-    private val editor = appSharedPreferences.edit()
-    private val keysToSaveSet by lazy { ConcurrentSkipListSet<String>() }
-
-    @ExperimentalCoroutinesApi
-    @ObsoleteCoroutinesApi
-    private val channel by lazy {
-        coroutineScope.actor<Pair<String, Any>>(capacity = CHANNEL_BUFFER_CAPACITY) {
-
-            for (message in channel) {
-                val key = message.first
-                keysToSaveSet.add(key)
-                when (val value = message.second) {
-                    is Boolean -> editor.putBoolean(key, value)
-                    is Int -> editor.putInt(key, value)
-                    is Float -> editor.putFloat(key, value)
-                    is String -> editor.putString(key, null).putString(key, value)
-                    is Set<*> -> {
-                        if (value.all { it is String }) {
-                            @Suppress("UNCHECKED_CAST")
-                            editor.putStringSet(key, null).putStringSet(key, value as Set<String>)
-                        } else {
-                            throw UnsupportedOperationException("AppPreferenceHelper Only String Set is allowed")
-                        }
-                    }
-                    else -> throw UnsupportedOperationException(
-                        "AppPreferenceHelper Type ${value.javaClass.canonicalName} is not implemented"
-                    )
-                }
-                if (channel.isEmpty) {
-                    editor.apply()
-                    keysToSaveSet.clear()
+    override fun setPreference(key: String, value: Any) = mainCoroutineScope.launch {
+        val editor = appPreferences.edit()
+        when (value) {
+            is Boolean -> editor.putBoolean(key, value)
+            is Int -> editor.putInt(key, value)
+            is Float -> editor.putFloat(key, value)
+            is String -> editor.putString(key, null).putString(key, value)
+            is Set<*> -> {
+                if (value.all { it is String }) {
+                    @Suppress("UNCHECKED_CAST")
+                    editor.putStringSet(key, null).putStringSet(key, value as Set<String>)
+                } else {
+                    throw UnsupportedOperationException("AppPreferenceHelper Only String Set is allowed")
                 }
             }
+            else -> throw UnsupportedOperationException(
+                "AppPreferenceHelper Type ${value.javaClass.canonicalName} is not implemented"
+            )
         }
+        editor.apply()
     }
 
-    @ObsoleteCoroutinesApi
-    @ExperimentalCoroutinesApi
-    override fun setPreference(key: String, value: Any) = coroutineScope.launch {
-        channel.send(key to value)
-    }
-
-    override fun getPreference(@PreferenceType type: Int, key: String): Any {
-
-        if (keysToSaveSet.contains(key)) {
-            editor.apply()
-            keysToSaveSet.clear()
-        }
-
-        return when (type) {
-            PreferenceType.BOOL_PREFERENCE -> appSharedPreferences.getBoolean(key, false)
-            PreferenceType.INT_PREFERENCE -> appSharedPreferences.getInt(key, 0)
-            PreferenceType.FLOAT_PREFERENCE -> appSharedPreferences.getFloat(key, 0f)
-            PreferenceType.STRING_PREFERENCE -> appSharedPreferences.getString(key, "") as Any
-            PreferenceType.STRING_SET_PREFERENCE -> appSharedPreferences.getStringSet(
+    override fun getPreference(@PreferenceType type: Int, key: String): Any =
+        when (type) {
+            PreferenceType.BOOL_PREFERENCE -> appPreferences.getBoolean(key, false)
+            PreferenceType.INT_PREFERENCE -> appPreferences.getInt(key, 0)
+            PreferenceType.FLOAT_PREFERENCE -> appPreferences.getFloat(key, 0f)
+            PreferenceType.STRING_PREFERENCE -> appPreferences.getString(key, "") as Any
+            PreferenceType.STRING_SET_PREFERENCE -> appPreferences.getStringSet(
                 key,
                 emptySet()
             ) as Any
@@ -104,5 +72,4 @@ class AppPreferenceHelperImpl @Inject constructor(
                 "AppPreferenceHelper Preference Type $type is not implemented"
             )
         }
-    }
 }

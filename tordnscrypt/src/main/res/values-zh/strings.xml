@@ -345,7 +345,7 @@
     <string name="main_fragment_protect_dns">"使用 DNSCRYPT 保护 DNS"</string>
     <string name="main_fragment_access_i2p">"使用 Purple I2P 访问 I2P 站点"</string>
     <string name="ask_force_close_title">"注意"</string>
-    <string name="ask_force_close_text">"InviZible Pro 无法启动 %s！请检查 %s 设置或尝试强制关闭应用。 如果不起作用，请重启您的设备。"</string>
+    <string name="ask_force_close_text">"InviZible Pro 无法启动 %1$s！请检查 %2$s 设置或尝试强制关闭应用。 如果不起作用，请重启您的设备。"</string>
     <string name="ask_force_close_btn">"强制关闭"</string>
     <string name="add_custom_server_title">"添加自定义服务器"</string>
     <string name="add_custom_server_error">"无效自定义服务器配置。请检查 SDNS 字段。"</string>
@@ -404,9 +404,9 @@
     <string name="pref_common_compatibility_mode">"兼容模式"</string>
     <string name="pref_common_compatibility_mode_summ">"如果您的设备使用自定义 ROM 并且当点按启动按钮时连接丢失，启用此模式"</string>
     <string name="pref_common_shell_control">"启用脚本控制"</string>
-    <string name="pref_common_shell_control_summ">"使用以下命令管理应用模块： \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 -n %s/.BootCompleteReceiver\"。其中 1 - 启动，0 - 停止模块。"</string>
+    <string name="pref_common_shell_control_summ">"使用以下命令管理应用模块： \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\"。其中 1 - 启动，0 - 停止模块。"</string>
     <string name="pref_common_local_eth_device_addr">"LAN 设备 IP 地址"</string>
-    <string name="pref_common_local_eth_device_addr_summ">"启用固定 TTL 并配置 LAN 设备连接到 InviZible。使用默认网关：%s，DNS 服务器：%s。"</string>
+    <string name="pref_common_local_eth_device_addr_summ">"启用固定 TTL 并配置 LAN 设备连接到 InviZible。使用默认网关：%1$s，DNS 服务器：%2$s。"</string>
     <string name="pref_common_multi_user">"多用户支持"</string>
     <string name="pref_common_multi_user_summ">"支持双应用，MIUI，Island，Shelter 和工作资料应用"</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">"启用 SOCKS 出站代理"</string>
@@ -481,4 +481,21 @@
     <string name="backupSaved">"备份已保存："</string>
     <string name="backupRestored">"备份已恢复"</string>
     <string name="thanks_for_donate_gp">"InviZible Pro 项目及其作者感谢您的帮助。"</string>
+    <string name="pref_tor_hardware_accel_summ">"Try to use built-in crypto hardware acceleration when available."</string>
+    <string name="notification_connecting">"Connecting…"</string>
+    <string name="notification_waiting_network">"Waiting for network…"</string>
+    <string name="tile_change_tor_ip">"Change Tor IP"</string>
+    <string name="tile_changing_tor_ip">"Tor IP changing"</string>
+    <string name="tile_dialog_over_three_tiles_message">"You have added more than 3 tiles to Quick Settings. Please leave only 3. Adding more than 3 tiles can cause issues with app control."</string>
+    <string name="pref_common_rogue_dhcp_detection">"Rogue DHCP detection"</string>
+    <string name="pref_common_rogue_dhcp_detection_summ">"Detect Man-in-the-middle rogue DHCP attacks in Wi-Fi networks."</string>
+    <string name="pref_tor_snowflake_select_rendezvous">"Select rendezvous"</string>
+    <string name="pref_tor_snowflake_select_rendezvous_summ">"Hides the broker's domain name from the Internet provider. The broker is used to establish a connection."</string>
+    <string name="pref_firewall_show_all_apps">"Show all apps"</string>
+    <string name="pref_firewall_show_all_apps_on_summ">"Apps are shown regardless of whether the app can connect to the Internet or not."</string>
+    <string name="pref_firewall_show_all_apps_off_summ">"Only apps that can connect to the Internet are shown."</string>
+    <string name="pref_common_kill_switch">"Kill switch"</string>
+    <string name="pref_common_kill_switch_summ">"Block internet connection when Tor, DNSCrypt and Purple I2P are stopped"</string>
+    <string name="notification_internet_blocked_message">"Internet blocked due to the Kill switch. Start Tor, DNSCrypt or I2P to allow the connection. Or disable the Kill switch in Common Settings."</string>
+    <string name="list_is_empty">"List is Empty"</string>
 </resources>

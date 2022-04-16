@@ -46,7 +46,7 @@ class CoroutinesModule {
     }
 
     @Provides
-    fun provideDispatcherMain(): MainCoroutineDispatcher = Dispatchers.Main
+    fun provideDispatcherMain(): MainCoroutineDispatcher = Dispatchers.Main.immediate
 
     @Provides
     @Named(DISPATCHER_IO)

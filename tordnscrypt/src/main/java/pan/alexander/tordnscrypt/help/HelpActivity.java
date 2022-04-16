@@ -32,7 +32,6 @@ import androidx.fragment.app.DialogFragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.os.Looper;
-import android.os.Process;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -69,6 +68,7 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.deleteFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SAVE_ROOT_LOGS;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.HELP_ACTIVITY_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
@@ -124,7 +124,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         SwitchCompat swRootCommandsLog = findViewById(R.id.swRootCommandsLog);
 
         if (ModulesStatus.getInstance().isRootAvailable()) {
-            swRootCommandsLog.setChecked(preferenceRepository.get().getBoolPreference("swRootCommandsLog"));
+            swRootCommandsLog.setChecked(preferenceRepository.get().getBoolPreference(SAVE_ROOT_LOGS));
             swRootCommandsLog.setOnCheckedChangeListener(this);
         } else {
             swRootCommandsLog.setVisibility(View.GONE);
@@ -142,7 +142,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         busyboxPath = pathVars.getBusyboxPath();
         pathToSaveLogs = pathVars.getDefaultBackupPath();
         iptables = pathVars.getIptablesPath();
-        appUID = String.valueOf(Process.myUid());
+        appUID = pathVars.getAppUidStr();
 
         cacheDir = pathVars.getCacheDirPath(this);
 
@@ -288,7 +288,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     @Override
     public void onCheckedChanged(CompoundButton compoundButton, boolean newValue) {
         if (compoundButton.getId() == R.id.swRootCommandsLog) {
-            preferenceRepository.get().setBoolPreference("swRootCommandsLog", newValue);
+            preferenceRepository.get().setBoolPreference(SAVE_ROOT_LOGS, newValue);
 
             if (!newValue) {
                 FileManager.deleteFile(getApplicationContext(), appDataDir + "/logs", "RootExec.log", "RootExec.log");

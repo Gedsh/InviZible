@@ -49,6 +49,8 @@ import static pan.alexander.tordnscrypt.utils.AppExtension.getApp;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_DEFAULT_BRIDGES;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_OWN_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.DNSCRYPT_RUN_FRAGMENT_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.I2PD_RUN_FRAGMENT_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.TOP_FRAGMENT_MARK;
@@ -410,8 +412,8 @@ public class ModulesStarterHelper {
 
             preferences.setStringPreference("ObfsBinaryPath", currentObfsBinaryPath);
 
-            boolean useDefaultBridges = preferences.getBoolPreference("useDefaultBridges");
-            boolean useOwnBridges = preferences.getBoolPreference("useOwnBridges");
+            boolean useDefaultBridges = preferences.getBoolPreference(USE_DEFAULT_BRIDGES);
+            boolean useOwnBridges = preferences.getBoolPreference(USE_OWN_BRIDGES);
 
             if (useDefaultBridges || useOwnBridges) {
 

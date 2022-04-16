@@ -353,7 +353,7 @@
     <string name="main_fragment_protect_dns">"Protection du DNS avec DNSCRYPT"</string>
     <string name="main_fragment_access_i2p">"Accès aux sites I2P avec Purple I2P"</string>
     <string name="ask_force_close_title">"Attention"</string>
-    <string name="ask_force_close_text">"InviZible Pro ne peut pas démarrer %s! Veuillez vérifier les paramètres de %s ou essayer de forcer la fermeture de l'application.
+    <string name="ask_force_close_text">"InviZible Pro ne peut pas démarrer %1$s! Veuillez vérifier les paramètres de %2$s ou essayer de forcer la fermeture de l'application.
          Si cela ne résout pas le problème, veuillez redémarrer votre appareil."</string>
     <string name="ask_force_close_btn">"Forcer la fermeture"</string>
     <string name="add_custom_server_title">"Ajouter un serveur personnalisé"</string>
@@ -429,9 +429,9 @@
     <string name="pref_common_shell_control">"Activer le contrôle de script"</string>
     <string name="pref_common_shell_control_summ">"Utiliser la commande suivante pour gérer les modules d'application:
                 \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
-                --ei dnscrypt 1 --ei tor 1 --ei i2p 1 -n %s/.BootCompleteReceiver\". Où 1 - démarre, 0 - arrête le module."</string>
+                --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Où 1 - démarre, 0 - arrête le module."</string>
     <string name="pref_common_local_eth_device_addr">"Adresse IP du périphérique LAN"</string>
-    <string name="pref_common_local_eth_device_addr_summ">"Activez Fixer la DDV et configurez le périphérique LAN pour qu'il se connecte à InviZible. Utilisez la passerelle par défaut: %s, serveur DNS: %s."</string>
+    <string name="pref_common_local_eth_device_addr_summ">"Activez Fixer la DDV et configurez le périphérique LAN pour qu'il se connecte à InviZible. Utilisez la passerelle par défaut: %1$s, serveur DNS: %2$s."</string>
     <string name="pref_common_multi_user">"Support multi-utilisateurs"</string>
     <string name="pref_common_multi_user_summ">"Soutien des applications doubles, MIUI, Island, Shelter et utilisant le Profil Professionnel"</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">"Activer le mandataire SOCKS de sortie"</string>
@@ -520,4 +520,8 @@
     <string name="pref_firewall_show_all_apps">"Afficher toutes les applications"</string>
     <string name="pref_firewall_show_all_apps_on_summ">"Les applications sont affichées, que l'application puisse se connecter à l'Internet ou non."</string>
     <string name="pref_firewall_show_all_apps_off_summ">"Seules les applications qui peuvent se connecter à Internet sont affichées."</string>
+    <string name="pref_common_kill_switch">"Kill switch"</string>
+    <string name="pref_common_kill_switch_summ">"Block internet connection when Tor, DNSCrypt and Purple I2P are stopped"</string>
+    <string name="notification_internet_blocked_message">"Internet blocked due to the Kill switch. Start Tor, DNSCrypt or I2P to allow the connection. Or disable the Kill switch in Common Settings."</string>
+    <string name="list_is_empty">"List is Empty"</string>
 </resources>

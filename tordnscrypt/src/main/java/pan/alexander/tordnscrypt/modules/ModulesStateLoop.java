@@ -525,7 +525,8 @@ public class ModulesStateLoop implements Runnable,
 
     @Override
     public void onDNSCryptLogUpdated(@NonNull LogDataModel dnsCryptLogData) {
-        if (dnsCryptLogData.getStartedSuccessfully()) {
+        if (dnsCryptLogData.getStartedSuccessfully()
+                && modulesStatus.getDnsCryptState() == RUNNING) {
             setDNSCryptReady(true);
             denySystemDNS();
             if (dnsCryptInteractor != null) {
@@ -540,18 +541,23 @@ public class ModulesStateLoop implements Runnable,
     }
 
     private void setDNSCryptReady(boolean ready) {
+
+        boolean savedReady = modulesStatus.isDnsCryptReady();
+
         preferenceRepository.get().setBoolPreference(DNSCRYPT_READY_PREF, ready);
         modulesStatus.setDnsCryptReady(ready);
 
         //If DNSCrypt is ready, app will use DNSCrypt DNS instead of Tor Exit node DNS in VPN mode
-        if (ready && modulesStatus.isTorReady() && (modulesStatus.getMode() == VPN_MODE || isFixTTL())) {
+        if (ready && !savedReady && modulesStatus.isTorReady()
+                && (modulesStatus.getMode() == VPN_MODE || isFixTTL())) {
             ServiceVPNHelper.reload("Use DNSCrypt DNS instead of Tor", modulesService);
         }
     }
 
     @Override
     public void onTorLogUpdated(@NonNull LogDataModel torLogData) {
-        if (torLogData.getStartedSuccessfully()) {
+        if (torLogData.getStartedSuccessfully()
+                && modulesStatus.getTorState() == RUNNING) {
             setTorReady(true);
             denySystemDNS();
             if (torInteractor != null) {
@@ -566,9 +572,14 @@ public class ModulesStateLoop implements Runnable,
     }
 
     private void setTorReady(boolean ready) {
+        boolean savedReady = modulesStatus.isTorReady();
+
         preferenceRepository.get().setBoolPreference(TOR_READY_PREF, ready);
         modulesStatus.setTorReady(ready);
-        startRefreshTorUnlockIPs(modulesService.getApplicationContext());
+
+        if (ready && !savedReady) {
+            startRefreshTorUnlockIPs(modulesService.getApplicationContext());
+        }
     }
 
     private synchronized void denySystemDNS() {
@@ -588,7 +599,8 @@ public class ModulesStateLoop implements Runnable,
 
     @Override
     public void onITPDHtmlUpdated(@NonNull LogDataModel itpdLogData) {
-        if (itpdLogData.getStartedSuccessfully()) {
+        if (itpdLogData.getStartedSuccessfully()
+                && modulesStatus.getItpdState() == RUNNING) {
             setITPDReady(true);
             if (itpdInteractor != null) {
                 itpdInteractor.removeOnITPDHtmlUpdatedListener(this);

@@ -18,15 +18,11 @@ package pan.alexander.tordnscrypt.data.preferences
     Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceType
 import pan.alexander.tordnscrypt.utils.preferences.AppPreferenceHelper
 import javax.inject.Inject
 import javax.inject.Singleton
 
-@ExperimentalCoroutinesApi
-@ObsoleteCoroutinesApi
 @Singleton
 class PreferenceDataSourceImpl @Inject constructor(
     private val appPreferenceHelper: AppPreferenceHelper

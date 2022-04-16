@@ -353,7 +353,7 @@ Möchtest du den Download und das Upgrade auf PRO durchführen? Die Installation
     <string name="main_fragment_protect_dns">"Schütze DNS mit DNSCRYPT"</string>
     <string name="main_fragment_access_i2p">"Zugang zu I2P Seiten mit Purple I2P"</string>
     <string name="ask_force_close_title">"Achtung"</string>
-    <string name="ask_force_close_text">"InviZible Pro kann nicht starten %s! Bitte überprüfe %s Einstellungen oder versuche die App manuell zu beenden.
+    <string name="ask_force_close_text">"InviZible Pro kann nicht starten %1$s! Bitte überprüfe %2$s Einstellungen oder versuche die App manuell zu beenden.
 Falls das nicht helfen sollte, starte dein Gerät bitte neu."</string>
     <string name="ask_force_close_btn">"Erzwinge Beenden"</string>
     <string name="add_custom_server_title">"Eigenen Server hinzufügen"</string>
@@ -439,10 +439,10 @@ Dies beschleunigt Abläufe, wenn keine IPv6 Konnektivität vorhanden ist, kann a
     <string name="pref_common_shell_control">"Aktiviere Skript Kontrolle"</string>
     <string name="pref_common_shell_control_summ">"Nutze den folgenden Befehl um Module zu verwalten:
 \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
-        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 -n %s/.BootCompleteReceiver\"
+        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\"
 1 = Modulstart, 0 = Modulstopp"</string>
     <string name="pref_common_local_eth_device_addr">"Lokale IP Adresse"</string>
-    <string name="pref_common_local_eth_device_addr_summ">"Aktiviere Fix TTL und konfiguriere das LAN Gerät InviZible zu nutzen. Benutze den Standard Gateway: %s, DNS Server: %s."</string>
+    <string name="pref_common_local_eth_device_addr_summ">"Aktiviere Fix TTL und konfiguriere das LAN Gerät InviZible zu nutzen. Benutze den Standard Gateway: %1$s, DNS Server: %2$s."</string>
     <string name="pref_common_multi_user">"Unterstützung für Multi-User"</string>
     <string name="pref_common_multi_user_summ">"Unterstützung für Dual Apps, MIUI, Island, Shelter und Apps mit Arbeitsprofilen"</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">"Aktiviere SOCKS Ausgabe Proxy"</string>
@@ -536,4 +536,5 @@ WLAN aus- und kurz darauf wieder anschalten. Die Verwendung des derzeitigen Hots
     <string name="pref_common_kill_switch">"Aus-Schalter"</string>
     <string name="pref_common_kill_switch_summ">"Blockiere die Internet Verbindung sobald Tor, DNSCrypt oder I2P gestoppt wurden."</string>
     <string name="notification_internet_blocked_message">"Die Internet Verbindung wurde aufgrund des Aus-Schalters blockiert. Starte Tor, DNSCrypt oder I2P um sie zu reaktivieren. Alternativ kann der Aus-Schalter in den Einstellungen deaktiviert werden."</string>
+    <string name="list_is_empty">"Liste ist leer"</string>
 </resources>

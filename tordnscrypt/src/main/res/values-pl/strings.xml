@@ -339,7 +339,7 @@ Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych 
     <string name="main_fragment_protect_dns">"Chron DNS za pomocą DNSCRYPT"</string>
     <string name="main_fragment_access_i2p">" Dostep do stron I2P za pomocą Purple I2P"</string>
     <string name="ask_force_close_title">"Uwaga"</string>
-    <string name="ask_force_close_text">"Blad uruchomienia InviZible Pro %s! Sprawdz %s ustawienia lub sprobuj wymusic zamkniecie aplikacji w ustawieniach urzadzenia. Jesli brak poprawy, uruchom urzadzenie ponownie."</string>
+    <string name="ask_force_close_text">"Blad uruchomienia InviZible Pro %1$s! Sprawdz %2$s ustawienia lub sprobuj wymusic zamkniecie aplikacji w ustawieniach urzadzenia. Jesli brak poprawy, uruchom urzadzenie ponownie."</string>
     <string name="ask_force_close_btn">"Wymus zamkniecie"</string>
     <string name="add_custom_server_title">"Dodaj serwer"</string>
     <string name="add_custom_server_error">"Niepoprawna niestandardowa konfiguracja serwera. Sprawdź pole SDNS."</string>
@@ -398,9 +398,9 @@ Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych 
     <string name="pref_common_compatibility_mode">"Tryb zgodnosci"</string>
     <string name="pref_common_compatibility_mode_summ">"Aktywuj jesli masz urzadzenie z modyfikowanym ROMem oraz jesli przycisniecie Start powoduje zerwanie polaczenia"</string>
     <string name="pref_common_shell_control">"Aktywuj skrypt kontrolny"</string>
-    <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">"Aby zarzadzac modulami, uzyj nastepujacej komendy: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 -n %s/.BootCompleteReceiver\". Gdzie 1 - uruchamia, 0 - zatrzymuje modul."</string>
+    <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">"Aby zarzadzac modulami, uzyj nastepujacej komendy: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Gdzie 1 - uruchamia, 0 - zatrzymuje modul."</string>
     <string name="pref_common_local_eth_device_addr">"Adres IP urzadzenia LAN"</string>
-    <string name="pref_common_local_eth_device_addr_summ">"Aktywuj Fix TTL i skonfiguruj urzadzenie LAN dla polaczenia InviZible. Uzyj domyslnie: gateway: %s, Serwer DNS: %s"</string>
+    <string name="pref_common_local_eth_device_addr_summ">"Aktywuj Fix TTL i skonfiguruj urzadzenie LAN dla polaczenia InviZible. Uzyj domyslnie: gateway: %1$s, Serwer DNS: %2$s"</string>
     <string name="pref_common_multi_user">"Wsparcie trybu multi-user"</string>
     <string name="pref_common_multi_user_summ">"Wsparcie Dual Apps, MIUI, profili Island, Shelter i Work"</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">"Aktywuj proxy wychozace SOCKS"</string>
@@ -475,4 +475,21 @@ Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych 
     <string name="backupSaved">"Zapisano backup"</string>
     <string name="backupRestored">"Przywrocono backup"</string>
     <string name="thanks_for_donate_gp">"Projekt InviZible Pro Project i jego Autor wyrazaja podziekowania za wsparcie."</string>
+    <string name="pref_tor_hardware_accel_summ">"Try to use built-in crypto hardware acceleration when available."</string>
+    <string name="notification_connecting">"Connecting…"</string>
+    <string name="notification_waiting_network">"Waiting for network…"</string>
+    <string name="tile_change_tor_ip">"Change Tor IP"</string>
+    <string name="tile_changing_tor_ip">"Tor IP changing"</string>
+    <string name="tile_dialog_over_three_tiles_message">"You have added more than 3 tiles to Quick Settings. Please leave only 3. Adding more than 3 tiles can cause issues with app control."</string>
+    <string name="pref_common_rogue_dhcp_detection">"Rogue DHCP detection"</string>
+    <string name="pref_common_rogue_dhcp_detection_summ">"Detect Man-in-the-middle rogue DHCP attacks in Wi-Fi networks."</string>
+    <string name="pref_tor_snowflake_select_rendezvous">"Select rendezvous"</string>
+    <string name="pref_tor_snowflake_select_rendezvous_summ">"Hides the broker's domain name from the Internet provider. The broker is used to establish a connection."</string>
+    <string name="pref_firewall_show_all_apps">"Show all apps"</string>
+    <string name="pref_firewall_show_all_apps_on_summ">"Apps are shown regardless of whether the app can connect to the Internet or not."</string>
+    <string name="pref_firewall_show_all_apps_off_summ">"Only apps that can connect to the Internet are shown."</string>
+    <string name="pref_common_kill_switch">"Kill switch"</string>
+    <string name="pref_common_kill_switch_summ">"Block internet connection when Tor, DNSCrypt and Purple I2P are stopped"</string>
+    <string name="notification_internet_blocked_message">"Internet blocked due to the Kill switch. Start Tor, DNSCrypt or I2P to allow the connection. Or disable the Kill switch in Common Settings."</string>
+    <string name="list_is_empty">"List is Empty"</string>
 </resources>

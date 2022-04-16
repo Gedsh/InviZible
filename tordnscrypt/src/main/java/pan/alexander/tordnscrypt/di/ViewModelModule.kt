@@ -24,8 +24,10 @@ import androidx.lifecycle.ViewModelProvider
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import pan.alexander.tordnscrypt.settings.firewall.FirewallViewModel
+import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridgesViewModel
 import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsViewModel
 
 @Module
@@ -49,5 +51,13 @@ abstract class ViewModelModule {
     @ViewModelKey(FirewallViewModel::class)
     abstract fun provideFirewallViewModel(
         firewallViewModel: FirewallViewModel
+    ): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(PreferencesTorBridgesViewModel::class)
+    @ExperimentalCoroutinesApi
+    abstract fun providePreferencesTorBridgesViewModel(
+        preferencesTorBridgesViewModel: PreferencesTorBridgesViewModel
     ): ViewModel
 }

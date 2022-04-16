@@ -29,6 +29,7 @@ import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_ENABLED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.GSM_ON_REQUESTED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.KILL_SWITCH;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REFRESH_RULES;
@@ -108,18 +109,20 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     private final Provider<InternetSharingChecker> internetSharingChecker;
     private final CachedExecutor cachedExecutor;
     private final Lazy<Handler> handler;
+    private final Lazy<TorRestarterReconnector> torRestarterReconnector;
 
     private Context context;
-    private Object commonNetworkCallback;
-    private BroadcastReceiver vpnConnectivityReceiver;
-    private FirewallNotification firewallNotificationReceiver;
+    private volatile Object commonNetworkCallback;
+    private volatile BroadcastReceiver vpnConnectivityReceiver;
+    private volatile FirewallNotification firewallNotificationReceiver;
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
-    private OperationMode savedOperationMode = UNDEFINED;
-    private boolean commonReceiversRegistered = false;
-    private boolean rootReceiversRegistered = false;
+    private volatile OperationMode savedOperationMode = UNDEFINED;
+    private volatile boolean commonReceiversRegistered = false;
+    private volatile boolean rootReceiversRegistered = false;
+    private volatile boolean rootVpnReceiverRegistered = false;
     private volatile boolean lock = false;
     private volatile Future<?> checkTetheringTask;
-    private boolean vpnRevoked = false;
+    private volatile boolean vpnRevoked = false;
 
     @Inject
     public ModulesReceiver(
@@ -128,7 +131,8 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             Lazy<ConnectionCheckerInteractor> connectionCheckerInteractor,
             Provider<InternetSharingChecker> internetSharingChecker,
             CachedExecutor cachedExecutor,
-            Lazy<Handler> handler
+            Lazy<Handler> handler,
+            Lazy<TorRestarterReconnector> torRestarterReconnector
     ) {
         this.preferenceRepository = preferenceRepository;
         this.defaultPreferences = defaultSharedPreferences;
@@ -136,6 +140,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         this.internetSharingChecker = internetSharingChecker;
         this.cachedExecutor = cachedExecutor;
         this.handler = handler;
+        this.torRestarterReconnector = torRestarterReconnector;
     }
 
     @Override
@@ -158,6 +163,28 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         } else {
             logi("ModulesReceiver received " + intent);
         }
+
+        if (this.context == null) {
+            logw("ModulesReceiver context is null");
+            return;
+        }
+
+        PendingResult pendingResult = goAsync();
+
+        cachedExecutor.submit(() -> {
+            try {
+                intentOnReceive(intent, action);
+            } catch (Exception e) {
+                loge("ModulesReceiver onReceive", e, true);
+            } finally {
+                pendingResult.finish();
+            }
+        });
+
+
+    }
+
+    private void intentOnReceive(Intent intent, String action) {
 
         OperationMode mode = modulesStatus.getMode();
         if (savedOperationMode != mode) {
@@ -192,7 +219,9 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
     void registerReceivers(Context context) {
 
-        this.context = context;
+        if (this.context == null) {
+            this.context = context;
+        }
 
         savedOperationMode = modulesStatus.getMode();
 
@@ -210,9 +239,22 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             registerPowerOFF();
         }
 
-        if (isVpnMode() && firewallNotificationReceiver == null) {
+        if (isRootMode() && !modulesStatus.isUseModulesWithRoot()) {
+            if (rootVpnReceiverRegistered && modulesStatus.isFixTTL()) {
+                unlistenVpnConnectivityChanges();
+                rootVpnReceiverRegistered = false;
+            } else if (!rootVpnReceiverRegistered && !modulesStatus.isFixTTL()) {
+                listenVpnConnectivityChanges();
+                rootVpnReceiverRegistered = true;
+            }
+        } else if (rootVpnReceiverRegistered) {
+            unlistenVpnConnectivityChanges();
+            rootVpnReceiverRegistered = false;
+        }
+
+        if ((isVpnMode() || isRootMode()) && firewallNotificationReceiver == null) {
             registerFirewallReceiver();
-        } else if (!isVpnMode() && firewallNotificationReceiver != null) {
+        } else if (!(isVpnMode() || isRootMode()) && firewallNotificationReceiver != null) {
             unregisterFirewallReceiver();
         }
 
@@ -327,9 +369,9 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         }
 
         ConnectivityManager.NetworkCallback nc = new ConnectivityManager.NetworkCallback() {
-            private Boolean last_connected = null;
-            private List<InetAddress> last_dns = null;
-            private int last_network = 0;
+            private volatile Boolean last_connected = null;
+            private volatile List<InetAddress> last_dns = null;
+            private volatile int last_network = 0;
 
             @Override
             public void onAvailable(@NonNull Network network) {
@@ -422,17 +464,15 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                             reload("Connected state changed", context);
                         }
                         logi("ModulesReceiver changed capabilities=" + network);
+                    } else if (isRootMode() && last_network != network.hashCode()) {
+                        updateIptablesRules(false);
+                        resetArpScanner();
+                        checkInternetConnection();
+                        logi("ModulesReceiver changed capabilities=" + network);
+                    } else if (isProxyMode()) {
+                        resetArpScanner();
+                        logi("ModulesReceiver changed capabilities=" + network);
                     }
-                }
-
-                if (isRootMode() && last_network != network.hashCode()) {
-                    updateIptablesRules(false);
-                    resetArpScanner();
-                    checkInternetConnection();
-                    logi("ModulesReceiver changed capabilities=" + network);
-                } else if (isProxyMode()) {
-                    resetArpScanner();
-                    logi("ModulesReceiver changed capabilities=" + network);
                 }
 
                 last_network = network.hashCode();
@@ -533,7 +573,13 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                         ConnectivityManager.TYPE_DUMMY
                 );
                 if (networkType == ConnectivityManager.TYPE_VPN) {
-                    checkVpnRestoreAfterRevoke();
+                    if (isVpnMode()) {
+                        checkVpnRestoreAfterRevoke();
+                    } else if (isRootMode()
+                            && !modulesStatus.isUseModulesWithRoot()
+                            && !modulesStatus.isFixTTL()) {
+                        connectivityStateChanged(new Intent("VPN connectivity changed"));
+                    }
                 }
             }
         };
@@ -795,7 +841,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         boolean refreshRules = defaultPreferences.get().getBoolean(REFRESH_RULES, false);
         boolean fixTTL = modulesStatus.isFixTTL();
 
-        if (!refreshRules && !forceUpdate && !fixTTL) {
+        if (!refreshRules && !forceUpdate && !fixTTL && !isFirewallEnabled()) {
             return;
         }
 
@@ -862,6 +908,15 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
     @Override
     public void onConnectionChecked(boolean available) {
+
+        if (modulesStatus.getTorState() == RUNNING && modulesStatus.isTorReady()) {
+            if (available) {
+                torRestarterReconnector.get().stopRestarterCounter();
+            } else if (isNetworkAvailable()) {
+                torRestarterReconnector.get().startRestarterCounter();
+            }
+        }
+
         if (isVpnMode()) {
             return;
         }
@@ -893,5 +948,9 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     private boolean isNetworkAvailable() {
         connectionCheckerInteractor.get().checkNetworkConnection();
         return connectionCheckerInteractor.get().getNetworkConnectionResult();
+    }
+
+    private boolean isFirewallEnabled() {
+        return preferenceRepository.get().getBoolPreference(FIREWALL_ENABLED);
     }
 }

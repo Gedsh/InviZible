@@ -26,6 +26,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Point
 import android.os.Environment
+import android.os.Process
 import android.util.Base64
 import android.util.Log
 import android.view.Display
@@ -33,16 +34,18 @@ import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesService
 import pan.alexander.tordnscrypt.settings.PathVars
+import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges
+import pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_PACKAGE
 import pan.alexander.tordnscrypt.utils.appexit.AppExitDetectService
 import pan.alexander.tordnscrypt.utils.filemanager.FileShortener
+import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.io.File
 import java.io.PrintWriter
 import java.lang.IllegalArgumentException
 import java.net.Inet4Address
-import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
 import kotlin.math.roundToInt
@@ -214,12 +217,16 @@ object Utils {
     }
 
     @JvmStatic
-    fun shortenTooLongSnowflakeLog(context: Context, preferences: PreferenceRepository, pathVars: PathVars) {
+    fun shortenTooLongSnowflakeLog(
+        context: Context,
+        preferences: PreferenceRepository,
+        pathVars: PathVars
+    ) {
         try {
             val bridgesSnowflakeDefault =
-                preferences.getStringPreference(DEFAULT_BRIDGES_OBFS) == PreferencesTorBridges.snowFlakeBridgesDefault
+                preferences.getStringPreference(DEFAULT_BRIDGES_OBFS) == PreferencesTorBridges.SNOWFLAKE_BRIDGES_DEFAULT
             val bridgesSnowflakeOwn =
-                preferences.getStringPreference(OWN_BRIDGES_OBFS) == PreferencesTorBridges.snowFlakeBridgesOwn
+                preferences.getStringPreference(OWN_BRIDGES_OBFS) == PreferencesTorBridges.SNOWFLAKE_BRIDGES_OWN
             val shPref = PreferenceManager.getDefaultSharedPreferences(context)
             val showHelperMessages =
                 shPref.getBoolean(ALWAYS_SHOW_HELP_MESSAGES, false)
@@ -231,4 +238,26 @@ object Utils {
         }
     }
 
+    fun getUidForName(name: String, defaultValue: Int): Int {
+        var uid = defaultValue
+        try {
+            val result = Process.getUidForName(name)
+            if (result > 0) {
+                uid = result
+            } else {
+                logw("No uid for $name, using default value $defaultValue")
+            }
+        } catch (e: Exception) {
+            logw("No uid for $name, using default value $defaultValue")
+        }
+        return uid
+    }
+
+    fun getCriticalSystemUids(apps: List<ApplicationData>, ownUid: Int): List<Int> =
+        apps.filter { it.pack.contains(NETWORK_STACK_PACKAGE, true) }
+            .map { it.uid }
+            .plus(getUidForName("dns", 1051 + ownUid / 100_000 * 100_000))
+
+    fun getDnsTetherUid(ownUid: Int) =
+        getUidForName("dns_tether", 1052 + ownUid / 100_000 * 100_000)
 }

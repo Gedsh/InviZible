@@ -55,6 +55,7 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.Utils;
+import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.utils.wakelock.WakeLocksManager;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
@@ -970,6 +971,8 @@ public class ModulesService extends Service {
 
         serviceIsRunning = false;
 
+        stopRootExecServiceIfRequired();
+
         super.onDestroy();
     }
 
@@ -1160,5 +1163,10 @@ public class ModulesService extends Service {
     private void checkModulesConfigPatches() {
         Patch patch = new Patch(this);
         patch.checkPatches(false);
+    }
+
+    private void stopRootExecServiceIfRequired() {
+        Intent intent = new Intent(this, RootExecService.class);
+        stopService(intent);
     }
 }

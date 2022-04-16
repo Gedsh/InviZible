@@ -301,6 +301,20 @@ void handle_ip(const struct arguments *args,
         } else {
             uid = get_uid_q(args, version, protocol, source, sport, dest, dport);
         }
+
+        if (uid < 0 && dport != 53) {
+            uid = restore_uid(args,
+                              version,
+                              protocol,
+                              saddr,
+                              sport,
+                              daddr,
+                              dport,
+                              source,
+                              dest,
+                              flags,
+                              payload);
+        }
     }
 
     log_android(ANDROID_LOG_DEBUG,
@@ -311,13 +325,12 @@ void handle_ip(const struct arguments *args,
     int allowed = 0;
     struct allowed *redirect = NULL;
     if (protocol == IPPROTO_UDP
-        && has_udp_session(args, pkt, payload))
+        && has_udp_session(args, pkt, payload)) {
         allowed = 1; // could be a lingering/blocked session
-    else if (protocol == IPPROTO_TCP
-             && (!syn || (!args->fwd53 && uid == 0 && dport == 53))
-             /*&& strcmp(dest, "10.191.0.1") != 0*/)
+    } else if (protocol == IPPROTO_TCP
+               && (!syn || (!args->fwd53 && uid == 0 && dport == 53))) {
         allowed = 1; // assume existing session
-    else {
+    } else {
         jobject objPacket = create_packet(
                 args, version, protocol, flags, source, sport, dest, dport, data, uid, 0);
         redirect = is_address_allowed(args, objPacket);
@@ -325,13 +338,6 @@ void handle_ip(const struct arguments *args,
         if (redirect != NULL && (*redirect->raddr == 0 || redirect->rport == 0))
             redirect = NULL;
     }
-
-    /*if (args->fwd53 && dport == 53 && uid != own_uid
-        && (redirect == NULL || *redirect->raddr == 0 || redirect->rport == 0)) {
-        allowed = 0;
-        log_android(ANDROID_LOG_ERROR, "Direct DNS connection for v%d p%d %s/%u syn %d not allowed",
-                    version, protocol, dest, dport, syn);
-    }*/
 
     // Handle allowed traffic
     if (allowed) {
@@ -531,6 +537,89 @@ jint get_uid_sub(const int version, const int protocol,
 
     if (fclose(fd))
         log_android(ANDROID_LOG_ERROR, "fclose %s error %d: %s", fn, errno, strerror(errno));
+
+    return uid;
+}
+
+jint restore_uid(const struct arguments *args,
+                 const int version,
+                 const int protocol,
+                 const void *saddr,
+                 const uint16_t sport,
+                 const void *daddr,
+                 const uint16_t dport,
+                 const char *source,
+                 const char *dest,
+                 const char *flags,
+                 const uint8_t *payload) {
+
+    struct ng_session *cur = args->ctx->ng_session;
+    jint uid = -1;
+
+    if (protocol == IPPROTO_TCP) {
+        while (cur != NULL &&
+               !(cur->protocol == IPPROTO_TCP &&
+                 cur->tcp.uid >= 0 &&
+                 cur->tcp.version == version &&
+                 cur->tcp.dest == htons(dport) &&
+                 (version == 4 ? cur->tcp.saddr.ip4 == *((int32_t *) saddr) &&
+                                 cur->tcp.daddr.ip4 == *((int32_t *) daddr)
+                               : memcmp(&cur->tcp.saddr.ip6, saddr, 16) == 0 &&
+                                 memcmp(&cur->tcp.daddr.ip6, daddr, 16) == 0)))
+            cur = cur->next;
+        if (cur != NULL) {
+            uid = cur->tcp.uid;
+        }
+    } else if (protocol == IPPROTO_UDP) {
+        while (cur != NULL &&
+               !(cur->protocol == IPPROTO_UDP &&
+                 cur->udp.uid >= 0 &&
+                 cur->udp.version == version &&
+                 cur->udp.dest == htons(dport) &&
+                 (version == 4 ? cur->udp.saddr.ip4 == *((int32_t *) saddr) &&
+                                 cur->udp.daddr.ip4 == *((int32_t *) daddr)
+                               : memcmp(&cur->udp.saddr.ip6, saddr, 16) == 0 &&
+                                 memcmp(&cur->udp.daddr.ip6, daddr, 16) == 0)))
+            cur = cur->next;
+        if (cur != NULL) {
+            uid = cur->udp.uid;
+        }
+    } else if (protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6) {
+
+        struct icmp *icmp = (struct icmp *) payload;
+
+        if (icmp->icmp_type != ICMP_ECHO) {
+            log_android(ANDROID_LOG_WARN, "ICMP type %d code %d from %s to %s not supported",
+                        icmp->icmp_type, icmp->icmp_code, source, dest);
+            return uid;
+        }
+
+        while (cur != NULL &&
+               !((cur->protocol == IPPROTO_ICMP || cur->protocol == IPPROTO_ICMPV6) &&
+                 cur->icmp.uid >= 0 &&
+                 !cur->icmp.stop && cur->icmp.version == version &&
+                 cur->icmp.id == icmp->icmp_id &&
+                 (version == 4 ? cur->icmp.saddr.ip4 == *((int32_t *) saddr) &&
+                                 cur->icmp.daddr.ip4 == *((int32_t *) daddr)
+                               : memcmp(&cur->icmp.saddr.ip6, saddr, 16) == 0 &&
+                                 memcmp(&cur->icmp.daddr.ip6, daddr, 16) == 0)))
+            cur = cur->next;
+        if (cur != NULL) {
+            uid = cur->icmp.uid;
+        }
+    } else {
+        return uid;
+    }
+
+    if (uid < 0) {
+        log_android(ANDROID_LOG_ERROR,
+                    "Packet uid can not be restored v%d %s/%u > %s/%u proto %d flags %s uid %d",
+                    version, source, sport, dest, dport, protocol, flags, uid);
+    } else {
+        log_android(ANDROID_LOG_ERROR,
+                    "Packet uid restored v%d %s/%u > %s/%u proto %d flags %s uid %d",
+                    version, source, sport, dest, dport, protocol, flags, uid);
+    }
 
     return uid;
 }

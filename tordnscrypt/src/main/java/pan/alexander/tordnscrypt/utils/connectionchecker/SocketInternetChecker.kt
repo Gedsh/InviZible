@@ -24,6 +24,7 @@ import java.net.*
 import javax.inject.Inject
 
 private const val CONNECT_TIMEOUT_SEC = 50
+private const val PING_TIMEOUT_SEC = 1
 
 class SocketInternetChecker @Inject constructor() {
 
@@ -60,6 +61,51 @@ class SocketInternetChecker @Inject constructor() {
             } catch (ignored: Exception) {
             }
         }
+    }
+
+    fun checkConnectionPing(
+        ip: String,
+        port: Int,
+        proxyAddress: String,
+        proxyPort: Int
+    ): Int {
+
+        var socket: Socket? = null
+        val timeStart = System.currentTimeMillis()
+
+        try {
+            socket = if (proxyAddress.isNotBlank() && proxyPort != 0) {
+                val proxySockAdr: SocketAddress = InetSocketAddress(
+                    proxyAddress,
+                    proxyPort
+                )
+                val proxy = Proxy(Proxy.Type.SOCKS, proxySockAdr)
+                Socket(proxy)
+            } else {
+                Socket()
+            }
+
+            val sockAddress: SocketAddress =
+                InetSocketAddress(InetAddress.getByName(ip), port)
+
+            socket.connect(sockAddress, PING_TIMEOUT_SEC * 1000)
+
+            return if (socket.isConnected) {
+                (System.currentTimeMillis() - timeStart).toInt()
+            } else {
+                NO_CONNECTION
+            }
+
+        } finally {
+            try {
+                socket?.close()
+            } catch (ignored: Exception) {
+            }
+        }
+    }
+
+    companion object {
+        const val NO_CONNECTION = -1
     }
 
 }

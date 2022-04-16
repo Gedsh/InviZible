@@ -186,7 +186,12 @@ public class DownloadTask extends Thread {
 
         Proxy proxy = null;
         if (ModulesStatus.getInstance().getTorState() == RUNNING) {
-            proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(LOOPBACK_ADDRESS, Integer.parseInt(pathVars.getTorHTTPTunnelPort())));
+            proxy = new Proxy(
+                    Proxy.Type.SOCKS,
+                    new InetSocketAddress(
+                            LOOPBACK_ADDRESS,
+                            Integer.parseInt(pathVars.getTorSOCKSPort()))
+            );
         }
 
         //create url and connect

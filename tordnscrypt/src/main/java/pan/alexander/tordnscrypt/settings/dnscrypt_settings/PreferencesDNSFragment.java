@@ -370,12 +370,12 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                 val_toml.set(key_toml.lastIndexOf("refresh_delay"), newValue.toString());
                 return true;
             } else if (Objects.equals(preference.getKey(), "Enable proxy")) {
-                if (Boolean.parseBoolean(newValue.toString()) && key_toml.contains("#proxy") && key_toml.contains("force_tcp")) {
+                if (Boolean.parseBoolean(newValue.toString())
+                        && key_toml.contains("#proxy") && key_toml.contains("force_tcp")) {
                     key_toml.set(key_toml.indexOf("#proxy"), "proxy");
                     val_toml.set(key_toml.indexOf("force_tcp"), "true");
                 } else if (key_toml.contains("proxy") && key_toml.contains("force_tcp")) {
                     key_toml.set(key_toml.indexOf("proxy"), "#proxy");
-                    val_toml.set(key_toml.indexOf("force_tcp"), "false");
                 }
                 return true;
             } else if (Objects.equals(preference.getKey().trim(), "Enable Query logging")) {

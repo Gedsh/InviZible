@@ -24,6 +24,7 @@ import android.content.Intent
 import android.os.Build
 import pan.alexander.tordnscrypt.utils.Utils.isShowNotification
 import pan.alexander.tordnscrypt.utils.app
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 
 object ModulesActionSender {
     fun sendIntent(context: Context, action: String) {
@@ -35,7 +36,12 @@ object ModulesActionSender {
             intent.putExtra("showNotification", true)
 
             if (context.app.isAppForeground) {
-                context.startService(intent)
+                try {
+                    context.startService(intent)
+                } catch (e: Exception) {
+                    loge("ModulesActionSender sendIntent with action $action", e)
+                    context.startForegroundService(intent)
+                }
             } else {
                 context.startForegroundService(intent)
             }

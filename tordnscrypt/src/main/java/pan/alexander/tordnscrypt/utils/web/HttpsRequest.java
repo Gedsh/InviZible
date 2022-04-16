@@ -56,7 +56,7 @@ public class HttpsRequest {
         Proxy proxy = null;
         if (ModulesStatus.getInstance().getTorState() == RUNNING) {
             PathVars pathVars = App.getInstance().getDaggerComponent().getPathVars().get();
-            proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(LOOPBACK_ADDRESS, Integer.parseInt(pathVars.getTorHTTPTunnelPort())));
+            proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(LOOPBACK_ADDRESS, Integer.parseInt(pathVars.getTorSOCKSPort())));
         }
 
 

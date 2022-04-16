@@ -28,7 +28,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.ParcelFileDescriptor;
-import android.os.Process;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -136,7 +135,7 @@ public class ServiceVPNHandler extends Handler {
         String reason = intent.getStringExtra(EXTRA_REASON);
 
         logi("VPN Handler Executing intent=" + intent + " command=" + cmd + " reason=" + reason +
-                " vpn=" + (serviceVPN.vpn != null) + " user=" + (Process.myUid() / 100000));
+                " vpn=" + (serviceVPN.vpn != null) + " user=" + (pathVars.get().getAppUid() / 100000));
 
         try {
             if (cmd != null) {

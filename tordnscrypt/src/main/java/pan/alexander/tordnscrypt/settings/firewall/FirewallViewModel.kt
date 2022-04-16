@@ -29,7 +29,9 @@ import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.di.CoroutinesModule.Companion.DISPATCHER_COMPUTATION
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
+import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
+import pan.alexander.tordnscrypt.utils.Utils
 import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
@@ -40,7 +42,8 @@ import javax.inject.Named
 class FirewallViewModel @Inject constructor(
     private val preferenceRepository: dagger.Lazy<PreferenceRepository>,
     @Named(DISPATCHER_COMPUTATION)
-    private val dispatcherComputation: CoroutineDispatcher
+    private val dispatcherComputation: CoroutineDispatcher,
+    private val pathVars: dagger.Lazy<PathVars>
 ) : ViewModel(), InstalledApplicationsManager.OnAppAddListener {
 
     private val firewallStateMutableLiveData = MutableLiveData<FirewallState>()
@@ -57,6 +60,8 @@ class FirewallViewModel @Inject constructor(
     var appsAllowGsm = mutableSetOf<Int>()
     var appsAllowRoaming = mutableSetOf<Int>()
     var appsAllowVpn = mutableSetOf<Int>()
+
+    val criticalSystemUids = hashSetOf<Int>()
 
     fun getDeviceApps() {
         viewModelScope.launch(dispatcherComputation) {
@@ -92,8 +97,12 @@ class FirewallViewModel @Inject constructor(
                 .setOnAppAddListener(this)
                 .showSpecialApps(true)
                 .showAllApps(showAllApps)
+                .setIconRequired()
                 .build()
                 .getInstalledApps()
+
+            Utils.getCriticalSystemUids(installedApps, pathVars.get().appUid)
+                .also { criticalSystemUids.addAll(it) }
 
             appsCompleteSet.clear()
 

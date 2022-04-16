@@ -49,7 +49,6 @@ import androidx.viewpager.widget.ViewPager;
 
 import android.text.InputType;
 import android.util.Base64;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -105,12 +104,13 @@ import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.utils.Utils.isInterfaceLocked;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATION_MODE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -244,9 +244,13 @@ public class MainActivity extends LangAppCompatActivity
     protected void onRestart() {
         super.onRestart();
 
-        if (preferenceRepository.get().getBoolPreference("refresh_main_activity")) {
-            preferenceRepository.get().setBoolPreference("refresh_main_activity", false);
-            recreate();
+        if (preferenceRepository.get().getBoolPreference(MAIN_ACTIVITY_RECREATE)) {
+            preferenceRepository.get().setBoolPreference(MAIN_ACTIVITY_RECREATE, false);
+            try {
+                recreate();
+            } catch (Exception e) {
+                loge("MainActivity onRestart", e);
+            }
         }
     }
 
@@ -476,7 +480,8 @@ public class MainActivity extends LangAppCompatActivity
             menuRootMode.setEnabled(false);
         }
 
-        if ((mode == PROXY_MODE || mode == ROOT_MODE) && firewallNavigationItem != null) {
+        if ((mode == PROXY_MODE || mode == ROOT_MODE && useModulesWithRoot)
+                && firewallNavigationItem != null) {
             firewallNavigationItem.setVisible(false);
         } else if (firewallNavigationItem != null) {
             firewallNavigationItem.setVisible(true);
@@ -526,7 +531,7 @@ public class MainActivity extends LangAppCompatActivity
                 childLock.setIcon(R.drawable.ic_lock_open_white_24dp);
             }
         } catch (IllegalArgumentException e) {
-            Log.e(LOG_TAG, "MainActivity Child Lock Exeption " + e.getMessage());
+            loge("MainActivity switchChildLockIcon", e);
         }
     }
 
@@ -596,11 +601,11 @@ public class MainActivity extends LangAppCompatActivity
                 try {
                     startActivityForResult(intent, CODE_IS_AP_ON);
                 } catch (Exception e) {
-                    Log.e(LOG_TAG, "MainActivity switchHotspot exception " + e.getMessage() + " " + e.getCause());
+                    loge("MainActivity switchHotspot", e);
                 }
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "MainActivity onOptionsItemSelected exception " + e.getMessage() + " " + e.getCause());
+            loge("MainActivity onOptionsItemSelected", e);
         }
     }
 
@@ -835,7 +840,7 @@ public class MainActivity extends LangAppCompatActivity
                 try {
                     startActivity(intent);
                 } catch (Exception e) {
-                    Log.e(LOG_TAG, "MainActivity ACTION_VIEW exception " + e.getMessage() + " " + e.getCause());
+                    loge("MainActivity ACTION_VIEW", e);
                 }
 
             }
@@ -880,7 +885,7 @@ public class MainActivity extends LangAppCompatActivity
 
     @Override
     public void prepareVPNService() {
-        Log.i(LOG_TAG, "MainActivity prepare VPN Service");
+        logi("MainActivity prepare VPN Service");
 
         final Intent prepareIntent = VpnService.prepare(this);
 
@@ -894,7 +899,7 @@ public class MainActivity extends LangAppCompatActivity
                 if (!isFinishing()) {
                     Toast.makeText(this, getString(R.string.wrong), Toast.LENGTH_SHORT).show();
                 }
-                Log.e(LOG_TAG, "Main Activity prepareVPNService exception " + e.getMessage() + " " + e.getCause());
+                loge("MainActivity prepareVPNService", e);
             }
 
         }
@@ -1041,7 +1046,7 @@ public class MainActivity extends LangAppCompatActivity
     public boolean onKeyLongPress(int keyCode, KeyEvent event) {
 
         if (keyCode == KeyEvent.KEYCODE_BACK && handler != null) {
-            Log.e(LOG_TAG, "FORCE CLOSE ALL");
+            loge("FORCE CLOSE ALL");
 
             Toast.makeText(this, "Force Close ...", Toast.LENGTH_LONG).show();
 

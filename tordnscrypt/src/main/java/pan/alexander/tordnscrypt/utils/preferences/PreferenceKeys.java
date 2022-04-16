@@ -22,6 +22,7 @@ public interface PreferenceKeys {
 
     String DEFAULT_BRIDGES_OBFS = "defaultBridgesObfs";
     String OWN_BRIDGES_OBFS = "ownBridgesObfs";
+    String RELAY_BRIDGES_REQUESTED = "relayBridgesRequested";
 
     String IPS_TO_UNLOCK = "ipsToUnlock";
     String IPS_FOR_CLEARNET = "ipsForClearNet";
@@ -44,6 +45,12 @@ public interface PreferenceKeys {
     String WIFI_ON_REQUESTED = "wifiOnRequested";
     String GSM_ON_REQUESTED = "gsmOnRequested";
 
+    String MAIN_ACTIVITY_RECREATE = "refresh_main_activity";
+
+    String USE_NO_BRIDGES = "useNoBridges";
+    String USE_DEFAULT_BRIDGES = "useDefaultBridges";
+    String USE_OWN_BRIDGES = "useOwnBridges";
+
     //VPN
     String VPN_SERVICE_ENABLED = "VPNServiceEnabled";
 
@@ -52,6 +59,7 @@ public interface PreferenceKeys {
     String BLOCK_HTTP = "pref_fast_block_http";
     String ALL_THROUGH_TOR = "pref_fast_all_through_tor";
     String BYPASS_LAN = "Allow LAN";
+    String AUTO_START_DELAY = "pref_fast_autostart_delay";
 
     //Common Settings
     String ARP_SPOOFING_DETECTION = "pref_common_arp_spoofing_detection";
@@ -60,6 +68,7 @@ public interface PreferenceKeys {
     String RUN_MODULES_WITH_ROOT = "swUseModulesRoot";
     String FIX_TTL = "pref_common_fix_ttl";
     String TOR_TETHERING = "pref_common_tor_tethering";
+    String ITPD_TETHERING = "pref_common_itpd_tethering";
     String COMPATIBILITY_MODE = "swCompatibilityMode";
     String DNS_REBIND_PROTECTION = "pref_common_dns_rebind_protection";
     String USE_PROXY = "swUseProxy";
@@ -68,6 +77,7 @@ public interface PreferenceKeys {
     String MULTI_USER_SUPPORT = "pref_common_multi_user";
     String REFRESH_RULES = "swRefreshRules";
     String KILL_SWITCH = "swKillSwitch";
+    String USE_IPTABLES = "pref_common_use_iptables";
 
     //DNSCrypt Settings
     String BLOCK_IPv6 = "block_ipv6";
@@ -77,4 +87,7 @@ public interface PreferenceKeys {
 
     //Firewall Settings
     String FIREWALL_SHOWS_ALL_APPS = "FirewallShowsAllApps";
+
+    //Logs
+    String SAVE_ROOT_LOGS = "swRootCommandsLog";
 }

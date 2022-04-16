@@ -42,7 +42,7 @@ class VpnPreferenceHolder @Inject constructor(
     val nativeLogLevel = Log.ERROR
     val dnsBlockedResponseCode = 3
     val itpdRedirectAddress = "10.191.0.1"
-    val ownUID = android.os.Process.myUid()
+    val ownUID = pathVars.appUid
     val blockHttp = defaultPreferences.getBoolean(BLOCK_HTTP, false)
     val routeAllThroughTor = defaultPreferences.getBoolean(ALL_THROUGH_TOR, true)
     val torTethering = defaultPreferences.getBoolean(TOR_TETHERING, false)

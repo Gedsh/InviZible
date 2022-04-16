@@ -58,8 +58,10 @@ import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.s
 import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.stopRefreshTorUnlockIPs;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.AUTO_START_DELAY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BLOCK_HTTP;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BYPASS_LAN;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SITES_IPS_REFRESH_INTERVAL;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -86,6 +88,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         addPreferencesFromResource(R.xml.preferences_fast);
     }
 
+    @NonNull
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
@@ -111,7 +114,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
             useBridges.setSummary(R.string.pref_fast_use_tor_bridges_alt_summ);
         }
 
-        Preference pref_fast_autostart_delay = findPreference("pref_fast_autostart_delay");
+        Preference pref_fast_autostart_delay = findPreference(AUTO_START_DELAY);
         if (pref_fast_autostart_delay != null) {
             pref_fast_autostart_delay.setOnPreferenceChangeListener(this);
         }
@@ -281,7 +284,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         activity.overridePendingTransition(0, 0);
         startActivity(intent);
 
-        preferenceRepository.get().setBoolPreference("refresh_main_activity", true);
+        preferenceRepository.get().setBoolPreference(MAIN_ACTIVITY_RECREATE, true);
     }
 
     @Override
@@ -303,7 +306,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
     }
 
     @Override
-    public boolean onPreferenceChange(Preference preference, Object newValue) {
+    public boolean onPreferenceChange(@NonNull Preference preference, Object newValue) {
 
         Context context = getActivity();
 
@@ -367,7 +370,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                     return true;
                 }
             case SITES_IPS_REFRESH_INTERVAL:
-            case "pref_fast_autostart_delay":
+            case AUTO_START_DELAY:
                 return newValue.toString().matches("\\d+");
         }
 

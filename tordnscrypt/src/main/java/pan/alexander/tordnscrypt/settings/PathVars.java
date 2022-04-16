@@ -22,6 +22,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Environment;
+import android.os.Process;
 import android.util.Log;
 
 import androidx.preference.PreferenceManager;
@@ -34,6 +35,7 @@ import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_IPTABLES;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
@@ -50,6 +52,8 @@ public class PathVars {
     private final String obfsPath;
     private final String snowflakePath;
     private final boolean bbOK;
+    private volatile int appUid = -1;
+    private volatile String appUidStr = "";
 
     @SuppressLint("SdCardPath")
     @Inject
@@ -79,20 +83,19 @@ public class PathVars {
     }
 
     public String getIptablesPath() {
-        String iptablesSelector = preferences.getString("pref_common_use_iptables", "1");
+        String iptablesSelector = preferences.getString(USE_IPTABLES, "2");
         if (iptablesSelector == null) {
-            iptablesSelector = "1";
+            iptablesSelector = "2";
         }
 
         String path;
         switch (iptablesSelector) {
-            case "2":
-                path = "iptables ";
-                break;
             case "1":
-
-            default:
                 path = appDataDir + "/app_bin/iptables -w ";
+                break;
+            case "2":
+            default:
+                path = "iptables ";
                 break;
         }
 
@@ -100,24 +103,19 @@ public class PathVars {
     }
 
     public String getIp6tablesPath() {
-        String iptablesSelector = preferences.getString("pref_common_use_iptables", "1");
+        String iptablesSelector = preferences.getString(USE_IPTABLES, "2");
         if (iptablesSelector == null) {
-            iptablesSelector = "1";
+            iptablesSelector = "2";
         }
 
         String path;
         switch (iptablesSelector) {
-            case "2":
-                path = "ip6tables ";
-                break;
             case "1":
-
+                path = appDataDir + "/app_bin/ip6tables -w ";
+                break;
+            case "2":
             default:
-                if (new File(appDataDir + "/app_bin/ip6tables").isFile()) {
-                    path = appDataDir + "/app_bin/ip6tables -w ";
-                } else {
-                    path = "ip6tables -w ";
-                }
+                path = "ip6tables ";
                 break;
         }
 
@@ -351,7 +349,7 @@ public class PathVars {
         return cacheDirPath;
     }
 
-    public String getDnscryptConfPath () {
+    public String getDnscryptConfPath() {
         return appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml";
     }
 
@@ -363,7 +361,21 @@ public class PathVars {
         return appDataDir + "/app_data/i2pd/i2pd.conf";
     }
 
-    public String getItpdTunnelsPath () {
+    public String getItpdTunnelsPath() {
         return appDataDir + "/app_data/i2pd/tunnels.conf";
+    }
+
+    public synchronized int getAppUid() {
+        if (appUid < 0) {
+            appUid = Process.myUid();
+        }
+        return appUid;
+    }
+
+    public synchronized String getAppUidStr() {
+        if (appUidStr.isEmpty()) {
+            appUidStr = String.valueOf(getAppUid());
+        }
+        return appUidStr;
     }
 }

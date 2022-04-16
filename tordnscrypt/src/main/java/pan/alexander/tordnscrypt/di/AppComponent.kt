@@ -58,9 +58,11 @@ import pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment
 import pan.alexander.tordnscrypt.tor_fragment.TorFragmentReceiver
 import pan.alexander.tordnscrypt.update.DownloadTask
 import pan.alexander.tordnscrypt.update.UpdateService
+import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager
 import pan.alexander.tordnscrypt.utils.integrity.Verifier
+import pan.alexander.tordnscrypt.utils.root.RootExecService
 import pan.alexander.tordnscrypt.utils.web.TorRefreshIPsWork
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPN
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHandler
@@ -114,6 +116,7 @@ interface AppComponent {
     fun inject(fragment: ExtendedDialogFragment)
     fun inject(service: ModulesService)
     fun inject(service: ServiceVPN)
+    fun inject(service: RootExecService)
     fun inject(service: UpdateService)
     fun inject(receiver: BootCompleteReceiver)
     fun inject(receiver: DNSCryptFragmentReceiver)
@@ -139,4 +142,5 @@ interface AppComponent {
     fun inject(modulesIptablesRules: ModulesIptablesRules)
     fun inject(serviceVPNHandler: ServiceVPNHandler)
     fun inject(installer: Installer)
+    fun inject(installedApplicationsManager: InstalledApplicationsManager)
 }
