@@ -34,9 +34,9 @@ import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesService
 import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges
-import pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_PACKAGE
+import pan.alexander.tordnscrypt.utils.Constants.DNS_DEFAULT_UID
+import pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_DEFAULT_UID
 import pan.alexander.tordnscrypt.utils.appexit.AppExitDetectService
 import pan.alexander.tordnscrypt.utils.filemanager.FileShortener
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
@@ -253,10 +253,11 @@ object Utils {
         return uid
     }
 
-    fun getCriticalSystemUids(apps: List<ApplicationData>, ownUid: Int): List<Int> =
-        apps.filter { it.pack.contains(NETWORK_STACK_PACKAGE, true) }
-            .map { it.uid }
-            .plus(getUidForName("dns", 1051 + ownUid / 100_000 * 100_000))
+    fun getCriticalSystemUids(ownUid: Int): List<Int> =
+        arrayListOf(
+            getUidForName("dns", DNS_DEFAULT_UID + ownUid / 100_000 * 100_000),
+            getUidForName("network_stack", NETWORK_STACK_DEFAULT_UID + ownUid / 100_000 * 100_000)
+        )
 
     fun getDnsTetherUid(ownUid: Int) =
         getUidForName("dns_tether", 1052 + ownUid / 100_000 * 100_000)

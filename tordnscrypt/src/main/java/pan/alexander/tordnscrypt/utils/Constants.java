@@ -34,7 +34,7 @@ public interface Constants {
 
     int PLAINTEXT_DNS_PORT = 53;
 
-    String NETWORK_STACK_PACKAGE = "com.android.networkstack";
+    int DNS_DEFAULT_UID = 1051;
     int NETWORK_STACK_DEFAULT_UID = 1073;
 
     String VPN_DNS_2 = "89.233.43.71";//blog.uncensoreddns.org

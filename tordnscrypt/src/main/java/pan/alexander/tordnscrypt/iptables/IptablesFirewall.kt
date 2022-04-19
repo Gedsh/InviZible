@@ -221,6 +221,8 @@ class IptablesFirewall @Inject constructor(
                 listAllowed.addAll(preferences.getStringSetPreference(APPS_ALLOW_ROAMING))
             isCellularActive(context) ->
                 listAllowed.addAll(preferences.getStringSetPreference(APPS_ALLOW_GSM_PREF))
+            isWifiActive(context, true) ->
+                listAllowed.addAll(preferences.getStringSetPreference(APPS_ALLOW_WIFI_PREF))
         }
 
         return listAllowed
