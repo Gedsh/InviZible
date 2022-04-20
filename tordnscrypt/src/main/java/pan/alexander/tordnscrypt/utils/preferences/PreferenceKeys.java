@@ -78,6 +78,7 @@ public interface PreferenceKeys {
     String REFRESH_RULES = "swRefreshRules";
     String KILL_SWITCH = "swKillSwitch";
     String USE_IPTABLES = "pref_common_use_iptables";
+    String WAIT_IPTABLES = "pref_common_wait_iptables";
 
     //DNSCrypt Settings
     String BLOCK_IPv6 = "block_ipv6";

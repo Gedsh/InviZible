@@ -90,6 +90,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MOD
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TETHERING;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_IPTABLES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.WAIT_IPTABLES;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
@@ -736,11 +737,15 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         PreferenceCategory categoryOther = findPreference("common_other");
         Preference selectIptables = findPreference(USE_IPTABLES);
+        Preference waitIptables = findPreference(WAIT_IPTABLES);
         Preference selectBusybox = findPreference("pref_common_use_busybox");
         Preference killSwitch = findPreference(KILL_SWITCH);
 
         if (categoryOther != null && selectIptables != null) {
             categoryOther.removePreference(selectIptables);
+        }
+        if (categoryOther != null && waitIptables != null) {
+            categoryOther.removePreference(waitIptables);
         }
         if (categoryOther != null && selectBusybox != null) {
             categoryOther.removePreference(selectBusybox);

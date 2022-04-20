@@ -219,18 +219,10 @@
         Otherwise android will kill DNSCrypt, Tor or I2P at any time. On special systems,
         like MIUI, required some additional steps.</string>
     <string name="pref_common_use_busybox">Select BusyBox</string>
-    <string-array name="pref_common_categ_use_busybox_titles">
-        <item>Auto</item>
-        <item>Use device BusyBox</item>
-        <item>Use application BusyBox</item>
-        <item>Not use BusyBox</item>
-    </string-array>
-    <string-array name="pref_common_use_busybox_values">
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-        <item>4</item>
-    </string-array>
+    <string name="pref_common_use_busybox_auto">Auto</string>
+    <string name="pref_common_use_busybox_device">Use device BusyBox</string>
+    <string name="pref_common_use_busybox_app">Use application BusyBox</string>
+    <string name="pref_common_use_busybox_not_use">Not use BusyBox</string>
     <string name="pref_common_categ_hotspot">HOTSPOT-Experimental</string>
     <string name="pref_common_tethering_autostart">Start Tethering On Boot</string>
     <string name="pref_common_tor_tethering">Allow Tor Tethering</string>
@@ -254,15 +246,11 @@
     <string name="pref_common_multi_user">Multi-user support</string>
     <string name="pref_common_multi_user_summ">Support for Dual Apps, MIUI, Island, Shelter and Work profile applications</string>
 
-    <string name="pref_common_use_iptables">Select Iptables</string>
-    <string-array name="pref_common_categ_use_iptables_titles">
-        <item>Use application Iptables</item>
-        <item>Use device Iptables</item>
-    </string-array>
-    <string-array name="pref_common_use_iptables_values">
-        <item>1</item>
-        <item>2</item>
-    </string-array>
+    <string name="pref_common_use_iptables">Select iptables</string>
+    <string name="pref_common_use_iptables_app">Use application iptables</string>
+    <string name="pref_common_use_iptables_device">Use device iptables</string>
+    <string name="pref_common_wait_iptables">Wait for the xtables lock</string>
+    <string name="pref_common_wait_iptables_summ">Wait until the exclusive iptables lock can be obtained to prevent concurrent modification of iptables rules.</string>
 
     <string name="pref_common_log_root_commands">Save Root Commands to Log</string>
 

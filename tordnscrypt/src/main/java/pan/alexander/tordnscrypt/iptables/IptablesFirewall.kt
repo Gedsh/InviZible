@@ -50,7 +50,7 @@ private const val FIREWALL_RETURN_MARK = 15600
 class IptablesFirewall @Inject constructor(
     private val context: Context,
     private val preferences: PreferenceRepository,
-    pathVars: PathVars
+    private val pathVars: PathVars
 ) {
     private val numberRegex by lazy { Regex("-?$NUMBER_REGEX") }
     private val positiveNumberRegex by lazy { Regex(NUMBER_REGEX) }
@@ -58,7 +58,6 @@ class IptablesFirewall @Inject constructor(
 
     private val modulesStatus = ModulesStatus.getInstance()
 
-    private val iptables = pathVars.iptablesPath.removeSuffix(" ")
     private val ownUID = pathVars.appUid
 
     private val uidAllowed by lazy { hashSetOf<Int>() }
@@ -66,7 +65,11 @@ class IptablesFirewall @Inject constructor(
     private val uidLanAllowed by lazy { hashSetOf<Int>() }
 
     fun getFirewallRules(tetheringActive: Boolean): List<String> {
+
         prepareUidAllowed()
+
+        val iptables = getIptables()
+
         return sequenceOf(
             "$iptables -F $FILTER_OUTPUT_FIREWALL 2> /dev/null",
             "$iptables -D OUTPUT -j $FILTER_OUTPUT_FIREWALL 2> /dev/null || true",
@@ -74,32 +77,40 @@ class IptablesFirewall @Inject constructor(
             "$iptables -I OUTPUT 2 -j $FILTER_OUTPUT_FIREWALL",
             "$iptables -A $FILTER_OUTPUT_FIREWALL -m owner --uid-owner $ownUID -j RETURN"
         ).plus(
-            getTetheringRules(tetheringActive)
+            getTetheringRules(iptables, tetheringActive)
         ).plus(
-            getLanRules()
+            getLanRules(iptables)
         ).plus(
-            getAppRulesByConnectionType()
+            getAppRulesByConnectionType(iptables)
         ).plus(
-            getSpecialRules()
+            getSpecialRules(iptables)
         ).plus(
             "$iptables -A $FILTER_OUTPUT_FIREWALL -j REJECT"
         ).toList()
     }
 
-    fun getFastUpdateFirewallRules(): List<String> =
-        arrayListOf(
+    fun getFastUpdateFirewallRules(): List<String> {
+
+        val iptables = getIptables()
+
+        return arrayListOf(
             "$iptables -D OUTPUT -j $FILTER_OUTPUT_FIREWALL 2> /dev/null || true",
             "$iptables -I OUTPUT 2 -j $FILTER_OUTPUT_FIREWALL"
         )
+    }
 
-    fun getClearFirewallRules(): List<String> =
-        arrayListOf(
+    fun getClearFirewallRules(): List<String> {
+
+        val iptables = getIptables()
+
+        return arrayListOf(
             "$iptables -F $FILTER_FIREWALL_LAN 2> /dev/null",
             "$iptables -F $FILTER_OUTPUT_FIREWALL 2> /dev/null",
             "$iptables -D OUTPUT -j $FILTER_OUTPUT_FIREWALL 2> /dev/null || true"
         )
+    }
 
-    private fun getLanRules(): List<String> =
+    private fun getLanRules(iptables: String): List<String> =
         sequenceOf(
             "$iptables -F $FILTER_FIREWALL_LAN 2> /dev/null",
             "$iptables -N $FILTER_FIREWALL_LAN 2> /dev/null"
@@ -127,12 +138,12 @@ class IptablesFirewall @Inject constructor(
             "$iptables -A $FILTER_FIREWALL_LAN -j REJECT"
         ).toList()
 
-    private fun getAppRulesByConnectionType(): List<String> =
+    private fun getAppRulesByConnectionType(iptables: String): List<String> =
         uidAllowed.map {
             "$iptables -A $FILTER_OUTPUT_FIREWALL -m owner --uid-owner $it -j RETURN"
         }
 
-    private fun getSpecialRules(): List<String> =
+    private fun getSpecialRules(iptables: String): List<String> =
         uidSpecialAllowed.flatMap {
             when (it) {
                 SPECIAL_UID_KERNEL -> {
@@ -158,7 +169,7 @@ class IptablesFirewall @Inject constructor(
             }
         }
 
-    private fun getTetheringRules(tetheringActive: Boolean): List<String> =
+    private fun getTetheringRules(iptables: String, tetheringActive: Boolean): List<String> =
         if (tetheringActive) {
             val dnsTetherUid = Utils.getDnsTetherUid(ownUID)
             arrayListOf(
@@ -227,6 +238,8 @@ class IptablesFirewall @Inject constructor(
 
         return listAllowed
     }
+
+    private fun getIptables() = pathVars.iptablesPath.removeSuffix(" ")
 
     private fun getInstalledApps(): List<ApplicationData> =
         InstalledApplicationsManager.Builder()
