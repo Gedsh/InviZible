@@ -64,29 +64,34 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionDismissNotification;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionRecoverService;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionRestartDnsCrypt;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionRestartITPD;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionRestartTor;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionRestartTorFull;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStartDnsCrypt;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStartITPD;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStartTor;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStopDnsCrypt;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStopITPD;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStopService;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStopServiceForeground;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStopTor;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.clearIptablesCommandsHash;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.extraLoop;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.slowdownLoop;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.speedupLoop;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.startArpScanner;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.stopArpScanner;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.ACTION_DISMISS_NOTIFICATION;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.ACTION_RECOVER_SERVICE;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.ACTION_RESTART_DNSCRYPT;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.ACTION_RESTART_ITPD;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.ACTION_RESTART_TOR;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.ACTION_RESTART_TOR_FULL;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.ACTION_START_DNSCRYPT;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.ACTION_START_ITPD;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.ACTION_START_TOR;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.ACTION_STOP_DNSCRYPT;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.ACTION_STOP_ITPD;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.ACTION_STOP_SERVICE;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.ACTION_STOP_SERVICE_FOREGROUND;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.ACTION_STOP_TOR;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.CLEAR_IPTABLES_COMMANDS_HASH;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.EXTRA_LOOP;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.SLOWDOWN_LOOP;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.SPEEDUP_LOOP;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.START_ARP_SCANNER;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.STOP_ARP_SCANNER;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATION_MODE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
@@ -113,7 +118,8 @@ public class ModulesService extends Service {
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
-    @Inject @Named(DEFAULT_PREFERENCES_NAME)
+    @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
     public Lazy<SharedPreferences> defaultSharedPreferences;
     @Inject
     public Lazy<ConnectionCheckerInteractor> internetCheckerInteractor;
@@ -185,7 +191,7 @@ public class ModulesService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        if (intent != null && Objects.equals(intent.getAction(), actionStopServiceForeground)) {
+        if (intent != null && Objects.equals(intent.getAction(), ACTION_STOP_SERVICE_FOREGROUND)) {
             stopModulesServiceForeground();
         }
 
@@ -218,14 +224,13 @@ public class ModulesService extends Service {
             }
         }
 
-        if (intent != null && Objects.equals(intent.getAction(), actionStopServiceForeground)) {
+        if (intent != null && Objects.equals(intent.getAction(), ACTION_STOP_SERVICE_FOREGROUND)) {
             stopModulesServiceForeground(startId);
             return START_NOT_STICKY;
         }
 
         if (intent == null) {
-            stopService(startId);
-            return START_NOT_STICKY;
+            intent = new Intent(ACTION_RECOVER_SERVICE);
         }
 
         String action = intent.getAction();
@@ -238,68 +243,68 @@ public class ModulesService extends Service {
         manageWakelocks();
 
         switch (action) {
-            case actionStartDnsCrypt:
+            case ACTION_START_DNSCRYPT:
                 startDNSCrypt();
                 break;
-            case actionStartTor:
+            case ACTION_START_TOR:
                 startTor();
                 break;
-            case actionStartITPD:
+            case ACTION_START_ITPD:
                 startITPD();
                 break;
-            case actionStopDnsCrypt:
+            case ACTION_STOP_DNSCRYPT:
                 stopDNSCrypt();
                 break;
-            case actionStopTor:
+            case ACTION_STOP_TOR:
                 stopTor();
                 break;
-            case actionStopITPD:
+            case ACTION_STOP_ITPD:
                 stopITPD();
                 break;
-            case actionRestartDnsCrypt:
+            case ACTION_RESTART_DNSCRYPT:
                 restartDNSCrypt();
                 break;
-            case actionRestartTor:
+            case ACTION_RESTART_TOR:
                 restartTor();
                 break;
-            case actionRestartTorFull:
+            case ACTION_RESTART_TOR_FULL:
                 restartTorFull();
                 break;
-            case actionRestartITPD:
+            case ACTION_RESTART_ITPD:
                 restartITPD();
                 break;
-            case actionDismissNotification:
+            case ACTION_DISMISS_NOTIFICATION:
                 dismissNotification(startId);
                 break;
-            case actionRecoverService:
-                setAllModulesStateStopped();
+            case ACTION_RECOVER_SERVICE:
+                recoverAppState();
                 break;
-            case speedupLoop:
+            case SPEEDUP_LOOP:
                 speedupTimer();
                 break;
-            case slowdownLoop:
+            case SLOWDOWN_LOOP:
                 slowdownTimer();
                 break;
-            case extraLoop:
+            case EXTRA_LOOP:
                 makeExtraLoop();
                 break;
-            case actionStopService:
+            case ACTION_STOP_SERVICE:
                 stopModulesService();
                 return START_NOT_STICKY;
-            case startArpScanner:
+            case START_ARP_SCANNER:
                 startArpScanner();
                 break;
-            case stopArpScanner:
+            case STOP_ARP_SCANNER:
                 stopArpScanner();
                 break;
-            case clearIptablesCommandsHash:
+            case CLEAR_IPTABLES_COMMANDS_HASH:
                 clearIptablesCommandsSavedHash();
                 break;
         }
 
         setBroadcastReceiver();
 
-        return START_REDELIVER_INTENT;
+        return START_STICKY;
 
     }
 
@@ -990,10 +995,69 @@ public class ModulesService extends Service {
         stopSelf(startID);
     }
 
-    private void setAllModulesStateStopped() {
+    private void recoverAppState() {
+
         modulesStatus.setDnsCryptState(STOPPED);
         modulesStatus.setTorState(STOPPED);
         modulesStatus.setItpdState(STOPPED);
+
+        if (modulesStatus.getMode() != null && modulesStatus.getMode() != UNDEFINED) {
+            return;
+        }
+
+        loge("Restoring application state, possibly after the crash.");
+
+        Utils.startAppExitDetectService(this);
+
+        SharedPreferences defaultPreferences = defaultSharedPreferences.get();
+        PreferenceRepository preferences = preferenceRepository.get();
+
+        boolean rootIsAvailable = preferences.getBoolPreference(ROOT_IS_AVAILABLE);
+        boolean runModulesWithRoot = defaultPreferences.getBoolean(RUN_MODULES_WITH_ROOT, false);
+        modulesStatus.setFixTTL(defaultPreferences.getBoolean(FIX_TTL, false));
+
+        String operationMode = preferences.getStringPreference(OPERATION_MODE);
+
+        if (!operationMode.isEmpty()) {
+            OperationMode mode = OperationMode.valueOf(operationMode);
+            ModulesAux.switchModes(rootIsAvailable, runModulesWithRoot, mode);
+        }
+
+        boolean savedDNSCryptStateRunning = ModulesAux.isDnsCryptSavedStateRunning();
+        boolean savedTorStateRunning = ModulesAux.isTorSavedStateRunning();
+        boolean savedITPDStateRunning = ModulesAux.isITPDSavedStateRunning();
+
+        if (savedDNSCryptStateRunning && !runModulesWithRoot) {
+            modulesStatus.setSystemDNSAllowed(true);
+        }
+
+        if (savedDNSCryptStateRunning) {
+            startDNSCrypt();
+        }
+
+        if (savedTorStateRunning) {
+            startTor();
+        }
+
+        if (savedITPDStateRunning) {
+            startITPD();
+        }
+
+        saveModulesStateRunning(
+                savedDNSCryptStateRunning,
+                savedTorStateRunning,
+                savedITPDStateRunning
+        );
+    }
+
+    private void saveModulesStateRunning(
+            boolean saveDNSCryptRunning,
+            boolean saveTorRunning,
+            boolean saveITPDRunning
+    ) {
+        ModulesAux.saveDNSCryptStateRunning(saveDNSCryptRunning);
+        ModulesAux.saveTorStateRunning(saveTorRunning);
+        ModulesAux.saveITPDStateRunning(saveITPDRunning);
     }
 
     private void stopModulesService() {
