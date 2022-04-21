@@ -74,7 +74,7 @@ import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFE
 import static pan.alexander.tordnscrypt.modules.ModulesReceiver.VPN_REVOKED_EXTRA;
 import static pan.alexander.tordnscrypt.modules.ModulesReceiver.VPN_REVOKE_ACTION;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStopServiceForeground;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.ACTION_STOP_SERVICE_FOREGROUND;
 import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_PORT_NTP;
 import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_UID_KERNEL;
 import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_UID_NTP;
@@ -592,7 +592,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         SharedPreferences prefs = defaultPreferences.get();
         boolean vpnEnabled = prefs.getBoolean(VPN_SERVICE_ENABLED, false);
 
-        if (intent != null && Objects.equals(intent.getAction(), actionStopServiceForeground)) {
+        if (intent != null && Objects.equals(intent.getAction(), ACTION_STOP_SERVICE_FOREGROUND)) {
 
             try {
                 notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
@@ -628,7 +628,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
         logi("VPN Received " + intent);
 
-        if (intent != null && Objects.equals(intent.getAction(), actionStopServiceForeground)) {
+        if (intent != null && Objects.equals(intent.getAction(), ACTION_STOP_SERVICE_FOREGROUND)) {
 
             try {
                 notificationManager.cancel(DEFAULT_NOTIFICATION_ID);

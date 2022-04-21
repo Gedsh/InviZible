@@ -35,17 +35,17 @@ import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class ModulesRestarter {
     public static void restartDNSCrypt(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.actionRestartDnsCrypt);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.ACTION_RESTART_DNSCRYPT);
         ModulesAux.speedupModulesStateLoopTimer(context);
     }
 
     public static void restartTor(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.actionRestartTorFull);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.ACTION_RESTART_TOR_FULL);
         ModulesAux.speedupModulesStateLoopTimer(context);
     }
 
     public static void restartITPD(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.actionRestartITPD);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.ACTION_RESTART_ITPD);
         ModulesAux.speedupModulesStateLoopTimer(context);
     }
 

@@ -89,15 +89,15 @@ public class ModulesKiller {
     }
 
     public static void stopDNSCrypt(Context context) {
-        sendStopIntent(context, ModulesServiceActions.actionStopDnsCrypt);
+        sendStopIntent(context, ModulesServiceActions.ACTION_STOP_DNSCRYPT);
     }
 
     public static void stopTor(Context context) {
-        sendStopIntent(context, ModulesServiceActions.actionStopTor);
+        sendStopIntent(context, ModulesServiceActions.ACTION_STOP_TOR);
     }
 
     public static void stopITPD(Context context) {
-        sendStopIntent(context, ModulesServiceActions.actionStopITPD);
+        sendStopIntent(context, ModulesServiceActions.ACTION_STOP_ITPD);
     }
 
     private static void sendStopIntent(Context context, String action) {

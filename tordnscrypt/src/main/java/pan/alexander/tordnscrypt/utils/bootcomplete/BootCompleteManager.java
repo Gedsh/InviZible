@@ -21,7 +21,7 @@ package pan.alexander.tordnscrypt.utils.bootcomplete;
 
 import static pan.alexander.tordnscrypt.BootCompleteReceiver.MY_PACKAGE_REPLACED;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStopServiceForeground;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.ACTION_STOP_SERVICE_FOREGROUND;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
@@ -342,13 +342,13 @@ public class BootCompleteManager {
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (mode == VPN_MODE || mode == ROOT_MODE && fixTTL) {
                 Intent stopVPNServiceForeground = new Intent(context, VpnService.class);
-                stopVPNServiceForeground.setAction(actionStopServiceForeground);
+                stopVPNServiceForeground.setAction(ACTION_STOP_SERVICE_FOREGROUND);
                 stopVPNServiceForeground.putExtra("showNotification", true);
                 context.startForegroundService(stopVPNServiceForeground);
             }
 
             Intent stopModulesServiceForeground = new Intent(context, ModulesService.class);
-            stopModulesServiceForeground.setAction(actionStopServiceForeground);
+            stopModulesServiceForeground.setAction(ACTION_STOP_SERVICE_FOREGROUND);
             context.startForegroundService(stopModulesServiceForeground);
             stopModulesServiceForeground.putExtra("showNotification", true);
 

@@ -340,7 +340,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             case "swShowNotification":
                 if (!Boolean.parseBoolean(newValue.toString())) {
                     Intent intent = new Intent(context, ModulesService.class);
-                    intent.setAction(ModulesServiceActions.actionDismissNotification);
+                    intent.setAction(ModulesServiceActions.ACTION_DISMISS_NOTIFICATION);
                     context.startService(intent);
                 }
                 break;
