@@ -175,7 +175,7 @@
     <string name="pref_common_restart_dnscrypt">Lütfen DNSCrypt\'i yeniden başlatın</string>
     <string name="pref_common_restart_tor">Lütfen Tor\'u yeniden başlatın</string>
     <string name="pref_common_multi_user_summ">İkili uygulamalar, MIUI, Island, Shelter ve iş profili uygulamaları için destek</string>
-    <string name="pref_common_use_iptables">Iptables\'ı Seç</string>
+    <string name="pref_common_use_iptables">iptables seç</string>
     <string name="pref_common_log_root_commands">Root Komutlarını Günlüğe Kaydet</string>
     <string name="notification_text">DNSCrypt, Tor, I2P korumalıdır. Gizleme.</string>
     <string name="notification_temp_text">Root komutları çalıştırılıyor…</string>
