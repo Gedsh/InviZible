@@ -38,6 +38,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.lang.Exception
+import java.lang.IllegalStateException
 import javax.inject.Inject
 import javax.inject.Named
 import kotlin.math.roundToInt
@@ -66,35 +67,39 @@ class RootExecutor @Inject constructor(
     private val coroutineScope = CoroutineScope(
         SupervisorJob() +
                 dispatcherIo.limitedParallelism(1) +
-                CoroutineName("RootExecutor")
+                CoroutineName("RootExecutor") +
+                CoroutineExceptionHandler {
+                _, throwable ->
+            loge("RootExecutor uncaught exception", throwable, true)
+        }
     )
 
     private val commandsInProgress = MutableSharedFlow<CommandsWithMark>(
         0,
         10,
         BufferOverflow.DROP_OLDEST
-    ).also {
-        coroutineScope.launch {
-            it.onEach {
-                try {
-                    withTimeout(MAX_EXECUTION_TIME_SEC * 1000L) {
-                        executeCommands(it.commands, it.mark)
-                    }
-                } catch (e: CancellationException) {
-                    loge("RootExecutor commands take too long", e)
-                    commandsDone(
-                        listOf("Commands take too long, more than $MAX_EXECUTION_TIME_SEC seconds"),
-                        it.mark
-                    )
-                } catch (e: Exception) {
-                    loge("RootExecutor execute", e)
-                    commandsDone(
-                        listOf(e.message ?: ""),
-                        it.mark
-                    )
+    ).apply {
+        onEach {
+            try {
+                withTimeout(MAX_EXECUTION_TIME_SEC * 1000L) {
+                    executeCommands(it.commands, it.mark)
                 }
-            }.collect()
-        }
+            } catch (e: CancellationException) {
+                loge("RootExecutor commands take too long", e)
+                commandsDone(
+                    listOf("Commands take too long, more than $MAX_EXECUTION_TIME_SEC seconds"),
+                    it.mark
+                )
+            } catch (e: Exception) {
+                loge("RootExecutor execute", e)
+                commandsDone(
+                    listOf(e.message ?: ""),
+                    it.mark
+                )
+            }
+        }.catch {
+            loge("RootExecutor collect exception", it, true)
+        }.launchIn(coroutineScope)
     }
 
     @Volatile
@@ -202,22 +207,28 @@ class RootExecutor @Inject constructor(
 
     private suspend fun executeCommand(command: String): ExecutionResult? {
 
-        console ?: openCommandShell()
+        if (console?.isClosed != false) {
+            openCommandShell()
+        }
 
         val console = console ?: return null
 
-        try {
+        return try {
+            if (console.isClosed) {
+                throw IllegalStateException("Root console is closed")
+            }
+
             val commandResult = console.run(command)
-            return ExecutionResult(
+
+            ExecutionResult(
                 commandResult.exitCode,
                 commandResult.stdout,
                 commandResult.stderr
             )
         } catch (e: Exception) {
             loge("RootExecutor executeCommand", e)
+            null
         }
-
-        return null
     }
 
     private suspend fun openCommandShell() {
@@ -239,6 +250,10 @@ class RootExecutor @Inject constructor(
                 loge("RootExecutor openCommandShell", it)
             }
         } while (console?.isClosed != false && attempts < ATTEMPTS_TO_OPEN_ROOT_CONSOLE)
+
+        if (console?.isClosed != false) {
+            loge("RootExecutor cannot openCommandShell")
+        }
 
     }
 
