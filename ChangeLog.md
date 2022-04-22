@@ -755,3 +755,10 @@
 * Fixed using Root firewall when Refresh rules option is disabled.
 * Fixed the ARP spoofing detector false positives on some devices.
 * Minor fixes.
+
+**InviZible Pro beta 1.6.3**
+* Added option to wait for an xtables lock to prevent concurrent modification of the iptables rules.
+* Fixed internet blocking when using root firewall on some roms.
+* Improved app restart after a crash or after the app was killed due to low device memory.
+* Improved root commands execution.
+* Updated Portuguese-BR translation.
