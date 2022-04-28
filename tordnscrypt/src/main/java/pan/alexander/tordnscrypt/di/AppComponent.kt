@@ -51,7 +51,6 @@ import pan.alexander.tordnscrypt.settings.dnscrypt_settings.PreferencesDNSFragme
 import pan.alexander.tordnscrypt.settings.firewall.FirewallFragment
 import pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment
 import pan.alexander.tordnscrypt.settings.tor_bridges.BridgeAdapter
-import pan.alexander.tordnscrypt.settings.tor_bridges.GetNewBridges
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges
 import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFragment
 import pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment
@@ -135,7 +134,6 @@ interface AppComponent {
     fun inject(fileManager: FileManager)
     fun inject(verifier: Verifier)
     fun inject(bridgeAdapter: BridgeAdapter)
-    fun inject(getNewBridges: GetNewBridges)
     fun inject(modulesStarterHelper: ModulesStarterHelper)
     fun inject(backupHelper: BackupHelper)
     fun inject(tethering: Tethering)

@@ -59,6 +59,8 @@ public interface Constants {
 
     String ONIONOO_SITE_ADDRESS = "https://onionoo.torproject.org/";
 
+    String TOR_BRIDGES_ADDRESS = "https://bridges.torproject.org/";
+
     int SITES_IPS_REFRESH_JOB_ID = 1;
     int DEFAULT_SITES_IPS_REFRESH_INTERVAL = 12;
 
