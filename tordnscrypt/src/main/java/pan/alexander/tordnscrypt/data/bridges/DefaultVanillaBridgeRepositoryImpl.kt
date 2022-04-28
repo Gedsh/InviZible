@@ -20,7 +20,7 @@
 package pan.alexander.tordnscrypt.data.bridges
 
 import org.json.JSONObject
-import pan.alexander.tordnscrypt.domain.bridges.BridgeRepository
+import pan.alexander.tordnscrypt.domain.bridges.DefaultVanillaBridgeRepository
 import pan.alexander.tordnscrypt.utils.connectionchecker.SocketInternetChecker
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import java.lang.Exception
@@ -29,10 +29,10 @@ import java.util.regex.Pattern
 import javax.inject.Inject
 import javax.inject.Provider
 
-class BridgeRepositoryImpl @Inject constructor(
+class DefaultVanillaBridgeRepositoryImpl @Inject constructor(
     private val socketInternetChecker: Provider<SocketInternetChecker>,
-    private val bridgeDataSource: BridgeDataSource
-) : BridgeRepository {
+    private val bridgeDataSource: DefaultVanillaBridgeDataSource
+) : DefaultVanillaBridgeRepository {
 
     private val bridgePattern =
         Pattern.compile("([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}):(\\d+)")
@@ -64,14 +64,11 @@ class BridgeRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getRelaysWithFingerprintAndAddress(
-        proxyAddress: String,
-        proxyPort: Int
-    ): List<RelayAddressFingerprint> {
+    override fun getRelaysWithFingerprintAndAddress(): List<RelayAddressFingerprint> {
 
         val relays = mutableListOf<RelayAddressFingerprint>()
 
-        bridgeDataSource.getRelaysWithFingerprintAndAddress(proxyAddress, proxyPort)
+        bridgeDataSource.getRelaysWithFingerprintAndAddress()
             .forEach {
                 try {
                     if (it.contains("fingerprint")) {

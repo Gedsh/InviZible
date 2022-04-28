@@ -17,16 +17,8 @@
     Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.domain.bridges
+package pan.alexander.tordnscrypt.data.bridges
 
-import pan.alexander.tordnscrypt.data.bridges.RelayAddressFingerprint
-
-interface BridgeRepository {
-
-    fun getTimeout(bridgeLine: String): Int
-
-    fun getRelaysWithFingerprintAndAddress(
-        proxyAddress: String,
-        proxyPort: Int
-    ): List<RelayAddressFingerprint>
+interface DefaultVanillaBridgeDataSource {
+    fun getRelaysWithFingerprintAndAddress(): List<String>
 }
