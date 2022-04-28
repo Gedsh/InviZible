@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.dialogs.progressDialogs
+package pan.alexander.tordnscrypt.dialogs
 
 /*
     This file is part of InviZible Pro.
@@ -19,21 +19,20 @@ package pan.alexander.tordnscrypt.dialogs.progressDialogs
     Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.app.Dialog
 import android.content.DialogInterface
-import android.os.Bundle
-import android.widget.ProgressBar
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import pan.alexander.tordnscrypt.R
-import pan.alexander.tordnscrypt.dialogs.ExtendedDialogFragment
+import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridgesViewModel
 import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
-class PleaseWaitDialogBridgesRequest @Inject constructor(
+class BridgesReadyDialogFragment @Inject constructor(
     private val viewModelFactory: ViewModelProvider.Factory
 ) : ExtendedDialogFragment() {
 
@@ -42,35 +41,43 @@ class PleaseWaitDialogBridgesRequest @Inject constructor(
         { viewModelFactory }
     )
 
+    var bridges = ""
+
     override fun assignBuilder(): AlertDialog.Builder =
         AlertDialog.Builder(requireActivity(), R.style.CustomAlertDialogTheme).apply {
-            setTitle(R.string.pref_fast_use_tor_bridges_request_dialog)
-            setMessage(R.string.please_wait)
-            setIcon(R.drawable.ic_visibility_off_black_24dp)
-            setPositiveButton(R.string.cancel) { dialogInterface, _ ->
+            val tvBridges = TextView(requireActivity()).apply {
+                setBackgroundResource(R.drawable.background_10dp_padding)
+                setTextIsSelectable(true)
+                isSingleLine = false
+                isVerticalScrollBarEnabled = true
+                text = bridges
+            }
+
+            setTitle(R.string.pref_fast_use_tor_bridges_show_dialog)
+            setView(tvBridges)
+
+            setPositiveButton(R.string.pref_fast_use_tor_bridges_add_dialog) { _, _ ->
+                val preferencesTorBridges = parentFragment as? PreferencesTorBridges
+                if (preferencesTorBridges != null && bridges.isNotEmpty()) {
+                    preferencesTorBridges.readSavedCustomBridges(bridges)
+                } else {
+                    Toast.makeText(requireActivity(), "Unable to save bridges!", Toast.LENGTH_LONG)
+                        .show()
+                }
+            }
+
+            setNegativeButton(R.string.pref_fast_use_tor_bridges_close_dialog) { dialogInterface, _ ->
                 dialogInterface.cancel()
             }
-            val progressBar = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal)
-            progressBar.setBackgroundResource(R.drawable.background_10dp_padding)
-            progressBar.isIndeterminate = true
-            setView(progressBar)
-            setCancelable(false)
         }
-
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val dialog = super.onCreateDialog(savedInstanceState)
-
-        dialog.setCanceledOnTouchOutside(false)
-
-        return dialog
-    }
 
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
 
         if (activity?.isChangingConfigurations == false) {
-            preferencesTorBridgesViewModel.cancelTorBridgesRequestJob()
+            preferencesTorBridgesViewModel.dismissRequestBridgesDialogs()
         }
 
     }
+
 }

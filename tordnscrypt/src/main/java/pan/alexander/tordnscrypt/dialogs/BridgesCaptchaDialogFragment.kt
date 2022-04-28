@@ -1,4 +1,4 @@
-package pan.alexander.tordnscrypt.dialogs.progressDialogs
+package pan.alexander.tordnscrypt.dialogs
 
 /*
     This file is part of InviZible Pro.
@@ -19,57 +19,76 @@ package pan.alexander.tordnscrypt.dialogs.progressDialogs
     Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.app.Dialog
+import android.annotation.SuppressLint
+import android.content.Context
 import android.content.DialogInterface
-import android.os.Bundle
-import android.widget.ProgressBar
+import android.graphics.Bitmap
+import android.view.LayoutInflater
+import android.view.View
+import android.widget.EditText
+import android.widget.ImageView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import pan.alexander.tordnscrypt.R
-import pan.alexander.tordnscrypt.dialogs.ExtendedDialogFragment
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridgesViewModel
 import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
-class PleaseWaitDialogBridgesRequest @Inject constructor(
+class BridgesCaptchaDialogFragment @Inject constructor(
     private val viewModelFactory: ViewModelProvider.Factory
 ) : ExtendedDialogFragment() {
+
+    var transport = ""
+    var captcha: Bitmap? = null
+    var secretCode: String = ""
 
     private val preferencesTorBridgesViewModel: PreferencesTorBridgesViewModel by viewModels(
         { requireParentFragment() },
         { viewModelFactory }
     )
 
+    private var okButtonPressed = false
+
+    @SuppressLint("InflateParams")
     override fun assignBuilder(): AlertDialog.Builder =
         AlertDialog.Builder(requireActivity(), R.style.CustomAlertDialogTheme).apply {
-            setTitle(R.string.pref_fast_use_tor_bridges_request_dialog)
-            setMessage(R.string.please_wait)
-            setIcon(R.drawable.ic_visibility_off_black_24dp)
-            setPositiveButton(R.string.cancel) { dialogInterface, _ ->
-                dialogInterface.cancel()
+            val layoutInflater = requireActivity().getSystemService(
+                Context.LAYOUT_INFLATER_SERVICE
+            ) as LayoutInflater
+
+            val view: View = layoutInflater.inflate(R.layout.tor_transport_code_image, null)
+
+            val imgCode = view.findViewById<ImageView>(R.id.imgCode)
+            val etCode = view.findViewById<EditText>(R.id.etCode)
+
+            imgCode.setImageBitmap(captcha)
+
+            setView(view)
+
+            setPositiveButton(R.string.ok) { _, _ ->
+                okButtonPressed = true
+
+                val captchaText = etCode.text.toString()
+
+                if (transport.isNotEmpty() && secretCode.isNotEmpty()) {
+                    preferencesTorBridgesViewModel.requestTorBridges(
+                        transport,
+                        captchaText,
+                        secretCode
+                    )
+                }
             }
-            val progressBar = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal)
-            progressBar.setBackgroundResource(R.drawable.background_10dp_padding)
-            progressBar.isIndeterminate = true
-            setView(progressBar)
-            setCancelable(false)
+
+            setNegativeButton(R.string.cancel) { dialog, _ -> dialog.cancel() }
         }
-
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val dialog = super.onCreateDialog(savedInstanceState)
-
-        dialog.setCanceledOnTouchOutside(false)
-
-        return dialog
-    }
 
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
 
-        if (activity?.isChangingConfigurations == false) {
-            preferencesTorBridgesViewModel.cancelTorBridgesRequestJob()
+        if (activity?.isChangingConfigurations == false && !okButtonPressed) {
+            preferencesTorBridgesViewModel.dismissRequestBridgesDialogs()
         }
 
     }
