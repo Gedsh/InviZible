@@ -49,40 +49,47 @@ import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 
 public class HttpsRequest {
-    private static final int READTIMEOUT = 30;
-    private static final int CONNECTTIMEOUT = 30;
+    private static final int READ_TIMEOUT = 30;
+    private static final int CONNECT_TIMEOUT = 30;
+
     public static String post(String serverUrl, String dataToSend) throws IOException {
 
         Proxy proxy = null;
         if (ModulesStatus.getInstance().getTorState() == RUNNING) {
             PathVars pathVars = App.getInstance().getDaggerComponent().getPathVars().get();
-            proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(LOOPBACK_ADDRESS, Integer.parseInt(pathVars.getTorSOCKSPort())));
+            proxy = new Proxy(
+                    Proxy.Type.SOCKS,
+                    new InetSocketAddress(
+                            LOOPBACK_ADDRESS,
+                            Integer.parseInt(pathVars.getTorSOCKSPort())
+                    )
+            );
         }
 
 
         URL url = new URL(serverUrl);
 
-        HttpsURLConnection con;
+        HttpsURLConnection httpsURLConnection;
         if (proxy == null) {
-            con = (HttpsURLConnection) url.openConnection();
+            httpsURLConnection = (HttpsURLConnection) url.openConnection();
         } else {
-            con = (HttpsURLConnection) url.openConnection(proxy);
+            httpsURLConnection = (HttpsURLConnection) url.openConnection(proxy);
         }
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            con.setHostnameVerifier((hostname, session) -> true);
+            httpsURLConnection.setHostnameVerifier((hostname, session) -> true);
         }
 
         //set timeout of 30 seconds
-        con.setConnectTimeout(1000 * CONNECTTIMEOUT);
-        con.setReadTimeout(1000 * READTIMEOUT);
+        httpsURLConnection.setConnectTimeout(1000 * CONNECT_TIMEOUT);
+        httpsURLConnection.setReadTimeout(1000 * READ_TIMEOUT);
         //method
-        con.setRequestMethod("POST");
-        con.setDoOutput(true);
-        con.setRequestProperty("Content-Length", String.valueOf(dataToSend.getBytes().length));
-        con.setRequestProperty("User-Agent", TOR_BROWSER_USER_AGENT);
+        httpsURLConnection.setRequestMethod("POST");
+        httpsURLConnection.setDoOutput(true);
+        httpsURLConnection.setRequestProperty("Content-Length", String.valueOf(dataToSend.getBytes().length));
+        httpsURLConnection.setRequestProperty("User-Agent", TOR_BROWSER_USER_AGENT);
 
-        OutputStream os = con.getOutputStream();
+        OutputStream os = httpsURLConnection.getOutputStream();
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8));
 
         //make request
@@ -92,14 +99,14 @@ public class HttpsRequest {
         os.close();
 
         //get the response
-        int responseCode = con.getResponseCode();
+        int responseCode = httpsURLConnection.getResponseCode();
 
         if (responseCode == HttpURLConnection.HTTP_OK) {
             //read the response
             StringBuilder sb = new StringBuilder();
 
             BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(con.getInputStream()));
+                    new InputStreamReader(httpsURLConnection.getInputStream()));
             String line;
 
             //loop through the response from the server
@@ -107,7 +114,7 @@ public class HttpsRequest {
                 sb.append(line).append(System.lineSeparator());
             }
 
-            con.disconnect();
+            httpsURLConnection.disconnect();
 
             //return the response
             return sb.toString();
