@@ -119,7 +119,8 @@ class PreferencesTorBridgesViewModel @Inject constructor(
                 val result = requestBridgesInteractor.requestCaptchaChallenge(transport)
                 dismissRequestBridgesDialogs()
                 showCaptchaDialog(transport, result.first, result.second)
-            } catch (ignored: CancellationException) {
+            } catch (e: CancellationException) {
+                logw("PreferencesTorBridgesViewModel requestTorBridgesCaptchaChallenge", e)
             } catch (e: java.util.concurrent.CancellationException) {
                 logw("PreferencesTorBridgesViewModel requestTorBridgesCaptchaChallenge", e)
             } catch (e: Exception) {
@@ -155,7 +156,8 @@ class PreferencesTorBridgesViewModel @Inject constructor(
                     is ParseBridgesResult.RecaptchaChallenge ->
                         showCaptchaDialog(transport, result.captcha, result.secretCode)
                 }
-            } catch (ignored: CancellationException) {
+            } catch (e: CancellationException) {
+                logw("PreferencesTorBridgesViewModel requestTorBridges", e)
             } catch (e: java.util.concurrent.CancellationException) {
                 logw("PreferencesTorBridgesViewModel requestTorBridges", e)
             } catch (e: Exception) {
