@@ -25,5 +25,5 @@ interface DefaultVanillaBridgeRepository {
 
     fun getTimeout(bridgeLine: String): Int
 
-    fun getRelaysWithFingerprintAndAddress(): List<RelayAddressFingerprint>
+    suspend fun getRelaysWithFingerprintAndAddress(): List<RelayAddressFingerprint>
 }

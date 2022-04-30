@@ -64,7 +64,7 @@ class DefaultVanillaBridgeRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getRelaysWithFingerprintAndAddress(): List<RelayAddressFingerprint> {
+    override suspend fun getRelaysWithFingerprintAndAddress(): List<RelayAddressFingerprint> {
 
         val relays = mutableListOf<RelayAddressFingerprint>()
 

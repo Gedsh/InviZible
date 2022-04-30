@@ -20,5 +20,5 @@
 package pan.alexander.tordnscrypt.data.bridges
 
 interface DefaultVanillaBridgeDataSource {
-    fun getRelaysWithFingerprintAndAddress(): List<String>
+    suspend fun getRelaysWithFingerprintAndAddress(): List<String>
 }
