@@ -56,6 +56,7 @@ import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFragment
 import pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment
 import pan.alexander.tordnscrypt.tor_fragment.TorFragmentReceiver
 import pan.alexander.tordnscrypt.update.DownloadTask
+import pan.alexander.tordnscrypt.update.UpdateCheck
 import pan.alexander.tordnscrypt.update.UpdateService
 import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
@@ -129,6 +130,7 @@ interface AppComponent {
     fun inject(usageStatistic: UsageStatistic)
     fun inject(modulesKiller: ModulesKiller)
     fun inject(contextUIDUpdater: ContextUIDUpdater)
+    fun inject(updateCheck: UpdateCheck)
     fun inject(downloadTask: DownloadTask)
     fun inject(torRefreshIPsWork: TorRefreshIPsWork)
     fun inject(fileManager: FileManager)
