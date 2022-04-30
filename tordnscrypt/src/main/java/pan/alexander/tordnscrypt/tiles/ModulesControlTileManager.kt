@@ -293,7 +293,7 @@ class ModulesControlTileManager @Inject constructor(
         //shortenTooLongSnowflakeLog(context, preferenceRepository, pathVars)
     }
 
-    private fun manageTor() {
+    private suspend fun manageTor() {
 
         if (isInterfaceLocked(preferenceRepository)) {
             showInterfaceLockedToast()
@@ -339,7 +339,7 @@ class ModulesControlTileManager @Inject constructor(
         ModulesAux.saveTorStateRunning(false)
     }
 
-    private fun manageDnsCrypt() {
+    private suspend fun manageDnsCrypt() {
 
         if (isInterfaceLocked(preferenceRepository)) {
             showInterfaceLockedToast()
@@ -372,7 +372,7 @@ class ModulesControlTileManager @Inject constructor(
         ModulesAux.saveDNSCryptStateRunning(false)
     }
 
-    private fun manageITPD() {
+    private suspend fun manageITPD() {
 
         if (isInterfaceLocked(preferenceRepository)) {
             showInterfaceLockedToast()
@@ -435,15 +435,15 @@ class ModulesControlTileManager @Inject constructor(
         }
     }
 
-    private fun showInterfaceLockedToast() {
+    private suspend fun showInterfaceLockedToast() {
         showToast(R.string.action_mode_dialog_locked)
     }
 
-    private fun showPleaseWaitToast() {
+    private suspend fun showPleaseWaitToast() {
         showToast(R.string.please_wait)
     }
 
-    private fun showToast(@StringRes message: Int) {
+    private suspend fun showToast(@StringRes message: Int) = withContext(dispatcherMain) {
         Toast.makeText(context, message, Toast.LENGTH_LONG).show()
     }
 
