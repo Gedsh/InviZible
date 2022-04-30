@@ -20,9 +20,12 @@
 package pan.alexander.tordnscrypt.utils.web
 
 import android.os.Build
+import kotlinx.coroutines.*
+import org.jetbrains.annotations.NotNull
+import pan.alexander.tordnscrypt.di.CoroutinesModule
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.utils.Constants
+import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
 import pan.alexander.tordnscrypt.utils.Constants.TOR_BROWSER_USER_AGENT
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import java.io.IOException
@@ -33,12 +36,15 @@ import java.net.Proxy
 import java.net.URL
 import java.net.URLEncoder
 import javax.inject.Inject
+import javax.inject.Named
 import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLSession
 
 class HttpsConnectionManager @Inject constructor(
-    private val pathVars: PathVars
+    private val pathVars: PathVars,
+    @Named(CoroutinesModule.DISPATCHER_IO)
+    private val dispatcherIo: CoroutineDispatcher
 ) {
 
     var readTimeoutSec = 180
@@ -49,100 +55,165 @@ class HttpsConnectionManager @Inject constructor(
 
         val httpsURLConnection = getHttpsUrlConnection(url)
 
-        httpsURLConnection.apply {
-            requestMethod = "GET"
-            setRequestProperty("User-Agent", TOR_BROWSER_USER_AGENT)
-            connectTimeout = 1000 * connectTimeoutSec
-            readTimeout = 1000 * readTimeoutSec
-        }.connect()
+        try {
+            httpsURLConnection.apply {
+                requestMethod = "GET"
+                setRequestProperty("User-Agent", TOR_BROWSER_USER_AGENT)
+                connectTimeout = 1000 * connectTimeoutSec
+                readTimeout = 1000 * readTimeoutSec
+            }.connect()
 
-        val response = httpsURLConnection.responseCode
-        if (response == HTTP_OK) {
-            block(httpsURLConnection.inputStream)
-        } else {
-            throw IOException("HttpsConnectionManager $url response code $response")
-        }
-
-        httpsURLConnection.disconnect()
-    }
-
-    @Throws(IOException::class)
-    fun get(url: String, data: Map<String, String>): List<String> {
-
-        val query = mapToQuery(data)
-
-        val httpsURLConnection = getHttpsUrlConnection("$url?$query")
-
-        httpsURLConnection.apply {
-            requestMethod = "GET"
-            setRequestProperty("User-Agent", TOR_BROWSER_USER_AGENT)
-            connectTimeout = 1000 * connectTimeoutSec
-            readTimeout = 1000 * readTimeoutSec
-        }.connect()
-
-        val response = httpsURLConnection.responseCode
-        val lines = if (response == HTTP_OK) {
-            httpsURLConnection.inputStream.bufferedReader().useLines {
-                it.toList()
+            val response = httpsURLConnection.responseCode
+            if (response == HTTP_OK) {
+                block(httpsURLConnection.inputStream)
+            } else {
+                throw IOException("HttpsConnectionManager $url response code $response")
             }
-        } else {
-            throw IOException("HttpsConnectionManager $url response code $response")
+        } finally {
+            httpsURLConnection.disconnect()
         }
-
-        httpsURLConnection.disconnect()
-
-        return lines
     }
+
+    @NotNull
+    @Throws(IOException::class)
+    @Suppress("BlockingMethodInNonBlockingContext")
+    suspend fun get(url: String, data: Map<String, String>): List<String> =
+        withContext(dispatcherIo) {
+
+            val query = mapToQuery(data)
+
+            val httpsURLConnection = getHttpsUrlConnection("$url?$query")
+
+            try {
+                httpsURLConnection.apply {
+                    requestMethod = "GET"
+                    setRequestProperty("User-Agent", TOR_BROWSER_USER_AGENT)
+                    connectTimeout = 1000 * connectTimeoutSec
+                    readTimeout = 1000 * readTimeoutSec
+                }.connect()
+
+                val response = httpsURLConnection.responseCode
+                if (response == HTTP_OK) {
+                    mutableListOf<String>().also { lines ->
+                        httpsURLConnection.inputStream.bufferedReader().useLines {
+                            it.forEach { line ->
+                                yield()
+                                lines.add(line)
+                            }
+                        }
+                    }
+                } else {
+                    throw IOException("HttpsConnectionManager $url response code $response")
+                }
+            } finally {
+                httpsURLConnection.disconnect()
+            }
+        }
 
     @Throws(IOException::class)
     fun post(url: String, data: Map<String, String>, block: (inputStream: InputStream) -> Unit) {
 
         val httpsURLConnection = getHttpsUrlConnection(url)
 
-        val query = mapToQuery(data)
+        try {
+            val query = mapToQuery(data)
 
-        httpsURLConnection.apply {
-            requestMethod = "POST"
-            setRequestProperty("User-Agent", TOR_BROWSER_USER_AGENT)
-            setRequestProperty(
-                "Content-Length",
-                query.toByteArray().size.toString()
-            )
-            doOutput = true
-            connectTimeout = 1000 * connectTimeoutSec
-            readTimeout = 1000 * readTimeoutSec
-        }.connect()
+            httpsURLConnection.apply {
+                requestMethod = "POST"
+                setRequestProperty("User-Agent", TOR_BROWSER_USER_AGENT)
+                setRequestProperty(
+                    "Content-Length",
+                    query.toByteArray().size.toString()
+                )
+                doOutput = true
+                connectTimeout = 1000 * connectTimeoutSec
+                readTimeout = 1000 * readTimeoutSec
+            }.connect()
 
-        httpsURLConnection.outputStream.bufferedWriter().use {
-            it.write(query)
-            it.flush()
+            httpsURLConnection.outputStream.bufferedWriter().use {
+                it.write(query)
+                it.flush()
+            }
+
+            val response = httpsURLConnection.responseCode
+            if (response == HTTP_OK) {
+                block(httpsURLConnection.inputStream)
+            } else {
+                throw IOException("HttpsConnectionManager $url response code $response")
+            }
+        } finally {
+            httpsURLConnection.disconnect()
         }
 
-        val response = httpsURLConnection.responseCode
-        if (response == HTTP_OK) {
-            block(httpsURLConnection.inputStream)
-        } else {
-            throw IOException("HttpsConnectionManager $url response code $response")
-        }
-
-        httpsURLConnection.disconnect()
     }
 
-    private fun getHttpsUrlConnection(url: String): HttpsURLConnection {
+    @NotNull
+    @Throws(IOException::class)
+    fun post(url: String, data: Map<String, String>): List<String> {
+
+        val httpsURLConnection = getHttpsUrlConnection(url)
+
+        val lines = try {
+            val query = mapToQuery(data)
+
+            httpsURLConnection.apply {
+                requestMethod = "POST"
+                setRequestProperty("User-Agent", TOR_BROWSER_USER_AGENT)
+                setRequestProperty(
+                    "Content-Length",
+                    query.toByteArray().size.toString()
+                )
+                doOutput = true
+                connectTimeout = 1000 * connectTimeoutSec
+                readTimeout = 1000 * readTimeoutSec
+            }.connect()
+
+            httpsURLConnection.outputStream.bufferedWriter().use {
+                it.write(query)
+                it.flush()
+            }
+
+            val response = httpsURLConnection.responseCode
+            if (response == HTTP_OK) {
+                mutableListOf<String>().also { lines ->
+                    httpsURLConnection.inputStream.bufferedReader().useLines {
+                        it.forEach { line ->
+                            if (!Thread.currentThread().isInterrupted) {
+                                lines.add(line)
+                            } else {
+                                throw CancellationException(
+                                    "HttpsConnectionManager post $url is cancelled"
+                                )
+                            }
+                        }
+                    }
+                }
+            } else {
+                throw IOException("HttpsConnectionManager $url response code $response")
+            }
+
+        } finally {
+            httpsURLConnection.disconnect()
+        }
+
+        return lines
+    }
+
+    fun getHttpsUrlConnection(url: String): HttpsURLConnection {
         val modulesStatus = ModulesStatus.getInstance()
         val proxy = if (modulesStatus.torState == ModuleState.RUNNING && modulesStatus.isTorReady) {
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
                 Proxy(
                     Proxy.Type.HTTP,
                     InetSocketAddress(
-                        Constants.LOOPBACK_ADDRESS, pathVars.torHTTPTunnelPort.toInt()
+                        LOOPBACK_ADDRESS, pathVars.torHTTPTunnelPort.toInt()
                     )
                 )
             } else {
                 Proxy(
                     Proxy.Type.SOCKS,
                     InetSocketAddress(
-                        Constants.LOOPBACK_ADDRESS, pathVars.torSOCKSPort.toInt()
+                        LOOPBACK_ADDRESS, pathVars.torSOCKSPort.toInt()
                     )
                 )
             }
