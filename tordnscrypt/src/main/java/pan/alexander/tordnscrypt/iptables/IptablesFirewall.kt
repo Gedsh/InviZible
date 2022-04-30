@@ -124,24 +124,43 @@ class IptablesFirewall @Inject constructor(
         ).plus(
             "$iptables -A $FILTER_OUTPUT_FIREWALL -m mark --mark $FIREWALL_RETURN_MARK -j RETURN"
         ).plus(
-            uidLanAllowed
-                .map {
-                    when {
-                        it >= 0 -> "$iptables -A $FILTER_FIREWALL_LAN -m owner --uid-owner $it -j MARK --set-mark $FIREWALL_RETURN_MARK 2> /dev/null || true"
-                        it == SPECIAL_UID_KERNEL -> "$iptables -A $FILTER_FIREWALL_LAN -m owner ! --uid-owner 0:999999999 -j MARK --set-mark $FIREWALL_RETURN_MARK 2> /dev/null || true"
-                        else -> ""
-                    }
-                }
+            getAppLanRules(iptables, uidLanAllowed)
         ).plus(
             "$iptables -A $FILTER_FIREWALL_LAN -m mark --mark $FIREWALL_RETURN_MARK -j RETURN"
         ).plus(
             "$iptables -A $FILTER_FIREWALL_LAN -j REJECT"
         ).toList()
 
-    private fun getAppRulesByConnectionType(iptables: String): List<String> =
-        uidAllowed.map {
-            "$iptables -A $FILTER_OUTPUT_FIREWALL -m owner --uid-owner $it -j RETURN"
+    private fun getAppLanRules(iptables: String, uids: Set<Int>) = with(IptablesUtils) {
+        uids.groupToRanges().map { range ->
+            when {
+                range.size == 1 ->
+                    when {
+                        range.first() >= 0 -> "$iptables -A $FILTER_FIREWALL_LAN -m owner --uid-owner ${range.first()} -j MARK --set-mark $FIREWALL_RETURN_MARK 2> /dev/null || true"
+                        range.first() == SPECIAL_UID_KERNEL -> "$iptables -A $FILTER_FIREWALL_LAN -m owner ! --uid-owner 0:999999999 -j MARK --set-mark $FIREWALL_RETURN_MARK 2> /dev/null || true"
+                        else -> ""
+                    }
+                range.size > 1 ->
+                    when {
+                        range.first() >= 0 -> "$iptables -A $FILTER_FIREWALL_LAN -m owner --uid-owner ${range.first()}:${range.last()} -j MARK --set-mark $FIREWALL_RETURN_MARK 2> /dev/null || true"
+                        else -> ""
+                    }
+                else -> ""
+            }
         }
+    }
+
+    private fun getAppRulesByConnectionType(iptables: String): List<String> = with(IptablesUtils) {
+        uidAllowed.groupToRanges().map {
+            when {
+                it.size == 1 ->
+                    "$iptables -A $FILTER_OUTPUT_FIREWALL -m owner --uid-owner ${it.first()} -j RETURN"
+                it.size > 1 ->
+                    "$iptables -A $FILTER_OUTPUT_FIREWALL -m owner --uid-owner ${it.first()}:${it.last()} -j RETURN"
+                else -> ""
+            }
+        }
+    }
 
     private fun getSpecialRules(iptables: String): List<String> =
         uidSpecialAllowed.flatMap {
