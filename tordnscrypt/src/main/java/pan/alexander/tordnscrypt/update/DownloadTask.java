@@ -27,7 +27,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
-import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.FileProvider;
@@ -41,10 +40,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.net.URL;
 import java.util.Objects;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.CRC32;
 
@@ -56,29 +53,31 @@ import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
-import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
+import pan.alexander.tordnscrypt.utils.web.HttpsConnectionManager;
 
 import static pan.alexander.tordnscrypt.update.UpdateService.STOP_DOWNLOAD_ACTION;
 import static pan.alexander.tordnscrypt.update.UpdateService.UPDATE_CHANNEL_ID;
 import static pan.alexander.tordnscrypt.update.UpdateService.UPDATE_CHANNEL_NOTIFICATION_ID;
 import static pan.alexander.tordnscrypt.update.UpdateService.UPDATE_RESULT;
 import static pan.alexander.tordnscrypt.utils.AppExtension.getApp;
-import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.TOR_BROWSER_USER_AGENT;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.TOP_FRAGMENT_MARK;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
-import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 
 public class DownloadTask extends Thread {
     private static final int READ_TIMEOUT = 60;
     private static final int CONNECT_TIMEOUT = 60;
+    private static final int ATTEMPTS_TO_DOWNLOAD = 3;
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
     public PathVars pathVars;
+    @Inject
+    public Lazy<HttpsConnectionManager> httpsConnectionManager;
 
     private final Context context;
     private final UpdateService updateService;
@@ -90,7 +89,6 @@ public class DownloadTask extends Thread {
     int serviceStartId;
     int notificationId;
     long startTime;
-
 
 
     public DownloadTask(UpdateService updateService, Intent intent, int serviceStartId, int notificationId, long startTime) {
@@ -110,6 +108,7 @@ public class DownloadTask extends Thread {
         String fileToDownload = intent.getStringExtra("file");
         String hash = intent.getStringExtra("hash");
         PreferenceRepository preferences = preferenceRepository.get();
+        int attempts = ATTEMPTS_TO_DOWNLOAD;
 
         try {
 
@@ -119,7 +118,23 @@ public class DownloadTask extends Thread {
                         + " hash = " + hash);
             }
 
-            File outputFile = downloadFile(fileToDownload, urlToDownload);
+            File outputFile = null;
+            Exception exception = new CancellationException(
+                    "UpdateService downloading file cancelled"
+            );
+            do {
+                try {
+                    outputFile = downloadFile(fileToDownload, urlToDownload);
+                } catch (IOException e) {
+                    exception = e;
+                    logw("UpdateService failed to download file " + urlToDownload, e);
+                }
+                attempts--;
+            } while (outputFile == null && attempts > 0 && !Thread.currentThread().isInterrupted());
+
+            if (outputFile == null) {
+                throw exception;
+            }
 
             boolean checkSum = hash.equalsIgnoreCase(crc32(outputFile));
 
@@ -147,13 +162,13 @@ public class DownloadTask extends Thread {
                 preferences.setStringPreference("LastUpdateResult", context.getString(R.string.update_fault));
                 preferences.setStringPreference("UpdateResultMessage", context.getString(R.string.update_fault));
                 FileManager.deleteFile(context, cacheDir, fileToDownload, "ignored");
-                Log.e(LOG_TAG, "UpdateService file hashes mismatch " + fileToDownload);
+                loge("UpdateService file hashes mismatch " + fileToDownload);
             }
 
         } catch (Exception e) {
             preferences.setStringPreference("LastUpdateResult", context.getString(R.string.update_fault));
             preferences.setStringPreference("UpdateResultMessage", context.getString(R.string.update_fault));
-            Log.e(LOG_TAG, "UpdateService failed to download file " + urlToDownload + " " + e.getMessage());
+            loge("UpdateService failed to download file " + urlToDownload, e);
         } finally {
             updateService.sparseArray.delete(serviceStartId);
             if (updateService.currentNotificationId.get() - 1 == UPDATE_CHANNEL_NOTIFICATION_ID) {
@@ -183,30 +198,7 @@ public class DownloadTask extends Thread {
             outputFile.createNewFile();
         }
 
-
-        Proxy proxy = null;
-        if (ModulesStatus.getInstance().getTorState() == RUNNING) {
-            proxy = new Proxy(
-                    Proxy.Type.SOCKS,
-                    new InetSocketAddress(
-                            LOOPBACK_ADDRESS,
-                            Integer.parseInt(pathVars.getTorSOCKSPort()))
-            );
-        }
-
-        //create url and connect
-        URL url = new URL(urlToDownload);
-
-        HttpsURLConnection con;
-        if (proxy == null) {
-            con = (HttpsURLConnection) url.openConnection();
-        } else {
-            con = (HttpsURLConnection) url.openConnection(proxy);
-        }
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            con.setHostnameVerifier((hostname, session) -> true);
-        }
+        HttpsURLConnection con = httpsConnectionManager.get().getHttpsUrlConnection(urlToDownload);
 
         con.setConnectTimeout(1000 * CONNECT_TIMEOUT);
         con.setReadTimeout(1000 * READ_TIMEOUT);
@@ -227,7 +219,7 @@ public class DownloadTask extends Thread {
                 range += count;
 
                 if (Thread.currentThread().isInterrupted()) {
-                    Log.w(LOG_TAG, "Download was interrupted by user " + fileToDownload);
+                    logw("Download was interrupted by user " + fileToDownload);
                     break;
                 }
 
@@ -246,23 +238,6 @@ public class DownloadTask extends Thread {
 
         return outputFile;
     }
-
-    /*private boolean isActivityActive() {
-
-        App app = App.Companion.getInstance();
-
-        WeakReference<Activity> activityWeakReference = app.getCurrentActivity();
-        if (activityWeakReference == null) {
-            return false;
-        }
-
-        Activity activity = activityWeakReference.get();
-        if (activity == null) {
-            return false;
-        }
-
-        return !activity.isFinishing();
-    }*/
 
     private void installApkForNougatAndHigher(File outputFile) {
         Uri apkUri = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", outputFile);
@@ -304,7 +279,7 @@ public class DownloadTask extends Thread {
                 }
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "Unable to remove old InviZible.apk file during update" + e.getMessage() + " " + e.getCause());
+            loge("Unable to remove old InviZible.apk file during update", e);
         }
     }
 
@@ -340,7 +315,7 @@ public class DownloadTask extends Thread {
 
             return String.format("%08X", crc.getValue());
         } catch (IOException e) {
-            Log.e(LOG_TAG, "crc32() Exception while getting FileInputStream " + e.getMessage());
+            loge("crc32() Exception while getting FileInputStream", e);
         }
 
         return null;
