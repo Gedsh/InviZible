@@ -42,8 +42,6 @@ const val AUX_CHANNEL_ID = "Auxiliary"
 
 class App : Application() {
 
-    //var currentActivity: WeakReference<Activity>? = null
-
     lateinit var daggerComponent: AppComponent
     private set
 

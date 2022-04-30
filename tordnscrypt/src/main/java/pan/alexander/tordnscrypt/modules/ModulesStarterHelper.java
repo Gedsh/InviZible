@@ -268,23 +268,6 @@ public class ModulesStarterHelper {
         };
     }
 
-    /*private boolean isActivityActive() {
-
-        App app = App.Companion.getInstance();
-
-        WeakReference<Activity> activityWeakReference = app.getCurrentActivity();
-        if (activityWeakReference == null) {
-            return false;
-        }
-
-        Activity activity = activityWeakReference.get();
-        if (activity == null) {
-            return false;
-        }
-
-        return !activity.isFinishing();
-    }*/
-
     Runnable getITPDStarterRunnable() {
         return () -> {
             //new experiment
