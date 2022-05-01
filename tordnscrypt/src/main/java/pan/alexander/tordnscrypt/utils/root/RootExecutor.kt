@@ -331,8 +331,10 @@ class RootExecutor @Inject constructor(
                     writer.appendLine("********************")
 
                     writer.appendLine("COMMANDS")
-                    commands.forEach {
-                        writer.appendLine(it)
+                    commands.forEach { command ->
+                        command.split("; ").forEach {
+                            writer.appendLine(it)
+                        }
                     }
                     writer.appendLine("--------------------")
 
