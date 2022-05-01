@@ -264,4 +264,11 @@ class IptablesFirewall @Inject constructor(
         InstalledApplicationsManager.Builder()
             .build()
             .getInstalledApps()
+
+    fun getCriticalUidsAllowed() =
+        preferences.getStringSetPreference(APPS_ALLOW_WIFI_PREF)
+            .also { it.addAll(preferences.getStringSetPreference(APPS_ALLOW_GSM_PREF)) }
+            .filter { it.matches(positiveNumberRegex) }
+            .map { it.toInt() }
+            .filter { it <= 2000 }
 }

@@ -27,4 +27,5 @@ interface IptablesConstants {
     String FILTER_FORWARD_CORE = "tordnscrypt_forward";
     String FILTER_FORWARD_FIREWALL = "ipro_fwl_forward";
     String NAT_PREROUTING_CORE = "tordnscrypt_prerouting";
+    String FILTER_OUTPUT_BLOCKING = "ipro_blocking";
 }
