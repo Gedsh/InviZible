@@ -762,3 +762,12 @@
 * Improved app restart after a crash or after the app was killed due to low device memory.
 * Improved root commands execution.
 * Updated Portuguese-BR translation.
+
+**InviZible Pro beta 1.6.4**
+* Updated Tor to version 4.7.7.
+* Updated Tor snowflake bridge.
+* Improved requesting new Tor bridges.
+* Improved checking and downloading app updates.
+* Fixed compatibility with android 4.4.2.
+* Lots of internal optimizations.
+* Minor fixes.
