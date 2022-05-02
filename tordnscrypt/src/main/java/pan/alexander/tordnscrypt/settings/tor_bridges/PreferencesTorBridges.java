@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -508,55 +509,51 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     }
 
     private void showPleaseWaitDialog() {
-        if (getChildFragmentManager().findFragmentByTag(
-                pleaseWaitDialogBridgesRequest.get().getClass().getCanonicalName()) == null) {
-            pleaseWaitDialogBridgesRequest.get().show(
-                    getChildFragmentManager(),
-                    pleaseWaitDialogBridgesRequest.get()
-                            .getClass().getCanonicalName()
-            );
+        String tag = PleaseWaitDialogBridgesRequest.class.getCanonicalName();
+        PleaseWaitDialogBridgesRequest dialog =
+                (PleaseWaitDialogBridgesRequest) getChildFragmentManager().findFragmentByTag(tag);
+        if (dialog == null || !dialog.isAdded()) {
+            pleaseWaitDialogBridgesRequest.get().show(getChildFragmentManager(), tag);
         }
     }
 
     private void showSelectBridgesTransportDialog() {
-        if (getChildFragmentManager().findFragmentByTag(
-                selectBridgesTransportDialogFragment.get().getClass().getCanonicalName()) == null) {
-            selectBridgesTransportDialogFragment.get().show(
-                    getChildFragmentManager(),
-                    selectBridgesTransportDialogFragment.get()
-                            .getClass().getCanonicalName()
-            );
+        String tag = SelectBridgesTransportDialogFragment.class.getCanonicalName();
+        SelectBridgesTransportDialogFragment dialog =
+                (SelectBridgesTransportDialogFragment) getChildFragmentManager().findFragmentByTag(tag);
+        if (dialog == null || !dialog.isAdded()) {
+            selectBridgesTransportDialogFragment.get().show(getChildFragmentManager(), tag);
         }
     }
 
     private void showCaptchaDialog(String transport, Bitmap captcha, String secretCode) {
-        if (getChildFragmentManager().findFragmentByTag(
-                bridgesCaptchaDialogFragment.get().getClass().getCanonicalName()) == null) {
-            BridgesCaptchaDialogFragment dialog = bridgesCaptchaDialogFragment.get();
+        String tag = BridgesCaptchaDialogFragment.class.getCanonicalName();
+        BridgesCaptchaDialogFragment dialog =
+                (BridgesCaptchaDialogFragment) getChildFragmentManager().findFragmentByTag(tag);
+        if (dialog == null || !dialog.isAdded()) {
+            dialog = bridgesCaptchaDialogFragment.get();
             dialog.setTransport(transport);
             dialog.setCaptcha(captcha);
             dialog.setSecretCode(secretCode);
-            dialog.show(
-                    getChildFragmentManager(),
-                    dialog.getClass().getCanonicalName()
-            );
+            dialog.show(getChildFragmentManager(), tag);
         }
     }
 
     private void showBridgesReadyDialog(String bridges) {
-        if (getChildFragmentManager().findFragmentByTag(
-                bridgesReadyDialogFragment.get().getClass().getCanonicalName()) == null) {
-            BridgesReadyDialogFragment dialog = bridgesReadyDialogFragment.get();
+        String tag = BridgesReadyDialogFragment.class.getCanonicalName();
+        BridgesReadyDialogFragment dialog =
+                (BridgesReadyDialogFragment) getChildFragmentManager().findFragmentByTag(tag);
+        if (dialog == null || !dialog.isAdded()) {
+            dialog = bridgesReadyDialogFragment.get();
             dialog.setBridges(bridges);
-            dialog.show(
-                    getChildFragmentManager(),
-                    dialog.getClass().getCanonicalName()
-            );
+            dialog.show(getChildFragmentManager(), tag);
         }
     }
 
     private void dismissRequestBridgesDialogs() {
-        for (Fragment dialog : getChildFragmentManager().getFragments()) {
+        FragmentManager fragmentManager = getChildFragmentManager();
+        fragmentManager.executePendingTransactions();
+        for (Fragment dialog : fragmentManager.getFragments()) {
             if (dialog instanceof ExtendedDialogFragment) {
                 ((ExtendedDialogFragment) dialog).dismiss();
             }
