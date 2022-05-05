@@ -50,7 +50,7 @@ import javax.inject.Inject
 class FirewallFragment : Fragment(),
     View.OnClickListener,
     SearchView.OnQueryTextListener,
-    ChipGroup.OnCheckedChangeListener,
+    ChipGroup.OnCheckedStateChangeListener,
     CompoundButton.OnCheckedChangeListener {
 
     @Inject
@@ -141,9 +141,9 @@ class FirewallFragment : Fragment(),
         binding.btnTopCheckAllFirewall.setOnClickListener(this)
         binding.btnTopUnCheckAllFirewall.setOnClickListener(this)
 
-        binding.chipGroupFirewall.setOnCheckedChangeListener(this)
+        binding.chipGroupFirewall.setOnCheckedStateChangeListener(this)
 
-        binding.chipGroupFirewallSort.setOnCheckedChangeListener(this)
+        binding.chipGroupFirewallSort.setOnCheckedStateChangeListener(this)
 
         searchText = null
 
@@ -337,19 +337,18 @@ class FirewallFragment : Fragment(),
         return true
     }
 
-    override fun onCheckedChanged(group: ChipGroup?, checkedId: Int) {
-
+    override fun onCheckedChanged(group: ChipGroup, checkedIds: MutableList<Int>) {
         if (!appsListComplete || binding.rvFirewallApps.isComputingLayout) {
             return
         }
 
-        when (checkedId) {
+        when (checkedIds.firstOrNull()) {
             R.id.chipFirewallAll -> chipSelectAllApps()
             R.id.chipFirewallSystem -> chipSelectSystemApps()
             R.id.chipFirewallUser -> chipSelectUserApps()
             R.id.chipFirewallSortName -> sortByName()
             R.id.chipFirewallSortUid -> sortByUid()
-            else -> loge("FirewallFragment chipGroup onCheckedChanged wrong id: $id")
+            else -> loge("FirewallFragment chipGroup onCheckedChanged wrong id")
         }
     }
 
