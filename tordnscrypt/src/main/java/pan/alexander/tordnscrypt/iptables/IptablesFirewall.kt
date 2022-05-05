@@ -32,7 +32,7 @@ import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPE
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_AGPS
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_KERNEL
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_NTP
-import pan.alexander.tordnscrypt.utils.Constants.NUMBER_REGEX
+import pan.alexander.tordnscrypt.utils.Constants.*
 import pan.alexander.tordnscrypt.utils.Utils
 import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker.isCellularActive
@@ -253,6 +253,13 @@ class IptablesFirewall @Inject constructor(
                 listAllowed.addAll(preferences.getStringSetPreference(APPS_ALLOW_GSM_PREF))
             isWifiActive(context, true) ->
                 listAllowed.addAll(preferences.getStringSetPreference(APPS_ALLOW_WIFI_PREF))
+            isCellularActive(context, true) ->
+                listAllowed.addAll(preferences.getStringSetPreference(APPS_ALLOW_GSM_PREF))
+            else -> listAllowed.apply {
+                add(SPECIAL_UID_KERNEL.toString())
+                add(ROOT_DEFAULT_UID.toString())
+                add(NETWORK_STACK_DEFAULT_UID.toString())
+            }
         }
 
         return listAllowed

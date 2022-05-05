@@ -293,23 +293,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             }
         }
 
-
-        StringBuilder criticalUidsAllowedBuilder = new StringBuilder();
-        if (firewallEnabled) {
-            for (int uid : firewall.getCriticalUidsAllowed()) {
-                if (uid  == NETWORK_STACK_DEFAULT_UID) {
-                    criticalUidsAllowedBuilder.append(iptables).append("-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner ").append(uid).append(" -j RETURN; ");
-                }
-            }
-        } else {
-            List<Integer> criticalUids = new ArrayList<>();
-            criticalUids.add(NETWORK_STACK_DEFAULT_UID);
-            for (int uid : criticalUids) {
-                criticalUidsAllowedBuilder.append(iptables).append("-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner ").append(uid).append(" -j RETURN; ");
-            }
-        }
-        String criticalUidsAllowed = criticalUidsAllowedBuilder + iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -p all -m owner ! --uid-owner 0:999999999 -j RETURN || true";
-
+        String criticalUidsAllowed = getCriticalUidsAllowedRules();
 
         String proxyAppsBypassNat = "";
         String proxyAppsBypassFilter = "";
@@ -719,11 +703,13 @@ public class ModulesIptablesRules extends IptablesRulesSender {
     public List<String> getBlockingRules(String appUID, String blockHOTSPOT, String unblockHOTSPOT) {
         Pair<String, String> bypassLanNatToBypassLanFilter = getBypassLanRules();
         String bypassLanFilter = bypassLanNatToBypassLanFilter.second;
+        String criticalUidsAllowed = getCriticalUidsAllowedRules();
         return new ArrayList<>(Arrays.asList(
                 iptables + "-F " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
                 iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true",
                 iptables + "-N " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
                 iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner " + appUID + " -j RETURN",
+                criticalUidsAllowed,
                 iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -j DROP",
                 iptables + "-I OUTPUT -j " + FILTER_OUTPUT_BLOCKING,
                 ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
@@ -762,11 +748,14 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             blockHOTSPOT = "";
         }
 
+        String criticalUidsAllowed = getCriticalUidsAllowedRules();
+
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
                 iptables + "-F " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
                 iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true",
                 iptables + "-N " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
                 iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner " + appUID + " -j RETURN",
+                criticalUidsAllowed,
                 iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -j DROP",
                 iptables + "-I OUTPUT -j " + FILTER_OUTPUT_BLOCKING,
                 ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
@@ -954,6 +943,26 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     "done";
         }
         return new Pair<>(bypassLanNat, bypassLanFilter);
+    }
+
+    private String getCriticalUidsAllowedRules() {
+        boolean firewallEnabled = preferenceRepository.get().getBoolPreference(FIREWALL_ENABLED);
+        StringBuilder criticalUidsAllowedBuilder = new StringBuilder();
+        if (firewallEnabled) {
+            for (int uid : iptablesFirewall.get().getCriticalUidsAllowed()) {
+                if (uid  == NETWORK_STACK_DEFAULT_UID) {
+                    criticalUidsAllowedBuilder.append(iptables).append("-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner ").append(uid).append(" -j RETURN; ");
+                }
+            }
+        } else {
+            List<Integer> criticalUids = new ArrayList<>();
+            criticalUids.add(NETWORK_STACK_DEFAULT_UID);
+            for (int uid : criticalUids) {
+                criticalUidsAllowedBuilder.append(iptables).append("-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner ").append(uid).append(" -j RETURN; ");
+            }
+        }
+
+        return criticalUidsAllowedBuilder + iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -p all -m owner ! --uid-owner 0:999999999 -j RETURN || true";
     }
 
     private static void executeCommands(Context context, List<String> commands) {

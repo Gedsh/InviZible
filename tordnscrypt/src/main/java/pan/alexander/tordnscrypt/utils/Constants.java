@@ -34,6 +34,7 @@ public interface Constants {
 
     int PLAINTEXT_DNS_PORT = 53;
 
+    int ROOT_DEFAULT_UID = 0;
     int DNS_DEFAULT_UID = 1051;
     int NETWORK_STACK_DEFAULT_UID = 1073;
 
