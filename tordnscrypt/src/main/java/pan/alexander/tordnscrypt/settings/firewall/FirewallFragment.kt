@@ -38,6 +38,7 @@ import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.databinding.FragmentFirewallBinding
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
+import pan.alexander.tordnscrypt.settings.OnBackPressListener
 import pan.alexander.tordnscrypt.settings.firewall.adapter.FirewallAdapter
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
@@ -51,7 +52,8 @@ class FirewallFragment : Fragment(),
     View.OnClickListener,
     SearchView.OnQueryTextListener,
     ChipGroup.OnCheckedStateChangeListener,
-    CompoundButton.OnCheckedChangeListener {
+    CompoundButton.OnCheckedChangeListener,
+    OnBackPressListener {
 
     @Inject
     lateinit var preferenceRepository: dagger.Lazy<PreferenceRepository>
@@ -905,7 +907,7 @@ class FirewallFragment : Fragment(),
         handler.get().post { _binding?.rvFirewallApps?.scrollToPosition(0) }
     }
 
-    fun onBackPressed(): Boolean {
+    override fun onBackPressed(): Boolean {
         if (isVisible) {
             val savingFirewallChangesRequired: Boolean = viewModel.isFirewallChangesSavingRequired()
             val saveFirewallChangesFragmentIsDisplayed =
