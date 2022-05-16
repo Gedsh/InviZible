@@ -364,7 +364,11 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                 rr.Rcode,
                 rr.Resource != null ? rr.Resource.trim() : ""
         );
-        connectionDataRecords.add(dnsRecord);
+
+        if (!connectionDataRecords.add(dnsRecord)) {
+            connectionDataRecords.remove(dnsRecord);
+            connectionDataRecords.add(dnsRecord);
+        }
 
         if (connectionDataRecords.size() >= LINES_IN_DNS_QUERY_RAW_RECORDS) {
             freeSpaceInConnectionRecords();
@@ -906,7 +910,11 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                         sourceAddres,
                         destinationAddress
                 );
-                connectionDataRecords.add(packetRecord);
+
+                if (!connectionDataRecords.add(packetRecord)) {
+                    connectionDataRecords.remove(packetRecord);
+                    connectionDataRecords.add(packetRecord);
+                }
 
                 if (connectionDataRecords.size() > LINES_IN_DNS_QUERY_RAW_RECORDS) {
                     freeSpaceInConnectionRecords();
