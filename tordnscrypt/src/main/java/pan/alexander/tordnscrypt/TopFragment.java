@@ -777,19 +777,21 @@ public class TopFragment extends Fragment {
     }
 
     public void downloadUpdate(String fileName, String updateStr, String message, String hash) {
-        Context context = getActivity();
-        if (context == null)
-            return;
+        handler.post(() -> {
+            Context context = getActivity();
+            if (context == null)
+                return;
 
-        cancelCheckUpdatesTask();
-        dismissCheckUpdatesDialog();
+            cancelCheckUpdatesTask();
+            dismissCheckUpdatesDialog();
 
-        preferenceRepository.get().setStringPreference("LastUpdateResult", context.getString(R.string.update_found));
+            preferenceRepository.get().setStringPreference("LastUpdateResult", context.getString(R.string.update_found));
 
-        if (isAdded() && !isStateSaved()) {
-            DialogFragment newUpdateDialogFragment = NewUpdateDialogFragment.newInstance(message, updateStr, fileName, hash);
-            newUpdateDialogFragment.show(getParentFragmentManager(), NewUpdateDialogFragment.TAG_NOT_FRAG);
-        }
+            if (isAdded() && !isStateSaved()) {
+                DialogFragment newUpdateDialogFragment = NewUpdateDialogFragment.newInstance(message, updateStr, fileName, hash);
+                newUpdateDialogFragment.show(getParentFragmentManager(), NewUpdateDialogFragment.TAG_NOT_FRAG);
+            }
+        });
     }
 
     private void dismissCheckUpdatesDialog() {
