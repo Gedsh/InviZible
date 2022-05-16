@@ -48,7 +48,8 @@ import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readT
 
 import javax.inject.Inject;
 
-public class ConfigEditorFragment extends Fragment implements OnTextFileOperationsCompleteListener {
+public class ConfigEditorFragment extends Fragment implements OnTextFileOperationsCompleteListener,
+        OnBackPressListener {
 
     @Inject
     public Lazy<PathVars> pathVars;
@@ -114,32 +115,6 @@ public class ConfigEditorFragment extends Fragment implements OnTextFileOperatio
         return view;
     }
 
-
-    @Override
-    public void onStop() {
-
-        super.onStop();
-
-        String input = etConfigEditor.getText().toString();
-
-        if (input.isEmpty()) {
-            return;
-        }
-
-        if (!input.equals(savedText) && getFragmentManager() != null) {
-            DialogFragment dialogFragment = DialogSaveConfigChanges.newInstance();
-
-            Bundle bundle = new Bundle();
-            bundle.putString("moduleName", moduleName);
-            bundle.putString("filePath", filePath);
-            bundle.putString("fileText", input);
-
-            dialogFragment.setArguments(bundle);
-
-            dialogFragment.show(getFragmentManager(), "DialogSaveConfigChanges");
-        }
-    }
-
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -185,5 +160,35 @@ public class ConfigEditorFragment extends Fragment implements OnTextFileOperatio
             fragmentTransaction.addToBackStack("configEditorFragmentTag");
             fragmentTransaction.commit();
         }
+    }
+
+    @Override
+    public boolean onBackPressed() {
+        return showSaveChangesDialog();
+    }
+
+    private boolean showSaveChangesDialog() {
+        String input = etConfigEditor.getText().toString();
+
+        if (input.isEmpty()) {
+            return false;
+        }
+
+        if (!input.equals(savedText)) {
+            DialogFragment dialogFragment = DialogSaveConfigChanges.newInstance();
+
+            Bundle bundle = new Bundle();
+            bundle.putString("moduleName", moduleName);
+            bundle.putString("filePath", filePath);
+            bundle.putString("fileText", input);
+
+            dialogFragment.setArguments(bundle);
+
+            dialogFragment.show(getChildFragmentManager(), "DialogSaveConfigChanges");
+
+            return true;
+        }
+
+        return false;
     }
 }
