@@ -24,7 +24,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.Html;
 import android.text.Spanned;
-import android.util.Log;
 import android.view.ScaleGestureDetector;
 import android.widget.Toast;
 
@@ -54,8 +53,8 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -390,7 +389,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
         setFixedErrorState(true);
 
-        Log.e(LOG_TAG, "DNSCrypt Error: " + logData.getLines());
+        loge("DNSCrypt Error: " + logData.getLines());
     }
 
     @Override
@@ -460,6 +459,22 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             }
         });
     }
+
+    /* For testing purposes
+    String strDiffCalc(String s1, String s2) {
+
+        if (s1.isEmpty() || s2.isEmpty()) {
+            return null;
+        }
+
+        if (s1.length() > s2.length()) {
+            return s1.substring(s2.length() - 1);
+        } else if (s2.length() > s1.length()) {
+            return s2.substring(s1.length() - 1);
+        } else {
+            return null;
+        }
+    }*/
 
     @Override
     public void refreshDNSCryptState() {
@@ -536,7 +551,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             notification.show(fragmentManager, "NotificationDialogFragment");
         }
 
-        Log.e(LOG_TAG, context.getString(R.string.helper_dnscrypt_stopped));
+        loge(context.getString(R.string.helper_dnscrypt_stopped));
 
     }
 
