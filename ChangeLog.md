@@ -771,3 +771,10 @@
 * Fixed compatibility with android 4.4.2.
 * Lots of internal optimizations.
 * Minor fixes.
+
+**InviZible Pro beta 1.6.5**
+* Implemented real-time connection logs for Root mode.
+* Improved real-time connection logs for VPN mode.
+* Fixed saving changes when using direct editing of module configuration files.
+* Lots of internal optimizations.
+* Minor fixes.
