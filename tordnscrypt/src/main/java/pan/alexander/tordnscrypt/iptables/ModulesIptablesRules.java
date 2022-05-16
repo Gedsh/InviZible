@@ -61,7 +61,10 @@ import static pan.alexander.tordnscrypt.utils.Constants.G_DNG_41;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_42;
 import static pan.alexander.tordnscrypt.utils.Constants.HTTP_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
+import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_DEFAULT_UID;
+import static pan.alexander.tordnscrypt.utils.Constants.NFLOG_GROUP;
+import static pan.alexander.tordnscrypt.utils.Constants.NFLOG_PREFIX;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_BLOCK_INTERNET;
@@ -363,6 +366,10 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         blockTlsRuleNatUDP,
                         blockGDNSNat,
                         iptables + "-N " + FILTER_OUTPUT_CORE + " 2> /dev/null",
+                        iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getDNSCryptPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                        iptables + "-A " + FILTER_OUTPUT_CORE + " -p tcp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getDNSCryptPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                        iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getTorDNSPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                        iptables + "-A " + FILTER_OUTPUT_CORE + " -p tcp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getTorDNSPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
@@ -386,6 +393,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         kernelRejectNonTCPFilter,
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -m state --state ESTABLISHED,RELATED -j RETURN",
                         iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
+                        iptables + "-t mangle -D OUTPUT -p all -m owner ! --uid-owner " + appUID + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                        iptables + "-t mangle -I OUTPUT -p all -m owner ! --uid-owner " + appUID + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
                         unblockHOTSPOT,
                         blockHOTSPOT
                 ));
@@ -434,6 +443,10 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         bypassLanNat,
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
                         iptables + "-N " + FILTER_OUTPUT_CORE + " 2> /dev/null",
+                        iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getDNSCryptPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                        iptables + "-A " + FILTER_OUTPUT_CORE + " -p tcp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getDNSCryptPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                        iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getTorDNSPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                        iptables + "-A " + FILTER_OUTPUT_CORE + " -p tcp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getTorDNSPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
@@ -451,6 +464,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         bypassLanFilter,
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -j REJECT",
                         iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
+                        iptables + "-t mangle -D OUTPUT -p all -m owner ! --uid-owner " + appUID + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                        iptables + "-t mangle -I OUTPUT -p all -m owner ! --uid-owner " + appUID + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
                         unblockHOTSPOT,
                         blockHOTSPOT
                 ));
@@ -503,6 +518,10 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     blockTlsRuleNatUDP,
                     blockGDNSNat,
                     iptables + "-N " + FILTER_OUTPUT_CORE + " 2> /dev/null",
+                    iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getDNSCryptPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                    iptables + "-A " + FILTER_OUTPUT_CORE + " -p tcp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getDNSCryptPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                    iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getTorDNSPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                    iptables + "-A " + FILTER_OUTPUT_CORE + " -p tcp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getTorDNSPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
                     iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                     iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                     dnsCryptSystemDNSAllowedFilter,
@@ -511,6 +530,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     blockRejectAddressFilter,
                     iptables + "-A " + FILTER_OUTPUT_CORE + " -m state --state ESTABLISHED,RELATED -j RETURN",
                     iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
+                    iptables + "-t mangle -D OUTPUT -p all -m owner ! --uid-owner " + appUID + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                    iptables + "-t mangle -I OUTPUT -p all -m owner ! --uid-owner " + appUID + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
                     unblockHOTSPOT,
                     blockHOTSPOT
             ));
@@ -538,6 +559,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     iptables + "-F " + FILTER_OUTPUT_CORE + " 2> /dev/null || true",
                     iptables + "-A " + FILTER_OUTPUT_CORE + " -j RETURN 2> /dev/null || true",
                     iptables + "-D OUTPUT -j " + FILTER_OUTPUT_CORE + " 2> /dev/null || true",
+                    iptables + "-t mangle -D OUTPUT -p all -m owner ! --uid-owner " + appUID + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
                     unblockHOTSPOT
             ));
 
@@ -582,6 +604,10 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         blockTlsRuleNatUDP,
                         blockGDNSNat,
                         iptables + "-N " + FILTER_OUTPUT_CORE + " 2> /dev/null",
+                        iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getDNSCryptPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                        iptables + "-A " + FILTER_OUTPUT_CORE + " -p tcp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getDNSCryptPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                        iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getTorDNSPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                        iptables + "-A " + FILTER_OUTPUT_CORE + " -p tcp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getTorDNSPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
                         torSystemDNSAllowedFilter,
@@ -604,6 +630,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         kernelRejectNonTCPFilter,
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -m state --state ESTABLISHED,RELATED -j RETURN",
                         iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
+                        iptables + "-t mangle -D OUTPUT -p all -m owner ! --uid-owner " + appUID + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                        iptables + "-t mangle -I OUTPUT -p all -m owner ! --uid-owner " + appUID + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
                         unblockHOTSPOT,
                         blockHOTSPOT
                 ));
@@ -645,6 +673,10 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         bypassLanNat,
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
                         iptables + "-N " + FILTER_OUTPUT_CORE + " 2> /dev/null",
+                        iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getDNSCryptPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                        iptables + "-A " + FILTER_OUTPUT_CORE + " -p tcp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getDNSCryptPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                        iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getTorDNSPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                        iptables + "-A " + FILTER_OUTPUT_CORE + " -p tcp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getTorDNSPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
                         torSystemDNSAllowedFilter,
                         torRootDNSAllowedFilter,
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
@@ -660,6 +692,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         bypassLanFilter,
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -j REJECT",
                         iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
+                        iptables + "-t mangle -D OUTPUT -p all -m owner ! --uid-owner " + appUID + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                        iptables + "-t mangle -I OUTPUT -p all -m owner ! --uid-owner " + appUID + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
                         unblockHOTSPOT,
                         blockHOTSPOT
                 ));
@@ -818,6 +852,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                 iptables + "-D FORWARD -j " + FILTER_FORWARD_CORE + " 2> /dev/null || true",
                 iptables + "-D FORWARD -j DROP 2> /dev/null || true",
 
+                iptables + "-t mangle -D OUTPUT -p all -m owner ! --uid-owner " + appUID + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+
                 "ip rule delete from " + wifiAPAddressesRange + " lookup 63 2> /dev/null || true",
                 "ip rule delete from " + usbModemAddressesRange + " lookup 62 2> /dev/null || true"
         ));
@@ -950,7 +986,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         StringBuilder criticalUidsAllowedBuilder = new StringBuilder();
         if (firewallEnabled) {
             for (int uid : iptablesFirewall.get().getCriticalUidsAllowed()) {
-                if (uid  == NETWORK_STACK_DEFAULT_UID) {
+                if (uid == NETWORK_STACK_DEFAULT_UID) {
                     criticalUidsAllowedBuilder.append(iptables).append("-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner ").append(uid).append(" -j RETURN; ");
                 }
             }

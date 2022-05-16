@@ -52,6 +52,7 @@ public class PathVars {
     private final String itpdPath;
     private final String obfsPath;
     private final String snowflakePath;
+    private final String nflogPath;
     private final boolean bbOK;
     private volatile int appUid = -1;
     private volatile String appUidStr = "";
@@ -77,6 +78,7 @@ public class PathVars {
         itpdPath = nativeLibPath + "/libi2pd.so";
         obfsPath = nativeLibPath + "/libobfs4proxy.so";
         snowflakePath = nativeLibPath + "/libsnowflake.so";
+        nflogPath = nativeLibPath + "/libnflog.so";
     }
 
     public String getDefaultBackupPath() {
@@ -198,6 +200,10 @@ public class PathVars {
 
     public String getSnowflakePath() {
         return snowflakePath;
+    }
+
+    public String getNflogPath() {
+        return nflogPath;
     }
 
     public String getTorVirtAdrNet() {

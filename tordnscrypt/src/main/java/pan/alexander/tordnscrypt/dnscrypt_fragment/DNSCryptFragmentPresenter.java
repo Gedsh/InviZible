@@ -184,7 +184,9 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
         dnsCryptInteractor.get().addOnDNSCryptLogUpdatedListener(this);
 
-        if (modulesStatus.getMode() == VPN_MODE || isFixTTL()) {
+        if (modulesStatus.getMode() == VPN_MODE
+                || modulesStatus.getMode() == ROOT_MODE
+                || isFixTTL()) {
             connectionRecordsInteractor.get().addOnConnectionRecordsUpdatedListener(this);
         }
 
@@ -402,7 +404,9 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
     private void displayDnsResponses(String savedLogLines, String connectionRecords) {
 
-        if (modulesStatus.getMode() != VPN_MODE && !isFixTTL()) {
+        if (modulesStatus.getMode() != VPN_MODE
+                && modulesStatus.getMode() != ROOT_MODE
+                && !isFixTTL()) {
             if (!savedConnectionRecords.isEmpty()) {
                 savedConnectionRecords = "";
 
@@ -559,7 +563,10 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             return;
         }
 
-        if (connectionRecordsInteractor != null && (modulesStatus.getMode() == VPN_MODE || isFixTTL())) {
+        if (connectionRecordsInteractor != null &&
+                (modulesStatus.getMode() == VPN_MODE
+                        || modulesStatus.getMode() == ROOT_MODE
+                        || isFixTTL())) {
             connectionRecordsInteractor.get().clearConnectionRecords();
         }
 

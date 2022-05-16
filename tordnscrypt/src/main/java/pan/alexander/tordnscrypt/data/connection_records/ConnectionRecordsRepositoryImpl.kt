@@ -19,24 +19,76 @@
 
 package pan.alexander.tordnscrypt.data.connection_records
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsRepository
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecord
+import pan.alexander.tordnscrypt.modules.ModulesStatus
+import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import javax.inject.Inject
 
+@ExperimentalCoroutinesApi
 class ConnectionRecordsRepositoryImpl @Inject constructor(
-    private val connectionRecordsGetter: ConnectionRecordsGetter
-): ConnectionRecordsRepository {
+    private val connectionRecordsGetter: ConnectionRecordsGetter,
+    private val nflogRecordsGetter: NflogRecordsGetter
+) : ConnectionRecordsRepository {
 
-    override fun getRawConnectionRecords(): List<ConnectionRecord?> {
-        return connectionRecordsGetter.getConnectionRawRecords()
-    }
+    private val modulesStatus = ModulesStatus.getInstance()
+
+    @Volatile
+    private var savedMode = modulesStatus.mode
+
+    override fun getRawConnectionRecords(): List<ConnectionRecord?> =
+        if (isVpnMode() || isFixTTL()) {
+
+            if (modulesStatus.mode != savedMode) {
+                stopNflogRecordsGetter()
+                savedMode = modulesStatus.mode
+            }
+
+            connectionRecordsGetter.getConnectionRawRecords()
+
+        } else if (isRootMode()) {
+
+            if (modulesStatus.mode != savedMode) {
+                stopConnectionRecordsGetter()
+                savedMode = modulesStatus.mode
+            }
+
+            nflogRecordsGetter.getConnectionRawRecords()
+        } else {
+            emptyList()
+        }
 
     override fun clearConnectionRawRecords() {
-        connectionRecordsGetter.clearConnectionRawRecords()
+        if (isVpnMode() || isFixTTL()) {
+            connectionRecordsGetter.clearConnectionRawRecords()
+        } else if (isRootMode()) {
+            nflogRecordsGetter.clearConnectionRawRecords()
+        }
     }
 
     override fun connectionRawRecordsNoMoreRequired() {
-        connectionRecordsGetter.connectionRawRecordsNoMoreRequired()
+        if (isVpnMode() || isFixTTL()) {
+            connectionRecordsGetter.connectionRawRecordsNoMoreRequired()
+        }
     }
+
+    private fun stopConnectionRecordsGetter() = with(connectionRecordsGetter) {
+        clearConnectionRawRecords()
+        connectionRawRecordsNoMoreRequired()
+    }
+
+    private fun stopNflogRecordsGetter() = with(nflogRecordsGetter) {
+        clearConnectionRawRecords()
+    }
+
+    private fun isVpnMode() = modulesStatus.mode == OperationMode.VPN_MODE
+
+    private fun isRootMode() = modulesStatus.mode == OperationMode.ROOT_MODE
+            && !modulesStatus.isUseModulesWithRoot
+
+    private fun isFixTTL() = modulesStatus.isFixTTL
+            && modulesStatus.mode == OperationMode.ROOT_MODE
+            && !modulesStatus.isUseModulesWithRoot
 
 }
