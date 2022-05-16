@@ -86,7 +86,7 @@ public class ServiceVPNHandler extends Handler {
     @Inject
     public Lazy<VpnBuilder> vpnBuilder;
 
-    private final static List<Rule> listRule = new CopyOnWriteArrayList<>();
+    private final List<Rule> listRule = new CopyOnWriteArrayList<>();
     @Nullable
     private final ServiceVPN serviceVPN;
     private ServiceVPN.Builder last_builder = null;
@@ -356,7 +356,7 @@ public class ServiceVPNHandler extends Handler {
 
             if (!preferences.getBoolPreference(FIREWALL_ENABLED)
                     || ModulesStatus.getInstance().getMode() == ROOT_MODE) {
-                for (Rule rule : ServiceVPNHandler.listRule) {
+                for (Rule rule : listRule) {
                     listAllowed.add(String.valueOf(rule.uid));
                 }
             } else if (NetworkChecker.isWifiActive(serviceVPN) || NetworkChecker.isEthernetActive(serviceVPN)) {
@@ -368,7 +368,7 @@ public class ServiceVPNHandler extends Handler {
             }
         //}
 
-        logi("VPN Handler Allowed " + listAllowed.size() + " of " + ServiceVPNHandler.listRule.size());
+        logi("VPN Handler Allowed " + listAllowed.size() + " of " + listRule.size());
         return listAllowed;
     }
 
@@ -447,7 +447,7 @@ public class ServiceVPNHandler extends Handler {
         }
     }
 
-    public static List<Rule> getAppsList() {
+    List<Rule> getAppsList() {
         return listRule;
     }
 }
