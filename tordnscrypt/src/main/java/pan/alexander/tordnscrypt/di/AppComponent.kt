@@ -114,6 +114,7 @@ interface AppComponent {
     fun inject(fragment: UpdateModulesDialogFragment)
     fun inject(fragment: NotificationHelper)
     fun inject(fragment: ExtendedDialogFragment)
+    fun inject(fragment: ChangeModeDialog)
     fun inject(service: ModulesService)
     fun inject(service: ServiceVPN)
     fun inject(service: RootExecService)
