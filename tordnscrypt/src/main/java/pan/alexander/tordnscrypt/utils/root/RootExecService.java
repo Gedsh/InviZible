@@ -25,6 +25,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootServiceNotificationManager.DEFAULT_NOTIFICATION_ID;
 
+import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
@@ -44,6 +45,7 @@ import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 
+@SuppressLint("UnsafeOptInUsageWarning")
 public class RootExecService extends Service
         implements RootExecutor.OnCommandsProgressListener, RootExecutor.OnCommandsDoneListener {
 
