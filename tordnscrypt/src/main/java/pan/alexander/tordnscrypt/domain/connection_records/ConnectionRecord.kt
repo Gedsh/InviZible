@@ -19,14 +19,16 @@
 
 package pan.alexander.tordnscrypt.domain.connection_records
 
-class ConnectionRecord(val qName: String = "",
-                       val aName:String = "",
-                       var cName:String = "",
-                       val hInfo:String = "",
-                       val rCode: Int = 0,
-                       val saddr:String = "",
-                       var daddr:String = "",
-                       var uid:Int = -1000) {
+class ConnectionRecord(
+    val qName: String = "",
+    val aName: String = "",
+    var cName: String = "",
+    val hInfo: String = "",
+    val rCode: Int = 0,
+    val saddr: String = "",
+    var daddr: String = "",
+    var uid: Int = -1000
+) {
     var reverseDNS = ""
     var blocked = false
     var blockedByIpv6 = false
@@ -61,4 +63,20 @@ class ConnectionRecord(val qName: String = "",
         result = 31 * result + uid
         return result
     }
+
+    override fun toString(): String {
+        return "ConnectionRecord(qName='$qName'," +
+                " aName='$aName'," +
+                " cName='$cName'," +
+                " hInfo='$hInfo'," +
+                " rCode=$rCode," +
+                " saddr='$saddr'," +
+                " daddr='$daddr'," +
+                " uid=$uid," +
+                " reverseDNS='$reverseDNS'," +
+                " blocked=$blocked," +
+                " blockedByIpv6=$blockedByIpv6," +
+                " unused=$unused)"
+    }
+
 }

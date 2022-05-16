@@ -53,6 +53,7 @@ import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.patches.Patch;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
+import pan.alexander.tordnscrypt.utils.apps.InstalledAppNamesStorage;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.root.RootExecService;
@@ -134,6 +135,8 @@ public class ModulesService extends Service {
     public Lazy<PathVars> pathVars;
     @Inject
     public CachedExecutor cachedExecutor;
+    @Inject
+    public Lazy<InstalledAppNamesStorage> installedAppNamesStorage;
 
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
@@ -977,6 +980,8 @@ public class ModulesService extends Service {
         serviceIsRunning = false;
 
         stopRootExecServiceIfRequired();
+
+        installedAppNamesStorage.get().clearAppUidToNames();
 
         super.onDestroy();
     }

@@ -70,6 +70,9 @@ class InstalledApplicationsManager private constructor(
     @Inject
     lateinit var pathVars: PathVars
 
+    @Inject
+    lateinit var installedAppNamesStorage: InstalledAppNamesStorage
+
     init {
         App.instance.daggerComponent.inject(this)
 
@@ -131,7 +134,7 @@ class InstalledApplicationsManager private constructor(
 
                 val name =
                     packageManager.getApplicationLabel(applicationInfo)?.toString() ?: "Undefined"
-                val icon = if (iconIsRequired)  {
+                val icon = if (iconIsRequired) {
                     packageManager.getApplicationIcon(applicationInfo)
                 } else {
                     null
@@ -213,6 +216,8 @@ class InstalledApplicationsManager private constructor(
                     applications.add(knownApp)
                 }
             }
+
+            installedAppNamesStorage.updateAppUidToNames(applications)
 
             return applications.sorted()
         } catch (e: Exception) {
@@ -429,7 +434,8 @@ class InstalledApplicationsManager private constructor(
         if (multiUserSupport
             && !(appVersion.endsWith("p") || appVersion.startsWith("f"))
             && ModulesStatus.getInstance().isRootAvailable
-            && !isInteractAcrossUsersPermissionGranted()) {
+            && !isInteractAcrossUsersPermissionGranted()
+        ) {
             val allowAccessToWorkProfileApps = listOf(
                 "pm grant ${context.packageName} android.permission.INTERACT_ACROSS_USERS"
             )

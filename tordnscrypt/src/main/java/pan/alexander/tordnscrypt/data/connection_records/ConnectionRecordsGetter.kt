@@ -66,9 +66,7 @@ class ConnectionRecordsGetter @Inject constructor(
         lockConnectionRawRecordsListForRead(true)
 
         val rawRecords = try {
-            ArrayList<ConnectionRecord?>(
-                serviceVPN?.get()?.dnsQueryRawRecords ?: emptyList()
-            )
+            serviceVPN?.get()?.dnsQueryRawRecords ?: emptyList()
         } catch (e: Exception) {
             logw("ConnectionRecordsGetter getConnectionRawRecords", e)
             emptyList()

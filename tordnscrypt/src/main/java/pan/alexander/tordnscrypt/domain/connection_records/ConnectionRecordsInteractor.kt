@@ -30,11 +30,11 @@ import javax.inject.Inject
 @LogReaderScope
 class ConnectionRecordsInteractor @Inject constructor(
     private val connectionRecordsRepository: ConnectionRecordsRepository,
-    private val converter: dagger.Lazy<ConnectionRecordsConverter>
+    private val converter: dagger.Lazy<ConnectionRecordsConverter>,
+    private var parser: ConnectionRecordsParser
 ) {
     private val applicationContext = App.instance.applicationContext
     private val listeners: HashMap<Class<*>, WeakReference<OnConnectionRecordsUpdatedListener>> = hashMapOf()
-    private var parser: ConnectionRecordsParser? = null
 
     fun <T: OnConnectionRecordsUpdatedListener> addListener(listener: T?) {
         listener?.let { listeners[it.javaClass] = WeakReference(it) }
@@ -68,7 +68,6 @@ class ConnectionRecordsInteractor @Inject constructor(
         if (listeners.isEmpty() || forceStop) {
             connectionRecordsRepository.connectionRawRecordsNoMoreRequired()
             converter.get().onStop()
-            parser = null
         }
     }
 
@@ -78,8 +77,6 @@ class ConnectionRecordsInteractor @Inject constructor(
         if (context == null || listeners.isEmpty()) {
             return
         }
-
-        parser = parser ?: ConnectionRecordsParser(context)
 
         var rawConnections: List<ConnectionRecord?> = emptyList()
 
@@ -113,7 +110,7 @@ class ConnectionRecordsInteractor @Inject constructor(
 
         var records: String? = ""
         try {
-            records = parser?.formatLines(connectionRecords ?: emptyList())
+            records = parser.formatLines(connectionRecords ?: emptyList())
         } catch (e: Exception) {
             Log.e(
                 LOG_TAG,

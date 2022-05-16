@@ -20,30 +20,32 @@
 package pan.alexander.tordnscrypt.domain.connection_records
 
 import android.content.Context
-import androidx.preference.PreferenceManager
-import pan.alexander.tordnscrypt.App
+import android.content.SharedPreferences
 import pan.alexander.tordnscrypt.TopFragment
+import pan.alexander.tordnscrypt.di.SharedPreferencesModule
 import pan.alexander.tordnscrypt.iptables.Tethering
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.utils.Constants
 import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
 import pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS
-import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys
+import pan.alexander.tordnscrypt.utils.apps.InstalledAppNamesStorage
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
-import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHandler
 import java.util.*
+import javax.inject.Inject
+import javax.inject.Named
 
 private const val MAX_LINES_IN_LOG = 200
 
-class ConnectionRecordsParser(private val applicationContext: Context) {
+class ConnectionRecordsParser @Inject constructor(
+    private val applicationContext: Context,
+    private val installedAppNamesStorage: dagger.Lazy<InstalledAppNamesStorage>,
+    @Named(SharedPreferencesModule.DEFAULT_PREFERENCES_NAME)
+    defaultPreferences: SharedPreferences
+) {
 
     private val modulesStatus = ModulesStatus.getInstance()
-    private val sharedPreferences =
-        PreferenceManager.getDefaultSharedPreferences(applicationContext)
-    private val apIsOn = App.instance.daggerComponent.getPreferenceRepository().get()
-        .getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON)
     private val localEthernetDeviceAddress =
-        sharedPreferences.getString(
+        defaultPreferences.getString(
             "pref_common_local_eth_device_addr",
             Constants.STANDARD_ADDRESS_LOCAL_PC
         ) ?: Constants.STANDARD_ADDRESS_LOCAL_PC
@@ -102,16 +104,7 @@ class ConnectionRecordsParser(private val applicationContext: Context) {
             }
 
             if (record.uid != -1000) {
-                var appName = ""
-                val appList = ServiceVPNHandler.getAppsList()
-                if (appList != null) {
-                    for (rule in appList) {
-                        if (rule.uid == record.uid) {
-                            appName = rule.appName
-                            break
-                        }
-                    }
-                }
+                var appName = installedAppNamesStorage.get().getAppNameByUid(record.uid) ?: ""
                 if (appName.isEmpty() || record.uid == 1000) {
                     appName =
                         applicationContext.packageManager.getNameForUid(record.uid) ?: "Undefined"

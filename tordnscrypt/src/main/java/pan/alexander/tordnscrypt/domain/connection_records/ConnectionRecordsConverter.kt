@@ -22,7 +22,6 @@ package pan.alexander.tordnscrypt.domain.connection_records
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
-import android.util.Log
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.domain.dns_resolver.DnsInteractor
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
@@ -31,18 +30,19 @@ import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
 import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
 import pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.vpn.VpnUtils
+import pan.alexander.tordnscrypt.vpn.service.ServiceVPN.LINES_IN_DNS_QUERY_RAW_RECORDS
 import pan.alexander.tordnscrypt.vpn.service.VpnBuilder
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Future
 import javax.inject.Inject
 
-private const val REVERSE_LOOKUP_QUEUE_CAPACITY = 100
-private const val IP_TO_HOST_ADDRESS_MAP_SIZE = 500
+private const val REVERSE_LOOKUP_QUEUE_CAPACITY = 32
+private const val IP_TO_HOST_ADDRESS_MAP_SIZE = LINES_IN_DNS_QUERY_RAW_RECORDS
 
 class ConnectionRecordsConverter @Inject constructor(
     context: Context,
@@ -54,17 +54,19 @@ class ConnectionRecordsConverter @Inject constructor(
     private val sharedPreferences: SharedPreferences =
         PreferenceManager.getDefaultSharedPreferences(context)
     private val blockIPv6: Boolean = sharedPreferences.getBoolean(BLOCK_IPv6, true)
-    private var compatibilityMode = sharedPreferences.getBoolean(COMPATIBILITY_MODE, false)
     private val meteredNetwork = NetworkChecker.isMeteredNetwork(context)
     private val vpnDNS = VpnBuilder.vpnDnsSet
     private val modulesStatus = ModulesStatus.getInstance()
     private val fixTTL = (modulesStatus.isFixTTL && modulesStatus.mode == OperationMode.ROOT_MODE
             && !modulesStatus.isUseModulesWithRoot)
+    private var compatibilityMode = (sharedPreferences.getBoolean(COMPATIBILITY_MODE, false)
+            || Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
+            && modulesStatus.mode == OperationMode.VPN_MODE
 
     private val dnsQueryLogRecords = ArrayList<ConnectionRecord>()
     private val dnsQueryLogRecordsSublist = ArrayList<ConnectionRecord>()
     private val reverseLookupQueue = ArrayBlockingQueue<String>(REVERSE_LOOKUP_QUEUE_CAPACITY, true)
-    private val ipToHostAddressMap = mutableMapOf<String, String>()
+    private val ipToHostAddressMap = mutableMapOf<IpToTime, String>()
     private var futureTask: Future<*>? = null
 
     private val firewallEnabled = preferenceRepository.getBoolPreference(FIREWALL_ENABLED)
@@ -86,10 +88,6 @@ class ConnectionRecordsConverter @Inject constructor(
             }
 
             tempSet?.forEach { appsAllowed.add(it.toInt()) }
-        }
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            compatibilityMode = true
         }
     }
 
@@ -199,10 +197,10 @@ class ConnectionRecordsConverter @Inject constructor(
 
             dnsQueryLogRecordsSublist.add(dnsQueryNewRecord)
 
-        } else if (vpnDNS != null && !vpnDNS.contains(dnsQueryRawRecord.daddr)) {
+        } else if (vpnDNS == null || !vpnDNS.contains(dnsQueryRawRecord.daddr)) {
 
             if (!meteredNetwork && dnsQueryRawRecord.daddr.isNotEmpty()) {
-                val host = ipToHostAddressMap[dnsQueryRawRecord.daddr]
+                val host = ipToHostAddressMap[IpToTime(dnsQueryRawRecord.daddr)]
 
                 if (host == null) {
                     makeReverseLookup(dnsQueryRawRecord.daddr)
@@ -245,21 +243,23 @@ class ConnectionRecordsConverter @Inject constructor(
 
                     val host = dnsInteractor.get().reverseResolve(ip)
 
-                    if (ipToHostAddressMap.size > IP_TO_HOST_ADDRESS_MAP_SIZE) {
-                        val pairs = ipToHostAddressMap.toList()
-                        ipToHostAddressMap.clear()
-                        ipToHostAddressMap.plus(pairs.subList(pairs.size / 2, pairs.size))
+                    if (ipToHostAddressMap.size >= IP_TO_HOST_ADDRESS_MAP_SIZE) {
+
+                        ipToHostAddressMap.keys.sortedBy { it.time }.let {
+                            for (i in 0..it.size / 3) {
+                                ipToHostAddressMap.remove(it[i])
+                            }
+                        }
                     }
 
-                    ipToHostAddressMap[ip] = host
+                    if (host.isNotBlank()) {
+                        ipToHostAddressMap[IpToTime(ip, System.currentTimeMillis())] = host
+                    }
                 }
 
             } catch (ignored: InterruptedException) {
-            } catch (exception: Exception) {
-                Log.e(
-                    LOG_TAG,
-                    "DNSQueryLogRecordsConverter reverse lookup exception " + exception.message + " " + exception.cause
-                )
+            } catch (e: Exception) {
+                loge("DNSQueryLogRecordsConverter reverse lookup exception", e)
             }
         }
     }
@@ -314,5 +314,25 @@ class ConnectionRecordsConverter @Inject constructor(
             }
         }
         return false
+    }
+
+    private class IpToTime(
+        val ip: String,
+        val time: Long = 0
+    ) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as IpToTime
+
+            if (ip != other.ip) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            return ip.hashCode()
+        }
     }
 }

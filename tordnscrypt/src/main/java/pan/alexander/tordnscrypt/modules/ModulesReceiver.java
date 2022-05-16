@@ -77,6 +77,7 @@ import pan.alexander.tordnscrypt.domain.connection_checker.OnInternetConnectionC
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallNotification;
 import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
+import pan.alexander.tordnscrypt.utils.apps.InstalledAppNamesStorage;
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
@@ -110,6 +111,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     private final CachedExecutor cachedExecutor;
     private final Lazy<Handler> handler;
     private final Lazy<TorRestarterReconnector> torRestarterReconnector;
+    private final Lazy<InstalledAppNamesStorage> installedAppNamesStorage;
 
     private Context context;
     private volatile Object commonNetworkCallback;
@@ -132,7 +134,8 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             Provider<InternetSharingChecker> internetSharingChecker,
             CachedExecutor cachedExecutor,
             Lazy<Handler> handler,
-            Lazy<TorRestarterReconnector> torRestarterReconnector
+            Lazy<TorRestarterReconnector> torRestarterReconnector,
+            Lazy<InstalledAppNamesStorage> installedAppNamesStorage
     ) {
         this.preferenceRepository = preferenceRepository;
         this.defaultPreferences = defaultSharedPreferences;
@@ -141,6 +144,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         this.cachedExecutor = cachedExecutor;
         this.handler = handler;
         this.torRestarterReconnector = torRestarterReconnector;
+        this.installedAppNamesStorage = installedAppNamesStorage;
     }
 
     @Override
@@ -795,7 +799,12 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                 reload("Package deleted", context);
             }
         } else if (isRootMode()) {
+
             updateIptablesRules(true);
+
+            if (!modulesStatus.isFixTTL()) {
+                installedAppNamesStorage.get().updateAppUidToNames();
+            }
         }
     }
 
