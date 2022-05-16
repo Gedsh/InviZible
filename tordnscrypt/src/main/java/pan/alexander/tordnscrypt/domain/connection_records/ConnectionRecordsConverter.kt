@@ -43,6 +43,7 @@ import javax.inject.Inject
 
 private const val REVERSE_LOOKUP_QUEUE_CAPACITY = 32
 private const val IP_TO_HOST_ADDRESS_MAP_SIZE = LINES_IN_DNS_QUERY_RAW_RECORDS
+private const val DNS_REVERSE_LOOKUP_SUFFIX = ".in-addr.arpa"
 
 class ConnectionRecordsConverter @Inject constructor(
     context: Context,
@@ -112,7 +113,9 @@ class ConnectionRecordsConverter @Inject constructor(
             if (dnsQueryRawRecord.uid != -1000) {
                 addUID(dnsQueryRawRecord)
                 return
-            } else if (isIdenticalRecord(dnsQueryRawRecord)) {
+            } else if (isIdenticalRecord(dnsQueryRawRecord)
+                || isRootMode() && isPointerRecord(dnsQueryRawRecord)
+            ) {
                 return
             }
         }
@@ -150,6 +153,12 @@ class ConnectionRecordsConverter @Inject constructor(
 
         return false
     }
+
+    private fun isRootMode() =
+        modulesStatus.mode == OperationMode.ROOT_MODE && !modulesStatus.isFixTTL
+
+    private fun isPointerRecord(dnsQueryRawRecord: ConnectionRecord) =
+        dnsQueryRawRecord.aName.endsWith(DNS_REVERSE_LOOKUP_SUFFIX)
 
     private fun addUID(dnsQueryRawRecord: ConnectionRecord) {
         var savedRecord: ConnectionRecord? = null
@@ -283,7 +292,7 @@ class ConnectionRecordsConverter @Inject constructor(
 
         } else if (dnsQueryRawRecord.daddr.isBlank()
             && dnsQueryRawRecord.cName.isBlank()
-            && !dnsQueryRawRecord.aName.contains(".in-addr.arpa")
+            && !dnsQueryRawRecord.aName.contains(DNS_REVERSE_LOOKUP_SUFFIX)
         ) {
             dnsQueryRawRecord.blocked = true
             dnsQueryRawRecord.unused = false
