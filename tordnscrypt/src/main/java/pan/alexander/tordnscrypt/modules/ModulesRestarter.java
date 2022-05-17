@@ -121,9 +121,9 @@ public class ModulesRestarter {
         String[] result;
 
         if (pid.isEmpty() || killWithRoot) {
-            String killStringBusybox = pathVars.getBusyboxPath() + "pkill -SIGHUP" + " " + module;
+            String killStringBusybox = pathVars.getBusyboxPath() + "pkill -SIGHUP " + module + " || true";
             //String killAllStringBusybox = pathVars.busyboxPath + "kill -s SIGHUP" + " $(pgrep " + module + ")";
-            String killStringToyBox = "toybox pkill -SIGHUP" + " " + module;
+            String killStringToyBox = "toybox pkill -SIGHUP " + module + " || true";
             //String killString = "pkill -" + "SIGHUP" + " " + module;
 
             String killString = killStringBusybox;
@@ -138,7 +138,7 @@ public class ModulesRestarter {
             //String killStringBusyBox = pathVars.busyboxPath + "kill -s SIGHUP" + " " + pid;
             //String killAllStringToolBox = "toolbox kill -s SIGHUP" + " " + pid;
             //String killStringToyBox = "toybox kill -s SIGHUP" + " " + pid;
-            String killString = "kill -s SIGHUP" + " " + pid;
+            String killString = "kill -s SIGHUP " + pid + " || true";
 
             result = new String[]{
                     //killStringBusyBox,
