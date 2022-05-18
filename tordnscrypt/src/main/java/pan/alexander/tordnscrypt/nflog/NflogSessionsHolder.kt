@@ -22,7 +22,7 @@ package pan.alexander.tordnscrypt.nflog
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_KERNEL
 import javax.inject.Inject
 
-private const val SESSIONS_MAX_SIZE = 128
+private const val SESSIONS_MAX_SIZE = 256
 
 class NflogSessionsHolder @Inject constructor() {
 
@@ -55,7 +55,7 @@ class NflogSessionsHolder @Inject constructor() {
 
     private fun clearOldSessions() {
         sessionToUids.keys.sortedBy { it.time }.forEachIndexed { index, session ->
-            if (index < SESSIONS_MAX_SIZE / 2) {
+            if (index < SESSIONS_MAX_SIZE / 3) {
                 sessionToUids.remove(session)
             } else {
                 return

@@ -99,6 +99,10 @@ class NflogParser @Inject constructor(
     }
 
     private fun parseError(line: String) {
+        if (line.contains("unsupported yet")) {
+            return
+        }
+
         loge("NflogParser Nflog error. $line")
     }
 

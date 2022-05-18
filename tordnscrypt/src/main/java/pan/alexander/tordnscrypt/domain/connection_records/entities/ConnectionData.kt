@@ -60,6 +60,12 @@ class DnsRecord(
         result = 31 * result + ip.hashCode()
         return result
     }
+
+    override fun toString(): String {
+        return "DnsRecord(qName='$qName', aName='$aName', cName='$cName', hInfo='$hInfo', rCode=$rCode, ip='$ip')"
+    }
+
+
 }
 
 class PacketRecord(
@@ -88,4 +94,10 @@ class PacketRecord(
         result = 31 * result + daddr.hashCode()
         return result
     }
+
+    override fun toString(): String {
+        return "PacketRecord(uid=$uid, saddr='$saddr', daddr='$daddr')"
+    }
+
+
 }
