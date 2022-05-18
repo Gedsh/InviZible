@@ -138,7 +138,7 @@ class NflogManager @Inject constructor(
             runCatching {
 
                 if (attempts > 0) {
-                    delay(attempts * 100L)
+                    delay(attempts * 1000L)
                 }
 
                 startNfLogHandlerThread()
