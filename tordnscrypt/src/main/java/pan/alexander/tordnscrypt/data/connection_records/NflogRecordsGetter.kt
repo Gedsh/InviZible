@@ -20,8 +20,9 @@
 package pan.alexander.tordnscrypt.data.connection_records
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecord
+import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData
 import pan.alexander.tordnscrypt.nflog.NflogManager
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
@@ -29,7 +30,7 @@ class NflogRecordsGetter @Inject constructor(
     private val nflogManager: NflogManager
 ) {
 
-    fun getConnectionRawRecords(): List<ConnectionRecord?> = nflogManager.getRealTimeLogs()
+    fun getConnectionRawRecords(): ConcurrentHashMap<ConnectionData, Boolean> = nflogManager.getRealTimeLogs()
 
     fun clearConnectionRawRecords() = nflogManager.clearRealTimeLogs()
 }

@@ -27,10 +27,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import pan.alexander.tordnscrypt.di.CoroutinesModule
-import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecord
 import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData
-import pan.alexander.tordnscrypt.domain.connection_records.entities.DnsRecord
-import pan.alexander.tordnscrypt.domain.connection_records.entities.PacketRecord
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.Constants.NFLOG_GROUP
 import pan.alexander.tordnscrypt.utils.Constants.NFLOG_PREFIX
@@ -39,13 +36,11 @@ import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPN.LINES_IN_DNS_QUERY_RAW_RECORDS
 import java.io.File
-import java.util.concurrent.locks.ReentrantReadWriteLock
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
 import kotlin.Exception
-import kotlin.concurrent.read
-import kotlin.concurrent.write
 
 private const val ATTEMPTS_TO_OPEN_NFLOG = 3
 private const val ATTEMPTS_TO_CLOSE_NFLOG = 3
@@ -61,9 +56,11 @@ class NflogManager @Inject constructor(
     private val nflogParser: NflogParser
 ) {
 
-    private val lock = ReentrantReadWriteLock()
-
-    private val connectionDataRecords = hashSetOf<ConnectionData>()
+    private val connectionDataRecords = ConcurrentHashMap<ConnectionData, Boolean>(
+        16,
+        0.75f,
+        2
+    )
 
     private val coroutineScope = CoroutineScope(
         SupervisorJob() +
@@ -325,22 +322,20 @@ class NflogManager @Inject constructor(
 
     private fun handleConnectionRecordLine(line: String) {
         try {
-            lock.write {
-                nflogParser.parse(line)?.let {
+            nflogParser.parse(line)?.let {
+                connectionDataRecords.remove(it)
+                connectionDataRecords.put(it, true)
+            }
 
-                    if (!connectionDataRecords.add(it)) {
-                        connectionDataRecords.remove(it)
-                        connectionDataRecords.add(it)
+            if (connectionDataRecords.size >= LINES_IN_DNS_QUERY_RAW_RECORDS) {
+                connectionDataRecords.keys()
+                    .toList()
+                    .sortedBy { it.time }
+                    .take(LINES_IN_DNS_QUERY_RAW_RECORDS / 5).let {
+                        for (record in it) {
+                            connectionDataRecords.remove(record)
+                        }
                     }
-                }
-
-                if (connectionDataRecords.size >= LINES_IN_DNS_QUERY_RAW_RECORDS) {
-                    connectionDataRecords.removeAll(
-                        connectionDataRecords.sortedBy {
-                            it.time
-                        }.take(LINES_IN_DNS_QUERY_RAW_RECORDS / 5).toSet()
-                    )
-                }
             }
         } catch (e: Exception) {
             loge("NflogManager parseLine $line", e)
@@ -352,41 +347,10 @@ class NflogManager @Inject constructor(
         STOP
     }
 
-    fun getRealTimeLogs() = lock.read {
-        connectionDataRecords.sortedBy { it.time }.map {
-            when (it) {
-                is DnsRecord -> {
-                    ConnectionRecord(
-                        qName = it.qName,
-                        aName = it.aName,
-                        cName = it.cName,
-                        hInfo = it.hInfo,
-                        rCode = it.rCode,
-                        saddr = "",
-                        daddr = it.ip,
-                        uid = -1000
-                    )
-                }
-                is PacketRecord -> {
-                    ConnectionRecord(
-                        qName = "",
-                        aName = "",
-                        cName = "",
-                        hInfo = "",
-                        rCode = 0,
-                        saddr = it.saddr,
-                        daddr = it.daddr,
-                        uid = it.uid
-                    )
-                }
-            }
-        }
-    }
+    fun getRealTimeLogs() = connectionDataRecords
 
     fun clearRealTimeLogs() {
-        lock.write {
-            connectionDataRecords.clear()
-        }
+        connectionDataRecords.clear()
     }
 
 }
