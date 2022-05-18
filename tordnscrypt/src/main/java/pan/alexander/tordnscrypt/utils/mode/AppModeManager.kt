@@ -64,7 +64,7 @@ class AppModeManager @Inject constructor(
         }
 
         modulesStatus.dnsCryptState.let {
-            if (!fixTTL &&
+            if (!modulesStatus.isUseModulesWithRoot &&
                 (it == ModuleState.RUNNING
                         || it == ModuleState.STARTING
                         || it == ModuleState.RESTARTING)

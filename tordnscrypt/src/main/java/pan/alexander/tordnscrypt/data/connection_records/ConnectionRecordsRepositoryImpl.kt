@@ -22,14 +22,19 @@ package pan.alexander.tordnscrypt.data.connection_records
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsRepository
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecord
+import pan.alexander.tordnscrypt.domain.connection_records.RawConnectionRecordsMapper
+import pan.alexander.tordnscrypt.domain.connection_records.entities.DnsRecord
+import pan.alexander.tordnscrypt.domain.connection_records.entities.PacketRecord
 import pan.alexander.tordnscrypt.modules.ModulesStatus
+import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_KERNEL
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
 class ConnectionRecordsRepositoryImpl @Inject constructor(
     private val connectionRecordsGetter: ConnectionRecordsGetter,
-    private val nflogRecordsGetter: NflogRecordsGetter
+    private val nflogRecordsGetter: NflogRecordsGetter,
+    private val rawConnectionRecordsMapper: RawConnectionRecordsMapper
 ) : ConnectionRecordsRepository {
 
     private val modulesStatus = ModulesStatus.getInstance()
@@ -38,14 +43,25 @@ class ConnectionRecordsRepositoryImpl @Inject constructor(
     private var savedMode = modulesStatus.mode
 
     override fun getRawConnectionRecords(): List<ConnectionRecord?> =
-        if (isVpnMode() || isFixTTL()) {
+        if (isVpnMode()) {
 
             if (modulesStatus.mode != savedMode) {
                 stopNflogRecordsGetter()
                 savedMode = modulesStatus.mode
             }
 
-            connectionRecordsGetter.getConnectionRawRecords()
+            rawConnectionRecordsMapper.map(connectionRecordsGetter.getConnectionRawRecords())
+
+        } else if (isFixTTL()) {
+            rawConnectionRecordsMapper.map(
+                connectionRecordsGetter.getConnectionRawRecords()
+                        + nflogRecordsGetter.getConnectionRawRecords().filter {
+                    when (val record = it.key) {
+                        is PacketRecord -> record.uid != SPECIAL_UID_KERNEL
+                        is DnsRecord -> true
+                    }
+                }
+            )
 
         } else if (isRootMode()) {
 
@@ -54,7 +70,7 @@ class ConnectionRecordsRepositoryImpl @Inject constructor(
                 savedMode = modulesStatus.mode
             }
 
-            nflogRecordsGetter.getConnectionRawRecords()
+            rawConnectionRecordsMapper.map(nflogRecordsGetter.getConnectionRawRecords())
         } else {
             emptyList()
         }

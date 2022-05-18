@@ -650,7 +650,6 @@ public class ModulesStateLoop implements Runnable,
     @SuppressLint("UnsafeOptInUsageWarning")
     private void startNflogIfRootMode() {
         if (modulesStatus.getMode() == ROOT_MODE
-                && !modulesStatus.isFixTTL()
                 && !modulesStatus.isUseModulesWithRoot()) {
             nflogManager.get().startNflog();
             nflogIsRunning = true;
