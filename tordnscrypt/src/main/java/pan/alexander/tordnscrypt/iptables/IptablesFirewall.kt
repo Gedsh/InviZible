@@ -172,7 +172,7 @@ class IptablesFirewall @Inject constructor(
                 }
                 SPECIAL_UID_NTP -> {
                     arrayListOf(
-                        "$iptables -A $FILTER_OUTPUT_FIREWALL -p tcp --dport $SPECIAL_PORT_NTP -m owner --uid-owner 1000 -j RETURN",
+                        "$iptables -A $FILTER_OUTPUT_FIREWALL -p udp --sport $SPECIAL_PORT_NTP -m owner --uid-owner 1000 -j RETURN",
                         "$iptables -A $FILTER_OUTPUT_FIREWALL -p udp --dport $SPECIAL_PORT_NTP -m owner --uid-owner 1000 -j RETURN",
                     )
                 }
