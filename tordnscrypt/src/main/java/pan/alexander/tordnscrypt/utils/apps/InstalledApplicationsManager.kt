@@ -30,6 +30,7 @@ import android.os.Build
 import android.os.UserManager
 import androidx.core.content.ContextCompat
 import pan.alexander.tordnscrypt.App
+import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.TopFragment.appVersion
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule
 import pan.alexander.tordnscrypt.modules.ModulesStatus
@@ -423,6 +424,16 @@ class InstalledApplicationsManager private constructor(
                     defaultIcon,
                     true,
                     activeApps.contains(ApplicationData.SPECIAL_UID_AGPS.toString())
+                )
+            )
+            specialDataApps.add(
+                ApplicationData(
+                    context.getString(R.string.connectivity_check),
+                    "connectivitycheck.gstatic.com",
+                    ApplicationData.SPECIAL_UID_CONNECTIVITY_CHECK,
+                    defaultIcon,
+                    true,
+                    activeApps.contains(ApplicationData.SPECIAL_UID_CONNECTIVITY_CHECK.toString())
                 )
             )
         }

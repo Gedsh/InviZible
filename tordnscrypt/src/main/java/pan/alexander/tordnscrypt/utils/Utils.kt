@@ -34,6 +34,7 @@ import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesService
 import pan.alexander.tordnscrypt.settings.PathVars
+import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_CONNECTIVITY_CHECK
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges
 import pan.alexander.tordnscrypt.utils.Constants.DNS_DEFAULT_UID
 import pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_DEFAULT_UID
@@ -256,7 +257,8 @@ object Utils {
     fun getCriticalSystemUids(ownUid: Int): List<Int> =
         arrayListOf(
             getUidForName("dns", DNS_DEFAULT_UID + ownUid / 100_000 * 100_000),
-            getUidForName("network_stack", NETWORK_STACK_DEFAULT_UID + ownUid / 100_000 * 100_000)
+            getUidForName("network_stack", NETWORK_STACK_DEFAULT_UID + ownUid / 100_000 * 100_000),
+            SPECIAL_UID_CONNECTIVITY_CHECK
         )
 
     fun getDnsTetherUid(ownUid: Int) =

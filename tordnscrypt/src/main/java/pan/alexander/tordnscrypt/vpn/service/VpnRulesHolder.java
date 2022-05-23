@@ -24,6 +24,7 @@ import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIA
 import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_PORT_AGPS2;
 import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_PORT_NTP;
 import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_UID_AGPS;
+import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_UID_CONNECTIVITY_CHECK;
 import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_UID_KERNEL;
 import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_UID_NTP;
 import static pan.alexander.tordnscrypt.utils.Constants.DNS_OVER_TLS_PORT;
@@ -56,12 +57,14 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import dagger.Lazy;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.iptables.Tethering;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.Constants;
+import pan.alexander.tordnscrypt.utils.connectivitycheck.ConnectivityCheckManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.vpn.Allowed;
 import pan.alexander.tordnscrypt.vpn.Forward;
@@ -76,6 +79,7 @@ public class VpnRulesHolder {
     private final SharedPreferences defaultPreferences;
     private final PreferenceRepository preferenceRepository;
     private final PathVars pathVars;
+    private final Lazy<ConnectivityCheckManager> connectivityCheckManager;
 
     @SuppressLint("UseSparseArrays")
     final Map<Integer, Boolean> mapUidAllowed = new HashMap<>();
@@ -88,14 +92,18 @@ public class VpnRulesHolder {
     private final Set<Integer> uidLanAllowed = new HashSet<>();
     final Set<Integer> uidSpecialAllowed = new HashSet<>();
 
+    private final Set<String> connectivityCheckIps = new HashSet<>();
+
     @Inject
     public VpnRulesHolder(@Named(DEFAULT_PREFERENCES_NAME) SharedPreferences defaultPreferences,
                           PreferenceRepository preferenceRepository,
-                          PathVars pathVars
+                          PathVars pathVars,
+                          Lazy<ConnectivityCheckManager> connectivityCheckManager
     ) {
         this.defaultPreferences = defaultPreferences;
         this.preferenceRepository = preferenceRepository;
         this.pathVars = pathVars;
+        this.connectivityCheckManager = connectivityCheckManager;
     }
 
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
@@ -221,8 +229,8 @@ public class VpnRulesHolder {
         } else if (vpnPreferences.getFirewallEnabled()
                 && isIpInLanRange(packet.daddr)) {
             packet.allowed = uidLanAllowed.contains(packet.uid);
-        } else if (isDestinationInSpecialRange(packet.uid, packet.dport)) {
-            packet.allowed = isSpecialAllowed(packet.uid, packet.dport);
+        } else if (isDestinationInSpecialRange(packet.uid, packet.daddr, packet.dport)) {
+            packet.allowed = isSpecialAllowed(packet.uid, packet.daddr, packet.dport);
         } else {
 
             if (mapUidAllowed.containsKey(packet.uid)) {
@@ -285,15 +293,16 @@ public class VpnRulesHolder {
         return false;
     }
 
-    private boolean isDestinationInSpecialRange(int uid, int destPort) {
+    private boolean isDestinationInSpecialRange(int uid, String destIp, int destPort) {
         return uid == 0 && destPort == PLAINTEXT_DNS_PORT
                 || uid == SPECIAL_UID_KERNEL
                 || destPort == SPECIAL_PORT_NTP
                 || destPort == SPECIAL_PORT_AGPS1
-                || destPort == SPECIAL_PORT_AGPS2;
+                || destPort == SPECIAL_PORT_AGPS2
+                || connectivityCheckIps.contains(destIp);
     }
 
-    private boolean isSpecialAllowed(int uid, int destPort) {
+    private boolean isSpecialAllowed(int uid, String destIp, int destPort) {
         if (uid == 0 && destPort == PLAINTEXT_DNS_PORT) {
             return true;
         } else if (uid == SPECIAL_UID_KERNEL) {
@@ -303,6 +312,8 @@ public class VpnRulesHolder {
                     || mapUidAllowed.containsKey(1000);
         } else if (destPort == SPECIAL_PORT_AGPS1 || destPort == SPECIAL_PORT_AGPS2) {
             return uidSpecialAllowed.contains(SPECIAL_UID_AGPS);
+        } else if(connectivityCheckIps.contains(destIp)) {
+            return uidSpecialAllowed.contains(SPECIAL_UID_CONNECTIVITY_CHECK);
         }
         return false;
     }
@@ -329,6 +340,8 @@ public class VpnRulesHolder {
 
         return false;
     }
+
+
 
     void prepareUidAllowed(
             List<String> listAllowed,
@@ -367,6 +380,9 @@ public class VpnRulesHolder {
         } else {
             ipsForTor.addAll(preferenceRepository.getStringSetPreference(IPS_TO_UNLOCK));
         }
+
+        connectivityCheckIps.clear();
+        connectivityCheckIps.addAll(connectivityCheckManager.get().getConnectivityCheckIps());
 
         lock.writeLock().unlock();
     }

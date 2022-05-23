@@ -26,10 +26,12 @@ import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.domain.dns_resolver.DnsInteractor
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
+import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_CONNECTIVITY_CHECK
+import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_KERNEL
 import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
 import pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker
+import pan.alexander.tordnscrypt.utils.connectivitycheck.ConnectivityCheckManager
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
@@ -49,7 +51,8 @@ class ConnectionRecordsConverter @Inject constructor(
     context: Context,
     preferenceRepository: PreferenceRepository,
     private val dnsInteractor: dagger.Lazy<DnsInteractor>,
-    private val cachedExecutor: CachedExecutor
+    private val cachedExecutor: CachedExecutor,
+    private val connectivityCheckManager: ConnectivityCheckManager
 ) {
 
     private val sharedPreferences: SharedPreferences =
@@ -165,8 +168,11 @@ class ConnectionRecordsConverter @Inject constructor(
         dnsQueryLogRecordsSublist.clear()
 
         val uidBlocked = if (firewallEnabled) {
-            if (compatibilityMode && dnsQueryRawRecord.uid == ApplicationData.SPECIAL_UID_KERNEL
-                || fixTTL && dnsQueryRawRecord.uid == ApplicationData.SPECIAL_UID_KERNEL
+            if (compatibilityMode && dnsQueryRawRecord.uid == SPECIAL_UID_KERNEL
+                || fixTTL && dnsQueryRawRecord.uid == SPECIAL_UID_KERNEL
+                || appsAllowed.contains(SPECIAL_UID_CONNECTIVITY_CHECK)
+                && connectivityCheckManager.getConnectivityCheckIps()
+                    .contains(dnsQueryRawRecord.daddr)
             ) {
                 false
             } else if (isIpInLanRange(dnsQueryRawRecord.daddr)) {

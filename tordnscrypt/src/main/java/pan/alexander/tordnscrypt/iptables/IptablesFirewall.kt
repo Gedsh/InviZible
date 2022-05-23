@@ -21,8 +21,7 @@ package pan.alexander.tordnscrypt.iptables
 
 import android.content.Context
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
-import pan.alexander.tordnscrypt.iptables.IptablesConstants.FILTER_FIREWALL_LAN
-import pan.alexander.tordnscrypt.iptables.IptablesConstants.FILTER_OUTPUT_FIREWALL
+import pan.alexander.tordnscrypt.iptables.IptablesConstants.*
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
@@ -30,6 +29,7 @@ import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPE
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_PORT_AGPS2
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_PORT_NTP
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_AGPS
+import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_CONNECTIVITY_CHECK
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_KERNEL
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_NTP
 import pan.alexander.tordnscrypt.utils.Constants.*
@@ -40,6 +40,7 @@ import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker.isEthern
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker.isRoaming
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker.isVpnActive
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker.isWifiActive
+import pan.alexander.tordnscrypt.utils.connectivitycheck.ConnectivityCheckManager
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.vpn.VpnUtils
@@ -50,8 +51,10 @@ private const val FIREWALL_RETURN_MARK = 15600
 class IptablesFirewall @Inject constructor(
     private val context: Context,
     private val preferences: PreferenceRepository,
-    private val pathVars: PathVars
+    private val pathVars: PathVars,
+    private val connectivityCheckManager: dagger.Lazy<ConnectivityCheckManager>
 ) {
+
     private val numberRegex by lazy { Regex("-?$NUMBER_REGEX") }
     private val positiveNumberRegex by lazy { Regex(NUMBER_REGEX) }
     private val negativeNumberRegex by lazy { Regex("-$NUMBER_REGEX") }
@@ -106,7 +109,9 @@ class IptablesFirewall @Inject constructor(
         return arrayListOf(
             "$iptables -F $FILTER_FIREWALL_LAN 2> /dev/null",
             "$iptables -F $FILTER_OUTPUT_FIREWALL 2> /dev/null",
-            "$iptables -D OUTPUT -j $FILTER_OUTPUT_FIREWALL 2> /dev/null || true"
+            "$iptables -D OUTPUT -j $FILTER_OUTPUT_FIREWALL 2> /dev/null || true",
+            "$iptables -t mangle -F $MANGLE_FIREWALL_ALLOW 2> /dev/null",
+            "$iptables -t mangle -D OUTPUT -j $MANGLE_FIREWALL_ALLOW 2> /dev/null || true"
         )
     }
 
@@ -163,30 +168,47 @@ class IptablesFirewall @Inject constructor(
     }
 
     private fun getSpecialRules(iptables: String): List<String> =
-        uidSpecialAllowed.flatMap {
-            when (it) {
-                SPECIAL_UID_KERNEL -> {
-                    arrayListOf(
-                        "$iptables -A $FILTER_OUTPUT_FIREWALL -m owner ! --uid-owner 0:999999999 -j RETURN"
-                    )
+        sequenceOf(
+            "$iptables -t mangle -F $MANGLE_FIREWALL_ALLOW 2> /dev/null",
+            "$iptables -t mangle -D OUTPUT -j $MANGLE_FIREWALL_ALLOW 2> /dev/null || true",
+            "$iptables -t mangle -N $MANGLE_FIREWALL_ALLOW 2> /dev/null"
+        ).plus(
+            uidSpecialAllowed.flatMap {
+                when (it) {
+                    SPECIAL_UID_KERNEL -> {
+                        arrayListOf(
+                            "$iptables -t mangle -A $MANGLE_FIREWALL_ALLOW -m owner ! --uid-owner 0:999999999 -j RETURN"
+                        )
+                    }
+                    SPECIAL_UID_NTP -> {
+                        arrayListOf(
+                            "$iptables -t mangle -A $MANGLE_FIREWALL_ALLOW -p udp --sport $SPECIAL_PORT_NTP -m owner --uid-owner 1000 -j CONNMARK --set-mark $FIREWALL_RETURN_MARK || true",
+                            "$iptables -t mangle -A $MANGLE_FIREWALL_ALLOW -p udp --dport $SPECIAL_PORT_NTP -m owner --uid-owner 1000 -j CONNMARK --set-mark $FIREWALL_RETURN_MARK || true",
+                        )
+                    }
+                    SPECIAL_UID_AGPS -> {
+                        arrayListOf(
+                            "$iptables -t mangle -A $MANGLE_FIREWALL_ALLOW -p tcp --dport $SPECIAL_PORT_AGPS1 -j CONNMARK --set-mark $FIREWALL_RETURN_MARK || true",
+                            "$iptables -t mangle -A $MANGLE_FIREWALL_ALLOW -p udp --dport $SPECIAL_PORT_AGPS1 -j CONNMARK --set-mark $FIREWALL_RETURN_MARK || true",
+                            "$iptables -t mangle -A $MANGLE_FIREWALL_ALLOW -p tcp --dport $SPECIAL_PORT_AGPS2 -j CONNMARK --set-mark $FIREWALL_RETURN_MARK || true",
+                            "$iptables -t mangle -A $MANGLE_FIREWALL_ALLOW -p udp --dport $SPECIAL_PORT_AGPS2 -j CONNMARK --set-mark $FIREWALL_RETURN_MARK || true"
+                        )
+                    }
+                    SPECIAL_UID_CONNECTIVITY_CHECK -> {
+                        connectivityCheckManager.get().getConnectivityCheckIps().map { ip ->
+                            "$iptables -t mangle -A $MANGLE_FIREWALL_ALLOW -d $ip -j CONNMARK --set-mark $FIREWALL_RETURN_MARK || true"
+                        }
+                    }
+                    else -> emptyList()
                 }
-                SPECIAL_UID_NTP -> {
-                    arrayListOf(
-                        "$iptables -A $FILTER_OUTPUT_FIREWALL -p udp --sport $SPECIAL_PORT_NTP -m owner --uid-owner 1000 -j RETURN",
-                        "$iptables -A $FILTER_OUTPUT_FIREWALL -p udp --dport $SPECIAL_PORT_NTP -m owner --uid-owner 1000 -j RETURN",
-                    )
-                }
-                SPECIAL_UID_AGPS -> {
-                    arrayListOf(
-                        "$iptables -A $FILTER_OUTPUT_FIREWALL -p tcp --dport $SPECIAL_PORT_AGPS1 -j RETURN",
-                        "$iptables -A $FILTER_OUTPUT_FIREWALL -p udp --dport $SPECIAL_PORT_AGPS1 -j RETURN",
-                        "$iptables -A $FILTER_OUTPUT_FIREWALL -p tcp --dport $SPECIAL_PORT_AGPS2 -j RETURN",
-                        "$iptables -A $FILTER_OUTPUT_FIREWALL -p udp --dport $SPECIAL_PORT_AGPS2 -j RETURN"
-                    )
-                }
-                else -> emptyList()
             }
-        }
+        ).plus(
+            arrayListOf(
+                "$iptables -t mangle -I OUTPUT -j $MANGLE_FIREWALL_ALLOW",
+                "$iptables -A $FILTER_OUTPUT_FIREWALL -m connmark --mark $FIREWALL_RETURN_MARK -j RETURN"
+            )
+        ).toList()
+
 
     private fun getTetheringRules(iptables: String, tetheringActive: Boolean): List<String> =
         if (tetheringActive) {

@@ -337,6 +337,10 @@ public class PathVars {
         return appDataDir + "/app_data/dnscrypt-proxy/forwarding-rules-remote.txt";
     }
 
+    public String getDNSCryptCaptivePortalsPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/captive-portals.txt";
+    }
+
     public String getCacheDirPath(Context context) {
         String cacheDirPath = "/storage/emulated/0/Android/data/" + context.getPackageName() + "/cache";
 

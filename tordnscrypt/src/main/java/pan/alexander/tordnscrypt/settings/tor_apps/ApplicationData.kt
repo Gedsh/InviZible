@@ -49,6 +49,7 @@ data class ApplicationData(private val name: String = "",
         const val SPECIAL_UID_AGPS = -15
         const val SPECIAL_PORT_AGPS1 = 7275
         const val SPECIAL_PORT_AGPS2 = 7276
+        const val SPECIAL_UID_CONNECTIVITY_CHECK = -16
 
         fun <T> sortListBy(list: CopyOnWriteArrayList<T>?, comparator: Comparator<T>) {
             if (list != null && list.size > 1) {
