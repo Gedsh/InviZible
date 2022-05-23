@@ -81,7 +81,7 @@ class InstalledApplicationsManager private constructor(
     }
 
     private val ownUID = pathVars.appUid
-    private var multiUserSupport = defaultPreferences.getBoolean(MULTI_USER_SUPPORT, false)
+    private var multiUserSupport = defaultPreferences.getBoolean(MULTI_USER_SUPPORT, true)
     private var savedTime = 0L
 
     fun getInstalledApps(): List<ApplicationData> {
