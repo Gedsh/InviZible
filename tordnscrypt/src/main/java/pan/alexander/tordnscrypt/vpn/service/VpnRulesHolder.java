@@ -231,7 +231,7 @@ public class VpnRulesHolder {
             packet.allowed = uidLanAllowed.contains(packet.uid);
         } else if (isDestinationInSpecialRange(packet.uid, packet.daddr, packet.dport)) {
             packet.allowed = isSpecialAllowed(packet.uid, packet.daddr, packet.dport);
-        } else {
+        } else if(vpnPreferences.getFirewallEnabled()) {
 
             if (mapUidAllowed.containsKey(packet.uid)) {
                 Boolean allow = mapUidAllowed.get(packet.uid);
@@ -246,6 +246,8 @@ public class VpnRulesHolder {
             } else {
                 logw("UID is not allowed or no rules for " + packet);
             }
+        } else {
+            packet.allowed = true;
         }
 
         Allowed allowed = null;
