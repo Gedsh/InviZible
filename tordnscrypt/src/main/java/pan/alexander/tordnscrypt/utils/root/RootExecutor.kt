@@ -75,8 +75,8 @@ class RootExecutor @Inject constructor(
     )
 
     private val commandsInProgress = MutableSharedFlow<CommandsWithMark>(
-        0,
         10,
+        0,
         BufferOverflow.DROP_OLDEST
     ).apply {
         onEach {
