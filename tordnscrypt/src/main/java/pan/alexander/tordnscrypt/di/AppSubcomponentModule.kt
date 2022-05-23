@@ -21,7 +21,6 @@ package pan.alexander.tordnscrypt.di
 
 import dagger.Module
 import pan.alexander.tordnscrypt.di.arp.ArpSubcomponent
-import pan.alexander.tordnscrypt.di.logreader.LogReaderSubcomponent
 import pan.alexander.tordnscrypt.di.modulesservice.ModulesServiceSubcomponent
 import pan.alexander.tordnscrypt.di.tiles.TilesSubcomponent
 
