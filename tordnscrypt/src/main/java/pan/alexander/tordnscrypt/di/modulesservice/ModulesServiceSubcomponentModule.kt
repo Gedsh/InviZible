@@ -17,19 +17,14 @@
     Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.di
+package pan.alexander.tordnscrypt.di.modulesservice
 
 import dagger.Module
-import pan.alexander.tordnscrypt.di.arp.ArpSubcomponent
 import pan.alexander.tordnscrypt.di.logreader.LogReaderSubcomponent
-import pan.alexander.tordnscrypt.di.modulesservice.ModulesServiceSubcomponent
-import pan.alexander.tordnscrypt.di.tiles.TilesSubcomponent
 
 @Module(
     subcomponents = [
-        TilesSubcomponent::class,
-        ArpSubcomponent::class,
-        ModulesServiceSubcomponent::class
+        LogReaderSubcomponent::class
     ]
 )
-class AppSubcomponentModule
+class ModulesServiceSubcomponentModule

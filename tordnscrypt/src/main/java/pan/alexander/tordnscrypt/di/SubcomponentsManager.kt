@@ -19,17 +19,33 @@
 
 package pan.alexander.tordnscrypt.di
 
-import dagger.Module
-import pan.alexander.tordnscrypt.di.arp.ArpSubcomponent
+import android.content.Context
 import pan.alexander.tordnscrypt.di.logreader.LogReaderSubcomponent
 import pan.alexander.tordnscrypt.di.modulesservice.ModulesServiceSubcomponent
-import pan.alexander.tordnscrypt.di.tiles.TilesSubcomponent
+import pan.alexander.tordnscrypt.utils.delegates.MutableLazy
 
-@Module(
-    subcomponents = [
-        TilesSubcomponent::class,
-        ArpSubcomponent::class,
-        ModulesServiceSubcomponent::class
-    ]
-)
-class AppSubcomponentModule
+class SubcomponentsManager(
+    context: Context,
+    daggerComponent: AppComponent
+) {
+    private var logReaderDaggerSubcomponent: LogReaderSubcomponent? by MutableLazy {
+        modulesServiceSubcomponent().logReaderSubcomponent().create(context)
+    }
+
+    fun initLogReaderDaggerSubcomponent() = logReaderDaggerSubcomponent!!
+
+    fun releaseLogReaderScope() {
+        logReaderDaggerSubcomponent = null
+    }
+
+
+    private var modulesServiceSubcomponent: ModulesServiceSubcomponent? by MutableLazy {
+        daggerComponent.modulesServiceSubcomponent().create()
+    }
+
+    fun modulesServiceSubcomponent() = modulesServiceSubcomponent!!
+
+    fun releaseModulesServiceSubcomponent() {
+        modulesServiceSubcomponent = null
+    }
+}

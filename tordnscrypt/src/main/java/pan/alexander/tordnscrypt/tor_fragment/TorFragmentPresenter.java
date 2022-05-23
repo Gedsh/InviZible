@@ -105,6 +105,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
     public TorFragmentPresenter(TorFragmentView view) {
         App.getInstance()
+                .getSubcomponentsManager()
                 .initLogReaderDaggerSubcomponent()
                 .inject(this);
         this.view = view;

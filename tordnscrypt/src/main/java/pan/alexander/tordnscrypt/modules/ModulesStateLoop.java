@@ -122,6 +122,7 @@ public class ModulesStateLoop implements Runnable,
 
     ModulesStateLoop(ModulesService modulesService) {
         App.getInstance()
+                .getSubcomponentsManager()
                 .initLogReaderDaggerSubcomponent()
                 .inject(this);
 

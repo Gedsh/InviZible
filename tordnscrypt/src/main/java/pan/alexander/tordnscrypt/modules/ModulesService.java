@@ -983,6 +983,8 @@ public class ModulesService extends Service {
 
         installedAppNamesStorage.get().clearAppUidToNames();
 
+        App.getInstance().getSubcomponentsManager().releaseModulesServiceSubcomponent();
+
         super.onDestroy();
     }
 

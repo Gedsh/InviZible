@@ -28,7 +28,7 @@ import pan.alexander.tordnscrypt.TopFragment
 import pan.alexander.tordnscrypt.backup.BackupFragment
 import pan.alexander.tordnscrypt.backup.BackupHelper
 import pan.alexander.tordnscrypt.di.arp.ArpSubcomponent
-import pan.alexander.tordnscrypt.di.logreader.LogReaderSubcomponent
+import pan.alexander.tordnscrypt.di.modulesservice.ModulesServiceSubcomponent
 import pan.alexander.tordnscrypt.di.tiles.TilesSubcomponent
 import pan.alexander.tordnscrypt.dialogs.*
 
@@ -38,7 +38,6 @@ import pan.alexander.tordnscrypt.help.HelpActivity
 import pan.alexander.tordnscrypt.help.HelpActivityReceiver
 import pan.alexander.tordnscrypt.installer.Installer
 import pan.alexander.tordnscrypt.iptables.IptablesReceiver
-import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules
 import pan.alexander.tordnscrypt.iptables.Tethering
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDFragmentReceiver
 import pan.alexander.tordnscrypt.main_fragment.MainFragment
@@ -64,7 +63,6 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager
 import pan.alexander.tordnscrypt.utils.integrity.Verifier
 import pan.alexander.tordnscrypt.utils.root.RootExecService
 import pan.alexander.tordnscrypt.utils.web.TorRefreshIPsWork
-import pan.alexander.tordnscrypt.vpn.service.ServiceVPN
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHandler
 import javax.inject.Singleton
 
@@ -77,9 +75,9 @@ import javax.inject.Singleton
 )
 @Keep
 interface AppComponent {
-    fun logReaderSubcomponent(): LogReaderSubcomponent.Factory
     fun tilesSubcomponent(): TilesSubcomponent.Factory
     fun arpSubcomponent(): ArpSubcomponent.Factory
+    fun modulesServiceSubcomponent(): ModulesServiceSubcomponent.Factory
 
     fun getPathVars(): dagger.Lazy<PathVars>
     fun getPreferenceRepository(): dagger.Lazy<PreferenceRepository>
@@ -114,9 +112,7 @@ interface AppComponent {
     fun inject(fragment: UpdateModulesDialogFragment)
     fun inject(fragment: NotificationHelper)
     fun inject(fragment: ExtendedDialogFragment)
-    fun inject(fragment: ChangeModeDialog)
     fun inject(service: ModulesService)
-    fun inject(service: ServiceVPN)
     fun inject(service: RootExecService)
     fun inject(service: UpdateService)
     fun inject(receiver: BootCompleteReceiver)
@@ -140,7 +136,6 @@ interface AppComponent {
     fun inject(modulesStarterHelper: ModulesStarterHelper)
     fun inject(backupHelper: BackupHelper)
     fun inject(tethering: Tethering)
-    fun inject(modulesIptablesRules: ModulesIptablesRules)
     fun inject(serviceVPNHandler: ServiceVPNHandler)
     fun inject(installer: Installer)
     fun inject(installedApplicationsManager: InstalledApplicationsManager)

@@ -40,7 +40,7 @@ class ChangeModeDialog: ExtendedDialogFragment() {
     lateinit var appModeManager: AppModeManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        App.instance.daggerComponent.inject(this)
+        App.instance.subcomponentsManager.modulesServiceSubcomponent().inject(this)
         super.onCreate(savedInstanceState)
     }
 

@@ -94,6 +94,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
     public DNSCryptFragmentPresenter(DNSCryptFragmentView view) {
         App.getInstance()
+                .getSubcomponentsManager()
                 .initLogReaderDaggerSubcomponent()
                 .inject(this);
         this.view = view;

@@ -111,7 +111,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
     public ModulesIptablesRules(Context context) {
         super(context, App.getInstance().getDaggerComponent().getPathVars().get());
-        App.getInstance().getDaggerComponent().inject(this);
+        App.getInstance().getSubcomponentsManager().modulesServiceSubcomponent().inject(this);
     }
 
     @Override

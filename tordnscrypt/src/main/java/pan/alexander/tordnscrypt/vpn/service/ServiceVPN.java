@@ -584,7 +584,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
             notification.sendNotification(title, message);
         }
 
-        App.getInstance().getDaggerComponent().inject(this);
+        App.getInstance().getSubcomponentsManager().modulesServiceSubcomponent().inject(this);
 
         HandlerThread commandThread = new HandlerThread(
                 getString(R.string.app_name) + " command",
