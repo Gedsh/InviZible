@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import pan.alexander.tordnscrypt.di.CoroutinesModule
+import pan.alexander.tordnscrypt.di.modulesservice.ModulesServiceScope
 import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.Constants.NFLOG_GROUP
@@ -39,15 +40,14 @@ import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Named
-import javax.inject.Singleton
 import kotlin.Exception
 
-private const val ATTEMPTS_TO_OPEN_NFLOG = 3
+private const val ATTEMPTS_TO_OPEN_NFLOG = 10
 private const val ATTEMPTS_TO_CLOSE_NFLOG = 3
 private const val TIMEOUT_TO_CLOSE_NFLOG_SEC = 5
 private const val NFLOG_PID_FILE_NAME = "nflog.pid"
 
-@Singleton
+@ModulesServiceScope
 @ExperimentalCoroutinesApi
 class NflogManager @Inject constructor(
     private val pathVars: dagger.Lazy<PathVars>,
@@ -62,26 +62,30 @@ class NflogManager @Inject constructor(
         2
     )
 
-    private val coroutineScope = CoroutineScope(
-        SupervisorJob() +
-                dispatcherIo +
-                CoroutineName("NflogManager") +
-                CoroutineExceptionHandler { _, throwable ->
-                    loge("NflogManager uncaught exception", throwable, true)
-                }
-    )
+    private val coroutineScope by lazy {
+        CoroutineScope(
+            SupervisorJob() +
+                    dispatcherIo +
+                    CoroutineName("NflogManager") +
+                    CoroutineExceptionHandler { _, throwable ->
+                        loge("NflogManager uncaught exception", throwable, true)
+                    }
+        )
+    }
 
-    private val nflogMutableSharedFlow = MutableSharedFlow<NflogCommand>(
-        replay = 0,
-        extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
-    ).also { flow ->
-        flow.onEach {
-            when (it) {
-                NflogCommand.START -> startSequence()
-                NflogCommand.STOP -> stopSequence()
-            }
-        }.launchIn(coroutineScope)
+    private val nflogMutableSharedFlow by lazy {
+        MutableSharedFlow<NflogCommand>(
+            replay = 1,
+            extraBufferCapacity = 0,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        ).also { flow ->
+            flow.onEach {
+                when (it) {
+                    NflogCommand.START -> startSequence()
+                    NflogCommand.STOP -> stopSequence()
+                }
+            }.launchIn(coroutineScope)
+        }
     }
 
     @Volatile
