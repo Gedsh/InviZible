@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="action_settings">Innstillinger</string>
     <string name="tvITPDStop">I2P ble stoppet</string>
     <string name="tvITPDRunning">I2P kjører …</string>
@@ -305,4 +305,12 @@
     <string name="tile_dialog_over_three_tiles_message">Du har lagt til mer enn tre flis til hurtiginnstillinger. Å legge til flere kan forårsake problemer med programkontroll.</string>
     <string name="pref_firewall_allow_internet_for_new_apps_off_summ">Internett-tilkoblinger for nylig installerte programmer er blokkert.</string>
     <string name="pref_itpd_com_ntcpproxy_summ">Angi mellomtjenerr for NTCP. Skal være http://address:port eller socks://address:port.</string>
+    <string name="pref_common_tethering_autostart">Begynn tjudring ved oppstart</string>
+    <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">Bruk følgende kommando for å håndtere programmoduler: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Der «1» - starter, og , «0» - stopper modulen.</string>
+    <string name="pref_common_run_with_root_summ">Bruk rot-tilgang for DNSCrypt, Tor, og I2P-moduler. Å skru på denne funksjonen levner moduler uhåndtert og kan forårsake tilkoblingsproblemer.</string>
+    <string name="pref_common_excludes_from_tor_summ">En liste over nettside å åpne direkte for HOTSPOT</string>
+    <string name="pref_common_unblock_with_tor_summ">En liste over nettside å åpne med Tor for HOTSPOT</string>
+    <string name="action_mode_hotspot">HOTSPOT</string>
+    <string name="update_core_restart">Start InviZible Pro på ny og tillat full installasjon. Etter det kan du sette opp HOTSPOT, hvis du bruker det.</string>
+    <string name="pref_common_notification_helper">Utelat InviZible Pro fra Android-batterioptimalisering. Ellers kan Android drepe DNSCrypt, Tor, eller I2P når som helst. På spesielle systemer, som MIUI kreves ytterligere steg.</string>
 </resources>
