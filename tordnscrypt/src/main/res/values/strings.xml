@@ -170,6 +170,8 @@
     <string name="pref_fast_tor_bypass_lan">Bypass LAN addresses</string>
     <string name="pref_fast_tor_bypass_lan_summ">Do not use Tor for LAN destinations and IANA reserved IP blocks</string>
     <string name="pref_fast_language">Select Language</string>
+    <string name="pref_fast_logs">Real-time logs</string>
+    <string name="pref_fast_logs_summ">Show application connection logs in the DNS tab</string>
     <string name="pref_fast_block_http">Block http</string>
     <string name="pref_fast_block_http_summ">Deny connection to http port 80</string>
     <string name="pref_fast_categ_update">Update</string>

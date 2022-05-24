@@ -20,10 +20,12 @@ package pan.alexander.tordnscrypt.utils.mode
 */
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.widget.Toast
 import androidx.preference.PreferenceManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import pan.alexander.tordnscrypt.R
+import pan.alexander.tordnscrypt.di.SharedPreferencesModule
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.iptables.IptablesRules
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules
@@ -33,16 +35,18 @@ import pan.alexander.tordnscrypt.nflog.NflogManager
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
-import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATION_MODE
-import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper
 import javax.inject.Inject
+import javax.inject.Named
 
 @ExperimentalCoroutinesApi
 class AppModeManager @Inject constructor(
     private val context: Context,
     private val preferenceRepository: dagger.Lazy<PreferenceRepository>,
-    private val nflogManager: dagger.Lazy<NflogManager>
+    private val nflogManager: dagger.Lazy<NflogManager>,
+    @Named(SharedPreferencesModule.DEFAULT_PREFERENCES_NAME)
+    private val defaultPreferences: dagger.Lazy<SharedPreferences>
 ) {
 
     private val modulesStatus = ModulesStatus.getInstance()
@@ -64,7 +68,8 @@ class AppModeManager @Inject constructor(
         }
 
         modulesStatus.dnsCryptState.let {
-            if (!modulesStatus.isUseModulesWithRoot &&
+            if (defaultPreferences.get().getBoolean(CONNECTION_LOGS, true)
+                && !modulesStatus.isUseModulesWithRoot &&
                 (it == ModuleState.RUNNING
                         || it == ModuleState.STARTING
                         || it == ModuleState.RESTARTING)

@@ -56,6 +56,7 @@ public interface PreferenceKeys {
 
     //Fast Settings
     String SITES_IPS_REFRESH_INTERVAL = "pref_fast_site_refresh_interval";
+    String CONNECTION_LOGS = "pref_fast_logs";
     String BLOCK_HTTP = "pref_fast_block_http";
     String ALL_THROUGH_TOR = "pref_fast_all_through_tor";
     String BYPASS_LAN = "Allow LAN";

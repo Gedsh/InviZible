@@ -53,7 +53,9 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CONNECTION_LOGS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
@@ -66,6 +68,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInterface,
         OnDNSCryptLogUpdatedListener, OnConnectionRecordsUpdatedListener {
@@ -76,6 +79,9 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
     public Lazy<DNSCryptInteractorInterface> dnsCryptInteractor;
     @Inject
     public Lazy<ConnectionRecordsInteractorInterface> connectionRecordsInteractor;
+    @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultPreferences;
 
     private Context context;
 
@@ -406,7 +412,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
         if (modulesStatus.getMode() != VPN_MODE
                 && modulesStatus.getMode() != ROOT_MODE
-                && !isFixTTL()) {
+                && !isFixTTL()
+                || isRealTimeLogsDisabled()) {
             if (!savedConnectionRecords.isEmpty()) {
                 savedConnectionRecords = "";
 
@@ -718,5 +725,9 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
     private boolean isUseModulesWithRoot() {
         return modulesStatus.isUseModulesWithRoot() && modulesStatus.getMode() == ROOT_MODE;
+    }
+
+    private boolean isRealTimeLogsDisabled() {
+        return !defaultPreferences.get().getBoolean(CONNECTION_LOGS, true);
     }
 }

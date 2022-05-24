@@ -39,6 +39,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.WIFI_ON
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper.reload;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -916,6 +917,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     }
 
     @Override
+    @SuppressLint("UnsafeOptInUsageWarning")
     public void onConnectionChecked(boolean available) {
 
         if (modulesStatus.getTorState() == RUNNING && modulesStatus.isTorReady()) {

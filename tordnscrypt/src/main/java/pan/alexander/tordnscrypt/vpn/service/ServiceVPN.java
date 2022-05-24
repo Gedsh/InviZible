@@ -353,6 +353,11 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     }
 
     private void addDnsToConnectionRecords(ResourceRecord rr) {
+
+        if (!vpnPreferences.getConnectionLogsEnabled()) {
+            return;
+        }
+
         DnsRecord dnsRecord = new DnsRecord(
                 System.currentTimeMillis(),
                 rr.QName != null ? toUnicode(rr.QName.trim(), ALLOW_UNASSIGNED) : "",
@@ -852,6 +857,10 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     }
 
     void addUIDtoDNSQueryRawRecords(int uid, String destinationAddress, int destinationPort, String sourceAddres) {
+
+        if (!vpnPreferences.getConnectionLogsEnabled()) {
+            return;
+        }
 
         try {
 

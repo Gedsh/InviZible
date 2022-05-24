@@ -138,6 +138,11 @@
         android:layout="@layout/preferences_category_custom"
         android:title="@string/pref_common_categ_other">
         <SwitchPreference
+            android:defaultValue="true"
+            android:key="pref_fast_logs"
+            android:summary="@string/pref_fast_logs_summ"
+            android:title="@string/pref_fast_logs" />
+        <SwitchPreference
             android:defaultValue="false"
             android:key="pref_fast_block_http"
             android:summary="@string/pref_fast_block_http_summ"

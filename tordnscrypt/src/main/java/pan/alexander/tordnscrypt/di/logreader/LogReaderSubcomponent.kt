@@ -25,6 +25,7 @@ import dagger.Subcomponent
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptFragmentPresenter
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDFragmentPresenter
 import pan.alexander.tordnscrypt.modules.ModulesStateLoop
+import pan.alexander.tordnscrypt.settings.PreferencesFastFragment
 import pan.alexander.tordnscrypt.tor_fragment.TorFragmentPresenter
 import javax.inject.Named
 
@@ -41,6 +42,7 @@ interface LogReaderSubcomponent {
     fun inject(presenter: TorFragmentPresenter)
     fun inject(presenter: ITPDFragmentPresenter)
     fun inject(modulesStateLoop: ModulesStateLoop)
+    fun inject(fragment: PreferencesFastFragment)
 
     companion object {
         const val LOG_READER_CONTEXT = "LogReaderContext"

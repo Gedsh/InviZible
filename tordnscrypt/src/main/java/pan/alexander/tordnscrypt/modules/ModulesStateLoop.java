@@ -52,10 +52,12 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.startRefreshTorUnlockIPs;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CONNECTION_LOGS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_READY_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ITPD_READY_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SAVED_DNSCRYPT_STATE_PREF;
@@ -73,6 +75,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 public class ModulesStateLoop implements Runnable,
         OnDNSCryptLogUpdatedListener, OnTorLogUpdatedListener, OnITPDHtmlUpdatedListener {
@@ -91,6 +94,9 @@ public class ModulesStateLoop implements Runnable,
     public ITPDInteractorInterface itpdInteractor;
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultPreferences;
     @Inject
     public Lazy<Handler> handler;
     @Inject
@@ -651,7 +657,8 @@ public class ModulesStateLoop implements Runnable,
     @SuppressLint("UnsafeOptInUsageWarning")
     private void startNflogIfRootMode() {
         if (modulesStatus.getMode() == ROOT_MODE
-                && !modulesStatus.isUseModulesWithRoot()) {
+                && !modulesStatus.isUseModulesWithRoot()
+                && defaultPreferences.get().getBoolean(CONNECTION_LOGS, true)) {
             nflogManager.get().startNflog();
             nflogIsRunning = true;
         }

@@ -534,4 +534,6 @@
     <string name="pref_dnscrypt_cloaking_rules_categ">Правила маскировки</string>
     <string name="pref_itpd_reseeding">Повторное заполнение</string>
     <string name="connectivity_check">Проверка подключения к интернету</string>
+    <string name="pref_fast_logs">Логи соединений</string>
+    <string name="pref_fast_logs_summ">Показывать лог подключений приложений на вкладке DNS</string>
 </resources>

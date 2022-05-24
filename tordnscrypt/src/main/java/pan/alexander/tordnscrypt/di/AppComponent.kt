@@ -95,7 +95,6 @@ interface AppComponent {
     fun inject(activity: HelpActivity)
     fun inject(fragment: TopFragment)
     fun inject(fragment: MainFragment)
-    fun inject(fragment: PreferencesFastFragment)
     fun inject(fragment: UnlockTorAppsFragment)
     fun inject(fragment: PreferencesTorBridges)
     fun inject(fragment: UnlockTorIpsFragment)
