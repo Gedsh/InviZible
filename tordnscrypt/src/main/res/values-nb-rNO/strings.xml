@@ -298,7 +298,7 @@
     <string name="firewall_btnTopVpnFirewall_tooltip">Tillat tilkoblinger med VPN påslått</string>
     <string name="pref_fast_tor_bypass_lan_summ">Ikke bruk for LAN-mål og IANA-reserverte IP-blokker</string>
     <string name="pref_fast_tor_bypass_lan">Utelat LAN-adresser</string>
-    <string name="pref_common_wakelock_summ">Ytterligere beskyttelse uten rot-tilgangsmodus for å forhindre programmet fra å bli drept av Android. Kan tappe batteriet.</string>
+    <string name="pref_common_wakelock_summ">Ytterligere beskyttelse med «modus for manglende rot-tilgang» for å forhindre programmet fra å bli drept av Android. Kan tappe batteriet.</string>
     <string name="pref_tor_snowflake_stun">STUN-tjenere for SnowFlake-broer</string>
     <string name="firewall_system_apps">System</string>
     <string name="firewall_all_apps">Alle</string>
@@ -313,4 +313,14 @@
     <string name="action_mode_hotspot">HOTSPOT</string>
     <string name="update_core_restart">Start InviZible Pro på ny og tillat full installasjon. Etter det kan du sette opp HOTSPOT, hvis du bruker det.</string>
     <string name="pref_common_notification_helper">Utelat InviZible Pro fra Android-batterioptimalisering. Ellers kan Android drepe DNSCrypt, Tor, eller I2P når som helst. På spesielle systemer, som MIUI kreves ytterligere steg.</string>
+    <string name="pref_common_notification_summ">Beskytt programmer med «modus for manglende rot-tilgang» for å forhindre at programmet drepes av Android.</string>
+    <string name="pref_common_excludes_from_tor">Utelatte nettsider</string>
+    <string name="pref_common_fix_ttl_summ">TTL vil bli fastsatt til 64 ved bruk av en lokal VPN. Kjernestøtte kreves ikke. Det kan kun brukes i «rot-modus», med «Kjør moduler med rot-tilgang»-innstillingen avksrudd. For å fastsette TTL kan du starte DNSCrypt, eller/og Tor.</string>
+    <string name="pref_common_tethering_settings">Åpne tjudringsoppsett</string>
+    <string name="pref_common_restart_dnscrypt">Start DNSCrypt på ny</string>
+    <string name="pref_tor_exclude_nodes_summ">En liste over landskoder å unngå ved forbindelse av en krets.</string>
+    <string name="proxy_exclude_apps_from_proxy">Utelatte programmer</string>
+    <string name="notification_mitm">Mann-i-midten -angrep oppdaget. Dataen din kan fanges opp av en annen enhet på lokalnettverket. Skru av, vent noen sekunder, og skru deretter på Wi-Fi. Å bruke nåværende Wi-Fi-tilknytning kan være utrygt.</string>
+    <string name="pref_tor_exclude_exit_nodes_summ">En liste over landskoder å aldri bruke ved valg av utgangsnode, som leverer trafikk for deg utenfor Tor-nettverket.</string>
+    <string name="proxy_exclude_apps_from_proxy_summ">Programliste å åpne direkte. Disse programmene vil ikke bruke Tor eller mellomtjener for å koble til Internett.</string>
 </resources>
