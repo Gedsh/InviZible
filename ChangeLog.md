@@ -778,3 +778,10 @@
 * Fixed saving changes when using direct editing of module configuration files.
 * Lots of internal optimizations.
 * Minor fixes.
+
+**InviZible Pro beta 1.6.6**
+* Updated Purple I2P to version 2.42.0.
+* Added "Internet connectivity check" option to the firewall to allow connection checks for system applications.
+* Added a switch to enable/disable real-time connection logs.
+* Improved real-time connection logs for Root mode.
+* Improved real-time connection logs for VPN mode.
