@@ -28,6 +28,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import pan.alexander.tordnscrypt.di.CoroutinesModule
 import pan.alexander.tordnscrypt.di.modulesservice.ModulesServiceScope
+import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor
+import pan.alexander.tordnscrypt.domain.connection_checker.OnInternetConnectionCheckedListener
 import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.Constants.NFLOG_GROUP
@@ -42,7 +44,7 @@ import javax.inject.Inject
 import javax.inject.Named
 import kotlin.Exception
 
-private const val ATTEMPTS_TO_OPEN_NFLOG = 10
+private const val ATTEMPTS_TO_OPEN_NFLOG = 5
 private const val ATTEMPTS_TO_CLOSE_NFLOG = 3
 private const val TIMEOUT_TO_CLOSE_NFLOG_SEC = 5
 private const val NFLOG_PID_FILE_NAME = "nflog.pid"
@@ -53,8 +55,12 @@ class NflogManager @Inject constructor(
     private val pathVars: dagger.Lazy<PathVars>,
     @Named(CoroutinesModule.DISPATCHER_IO)
     dispatcherIo: CoroutineDispatcher,
-    private val nflogParser: NflogParser
-) {
+    private val nflogParser: NflogParser,
+    private val checkConnectionInteractor: dagger.Lazy<ConnectionCheckerInteractor>
+): OnInternetConnectionCheckedListener {
+
+    @Volatile
+    private var nfLogStartFailed = false
 
     private val connectionDataRecords = ConcurrentHashMap<ConnectionData, Boolean>(
         16,
@@ -127,6 +133,8 @@ class NflogManager @Inject constructor(
 
             stopNflogHandlerThread()
 
+            clearRealTimeLogs()
+
             logi("Nflog stopped")
         } catch (e: Exception) {
             loge("NflogManager stopNflog", e)
@@ -137,6 +145,11 @@ class NflogManager @Inject constructor(
     private suspend fun openNflogShell() {
 
         var attempts = 0
+
+        if (nfLogStartFailed) {
+            nfLogStartFailed = false
+            unlistenConnectionChanges()
+        }
 
         do {
             runCatching {
@@ -163,6 +176,8 @@ class NflogManager @Inject constructor(
         } while (nflogActive && attempts < ATTEMPTS_TO_OPEN_NFLOG)
 
         if (nflogActive) {
+            nfLogStartFailed = true
+            listenConnectionChanges()
             loge("Attempts to start Nflog have ended")
         }
 
@@ -355,6 +370,22 @@ class NflogManager @Inject constructor(
 
     fun clearRealTimeLogs() {
         connectionDataRecords.clear()
+    }
+
+    override fun onConnectionChecked(available: Boolean) {
+        if (available) {
+            startNflog()
+        }
+    }
+
+    override fun isActive(): Boolean = true
+
+    private fun listenConnectionChanges() {
+        checkConnectionInteractor.get().addListener(this)
+    }
+
+    private fun unlistenConnectionChanges() {
+        checkConnectionInteractor.get().removeListener(this)
     }
 
 }
