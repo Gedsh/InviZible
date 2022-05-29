@@ -5,11 +5,11 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 obfs4proxy_version=e330d1b7
 dnscryptproxy_version=2.1.1
 snowflake_version=v2.1.0
-tor_openssl_version=OpenSSL_1_1_1n
+tor_openssl_version=OpenSSL_1_1_1o
 libevent_version=release-2.1.12-stable
 zstd_version=v1.4.9
 xz_version=v5.2.4
-tor_version=tor-0.4.7.7
+tor_version=release-0.4.7
 i2pd_openssl_version=OpenSSL_1_1_1o
 miniupnpc_version=c2818392e12f42901ab5abf145f43d69825a38c9
 i2pd_version=2.42.0
