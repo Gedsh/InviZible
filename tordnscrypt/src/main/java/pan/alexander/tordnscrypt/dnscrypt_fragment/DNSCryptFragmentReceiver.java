@@ -128,8 +128,8 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
                 if (sb.toString().contains("DNSCrypt_version")) {
                     String[] strArr = sb.toString().split("DNSCrypt_version");
-                    if (strArr.length > 1 && strArr[1].trim().matches("\\d+\\.\\d+\\.\\d+")) {
-                        DNSCryptVersion = strArr[1].trim();
+                    if (strArr.length > 1 && strArr[1].trim().matches("STDOUT=\\d+\\.\\d+\\.\\d+")) {
+                        DNSCryptVersion = strArr[1].replace("STDOUT=", "").trim();
                         preferenceRepository.get()
                                 .setStringPreference("DNSCryptVersion", DNSCryptVersion);
 
