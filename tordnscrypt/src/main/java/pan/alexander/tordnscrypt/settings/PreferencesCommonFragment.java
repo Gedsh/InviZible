@@ -31,7 +31,6 @@ import androidx.annotation.NonNull;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
-import androidx.preference.PreferenceManager;
 import androidx.preference.PreferenceScreen;
 import androidx.preference.SwitchPreference;
 
@@ -69,6 +68,7 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
 import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.ISOLATE_DEST_ADDRESS;
 import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.ISOLATE_DEST_PORT;
@@ -98,6 +98,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 
 public class PreferencesCommonFragment extends PreferenceFragmentCompat
@@ -112,6 +113,9 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     public CachedExecutor cachedExecutor;
     @Inject
     public Lazy<Handler> handler;
+    @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultPreferences;
 
     private static final int ARP_SCANNER_CHANGE_STATE_DELAY_SEC = 5;
 
@@ -285,7 +289,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         itpdConfPath = pathVars.get().getItpdConfPath();
         itpdTunnelsPath = pathVars.get().getItpdTunnelsPath();
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences sharedPreferences = defaultPreferences.get();
         boolean swUseProxy = sharedPreferences.getBoolean(USE_PROXY, false);
         String proxyServer = sharedPreferences.getString(PROXY_ADDRESS, "");
         String proxyPort = sharedPreferences.getString(PROXY_PORT, "");
@@ -471,7 +475,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     }
 
     private void disableProxy(Context context) {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences sharedPreferences = defaultPreferences.get();
         String proxyServer = sharedPreferences.getString(PROXY_ADDRESS, "");
         String proxyPort = sharedPreferences.getString(PROXY_PORT, "");
 
@@ -513,7 +517,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             return;
         }
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences sharedPreferences = defaultPreferences.get();
         boolean isolateDestAddress = sharedPreferences.getBoolean("pref_tor_isolate_dest_address", false);
         boolean isolateDestPort = sharedPreferences.getBoolean("pref_tor_isolate_dest_port", false);
 
@@ -658,14 +662,22 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         if (swFixTTL != null) {
             swFixTTL.setOnPreferenceChangeListener(this);
 
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+            SharedPreferences sharedPreferences = defaultPreferences.get();
             swFixTTL.setEnabled(!sharedPreferences.getBoolean(RUN_MODULES_WITH_ROOT, false));
         }
 
         Preference prefTorSiteUnlockTether = findPreference("prefTorSiteUnlockTether");
         if (prefTorSiteUnlockTether != null) {
-            SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
+            SharedPreferences shPref = defaultPreferences.get();
             prefTorSiteUnlockTether.setEnabled(!shPref.getBoolean("pref_common_tor_route_all", false));
+        }
+
+        if (!defaultPreferences.get().getBoolean(RUN_MODULES_WITH_ROOT, false)) {
+            PreferenceScreen preferenceScreen = findPreference("pref_common");
+            PreferenceCategory categoryUseModulesRoot = findPreference("categoryUseModulesRoot");
+            if (preferenceScreen != null && categoryUseModulesRoot != null) {
+                preferenceScreen.removePreference(categoryUseModulesRoot);
+            }
         }
 
         ArrayList<Preference> preferences = new ArrayList<>();
@@ -723,7 +735,8 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
 
         if (ModulesStatus.getInstance().isRootAvailable()
-                && ModulesStatus.getInstance().getMode() != VPN_MODE) {
+                && ModulesStatus.getInstance().getMode() != VPN_MODE
+                && defaultPreferences.get().getBoolean(RUN_MODULES_WITH_ROOT, false)) {
             Preference pref_common_use_modules_with_root = findPreference(RUN_MODULES_WITH_ROOT);
             if (pref_common_use_modules_with_root != null) {
                 pref_common_use_modules_with_root.setOnPreferenceChangeListener(this);
