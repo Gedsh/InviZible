@@ -177,7 +177,7 @@ class IptablesFirewall @Inject constructor(
                 when (it) {
                     SPECIAL_UID_KERNEL -> {
                         arrayListOf(
-                            "$iptables -t mangle -A $MANGLE_FIREWALL_ALLOW -m owner ! --uid-owner 0:999999999 -j RETURN"
+                            "$iptables -A $FILTER_OUTPUT_FIREWALL -m owner ! --uid-owner 0:999999999 -j RETURN"
                         )
                     }
                     SPECIAL_UID_NTP -> {

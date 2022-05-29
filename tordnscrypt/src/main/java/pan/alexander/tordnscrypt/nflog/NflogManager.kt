@@ -239,7 +239,7 @@ class NflogManager @Inject constructor(
 
     private fun getNflogStartCommand(): String = with(pathVars.get()) {
         return "$nflogPath " +
-                "-ouid $appUid " +
+                //"-ouid $appUid " +
                 "-group $NFLOG_GROUP " +
                 "-dport $dnsCryptPort " +
                 "-tport $torDNSPort " +

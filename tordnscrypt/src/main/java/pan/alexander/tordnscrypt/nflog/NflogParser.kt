@@ -22,19 +22,23 @@ package pan.alexander.tordnscrypt.nflog
 import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData
 import pan.alexander.tordnscrypt.domain.connection_records.entities.DnsRecord
 import pan.alexander.tordnscrypt.domain.connection_records.entities.PacketRecord
+import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.net.IDN
 import java.util.regex.Pattern
 import javax.inject.Inject
 
 class NflogParser @Inject constructor(
-    private val nflogSessionsHolder: NflogSessionsHolder
+    private val nflogSessionsHolder: NflogSessionsHolder,
+    pathVars: dagger.Lazy<PathVars>
 ) {
 
     private val packetPattern =
         Pattern.compile("PKT UID:(-?\\d+) ([^ ]+) SIP:([^ ]*) SPT:(\\d+) DIP:([^ ]*) DPT:(\\d+)")
     private val dnsPattern =
         Pattern.compile("DNS QNAME:([^ ]*) ANAME:([^ ]*) CNAME:([^ ]*) HINFO:(.*?) RCODE:(\\d+) IP:([^ ]*)")
+
+    private val ownUid = pathVars.get().appUid
 
     fun parse(line: String): ConnectionData? =
         when {
@@ -58,6 +62,10 @@ class NflogParser @Inject constructor(
                 nflogSessionsHolder.addSession(uid, protocol, saddr, sport, daddr, dport)
             } else {
                 uid = nflogSessionsHolder.getUid(protocol, saddr, sport, daddr, dport)
+            }
+
+            if (uid == ownUid) {
+                return null
             }
 
             return PacketRecord(

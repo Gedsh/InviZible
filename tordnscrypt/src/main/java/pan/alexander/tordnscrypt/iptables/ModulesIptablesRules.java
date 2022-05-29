@@ -143,7 +143,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         Set<String> clearnetApps = preferences.getStringSetPreference(CLEARNET_APPS);
         Set<String> clearnetIPs = preferences.getStringSetPreference(IPS_FOR_CLEARNET);
         Set<String> clearnetAppsForProxy = preferences.getStringSetPreference(CLEARNET_APPS_FOR_PROXY);
-        boolean firewallEnabled = preferences.getBoolPreference(FIREWALL_ENABLED);
+        boolean firewallEnabled = preferences.getBoolPreference(FIREWALL_ENABLED) && !runModulesWithRoot;
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
         boolean ttlFix = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE) && !modulesStatus.isUseModulesWithRoot();
@@ -333,7 +333,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             ));
             nflogPackets = TextUtils.join("; ", Arrays.asList(
                     iptables + "-t mangle -D OUTPUT -p all -m owner ! --uid-owner " + appUID + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
-                    iptables + "-t mangle -I OUTPUT -p all -m owner ! --uid-owner " + appUID + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true"
+                    iptables + "-t mangle -D OUTPUT -p all -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                    iptables + "-t mangle -I OUTPUT -p all -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true"
             ));
         }
 
