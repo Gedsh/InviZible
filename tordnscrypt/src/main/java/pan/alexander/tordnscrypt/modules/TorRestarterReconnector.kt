@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.modules
 import android.content.Context
 import kotlinx.coroutines.*
 import pan.alexander.tordnscrypt.di.CoroutinesModule
+import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import javax.inject.Inject
@@ -33,7 +34,8 @@ private const val DELAY_BEFORE_RESTART_TOR_SEC = 60
 class TorRestarterReconnector @Inject constructor(
     private val context: Context,
     @Named(CoroutinesModule.DISPATCHER_IO)
-    dispatcherIo: CoroutineDispatcher
+    dispatcherIo: CoroutineDispatcher,
+    private val connectionCheckerInteractor: dagger.Lazy<ConnectionCheckerInteractor>
 ) {
 
     private val scope by lazy {
@@ -69,7 +71,9 @@ class TorRestarterReconnector @Inject constructor(
                     delay(1000L)
                 }
 
-                if (modulesStatus.torState == ModuleState.RUNNING && modulesStatus.isTorReady) {
+                if (modulesStatus.torState == ModuleState.RUNNING && modulesStatus.isTorReady
+                    && isNetworkAvailable()
+                ) {
                     ModulesRestarter.restartTor(context)
                     lockCounter()
                     logi("Restart Tor to re-establish a connection")
@@ -105,5 +109,10 @@ class TorRestarterReconnector @Inject constructor(
 
     private fun resetCounter() {
         counter = 0
+    }
+
+    private fun isNetworkAvailable() = with(connectionCheckerInteractor.get()) {
+        checkNetworkConnection()
+        getNetworkConnectionResult()
     }
 }
