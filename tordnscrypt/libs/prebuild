@@ -12,7 +12,7 @@ xz_version=v5.2.4
 tor_version=release-0.4.7
 i2pd_openssl_version=OpenSSL_1_1_1o
 miniupnpc_version=c2818392e12f42901ab5abf145f43d69825a38c9
-i2pd_version=2.42.0
+i2pd_version=2.42.1
 
 git clone https://git.torproject.org/pluggable-transports/obfs4.git
 pushd obfs4
