@@ -108,6 +108,7 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import javax.inject.Inject;
 
 
+@SuppressLint("UnsafeOptInUsageWarning")
 public class PreferencesTorBridges extends Fragment implements View.OnClickListener,
         CompoundButton.OnCheckedChangeListener, AdapterView.OnItemSelectedListener,
         OnTextFileOperationsCompleteListener, PreferencesBridges, SwipeRefreshLayout.OnRefreshListener {
