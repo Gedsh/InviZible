@@ -31,4 +31,7 @@
     <color name="mainStartButtonColorActive">#64B5F6</color>
     <color name="colorAlert">#FF5252</color>
     <color name="chipColorFocused">#2A3F43</color>
+    <color name="torBridgePingGood">#009688</color>
+    <color name="torBridgePingAverage">#E7AD42</color>
+    <color name="torBridgePingBad">#F08080</color>
 </resources>
