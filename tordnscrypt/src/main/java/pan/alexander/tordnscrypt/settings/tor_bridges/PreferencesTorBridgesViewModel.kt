@@ -31,8 +31,8 @@ import pan.alexander.tordnscrypt.domain.bridges.ParseBridgesResult
 import pan.alexander.tordnscrypt.domain.bridges.RequestBridgesInteractor
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
-import java.lang.Exception
 import javax.inject.Inject
+import kotlin.Exception
 
 @ExperimentalCoroutinesApi
 class PreferencesTorBridgesViewModel @Inject constructor(
@@ -56,6 +56,8 @@ class PreferencesTorBridgesViewModel @Inject constructor(
     private val dialogsFlowMutableLiveData = MutableLiveData<DialogsFlowState>()
     val dialogsFlowLiveData: LiveData<DialogsFlowState> get() = dialogsFlowMutableLiveData.distinctUntilChanged()
 
+    private val errorsMutableLiveData = MutableLiveData<String>()
+    val errorsLiveData: LiveData<String> get() = errorsMutableLiveData
 
     fun measureTimeouts(bridges: List<ObfsBridge>) {
 
@@ -86,9 +88,17 @@ class PreferencesTorBridgesViewModel @Inject constructor(
     fun requestRelayBridges() {
         relayBridgesRequestJob?.cancel()
         relayBridgesRequestJob = viewModelScope.launch {
-            defaultVanillaBridgesMutableLiveData.value =
-                defaultVanillaBridgeInteractor.requestRelays()
-                    .map { "${it.address}:${it.port} ${it.fingerprint}" }
+            try {
+                defaultVanillaBridgesMutableLiveData.value =
+                    defaultVanillaBridgeInteractor.requestRelays()
+                        .map { "${it.address}:${it.port} ${it.fingerprint}" }
+            } catch (ignored: CancellationException) {
+            } catch (e: Exception) {
+                e.message?.let {
+                    errorsMutableLiveData.value = it
+                }
+                loge("PreferencesTorBridgesViewModel requestRelayBridges", e)
+            }
         }
     }
 

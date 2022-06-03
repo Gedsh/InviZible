@@ -302,6 +302,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         observeDialogsFlow();
         observeTimeouts();
         observeDefaultVanillaBridges();
+        observeErrors();
 
         cachedExecutor.submit(() -> {
             try {
@@ -1252,6 +1253,13 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 action.run();
                 bridgeAdapter.notifyDataSetChanged();
             }
+        });
+    }
+
+    private void observeErrors() {
+        viewModel.getErrorsLiveData().observe(getViewLifecycleOwner(), error -> {
+            swipeRefreshBridges.setRefreshing(false);
+            Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show();
         });
     }
 }

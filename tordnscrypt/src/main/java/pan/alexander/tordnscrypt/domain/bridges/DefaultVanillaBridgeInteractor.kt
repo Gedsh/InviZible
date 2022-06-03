@@ -61,13 +61,8 @@ class DefaultVanillaBridgeInteractor @Inject constructor(
         }
 
     suspend fun requestRelays(): List<RelayAddressFingerprint> = withContext(dispatcherIo) {
-        try {
-            repository.getRelaysWithFingerprintAndAddress()
-                .shuffled()
-                .take(MAX_RELAY_COUNT)
-        } catch (e: Exception) {
-            loge("BridgeCheckerInteractor requestRelays", e)
-            emptyList()
-        }
+        repository.getRelaysWithFingerprintAndAddress()
+            .shuffled()
+            .take(MAX_RELAY_COUNT)
     }
 }
