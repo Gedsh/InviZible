@@ -443,7 +443,7 @@ class InstalledApplicationsManager private constructor(
 
     private fun allowInteractAcrossUsersPermissionIfRequired() {
         if (multiUserSupport
-            && !(appVersion.endsWith("p") || appVersion.startsWith("f"))
+            && !appVersion.endsWith("p")
             && ModulesStatus.getInstance().isRootAvailable
             && !isInteractAcrossUsersPermissionGranted()
         ) {

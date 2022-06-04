@@ -47,8 +47,7 @@
         tools:node="remove" />
     <uses-permission
         android:name="android.permission.INTERACT_ACROSS_USERS"
-        tools:ignore="ProtectedPermissions"
-        tools:node="remove" />
+        tools:ignore="ProtectedPermissions" />
 
     <application
         android:name=".App"
