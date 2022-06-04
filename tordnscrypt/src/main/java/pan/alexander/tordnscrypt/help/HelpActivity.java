@@ -233,22 +233,22 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
         List<String> logcatCommands = new ArrayList<>(Arrays.asList(
                 "cd " + cacheDir,
-                busyboxPath + "rm -rf logs_dir 2> /dev/null",
-                busyboxPath + "mkdir -m 655 -p logs_dir 2> /dev/null",
-                busyboxPath + "cp -R " + appDataDir + "/logs" + " logs_dir 2> /dev/null",
-                "logcat -d | grep " + pid + " > logs_dir/logcat.log 2> /dev/null",
-                "ifconfig > logs_dir/ifconfig.log 2> /dev/null",
-                iptables + "-L -v > logs_dir/filter.log 2> /dev/null",
-                iptables + "-t nat -L -v > logs_dir/nat.log 2> /dev/null",
-                iptables + "-t mangle -L -v > logs_dir/mangle.log 2> /dev/null",
-                iptables + "-t raw -L -v > logs_dir/raw.log 2> /dev/null",
-                busyboxPath + "cp -R "+ appDataDir + "/shared_prefs"+" logs_dir 2> /dev/null",
-                busyboxPath + "sleep 1 2> /dev/null",
-                busyboxPath + "echo \"" + info + "\" > logs_dir/device_info.log 2> /dev/null",
-                "restorecon -R logs_dir 2> /dev/null",
-                busyboxPath + "chown -R " + appUID + "." + appUID + " logs_dir 2> /dev/null",
-                busyboxPath + "chmod -R 755 logs_dir 2> /dev/null",
-                busyboxPath + "echo 'Logs Saved' 2> /dev/null"
+                busyboxPath + "rm -rf logs_dir 2> /dev/null || true",
+                busyboxPath + "mkdir -m 655 -p logs_dir 2> /dev/null || true",
+                busyboxPath + "cp -R " + appDataDir + "/logs" + " logs_dir 2> /dev/null || true",
+                "logcat -d | grep " + pid + " > logs_dir/logcat.log 2> /dev/null || true",
+                "ifconfig > logs_dir/ifconfig.log 2> /dev/null || true",
+                busyboxPath + "cp -R "+ appDataDir + "/shared_prefs"+" logs_dir 2> /dev/null || true",
+                busyboxPath + "sleep 1 2> /dev/null || true",
+                busyboxPath + "echo \"" + info + "\" > logs_dir/device_info.log 2> /dev/null || true",
+                iptables + "-L -v > logs_dir/filter.log 2> /dev/null || true",
+                iptables + "-t nat -L -v > logs_dir/nat.log 2> /dev/null || true",
+                iptables + "-t mangle -L -v > logs_dir/mangle.log 2> /dev/null || true",
+                iptables + "-t raw -L -v > logs_dir/raw.log 2> /dev/null || true",
+                "restorecon -R logs_dir 2> /dev/null || true",
+                busyboxPath + "chown -R " + appUID + "." + appUID + " logs_dir 2> /dev/null || true",
+                busyboxPath + "chmod -R 755 logs_dir 2> /dev/null || true",
+                busyboxPath + "echo 'Logs Saved' 2> /dev/null || true"
         ));
 
         RootCommands.execute(this, logcatCommands, HELP_ACTIVITY_MARK);
