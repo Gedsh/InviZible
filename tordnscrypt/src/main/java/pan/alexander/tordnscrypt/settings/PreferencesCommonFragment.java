@@ -397,9 +397,14 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
                 activityCurrentRecreate();
                 break;
+            case MULTI_USER_SUPPORT:
+                if (Boolean.parseBoolean(newValue.toString())) {
+                    Utils.allowInteractAcrossUsersPermissionIfRequired(context);
+                }
+                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
+                break;
             case "pref_common_local_eth_device_addr":
             case COMPATIBILITY_MODE:
-            case MULTI_USER_SUPPORT:
             case DNS_REBIND_PROTECTION:
             case KILL_SWITCH:
                 ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
