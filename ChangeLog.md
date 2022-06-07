@@ -793,3 +793,10 @@
 * Improved real-time connection logs for Root mode.
 * The "Run modules with Root" option is no longer supported and will be hidden in the Common Settings.
 * Minor fixes and optimizations.
+
+**InviZible Pro beta 1.6.8**
+* Updated Purple I2P to version 2.42.1.
+* Updated Tor snowflake bridge.
+* Bridge ping color changes based on ping value.
+* Fixed DNSCrypt version detection.
+* Minor optimizations.
