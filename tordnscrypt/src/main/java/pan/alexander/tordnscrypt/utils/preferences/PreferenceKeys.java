@@ -85,6 +85,8 @@ public interface PreferenceKeys {
     String BLOCK_IPv6 = "block_ipv6";
 
     //Tor Settings
+    String TOR_OUTBOUND_PROXY = "Enable output Socks5Proxy";
+    String TOR_OUTBOUND_PROXY_ADDRESS = "Socks5Proxy";
     String SNOWFLAKE_RENDEZVOUS = "SnowflakeRendezvous";
 
     //Firewall Settings

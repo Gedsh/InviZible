@@ -44,6 +44,8 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.writeToTextFile;
@@ -270,11 +272,11 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     case "#HTTPTunnelPort":
                         editor.putBoolean("Enable HTTPTunnel", false);
                         break;
-                    case "Socks5Proxy":
-                        editor.putBoolean("Enable output Socks5Proxy", true);
+                    case TOR_OUTBOUND_PROXY_ADDRESS:
+                        editor.putBoolean(TOR_OUTBOUND_PROXY, true);
                         break;
                     case "#Socks5Proxy":
-                        editor.putBoolean("Enable output Socks5Proxy", false);
+                        editor.putBoolean(TOR_OUTBOUND_PROXY, false);
                         break;
                 }
             }
