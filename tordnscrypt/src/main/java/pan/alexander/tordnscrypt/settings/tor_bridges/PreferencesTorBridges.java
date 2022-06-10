@@ -69,6 +69,8 @@ import pan.alexander.tordnscrypt.dialogs.ExtendedDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.SelectBridgesTransportDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitDialogBridgesRequest;
 import pan.alexander.tordnscrypt.domain.bridges.BridgePingData;
+import pan.alexander.tordnscrypt.domain.bridges.BridgePingResult;
+import pan.alexander.tordnscrypt.domain.bridges.PingCheckComplete;
 import pan.alexander.tordnscrypt.settings.SettingsActivity;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.dialogs.UpdateDefaultBridgesDialog;
@@ -575,19 +577,26 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         viewModel.getTimeoutLiveData().observe(getViewLifecycleOwner(), bridgePingData ->
                 doActionAndUpdateRecycler(() -> {
 
-                    for (BridgePingData bridgePing : bridgePingData) {
-                        for (ObfsBridge obfsBridge : bridgesToDisplay) {
-                            if (obfsBridge.bridge.hashCode() == bridgePing.getBridgeHash()) {
-                                obfsBridge.ping = bridgePing.getPing();
+                    for (BridgePingResult bridgePing : bridgePingData) {
+                        if (bridgePing instanceof BridgePingData) {
+                            for (ObfsBridge obfsBridge : bridgesToDisplay) {
+                                if (obfsBridge.bridge.hashCode() == ((BridgePingData) bridgePing).getBridgeHash()) {
+                                    obfsBridge.ping = ((BridgePingData) bridgePing).getPing();
+                                }
                             }
                         }
                     }
 
-                    if (bridgePingData.size() == bridgesToDisplay.size()) {
+                    if (bridgePingData.contains(PingCheckComplete.INSTANCE)) {
                         sortBridgesByPing();
                         limitDisplayedBridgesInCaseOfDefaultVanillaBridges();
+                        swipeRefreshBridges.setRefreshing(false);
                     } else {
                         sortBridgesByPing();
+
+                        if (!swipeRefreshBridges.isRefreshing()) {
+                            swipeRefreshBridges.setRefreshing(true);
+                        }
                     }
 
                 }));
@@ -800,9 +809,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         doActionAndUpdateRecycler(() -> {
             checkNoBridgesRadioButton();
 
-            cancelRequestingRelayBridgesIfRequired();
-
             viewModel.cancelRequestingRelayBridges();
+            viewModel.cancelMeasuringTimeouts();
+            swipeRefreshBridges.setRefreshing(false);
 
             bridgesToDisplay.clear();
             bridgesInUse.clear();

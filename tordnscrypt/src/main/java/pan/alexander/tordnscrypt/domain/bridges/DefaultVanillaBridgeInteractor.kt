@@ -40,15 +40,16 @@ class DefaultVanillaBridgeInteractor @Inject constructor(
     private val dispatcherIo: CoroutineDispatcher
 ) {
 
-    private val timeouts = MutableSharedFlow<BridgePingData>()
+    private val timeouts = MutableSharedFlow<BridgePingResult>()
 
     fun observeTimeouts() = timeouts.asSharedFlow()
 
     suspend fun measureTimeouts(bridges: List<String>) =
         withContext(dispatcherIo.limitedParallelism(SIMULTANEOUS_CHECKS)) {
+            val defers = mutableListOf<Deferred<Unit>>()
             bridges.forEach {
                 try {
-                    launch {
+                    defers += async {
                         timeouts.emit(
                             BridgePingData(it.hashCode(), repository.getTimeout(it))
                         )
@@ -58,6 +59,8 @@ class DefaultVanillaBridgeInteractor @Inject constructor(
                     loge("BridgeCheckerInteractor measureTimeouts", e)
                 }
             }
+            defers.awaitAll()
+            timeouts.emit(PingCheckComplete)
         }
 
     suspend fun requestRelays(): List<RelayAddressFingerprint> = withContext(dispatcherIo) {

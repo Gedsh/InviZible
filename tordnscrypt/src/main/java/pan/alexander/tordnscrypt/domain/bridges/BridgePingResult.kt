@@ -19,7 +19,11 @@
 
 package pan.alexander.tordnscrypt.domain.bridges
 
+sealed class BridgePingResult
+
 data class BridgePingData(
     val bridgeHash: Int,
     val ping: Int
-)
+) : BridgePingResult()
+
+object PingCheckComplete : BridgePingResult()

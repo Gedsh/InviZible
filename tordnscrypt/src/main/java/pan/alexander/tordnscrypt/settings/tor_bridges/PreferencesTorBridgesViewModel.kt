@@ -25,10 +25,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.onEach
-import pan.alexander.tordnscrypt.domain.bridges.DefaultVanillaBridgeInteractor
-import pan.alexander.tordnscrypt.domain.bridges.BridgePingData
-import pan.alexander.tordnscrypt.domain.bridges.ParseBridgesResult
-import pan.alexander.tordnscrypt.domain.bridges.RequestBridgesInteractor
+import pan.alexander.tordnscrypt.domain.bridges.*
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import javax.inject.Inject
@@ -40,11 +37,11 @@ class PreferencesTorBridgesViewModel @Inject constructor(
     private val requestBridgesInteractor: RequestBridgesInteractor
 ) : ViewModel() {
 
-    private val timeouts = mutableListOf<BridgePingData>()
-    private val timeoutMutableLiveData = MutableLiveData<List<BridgePingData>>()
+    private val timeouts = mutableListOf<BridgePingResult>()
+    private val timeoutMutableLiveData = MutableLiveData<List<BridgePingResult>>()
     private var timeoutsMeasurementJob: Job? = null
     private var timeoutsObserveJob: Job? = null
-    val timeoutLiveData: LiveData<List<BridgePingData>> get() = timeoutMutableLiveData
+    val timeoutLiveData: LiveData<List<BridgePingResult>> get() = timeoutMutableLiveData
 
 
     private val defaultVanillaBridgesMutableLiveData = MutableLiveData<List<String>>()
@@ -61,8 +58,7 @@ class PreferencesTorBridgesViewModel @Inject constructor(
 
     fun measureTimeouts(bridges: List<ObfsBridge>) {
 
-        timeoutsMeasurementJob?.cancelChildren()
-        timeouts.clear()
+        cancelMeasuringTimeouts()
 
         if (timeoutsObserveJob?.isCancelled != false) {
             initBridgeCheckerObserver()
@@ -73,15 +69,23 @@ class PreferencesTorBridgesViewModel @Inject constructor(
         }
     }
 
+    fun cancelMeasuringTimeouts() {
+        timeoutsMeasurementJob?.cancelChildren()
+        timeouts.clear()
+    }
+
     private fun initBridgeCheckerObserver() {
         timeoutsObserveJob = viewModelScope.launch {
             defaultVanillaBridgeInteractor.observeTimeouts()
-                .filter { it.ping != 0 }
-                .onEach {
+                .filter {
+                    when (it) {
+                        is BridgePingData -> it.ping != 0
+                        is PingCheckComplete -> true
+                    }
+                }.onEach {
                     timeouts.add(it)
                     timeoutMutableLiveData.value = timeouts
-                }
-                .collect()
+                }.collect()
         }
     }
 
