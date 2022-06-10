@@ -116,6 +116,8 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     @Inject
     @Named(DEFAULT_PREFERENCES_NAME)
     public Lazy<SharedPreferences> defaultPreferences;
+    @Inject
+    public Lazy<ProxyHelper> proxyHelper;
 
     private static final int ARP_SCANNER_CHANGE_STATE_DELAY_SEC = 5;
 
@@ -479,13 +481,13 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         return false;
     }
 
-    private void disableProxy(Context context) {
+    private void disableProxy() {
         SharedPreferences sharedPreferences = defaultPreferences.get();
         String proxyServer = sharedPreferences.getString(PROXY_ADDRESS, "");
         String proxyPort = sharedPreferences.getString(PROXY_PORT, "");
 
         if (proxyServer != null && proxyPort != null) {
-            ProxyHelper.INSTANCE.manageProxy(context, proxyServer, proxyPort, false,
+            proxyHelper.get().manageProxy(proxyServer, proxyPort, false,
                     false, false, false);
         }
     }
@@ -804,7 +806,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         if (context != null && commandDisableProxy) {
             commandDisableProxy = false;
-            disableProxy(context);
+            disableProxy();
             Toast.makeText(context, R.string.toastSettings_saved, Toast.LENGTH_SHORT).show();
         }
     }

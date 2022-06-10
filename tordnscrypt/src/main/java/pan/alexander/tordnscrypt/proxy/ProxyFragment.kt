@@ -63,6 +63,8 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
     lateinit var cachedExecutor: CachedExecutor
     @Inject
     lateinit var handler: dagger.Lazy<Handler>
+    @Inject
+    lateinit var proxyHelper: ProxyHelper
 
     private var _binding: FragmentProxyBinding? = null
     private val binding get() = _binding!!
@@ -162,10 +164,10 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
 
         if (proxyServer.isNotEmpty() && proxyPort.isNotEmpty()
                 && (setBypassProxy.isNotEmpty() || proxyServer != LOOPBACK_ADDRESS)) {
-            ProxyHelper.manageProxy(context, proxyServer, proxyPort, serverOrPortChanged,
+            proxyHelper.manageProxy(proxyServer, proxyPort, serverOrPortChanged,
                     activateDNSCryptProxy, activateTorProxy, activateITPDProxy)
         } else {
-            ProxyHelper.manageProxy(context, proxyServer, proxyPort, false,
+            proxyHelper.manageProxy(proxyServer, proxyPort, false,
                     enableDNSCryptProxy = false, enableTorProxy = false, enableItpdProxy = false)
         }
 
@@ -242,7 +244,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
 
         futureTask = cachedExecutor.submit {
             try {
-                val result = ProxyHelper.checkProxyConnectivity(server, port.toInt())
+                val result = proxyHelper.checkProxyConnectivity(server, port.toInt())
 
                 if (_binding != null) {
                     if (result.matches(Regex("\\d+"))) {
