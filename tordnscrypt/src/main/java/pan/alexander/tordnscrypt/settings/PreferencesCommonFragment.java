@@ -316,7 +316,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             context, getString(R.string.verifier_error), "5889");
                     if (notificationHelper != null && isAdded()) {
-                        notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
+                        handler.get().post(() -> notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER));
                     }
                 }
 
@@ -324,7 +324,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                         context, getString(R.string.verifier_error), "5804");
                 if (notificationHelper != null && isAdded()) {
-                    notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
+                    handler.get().post(() -> notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER));
                 }
                 Log.e(LOG_TAG, "PreferencesCommonFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                         Arrays.toString(e.getStackTrace()));

@@ -133,7 +133,7 @@ public class UnlockTorIpsFragment extends Fragment {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             activity, getString(R.string.verifier_error), "123");
                     if (notificationHelper != null && isAdded()) {
-                        notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
+                        activity.runOnUiThread(() -> notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER));
                     }
                 }
 
@@ -141,7 +141,7 @@ public class UnlockTorIpsFragment extends Fragment {
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                         activity, getString(R.string.verifier_error), "168");
                 if (notificationHelper != null && isAdded()) {
-                    notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
+                    activity.runOnUiThread(() -> notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER));
                 }
                 Log.e(LOG_TAG, "UnlockTorIpsFrag fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                         Arrays.toString(e.getStackTrace()));

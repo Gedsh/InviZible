@@ -414,8 +414,8 @@ public class TopFragment extends Fragment {
                     if (topFragment.isAdded() && !topFragment.isStateSaved()) {
                         NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                                 activity, topFragment.getString(R.string.verifier_error), "1112");
-                        if (notificationHelper != null) {
-                            notificationHelper.show(topFragment.getParentFragmentManager(), NotificationHelper.TAG_HELPER);
+                        if (notificationHelper != null && topFragment.handler != null) {
+                            topFragment.handler.post(() -> notificationHelper.show(topFragment.getChildFragmentManager(), NotificationHelper.TAG_HELPER));
                         }
                     }
                 }
@@ -424,8 +424,8 @@ public class TopFragment extends Fragment {
                 if (topFragment.isAdded()) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             activity, topFragment.getString(R.string.verifier_error), "2235");
-                    if (notificationHelper != null && !topFragment.isStateSaved()) {
-                        notificationHelper.show(topFragment.getParentFragmentManager(), NotificationHelper.TAG_HELPER);
+                    if (notificationHelper != null && !topFragment.isStateSaved() && topFragment.handler != null) {
+                        topFragment.handler.post(() -> notificationHelper.show(topFragment.getChildFragmentManager(), NotificationHelper.TAG_HELPER));
                     }
                 }
                 Log.e(LOG_TAG, "Top Fragment comparator fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +

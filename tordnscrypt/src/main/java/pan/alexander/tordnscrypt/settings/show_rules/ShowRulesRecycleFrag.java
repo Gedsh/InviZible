@@ -215,7 +215,7 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
     private void showTooManyRulesDialog() {
         DialogFragment dialogFragment = NotificationDialogFragment.newInstance(R.string.dnscrypt_many_rules_dialog_message);
         if (isAdded()) {
-            dialogFragment.show(getParentFragmentManager(), "TooManyRules");
+            dialogFragment.show(getChildFragmentManager(), "TooManyRules");
         }
     }
 

@@ -316,7 +316,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                         NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                                 context, getString(R.string.verifier_error), "3458");
                         if (notificationHelper != null) {
-                            notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
+                            handlerLazy.get().post(() -> notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER));
                         }
                     }
                 }
@@ -326,7 +326,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             context, getString(R.string.verifier_error), "64539");
                     if (notificationHelper != null) {
-                        notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
+                        handlerLazy.get().post(() -> notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER));
                     }
                 }
                 loge("PreferencesTorBridges", e, true);
