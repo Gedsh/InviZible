@@ -800,3 +800,9 @@
 * Bridge ping color changes based on ping value.
 * Fixed DNSCrypt version detection.
 * Minor optimizations.
+
+**InviZible Pro beta 1.6.9**
+* DNSCrypt fork is used, which minimizes plaintext DNS queries for bootstrap.
+* Check Tor bridges ping through proxy if enabled.
+* Fixed crash on anroid 4.4.2 when opening some screens.
+* Minor fixes and optimizations.
