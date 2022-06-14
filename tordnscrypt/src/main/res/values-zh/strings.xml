@@ -3,13 +3,10 @@
     <string name="nav_header_title">"Tor 及 DNSCrypt 和 I2P"</string>
     <string name="nav_header_subtitle">"最佳隐私解决方案"</string>
     <string name="action_settings">"设置"</string>
-
     <!-- Fuzzy -->
     <string name="tvITPDStop">"I2P 已停止"</string>
-
     <!-- Fuzzy -->
     <string name="tvITPDRunning">"I2P 正在运行"</string>
-
     <!-- Fuzzy -->
     <string name="tvITPDStarting">"I2P 正在启动"</string>
     <string name="tvITPDStopping">"I2P 正在停止"</string>
@@ -68,7 +65,7 @@
     <string name="pref_fast_tor_autostart">"设备启动时启动 Tor"</string>
     <string name="pref_fast_itpd_autostart">"设备启动时启动 I2P"</string>
     <string name="pref_fast_autostart_delay">"延迟"</string>
-    <string name="pref_fast_autostart_delay_summ">"仅在自动启动无法正确工作时使用延迟（秒）"</string>
+    <string name="pref_fast_autostart_delay_summ">仅在自动启动无法正确工作时使用延迟（秒）</string>
     <string name="pref_fast_dns_server">"DNSCrypt 服务器"</string>
     <string name="pref_fast_select_dns_server">"选择 DNSCrypt 服务器"</string>
     <string name="pref_fast_tor">"Tor 设置"</string>
@@ -146,7 +143,7 @@
     <string name="pref_common_restart_dnscrypt">"请重启 DNSCrypt"</string>
     <string name="pref_common_restart_tor">"请重启 Tor"</string>
     <string name="pref_common_restart_itpd">"请重启 I2P"</string>
-    <string name="pref_common_use_iptables">"选择 Iptables"</string>
+    <string name="pref_common_use_iptables">选择 iptables</string>
     <string name="pref_common_log_root_commands">"将 Root 命令保存到日志"</string>
     <string name="notification_text">"DNSCrypt，Tor，I2P 已受保护。不隐藏。"</string>
     <string name="notification_temp_text">"执行 Root 命令…"</string>
@@ -164,8 +161,8 @@
     <string name="pref_dnscrypt_require_nolog_summ">"服务器必须声明不记录用户日志。"</string>
     <string name="pref_dnscrypt_require_nofilter_summ">"服务器必须不强制应用自己的黑名单（家长控制，广告拦截…）。"</string>
     <string name="pref_dnscrypt_force_tcp_categ">"总是使用 TCP 连接上游服务器。"</string>
-    <string name="pref_dnscrypt_force_tcp_summ">"当您需要路由所有流量通过 Tor 时有用。
-否则置为 false，因为它并不提高安全性（dnscrypt-proxy 将加密所有流量，即使使用 UDP），并只会提高延迟。"</string>
+    <string name="pref_dnscrypt_force_tcp_summ">当您需要路由所有流量通过 Tor 时有用。
+\n 否则置为 false，因为它并不提高安全性（dnscrypt-proxy 将加密所有流量，即使使用 UDP），并只会提高延迟。</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"SOCKS 代理。"</string>
     <string name="pref_dnscrypt_use_proxy">"启用代理"</string>
     <string name="pref_dnscrypt_proxy_summ">"路由全部 TCP 连接到本地 Tor 节点。 Tor 不支持 UDP，因此也设置 force_tcp 为 true。"</string>
@@ -177,16 +174,16 @@
     <string name="pref_dnscrypt_forwarding_rules_categ">"转发规则"</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"指定域名的路由请求发送到一组指定的服务器。"</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">"伪装规则"</string>
-    <string name="pref_dnscrypt_cloaking_rules_summ">"伪装规则对指定域名返回预定义地址。
-除了像 HOSTS 文件一样工作，它也可以返回一个不同域名的 IP 地址。它也可以执行 CNAME 展开。"</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">伪装规则对指定域名返回预定义地址。
+\n 除了像 HOSTS 文件一样工作，它也可以返回一个不同域名的 IP 地址。它也可以执行 CNAME 展开。</string>
     <string name="pref_dnscrypt_query_log_categ">"记录请求。"</string>
     <string name="pref_dnscrypt_query_log_summ">"将客户端请求记录到文件。"</string>
     <string name="pref_dnscrypt_query_log">"启用请求日志"</string>
     <string name="pref_dnscrypt_ignored_qtypes_summ">"不记录请求类型，以减少复杂性。保持空记录所有内容。"</string>
     <string name="open_query_log">"打开请求日志"</string>
     <string name="pref_dnscrypt_nx_log_categ">"记录可疑请求。"</string>
-    <string name="pref_dnscrypt_nx_log_summ">"记录不存在区域的请求。
-这些请求将揭示恶意软件，损坏/过时应用，及向第三方显示存在的设备的存在。"</string>
+    <string name="pref_dnscrypt_nx_log_summ">记录不存在区域的请求。
+\n 这些请求将揭示恶意软件，损坏/过时应用，及向第三方显示存在的设备的存在。</string>
     <string name="pref_dnscrypt_nx_log">"启用可疑请求日志"</string>
     <string name="open_nx_log">"打开可疑请求日志"</string>
     <string name="pref_dnscrypt_blacklist_categ">"基于模式的阻止（黑名单）。"</string>
@@ -217,7 +214,7 @@
     <string name="pref_tor_avoid_disc_writes_summ">"如果非零，将试图减少磁盘写入次数。"</string>
     <string name="pref_tor_connections_padding_summ">"此选项控制 Tor 对填充的使用以防守一些类型的流量分析。禁用以节省带宽。"</string>
     <string name="pref_tor_reduced_connections_padding_summ">"如果设置为已启用，Tor 将不会保持打开很长时间的 OR 连接，并会在连接中发送更少填充。启用以节省带宽。"</string>
-    <string name="pref_tor_exclude_exit_nodes_summ">"从不使用的国家代码列表，用于挑选出口节点，将流量为您发送到 Tor 网络之外"</string>
+    <string name="pref_tor_exclude_exit_nodes_summ">从不使用的国家代码列表，用于挑选出口节点，将流量为您发送到 Tor 网络之外。</string>
     <string name="pref_tor_exit_nodes_summ">"使用的出口节点国家代码列表 - 即，将流量为您发送到 Tor 网络之外的节点。"</string>
     <string name="pref_tor_exclude_nodes_summ">"构建链路时避免的国家代码列表。"</string>
     <string name="pref_tor_entry_nodes_summ">"您的正常链路中第一跳使用的节点的国家代码列表。"</string>
@@ -478,15 +475,15 @@
     <string name="notification_dns_rebinding_text">"检测到可能的 DNS 重绑定攻击！站点 %s 已被阻止。"</string>
     <string name="areYouSure">"您确定吗？此操作无法撤销！"</string>
     <string name="btnResetSettings">"重置设置"</string>
-    <string name="backupSaved">"备份已保存："</string>
+    <string name="backupSaved">备份已保存</string>
     <string name="backupRestored">"备份已恢复"</string>
-    <string name="thanks_for_donate_gp">"InviZible Pro 项目及其作者感谢您的帮助。"</string>
-    <string name="pref_tor_hardware_accel_summ">"Try to use built-in crypto hardware acceleration when available."</string>
-    <string name="notification_connecting">"Connecting…"</string>
-    <string name="notification_waiting_network">"Waiting for network…"</string>
-    <string name="tile_change_tor_ip">"Change Tor IP"</string>
-    <string name="tile_changing_tor_ip">"Tor IP changing"</string>
-    <string name="tile_dialog_over_three_tiles_message">"You have added more than 3 tiles to Quick Settings. Please leave only 3. Adding more than 3 tiles can cause issues with app control."</string>
+    <string name="thanks_for_donate_gp">InviZible Pro 项目及其作者感谢您的帮助！</string>
+    <string name="pref_tor_hardware_accel_summ">如果设备支持将尝试使用内置加密硬件加速。</string>
+    <string name="notification_connecting">正在连接…</string>
+    <string name="notification_waiting_network">等待网络…</string>
+    <string name="tile_change_tor_ip">更改Tor IP</string>
+    <string name="tile_changing_tor_ip">Tor IP正在更改</string>
+    <string name="tile_dialog_over_three_tiles_message">你在快捷设置中添加了超过3个磁贴。请只留下3个。添加超过3个磁贴会导致应用控制的问题。</string>
     <string name="pref_common_rogue_dhcp_detection">"Rogue DHCP detection"</string>
     <string name="pref_common_rogue_dhcp_detection_summ">"Detect Man-in-the-middle rogue DHCP attacks in Wi-Fi networks."</string>
     <string name="pref_tor_snowflake_select_rendezvous">"Select rendezvous"</string>
@@ -498,4 +495,17 @@
     <string name="pref_common_kill_switch_summ">"Block internet connection when Tor, DNSCrypt and Purple I2P are stopped"</string>
     <string name="notification_internet_blocked_message">"Internet blocked due to the Kill switch. Start Tor, DNSCrypt or I2P to allow the connection. Or disable the Kill switch in Common Settings."</string>
     <string name="list_is_empty">"List is Empty"</string>
+    <string name="agreement_text">\\\t感谢您选择InviZible Pro。我希望它能对您的隐私和舒适地使用互联网有帮助。
+\n
+\n\tInviZible Pro包括Tor、DNSCrypt和Purple I2P等模块。
+\n
+\n\t如果您的设备有root权限，InviZible Pro可以使用root，或者使用本地VPN将互联网流量传送到Tor、DNSCrypt和I2P网络。
+\n
+\n\t隐私政策：
+\n\tInviZible Pro不收集或分享任何私人或敏感的用户数据。
+\n
+\n\tCopyright © 2019-2022
+\n\tGarmatin Oleksandr
+\n\tinvizible.soft@gmail.com
+\n\tinvizible.net/en/privacy</string>
 </resources>
