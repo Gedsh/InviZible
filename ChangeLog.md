@@ -806,3 +806,8 @@
 * Check Tor bridges ping through proxy if enabled.
 * Fixed crash on anroid 4.4.2 when opening some screens.
 * Minor fixes and optimizations.
+
+**InviZible Pro beta 1.7.0**
+* Updated Tor to version 4.7.8.
+* Updated Tor snowflake bridge.
+* Updated DNSCrypt.
