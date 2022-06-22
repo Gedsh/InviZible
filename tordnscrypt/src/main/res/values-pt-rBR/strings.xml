@@ -529,4 +529,15 @@ Essas consultas podem revelar a presença de malware, aplicativos quebrados / ob
     <string name="pref_common_kill_switch_summ">"Bloquear a conexão à Internet quando Tor, DNSCrypt e Purple I2P forem interrompidos"</string>
     <string name="notification_internet_blocked_message">"Internet bloqueada devido ao Kill switch. Inicie o Tor, DNSCrypt ou I2P para permitir a conexão, ou desabilite o Kill switch em Configurações Comuns."</string>
     <string name="list_is_empty">"A lista está vazia"</string>
+    <string name="pref_common_use_busybox_auto">"Auto"</string>
+    <string name="pref_common_use_busybox_device">"Use device BusyBox"</string>
+    <string name="pref_common_use_busybox_app">"Use application BusyBox"</string>
+    <string name="pref_common_use_busybox_not_use">"Not use BusyBox"</string>
+    <string name="pref_common_use_iptables_app">"Use application iptables"</string>
+    <string name="pref_common_use_iptables_device">"Use device iptables"</string>
+    <string name="pref_common_wait_iptables">"Wait for the xtables lock"</string>
+    <string name="pref_common_wait_iptables_summ">"Wait until the exclusive iptables lock can be obtained to prevent concurrent modification of iptables rules."</string>
+    <string name="connectivity_check">"Internet connectivity check"</string>
+    <string name="pref_fast_logs">"Real-time logs"</string>
+    <string name="pref_fast_logs_summ">"Show application connection logs in the DNS tab"</string>
 </resources>

@@ -537,4 +537,15 @@ WLAN aus- und kurz darauf wieder anschalten. Die Verwendung des derzeitigen Hots
     <string name="pref_common_kill_switch_summ">"Blockiere die Internet Verbindung sobald Tor, DNSCrypt oder I2P gestoppt wurden."</string>
     <string name="notification_internet_blocked_message">"Die Internet Verbindung wurde aufgrund des Aus-Schalters blockiert. Starte Tor, DNSCrypt oder I2P um sie zu reaktivieren. Alternativ kann der Aus-Schalter in den Einstellungen deaktiviert werden."</string>
     <string name="list_is_empty">"Liste ist leer"</string>
+    <string name="pref_common_use_busybox_auto">"Automatisch"</string>
+    <string name="pref_common_use_busybox_device">"BusyBox des Gerätes verwenden"</string>
+    <string name="pref_common_use_busybox_app">"BusyBox des Programmes verwenden"</string>
+    <string name="pref_common_use_busybox_not_use">"BusyBox nicht verwenden"</string>
+    <string name="pref_common_use_iptables_app">"IPTables des Gerätes verwenden"</string>
+    <string name="pref_common_use_iptables_device">"IPTables des Gerätes verwenden"</string>
+    <string name="pref_common_wait_iptables">"Warten auf die xTables Sperre"</string>
+    <string name="pref_common_wait_iptables_summ">"Warten bis die IPTables-Sperre greift, um gleichzeitige Änderung von IPTables-Regeln zu verhindern."</string>
+    <string name="connectivity_check">"Überprüfung auf Internetverbindung"</string>
+    <string name="pref_fast_logs">"Echtzeit Logs"</string>
+    <string name="pref_fast_logs_summ">"Zeige Programmverbindungslogs im DNS Reiter"</string>
 </resources>
