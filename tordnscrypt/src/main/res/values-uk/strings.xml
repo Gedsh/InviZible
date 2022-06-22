@@ -59,7 +59,7 @@
     <string name="btnRestoreBackup">Відновити налаштування</string>
     <string name="btnSaveBackup">Зберегти налаштування</string>
     <string name="drawer_menu_about">Про програму</string>
-    <string name="backupFolder">Вибрати папку для збереження:</string>
+    <string name="backupFolder">Вибрати теку для збереження:</string>
     <string name="backupSaved">Резервна копія збережена</string>
     <string name="backupRestored">Резервну копію відновлено</string>
     <string name="title_activity_settings">Налаштування</string>
@@ -139,7 +139,7 @@
     <string name="pref_advanced">Тільки для досвідчених користувачів!</string>
     <string name="pref_dnscrypt_local_port_summ">Номер порту.</string>
     <string name="btnResetSettings">Скинути налаштування</string>
-    <string name="etPathBackup">Шлях до папки:</string>
+    <string name="etPathBackup">Шлях до теки:</string>
     <string name="pref_fast_tor">Налаштування Tor</string>
     <string name="pref_fast_select_dns_server">Вибрати сервери DNSCrypt</string>
     <string name="pref_fast_unlock_apps_with_tor_summ">Програми, що відкриваються через Tor</string>
