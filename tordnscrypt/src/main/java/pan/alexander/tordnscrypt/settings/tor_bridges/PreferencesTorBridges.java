@@ -72,23 +72,18 @@ import pan.alexander.tordnscrypt.domain.bridges.BridgePingData;
 import pan.alexander.tordnscrypt.domain.bridges.BridgePingResult;
 import pan.alexander.tordnscrypt.domain.bridges.PingCheckComplete;
 import pan.alexander.tordnscrypt.settings.SettingsActivity;
-import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.dialogs.UpdateDefaultBridgesDialog;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.BridgeType;
 import pan.alexander.tordnscrypt.utils.enums.BridgesSelector;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
-import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
-import static pan.alexander.tordnscrypt.TopFragment.appSign;
-import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS;
@@ -305,34 +300,6 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         observeTimeouts();
         observeDefaultVanillaBridges();
         observeErrors();
-
-        cachedExecutor.submit(() -> {
-            try {
-                Verifier verifier = new Verifier(context);
-                String appSignAlt = verifier.getApkSignature();
-                if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
-
-                    if (isAdded()) {
-                        NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                context, getString(R.string.verifier_error), "3458");
-                        if (notificationHelper != null) {
-                            handlerLazy.get().post(() -> notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER));
-                        }
-                    }
-                }
-
-            } catch (Exception e) {
-                if (isAdded()) {
-                    NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                            context, getString(R.string.verifier_error), "64539");
-                    if (notificationHelper != null) {
-                        handlerLazy.get().post(() -> notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER));
-                    }
-                }
-                loge("PreferencesTorBridges", e, true);
-            }
-        });
-
     }
 
     @Override
