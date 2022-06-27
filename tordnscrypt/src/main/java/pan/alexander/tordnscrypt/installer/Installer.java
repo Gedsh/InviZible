@@ -400,14 +400,14 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             } else if (line.matches("(^| )\\{ ?server_name([ =]).+")) {
                 line = "";
             } else if (line.matches("(^| )server_names([ =]).+")) {
-                line = "server_names = ['ams-dnscrypt-nl', " +
-                        "'ams-doh-nl', " +
-                        "'plan9-ns1', " +
+                line = "server_names = ['uncensoreddns-dk-ipv4', " +
+                        "'njalla-doh', " +
+                        "'faelix-ch-ipv4', " +
                         "'dns.digitale-gesellschaft.ch', " +
                         "'dnscrypt.ca-1', " +
                         "'sth-doh-se', " +
                         "'libredns', " +
-                        "'opennic-luggs', " +
+                        "'dnscrypt.eu-nl', " +
                         "'publicarray-au-doh', " +
                         "'scaleway-fr']";
             } else if (line.contains("require_nofilter")) {
