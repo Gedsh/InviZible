@@ -93,7 +93,7 @@ class IptablesReceiver : BroadcastReceiver() {
             val refreshRules = sharedPreferences.getBoolean(REFRESH_RULES, false)
 
             if (resultStr.contains("unknown option \"-w\"")) {
-                sharedPreferences.edit().putString(USE_IPTABLES, "2").apply()
+                sharedPreferences.edit().putBoolean(WAIT_IPTABLES, false).apply()
                 it.postDelayed({ ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true) }, 1000)
             } else if (refreshRules
                 && (resultStr.contains(" -w ")

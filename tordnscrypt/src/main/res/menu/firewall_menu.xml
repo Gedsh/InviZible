@@ -7,13 +7,13 @@
         android:orderInCategory="1"
         android:title="@string/firewall_search"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
     <item
         android:id="@+id/firewall_switch_item"
         android:orderInCategory="2"
         android:title="@string/firewall_switch"
         app:actionLayout="@layout/switch_item"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
     <item
         android:id="@+id/firewall_settings"
         android:orderInCategory="3"

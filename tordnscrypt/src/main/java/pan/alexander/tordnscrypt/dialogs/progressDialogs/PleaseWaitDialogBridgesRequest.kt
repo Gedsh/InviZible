@@ -20,53 +20,57 @@ package pan.alexander.tordnscrypt.dialogs.progressDialogs
 */
 
 import android.app.Dialog
+import android.content.DialogInterface
 import android.os.Bundle
 import android.widget.ProgressBar
 import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.dialogs.ExtendedDialogFragment
-import java.util.concurrent.FutureTask
+import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridgesViewModel
+import javax.inject.Inject
 
-class PleaseWaitDialogBridgesRequest : ExtendedDialogFragment() {
-    var threadRequest: FutureTask<Any>? = null
+@ExperimentalCoroutinesApi
+class PleaseWaitDialogBridgesRequest @Inject constructor(
+    private val viewModelFactory: ViewModelProvider.Factory
+) : ExtendedDialogFragment() {
 
-    override fun assignBuilder(): AlertDialog.Builder? {
+    private val preferencesTorBridgesViewModel: PreferencesTorBridgesViewModel by viewModels(
+        { requireParentFragment() },
+        { viewModelFactory }
+    )
 
-        val activity = activity
-        if (activity == null || activity.isFinishing) {
-            return null
+    override fun assignBuilder(): AlertDialog.Builder =
+        AlertDialog.Builder(requireActivity(), R.style.CustomAlertDialogTheme).apply {
+            setTitle(R.string.pref_fast_use_tor_bridges_request_dialog)
+            setMessage(R.string.please_wait)
+            setIcon(R.drawable.ic_visibility_off_black_24dp)
+            setPositiveButton(R.string.cancel) { dialogInterface, _ ->
+                dialogInterface.cancel()
+            }
+            val progressBar = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal)
+            progressBar.setBackgroundResource(R.drawable.background_10dp_padding)
+            progressBar.isIndeterminate = true
+            setView(progressBar)
+            setCancelable(false)
         }
-
-        val builder = AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme)
-        builder.setTitle(R.string.pref_fast_use_tor_bridges_request_dialog)
-        builder.setMessage(R.string.please_wait)
-        builder.setIcon(R.drawable.ic_visibility_off_black_24dp)
-        builder.setPositiveButton(R.string.cancel) { dialogInterface, _ ->
-            threadRequest?.cancel(true)
-            dialogInterface.dismiss()
-        }
-        val progressBar = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal)
-        progressBar.setBackgroundResource(R.drawable.background_10dp_padding)
-        progressBar.isIndeterminate = true
-        builder.setView(progressBar)
-        builder.setCancelable(false)
-        return builder
-    }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState)
 
-        if (threadRequest?.isDone == true) {
-            dialog.dismiss()
-        } else {
-            dialog.setCanceledOnTouchOutside(false)
-        }
+        dialog.setCanceledOnTouchOutside(false)
 
         return dialog
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        threadRequest?.cancel(true)
+    override fun onDismiss(dialog: DialogInterface) {
+        super.onDismiss(dialog)
+
+        if (activity?.isChangingConfigurations == false) {
+            preferencesTorBridgesViewModel.cancelTorBridgesRequestJob()
+        }
+
     }
 }

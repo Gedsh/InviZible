@@ -24,9 +24,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import pan.alexander.tordnscrypt.data.bridges.RelayAddressFingerprint
 import pan.alexander.tordnscrypt.di.CoroutinesModule
-import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.lang.Exception
 import javax.inject.Inject
@@ -37,24 +34,22 @@ private const val SIMULTANEOUS_CHECKS = 3
 private const val MAX_RELAY_COUNT = 30
 
 @ExperimentalCoroutinesApi
-class BridgeInteractor @Inject constructor(
-    private val repository: BridgeRepository,
+class DefaultVanillaBridgeInteractor @Inject constructor(
+    private val repository: DefaultVanillaBridgeRepository,
     @Named(CoroutinesModule.DISPATCHER_IO)
-    private val dispatcherIo: CoroutineDispatcher,
-    private val pathVars: dagger.Lazy<PathVars>
+    private val dispatcherIo: CoroutineDispatcher
 ) {
 
-    private val modulesStatus = ModulesStatus.getInstance()
-
-    private val timeouts = MutableSharedFlow<BridgePingData>()
+    private val timeouts = MutableSharedFlow<BridgePingResult>()
 
     fun observeTimeouts() = timeouts.asSharedFlow()
 
     suspend fun measureTimeouts(bridges: List<String>) =
         withContext(dispatcherIo.limitedParallelism(SIMULTANEOUS_CHECKS)) {
+            val defers = mutableListOf<Deferred<Unit>>()
             bridges.forEach {
                 try {
-                    launch {
+                    defers += async {
                         timeouts.emit(
                             BridgePingData(it.hashCode(), repository.getTimeout(it))
                         )
@@ -64,23 +59,13 @@ class BridgeInteractor @Inject constructor(
                     loge("BridgeCheckerInteractor measureTimeouts", e)
                 }
             }
+            defers.awaitAll()
+            timeouts.emit(PingCheckComplete)
         }
 
     suspend fun requestRelays(): List<RelayAddressFingerprint> = withContext(dispatcherIo) {
-        try {
-            var host = ""
-            var port = 0
-            if (modulesStatus.isTorReady) {
-                host = LOOPBACK_ADDRESS
-                port = pathVars.get().torSOCKSPort.toInt()
-            }
-
-            repository.getRelaysWithFingerprintAndAddress(host, port)
-                .shuffled()
-                .take(MAX_RELAY_COUNT)
-        } catch (e: Exception) {
-            loge("BridgeCheckerInteractor requestRelays", e)
-            emptyList()
-        }
+        repository.getRelaysWithFingerprintAndAddress()
+            .shuffled()
+            .take(MAX_RELAY_COUNT)
     }
 }

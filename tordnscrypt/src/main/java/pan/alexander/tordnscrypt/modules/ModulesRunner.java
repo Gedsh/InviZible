@@ -24,14 +24,14 @@ import android.content.Context;
 public class ModulesRunner {
 
     public static void runDNSCrypt(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.actionStartDnsCrypt);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.ACTION_START_DNSCRYPT);
     }
 
     public static void runTor(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.actionStartTor);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.ACTION_START_TOR);
     }
 
     public static void runITPD(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.actionStartITPD);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.ACTION_START_ITPD);
     }
 }

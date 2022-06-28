@@ -7,3 +7,6 @@
 [submodule "PurpleI2PBuildScript"]
 	path = PurpleI2PBuildScript
 	url = https://github.com/Gedsh/Purple-I2P-Android-build-script
+[submodule "Nflog-android"]
+	path = Nflog-android
+	url = https://github.com/Gedsh/Nflog-android

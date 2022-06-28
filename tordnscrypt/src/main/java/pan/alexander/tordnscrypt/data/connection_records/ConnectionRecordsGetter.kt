@@ -25,7 +25,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
-import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecord
+import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPN
@@ -57,24 +57,18 @@ class ConnectionRecordsGetter @Inject constructor(
     @Volatile
     private var serviceVPN: WeakReference<ServiceVPN?>? = null
 
-    fun getConnectionRawRecords(): List<ConnectionRecord?> {
+    fun getConnectionRawRecords(): Map<ConnectionData, Boolean> {
         if (bound.compareAndSet(false, true)) {
             logi("ConnectionRecordsGetter bind to VPN service")
             bindToVPNService()
         }
 
-        lockConnectionRawRecordsListForRead(true)
-
         val rawRecords = try {
-            ArrayList<ConnectionRecord?>(
-                serviceVPN?.get()?.dnsQueryRawRecords ?: emptyList()
-            )
+            serviceVPN?.get()?.dnsQueryRawRecords ?: emptyMap<ConnectionData, Boolean>()
         } catch (e: Exception) {
             logw("ConnectionRecordsGetter getConnectionRawRecords", e)
-            emptyList()
+            emptyMap<ConnectionData, Boolean>()
         }
-
-        lockConnectionRawRecordsListForRead(false)
 
         return rawRecords
     }
@@ -89,14 +83,6 @@ class ConnectionRecordsGetter @Inject constructor(
 
     fun connectionRawRecordsNoMoreRequired() {
         unbindVPNService()
-    }
-
-    private fun lockConnectionRawRecordsListForRead(lock: Boolean) {
-        try {
-            serviceVPN?.get()?.lockDnsQueryRawRecordsListForRead(lock)
-        } catch (e: Exception) {
-            logw("ConnectionRecordsGetter lockConnectionRawRecordsListForRead", e)
-        }
     }
 
     @Synchronized

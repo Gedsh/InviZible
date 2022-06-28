@@ -24,7 +24,9 @@ interface IptablesConstants {
     String FILTER_OUTPUT_FIREWALL = "ipro_fwl_output";
     String FILTER_FIREWALL_LAN = "ipro_fwl_lan";
     String NAT_OUTPUT_CORE = "tordnscrypt_nat_output";
+    String MANGLE_FIREWALL_ALLOW = "ipro_mangle_fwl";
     String FILTER_FORWARD_CORE = "tordnscrypt_forward";
     String FILTER_FORWARD_FIREWALL = "ipro_fwl_forward";
     String NAT_PREROUTING_CORE = "tordnscrypt_prerouting";
+    String FILTER_OUTPUT_BLOCKING = "ipro_blocking";
 }

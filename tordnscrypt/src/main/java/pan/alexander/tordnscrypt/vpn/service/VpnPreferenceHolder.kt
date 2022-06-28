@@ -97,4 +97,5 @@ class VpnPreferenceHolder @Inject constructor(
     private val modulesStatus = ModulesStatus.getInstance()
     val fixTTL = (modulesStatus.isFixTTL && modulesStatus.mode == OperationMode.ROOT_MODE
             && !modulesStatus.isUseModulesWithRoot)
+    val connectionLogsEnabled = defaultPreferences.getBoolean(CONNECTION_LOGS, true)
 }

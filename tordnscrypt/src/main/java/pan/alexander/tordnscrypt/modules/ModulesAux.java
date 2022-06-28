@@ -124,38 +124,38 @@ public class ModulesAux {
     }
 
     public static void stopModulesService(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.actionStopService);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.ACTION_STOP_SERVICE);
     }
 
     public static void requestModulesStatusUpdate(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.actionUpdateModulesStatus);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.ACTION_UPDATE_MODULES_STATUS);
     }
 
     public static void recoverService(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.actionRecoverService);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.ACTION_RECOVER_SERVICE);
     }
 
     public static void speedupModulesStateLoopTimer(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.speedupLoop);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.SPEEDUP_LOOP);
     }
 
     public static void slowdownModulesStateLoopTimer(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.slowdownLoop);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.SLOWDOWN_LOOP);
     }
 
     public static void makeModulesStateExtraLoop(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.extraLoop);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.EXTRA_LOOP);
     }
 
     public static void startArpDetection(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.startArpScanner);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.START_ARP_SCANNER);
     }
 
     public static void stopArpDetection(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.stopArpScanner);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.STOP_ARP_SCANNER);
     }
 
     public static void clearIptablesCommandsSavedHash(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.clearIptablesCommandsHash);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.CLEAR_IPTABLES_COMMANDS_HASH);
     }
 }

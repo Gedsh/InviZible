@@ -37,11 +37,13 @@ import android.widget.Toast;
 import androidx.annotation.Keep;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import dagger.Lazy;
@@ -51,7 +53,9 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.arp.DNSRebindProtection;
 import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor;
 import pan.alexander.tordnscrypt.domain.connection_checker.OnInternetConnectionCheckedListener;
-import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecord;
+import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData;
+import pan.alexander.tordnscrypt.domain.connection_records.entities.DnsRecord;
+import pan.alexander.tordnscrypt.domain.connection_records.entities.PacketRecord;
 import pan.alexander.tordnscrypt.domain.dns_resolver.DnsInteractor;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
@@ -74,7 +78,7 @@ import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFE
 import static pan.alexander.tordnscrypt.modules.ModulesReceiver.VPN_REVOKED_EXTRA;
 import static pan.alexander.tordnscrypt.modules.ModulesReceiver.VPN_REVOKE_ACTION;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStopServiceForeground;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.ACTION_STOP_SERVICE_FOREGROUND;
 import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_PORT_NTP;
 import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_UID_KERNEL;
 import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_UID_NTP;
@@ -106,7 +110,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         }
     }
 
-    final static int LINES_IN_DNS_QUERY_RAW_RECORDS = 500;
+    public final static int LINES_IN_DNS_QUERY_RAW_RECORDS = 512;
 
     static final String EXTRA_COMMAND = "Command";
     static final String EXTRA_REASON = "Reason";
@@ -142,7 +146,11 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     volatile ParcelFileDescriptor vpn = null;
 
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
-    private final LinkedList<ConnectionRecord> dnsQueryRawRecords = new LinkedList<>();
+    private final ConcurrentHashMap<ConnectionData, Boolean> connectionDataRecords = new ConcurrentHashMap<>(
+            16,
+            0.75f,
+            2
+    );
 
     private volatile Looper commandLooper;
     private volatile ServiceVPNHandler commandHandler;
@@ -189,7 +197,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         vpnPreferences = vpnPreferenceHolder.get();
 
         // Prepare rules
-        vpnRulesHolder.get().prepareUidAllowed(listAllowed, ServiceVPNHandler.getAppsList());
+        vpnRulesHolder.get().prepareUidAllowed(listAllowed, commandHandler.getAppsList());
         vpnRulesHolder.get().prepareForwarding();
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
@@ -314,28 +322,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
         try {
 
-            lock.writeLock().lockInterruptibly();
-
-            ConnectionRecord lastRecord = dnsQueryRawRecords.isEmpty() ? null : dnsQueryRawRecords.getLast();
-            ConnectionRecord newRecord = new ConnectionRecord
-                    (
-                            rr.QName != null ? toUnicode(rr.QName.trim(), ALLOW_UNASSIGNED) : "",
-                            rr.AName != null ? toUnicode(rr.AName.trim(), ALLOW_UNASSIGNED) : "",
-                            rr.CName != null ? toUnicode(rr.CName.trim(), ALLOW_UNASSIGNED) : "",
-                            rr.HInfo != null ? rr.HInfo.trim() : "",
-                            rr.Rcode,
-                            "",
-                            rr.Resource != null ? rr.Resource.trim() : "",
-                            -1000
-                    );
-
-            if (!newRecord.equals(lastRecord)) {
-                dnsQueryRawRecords.add(newRecord);
-
-                if (dnsQueryRawRecords.size() > LINES_IN_DNS_QUERY_RAW_RECORDS) {
-                    dnsQueryRawRecords.removeFirst();
-                }
-            }
+            addDnsToConnectionRecords(rr);
 
             String qname = rr.QName;
             String destAddress = rr.Resource;
@@ -362,11 +349,44 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
         } catch (Exception e) {
             loge("ServiseVPN dnsResolved exception", e);
-        } finally {
-            if (lock.isWriteLockedByCurrentThread()) {
-                lock.writeLock().unlock();
-            }
         }
+    }
+
+    private void addDnsToConnectionRecords(ResourceRecord rr) {
+
+        if (!vpnPreferences.getConnectionLogsEnabled()) {
+            return;
+        }
+
+        DnsRecord dnsRecord = new DnsRecord(
+                System.currentTimeMillis(),
+                rr.QName != null ? toUnicode(rr.QName.trim(), ALLOW_UNASSIGNED) : "",
+                rr.AName != null ? toUnicode(rr.AName.trim(), ALLOW_UNASSIGNED) : "",
+                rr.CName != null ? toUnicode(rr.CName.trim(), ALLOW_UNASSIGNED) : "",
+                rr.HInfo != null ? rr.HInfo.trim() : "",
+                rr.Rcode,
+                rr.Resource != null ? rr.Resource.trim() : ""
+        );
+
+        connectionDataRecords.remove(dnsRecord);
+        connectionDataRecords.put(dnsRecord, true);
+
+        if (connectionDataRecords.size() >= LINES_IN_DNS_QUERY_RAW_RECORDS) {
+            freeSpaceInConnectionRecords();
+        }
+    }
+
+    private void freeSpaceInConnectionRecords() {
+        List<ConnectionData> connectionDataList = getSortedConnectionDataByTime();
+        for (int i = 0; i < connectionDataList.size() / 3; i++) {
+            connectionDataRecords.remove(connectionDataList.get(i));
+        }
+    }
+
+    private List<ConnectionData> getSortedConnectionDataByTime() {
+        List<ConnectionData> connectionDataList = new ArrayList<>(connectionDataRecords.keySet());
+        Collections.sort(connectionDataList, (o1, o2) -> (int) (o1.getTime() - o2.getTime()));
+        return connectionDataList;
     }
 
     // Called from native code
@@ -429,7 +449,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                     || vpnRulesHolder.get().mapUidAllowed.containsKey(1000));
         }
 
-        List<Rule> listRule = ServiceVPNHandler.getAppsList();
+        List<Rule> listRule = commandHandler.getAppsList();
 
         if (listRule != null) {
             for (Rule rule : listRule) {
@@ -569,7 +589,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
             notification.sendNotification(title, message);
         }
 
-        App.getInstance().getDaggerComponent().inject(this);
+        App.getInstance().getSubcomponentsManager().modulesServiceSubcomponent().inject(this);
 
         HandlerThread commandThread = new HandlerThread(
                 getString(R.string.app_name) + " command",
@@ -592,7 +612,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         SharedPreferences prefs = defaultPreferences.get();
         boolean vpnEnabled = prefs.getBoolean(VPN_SERVICE_ENABLED, false);
 
-        if (intent != null && Objects.equals(intent.getAction(), actionStopServiceForeground)) {
+        if (intent != null && Objects.equals(intent.getAction(), ACTION_STOP_SERVICE_FOREGROUND)) {
 
             try {
                 notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
@@ -628,7 +648,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
         logi("VPN Received " + intent);
 
-        if (intent != null && Objects.equals(intent.getAction(), actionStopServiceForeground)) {
+        if (intent != null && Objects.equals(intent.getAction(), ACTION_STOP_SERVICE_FOREGROUND)) {
 
             try {
                 notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
@@ -813,8 +833,8 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         }
     }
 
-    public LinkedList<ConnectionRecord> getDnsQueryRawRecords() {
-        return dnsQueryRawRecords;
+    public ConcurrentHashMap<ConnectionData, Boolean> getDnsQueryRawRecords() {
+        return connectionDataRecords;
     }
 
     public void clearDnsQueryRawRecords() {
@@ -822,8 +842,8 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
             try {
                 lock.writeLock().lockInterruptibly();
 
-                if (!dnsQueryRawRecords.isEmpty()) {
-                    dnsQueryRawRecords.clear();
+                if (!connectionDataRecords.isEmpty()) {
+                    connectionDataRecords.clear();
                 }
 
             } catch (Exception e) {
@@ -836,53 +856,33 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         });
     }
 
-    public void lockDnsQueryRawRecordsListForRead(boolean lock) {
-        try {
-            if (lock) {
-                this.lock.readLock().lockInterruptibly();
-            } else {
-                this.lock.readLock().unlock();
-            }
-        } catch (Exception e) {
-            loge("ServiseVPN lockDnsQueryRawRecordsListForRead", e);
-        }
-    }
-
     void addUIDtoDNSQueryRawRecords(int uid, String destinationAddress, int destinationPort, String sourceAddres) {
 
+        if (!vpnPreferences.getConnectionLogsEnabled()) {
+            return;
+        }
+
         try {
 
-            lock.writeLock().lockInterruptibly();
-
             if (uid != 0 || destinationPort != PLAINTEXT_DNS_PORT) {
-                ConnectionRecord lastRecord = dnsQueryRawRecords.isEmpty()
-                        ? null : dnsQueryRawRecords.getLast();
-                ConnectionRecord newRecord = new ConnectionRecord(
-                        "",
-                        "",
-                        "",
-                        "",
-                        0,
+
+                PacketRecord packetRecord = new PacketRecord(
+                        System.currentTimeMillis(),
+                        uid,
                         sourceAddres,
-                        destinationAddress,
-                        uid
+                        destinationAddress
                 );
 
-                if (!newRecord.equals(lastRecord)) {
-                    dnsQueryRawRecords.add(newRecord);
+                connectionDataRecords.remove(packetRecord);
+                connectionDataRecords.put(packetRecord, true);
 
-                    if (dnsQueryRawRecords.size() > LINES_IN_DNS_QUERY_RAW_RECORDS) {
-                        dnsQueryRawRecords.removeFirst();
-                    }
+                if (connectionDataRecords.size() > LINES_IN_DNS_QUERY_RAW_RECORDS) {
+                    freeSpaceInConnectionRecords();
                 }
             }
 
         } catch (Exception e) {
             loge("ServiceVPN addUIDtoDNSQueryRawRecords", e);
-        } finally {
-            if (lock.isWriteLockedByCurrentThread()) {
-                lock.writeLock().unlock();
-            }
         }
 
     }

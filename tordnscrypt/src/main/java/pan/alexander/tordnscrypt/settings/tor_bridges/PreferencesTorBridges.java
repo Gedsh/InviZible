@@ -21,12 +21,14 @@ package pan.alexander.tordnscrypt.settings.tor_bridges;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -46,7 +48,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -62,25 +63,27 @@ import java.util.zip.ZipInputStream;
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.dialogs.BridgesCaptchaDialogFragment;
+import pan.alexander.tordnscrypt.dialogs.BridgesReadyDialogFragment;
+import pan.alexander.tordnscrypt.dialogs.ExtendedDialogFragment;
+import pan.alexander.tordnscrypt.dialogs.SelectBridgesTransportDialogFragment;
+import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitDialogBridgesRequest;
 import pan.alexander.tordnscrypt.domain.bridges.BridgePingData;
+import pan.alexander.tordnscrypt.domain.bridges.BridgePingResult;
+import pan.alexander.tordnscrypt.domain.bridges.PingCheckComplete;
 import pan.alexander.tordnscrypt.settings.SettingsActivity;
-import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.dialogs.UpdateDefaultBridgesDialog;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
-import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.BridgeType;
 import pan.alexander.tordnscrypt.utils.enums.BridgesSelector;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
-import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
-import static pan.alexander.tordnscrypt.TopFragment.appSign;
-import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS;
@@ -102,6 +105,7 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import javax.inject.Inject;
 
 
+@SuppressLint("UnsafeOptInUsageWarning")
 public class PreferencesTorBridges extends Fragment implements View.OnClickListener,
         CompoundButton.OnCheckedChangeListener, AdapterView.OnItemSelectedListener,
         OnTextFileOperationsCompleteListener, PreferencesBridges, SwipeRefreshLayout.OnRefreshListener {
@@ -157,6 +161,14 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     public Lazy<SnowflakeConfigurator> snowflakeConfigurator;
     @Inject
     public ViewModelProvider.Factory viewModelFactory;
+    @Inject
+    public Lazy<SelectBridgesTransportDialogFragment> selectBridgesTransportDialogFragment;
+    @Inject
+    public Lazy<PleaseWaitDialogBridgesRequest> pleaseWaitDialogBridgesRequest;
+    @Inject
+    public Lazy<BridgesCaptchaDialogFragment> bridgesCaptchaDialogFragment;
+    @Inject
+    public Lazy<BridgesReadyDialogFragment> bridgesReadyDialogFragment;
 
     public PreferencesTorBridges() {
     }
@@ -284,36 +296,10 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         spDefaultBridges.setOnItemSelectedListener(this);
         spOwnBridges.setOnItemSelectedListener(this);
 
+        observeDialogsFlow();
         observeTimeouts();
-        observeRequestedBridges();
-
-        cachedExecutor.submit(() -> {
-            try {
-                Verifier verifier = new Verifier(context);
-                String appSignAlt = verifier.getApkSignature();
-                if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
-
-                    if (isAdded()) {
-                        NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                                context, getString(R.string.verifier_error), "3458");
-                        if (notificationHelper != null) {
-                            notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
-                        }
-                    }
-                }
-
-            } catch (Exception e) {
-                if (isAdded()) {
-                    NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                            context, getString(R.string.verifier_error), "64539");
-                    if (notificationHelper != null) {
-                        notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
-                    }
-                }
-                loge("PreferencesTorBridges", e, true);
-            }
-        });
-
+        observeDefaultVanillaBridges();
+        observeErrors();
     }
 
     @Override
@@ -465,28 +451,119 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         if (id == R.id.btnAddBridges) {
             FileManager.readTextFile(getActivity(), appDataDir + "/app_data/tor/bridges_custom.lst", ADD_BRIDGES_TAG);
         } else if (id == R.id.btnRequestBridges) {
-            GetNewBridges getNewBridges = new GetNewBridges(new WeakReference<>((SettingsActivity) getActivity()));
-            getNewBridges.selectTransport();
+            viewModel.showSelectRequestBridgesTypeDialog();
         }
+    }
+
+    private void observeDialogsFlow() {
+        viewModel.getDialogsFlowLiveData().observe(getViewLifecycleOwner(), dialogsState -> {
+            if (dialogsState instanceof DialogsFlowState.PleaseWaitDialog) {
+                showPleaseWaitDialog();
+            } else if (dialogsState instanceof DialogsFlowState.SelectBridgesTransportDialog) {
+                showSelectBridgesTransportDialog();
+            } else if (dialogsState instanceof DialogsFlowState.CaptchaDialog) {
+                showCaptchaDialog(
+                        ((DialogsFlowState.CaptchaDialog) dialogsState).getTransport(),
+                        ((DialogsFlowState.CaptchaDialog) dialogsState).getCaptcha(),
+                        ((DialogsFlowState.CaptchaDialog) dialogsState).getSecretCode()
+                );
+            } else if (dialogsState instanceof DialogsFlowState.BridgesReadyDialog) {
+                showBridgesReadyDialog(
+                        ((DialogsFlowState.BridgesReadyDialog) dialogsState).getBridges()
+                );
+            } else if (dialogsState instanceof DialogsFlowState.NoDialogs) {
+                dismissRequestBridgesDialogs();
+            } else if (dialogsState instanceof DialogsFlowState.ErrorMessage) {
+                showErrorMessage(((DialogsFlowState.ErrorMessage) dialogsState).getMessage());
+            }
+        });
+    }
+
+    private void showPleaseWaitDialog() {
+        String tag = PleaseWaitDialogBridgesRequest.class.getCanonicalName();
+        PleaseWaitDialogBridgesRequest dialog =
+                (PleaseWaitDialogBridgesRequest) getChildFragmentManager().findFragmentByTag(tag);
+        if (dialog == null || !dialog.isAdded()) {
+            pleaseWaitDialogBridgesRequest.get().show(getChildFragmentManager(), tag);
+        }
+    }
+
+    private void showSelectBridgesTransportDialog() {
+        String tag = SelectBridgesTransportDialogFragment.class.getCanonicalName();
+        SelectBridgesTransportDialogFragment dialog =
+                (SelectBridgesTransportDialogFragment) getChildFragmentManager().findFragmentByTag(tag);
+        if (dialog == null || !dialog.isAdded()) {
+            selectBridgesTransportDialogFragment.get().show(getChildFragmentManager(), tag);
+        }
+    }
+
+    private void showCaptchaDialog(String transport, Bitmap captcha, String secretCode) {
+        String tag = BridgesCaptchaDialogFragment.class.getCanonicalName();
+        BridgesCaptchaDialogFragment dialog =
+                (BridgesCaptchaDialogFragment) getChildFragmentManager().findFragmentByTag(tag);
+        if (dialog == null || !dialog.isAdded()) {
+            dialog = bridgesCaptchaDialogFragment.get();
+            dialog.setTransport(transport);
+            dialog.setCaptcha(captcha);
+            dialog.setSecretCode(secretCode);
+            dialog.show(getChildFragmentManager(), tag);
+        }
+    }
+
+    private void showBridgesReadyDialog(String bridges) {
+        String tag = BridgesReadyDialogFragment.class.getCanonicalName();
+        BridgesReadyDialogFragment dialog =
+                (BridgesReadyDialogFragment) getChildFragmentManager().findFragmentByTag(tag);
+        if (dialog == null || !dialog.isAdded()) {
+            dialog = bridgesReadyDialogFragment.get();
+            dialog.setBridges(bridges);
+            dialog.show(getChildFragmentManager(), tag);
+        }
+    }
+
+    private void dismissRequestBridgesDialogs() {
+        FragmentManager fragmentManager = getChildFragmentManager();
+        fragmentManager.executePendingTransactions();
+        for (Fragment dialog : fragmentManager.getFragments()) {
+            if (dialog instanceof ExtendedDialogFragment) {
+                ((ExtendedDialogFragment) dialog).dismiss();
+            }
+        }
+    }
+
+    private void showErrorMessage(String message) {
+        dismissRequestBridgesDialogs();
+        Toast.makeText(
+                requireContext(),
+                message,
+                Toast.LENGTH_LONG
+        ).show();
     }
 
     private void observeTimeouts() {
         viewModel.getTimeoutLiveData().observe(getViewLifecycleOwner(), bridgePingData ->
                 doActionAndUpdateRecycler(() -> {
 
-                    for (BridgePingData bridgePing : bridgePingData) {
-                        for (ObfsBridge obfsBridge : bridgesToDisplay) {
-                            if (obfsBridge.bridge.hashCode() == bridgePing.getBridgeHash()) {
-                                obfsBridge.ping = bridgePing.getPing();
+                    for (BridgePingResult bridgePing : bridgePingData) {
+                        if (bridgePing instanceof BridgePingData) {
+                            for (ObfsBridge obfsBridge : bridgesToDisplay) {
+                                if (obfsBridge.bridge.hashCode() == ((BridgePingData) bridgePing).getBridgeHash()) {
+                                    obfsBridge.ping = ((BridgePingData) bridgePing).getPing();
+                                }
                             }
                         }
                     }
 
-                    if (bridgePingData.size() == bridgesToDisplay.size()) {
+                    if (bridgePingData.contains(PingCheckComplete.INSTANCE)) {
                         sortBridgesByPing();
                         limitDisplayedBridgesInCaseOfDefaultVanillaBridges();
+                        swipeRefreshBridges.setRefreshing(false);
                     } else {
                         sortBridgesByPing();
+
+                        if (!swipeRefreshBridges.isRefreshing()) {
+                            swipeRefreshBridges.setRefreshing(true);
+                        }
                     }
 
                 }));
@@ -506,13 +583,13 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         }
     }
 
-    private void observeRequestedBridges() {
-        viewModel.getBridgesLiveData().observe(getViewLifecycleOwner(), (bridges) -> {
-                    swipeRefreshBridges.setRefreshing(false);
-                    if (areDefaultVanillaBridgesSelected()) {
-                        defaultBridgesOperation(bridges);
-                    }
-                });
+    private void observeDefaultVanillaBridges() {
+        viewModel.getDefaultVanillaBridgesLiveData().observe(getViewLifecycleOwner(), (bridges) -> {
+            swipeRefreshBridges.setRefreshing(false);
+            if (areDefaultVanillaBridgesSelected()) {
+                defaultBridgesOperation(bridges);
+            }
+        });
     }
 
     private void sortBridgesByPing() {
@@ -699,9 +776,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         doActionAndUpdateRecycler(() -> {
             checkNoBridgesRadioButton();
 
-            cancelRequestingRelayBridgesIfRequired();
-
             viewModel.cancelRequestingRelayBridges();
+            viewModel.cancelMeasuringTimeouts();
+            swipeRefreshBridges.setRefreshing(false);
 
             bridgesToDisplay.clear();
             bridgesInUse.clear();
@@ -1152,6 +1229,13 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 action.run();
                 bridgeAdapter.notifyDataSetChanged();
             }
+        });
+    }
+
+    private void observeErrors() {
+        viewModel.getErrorsLiveData().observe(getViewLifecycleOwner(), error -> {
+            swipeRefreshBridges.setRefreshing(false);
+            Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show();
         });
     }
 }

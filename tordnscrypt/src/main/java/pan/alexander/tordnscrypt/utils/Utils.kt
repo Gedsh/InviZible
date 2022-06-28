@@ -23,6 +23,7 @@ import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Point
 import android.os.Environment
@@ -30,17 +31,24 @@ import android.os.Process
 import android.util.Base64
 import android.util.Log
 import android.view.Display
+import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
+import pan.alexander.tordnscrypt.TopFragment.appVersion
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesService
+import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
+import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_CONNECTIVITY_CHECK
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges
-import pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_PACKAGE
+import pan.alexander.tordnscrypt.utils.Constants.DNS_DEFAULT_UID
+import pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_DEFAULT_UID
 import pan.alexander.tordnscrypt.utils.appexit.AppExitDetectService
 import pan.alexander.tordnscrypt.utils.filemanager.FileShortener
+import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
+import pan.alexander.tordnscrypt.utils.root.RootCommands
+import pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.io.File
 import java.io.PrintWriter
@@ -253,11 +261,35 @@ object Utils {
         return uid
     }
 
-    fun getCriticalSystemUids(apps: List<ApplicationData>, ownUid: Int): List<Int> =
-        apps.filter { it.pack.contains(NETWORK_STACK_PACKAGE, true) }
-            .map { it.uid }
-            .plus(getUidForName("dns", 1051 + ownUid / 100_000 * 100_000))
+    fun getCriticalSystemUids(ownUid: Int): List<Int> =
+        arrayListOf(
+            getUidForName("dns", DNS_DEFAULT_UID + ownUid / 100_000 * 100_000),
+            getUidForName("network_stack", NETWORK_STACK_DEFAULT_UID + ownUid / 100_000 * 100_000),
+            SPECIAL_UID_CONNECTIVITY_CHECK
+        )
 
     fun getDnsTetherUid(ownUid: Int) =
         getUidForName("dns_tether", 1052 + ownUid / 100_000 * 100_000)
+
+    @JvmStatic
+    fun allowInteractAcrossUsersPermissionIfRequired(
+        context: Context
+    ) {
+        if (!appVersion.endsWith("p")
+            && ModulesStatus.getInstance().isRootAvailable
+            && !isInteractAcrossUsersPermissionGranted(context)
+        ) {
+            val allowAccessToWorkProfileApps = listOf(
+                "pm grant ${context.packageName} android.permission.INTERACT_ACROSS_USERS"
+            )
+            RootCommands.execute(context, allowAccessToWorkProfileApps, NULL_MARK)
+            logi("Grant INTERACT_ACROSS_USERS permission to access applications in work profile")
+        }
+    }
+
+    private fun isInteractAcrossUsersPermissionGranted(context: Context) =
+        ContextCompat.checkSelfPermission(
+            context,
+            "android.permission.INTERACT_ACROSS_USERS"
+        ) == PackageManager.PERMISSION_GRANTED
 }

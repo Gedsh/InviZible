@@ -38,6 +38,7 @@ import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.databinding.FragmentFirewallBinding
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
+import pan.alexander.tordnscrypt.settings.OnBackPressListener
 import pan.alexander.tordnscrypt.settings.firewall.adapter.FirewallAdapter
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
@@ -50,8 +51,9 @@ import javax.inject.Inject
 class FirewallFragment : Fragment(),
     View.OnClickListener,
     SearchView.OnQueryTextListener,
-    ChipGroup.OnCheckedChangeListener,
-    CompoundButton.OnCheckedChangeListener {
+    ChipGroup.OnCheckedStateChangeListener,
+    CompoundButton.OnCheckedChangeListener,
+    OnBackPressListener {
 
     @Inject
     lateinit var preferenceRepository: dagger.Lazy<PreferenceRepository>
@@ -141,9 +143,9 @@ class FirewallFragment : Fragment(),
         binding.btnTopCheckAllFirewall.setOnClickListener(this)
         binding.btnTopUnCheckAllFirewall.setOnClickListener(this)
 
-        binding.chipGroupFirewall.setOnCheckedChangeListener(this)
+        binding.chipGroupFirewall.setOnCheckedStateChangeListener(this)
 
-        binding.chipGroupFirewallSort.setOnCheckedChangeListener(this)
+        binding.chipGroupFirewallSort.setOnCheckedStateChangeListener(this)
 
         searchText = null
 
@@ -337,19 +339,18 @@ class FirewallFragment : Fragment(),
         return true
     }
 
-    override fun onCheckedChanged(group: ChipGroup?, checkedId: Int) {
-
+    override fun onCheckedChanged(group: ChipGroup, checkedIds: MutableList<Int>) {
         if (!appsListComplete || binding.rvFirewallApps.isComputingLayout) {
             return
         }
 
-        when (checkedId) {
+        when (checkedIds.firstOrNull()) {
             R.id.chipFirewallAll -> chipSelectAllApps()
             R.id.chipFirewallSystem -> chipSelectSystemApps()
             R.id.chipFirewallUser -> chipSelectUserApps()
             R.id.chipFirewallSortName -> sortByName()
             R.id.chipFirewallSortUid -> sortByUid()
-            else -> loge("FirewallFragment chipGroup onCheckedChanged wrong id: $id")
+            else -> loge("FirewallFragment chipGroup onCheckedChanged wrong id")
         }
     }
 
@@ -906,7 +907,7 @@ class FirewallFragment : Fragment(),
         handler.get().post { _binding?.rvFirewallApps?.scrollToPosition(0) }
     }
 
-    fun onBackPressed(): Boolean {
+    override fun onBackPressed(): Boolean {
         if (isVisible) {
             val savingFirewallChangesRequired: Boolean = viewModel.isFirewallChangesSavingRequired()
             val saveFirewallChangesFragmentIsDisplayed =

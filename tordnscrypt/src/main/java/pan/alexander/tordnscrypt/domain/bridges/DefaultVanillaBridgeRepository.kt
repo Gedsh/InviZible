@@ -17,11 +17,13 @@
     Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.data.bridges
+package pan.alexander.tordnscrypt.domain.bridges
 
-interface BridgeDataSource {
-    fun getRelaysWithFingerprintAndAddress(
-        proxyAddress: String,
-        proxyPort: Int
-    ): List<String>
+import pan.alexander.tordnscrypt.data.bridges.RelayAddressFingerprint
+
+interface DefaultVanillaBridgeRepository {
+
+    fun getTimeout(bridgeLine: String): Int
+
+    suspend fun getRelaysWithFingerprintAndAddress(): List<RelayAddressFingerprint>
 }

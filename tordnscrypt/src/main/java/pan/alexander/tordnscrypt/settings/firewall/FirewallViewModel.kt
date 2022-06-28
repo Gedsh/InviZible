@@ -101,7 +101,7 @@ class FirewallViewModel @Inject constructor(
                 .build()
                 .getInstalledApps()
 
-            Utils.getCriticalSystemUids(installedApps, pathVars.get().appUid)
+            Utils.getCriticalSystemUids(pathVars.get().appUid)
                 .also { criticalSystemUids.addAll(it) }
 
             appsCompleteSet.clear()

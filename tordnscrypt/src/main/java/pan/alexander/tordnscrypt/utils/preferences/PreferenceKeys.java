@@ -56,6 +56,7 @@ public interface PreferenceKeys {
 
     //Fast Settings
     String SITES_IPS_REFRESH_INTERVAL = "pref_fast_site_refresh_interval";
+    String CONNECTION_LOGS = "pref_fast_logs";
     String BLOCK_HTTP = "pref_fast_block_http";
     String ALL_THROUGH_TOR = "pref_fast_all_through_tor";
     String BYPASS_LAN = "Allow LAN";
@@ -78,11 +79,14 @@ public interface PreferenceKeys {
     String REFRESH_RULES = "swRefreshRules";
     String KILL_SWITCH = "swKillSwitch";
     String USE_IPTABLES = "pref_common_use_iptables";
+    String WAIT_IPTABLES = "pref_common_wait_iptables";
 
     //DNSCrypt Settings
     String BLOCK_IPv6 = "block_ipv6";
 
     //Tor Settings
+    String TOR_OUTBOUND_PROXY = "Enable output Socks5Proxy";
+    String TOR_OUTBOUND_PROXY_ADDRESS = "Socks5Proxy";
     String SNOWFLAKE_RENDEZVOUS = "SnowflakeRendezvous";
 
     //Firewall Settings

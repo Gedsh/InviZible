@@ -17,9 +17,13 @@
     Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.domain.bridges
+package pan.alexander.tordnscrypt.data.bridges
 
-data class BridgePingData(
-    val bridgeHash: Int,
-    val ping: Int
-)
+import android.graphics.Bitmap
+import pan.alexander.tordnscrypt.domain.bridges.ParseBridgesResult
+import java.io.InputStream
+
+interface RequestBridgesDataSource {
+    fun parseCaptchaChallengeImage(inputStream: InputStream): Pair<Bitmap, String>
+    fun parseBridges(inputStream: InputStream): ParseBridgesResult
+}

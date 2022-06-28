@@ -107,6 +107,10 @@
         Иначе андроид может завершить DNSCrypt, Tor или I2P в любой момент.
         Для некоторых оболочек, например MIUI, могут потребоваться дополнительные настройки.</string>
     <string name="pref_common_use_busybox">Выбрать BusyBox</string>
+    <string name="pref_common_use_busybox_auto">Автоматически</string>
+    <string name="pref_common_use_busybox_device">Использовать BusyBox телефона</string>
+    <string name="pref_common_use_busybox_app">Использовать BusyBox приложения</string>
+    <string name="pref_common_use_busybox_not_use">Не использовать BusyBox</string>
     <string name="pref_common_categ_hotspot">Точка доступа</string>
     <string name="pref_common_tethering_autostart">Автозапуск раздачи</string>
     <string name="pref_common_tor_tethering">Разрешить раздачу Tor</string>
@@ -124,7 +128,11 @@
     <string name="pref_common_tethering_settings">Открыть настройки точки доступа</string>
     <string name="pref_common_restart_tor">Пожалуйста, перезапустите Tor</string>
     <string name="pref_common_restart_itpd">Пожалуйста, перезапустите I2P</string>
-    <string name="pref_common_use_iptables">Выбрать Iptables</string>
+    <string name="pref_common_use_iptables">Выбрать iptables</string>
+    <string name="pref_common_use_iptables_app">Использовать iptables приложения</string>
+    <string name="pref_common_use_iptables_device">Использовать iptables телефона</string>
+    <string name="pref_common_wait_iptables">Ожидать разблокировку xtables</string>
+    <string name="pref_common_wait_iptables_summ">Ждать разблокировку iptables, чтобы предотвратить одновременную модификацию правил iptables несколькими программами.</string>
     <string name="pref_common_log_root_commands">Логировать команды root</string>
     <string name="notification_text">DNSCrypt, Tor, I2P защищены. Не скрывайте уведомление.</string>
     <string name="notification_temp_text">Выполнение Рут команд…</string>
@@ -525,4 +533,7 @@
     <string name="pref_dnscrypt_forwarding_rules_categ">Правила переадресации</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">Правила маскировки</string>
     <string name="pref_itpd_reseeding">Повторное заполнение</string>
+    <string name="connectivity_check">Проверка подключения к интернету</string>
+    <string name="pref_fast_logs">Логи соединений</string>
+    <string name="pref_fast_logs_summ">Показывать лог подключений приложений на вкладке DNS</string>
 </resources>

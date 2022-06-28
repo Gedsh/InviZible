@@ -30,19 +30,17 @@ import android.os.Build
 import android.os.UserManager
 import androidx.core.content.ContextCompat
 import pan.alexander.tordnscrypt.App
-import pan.alexander.tordnscrypt.TopFragment.appVersion
+import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule
-import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
+import pan.alexander.tordnscrypt.utils.Utils.allowInteractAcrossUsersPermissionIfRequired
 import pan.alexander.tordnscrypt.utils.Utils.getUidForName
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_SHOWS_ALL_APPS
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MULTI_USER_SUPPORT
-import pan.alexander.tordnscrypt.utils.root.RootCommands
-import pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK
 import java.util.concurrent.locks.ReentrantLock
 import java.util.regex.Pattern
 import javax.inject.Inject
@@ -70,6 +68,9 @@ class InstalledApplicationsManager private constructor(
     @Inject
     lateinit var pathVars: PathVars
 
+    @Inject
+    lateinit var installedAppNamesStorage: InstalledAppNamesStorage
+
     init {
         App.instance.daggerComponent.inject(this)
 
@@ -77,14 +78,16 @@ class InstalledApplicationsManager private constructor(
     }
 
     private val ownUID = pathVars.appUid
-    private var multiUserSupport = defaultPreferences.getBoolean(MULTI_USER_SUPPORT, false)
+    private var multiUserSupport = defaultPreferences.getBoolean(MULTI_USER_SUPPORT, true)
     private var savedTime = 0L
 
     fun getInstalledApps(): List<ApplicationData> {
 
         try {
 
-            allowInteractAcrossUsersPermissionIfRequired()
+            if (multiUserSupport) {
+                allowInteractAcrossUsersPermissionIfRequired(context)
+            }
 
             reentrantLock.lockInterruptibly()
 
@@ -131,7 +134,7 @@ class InstalledApplicationsManager private constructor(
 
                 val name =
                     packageManager.getApplicationLabel(applicationInfo)?.toString() ?: "Undefined"
-                val icon = if (iconIsRequired)  {
+                val icon = if (iconIsRequired) {
                     packageManager.getApplicationIcon(applicationInfo)
                 } else {
                     null
@@ -213,6 +216,8 @@ class InstalledApplicationsManager private constructor(
                     applications.add(knownApp)
                 }
             }
+
+            installedAppNamesStorage.updateAppUidToNames(applications)
 
             return applications.sorted()
         } catch (e: Exception) {
@@ -420,29 +425,20 @@ class InstalledApplicationsManager private constructor(
                     activeApps.contains(ApplicationData.SPECIAL_UID_AGPS.toString())
                 )
             )
+            specialDataApps.add(
+                ApplicationData(
+                    context.getString(R.string.connectivity_check),
+                    "connectivitycheck.gstatic.com",
+                    ApplicationData.SPECIAL_UID_CONNECTIVITY_CHECK,
+                    defaultIcon,
+                    true,
+                    activeApps.contains(ApplicationData.SPECIAL_UID_CONNECTIVITY_CHECK.toString())
+                )
+            )
         }
 
         return specialDataApps
     }
-
-    private fun allowInteractAcrossUsersPermissionIfRequired() {
-        if (multiUserSupport
-            && !(appVersion.endsWith("p") || appVersion.startsWith("f"))
-            && ModulesStatus.getInstance().isRootAvailable
-            && !isInteractAcrossUsersPermissionGranted()) {
-            val allowAccessToWorkProfileApps = listOf(
-                "pm grant ${context.packageName} android.permission.INTERACT_ACROSS_USERS"
-            )
-            RootCommands.execute(context, allowAccessToWorkProfileApps, NULL_MARK)
-            logi("Grant INTERACT_ACROSS_USERS permission to access applications in work profile")
-        }
-    }
-
-    private fun isInteractAcrossUsersPermissionGranted() =
-        ContextCompat.checkSelfPermission(
-            context,
-            "android.permission.INTERACT_ACROSS_USERS"
-        ) == PackageManager.PERMISSION_GRANTED
 
     interface OnAppAddListener {
         fun onAppAdded(application: ApplicationData)

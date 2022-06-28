@@ -200,7 +200,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             context, getString(R.string.verifier_error), "11");
                     if (notificationHelper != null && isAdded()) {
-                        notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
+                        handler.get().post(() -> notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER));
                     }
                 }
 
@@ -208,7 +208,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                         context, getString(R.string.verifier_error), "188");
                 if (notificationHelper != null && isAdded()) {
-                    notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
+                    handler.get().post(() -> notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER));
                 }
                 Log.e(LOG_TAG, "UnlockTorAppsFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                         Arrays.toString(e.getStackTrace()));

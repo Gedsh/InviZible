@@ -25,6 +25,7 @@ import javax.inject.Inject
 
 private const val CONNECT_TIMEOUT_SEC = 50
 private const val PING_TIMEOUT_SEC = 1
+private const val CHECK_ADDRESS_REACHABLE_TIMEOUT_SEC = 3
 
 class SocketInternetChecker @Inject constructor() {
 
@@ -38,7 +39,7 @@ class SocketInternetChecker @Inject constructor() {
         var socket: Socket? = null
 
         try {
-            socket = if (proxyAddress.isNotBlank() && proxyPort != 0) {
+            socket = if (isProxyUsed(proxyAddress, proxyPort)) {
                 val proxySockAdr: SocketAddress = InetSocketAddress(
                     proxyAddress,
                     proxyPort
@@ -54,7 +55,12 @@ class SocketInternetChecker @Inject constructor() {
 
             socket.connect(sockAddress, CONNECT_TIMEOUT_SEC * 1000)
 
-            return socket.isConnected
+            return if (isProxyUsed(proxyAddress, proxyPort)) {
+                socket.inetAddress.isReachable(CHECK_ADDRESS_REACHABLE_TIMEOUT_SEC * 1000)
+            } else {
+                socket.isConnected
+            }
+
         } finally {
             try {
                 socket?.close()
@@ -74,7 +80,7 @@ class SocketInternetChecker @Inject constructor() {
         val timeStart = System.currentTimeMillis()
 
         try {
-            socket = if (proxyAddress.isNotBlank() && proxyPort != 0) {
+            socket = if (isProxyUsed(proxyAddress, proxyPort)) {
                 val proxySockAdr: SocketAddress = InetSocketAddress(
                     proxyAddress,
                     proxyPort
@@ -90,11 +96,17 @@ class SocketInternetChecker @Inject constructor() {
 
             socket.connect(sockAddress, PING_TIMEOUT_SEC * 1000)
 
-            return if (socket.isConnected) {
-                (System.currentTimeMillis() - timeStart).toInt()
+            if (isProxyUsed(proxyAddress, proxyPort)) {
+                if (socket.inetAddress.isReachable(CHECK_ADDRESS_REACHABLE_TIMEOUT_SEC * 1000)) {
+                    return (System.currentTimeMillis() - timeStart).toInt()
+                }
             } else {
-                NO_CONNECTION
+                if (socket.isConnected) {
+                    return (System.currentTimeMillis() - timeStart).toInt()
+                }
             }
+
+            return NO_CONNECTION
 
         } finally {
             try {
@@ -103,6 +115,11 @@ class SocketInternetChecker @Inject constructor() {
             }
         }
     }
+
+    private fun isProxyUsed(
+        proxyAddress: String,
+        proxyPort: Int
+    ) = proxyAddress.isNotBlank() && proxyPort != 0
 
     companion object {
         const val NO_CONNECTION = -1

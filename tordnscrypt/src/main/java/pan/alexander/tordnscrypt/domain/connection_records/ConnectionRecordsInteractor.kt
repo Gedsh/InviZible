@@ -19,28 +19,35 @@
 
 package pan.alexander.tordnscrypt.domain.connection_records
 
+import android.content.SharedPreferences
 import android.util.Log
 import pan.alexander.tordnscrypt.App
+import pan.alexander.tordnscrypt.di.SharedPreferencesModule
 import pan.alexander.tordnscrypt.di.logreader.LogReaderScope
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CONNECTION_LOGS
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.lang.Exception
 import java.lang.ref.WeakReference
 import javax.inject.Inject
+import javax.inject.Named
 
 @LogReaderScope
 class ConnectionRecordsInteractor @Inject constructor(
     private val connectionRecordsRepository: ConnectionRecordsRepository,
-    private val converter: dagger.Lazy<ConnectionRecordsConverter>
+    private val converter: dagger.Lazy<ConnectionRecordsConverter>,
+    private var parser: ConnectionRecordsParser,
+    @Named(SharedPreferencesModule.DEFAULT_PREFERENCES_NAME)
+    private val defaultPreferences: dagger.Lazy<SharedPreferences>
 ) {
     private val applicationContext = App.instance.applicationContext
-    private val listeners: HashMap<Class<*>, WeakReference<OnConnectionRecordsUpdatedListener>> = hashMapOf()
-    private var parser: ConnectionRecordsParser? = null
+    private val listeners: HashMap<Class<*>, WeakReference<OnConnectionRecordsUpdatedListener>> =
+        hashMapOf()
 
-    fun <T: OnConnectionRecordsUpdatedListener> addListener(listener: T?) {
+    fun <T : OnConnectionRecordsUpdatedListener> addListener(listener: T?) {
         listener?.let { listeners[it.javaClass] = WeakReference(it) }
     }
 
-    fun <T: OnConnectionRecordsUpdatedListener> removeListener(listener: T?) {
+    fun <T : OnConnectionRecordsUpdatedListener> removeListener(listener: T?) {
         listener?.let { listeners.remove(it.javaClass) }
         //stopConverter()
     }
@@ -68,18 +75,15 @@ class ConnectionRecordsInteractor @Inject constructor(
         if (listeners.isEmpty() || forceStop) {
             connectionRecordsRepository.connectionRawRecordsNoMoreRequired()
             converter.get().onStop()
-            parser = null
         }
     }
 
     private fun convert() {
         val context = applicationContext
 
-        if (context == null || listeners.isEmpty()) {
+        if (context == null || listeners.isEmpty() || isRealTimeLogsDisabled()) {
             return
         }
-
-        parser = parser ?: ConnectionRecordsParser(context)
 
         var rawConnections: List<ConnectionRecord?> = emptyList()
 
@@ -113,7 +117,7 @@ class ConnectionRecordsInteractor @Inject constructor(
 
         var records: String? = ""
         try {
-            records = parser?.formatLines(connectionRecords ?: emptyList())
+            records = parser.formatLines(connectionRecords ?: emptyList())
         } catch (e: Exception) {
             Log.e(
                 LOG_TAG,
@@ -134,4 +138,7 @@ class ConnectionRecordsInteractor @Inject constructor(
             }
         }
     }
+
+    private fun isRealTimeLogsDisabled() =
+        !defaultPreferences.get().getBoolean(CONNECTION_LOGS, true)
 }

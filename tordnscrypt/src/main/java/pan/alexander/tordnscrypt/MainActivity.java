@@ -643,25 +643,40 @@ public class MainActivity extends LangAppCompatActivity
         }
     }
 
+    @SuppressLint("UnsafeOptInUsageWarning")
     private void switchToRootMode(MenuItem item) {
-        ChangeModeDialog dialog = ChangeModeDialog.INSTANCE.getInstance(this, item, ROOT_MODE);
-        if (dialog != null) {
-            dialog.show(getSupportFragmentManager(), "ChangeModeDialog");
+
+        if (modulesStatus.getMode() == ROOT_MODE) {
+            return;
         }
+
+        ChangeModeDialog dialog = ChangeModeDialog.getInstance(ROOT_MODE);
+        dialog.show(getSupportFragmentManager(), "ChangeModeDialog");
+        item.setChecked(true);
     }
 
+    @SuppressLint("UnsafeOptInUsageWarning")
     private void switchToProxyMode(MenuItem item) {
-        ChangeModeDialog dialog = ChangeModeDialog.INSTANCE.getInstance(this, item, PROXY_MODE);
-        if (dialog != null) {
-            dialog.show(getSupportFragmentManager(), "ChangeModeDialog");
+
+        if (modulesStatus.getMode() == PROXY_MODE) {
+            return;
         }
+
+        ChangeModeDialog dialog = ChangeModeDialog.getInstance(PROXY_MODE);
+        dialog.show(getSupportFragmentManager(), "ChangeModeDialog");
+        item.setChecked(true);
     }
 
+    @SuppressLint("UnsafeOptInUsageWarning")
     private void switchToVPNMode(MenuItem item) {
-        ChangeModeDialog dialog = ChangeModeDialog.INSTANCE.getInstance(this, item, VPN_MODE);
-        if (dialog != null) {
-            dialog.show(getSupportFragmentManager(), "ChangeModeDialog");
+
+        if (modulesStatus.getMode() == VPN_MODE) {
+            return;
         }
+
+        ChangeModeDialog dialog = ChangeModeDialog.getInstance(VPN_MODE);
+        dialog.show(getSupportFragmentManager(), "ChangeModeDialog");
+        item.setChecked(true);
     }
 
     private void checkHotspotState() {

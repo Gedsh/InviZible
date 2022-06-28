@@ -34,7 +34,8 @@ public interface Constants {
 
     int PLAINTEXT_DNS_PORT = 53;
 
-    String NETWORK_STACK_PACKAGE = "com.android.networkstack";
+    int ROOT_DEFAULT_UID = 0;
+    int DNS_DEFAULT_UID = 1051;
     int NETWORK_STACK_DEFAULT_UID = 1073;
 
     String VPN_DNS_2 = "89.233.43.71";//blog.uncensoreddns.org
@@ -59,8 +60,13 @@ public interface Constants {
 
     String ONIONOO_SITE_ADDRESS = "https://onionoo.torproject.org/";
 
+    String TOR_BRIDGES_ADDRESS = "https://bridges.torproject.org/";
+
     int SITES_IPS_REFRESH_JOB_ID = 1;
     int DEFAULT_SITES_IPS_REFRESH_INTERVAL = 12;
+
+    int NFLOG_GROUP = 78;
+    String NFLOG_PREFIX = "IPRO:LOG";
 
     String IPv4_REGEX = "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$";
 

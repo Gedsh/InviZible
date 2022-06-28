@@ -18,6 +18,7 @@ package pan.alexander.tordnscrypt.settings;
     Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -46,10 +47,12 @@ import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
+import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsInteractorInterface;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.language.Language;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.nflog.NflogManager;
 import pan.alexander.tordnscrypt.utils.ThemeUtils;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
@@ -61,6 +64,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THR
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.AUTO_START_DELAY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BLOCK_HTTP;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BYPASS_LAN;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CONNECTION_LOGS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SITES_IPS_REFRESH_INTERVAL;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -76,10 +80,18 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
     public Lazy<Handler> handler;
+    @Inject
+    public Lazy<NflogManager> nflogManager;
+    @Inject
+    public Lazy<ConnectionRecordsInteractorInterface> connectionRecordsInteractor;
+
+    private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        App.getInstance().getDaggerComponent().inject(this);
+        App.getInstance().getSubcomponentsManager()
+                .initLogReaderDaggerSubcomponent()
+                .inject(this);
         super.onCreate(savedInstanceState);
 
         //noinspection deprecation
@@ -129,8 +141,8 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
             pref_fast_language.setOnPreferenceChangeListener(this);
         }
 
-        if (ModulesStatus.getInstance().getMode() == ROOT_MODE
-                || ModulesStatus.getInstance().getMode() == VPN_MODE) {
+        if (modulesStatus.getMode() == ROOT_MODE
+                || modulesStatus.getMode() == VPN_MODE) {
             changePreferencesWithRootOrVPNMode(context);
         } else {
             changePreferencesWithProxyMode();
@@ -305,6 +317,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         handler.get().removeCallbacksAndMessages(null);
     }
 
+    @SuppressLint("UnsafeOptInUsageWarning")
     @Override
     public boolean onPreferenceChange(@NonNull Preference preference, Object newValue) {
 
@@ -323,8 +336,6 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 }
                 return true;
             case ALL_THROUGH_TOR:
-
-                ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
                 if (modulesStatus.getMode() == ROOT_MODE || modulesStatus.getMode() == VPN_MODE) {
 
@@ -347,11 +358,30 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 }
 
                 return true;
+            case CONNECTION_LOGS:
+                if (Boolean.parseBoolean(newValue.toString())) {
+                    if (ModulesAux.isDnsCryptSavedStateRunning() && !modulesStatus.isUseModulesWithRoot()) {
+                        if (modulesStatus.getMode() == ROOT_MODE) {
+                            nflogManager.get().startNflog();
+                        }
+                        modulesStatus.setIptablesRulesUpdateRequested(context, true);
+                    }
+                } else {
+                    if (ModulesAux.isDnsCryptSavedStateRunning() && !modulesStatus.isUseModulesWithRoot()) {
+                        if (modulesStatus.getMode() == ROOT_MODE) {
+                            nflogManager.get().stopNflog();
+                        } else if (modulesStatus.getMode() == VPN_MODE) {
+                            connectionRecordsInteractor.get().clearConnectionRecords();
+                        }
+                        modulesStatus.setIptablesRulesUpdateRequested(context, true);
+                    }
+                }
+                return true;
             case BLOCK_HTTP:
             case BYPASS_LAN:
                 if (ModulesAux.isDnsCryptSavedStateRunning()
                         || ModulesAux.isTorSavedStateRunning()) {
-                    ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
+                    modulesStatus.setIptablesRulesUpdateRequested(context, true);
                 }
                 return true;
             case "pref_fast_theme":
@@ -386,6 +416,11 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         Preference bypassLan = findPreference(BYPASS_LAN);
         if (bypassLan != null) {
             bypassLan.setOnPreferenceChangeListener(this);
+        }
+
+        Preference pref_fast_logs = findPreference(CONNECTION_LOGS);
+        if (pref_fast_logs != null) {
+            pref_fast_logs.setOnPreferenceChangeListener(this);
         }
 
         Preference pref_fast_block_http = findPreference(BLOCK_HTTP);
@@ -442,6 +477,11 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         }
 
         PreferenceCategory fastOtherCategory = findPreference("fast_other");
+
+        Preference connectionLogs = findPreference(CONNECTION_LOGS);
+        if (fastOtherCategory != null && connectionLogs != null) {
+            fastOtherCategory.removePreference(connectionLogs);
+        }
 
         Preference blockHttp = findPreference(BLOCK_HTTP);
         if (fastOtherCategory != null && blockHttp != null) {

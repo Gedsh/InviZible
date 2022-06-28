@@ -73,6 +73,15 @@ go build -ldflags="-s -w" -o libsnowflake.so
 mv libsnowflake.so ${LIBS_ROOT}/${ABI}/libsnowflake.so || exit 1
 popd
 
+################
+# libnflog #
+################
+
+pushd Nflog-android/nflog/
+go build -ldflags="-s -w" -o libnflog.so
+mv libnflog.so ${LIBS_ROOT}/${ABI}/libnflog.so || exit 1
+popd
+
 ##########
 # libtor #
 ##########

@@ -34,7 +34,6 @@ import pan.alexander.tordnscrypt.language.Language;
 public abstract class LangAppCompatActivity extends AppCompatActivity {
 
     private final boolean DEVELOPER_MODE = false;
-    //private App applicationContext;
 
     @RequiresApi(api = Build.VERSION_CODES.P)
     @Override
@@ -60,19 +59,7 @@ public abstract class LangAppCompatActivity extends AppCompatActivity {
 
         Language.setFromPreference(this, "pref_fast_language");
 
-        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && getApplicationContext() instanceof App) {
-            applicationContext = (App) getApplicationContext();
-        }*/
     }
-
-    /*@Override
-    protected void onStart() {
-        super.onStart();
-
-        if (applicationContext != null) {
-            applicationContext.setCurrentActivity(new WeakReference<>(this));
-        }
-    }*/
 
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
@@ -91,26 +78,4 @@ public abstract class LangAppCompatActivity extends AppCompatActivity {
         super.applyOverrideConfiguration(overrideConfiguration);
     }
 
-    /*@Override
-    protected void onStop() {
-
-        clearCurrentActivity();
-
-        super.onStop();
-    }
-
-    @Override
-    protected void onDestroy() {
-
-        clearCurrentActivity();
-
-        super.onDestroy();
-    }
-
-    private void clearCurrentActivity() {
-        if (applicationContext != null && applicationContext.getCurrentActivity() != null
-                && Objects.equals(applicationContext.getCurrentActivity().get(), this)) {
-            applicationContext.setCurrentActivity(null);
-        }
-    }*/
 }

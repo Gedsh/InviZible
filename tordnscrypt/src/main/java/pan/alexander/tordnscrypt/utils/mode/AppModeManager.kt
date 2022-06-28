@@ -20,41 +20,62 @@ package pan.alexander.tordnscrypt.utils.mode
 */
 
 import android.content.Context
-import android.util.Log
-import android.view.MenuItem
+import android.content.SharedPreferences
 import android.widget.Toast
 import androidx.preference.PreferenceManager
-import pan.alexander.tordnscrypt.App
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import pan.alexander.tordnscrypt.R
+import pan.alexander.tordnscrypt.di.SharedPreferencesModule
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.iptables.IptablesRules
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules
 import pan.alexander.tordnscrypt.modules.ModulesAux
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.nflog.NflogManager
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
-import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATION_MODE
-import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT
+import pan.alexander.tordnscrypt.utils.logger.Logger.logi
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper
+import javax.inject.Inject
+import javax.inject.Named
 
-object AppModeManager {
-    fun switchToRootMode(context: Context, item: MenuItem?, appModeManagerCallback: AppModeManagerCallback?) {
+@ExperimentalCoroutinesApi
+class AppModeManager @Inject constructor(
+    private val context: Context,
+    private val preferenceRepository: dagger.Lazy<PreferenceRepository>,
+    private val nflogManager: dagger.Lazy<NflogManager>,
+    @Named(SharedPreferencesModule.DEFAULT_PREFERENCES_NAME)
+    private val defaultPreferences: dagger.Lazy<SharedPreferences>
+) {
 
-        item?.isChecked = true
+    private val modulesStatus = ModulesStatus.getInstance()
 
-        val modulesStatus = ModulesStatus.getInstance()
+    fun switchToRootMode(appModeManagerCallback: AppModeManagerCallback?) {
 
-        App.instance.daggerComponent.getPreferenceRepository().get()
+        preferenceRepository.get()
             .setStringPreference(OPERATION_MODE, OperationMode.ROOT_MODE.toString())
-        Log.i(LOG_TAG, "Root mode enabled")
+        logi("Root mode enabled")
 
         val fixTTL = modulesStatus.isFixTTL && !modulesStatus.isUseModulesWithRoot
         val operationMode: OperationMode = modulesStatus.mode
         if (operationMode == OperationMode.VPN_MODE && !fixTTL) {
             ServiceVPNHelper.stop("Switch to root mode", context)
-            Toast.makeText(context, context.getText(R.string.vpn_mode_off), Toast.LENGTH_LONG).show()
+            Toast.makeText(context, context.getText(R.string.vpn_mode_off), Toast.LENGTH_LONG)
+                .show()
         } else if (operationMode == OperationMode.PROXY_MODE && fixTTL) {
             appModeManagerCallback?.prepareVPNService()
+        }
+
+        modulesStatus.dnsCryptState.let {
+            if (defaultPreferences.get().getBoolean(CONNECTION_LOGS, true)
+                && !modulesStatus.isUseModulesWithRoot &&
+                (it == ModuleState.RUNNING
+                        || it == ModuleState.STARTING
+                        || it == ModuleState.RESTARTING)
+            ) {
+                nflogManager.get().startNflog()
+            }
         }
 
         //This start iptables adaptation
@@ -62,20 +83,20 @@ object AppModeManager {
         ModulesAux.clearIptablesCommandsSavedHash(context)
         modulesStatus.setIptablesRulesUpdateRequested(true)
 
-        appModeManagerCallback?.setFirewallNavigationItemVisible(false)
+        appModeManagerCallback?.setFirewallNavigationItemVisible(true)
         appModeManagerCallback?.invalidateMenu()
     }
 
-    fun switchToProxyMode(context: Context, item: MenuItem?, appModeManagerCallback: AppModeManagerCallback?) {
+    fun switchToProxyMode(appModeManagerCallback: AppModeManagerCallback?) {
 
-        item?.isChecked = true
-
-        val modulesStatus = ModulesStatus.getInstance()
-
-        App.instance.daggerComponent.getPreferenceRepository().get()
+        preferenceRepository.get()
             .setStringPreference(OPERATION_MODE, OperationMode.PROXY_MODE.toString())
-        Log.i(LOG_TAG, "Proxy mode enabled")
+        logi("Proxy mode enabled")
         val operationMode: OperationMode = modulesStatus.mode
+
+        if (operationMode == OperationMode.ROOT_MODE) {
+            nflogManager.get().stopNflog()
+        }
 
         //This stop iptables adaptation
         modulesStatus.mode = OperationMode.PROXY_MODE
@@ -83,26 +104,27 @@ object AppModeManager {
             val iptablesRules: IptablesRules = ModulesIptablesRules(context)
             val commands = iptablesRules.clearAll()
             iptablesRules.sendToRootExecService(commands)
-            Log.i(LOG_TAG, "Iptables rules removed")
+            logi("Iptables rules removed")
         } else if (operationMode == OperationMode.VPN_MODE) {
             ServiceVPNHelper.stop("Switch to proxy mode", context)
-            Toast.makeText(context, context.getText(R.string.vpn_mode_off), Toast.LENGTH_LONG).show()
+            Toast.makeText(context, context.getText(R.string.vpn_mode_off), Toast.LENGTH_LONG)
+                .show()
         }
 
         appModeManagerCallback?.setFirewallNavigationItemVisible(false)
         appModeManagerCallback?.invalidateMenu()
     }
 
-    fun switchToVPNMode(context: Context, item: MenuItem?, appModeManagerCallback: AppModeManagerCallback?) {
+    fun switchToVPNMode(appModeManagerCallback: AppModeManagerCallback?) {
 
-        item?.isChecked = true
-
-        val modulesStatus = ModulesStatus.getInstance()
-
-        App.instance.daggerComponent.getPreferenceRepository().get()
+        preferenceRepository.get()
             .setStringPreference(OPERATION_MODE, OperationMode.VPN_MODE.toString())
-        Log.i(LOG_TAG, "VPN mode enabled")
+        logi("VPN mode enabled")
         val operationMode: OperationMode = modulesStatus.mode
+
+        if (operationMode == OperationMode.ROOT_MODE) {
+            nflogManager.get().stopNflog()
+        }
 
         //This stop iptables adaptation
         modulesStatus.mode = OperationMode.VPN_MODE
@@ -110,14 +132,15 @@ object AppModeManager {
             val iptablesRules: IptablesRules = ModulesIptablesRules(context)
             val commands = iptablesRules.clearAll()
             iptablesRules.sendToRootExecService(commands)
-            Log.i(LOG_TAG, "Iptables rules removed")
+            logi("Iptables rules removed")
         }
         val dnsCryptState: ModuleState = modulesStatus.dnsCryptState
         val torState: ModuleState = modulesStatus.torState
         val itpdState: ModuleState = modulesStatus.itpdState
         if (dnsCryptState != ModuleState.STOPPED
-                || torState != ModuleState.STOPPED
-                || itpdState != ModuleState.STOPPED) {
+            || torState != ModuleState.STOPPED
+            || itpdState != ModuleState.STOPPED
+        ) {
             if (modulesStatus.isUseModulesWithRoot) {
                 Toast.makeText(context, "Stop modules...", Toast.LENGTH_LONG).show()
                 disableUseModulesWithRoot(context, modulesStatus)
@@ -126,9 +149,10 @@ object AppModeManager {
             }
         }
         if (dnsCryptState == ModuleState.STOPPED
-                && torState == ModuleState.STOPPED
-                && itpdState == ModuleState.STOPPED
-                && modulesStatus.isUseModulesWithRoot) {
+            && torState == ModuleState.STOPPED
+            && itpdState == ModuleState.STOPPED
+            && modulesStatus.isUseModulesWithRoot
+        ) {
             disableUseModulesWithRoot(context, modulesStatus)
         }
 
@@ -143,6 +167,6 @@ object AppModeManager {
         modulesStatus.isUseModulesWithRoot = false
         modulesStatus.isContextUIDUpdateRequested = true
         ModulesAux.requestModulesStatusUpdate(context)
-        Log.i(LOG_TAG, "Switch to VPN mode, disable use modules with root option")
+        logi("Switch to VPN mode, disable use modules with root option")
     }
 }

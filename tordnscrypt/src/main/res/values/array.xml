@@ -521,4 +521,26 @@
         <item>stun.voipgate.com:3478</item>
         <item>stun.voys.nl:3478</item>
     </string-array>
+
+    <string-array name="pref_common_categ_use_busybox_titles">
+        <item>@string/pref_common_use_busybox_auto</item>
+        <item>@string/pref_common_use_busybox_device</item>
+        <item>@string/pref_common_use_busybox_app</item>
+        <item>@string/pref_common_use_busybox_not_use</item>
+    </string-array>
+    <string-array name="pref_common_use_busybox_values">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </string-array>
+
+    <string-array name="pref_common_categ_use_iptables_titles">
+        <item>@string/pref_common_use_iptables_app</item>
+        <item>@string/pref_common_use_iptables_device</item>
+    </string-array>
+    <string-array name="pref_common_use_iptables_values">
+        <item>1</item>
+        <item>2</item>
+    </string-array>
 </resources>

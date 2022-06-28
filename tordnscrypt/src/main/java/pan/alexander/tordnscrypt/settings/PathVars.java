@@ -36,6 +36,7 @@ import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_IPTABLES;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.WAIT_IPTABLES;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
@@ -51,6 +52,7 @@ public class PathVars {
     private final String itpdPath;
     private final String obfsPath;
     private final String snowflakePath;
+    private final String nflogPath;
     private final boolean bbOK;
     private volatile int appUid = -1;
     private volatile String appUidStr = "";
@@ -76,6 +78,7 @@ public class PathVars {
         itpdPath = nativeLibPath + "/libi2pd.so";
         obfsPath = nativeLibPath + "/libobfs4proxy.so";
         snowflakePath = nativeLibPath + "/libsnowflake.so";
+        nflogPath = nativeLibPath + "/libnflog.so";
     }
 
     public String getDefaultBackupPath() {
@@ -88,15 +91,21 @@ public class PathVars {
             iptablesSelector = "2";
         }
 
+        boolean waitIptables = preferences.getBoolean(WAIT_IPTABLES, true);
+
         String path;
         switch (iptablesSelector) {
             case "1":
-                path = appDataDir + "/app_bin/iptables -w ";
+                path = appDataDir + "/app_bin/iptables ";
                 break;
             case "2":
             default:
                 path = "iptables ";
                 break;
+        }
+
+        if (waitIptables) {
+            path += "-w ";
         }
 
         return path;
@@ -108,15 +117,21 @@ public class PathVars {
             iptablesSelector = "2";
         }
 
+        boolean waitIptables = preferences.getBoolean(WAIT_IPTABLES, true);
+
         String path;
         switch (iptablesSelector) {
             case "1":
-                path = appDataDir + "/app_bin/ip6tables -w ";
+                path = appDataDir + "/app_bin/ip6tables ";
                 break;
             case "2":
             default:
                 path = "ip6tables ";
                 break;
+        }
+
+        if (waitIptables) {
+            path += "-w ";
         }
 
         return path;
@@ -185,6 +200,10 @@ public class PathVars {
 
     public String getSnowflakePath() {
         return snowflakePath;
+    }
+
+    public String getNflogPath() {
+        return nflogPath;
     }
 
     public String getTorVirtAdrNet() {
@@ -316,6 +335,10 @@ public class PathVars {
 
     public String getDNSCryptRemoteForwardingRulesPath() {
         return appDataDir + "/app_data/dnscrypt-proxy/forwarding-rules-remote.txt";
+    }
+
+    public String getDNSCryptCaptivePortalsPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/captive-portals.txt";
     }
 
     public String getCacheDirPath(Context context) {

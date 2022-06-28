@@ -113,11 +113,11 @@ public class SnowflakeConfigurator {
             return "snowflake exec "
                     + snowflakePath + " -url https://snowflake-broker.torproject.net/"
                     + " -ampcache https://cdn.ampproject.org/" +
-                    " -front www.google.com -ice " + stunServerBuilder.toString() + " -max 1" + saveLogsString;
+                    " -front www.google.com -ice " + stunServerBuilder + " -max 1" + saveLogsString;
         } else if (rendezvous == FASTLY) {
             return "snowflake exec "
                     + snowflakePath + " -url https://snowflake-broker.torproject.net.global.prod.fastly.net/" +
-                    " -front cdn.sstatic.net -ice " + stunServerBuilder.toString() + " -max 1" + saveLogsString;
+                    " -front cdn.sstatic.net -ice " + stunServerBuilder + " -max 1" + saveLogsString;
         } else {
             return "";
         }

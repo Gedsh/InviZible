@@ -42,6 +42,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -69,6 +70,10 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
     private final LayoutInflater lInflater;
     private final PreferencesBridges preferencesBridges;
 
+    private final int torBridgePingGoodColor;
+    private final int torBridgePingAverageColor;
+    private final int torBridgePingBadColor;
+
     BridgeAdapter(SettingsActivity activity,
                   FragmentManager fragmentManager,
                   Lazy<PreferenceRepository> preferenceRepository,
@@ -79,6 +84,10 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
         this.preferencesBridges = preferencesBridges;
         this.lInflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         this.preferenceRepository = preferenceRepository;
+
+        torBridgePingGoodColor = ContextCompat.getColor(activity, R.color.torBridgePingGood);
+        torBridgePingAverageColor = ContextCompat.getColor(activity, R.color.torBridgePingAverage);
+        torBridgePingBadColor = ContextCompat.getColor(activity, R.color.torBridgePingBad);
     }
 
     @NonNull
@@ -165,6 +174,7 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
                 tvPing.setVisibility(View.GONE);
             } else {
                 tvPing.setText(formatPing(obfsBridge.ping));
+                tvPing.setTextColor(getPingColor(obfsBridge.ping));
                 tvPing.setVisibility(View.VISIBLE);
             }
 
@@ -177,6 +187,16 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
                 return "> 1 s";
             } else {
                 return ping + " ms";
+            }
+        }
+
+        private int getPingColor(int ping) {
+            if (ping < 0) {
+                return torBridgePingBadColor;
+            } else if (ping > 100) {
+                return torBridgePingAverageColor;
+            } else {
+                return torBridgePingGoodColor;
             }
         }
 

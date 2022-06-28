@@ -24,7 +24,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.Html;
 import android.text.Spanned;
-import android.util.Log;
 import android.view.ScaleGestureDetector;
 import android.widget.Toast;
 
@@ -54,8 +53,10 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CONNECTION_LOGS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -67,6 +68,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInterface,
         OnDNSCryptLogUpdatedListener, OnConnectionRecordsUpdatedListener {
@@ -77,6 +79,9 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
     public Lazy<DNSCryptInteractorInterface> dnsCryptInteractor;
     @Inject
     public Lazy<ConnectionRecordsInteractorInterface> connectionRecordsInteractor;
+    @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultPreferences;
 
     private Context context;
 
@@ -95,6 +100,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
     public DNSCryptFragmentPresenter(DNSCryptFragmentView view) {
         App.getInstance()
+                .getSubcomponentsManager()
                 .initLogReaderDaggerSubcomponent()
                 .inject(this);
         this.view = view;
@@ -184,7 +190,9 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
         dnsCryptInteractor.get().addOnDNSCryptLogUpdatedListener(this);
 
-        if (modulesStatus.getMode() == VPN_MODE || isFixTTL()) {
+        if (modulesStatus.getMode() == VPN_MODE
+                || modulesStatus.getMode() == ROOT_MODE
+                || isFixTTL()) {
             connectionRecordsInteractor.get().addOnConnectionRecordsUpdatedListener(this);
         }
 
@@ -388,7 +396,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
         setFixedErrorState(true);
 
-        Log.e(LOG_TAG, "DNSCrypt Error: " + logData.getLines());
+        loge("DNSCrypt Error: " + logData.getLines());
     }
 
     @Override
@@ -402,7 +410,10 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
     private void displayDnsResponses(String savedLogLines, String connectionRecords) {
 
-        if (modulesStatus.getMode() != VPN_MODE && !isFixTTL()) {
+        if (modulesStatus.getMode() != VPN_MODE
+                && modulesStatus.getMode() != ROOT_MODE
+                && !isFixTTL()
+                || isRealTimeLogsDisabled()) {
             if (!savedConnectionRecords.isEmpty()) {
                 savedConnectionRecords = "";
 
@@ -456,6 +467,22 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             }
         });
     }
+
+    /* For testing purposes
+    String strDiffCalc(String s1, String s2) {
+
+        if (s1.isEmpty() || s2.isEmpty()) {
+            return null;
+        }
+
+        if (s1.length() > s2.length()) {
+            return s1.substring(s2.length() - 1);
+        } else if (s2.length() > s1.length()) {
+            return s2.substring(s1.length() - 1);
+        } else {
+            return null;
+        }
+    }*/
 
     @Override
     public void refreshDNSCryptState() {
@@ -532,7 +559,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             notification.show(fragmentManager, "NotificationDialogFragment");
         }
 
-        Log.e(LOG_TAG, context.getString(R.string.helper_dnscrypt_stopped));
+        loge(context.getString(R.string.helper_dnscrypt_stopped));
 
     }
 
@@ -559,7 +586,10 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             return;
         }
 
-        if (connectionRecordsInteractor != null && (modulesStatus.getMode() == VPN_MODE || isFixTTL())) {
+        if (connectionRecordsInteractor != null &&
+                (modulesStatus.getMode() == VPN_MODE
+                        || modulesStatus.getMode() == ROOT_MODE
+                        || isFixTTL())) {
             connectionRecordsInteractor.get().clearConnectionRecords();
         }
 
@@ -695,5 +725,9 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
     private boolean isUseModulesWithRoot() {
         return modulesStatus.isUseModulesWithRoot() && modulesStatus.getMode() == ROOT_MODE;
+    }
+
+    private boolean isRealTimeLogsDisabled() {
+        return !defaultPreferences.get().getBoolean(CONNECTION_LOGS, true);
     }
 }

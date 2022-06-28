@@ -39,6 +39,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 import dagger.Lazy;
@@ -372,12 +374,14 @@ public class SettingsActivity extends LangAppCompatActivity {
 
     @Override
     public void onBackPressed() {
-
-        FirewallFragment firewallFragment = (FirewallFragment) getSupportFragmentManager()
-                .findFragmentByTag(FirewallFragment.TAG);
-
-        if (firewallFragment != null && firewallFragment.onBackPressed()) {
-            return;
+        List<Fragment> fragments = getSupportFragmentManager().getFragments();
+        Collections.reverse(fragments);
+        for (Fragment fragment: fragments) {
+            if (fragment instanceof OnBackPressListener) {
+                if (((OnBackPressListener) fragment).onBackPressed()) {
+                    return;
+                }
+            }
         }
 
         super.onBackPressed();

@@ -17,16 +17,26 @@
     Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.domain.bridges
+package pan.alexander.tordnscrypt.di.modulesservice
 
-import pan.alexander.tordnscrypt.data.bridges.RelayAddressFingerprint
+import dagger.Subcomponent
+import pan.alexander.tordnscrypt.di.logreader.LogReaderSubcomponent
+import pan.alexander.tordnscrypt.dialogs.ChangeModeDialog
+import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules
+import pan.alexander.tordnscrypt.vpn.service.ServiceVPN
 
-interface BridgeRepository {
+@ModulesServiceScope
+@Subcomponent(modules = [ModulesServiceSubcomponentModule::class])
+interface ModulesServiceSubcomponent {
 
-    fun getTimeout(bridgeLine: String): Int
+    fun logReaderSubcomponent(): LogReaderSubcomponent.Factory
 
-    fun getRelaysWithFingerprintAndAddress(
-        proxyAddress: String,
-        proxyPort: Int
-    ): List<RelayAddressFingerprint>
+    @Subcomponent.Factory
+    interface Factory {
+        fun create(): ModulesServiceSubcomponent
+    }
+
+    fun inject(service: ServiceVPN)
+    fun inject(modulesIptablesRules: ModulesIptablesRules)
+    fun inject(changeModeDialog: ChangeModeDialog)
 }

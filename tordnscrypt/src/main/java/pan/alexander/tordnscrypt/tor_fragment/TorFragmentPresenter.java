@@ -105,6 +105,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
     public TorFragmentPresenter(TorFragmentView view) {
         App.getInstance()
+                .getSubcomponentsManager()
                 .initLogReaderDaggerSubcomponent()
                 .inject(this);
         this.view = view;
@@ -597,7 +598,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             activity, context.getString(R.string.verifier_error), "15");
                     if (notificationHelper != null) {
-                        notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
+                        activity.runOnUiThread(() -> notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER));
                     }
                 }
 
@@ -605,7 +606,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                         activity, context.getString(R.string.verifier_error), "18");
                 if (notificationHelper != null) {
-                    notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
+                    activity.runOnUiThread(() -> notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER));
                 }
                 Log.e(LOG_TAG, "TorRunFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                         Arrays.toString(e.getStackTrace()));

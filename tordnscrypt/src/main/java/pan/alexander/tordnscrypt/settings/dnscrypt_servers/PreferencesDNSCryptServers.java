@@ -114,8 +114,8 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
         setRetainInstance(true);
 
-        Context context = getActivity();
-        if (context == null) {
+        Activity activity = getActivity();
+        if (activity == null) {
             return;
         }
 
@@ -123,22 +123,22 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
         cachedExecutor.submit(() -> {
             try {
-                Verifier verifier = new Verifier(context);
+                Verifier verifier = new Verifier(activity);
                 String appSign = verifier.getApkSignatureZip();
                 String appSignAlt = verifier.getApkSignature();
                 if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                            context, getText(R.string.verifier_error).toString(), "6787");
+                            activity, getText(R.string.verifier_error).toString(), "6787");
                     if (notificationHelper != null && isAdded()) {
-                        notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
+                        activity.runOnUiThread(() -> notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER));
                     }
                 }
 
             } catch (Exception e) {
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                        context, getText(R.string.verifier_error).toString(), "8990");
+                        activity, getText(R.string.verifier_error).toString(), "8990");
                 if (isAdded() && notificationHelper != null) {
-                    notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
+                    activity.runOnUiThread(() -> notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER));
                 }
                 Log.e(LOG_TAG, "PreferencesDNSCryptServers fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                         Arrays.toString(e.getStackTrace()));

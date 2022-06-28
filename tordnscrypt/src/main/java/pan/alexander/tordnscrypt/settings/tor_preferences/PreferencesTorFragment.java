@@ -54,6 +54,8 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SNOWFLAKE_RENDEZVOUS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TETHERING;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_DEFAULT_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_OWN_BRIDGES;
@@ -133,8 +135,8 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         preferences.add(findPreference("ClientUseIPv4"));
         preferences.add(findPreference("ClientUseIPv6"));
         preferences.add(findPreference("pref_tor_snowflake_stun"));
-        preferences.add(findPreference("Enable output Socks5Proxy"));
-        preferences.add(findPreference("Socks5Proxy"));
+        preferences.add(findPreference(TOR_OUTBOUND_PROXY));
+        preferences.add(findPreference(TOR_OUTBOUND_PROXY_ADDRESS));
         preferences.add(findPreference("pref_tor_isolate_dest_address"));
         preferences.add(findPreference("pref_tor_isolate_dest_port"));
         preferences.add(findPreference(SNOWFLAKE_RENDEZVOUS));
@@ -473,7 +475,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         } else if ((Objects.equals(preference.getKey(), "NewCircuitPeriod") || Objects.equals(preference.getKey(), "MaxCircuitDirtiness"))
                 && !newValue.toString().matches("\\d+")) {
             return false;
-        } else if ((Objects.equals(preference.getKey(), "Enable output Socks5Proxy"))) {
+        } else if ((Objects.equals(preference.getKey(), TOR_OUTBOUND_PROXY))) {
             if (Boolean.parseBoolean(newValue.toString())) {
                 if (key_tor.contains("#Socks5Proxy")) {
                     key_tor.set(key_tor.indexOf("#Socks5Proxy"), "Socks5Proxy");

@@ -755,3 +755,59 @@
 * Fixed using Root firewall when Refresh rules option is disabled.
 * Fixed the ARP spoofing detector false positives on some devices.
 * Minor fixes.
+
+**InviZible Pro beta 1.6.3**
+* Added option to wait for an xtables lock to prevent concurrent modification of the iptables rules.
+* Fixed internet blocking when using root firewall on some roms.
+* Improved app restart after a crash or after the app was killed due to low device memory.
+* Improved root commands execution.
+* Updated Portuguese-BR translation.
+
+**InviZible Pro beta 1.6.4**
+* Updated Tor to version 4.7.7.
+* Updated Tor snowflake bridge.
+* Improved requesting new Tor bridges.
+* Improved checking and downloading app updates.
+* Fixed compatibility with android 4.4.2.
+* Lots of internal optimizations.
+* Minor fixes.
+
+**InviZible Pro beta 1.6.5**
+* Implemented real-time connection logs for Root mode.
+* Improved real-time connection logs for VPN mode.
+* Fixed saving changes when using direct editing of module configuration files.
+* Lots of internal optimizations.
+* Minor fixes.
+
+**InviZible Pro beta 1.6.6**
+* Updated Purple I2P to version 2.42.0.
+* Added "Internet connectivity check" option to the firewall to allow connection checks for system applications.
+* Added a switch to enable/disable real-time connection logs.
+* Improved real-time connection logs for Root mode.
+* Improved real-time connection logs for VPN mode.
+
+**InviZible Pro beta 1.6.7**
+* Updated Tor.
+* Updated Tor snowflake bridge to version 2.2.0.
+* Updated Tor obfs4proxy to version 0.0.13.
+* Improved real-time connection logs for Root mode.
+* The "Run modules with Root" option is no longer supported and will be hidden in the Common Settings.
+* Minor fixes and optimizations.
+
+**InviZible Pro beta 1.6.8**
+* Updated Purple I2P to version 2.42.1.
+* Updated Tor snowflake bridge.
+* Bridge ping color changes based on ping value.
+* Fixed DNSCrypt version detection.
+* Minor optimizations.
+
+**InviZible Pro beta 1.6.9**
+* DNSCrypt fork is used, which minimizes plaintext DNS queries for bootstrap.
+* Check Tor bridges ping through proxy if enabled.
+* Fixed crash on anroid 4.4.2 when opening some screens.
+* Minor fixes and optimizations.
+
+**InviZible Pro beta 1.7.0**
+* Updated Tor to version 4.7.8.
+* Updated Tor snowflake bridge.
+* Updated DNSCrypt.

@@ -22,7 +22,7 @@ package pan.alexander.tordnscrypt.iptables;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Handler;
-import android.util.Log;
+import android.text.TextUtils;
 import android.util.Pair;
 
 import androidx.preference.PreferenceManager;
@@ -44,7 +44,9 @@ import pan.alexander.tordnscrypt.utils.root.RootCommands;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.vpn.VpnUtils;
 
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.iptables.IptablesConstants.FILTER_FORWARD_CORE;
+import static pan.alexander.tordnscrypt.iptables.IptablesConstants.FILTER_OUTPUT_BLOCKING;
 import static pan.alexander.tordnscrypt.iptables.IptablesConstants.FILTER_OUTPUT_CORE;
 import static pan.alexander.tordnscrypt.iptables.IptablesConstants.NAT_OUTPUT_CORE;
 import static pan.alexander.tordnscrypt.iptables.IptablesConstants.NAT_PREROUTING_CORE;
@@ -61,13 +63,17 @@ import static pan.alexander.tordnscrypt.utils.Constants.G_DNG_41;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_42;
 import static pan.alexander.tordnscrypt.utils.Constants.HTTP_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
+import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_DEFAULT_UID;
+import static pan.alexander.tordnscrypt.utils.Constants.NFLOG_GROUP;
+import static pan.alexander.tordnscrypt.utils.Constants.NFLOG_PREFIX;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_BLOCK_INTERNET;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BLOCK_HTTP;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BYPASS_LAN;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CONNECTION_LOGS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_ENABLED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.GSM_ON_REQUESTED;
@@ -82,12 +88,12 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_OWN
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.WIFI_ON_REQUESTED;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 public class ModulesIptablesRules extends IptablesRulesSender {
 
@@ -95,6 +101,9 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultPreferences;
     @Inject
     public Lazy<Handler> handler;
     @Inject
@@ -109,7 +118,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
     public ModulesIptablesRules(Context context) {
         super(context, App.getInstance().getDaggerComponent().getPathVars().get());
-        App.getInstance().getDaggerComponent().inject(this);
+        App.getInstance().getSubcomponentsManager().modulesServiceSubcomponent().inject(this);
     }
 
     @Override
@@ -128,12 +137,13 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         ignoreSystemDNS = shPref.getBoolean(IGNORE_SYSTEM_DNS, false);
         apIsOn = preferences.getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON);
         modemIsOn = preferences.getBoolPreference(PreferenceKeys.USB_MODEM_IS_ON);
+        boolean showConnectionLogs = defaultPreferences.get().getBoolean(CONNECTION_LOGS, true);
         Set<String> unlockApps = preferences.getStringSetPreference(UNLOCK_APPS);
         Set<String> unlockIPs = preferences.getStringSetPreference(IPS_TO_UNLOCK);
         Set<String> clearnetApps = preferences.getStringSetPreference(CLEARNET_APPS);
         Set<String> clearnetIPs = preferences.getStringSetPreference(IPS_FOR_CLEARNET);
         Set<String> clearnetAppsForProxy = preferences.getStringSetPreference(CLEARNET_APPS_FOR_PROXY);
-        boolean firewallEnabled = preferences.getBoolPreference(FIREWALL_ENABLED);
+        boolean firewallEnabled = preferences.getBoolPreference(FIREWALL_ENABLED) && !runModulesWithRoot;
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
         boolean ttlFix = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE) && !modulesStatus.isUseModulesWithRoot();
@@ -294,6 +304,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             }
         }
 
+        String criticalUidsAllowed = getCriticalUidsAllowedRules();
+
         String proxyAppsBypassNat = "";
         String proxyAppsBypassFilter = "";
 
@@ -308,6 +320,22 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
             proxyAppsBypassNat = removeRedundantSymbols(proxyAppsBypassNatBuilder);
             proxyAppsBypassFilter = removeRedundantSymbols(proxyAppsBypassFilterBuilder);
+        }
+
+        String nflogDns = "";
+        String nflogPackets = "";
+        if (showConnectionLogs) {
+            nflogDns = TextUtils.join("; ", Arrays.asList(
+                    iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getDNSCryptPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                    iptables + "-A " + FILTER_OUTPUT_CORE + " -p tcp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getDNSCryptPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                    iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getTorDNSPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                    iptables + "-A " + FILTER_OUTPUT_CORE + " -p tcp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getTorDNSPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true"
+            ));
+            nflogPackets = TextUtils.join("; ", Arrays.asList(
+                    iptables + "-t mangle -D OUTPUT -p all -m owner ! --uid-owner " + appUID + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                    iptables + "-t mangle -D OUTPUT -p all -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                    iptables + "-t mangle -I OUTPUT -p all -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true"
+            ));
         }
 
         if (arpSpoofingDetection && blockInternetWhenArpAttackDetected && mitmDetected) {
@@ -327,8 +355,13 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             if (!routeAllThroughTor) {
 
                 commands = new ArrayList<>(Arrays.asList(
-                        iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true",
-                        iptables + "-I OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP",
+                        iptables + "-F " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                        iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true",
+                        iptables + "-N " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                        iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner " + appUID + " -j RETURN",
+                        criticalUidsAllowed,
+                        iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -j DROP",
+                        iptables + "-I OUTPUT -j " + FILTER_OUTPUT_BLOCKING,
                         ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                         ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
                         ip6tables + "-I OUTPUT -j DROP",
@@ -337,7 +370,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -D OUTPUT -j " + NAT_OUTPUT_CORE + " 2> /dev/null || true",
                         iptables + "-F " + FILTER_OUTPUT_CORE + " 2> /dev/null",
                         iptables + "-D OUTPUT -j " + FILTER_OUTPUT_CORE + " 2> /dev/null || true",
-                        busybox + "sleep 1",
+                        busybox + "sleep 1 || true",
                         iptables + "-t nat -N " + NAT_OUTPUT_CORE + " 2> /dev/null",
                         iptables + "-t nat -I OUTPUT -j " + NAT_OUTPUT_CORE,
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p all -d 127.0.0.1/32 -j RETURN",
@@ -357,6 +390,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         blockTlsRuleNatUDP,
                         blockGDNSNat,
                         iptables + "-N " + FILTER_OUTPUT_CORE + " 2> /dev/null",
+                        nflogDns,
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
@@ -380,14 +414,20 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         kernelRejectNonTCPFilter,
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -m state --state ESTABLISHED,RELATED -j RETURN",
                         iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
+                        nflogPackets,
                         unblockHOTSPOT,
                         blockHOTSPOT
                 ));
             } else {
 
                 commands = new ArrayList<>(Arrays.asList(
-                        iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true",
-                        iptables + "-I OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP",
+                        iptables + "-F " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                        iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true",
+                        iptables + "-N " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                        iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner " + appUID + " -j RETURN",
+                        criticalUidsAllowed,
+                        iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -j DROP",
+                        iptables + "-I OUTPUT -j " + FILTER_OUTPUT_BLOCKING,
                         ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                         ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
                         ip6tables + "-I OUTPUT -j DROP",
@@ -396,7 +436,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -D OUTPUT -j " + NAT_OUTPUT_CORE + " 2> /dev/null || true",
                         iptables + "-F " + FILTER_OUTPUT_CORE + " 2> /dev/null",
                         iptables + "-D OUTPUT -j " + FILTER_OUTPUT_CORE + " 2> /dev/null || true",
-                        busybox + "sleep 1",
+                        busybox + "sleep 1 || true",
                         iptables + "-t nat -N " + NAT_OUTPUT_CORE + " 2> /dev/null",
                         iptables + "-t nat -I OUTPUT -j " + NAT_OUTPUT_CORE,
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p all -d 127.0.0.1/32 -j RETURN",
@@ -423,6 +463,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         bypassLanNat,
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
                         iptables + "-N " + FILTER_OUTPUT_CORE + " 2> /dev/null",
+                        nflogDns,
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
@@ -440,6 +481,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         bypassLanFilter,
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -j REJECT",
                         iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
+                        nflogPackets,
                         unblockHOTSPOT,
                         blockHOTSPOT
                 ));
@@ -454,14 +496,19 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             } else {
                 commands.addAll(firewall.getClearFirewallRules());
             }
-            commands.add(iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true");
+            commands.add(iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true");
         } else if (dnsCryptState == RUNNING && torState == STOPPED) {
 
             cancelKillSwitchNotificationIfNeeded();
 
             commands = new ArrayList<>(Arrays.asList(
-                    iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true",
-                    iptables + "-I OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP",
+                    iptables + "-F " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                    iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true",
+                    iptables + "-N " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                    iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner " + appUID + " -j RETURN",
+                    criticalUidsAllowed,
+                    iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -j DROP",
+                    iptables + "-I OUTPUT -j " + FILTER_OUTPUT_BLOCKING,
                     ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                     ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
                     ip6tables + "-I OUTPUT -j DROP",
@@ -470,7 +517,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     iptables + "-t nat -D OUTPUT -j " + NAT_OUTPUT_CORE + " 2> /dev/null || true",
                     iptables + "-F " + FILTER_OUTPUT_CORE + " 2> /dev/null",
                     iptables + "-D OUTPUT -j " + FILTER_OUTPUT_CORE + " 2> /dev/null || true",
-                    busybox + "sleep 1",
+                    busybox + "sleep 1 || true",
                     iptables + "-t nat -N " + NAT_OUTPUT_CORE + " 2> /dev/null",
                     iptables + "-t nat -I OUTPUT -j " + NAT_OUTPUT_CORE,
                     iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p all -d 127.0.0.1/32 -j RETURN",
@@ -487,6 +534,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     blockTlsRuleNatUDP,
                     blockGDNSNat,
                     iptables + "-N " + FILTER_OUTPUT_CORE + " 2> /dev/null",
+                    nflogDns,
                     iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                     iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                     dnsCryptSystemDNSAllowedFilter,
@@ -495,6 +543,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     blockRejectAddressFilter,
                     iptables + "-A " + FILTER_OUTPUT_CORE + " -m state --state ESTABLISHED,RELATED -j RETURN",
                     iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
+                    nflogPackets,
                     unblockHOTSPOT,
                     blockHOTSPOT
             ));
@@ -508,13 +557,13 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             } else {
                 commands.addAll(firewall.getClearFirewallRules());
             }
-            commands.add(iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true");
+            commands.add(iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true");
         } else if (dnsCryptState == STOPPED && torState == STOPPED) {
 
             cancelKillSwitchNotificationIfNeeded();
 
             commands = new ArrayList<>(Arrays.asList(
-                    iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true",
+                    iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true",
                     ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                     ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
                     iptables + "-t nat -F " + NAT_OUTPUT_CORE + " 2> /dev/null || true",
@@ -522,6 +571,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     iptables + "-F " + FILTER_OUTPUT_CORE + " 2> /dev/null || true",
                     iptables + "-A " + FILTER_OUTPUT_CORE + " -j RETURN 2> /dev/null || true",
                     iptables + "-D OUTPUT -j " + FILTER_OUTPUT_CORE + " 2> /dev/null || true",
+                    iptables + "-t mangle -D OUTPUT -p all -m owner ! --uid-owner " + appUID + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
                     unblockHOTSPOT
             ));
 
@@ -536,8 +586,13 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
             if (!routeAllThroughTor) {
                 commands = new ArrayList<>(Arrays.asList(
-                        iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true",
-                        iptables + "-I OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP",
+                        iptables + "-F " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                        iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true",
+                        iptables + "-N " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                        iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner " + appUID + " -j RETURN",
+                        criticalUidsAllowed,
+                        iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -j DROP",
+                        iptables + "-I OUTPUT -j " + FILTER_OUTPUT_BLOCKING,
                         ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                         ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
                         ip6tables + "-I OUTPUT -j DROP",
@@ -546,7 +601,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -D OUTPUT -j " + NAT_OUTPUT_CORE + " 2> /dev/null || true",
                         iptables + "-F " + FILTER_OUTPUT_CORE + " 2> /dev/null",
                         iptables + "-D OUTPUT -j " + FILTER_OUTPUT_CORE + " 2> /dev/null || true",
-                        busybox + "sleep 1",
+                        busybox + "sleep 1 || true",
                         iptables + "-t nat -N " + NAT_OUTPUT_CORE + " 2> /dev/null",
                         iptables + "-t nat -I OUTPUT -j " + NAT_OUTPUT_CORE,
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p all -d 127.0.0.1/32 -j RETURN",
@@ -561,6 +616,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         blockTlsRuleNatUDP,
                         blockGDNSNat,
                         iptables + "-N " + FILTER_OUTPUT_CORE + " 2> /dev/null",
+                        nflogDns,
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
                         torSystemDNSAllowedFilter,
@@ -583,13 +639,19 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         kernelRejectNonTCPFilter,
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -m state --state ESTABLISHED,RELATED -j RETURN",
                         iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
+                        nflogPackets,
                         unblockHOTSPOT,
                         blockHOTSPOT
                 ));
             } else {
                 commands = new ArrayList<>(Arrays.asList(
-                        iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true",
-                        iptables + "-I OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP",
+                        iptables + "-F " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                        iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true",
+                        iptables + "-N " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                        iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner " + appUID + " -j RETURN",
+                        criticalUidsAllowed,
+                        iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -j DROP",
+                        iptables + "-I OUTPUT -j " + FILTER_OUTPUT_BLOCKING,
                         ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                         ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
                         ip6tables + "-I OUTPUT -j DROP",
@@ -619,6 +681,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         bypassLanNat,
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
                         iptables + "-N " + FILTER_OUTPUT_CORE + " 2> /dev/null",
+                        nflogDns,
                         torSystemDNSAllowedFilter,
                         torRootDNSAllowedFilter,
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
@@ -634,6 +697,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         bypassLanFilter,
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -j REJECT",
                         iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
+                        nflogPackets,
                         unblockHOTSPOT,
                         blockHOTSPOT
                 ));
@@ -650,12 +714,17 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             } else {
                 commands.addAll(firewall.getClearFirewallRules());
             }
-            commands.add(iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true");
+            commands.add(iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true");
         } else if (itpdState == RUNNING) {
             cancelKillSwitchNotificationIfNeeded();
             commands.addAll(new ArrayList<>(Arrays.asList(
-                    iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true",
-                    iptables + "-I OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP"
+                    iptables + "-F " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                    iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true",
+                    iptables + "-N " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                    iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner " + appUID + " -j RETURN",
+                    criticalUidsAllowed,
+                    iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -j DROP",
+                    iptables + "-I OUTPUT -j " + FILTER_OUTPUT_BLOCKING
             )));
             commands = tethering.activateTethering(false);
             if (firewallEnabled) {
@@ -663,7 +732,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             } else {
                 commands.addAll(firewall.getClearFirewallRules());
             }
-            commands.add(iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true");
+            commands.add(iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true");
         }
 
         return commands;
@@ -672,9 +741,15 @@ public class ModulesIptablesRules extends IptablesRulesSender {
     public List<String> getBlockingRules(String appUID, String blockHOTSPOT, String unblockHOTSPOT) {
         Pair<String, String> bypassLanNatToBypassLanFilter = getBypassLanRules();
         String bypassLanFilter = bypassLanNatToBypassLanFilter.second;
+        String criticalUidsAllowed = getCriticalUidsAllowedRules();
         return new ArrayList<>(Arrays.asList(
-                iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true",
-                iptables + "-I OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP",
+                iptables + "-F " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true",
+                iptables + "-N " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner " + appUID + " -j RETURN",
+                criticalUidsAllowed,
+                iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -j DROP",
+                iptables + "-I OUTPUT -j " + FILTER_OUTPUT_BLOCKING,
                 ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                 ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
                 ip6tables + "-I OUTPUT -j DROP",
@@ -683,14 +758,14 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                 iptables + "-t nat -D OUTPUT -j " + NAT_OUTPUT_CORE + " 2> /dev/null || true",
                 iptables + "-F " + FILTER_OUTPUT_CORE + " 2> /dev/null",
                 iptables + "-D OUTPUT -j " + FILTER_OUTPUT_CORE + " 2> /dev/null || true",
-                busybox + "sleep 1",
+                busybox + "sleep 1 || true",
                 iptables + "-N " + FILTER_OUTPUT_CORE + " 2> /dev/null",
                 bypassLanFilter,
                 iptables + "-A " + FILTER_OUTPUT_CORE + " -m owner ! --uid-owner " + appUID + " -j REJECT",
                 iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
                 unblockHOTSPOT,
                 blockHOTSPOT,
-                iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true"
+                iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true"
         ));
     }
 
@@ -711,16 +786,23 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             blockHOTSPOT = "";
         }
 
+        String criticalUidsAllowed = getCriticalUidsAllowedRules();
+
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
-                iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true",
-                iptables + "-I OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP",
+                iptables + "-F " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true",
+                iptables + "-N " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner " + appUID + " -j RETURN",
+                criticalUidsAllowed,
+                iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -j DROP",
+                iptables + "-I OUTPUT -j " + FILTER_OUTPUT_BLOCKING,
                 ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                 ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
                 ip6tables + "-I OUTPUT -j DROP",
                 ip6tables + "-I OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT",
                 iptables + "-t nat -D OUTPUT -j " + NAT_OUTPUT_CORE + " 2> /dev/null || true",
                 iptables + "-D OUTPUT -j " + FILTER_OUTPUT_CORE + " 2> /dev/null || true",
-                busybox + "sleep 1",
+                busybox + "sleep 1 || true",
                 iptables + "-t nat -I OUTPUT -j " + NAT_OUTPUT_CORE,
                 iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
                 unblockHOTSPOT,
@@ -735,7 +817,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         if (firewallEnabled) {
             commands.addAll(firewall.getFastUpdateFirewallRules());
         }
-        commands.add(iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true");
+        commands.add(iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true");
 
         return commands;
     }
@@ -757,7 +839,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         }
 
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
-                iptables + "-D OUTPUT -m owner ! --uid-owner " + appUID + " -j DROP 2> /dev/null || true",
+                iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true",
                 ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
                 ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
                 iptables + "-t nat -F " + NAT_OUTPUT_CORE + " 2> /dev/null || true",
@@ -773,6 +855,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                 iptables + "-t nat -D PREROUTING -j " + NAT_PREROUTING_CORE + " 2> /dev/null || true",
                 iptables + "-D FORWARD -j " + FILTER_FORWARD_CORE + " 2> /dev/null || true",
                 iptables + "-D FORWARD -j DROP 2> /dev/null || true",
+
+                iptables + "-t mangle -D OUTPUT -p all -m owner ! --uid-owner " + appUID + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
 
                 "ip rule delete from " + wifiAPAddressesRange + " lookup 63 2> /dev/null || true",
                 "ip rule delete from " + usbModemAddressesRange + " lookup 62 2> /dev/null || true"
@@ -798,7 +882,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
             sendToRootExecService(tethering.fixTTLCommands());
 
-            Log.i(LOG_TAG, "ModulesIptablesRules Refresh Fix TTL Rules vpnInterfaceName = " + vpnInterfaceName);
+            logi("ModulesIptablesRules Refresh Fix TTL Rules vpnInterfaceName = " + vpnInterfaceName);
         }
     }
 
@@ -899,6 +983,26 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     "done";
         }
         return new Pair<>(bypassLanNat, bypassLanFilter);
+    }
+
+    private String getCriticalUidsAllowedRules() {
+        boolean firewallEnabled = preferenceRepository.get().getBoolPreference(FIREWALL_ENABLED);
+        StringBuilder criticalUidsAllowedBuilder = new StringBuilder();
+        if (firewallEnabled) {
+            for (int uid : iptablesFirewall.get().getCriticalUidsAllowed()) {
+                if (uid == NETWORK_STACK_DEFAULT_UID) {
+                    criticalUidsAllowedBuilder.append(iptables).append("-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner ").append(uid).append(" -j RETURN; ");
+                }
+            }
+        } else {
+            List<Integer> criticalUids = new ArrayList<>();
+            criticalUids.add(NETWORK_STACK_DEFAULT_UID);
+            for (int uid : criticalUids) {
+                criticalUidsAllowedBuilder.append(iptables).append("-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner ").append(uid).append(" -j RETURN; ");
+            }
+        }
+
+        return criticalUidsAllowedBuilder + iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -p all -m owner ! --uid-owner 0:999999999 -j RETURN || true";
     }
 
     private static void executeCommands(Context context, List<String> commands) {

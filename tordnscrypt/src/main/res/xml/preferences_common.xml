@@ -155,7 +155,7 @@
             android:title="@string/pref_common_compatibility_mode" />
         <SwitchPreference
             android:id="@+id/pref_common_multi_user"
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="pref_common_multi_user"
             android:summary="@string/pref_common_multi_user_summ"
             android:title="@string/pref_common_multi_user" />
@@ -182,5 +182,11 @@
             android:entryValues="@array/pref_common_use_iptables_values"
             android:key="pref_common_use_iptables"
             android:title="@string/pref_common_use_iptables" />
+        <SwitchPreference
+            android:id="@+id/pref_common_wait_iptables"
+            android:defaultValue="true"
+            android:key="pref_common_wait_iptables"
+            android:title="@string/pref_common_wait_iptables"
+            android:summary="@string/pref_common_wait_iptables_summ"/>
     </PreferenceCategory>
 </androidx.preference.PreferenceScreen>

@@ -31,9 +31,7 @@ import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.ProcessLifecycleOwner
 import pan.alexander.tordnscrypt.crash_handling.TopExceptionHandler
 import pan.alexander.tordnscrypt.di.*
-import pan.alexander.tordnscrypt.di.logreader.LogReaderSubcomponent
 import pan.alexander.tordnscrypt.language.Language
-import pan.alexander.tordnscrypt.utils.delegates.MutableLazy
 import pan.alexander.tordnscrypt.utils.multidex.MultidexActivator
 
 const val ANDROID_CHANNEL_ID = "InviZible"
@@ -42,13 +40,15 @@ const val AUX_CHANNEL_ID = "Auxiliary"
 
 class App : Application() {
 
-    //var currentActivity: WeakReference<Activity>? = null
+    val daggerComponent: AppComponent by lazy {
+        DaggerAppComponent
+            .builder()
+            .appContext(applicationContext)
+            .build()
+    }
 
-    lateinit var daggerComponent: AppComponent
-    private set
-
-    private var logReaderDaggerSubcomponent: LogReaderSubcomponent? by MutableLazy {
-        daggerComponent.logReaderSubcomponent().create(this)
+    val subcomponentsManager by lazy {
+        SubcomponentsManager(this, daggerComponent)
     }
 
     @Volatile
@@ -78,8 +78,6 @@ class App : Application() {
 
         instance = this
 
-        initDaggerComponent()
-
         Language.setFromPreference(this, "pref_fast_language")
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -95,19 +93,6 @@ class App : Application() {
         }
 
         initAppLifecycleListener()
-    }
-
-    private fun initDaggerComponent() {
-        daggerComponent = DaggerAppComponent
-            .builder()
-            .appContext(applicationContext)
-            .build()
-    }
-
-    fun initLogReaderDaggerSubcomponent() = logReaderDaggerSubcomponent!!
-
-    fun releaseLogReaderScope() {
-        logReaderDaggerSubcomponent = null
     }
 
     @TargetApi(Build.VERSION_CODES.O)
