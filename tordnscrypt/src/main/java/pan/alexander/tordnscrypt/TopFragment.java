@@ -211,11 +211,6 @@ public class TopFragment extends Fragment {
             logsTextSize = preferences.getFloatPreference("LogsTextSize");
         }
 
-        Looper looper = Looper.getMainLooper();
-        if (looper != null) {
-            handler = new Handler(looper);
-        }
-
         rootChecker = new RootChecker(this);
         rootChecker.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
@@ -227,6 +222,11 @@ public class TopFragment extends Fragment {
         Context context = getActivity();
         if (context != null) {
             registerReceiver(context);
+        }
+
+        Looper looper = Looper.getMainLooper();
+        if (looper != null) {
+            handler = new Handler(looper);
         }
     }
 
