@@ -4,7 +4,7 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 obfs4proxy_version=workaround/ntor-auth-mismatch
 dnscryptproxy_version=improve/minimize-plaintext-queries
-snowflake_version=v2.2.0
+snowflake_version=v2.3.0
 tor_openssl_version=OpenSSL_1_1_1o
 libevent_version=release-2.1.12-stable
 zstd_version=v1.4.9
