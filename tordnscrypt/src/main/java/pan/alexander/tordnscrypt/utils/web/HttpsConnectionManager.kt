@@ -28,6 +28,7 @@ import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
 import pan.alexander.tordnscrypt.utils.Constants.TOR_BROWSER_USER_AGENT
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
+import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection.HTTP_OK
@@ -203,6 +204,7 @@ class HttpsConnectionManager @Inject constructor(
         val modulesStatus = ModulesStatus.getInstance()
         val proxy = if (modulesStatus.torState == ModuleState.RUNNING && modulesStatus.isTorReady) {
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
+                logi("Using http proxy for url connection")
                 Proxy(
                     Proxy.Type.HTTP,
                     InetSocketAddress(
@@ -210,6 +212,7 @@ class HttpsConnectionManager @Inject constructor(
                     )
                 )
             } else {
+                logi("Using socks proxy for url connection")
                 Proxy(
                     Proxy.Type.SOCKS,
                     InetSocketAddress(
@@ -218,6 +221,7 @@ class HttpsConnectionManager @Inject constructor(
                 )
             }
         } else {
+            logi("Using direct url connection")
             null
         }
 
