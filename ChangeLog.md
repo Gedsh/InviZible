@@ -811,3 +811,10 @@
 * Updated Tor to version 4.7.8.
 * Updated Tor snowflake bridge.
 * Updated DNSCrypt.
+
+**InviZible Pro beta 1.7.1**
+* Updated DNSCrypt to version 2.1.2.
+* Updated Tor.
+* Updated Tor snowflake bridge to version 2.3.0.
+* Optimized armv7a build.
+* Minor fixes and optimizations.
