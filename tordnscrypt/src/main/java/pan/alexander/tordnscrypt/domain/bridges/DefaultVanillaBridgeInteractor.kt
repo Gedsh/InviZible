@@ -30,8 +30,8 @@ import javax.inject.Inject
 import javax.inject.Named
 
 private const val SIMULTANEOUS_CHECKS = 3
-
 private const val MAX_RELAY_COUNT = 30
+private val DESIGNATED_TOR_PORTS = listOf("9001", "9030", "9040", "9050", "9051", "9150")
 
 @ExperimentalCoroutinesApi
 class DefaultVanillaBridgeInteractor @Inject constructor(
@@ -65,6 +65,7 @@ class DefaultVanillaBridgeInteractor @Inject constructor(
 
     suspend fun requestRelays(): List<RelayAddressFingerprint> = withContext(dispatcherIo) {
         repository.getRelaysWithFingerprintAndAddress()
+            .filter { !DESIGNATED_TOR_PORTS.contains(it.port) }
             .shuffled()
             .take(MAX_RELAY_COUNT)
     }
