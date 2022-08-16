@@ -23,18 +23,21 @@ import android.content.Context
 import kotlinx.coroutines.*
 import pan.alexander.tordnscrypt.di.CoroutinesModule
 import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor
+import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import javax.inject.Inject
 import javax.inject.Named
 
-private const val DELAY_BEFORE_RESTART_TOR_SEC = 60
+private const val DELAY_BEFORE_RESTART_TOR_SEC = 30
 
 @ExperimentalCoroutinesApi
 class TorRestarterReconnector @Inject constructor(
     private val context: Context,
     @Named(CoroutinesModule.DISPATCHER_IO)
     dispatcherIo: CoroutineDispatcher,
+    private val pathVars: PathVars,
     private val connectionCheckerInteractor: dagger.Lazy<ConnectionCheckerInteractor>
 ) {
 
@@ -74,6 +77,7 @@ class TorRestarterReconnector @Inject constructor(
                 if (modulesStatus.torState == ModuleState.RUNNING && modulesStatus.isTorReady
                     && isNetworkAvailable()
                 ) {
+                    FileManager.deleteDirSynchronous(context, pathVars.appDataDir + "/tor_data")
                     ModulesRestarter.restartTor(context)
                     lockCounter()
                     logi("Restart Tor to re-establish a connection")
