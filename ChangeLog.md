@@ -818,3 +818,10 @@
 * Updated Tor snowflake bridge to version 2.3.0.
 * Optimized armv7a build.
 * Minor fixes and optimizations.
+
+**InviZible Pro beta 1.7.2**
+* Updated DNSCrypt.
+* Added http3 option to DNSCrypt settings (DoH3, HTTP over QUIC).
+* Updated Tor to version 4.7.10.
+* Updated Tor geoip.
+* Fixes and optimizations.
