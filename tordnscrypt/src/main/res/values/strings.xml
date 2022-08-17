@@ -314,6 +314,8 @@
     <string name="pref_dnscrypt_fallback_resolver" translatable="false">bootstrap_resolvers</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">Never let dnscrypt-proxy try to use the system DNS settings. Unconditionally use the fallback resolver..</string>
     <string name="pref_dnscrypt_ignore_system_dns" translatable="false">ignore_system_dns</string>
+    <string name="pref_dnscrypt_http3_summ">Enable support for HTTP/3 (DoH3, HTTP over QUIC). Note that, like DNSCrypt but unlike other HTTP versions, this uses UDP and (usually) port 443 instead of TCP.</string>
+    <string name="pref_dnscrypt_http3" translatable="false">http3</string>
 
     <string name="pref_dnscrypt_filters_categ">FILTERS</string>
 

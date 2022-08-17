@@ -26,7 +26,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -67,9 +66,10 @@ import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BLOCK_IPv6;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.HTTP3_QUIC;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
@@ -130,6 +130,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         preferences.add(findPreference("proxy_port"));
         preferences.add(findPreference("bootstrap_resolvers"));
         preferences.add(findPreference(IGNORE_SYSTEM_DNS));
+        preferences.add(findPreference(HTTP3_QUIC));
         preferences.add(findPreference("Enable Query logging"));
         preferences.add(findPreference("ignored_qtypes"));
         preferences.add(findPreference("Enable Suspicious logging"));
@@ -145,7 +146,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             if (preference != null) {
                 preference.setOnPreferenceChangeListener(this);
             } else if (!appVersion.startsWith("g")) {
-                Log.e(LOG_TAG, "PreferencesDNSFragment preference is null exception");
+                loge("PreferencesDNSFragment preference is null exception");
             }
         }
 
@@ -153,7 +154,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         if (editDNSTomlDirectly != null) {
             editDNSTomlDirectly.setOnPreferenceClickListener(this);
         } else if (!appVersion.startsWith("g")) {
-            Log.e(LOG_TAG, "PreferencesDNSFragment preference is null exception");
+            loge("PreferencesDNSFragment preference is null exception");
         }
 
         Preference cleanDNSCryptFolder = findPreference("cleanDNSCryptFolder");
@@ -186,7 +187,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             if (preference != null) {
                 preference.setOnPreferenceClickListener(this);
             } else if (!appVersion.startsWith("g")) {
-                Log.e(LOG_TAG, "PreferencesDNSFragment preference is null exception");
+                loge("PreferencesDNSFragment preference is null exception");
             }
         }
     }
@@ -414,6 +415,12 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                     }
                 }
                 return true;
+            } else if (Objects.equals(preference.getKey().trim(), "http3")) {
+                int position = key_toml.indexOf("ignore_system_dns");
+                if (!key_toml.contains("http3") && position >= 0) {
+                    key_toml.add(position + 1, "http3");
+                    val_toml.add(position + 1, "false");
+                }
             }
 
             if (key_toml.contains(preference.getKey().trim()) && !newValue.toString().isEmpty()) {
@@ -423,7 +430,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                 Toast.makeText(context, R.string.pref_dnscrypt_not_exist, Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "PreferencesDNSFragment exception " + e.getMessage() + " " + e.getCause());
+            loge("PreferencesDNSFragment", e);
             Toast.makeText(context, R.string.wrong, Toast.LENGTH_LONG).show();
         }
 
