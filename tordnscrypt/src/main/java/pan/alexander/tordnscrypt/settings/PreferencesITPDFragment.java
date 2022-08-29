@@ -107,6 +107,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
         preferences.add(findPreference("elgamal"));
         preferences.add(findPreference("UPNP"));
         preferences.add(findPreference("ntcp2 enabled"));
+        preferences.add(findPreference("ssu2 enabled"));
         preferences.add(findPreference("verify"));
         preferences.add(findPreference("transittunnels"));
         preferences.add(findPreference("openfiles"));
@@ -220,6 +221,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                     key_itpd_to_save.set(i, "outproxy");
                     break;
                 case "ntcp2 enabled":
+                case "ssu2 enabled":
                 case "SAM interface":
                 case "Socks proxy":
                 case "http enabled":
@@ -307,10 +309,28 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                     && newValue.toString().trim().isEmpty()) {
                 return false;
             } else if (Objects.equals(preference.getKey(), "notransit")) {
-                val_itpd.set(
-                        key_itpd.indexOf("published"),
-                        String.valueOf(!Boolean.parseBoolean(newValue.toString()))
-                );
+                for (int i = 0; i < key_itpd.size(); i++) {
+                    String key = key_itpd.get(i);
+                    if (key.equals("published")) {
+                        val_itpd.set(i, String.valueOf(!Boolean.parseBoolean(newValue.toString())));
+                    }
+                }
+            } else if (Objects.equals(preference.getKey(), "ssu2 enabled")) {
+                if (!key_itpd.contains("[ssu2]") && key_itpd.contains("[ntcp2]")) {
+                    int positionNtcp2 = key_itpd.indexOf("[ntcp2]");
+                    key_itpd.add(positionNtcp2, "[ssu2]");
+                    val_itpd.add(positionNtcp2, "");
+                    key_itpd.add(positionNtcp2 + 1, "ssu2 enabled");
+                    val_itpd.add(positionNtcp2 + 1, "true");
+                    key_itpd.add(positionNtcp2 + 2, "published");
+
+                    int positionNoTransit = key_itpd.indexOf("notransit");
+                    if (positionNoTransit >= 0 && "false".equals(val_itpd.get(positionNoTransit))) {
+                        val_itpd.add(positionNtcp2 + 2, "true");
+                    } else {
+                        val_itpd.add(positionNtcp2 + 2, "false");
+                    }
+                }
             }
 
             if (key_itpd.contains(preference.getKey().trim())) {

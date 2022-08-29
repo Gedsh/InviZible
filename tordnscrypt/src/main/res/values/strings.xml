@@ -519,6 +519,8 @@
     <string name="pref_itpd_com_share_summ">Max % of bandwidth limit for transit. 0–100.</string>
     <string name="pref_itpd_com_ssu" translatable="false">ssu</string>
     <string name="pref_itpd_com_ssu_summ">Enable SSU transport protocol (use UDP).</string>
+    <string name="pref_itpd_com_ssu2" translatable="false">ssu2</string>
+    <string name="pref_itpd_com_ssu2_summ">Enable SSU2 transport protocol (use UDP).</string>
     <string name="pref_itpd_com_ntcp" translatable="false">ntcp</string>
     <string name="pref_itpd_com_ntcp_summ">Enable NTCP2 transport protocol (use TCP).</string>
     <string name="pref_itpd_com_use_ntcpproxy">Enable ntcpproxy</string>
