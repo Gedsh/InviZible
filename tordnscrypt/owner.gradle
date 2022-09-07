@@ -9,7 +9,7 @@ def keystoreProperties = new Properties()
 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 33
 
 
     flavorDimensions "version", "processor"
@@ -89,10 +89,10 @@ android {
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 32
+        targetSdkVersion 33
         versionCode 173
 
-        resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt-rBR", "el", "tr"
+        resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt-rBR", "el", "tr", "it"
 
         externalNativeBuild {
             cmake {
@@ -184,7 +184,7 @@ repositories {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'androidx.appcompat:appcompat:1.5.0'
+    implementation 'androidx.appcompat:appcompat:1.5.1'
     implementation 'androidx.preference:preference-ktx:1.2.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.google.android.material:material:1.6.1'
@@ -200,7 +200,7 @@ dependencies {
     //noinspection GradleDynamicVersion
     implementation 'eu.chainfire:libsuperuser:1.1.0.+'
     implementation 'com.jrummyapps:android-shell:1.0.1'
-    implementation 'androidx.core:core-ktx:1.8.0'
+    implementation 'androidx.core:core-ktx:1.9.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1'
     implementation project(':filepicker')
 
