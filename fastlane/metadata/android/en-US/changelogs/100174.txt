@@ -1,0 +1,4 @@
+**InviZible Pro beta 1.7.4**
+* Fixed requesting Tor bridges via the app interface.
+* Removed bridge types that are no longer available on the torproject website.
+* Add Italian translation.

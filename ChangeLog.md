@@ -828,5 +828,10 @@
 
 **InviZible Pro beta 1.7.3**
 * Updated Purple I2P to version 2.43.0.
-* Added SSU2 option to Purple I2P settings
+* Added SSU2 option to Purple I2P settings.
 * Tor restarts if the internet connection is lost.
+
+**InviZible Pro beta 1.7.4**
+* Fixed requesting Tor bridges via the app interface.
+* Removed bridge types that are no longer available on the torproject website.
+* Add Italian translation.
