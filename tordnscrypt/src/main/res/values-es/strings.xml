@@ -143,7 +143,7 @@ En otros sistemas, como MIUI, se requieren ajustes adicionales."</string>
     <string name="pref_common_restart_dnscrypt">"Por favor, reinicie DNSCrypt"</string>
     <string name="pref_common_restart_tor">"Por favor, reinicie Tor"</string>
     <string name="pref_common_restart_itpd">"Por favor, reinicie I2P"</string>
-    <string name="pref_common_use_iptables">"Seleccionar binario Iptables"</string>
+    <string name="pref_common_use_iptables">Seleccionar tablasIP</string>
     <string name="pref_common_log_root_commands">"Guardar comandos Root al Log"</string>
     <string name="notification_text">"DNSCrypt, Tor e I2P estan ejecutandose. Ésta notificación no se cerrará."</string>
     <string name="notification_temp_text">"Ejecutando comandos Root…"</string>
