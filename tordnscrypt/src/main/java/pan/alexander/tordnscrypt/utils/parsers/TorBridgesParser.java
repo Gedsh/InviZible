@@ -50,7 +50,6 @@ public class TorBridgesParser {
             final String captcha_challenge_field_value;
             String inputLine;
             boolean imageFound = false;
-            boolean keywordFound = false;
 
 
             while ((inputLine = bufferedReader.readLine()) != null
@@ -74,13 +73,11 @@ public class TorBridgesParser {
                     }
 
 
-                } else if (inputLine.contains("captcha_challenge_field")) {
-                    keywordFound = true;
-                } else if (inputLine.contains("value") && keywordFound) {
+                } else if (inputLine.contains("captcha_challenge_field") && inputLine.contains("value")) {
 
                     String[] secretCodeArr = inputLine.split("\"");
-                    if (secretCodeArr.length > 1) {
-                        captcha_challenge_field_value = secretCodeArr[1];
+                    if (secretCodeArr.length > 5) {
+                        captcha_challenge_field_value = secretCodeArr[5];
 
                         return new Pair<>(codeImage, captcha_challenge_field_value);
 
@@ -112,7 +109,6 @@ public class TorBridgesParser {
             boolean keyWordBridge = false;
             boolean wrongImageCode = false;
             boolean imageFound = false;
-            boolean keywordCaptchaFound = false;
             List<String> newBridges = new LinkedList<>();
 
             final StringBuilder sb = new StringBuilder();
@@ -121,11 +117,15 @@ public class TorBridgesParser {
 
                 if (inputLine.contains("id=\"bridgelines\"") && !wrongImageCode) {
                     keyWordBridge = true;
-                } else if (inputLine.contains("<br />") && keyWordBridge && !wrongImageCode) {
+                } else if (inputLine.contains("<br />")
+                        && keyWordBridge
+                        && !wrongImageCode) {
                     newBridges.add(inputLine.replace("<br />", "").trim());
-                } else if (!inputLine.contains("<br />") && keyWordBridge && !wrongImageCode) {
+                } else if (inputLine.contains("</div>")
+                        && keyWordBridge
+                        && !wrongImageCode) {
                     break;
-                } else if (inputLine.contains("captcha-submission-container")) {
+                } else if (inputLine.contains("bridgedb-captcha-container")) {
                     wrongImageCode = true;
                 } else if (wrongImageCode) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -149,12 +149,10 @@ public class TorBridgesParser {
                             throw new IllegalStateException("Tor Project web site error");
                         }
 
-                    } else if (inputLine.contains("captcha_challenge_field")) {
-                        keywordCaptchaFound = true;
-                    } else if (inputLine.contains("value") && keywordCaptchaFound) {
+                    } else if (inputLine.contains("captcha_challenge_field") && inputLine.contains("value")) {
                         String[] secretCodeArr = inputLine.split("\"");
-                        if (secretCodeArr.length > 1 && codeImage != null) {
-                            captcha_challenge_field_value = secretCodeArr[1];
+                        if (secretCodeArr.length > 5 && codeImage != null) {
+                            captcha_challenge_field_value = secretCodeArr[5];
 
                             return new ParseBridgesResult.RecaptchaChallenge(
                                     codeImage,
