@@ -66,12 +66,8 @@ class SelectBridgesTransportDialogFragment @Inject constructor(
                 when (rbgTorTransport.checkedRadioButtonId) {
                     R.id.rbObfsNone ->
                         preferencesTorBridgesViewModel.requestTorBridgesCaptchaChallenge("0")
-                    R.id.rbObfs3 ->
-                        preferencesTorBridgesViewModel.requestTorBridgesCaptchaChallenge("obfs3")
                     R.id.rbObfs4 ->
                         preferencesTorBridgesViewModel.requestTorBridgesCaptchaChallenge("obfs4")
-                    R.id.rbObfsScrambleSuit ->
-                        preferencesTorBridgesViewModel.requestTorBridgesCaptchaChallenge("scramblesuit")
                 }
             }
 
