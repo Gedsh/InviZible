@@ -63,6 +63,7 @@ import static pan.alexander.tordnscrypt.update.UpdateService.UPDATE_CHANNEL_NOTI
 import static pan.alexander.tordnscrypt.update.UpdateService.UPDATE_RESULT;
 import static pan.alexander.tordnscrypt.utils.AppExtension.getApp;
 import static pan.alexander.tordnscrypt.utils.Constants.TOR_BROWSER_USER_AGENT;
+import static pan.alexander.tordnscrypt.utils.Utils.areNotificationsAllowed;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.TOP_FRAGMENT_MARK;
@@ -185,6 +186,8 @@ public class DownloadTask extends Thread {
     }
 
     private File downloadFile(String fileToDownload, String urlToDownload) throws IOException {
+        boolean notificationsAllowed = areNotificationsAllowed(updateService.notificationManager);
+
         long range = 0;
 
         String path = cacheDir + "/" + fileToDownload;
@@ -225,7 +228,7 @@ public class DownloadTask extends Thread {
 
 
                 int currentPercent = (int) (range * 100 / fileLength);
-                if (currentPercent - percent >= 5) {
+                if (notificationsAllowed && currentPercent - percent >= 5) {
                     percent = currentPercent;
                     updateNotification(fileToDownload, percent);
                 }

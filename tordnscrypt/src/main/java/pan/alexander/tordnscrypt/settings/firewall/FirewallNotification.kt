@@ -39,6 +39,7 @@ import pan.alexander.tordnscrypt.FIREWALL_CHANNEL_ID
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.settings.SettingsActivity
 import pan.alexander.tordnscrypt.modules.ModulesStatus
+import pan.alexander.tordnscrypt.utils.Utils.areNotificationsNotAllowed
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 
@@ -300,6 +301,13 @@ class FirewallNotification : BroadcastReceiver() {
             return
         }
 
+        val notificationManager =
+            context.applicationContext?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (areNotificationsNotAllowed(notificationManager)) {
+            return
+        }
+
         val notificationIntent = Intent(context, SettingsActivity::class.java)
         notificationIntent.action = "firewall"
         notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER)
@@ -389,8 +397,6 @@ class FirewallNotification : BroadcastReceiver() {
         }
 
         val notification = builder.build()
-        val notificationManager =
-            context.applicationContext?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?
-        notificationManager?.notify(notificationId, notification)
+        notificationManager.notify(notificationId, notification)
     }
 }

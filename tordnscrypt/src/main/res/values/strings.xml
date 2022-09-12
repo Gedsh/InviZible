@@ -74,6 +74,7 @@
     <string name="allow">Allow</string>
     <string name="deny">Deny</string>
     <string name="areYouSure">Are you sure? This action cannot be undone!</string>
+    <string name="ask_later">Ask later</string>
     <string name="empty_string" translatable="false" />
 
     <string name="message_no_root_used">You can use InviZible Pro with local VPN mode, or applications with own proxy or local VPN feature in proxy mode.</string>
@@ -770,4 +771,5 @@
         Please leave only 3. Adding more than 3 tiles can cause issues with app control.</string>
     <string name="list_is_empty">List is Empty</string>
     <string name="connectivity_check">Internet connectivity check</string>
+    <string name="notifications_permission_rationale_message">Notifications are essential for displaying important information about the app\'s operation, app control, and detected attacks. Would you like to allow notifications for InviZible?</string>
 </resources>

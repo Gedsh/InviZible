@@ -538,4 +538,6 @@
     <string name="pref_fast_logs">Логи соединений</string>
     <string name="pref_fast_logs_summ">Показывать лог подключений приложений на вкладке DNS</string>
     <string name="pref_dnscrypt_http3_summ">Включить поддержку HTTP/3 (DoH3, HTTP over QUIC). Обратите внимание, что, как и DNSCrypt, но в отличие от других версий HTTP, здесь используется UDP и (обычно) порт 443 вместо TCP.</string>
+    <string name="notifications_permission_rationale_message">Уведомления необходимы для отображения важной информации о работе приложения, управлении приложением, и обнаруженных атаках. Разрешить уведомления для InviZible?</string>
+    <string name="ask_later">Спросить позже</string>
 </resources>

@@ -52,6 +52,8 @@ public interface PreferenceKeys {
     String USE_DEFAULT_BRIDGES = "useDefaultBridges";
     String USE_OWN_BRIDGES = "useOwnBridges";
 
+    String NOTIFICATIONS_ARE_BLOCKED = "notificationsAreBlocked";
+
     //VPN
     String VPN_SERVICE_ENABLED = "VPNServiceEnabled";
 
