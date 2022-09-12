@@ -834,4 +834,9 @@
 **InviZible Pro beta 1.7.4**
 * Fixed requesting Tor bridges via the app interface.
 * Removed bridge types that are no longer available on the torproject website.
-* Add Italian translation.
+* Added Italian translation.
+
+**InviZible Pro beta 1.7.5**
+* Fixed display of notifications on Android 13.
+* Fixed requesting Tor bridges on Android 4.4.2.
+* Minor fixes and optimizations.
