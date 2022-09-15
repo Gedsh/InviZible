@@ -174,15 +174,16 @@ Si no es lo que desea, por favor, deje éste valor desactivado, ya que no mejora
     <string name="pref_dnscrypt_forwarding_rules_categ">"Reglas de reenvío"</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Redirige peticiones para dominios específicos a un conjunto determinado de servidores."</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">"Reglas de encubrimiento"</string>
-    <string name="pref_dnscrypt_cloaking_rules_summ">"Las reglas de encubrimiento proveen direcciones predefinidas para un nombre determinado. Además de actuar como un archivo HOSTS, también pueden devolver la dirección IP de un nombre diferente. También realizan tratamientos CNAME especiales…"</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">El Cloaking devuelve una dirección predefinida para un nombre específico.
+\n Además de actuar como un archivo HOSTS, también puede devolver la dirección IP de un nombre diferente. También hará el aplanamiento de CNAME..</string>
     <string name="pref_dnscrypt_query_log_categ">"Registro de peticiones"</string>
     <string name="pref_dnscrypt_query_log_summ">"Registra las peticiones de cliente a fichero."</string>
     <string name="pref_dnscrypt_query_log">"Activar el registro de peticiones"</string>
     <string name="pref_dnscrypt_ignored_qtypes_summ">"Tipos de peticiones a omitir, para reducir ruido, en los registros. Un valor vacío indica registrar todo."</string>
     <string name="open_query_log">"Abrir registro de peticiones"</string>
     <string name="pref_dnscrypt_nx_log_categ">"Registro de peticiones de dudosa naturaleza."</string>
-    <string name="pref_dnscrypt_nx_log_summ">"Registrar peticiones para zonas inexistentes.
-Con estas peticiones se puede descubrir la presencia de malware, aplicaciones defectuosas u obsoletas, y dispositivos revelando señales de presencia a terceros…"</string>
+    <string name="pref_dnscrypt_nx_log_summ">Registra las consultas de zonas inexistentes.
+\n Estas consultas pueden revelar la presencia de malware, aplicaciones rotas/obsoletas y dispositivos que señalan su presencia a terceros..</string>
     <string name="pref_dnscrypt_nx_log">"Activar registro dudoso"</string>
     <string name="open_nx_log">"Abrir registro dudoso"</string>
     <string name="pref_dnscrypt_blacklist_categ">"Bloqueo basado en patrones (Lista de bloqueo)."</string>
@@ -490,7 +491,7 @@ Donde 1 - arranca el módulo, y 0 - lo para."</string>
     <string name="btnResetSettings">"Reiniciar configuración"</string>
     <string name="backupSaved">"Copia guardada"</string>
     <string name="backupRestored">"Copia restaurada"</string>
-    <string name="thanks_for_donate_gp">"La comunidad del proyecto InviZible Pro y su desarrollador expresan sus agradecimientos por la ayuda."</string>
+    <string name="thanks_for_donate_gp">¡InviZible Pro Project y su autor le expresan su agradecimiento por la ayuda!</string>
     <string name="pref_tor_hardware_accel_summ">"Intentar usar la aceleración de hardware de cifrado incorporada cuando esté disponible."</string>
     <string name="notification_connecting">"Conectando…"</string>
     <string name="notification_waiting_network">"Esperando red…"</string>
