@@ -62,7 +62,7 @@
     <string name="pref_fast_tor_autostart">"Arrancar Tor al inicio del dispositivo"</string>
     <string name="pref_fast_itpd_autostart">"Arrancar I2P al inicio del dispositivo"</string>
     <string name="pref_fast_autostart_delay">"Retraso"</string>
-    <string name="pref_fast_autostart_delay_summ">"Establece un retraso en segundos en el caso en que Inicio Automático no funcione."</string>
+    <string name="pref_fast_autostart_delay_summ">Establece un retraso en segundos en el caso en que Inicio Automático no funcione</string>
     <string name="pref_fast_dns_server">"Servidores DNSCrypt"</string>
     <string name="pref_fast_select_dns_server">"Seleccionar servidores DNSCrypt"</string>
     <string name="pref_fast_tor">"Configuración de Tor"</string>
@@ -70,14 +70,14 @@
     <string name="pref_fast_all_through_tor">"Redirigir todo el tráfico a través de Tor"</string>
     <string name="pref_fast_all_through_ipro">"Dirigir todo el tráfico por InviZible"</string>
     <string name="pref_fast_unlock_with_tor">"Introduzca sitios web"</string>
-    <string name="pref_fast_unlock_with_tor_summ">"Lista de sitios web para abrir con Tor. Éste ajuste no funciona para sitios detrás de una CDN."</string>
+    <string name="pref_fast_unlock_with_tor_summ">Lista de sitios web para abrir con Tor. Éste ajuste no funciona para sitios detrás de una CDN</string>
     <string name="pref_fast_unlock_apps_with_tor">"Seleccionar Aplicaciones"</string>
-    <string name="pref_fast_unlock_apps_with_tor_summ">"Aplicaciones a usar con Tor."</string>
+    <string name="pref_fast_unlock_apps_with_tor_summ">Lista de aplicaciones para usar con Tor</string>
     <string name="pref_fast_unlock_apps_with_ipro_summ">"Aplicaciones a usar con InviZible"</string>
     <string name="pref_fast_exclude_from_tor">"Excluir sitios web"</string>
-    <string name="pref_fast_exclude_from_tor_summ">"Lista de sitios web a excluir de Tor. Éste ajuste no funciona para sitios detras de una CDN."</string>
+    <string name="pref_fast_exclude_from_tor_summ">Lista de sitios web a excluir de Tor. Éste ajuste no funciona para sitios detras de una CDN</string>
     <string name="pref_fast_exclude_apps_from_tor">"Excluir aplicaciones"</string>
-    <string name="pref_fast_exclude_apps_from_tor_summ">"Lista de aplicaciones a excluir de Tor."</string>
+    <string name="pref_fast_exclude_apps_from_tor_summ">Lista de aplicaciones para abrir directamente</string>
     <string name="pref_fast_site_refresh_interval">"Intervalo de actualización"</string>
     <string name="pref_fast_site_refresh_interval_summ">"Periodo en horas para actualizar IPs de sitios web. Para Android 5.1 en adelante. El valor 0 (cero) lo desactiva."</string>
     <string name="pref_fast_use_tor_bridges">"Puentes"</string>
