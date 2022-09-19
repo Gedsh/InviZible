@@ -326,6 +326,8 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     key = "incoming port";
                 } else if (header.equals("[ntcp2]") && key.equals("enabled")) {
                     key = "ntcp2 enabled";
+                } else if (header.equals("[ssu2]") && key.equals("enabled")) {
+                    key = "ssu2 enabled";
                 } else if (header.equals("[http]") && key.equals("enabled")) {
                     key = "http enabled";
                 } else if (header.equals("[httpproxy]") && key.equals("enabled")) {

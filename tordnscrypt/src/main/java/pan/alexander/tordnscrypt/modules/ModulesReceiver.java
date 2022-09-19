@@ -66,6 +66,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -127,6 +130,9 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     private volatile Future<?> checkTetheringTask;
     private volatile boolean vpnRevoked = false;
 
+    private static final int CHECK_INTERNET_CONNECTION_DELAY_SEC = 30;
+    private final AtomicBoolean isCheckingInternetConnection = new AtomicBoolean(false);
+
     @Inject
     public ModulesReceiver(
             Lazy<PreferenceRepository> preferenceRepository,
@@ -162,11 +168,14 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         }
 
         Bundle extras = intent.getExtras();
-        if (extras != null) {
-            logi("ModulesReceiver received " + intent
-                    + (extras.isEmpty() ? "" : " " + extras));
-        } else {
-            logi("ModulesReceiver received " + intent);
+        if (!action.equalsIgnoreCase(SCREEN_ON_ACTION)
+                && !action.equalsIgnoreCase(SCREEN_OFF_ACTION)) {
+            if (extras != null) {
+                logi("ModulesReceiver received " + intent
+                        + (extras.isEmpty() ? "" : " " + extras));
+            } else {
+                logi("ModulesReceiver received " + intent);
+            }
         }
 
         if (this.context == null) {
@@ -374,9 +383,12 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         }
 
         ConnectivityManager.NetworkCallback nc = new ConnectivityManager.NetworkCallback() {
+            private final Pattern SIGNAL_STRENGTH_PATTERN = Pattern.compile("SignalStrength: ?-(\\d+)");
+            private static final int SIGNAL_STRENGTH_THRESHOLD = 20;
             private volatile Boolean last_connected = null;
             private volatile List<InetAddress> last_dns = null;
             private volatile int last_network = 0;
+            private volatile int last_signal_strength = 0;
 
             @Override
             public void onAvailable(@NonNull Network network) {
@@ -477,6 +489,28 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                     } else if (isProxyMode()) {
                         resetArpScanner();
                         logi("ModulesReceiver changed capabilities=" + network);
+                    }
+                } else if (modulesStatus.getTorState() == RUNNING
+                        && (isVpnMode() || isRootMode())) {
+                    Matcher matcher = SIGNAL_STRENGTH_PATTERN.matcher(networkCapabilities.toString());
+                    if (matcher.find()) {
+                        String signalStrength = matcher.group(1);
+                        if (signalStrength != null) {
+                            int signal_strength = Integer.parseInt(signalStrength);
+                            if (Math.abs(signal_strength - last_signal_strength) > SIGNAL_STRENGTH_THRESHOLD
+                                    && isCheckingInternetConnection.compareAndSet(false, true)) {
+                                checkInternetConnectionWithDelay();
+                                logi("ModulesReceiver changed signal strength. "
+                                        + "Network " + network + " "
+                                        + "SignalStrength " + signalStrength);
+                            }
+                            last_signal_strength = signal_strength;
+                        }
+                    } else if (network.hashCode() != last_network
+                            && isCheckingInternetConnection.compareAndSet(false, true)) {
+                        checkInternetConnectionWithDelay();
+                        logi("ModulesReceiver network has changed. "
+                                + "Network " + network);
                     }
                 }
 
@@ -683,6 +717,11 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             }
             if (!interactor.getInternetConnectionResult()) {
                 interactor.checkInternetConnection();
+            } else if (interactor.getNetworkConnectionResult()
+                    && modulesStatus.getTorState() == RUNNING
+                    && (isVpnMode() || isRootMode())
+                    && isCheckingInternetConnection.compareAndSet(false, true)) {
+                checkInternetConnectionWithDelay();
             }
         } else if (SCREEN_OFF_ACTION.equals(intent.getAction())) {
             modulesStatus.setDeviceInteractive(false);
@@ -914,6 +953,14 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         ConnectionCheckerInteractor interactor = connectionCheckerInteractor.get();
         interactor.setInternetConnectionResult(false);
         interactor.checkInternetConnection();
+    }
+
+    private void checkInternetConnectionWithDelay() {
+        handler.get().postDelayed(() -> {
+            checkInternetConnection();
+            isCheckingInternetConnection.set(false);
+        }, CHECK_INTERNET_CONNECTION_DELAY_SEC * 1000);
+
     }
 
     @Override

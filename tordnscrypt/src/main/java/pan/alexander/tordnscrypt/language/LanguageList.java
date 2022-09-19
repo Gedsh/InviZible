@@ -35,6 +35,7 @@ public class LanguageList {
             "R2VybWFuIChEZXV0c2NoZSk=",
             "R3JlZWsgKM6VzrvOu863zr3Ouc66zq4p",
             "SW5kb25lc2lhbiAoYmFoYXNhIEluZG9uZXNpYSk=",
+            "SXRhbGlhbiAoSXRhbGlhbmEp",
             "SmFwYW5lc2UgKOaXpeacrOiqnik=",
             "UGVyc2lhbiAo2YHYp9ix2LPbjCk=",
             "UG9saXNoIChQb2xza2kp",
@@ -52,6 +53,7 @@ public class LanguageList {
             "de",
             "el",
             "in",
+            "it",
             "ja",
             "fa",
             "pl",
@@ -69,8 +71,7 @@ public class LanguageList {
             for (int i = 1; i < mHuman.length; i++) {
                 try {
                     mHuman[i] = decodeBase64(HUMAN_RAW[i]);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     mHuman[i] = MACHINE[i];
                 }
             }

@@ -74,10 +74,16 @@
             android:title="@string/pref_itpd_com_share" />
         <CheckBoxPreference
             android:id="@+id/pref_itpd_com_ssu"
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="ssu"
             android:summary="@string/pref_itpd_com_ssu_summ"
             android:title="@string/pref_itpd_com_ssu" />
+        <CheckBoxPreference
+            android:id="@+id/pref_itpd_com_ssu2_enabled"
+            android:defaultValue="false"
+            android:key="ssu2 enabled"
+            android:summary="@string/pref_itpd_com_ssu2_summ"
+            android:title="@string/pref_itpd_com_ssu2" />
         <CheckBoxPreference
             android:id="@+id/pref_itpd_ntcp2_enabled"
             android:defaultValue="true"

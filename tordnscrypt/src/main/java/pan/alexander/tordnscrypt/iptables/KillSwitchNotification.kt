@@ -30,6 +30,7 @@ import androidx.core.app.NotificationCompat
 import pan.alexander.tordnscrypt.AUX_CHANNEL_ID
 import pan.alexander.tordnscrypt.MainActivity
 import pan.alexander.tordnscrypt.R
+import pan.alexander.tordnscrypt.utils.Utils.areNotificationsNotAllowed
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.lang.Exception
 import javax.inject.Inject
@@ -45,6 +46,10 @@ class KillSwitchNotification @Inject constructor(
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     fun send() {
+
+        if (areNotificationsNotAllowed(notificationManager)) {
+            return
+        }
 
         val contentIntent = getContentIntent()
 

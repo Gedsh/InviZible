@@ -25,6 +25,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.Preference;
@@ -288,7 +289,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
     }
 
     @Override
-    public boolean onPreferenceChange(Preference preference, Object newValue) {
+    public boolean onPreferenceChange(@NonNull Preference preference, Object newValue) {
 
         Context context = getActivity();
         if (context == null || key_tor == null || val_tor == null) {
@@ -536,7 +537,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
     }
 
     @Override
-    public boolean onPreferenceClick(Preference preference) {
+    public boolean onPreferenceClick(@NonNull Preference preference) {
         Context context = getActivity();
         if (context == null || !isAdded()) {
             return false;

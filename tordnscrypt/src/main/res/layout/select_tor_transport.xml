@@ -19,24 +19,11 @@
             android:text="Vanilla" />
 
         <androidx.appcompat.widget.AppCompatRadioButton
-            android:id="@+id/rbObfs3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Obfs3" />
-
-        <androidx.appcompat.widget.AppCompatRadioButton
             android:id="@+id/rbObfs4"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Obfs4" />
 
-        <androidx.appcompat.widget.AppCompatRadioButton
-            android:id="@+id/rbObfsScrambleSuit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Scramblesuit" />
     </RadioGroup>
 </androidx.appcompat.widget.LinearLayoutCompat>

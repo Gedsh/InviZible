@@ -21,11 +21,13 @@ package pan.alexander.tordnscrypt.utils
 
 import android.app.Activity
 import android.app.ActivityManager
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Point
+import android.os.Build
 import android.os.Environment
 import android.os.Process
 import android.util.Base64
@@ -52,7 +54,6 @@ import pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.io.File
 import java.io.PrintWriter
-import java.lang.IllegalArgumentException
 import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.net.SocketException
@@ -292,4 +293,17 @@ object Utils {
             context,
             "android.permission.INTERACT_ACROSS_USERS"
         ) == PackageManager.PERMISSION_GRANTED
+
+    @JvmStatic
+    fun areNotificationsAllowed(notificationManager: NotificationManager) =
+        if (Build.VERSION.SDK_INT >= 24) {
+            notificationManager.areNotificationsEnabled()
+        } else {
+            true
+        }
+
+    @JvmStatic
+    fun areNotificationsNotAllowed(notificationManager: NotificationManager) =
+        !areNotificationsAllowed(notificationManager)
+
 }

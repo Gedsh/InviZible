@@ -31,6 +31,7 @@ import androidx.core.app.NotificationCompat
 import pan.alexander.tordnscrypt.AUX_CHANNEL_ID
 import pan.alexander.tordnscrypt.MainActivity
 import pan.alexander.tordnscrypt.R
+import pan.alexander.tordnscrypt.utils.Utils.areNotificationsNotAllowed
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import javax.inject.Inject
 
@@ -48,6 +49,10 @@ class ArpWarningNotification @Inject constructor(
         @StringRes text: Int,
         NOTIFICATION_ID: Int
     ) {
+
+        if (areNotificationsNotAllowed(notificationManager)) {
+            return
+        }
 
         val contentIntent = getContentIntent()
 

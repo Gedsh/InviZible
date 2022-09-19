@@ -811,3 +811,32 @@
 * Updated Tor to version 4.7.8.
 * Updated Tor snowflake bridge.
 * Updated DNSCrypt.
+
+**InviZible Pro beta 1.7.1**
+* Updated DNSCrypt to version 2.1.2.
+* Updated Tor.
+* Updated Tor snowflake bridge to version 2.3.0.
+* Optimized armv7a build.
+* Minor fixes and optimizations.
+
+**InviZible Pro beta 1.7.2**
+* Updated DNSCrypt.
+* Added http3 option to DNSCrypt settings (DoH3, HTTP over QUIC).
+* Updated Tor to version 4.7.10.
+* Updated Tor geoip.
+* Fixes and optimizations.
+
+**InviZible Pro beta 1.7.3**
+* Updated Purple I2P to version 2.43.0.
+* Added SSU2 option to Purple I2P settings.
+* Tor restarts if the internet connection is lost.
+
+**InviZible Pro beta 1.7.4**
+* Fixed requesting Tor bridges via the app interface.
+* Removed bridge types that are no longer available on the torproject website.
+* Added Italian translation.
+
+**InviZible Pro beta 1.7.5**
+* Fixed display of notifications on Android 13.
+* Fixed requesting Tor bridges on Android 4.4.2.
+* Minor fixes and optimizations.

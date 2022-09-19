@@ -98,6 +98,8 @@ import javax.inject.Named;
 public class ModulesIptablesRules extends IptablesRulesSender {
 
     private static final int DELAY_ENABLING_INTERNET_SEC = 3;
+    private static final String ONION_HEX = "'|056f6e696f6e00|'";
+    private static final String TOR_PROJECT_ORG_HEX = "'|0a746f7270726f6a656374036f726700|'";
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
@@ -380,7 +382,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         dnsCryptRootDNSAllowedNat,
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
                         //handle onion websites
-                        iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -m string --algo bm --from 16 --to 128 --hex-string '|056f6e696f6e00|' -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort() + " 2> /dev/null || true",
+                        iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -m string --algo bm --from 16 --to 128 --hex-string " + ONION_HEX + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort() + " 2> /dev/null || true",
+                        iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -m string --algo bm --from 16 --to 128 --hex-string " + TOR_PROJECT_ORG_HEX + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort() + " 2> /dev/null || true",
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
@@ -446,7 +449,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         dnsCryptRootDNSAllowedNat,
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
                         //handle onion websites
-                        iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -m string --algo bm --from 16 --to 128 --hex-string '|056f6e696f6e00|' -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort() + " 2> /dev/null || true",
+                        iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -m string --algo bm --from 16 --to 128 --hex-string " + ONION_HEX + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort() + " 2> /dev/null || true",
+                        iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -m string --algo bm --from 16 --to 128 --hex-string " + TOR_PROJECT_ORG_HEX + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort() + " 2> /dev/null || true",
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -m owner --uid-owner " + appUID + " -j RETURN",

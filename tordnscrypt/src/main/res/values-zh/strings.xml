@@ -482,7 +482,7 @@
     <string name="notification_connecting">正在连接…</string>
     <string name="notification_waiting_network">等待网络…</string>
     <string name="tile_change_tor_ip">更改Tor IP</string>
-    <string name="tile_changing_tor_ip">Tor IP正在更改</string>
+    <string name="tile_changing_tor_ip">Tor IP changing</string>
     <string name="tile_dialog_over_three_tiles_message">你在快捷设置中添加了超过3个磁贴。请只留下3个。添加超过3个磁贴会导致应用控制的问题。</string>
     <string name="pref_common_rogue_dhcp_detection">"Rogue DHCP detection"</string>
     <string name="pref_common_rogue_dhcp_detection_summ">"Detect Man-in-the-middle rogue DHCP attacks in Wi-Fi networks."</string>
