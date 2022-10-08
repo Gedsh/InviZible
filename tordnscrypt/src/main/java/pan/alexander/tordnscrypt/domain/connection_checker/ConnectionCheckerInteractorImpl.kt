@@ -19,6 +19,7 @@
 
 package pan.alexander.tordnscrypt.domain.connection_checker
 
+import android.content.Context
 import android.content.SharedPreferences
 import kotlinx.coroutines.*
 import pan.alexander.tordnscrypt.di.CoroutinesModule.Companion.SUPERVISOR_JOB_IO_DISPATCHER_SCOPE
@@ -32,8 +33,11 @@ import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
+import pan.alexander.tordnscrypt.vpn.VpnUtils
 import java.io.IOException
 import java.lang.ref.WeakReference
+import java.net.Inet4Address
+import java.net.InetAddress
 import java.net.SocketTimeoutException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -55,7 +59,8 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
     private val baseCoroutineScope: CoroutineScope,
     private val dnsRepository: DnsRepository,
     @Named(SharedPreferencesModule.DEFAULT_PREFERENCES_NAME)
-    private val defaultPreferences: SharedPreferences
+    private val defaultPreferences: SharedPreferences,
+    private val context: Context
 ) : ConnectionCheckerInteractor {
 
     private val coroutineScope = baseCoroutineScope + CoroutineName("ConnectionCheckerInteractor")
@@ -234,9 +239,15 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
                         proxyPort
                     )
                 } else {
-                    logi("Checking connection directly using ${pathVars.dnsCryptFallbackRes}")
+                    val dnsForConnectivityCheck = getNetworkDns()
+                        .plus(pathVars.dnsCryptFallbackRes)
+                        .shuffled()
+                        .first()
+
+                    logi("Checking connection directly using $dnsForConnectivityCheck")
+
                     checkerRepository.checkInternetAvailableOverSocks(
-                        pathVars.dnsCryptFallbackRes,
+                        dnsForConnectivityCheck,
                         PLAINTEXT_DNS_PORT,
                         "",
                         0
@@ -246,6 +257,16 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
             }
         }
 
+    }
+
+    private fun getNetworkDns(): List<String> = try {
+        VpnUtils.getDefaultDNS(context)
+            .filter {
+                val dns = InetAddress.getByName(it)
+                !dns.isLoopbackAddress && !dns.isAnyLocalAddress && dns is Inet4Address
+            }
+    } catch (e: Exception) {
+        listOf(pathVars.dnsCryptFallbackRes)
     }
 
     private enum class Via {
