@@ -21,6 +21,7 @@ package pan.alexander.tordnscrypt.domain.connection_checker
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
 import kotlinx.coroutines.*
 import pan.alexander.tordnscrypt.di.CoroutinesModule.Companion.SUPERVISOR_JOB_IO_DISPATCHER_SCOPE
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule
@@ -260,11 +261,17 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
     }
 
     private fun getNetworkDns(): List<String> = try {
-        VpnUtils.getDefaultDNS(context)
-            .filter {
-                val dns = InetAddress.getByName(it)
-                !dns.isLoopbackAddress && !dns.isAnyLocalAddress && dns is Inet4Address
-            }
+        //Do not get network DNS if SDK_INT < O to avoid loading jni lib in root mode
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+            || modulesStatus.mode == OperationMode.VPN_MODE) {
+            VpnUtils.getDefaultDNS(context)
+                .filter {
+                    val dns = InetAddress.getByName(it)
+                    !dns.isLoopbackAddress && !dns.isAnyLocalAddress && dns is Inet4Address
+                }
+        } else {
+            emptyList()
+        }
     } catch (e: Exception) {
         listOf(pathVars.dnsCryptFallbackRes)
     }
