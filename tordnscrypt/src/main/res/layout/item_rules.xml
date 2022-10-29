@@ -20,7 +20,7 @@
         app:cardCornerRadius="5dp"
         app:cardUseCompatPadding="true">
 
-        <androidx.appcompat.widget.LinearLayoutCompat
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:focusable="false"
@@ -30,14 +30,19 @@
                 android:id="@+id/etRule"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_marginBottom="8dp"
-                android:layout_weight="1"
+                android:clickable="true"
                 android:ellipsize="end"
+                android:focusable="true"
                 android:fontFamily="serif"
                 android:gravity="center"
-                android:inputType="textNoSuggestions"
+                android:inputType="none|textNoSuggestions"
                 android:singleLine="true"
-                android:textAlignment="center" />
+                android:minHeight="48dp"
+                android:textAlignment="center"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/swRuleActive"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/swRuleActive"
@@ -45,9 +50,13 @@
                 android:layout_height="match_parent"
                 android:layout_margin="5dp"
                 android:checked="false"
-                tools:checked="true" />
+                app:layout_constraintBottom_toBottomOf="@+id/etRule"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/etRule"
+                tools:checked="true"
+                tools:visibility="visible"/>
 
-        </androidx.appcompat.widget.LinearLayoutCompat>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.cardview.widget.CardView>
 
