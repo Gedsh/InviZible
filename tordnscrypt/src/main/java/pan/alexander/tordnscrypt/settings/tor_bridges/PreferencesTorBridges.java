@@ -376,7 +376,16 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     }
                 } else {
                     if (!currentBridge.isEmpty() && currentBridge.contains(currentBridgesType.toString())) {
-                        torConfCleaned.add("Bridge " + currentBridge);
+                        if (currentBridgesType.equals(snowflake)) {
+                            torConfCleaned.add(
+                                    "Bridge " + currentBridge
+                                            + " utls-imitate="
+                                            + snowflakeConfigurator.get().getUtlsClientID()
+
+                            );
+                        } else {
+                            torConfCleaned.add("Bridge " + currentBridge);
+                        }
                     }
                 }
 
@@ -909,6 +918,11 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     for (int i = 0; i < tor_conf.size(); i++) {
                         String line = tor_conf.get(i);
                         if (!line.contains("#") && line.contains("Bridge ")) {
+
+                            if (line.contains(snowflake.toString())) {
+                                line = line.replaceAll("utls-imitate.+?( |\\z)", "");
+                            }
+
                             bridgesInUse.add(line.replace("Bridge ", "").trim());
                         }
                     }

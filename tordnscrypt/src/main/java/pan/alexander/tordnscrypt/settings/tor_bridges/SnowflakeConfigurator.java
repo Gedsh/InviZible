@@ -50,7 +50,7 @@ public class SnowflakeConfigurator {
     public SnowflakeConfigurator(
             Context context,
             @Named(DEFAULT_PREFERENCES_NAME)
-            Lazy<SharedPreferences> defaultPreferences,
+                    Lazy<SharedPreferences> defaultPreferences,
             Lazy<PathVars> pathVars
     ) {
         this.context = context;
@@ -88,8 +88,9 @@ public class SnowflakeConfigurator {
         Pattern pattern = Pattern.compile(".+\\..+:\\d+");
         for (String server : stunServersArr) {
             Matcher matcher = pattern.matcher(server);
-            if (matcher.matches())
-            stunServerBuilder.append("stun:").append(server.trim()).append(",");
+            if (matcher.matches()) {
+                stunServerBuilder.append("stun:").append(server.trim()).append(",");
+            }
         }
         stunServerBuilder.deleteCharAt(stunServerBuilder.lastIndexOf(","));
 
@@ -112,12 +113,18 @@ public class SnowflakeConfigurator {
         if (rendezvous == AMP_CACHE) {
             return "snowflake exec "
                     + snowflakePath + " -url https://snowflake-broker.torproject.net/"
-                    + " -ampcache https://cdn.ampproject.org/" +
-                    " -front www.google.com -ice " + stunServerBuilder + " -max 1" + saveLogsString;
+                    + " -ampcache https://cdn.ampproject.org/"
+                    + " -front www.google.com -ice "
+                    + stunServerBuilder
+                    + " -max 1"
+                    + saveLogsString;
         } else if (rendezvous == FASTLY) {
             return "snowflake exec "
-                    + snowflakePath + " -url https://snowflake-broker.torproject.net.global.prod.fastly.net/" +
-                    " -front cdn.sstatic.net -ice " + stunServerBuilder + " -max 1" + saveLogsString;
+                    + snowflakePath + " -url https://snowflake-broker.torproject.net.global.prod.fastly.net/"
+                    + " -front cdn.sstatic.net -ice "
+                    + stunServerBuilder
+                    + " -max 1"
+                    + saveLogsString;
         } else {
             return "";
         }
@@ -143,5 +150,26 @@ public class SnowflakeConfigurator {
         }
 
         return stunServers;
+    }
+
+    @SuppressWarnings("unused")
+    public String getUtlsClientID() {
+        final String hellorandomizedalpn = "hellorandomizedalpn";
+        final String hellorandomizednoalpn = "hellorandomizednoalpn";
+        final String hellofirefox_auto = "hellofirefox_auto";
+        final String hellofirefox_55 = "hellofirefox_55";
+        final String hellofirefox_56 = "hellofirefox_56";
+        final String hellofirefox_63 = "hellofirefox_63";
+        final String hellofirefox_65 = "hellofirefox_65";
+        final String hellochrome_auto = "hellochrome_auto";
+        final String hellochrome_58 = "hellochrome_58";
+        final String hellochrome_62 = "hellochrome_62";
+        final String hellochrome_70 = "hellochrome_70";
+        final String hellochrome_72 = "hellochrome_72";
+        final String helloios_auto = "helloios_auto";
+        final String helloios_11_1 = "helloios_11_1";
+        final String helloios_12_1 = "helloios_12_1";
+
+        return hellorandomizedalpn;
     }
 }
