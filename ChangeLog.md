@@ -840,3 +840,10 @@
 * Fixed display of notifications on Android 13.
 * Fixed requesting Tor bridges on Android 4.4.2.
 * Minor fixes and optimizations.
+
+**InviZible Pro beta 1.7.6**
+* Updated Tor.
+* Updated Tor snowflake bridge.
+* Updated Tor obfs4proxy to version 0.0.14.
+* Use default network DNS to test connectivity if only DNSCrypt is running.
+* Fixed Tor bridges requesting dialog when font size is too large.
