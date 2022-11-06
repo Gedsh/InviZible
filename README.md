@@ -25,12 +25,14 @@ They are used to achieve maximum security, privacy and comfortable use of the In
 * Can block ads *
 * Can protect against dangerous and malicious sites *
 * Can block "adult" sites *
-* Hides visited sites from your provider
+* Hides visited sites from your provider **
 * Prevents some types of resource blocks
 * Open-source
 
 **Depending on the selected dnscrypt server*
 **(Not available in Google Play version!)**
+
+***In case your ISP does not use DPI equipment*
 
 ### Tor
 * Encrypts Internet traffic
