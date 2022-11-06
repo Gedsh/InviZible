@@ -119,7 +119,7 @@ android {
         def abiVersion = variant.mergedFlavor.versionCode
 
         variant.outputs.each { output ->
-            output.versionCodeOverride = abiVersion * 1000 + defaultConfig.versionCode
+            output.versionCodeOverride = abiVersion + defaultConfig.versionCode  * 100
         }
     }
 
