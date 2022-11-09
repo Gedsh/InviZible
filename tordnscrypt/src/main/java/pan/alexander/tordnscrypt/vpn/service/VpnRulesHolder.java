@@ -199,7 +199,8 @@ public class VpnRulesHolder {
             logi("Block ipv6 " + packet);
         } else if (vpnPreferences.getBlockHttp() && packet.dport == 80
                 && !VpnUtils.isIpInSubnet(packet.daddr, vpnPreferences.getTorVirtualAddressNetwork())
-                && !packet.daddr.equals(vpnPreferences.getItpdRedirectAddress())) {
+                && !packet.daddr.equals(vpnPreferences.getItpdRedirectAddress())
+                && !isIpInLanRange(packet.daddr)) {
             logw("Block http " + packet);
         } else if (packet.uid <= 2000 &&
                 (!vpnPreferences.getRouteAllThroughTor()
@@ -231,7 +232,7 @@ public class VpnRulesHolder {
             packet.allowed = uidLanAllowed.contains(packet.uid);
         } else if (isDestinationInSpecialRange(packet.uid, packet.daddr, packet.dport)) {
             packet.allowed = isSpecialAllowed(packet.uid, packet.daddr, packet.dport);
-        } else if(vpnPreferences.getFirewallEnabled()) {
+        } else if (vpnPreferences.getFirewallEnabled()) {
 
             if (mapUidAllowed.containsKey(packet.uid)) {
                 Boolean allow = mapUidAllowed.get(packet.uid);
@@ -314,7 +315,7 @@ public class VpnRulesHolder {
                     || mapUidAllowed.containsKey(1000);
         } else if (destPort == SPECIAL_PORT_AGPS1 || destPort == SPECIAL_PORT_AGPS2) {
             return uidSpecialAllowed.contains(SPECIAL_UID_AGPS);
-        } else if(connectivityCheckIps.contains(destIp)) {
+        } else if (connectivityCheckIps.contains(destIp)) {
             return uidSpecialAllowed.contains(SPECIAL_UID_CONNECTIVITY_CHECK);
         }
         return false;
@@ -342,7 +343,6 @@ public class VpnRulesHolder {
 
         return false;
     }
-
 
 
     void prepareUidAllowed(
