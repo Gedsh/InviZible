@@ -847,3 +847,8 @@
 * Updated Tor obfs4proxy to version 0.0.14.
 * Use default network DNS to test connectivity if only DNSCrypt is running.
 * Fixed Tor bridges requesting dialog when font size is too large.
+
+**InviZible Pro beta 1.7.7**
+* Updated Tor to version 4.7.11.
+* The app will not block port 80 on the LAN if the corresponding option is enabled.
+* Fixed compatibility with Android 4.4.2.
