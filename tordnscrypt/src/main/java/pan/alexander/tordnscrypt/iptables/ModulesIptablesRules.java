@@ -387,6 +387,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
+                        bypassLanNat,
                         blockHttpRuleNatTCP,
                         blockHttpRuleNatUDP,
                         blockTlsRuleNatTCP,
@@ -402,7 +403,6 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
                         blockRejectAddressFilter,
                         proxyAppsBypassNat,
-                        bypassLanNat,
                         //Redirect TCP sites to Tor
                         torSitesRedirectNat,
                         //Redirect TCP apps to Tor
@@ -455,6 +455,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -m owner --uid-owner " + appUID + " -j RETURN",
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
+                        bypassLanNat,
                         blockHttpRuleNatTCP,
                         blockHttpRuleNatUDP,
                         blockTlsRuleNatTCP,
@@ -464,7 +465,6 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         torAppsBypassNat,
                         kernelBypassNat,
                         proxyAppsBypassNat,
-                        bypassLanNat,
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
                         iptables + "-N " + FILTER_OUTPUT_CORE + " 2> /dev/null",
                         nflogDns,
@@ -614,6 +614,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort(),
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort(),
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
+                        bypassLanNat,
                         blockHttpRuleNatTCP,
                         blockHttpRuleNatUDP,
                         blockTlsRuleNatTCP,
@@ -627,7 +628,6 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         torRootDNSAllowedFilter,
                         blockRejectAddressFilter,
                         proxyAppsBypassNat,
-                        bypassLanNat,
                         //Redirect TCP sites to Tor
                         torSitesRedirectNat,
                         //Redirect TCP apps to Tor
@@ -673,6 +673,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort(),
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -m owner --uid-owner " + appUID + " -j RETURN",
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
+                        bypassLanNat,
                         blockHttpRuleNatTCP,
                         blockHttpRuleNatUDP,
                         blockTlsRuleNatTCP,
@@ -682,7 +683,6 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         torAppsBypassNat,
                         kernelBypassNat,
                         proxyAppsBypassNat,
-                        bypassLanNat,
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
                         iptables + "-N " + FILTER_OUTPUT_CORE + " 2> /dev/null",
                         nflogDns,
