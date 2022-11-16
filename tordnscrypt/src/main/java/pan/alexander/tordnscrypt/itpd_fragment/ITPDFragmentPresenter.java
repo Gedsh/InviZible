@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.itpd_fragment;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Activity;
@@ -99,7 +99,10 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
 
 
     public ITPDFragmentPresenter(ITPDFragmentView view) {
-        App.getInstance().initLogReaderDaggerSubcomponent().inject(this);
+        App.getInstance()
+                .getSubcomponentsManager()
+                .initLogReaderDaggerSubcomponent()
+                .inject(this);
         this.view = view;
     }
 

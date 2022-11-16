@@ -18,7 +18,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 #include "invizible.h"
@@ -61,6 +61,34 @@ int check_icmp_session(const struct arguments *args, struct ng_session *s,
     }
 
     return 0;
+}
+
+// Connection refused
+void write_connection_unreach(const struct arguments *args,
+                              const struct ng_session *s,
+                              const int serr) {
+    struct icmp icmp;
+    memset(&icmp, 0, sizeof(struct icmp));
+    icmp.icmp_type = ICMP_UNREACH;
+    if (serr == ECONNREFUSED)
+        icmp.icmp_code = ICMP_UNREACH_PORT;
+    else
+        icmp.icmp_code = ICMP_UNREACH_HOST;
+    icmp.icmp_cksum = 0;
+    icmp.icmp_cksum = ~calc_checksum(0, (const uint8_t *) &icmp, 4);
+
+    struct icmp_session sicmp;
+    memset(&sicmp, 0, sizeof(struct icmp_session));
+    sicmp.version = s->tcp.version;
+    if (s->tcp.version == 4) {
+        sicmp.saddr.ip4 = (__be32) s->tcp.saddr.ip4;
+        sicmp.daddr.ip4 = (__be32) s->tcp.daddr.ip4;
+    } else {
+        memcpy(&sicmp.saddr.ip6, &s->tcp.saddr.ip6, 16);
+        memcpy(&sicmp.daddr.ip6, &s->tcp.daddr.ip6, 16);
+    }
+
+    write_icmp(args, &sicmp, (uint8_t *) &icmp, 8);
 }
 
 void check_icmp_socket(const struct arguments *args, const struct epoll_event *ev) {
@@ -178,6 +206,7 @@ jboolean handle_icmp(const struct arguments *args,
     while (cur != NULL &&
            !((cur->protocol == IPPROTO_ICMP || cur->protocol == IPPROTO_ICMPV6) &&
              !cur->icmp.stop && cur->icmp.version == version &&
+                   cur->icmp.id == icmp->icmp_id &&
              (version == 4 ? cur->icmp.saddr.ip4 == ip4->saddr &&
                              cur->icmp.daddr.ip4 == ip4->daddr
                            : memcmp(&cur->icmp.saddr.ip6, &ip6->ip6_src, 16) == 0 &&

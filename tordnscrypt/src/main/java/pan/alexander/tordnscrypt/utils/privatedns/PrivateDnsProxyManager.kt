@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.utils.privatedns
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Notification
@@ -38,9 +38,11 @@ import pan.alexander.tordnscrypt.AUX_CHANNEL_ID
 import pan.alexander.tordnscrypt.MainActivity
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.modules.ModulesStatus
+import pan.alexander.tordnscrypt.utils.Utils.areNotificationsNotAllowed
+import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
-import pan.alexander.tordnscrypt.vpn.NetworkUtils
+import pan.alexander.tordnscrypt.vpn.VpnUtils
 
 const val DISABLE_PRIVATE_DNS_NOTIFICATION = 167
 const val DISABLE_PROXY_NOTIFICATION = 168
@@ -66,7 +68,7 @@ object PrivateDnsProxyManager {
 
 
             // localLinkProperties.privateDnsServerName == null - Opportunistic mode ("Automatic")
-            if (NetworkUtils.isPrivateDns(context) || localLinkProperties?.isPrivateDnsActive == true) {
+            if (VpnUtils.isPrivateDns(context) || localLinkProperties?.isPrivateDnsActive == true) {
                 sendNotification(
                     context,
                     context.getString(R.string.app_name),
@@ -77,14 +79,14 @@ object PrivateDnsProxyManager {
 
             if (localLinkProperties?.httpProxy != null) {
 
-                if (NetworkUtils.isWifiActive(context)) {
+                if (NetworkChecker.isWifiActive(context)) {
                     sendNotification(
                         context,
                         context.getString(R.string.app_name),
                         context.getString(R.string.helper_dnscrypt_proxy_wifi),
                         DISABLE_PROXY_NOTIFICATION
                     )
-                } else if (NetworkUtils.isCellularActive(context)) {
+                } else if (NetworkChecker.isCellularActive(context)) {
                     sendNotification(
                         context,
                         context.getString(R.string.app_name),
@@ -110,6 +112,10 @@ object PrivateDnsProxyManager {
     ) {
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (areNotificationsNotAllowed(notificationManager)) {
+            return
+        }
 
         var notificationIntent = Intent(Settings.ACTION_WIRELESS_SETTINGS)
 

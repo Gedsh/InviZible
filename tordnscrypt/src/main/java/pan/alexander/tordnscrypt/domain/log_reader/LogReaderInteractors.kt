@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.domain.log_reader
@@ -22,7 +22,6 @@ package pan.alexander.tordnscrypt.domain.log_reader
 import pan.alexander.tordnscrypt.di.logreader.LogReaderScope
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsInteractor
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsInteractorInterface
-import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsRepository
 import pan.alexander.tordnscrypt.domain.connection_records.OnConnectionRecordsUpdatedListener
 import pan.alexander.tordnscrypt.domain.log_reader.dnscrypt.DNSCryptInteractor
 import pan.alexander.tordnscrypt.domain.log_reader.dnscrypt.OnDNSCryptLogUpdatedListener
@@ -37,7 +36,7 @@ import javax.inject.Inject
 @LogReaderScope
 class LogReaderInteractors @Inject constructor(
     modulesLogRepository: ModulesLogRepository,
-    connectionsRepository: ConnectionRecordsRepository
+    private val connectionRecordsInteractor: ConnectionRecordsInteractor
 ) :
     DNSCryptInteractorInterface,
     TorInteractorInterface,
@@ -48,7 +47,6 @@ class LogReaderInteractors @Inject constructor(
     private val torInteractor = TorInteractor(modulesLogRepository)
     private val itpdInteractor = ITPDInteractor(modulesLogRepository)
     private val itpdHtmlInteractor = ITPDHtmlInteractor(modulesLogRepository)
-    private val connectionRecordsInteractor = ConnectionRecordsInteractor(connectionsRepository)
 
     private val logReaderLoop = LogReaderLoop(
         dnsCryptInteractor,
@@ -58,48 +56,48 @@ class LogReaderInteractors @Inject constructor(
         connectionRecordsInteractor
     )
 
-    override fun addOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: OnDNSCryptLogUpdatedListener) {
+    override fun <T: OnDNSCryptLogUpdatedListener> addOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: T) {
         dnsCryptInteractor.addListener(onDNSCryptLogUpdatedListener)
         logReaderLoop.startLogsParser()
     }
 
-    override fun removeOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: OnDNSCryptLogUpdatedListener) {
+    override fun <T: OnDNSCryptLogUpdatedListener> removeOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: T) {
         dnsCryptInteractor.removeListener(onDNSCryptLogUpdatedListener)
     }
 
-    override fun addOnTorLogUpdatedListener(onTorLogUpdatedListener: OnTorLogUpdatedListener) {
+    override fun <T: OnTorLogUpdatedListener> addOnTorLogUpdatedListener(onTorLogUpdatedListener: T) {
         torInteractor.addListener(onTorLogUpdatedListener)
         logReaderLoop.startLogsParser()
     }
 
-    override fun removeOnTorLogUpdatedListener(onTorLogUpdatedListener: OnTorLogUpdatedListener) {
+    override fun <T: OnTorLogUpdatedListener> removeOnTorLogUpdatedListener(onTorLogUpdatedListener: T) {
         torInteractor.removeListener(onTorLogUpdatedListener)
     }
 
-    override fun addOnITPDLogUpdatedListener(onITPDLogUpdatedListener: OnITPDLogUpdatedListener) {
+    override fun <T: OnITPDLogUpdatedListener> addOnITPDLogUpdatedListener(onITPDLogUpdatedListener: T) {
         itpdInteractor.addListener(onITPDLogUpdatedListener)
         logReaderLoop.startLogsParser()
     }
 
-    override fun removeOnITPDLogUpdatedListener(onITPDLogUpdatedListener: OnITPDLogUpdatedListener) {
+    override fun <T: OnITPDLogUpdatedListener> removeOnITPDLogUpdatedListener(onITPDLogUpdatedListener: T) {
         itpdInteractor.removeListener(onITPDLogUpdatedListener)
     }
 
-    override fun addOnITPDHtmlUpdatedListener(onITPDHtmlUpdatedListener: OnITPDHtmlUpdatedListener) {
+    override fun <T: OnITPDHtmlUpdatedListener> addOnITPDHtmlUpdatedListener(onITPDHtmlUpdatedListener: T) {
         itpdHtmlInteractor.addListener(onITPDHtmlUpdatedListener)
         logReaderLoop.startLogsParser()
     }
 
-    override fun removeOnITPDHtmlUpdatedListener(onITPDHtmlUpdatedListener: OnITPDHtmlUpdatedListener) {
+    override fun <T: OnITPDHtmlUpdatedListener> removeOnITPDHtmlUpdatedListener(onITPDHtmlUpdatedListener: T) {
         itpdHtmlInteractor.removeListener(onITPDHtmlUpdatedListener)
     }
 
-    override fun addOnConnectionRecordsUpdatedListener(onConnectionRecordsUpdatedListener: OnConnectionRecordsUpdatedListener) {
+    override fun <T: OnConnectionRecordsUpdatedListener> addOnConnectionRecordsUpdatedListener(onConnectionRecordsUpdatedListener: T) {
         connectionRecordsInteractor.addListener(onConnectionRecordsUpdatedListener)
         logReaderLoop.startLogsParser()
     }
 
-    override fun removeOnConnectionRecordsUpdatedListener(onConnectionRecordsUpdatedListener: OnConnectionRecordsUpdatedListener) {
+    override fun <T: OnConnectionRecordsUpdatedListener> removeOnConnectionRecordsUpdatedListener(onConnectionRecordsUpdatedListener: T) {
         connectionRecordsInteractor.removeListener(onConnectionRecordsUpdatedListener)
     }
 

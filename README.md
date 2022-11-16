@@ -29,12 +29,14 @@ They are used to achieve maximum security, privacy and comfortable use of the In
 * Can block ads *
 * Can protect against dangerous and malicious sites *
 * Can block "adult" sites *
-* Hides visited sites from your provider
+* Hides visited sites from your provider **
 * Prevents some types of resource blocks
 * Libre software
 
 **Depending on the selected DNSCrypt server*
 **(Not available in the Google Play version!)**
+
+***In case your ISP does not use DPI equipment*
 
 ### Tor
 * Encrypts Internet traffic
@@ -89,7 +91,7 @@ For questions, feature requests and bug-reports, you can use GitHub.
 **Official site: [invizible.net](https://invizible.net)**
 
 ### International:
- 
+
 Telegram channel: [InviZiblePro](https://t.me/InviZiblePro) \
 Telegram group: [InviZiblePro_Group](https://t.me/InviZiblePro_Group)
 
@@ -167,7 +169,7 @@ and carries no guarantee from the above projects about quality, suitability or a
 
 [GNU General Public License version 3](https://www.gnu.org/licenses/gpl-3.0.txt)
 
-Copyright © 2019–2021 Garmatin Oleksandr and contributors \
+Copyright © 2019–2022 Garmatin Oleksandr and contributors \
 invizible.soft@gmail.com
 
 This file is part of **InviZible Pro**.

@@ -16,15 +16,15 @@ package pan.alexander.tordnscrypt.modules;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.VpnService;
 import android.os.Build;
 import android.os.Handler;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -46,12 +46,18 @@ import pan.alexander.tordnscrypt.domain.log_reader.tor.OnTorLogUpdatedListener;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.iptables.IptablesRules;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
+import pan.alexander.tordnscrypt.nflog.NflogManager;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.startRefreshTorUnlockIPs;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CONNECTION_LOGS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_READY_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ITPD_READY_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SAVED_DNSCRYPT_STATE_PREF;
@@ -59,7 +65,6 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SAVED_I
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SAVED_TOR_STATE_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_READY_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -70,6 +75,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 public class ModulesStateLoop implements Runnable,
         OnDNSCryptLogUpdatedListener, OnTorLogUpdatedListener, OnITPDHtmlUpdatedListener {
@@ -89,9 +95,14 @@ public class ModulesStateLoop implements Runnable,
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultPreferences;
+    @Inject
     public Lazy<Handler> handler;
     @Inject
     public Lazy<PathVars> pathVars;
+    @Inject
+    public Lazy<NflogManager> nflogManager;
 
     private boolean iptablesUpdateTemporaryBlocked;
 
@@ -113,8 +124,13 @@ public class ModulesStateLoop implements Runnable,
 
     private int savedIptablesCommandsHash = 0;
 
+    private volatile boolean nflogIsRunning = false;
+
     ModulesStateLoop(ModulesService modulesService) {
-        App.getInstance().initLogReaderDaggerSubcomponent().inject(this);
+        App.getInstance()
+                .getSubcomponentsManager()
+                .initLogReaderDaggerSubcomponent()
+                .inject(this);
 
         //Delay in sec before service can stop
         stopCounter = STOP_COUNTER_DELAY;
@@ -178,7 +194,7 @@ public class ModulesStateLoop implements Runnable,
 
                 denySystemDNS();
 
-                Log.i(LOG_TAG, "ModulesStateLoop stopCounter is zero. Stop service.");
+                logi("ModulesStateLoop stopCounter is zero. Stop service.");
                 modulesStatus.setContextUIDUpdateRequested(false);
                 safeStopModulesService();
             }
@@ -189,7 +205,7 @@ public class ModulesStateLoop implements Runnable,
             if (handler != null) {
                 handler.get().post(() -> Toast.makeText(modulesService, R.string.wrong, Toast.LENGTH_SHORT).show());
             }
-            Log.e(LOG_TAG, "ModulesStateLoop exception " + e.getMessage() + " " + e.getCause());
+            loge("ModulesStateLoop run()", e);
         }
 
     }
@@ -244,7 +260,7 @@ public class ModulesStateLoop implements Runnable,
                                      ModuleState itpdState, OperationMode operationMode,
                                      boolean rootIsAvailable, boolean useModulesWithRoot) {
         /* For testing purposes
-        Log.i(LOG_TAG, String.format("DNSCrypt is %s Tor is %s I2P is %s\n" +
+        logi(String.format("DNSCrypt is %s Tor is %s I2P is %s\n" +
                         "Operation mode %s Use modules with Root %s " +
                         "dnsReady %s torReady %s i2pReady %s",
                 dnsCryptState, torState, itpdState,
@@ -255,7 +271,7 @@ public class ModulesStateLoop implements Runnable,
                 || torState != savedTorState
                 || itpdState != savedItpdState
                 || modulesStatus.isIptablesRulesUpdateRequested()) {
-            Log.i(LOG_TAG, String.format("DNSCrypt is %s Tor is %s I2P is %s\n" +
+            logi(String.format("DNSCrypt is %s Tor is %s I2P is %s\n" +
                             "Operation mode %s Use modules with Root %s",
                     dnsCryptState, torState, itpdState,
                     operationMode, useModulesWithRoot));
@@ -300,12 +316,14 @@ public class ModulesStateLoop implements Runnable,
                     if (dnsCryptInteractor != null) {
                         dnsCryptInteractor.addOnDNSCryptLogUpdatedListener(this);
                     }
+                    startNflogIfRootMode();
                 } else {
                     if (dnsCryptInteractor != null) {
                         dnsCryptInteractor.removeOnDNSCryptLogUpdatedListener(this);
                     }
                     setDNSCryptReady(false);
                     denySystemDNS();
+                    stopNflogIfRootMode();
                 }
             }
 
@@ -360,7 +378,7 @@ public class ModulesStateLoop implements Runnable,
 
                 iptablesRules.sendToRootExecService(commands);
 
-                Log.i(LOG_TAG, "Iptables rules updated");
+                logi("Iptables rules updated");
 
                 stopCounter = STOP_COUNTER_DELAY;
             } else if (operationMode == VPN_MODE) {
@@ -381,8 +399,8 @@ public class ModulesStateLoop implements Runnable,
                     ServiceVPNHelper.stop("All modules stopped", modulesService);
                 } else if (vpnServiceEnabled
                         /*Do not reload service during ARP attack to prevent loop*/
-                        && !ArpScanner.INSTANCE.getDhcpGatewayAttackDetected()
-                        && !ArpScanner.INSTANCE.getArpAttackDetected()) {
+                        && !ArpScanner.getDhcpGatewayAttackDetected()
+                        && !ArpScanner.getArpAttackDetected()) {
                     ServiceVPNHelper.reload("TTL is fixed", modulesService);
                 } else {
                     startVPNService();
@@ -431,7 +449,7 @@ public class ModulesStateLoop implements Runnable,
 
         if (!modulesStatus.isRootAvailable()) {
             modulesStatus.setContextUIDUpdateRequested(false);
-            Log.w(LOG_TAG, "Modules Selinux context and UID not updated. Root is Not Available");
+            logw("Modules Selinux context and UID not updated. Root is Not Available");
             return;
         }
 
@@ -444,7 +462,7 @@ public class ModulesStateLoop implements Runnable,
 
         contextUIDUpdater.updateModulesContextAndUID();
 
-        Log.i(LOG_TAG, "Modules Selinux context and UID updated for "
+        logi("Modules Selinux context and UID updated for "
                 + (modulesStatus.isUseModulesWithRoot() ? "Root" : "No Root"));
     }
 
@@ -522,7 +540,8 @@ public class ModulesStateLoop implements Runnable,
 
     @Override
     public void onDNSCryptLogUpdated(@NonNull LogDataModel dnsCryptLogData) {
-        if (dnsCryptLogData.getStartedSuccessfully()) {
+        if (dnsCryptLogData.getStartedSuccessfully()
+                && modulesStatus.getDnsCryptState() == RUNNING) {
             setDNSCryptReady(true);
             denySystemDNS();
             if (dnsCryptInteractor != null) {
@@ -537,18 +556,23 @@ public class ModulesStateLoop implements Runnable,
     }
 
     private void setDNSCryptReady(boolean ready) {
+
+        boolean savedReady = modulesStatus.isDnsCryptReady();
+
         preferenceRepository.get().setBoolPreference(DNSCRYPT_READY_PREF, ready);
         modulesStatus.setDnsCryptReady(ready);
 
         //If DNSCrypt is ready, app will use DNSCrypt DNS instead of Tor Exit node DNS in VPN mode
-        if (ready && modulesStatus.isTorReady() && (modulesStatus.getMode() == VPN_MODE || isFixTTL())) {
+        if (ready && !savedReady && modulesStatus.isTorReady()
+                && (modulesStatus.getMode() == VPN_MODE || isFixTTL())) {
             ServiceVPNHelper.reload("Use DNSCrypt DNS instead of Tor", modulesService);
         }
     }
 
     @Override
     public void onTorLogUpdated(@NonNull LogDataModel torLogData) {
-        if (torLogData.getStartedSuccessfully()) {
+        if (torLogData.getStartedSuccessfully()
+                && modulesStatus.getTorState() == RUNNING) {
             setTorReady(true);
             denySystemDNS();
             if (torInteractor != null) {
@@ -563,9 +587,14 @@ public class ModulesStateLoop implements Runnable,
     }
 
     private void setTorReady(boolean ready) {
+        boolean savedReady = modulesStatus.isTorReady();
+
         preferenceRepository.get().setBoolPreference(TOR_READY_PREF, ready);
         modulesStatus.setTorReady(ready);
-        startRefreshTorUnlockIPs(modulesService.getApplicationContext());
+
+        if (ready && !savedReady) {
+            startRefreshTorUnlockIPs(modulesService.getApplicationContext());
+        }
     }
 
     private synchronized void denySystemDNS() {
@@ -585,7 +614,8 @@ public class ModulesStateLoop implements Runnable,
 
     @Override
     public void onITPDHtmlUpdated(@NonNull LogDataModel itpdLogData) {
-        if (itpdLogData.getStartedSuccessfully()) {
+        if (itpdLogData.getStartedSuccessfully()
+                && modulesStatus.getItpdState() == RUNNING) {
             setITPDReady(true);
             if (itpdInteractor != null) {
                 itpdInteractor.removeOnITPDHtmlUpdatedListener(this);
@@ -621,6 +651,24 @@ public class ModulesStateLoop implements Runnable,
                 && !(modulesStatus.getDnsCryptState() == STOPPED && modulesStatus.getTorState() == STOPPED && modulesStatus.getItpdState() == STOPPED)
                 && !App.getInstance().isAppForeground()) {
             modulesService.slowdownTimer();
+        }
+    }
+
+    @SuppressLint("UnsafeOptInUsageWarning")
+    private void startNflogIfRootMode() {
+        if (modulesStatus.getMode() == ROOT_MODE
+                && !modulesStatus.isUseModulesWithRoot()
+                && defaultPreferences.get().getBoolean(CONNECTION_LOGS, true)) {
+            nflogManager.get().startNflog();
+            nflogIsRunning = true;
+        }
+    }
+
+    @SuppressLint("UnsafeOptInUsageWarning")
+    private void stopNflogIfRootMode() {
+        if (nflogIsRunning || modulesStatus.getMode() == ROOT_MODE && !modulesStatus.isFixTTL()) {
+            nflogManager.get().stopNflog();
+            nflogIsRunning = false;
         }
     }
 }

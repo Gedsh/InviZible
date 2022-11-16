@@ -25,6 +25,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -34,7 +35,10 @@ public class InternetSharingChecker {
 
     private static final String WIFI_AP_ADDRESSES_RANGE_EXTENDED = "192.168.0.0/16";
 
+    private static final String NO_INTERFACE = "";
+
     private static volatile String apInterfaceNameFromReceiver;
+    private static volatile String usbModemInterfaceNameFromReceiver;
 
     private String wifiAPAddressesRange = "192.168.43.0/24";
     private String usbModemAddressesRange = "192.168.42.0/24";
@@ -97,8 +101,14 @@ public class InternetSharingChecker {
                     checkEthernetAvailable(networkInterface);
                 }
 
-                if (apInterfaceNameFromReceiver != null) {
+                if (apInterfaceNameFromReceiver != null
+                        && !apInterfaceNameFromReceiver.equals(NO_INTERFACE)) {
                     checkApInterfaceFromReceiver(networkInterface);
+                }
+
+                if (usbModemInterfaceNameFromReceiver != null
+                        && !usbModemInterfaceNameFromReceiver.equals(NO_INTERFACE)) {
+                    checkUsbInterfaceFromReceiver(networkInterface);
                 }
 
                 if (!apIsOn && apInterfaceNameFromReceiver == null) {
@@ -114,10 +124,10 @@ public class InternetSharingChecker {
                     wifiInterfaceNameToAddressFuzzy = checkWiFiIsUp(networkInterface);
                 }
 
-                if (!usbTetherOn) {
+                if (!usbTetherOn && usbModemInterfaceNameFromReceiver == null) {
                     checkUsbModemAvailableStandard(networkInterface);
                 }
-                if (!usbTetherOn) {
+                if (!usbTetherOn&& usbModemInterfaceNameFromReceiver == null) {
                     checkUsbModemAvailableExtended(networkInterface);
                 }
 
@@ -142,7 +152,7 @@ public class InternetSharingChecker {
             }
 
             String logEntry = " \nWiFi Access point is " + (apIsOn ? "ON" : "OFF") + "\n" +
-                    "WiFi AP interface name " + wifiAPInterfaceName + "\n" +
+                    "Final WiFi AP interface name " + wifiAPInterfaceName + "\n" +
                     "WiFi AP addresses range " + wifiAPAddressesRange + "\n" +
                     "USB modem is " + (usbTetherOn ? "ON" : "OFF") + "\n" +
                     "USB modem interface name " + usbModemInterfaceName + "\n" +
@@ -178,8 +188,28 @@ public class InternetSharingChecker {
                 if (hostAddress != null && isNotIPv6Address(hostAddress) && isInetAddress(hostAddress)) {
                     apIsOn = true;
                     wifiAPInterfaceName = apInterfaceNameFromReceiver;
-                    wifiAPAddressesRange = hostAddress;
-                    Log.i(LOG_TAG, "WiFi AP interface name " + wifiAPInterfaceName);
+                    wifiAPAddressesRange = hostAddress.replaceAll("\\.\\d+$", ".0/24");
+                    Log.i(LOG_TAG, "Receiver WiFi AP interface name " + wifiAPInterfaceName);
+                    return;
+                }
+            }
+        }
+    }
+
+    private void checkUsbInterfaceFromReceiver(NetworkInterface networkInterface) {
+        String interfaceName = networkInterface.getName();
+        if (interfaceName.matches(usbModemInterfaceNameFromReceiver)) {
+
+            for (Enumeration<InetAddress> enumIpAddr = networkInterface.getInetAddresses();
+                 enumIpAddr.hasMoreElements(); ) {
+                InetAddress inetAddress = enumIpAddr.nextElement();
+                String hostAddress = inetAddress.getHostAddress();
+
+                if (hostAddress != null && isNotIPv6Address(hostAddress) && isInetAddress(hostAddress)) {
+                    usbTetherOn = true;
+                    usbModemInterfaceName = usbModemInterfaceNameFromReceiver;
+                    usbModemAddressesRange = hostAddress.replaceAll("\\.\\d+$", ".0/24");
+                    Log.i(LOG_TAG, "Receiver USB interface name " + usbModemInterfaceName);
                     return;
                 }
             }
@@ -195,7 +225,7 @@ public class InternetSharingChecker {
             if (hostAddress != null && hostAddress.contains(STANDARD_AP_INTERFACE_RANGE)) {
                 apIsOn = true;
                 wifiAPInterfaceName = networkInterface.getName();
-                Log.i(LOG_TAG, "WiFi AP interface name " + wifiAPInterfaceName);
+                Log.i(LOG_TAG, "Standard WiFi AP interface name " + wifiAPInterfaceName);
                 return;
             }
         }
@@ -387,12 +417,48 @@ public class InternetSharingChecker {
         return ethernetInterfaceName;
     }
 
-    public void setTetherInterfaceName(String interfaceName) {
-        apInterfaceNameFromReceiver = interfaceName;
+    public void setTetherInterfaceName(List<String> interfaceNames) {
+
+        if (interfaceNames == null) {
+            apInterfaceNameFromReceiver = null;
+            usbModemInterfaceNameFromReceiver = null;
+            return;
+        }
+
+        boolean found = false;
+        outer: for (String interfaceName: interfaceNames) {
+            for (String interfaceNameWiFi : STANDARD_WIFI_INTERFACE_NAMES) {
+                if (interfaceName.matches(interfaceNameWiFi.replace("+", "\\d+"))) {
+                    apInterfaceNameFromReceiver = interfaceName;
+                    found = true;
+                    break outer;
+                }
+            }
+        }
+        if (!found) {
+            apIsOn = false;
+            apInterfaceNameFromReceiver = NO_INTERFACE;
+        }
+
+        found = false;
+        outer: for (String interfaceName: interfaceNames) {
+            for (String interfaceNameUsb : STANDARD_USB_INTERFACE_TETHER_NAMES) {
+                if (interfaceName.matches(interfaceNameUsb.replace("+", "\\d+"))) {
+                    usbModemInterfaceNameFromReceiver = interfaceName;
+                    found = true;
+                    break outer;
+                }
+            }
+        }
+        if (!found) {
+            usbTetherOn = false;
+            usbModemInterfaceNameFromReceiver = NO_INTERFACE;
+        }
     }
 
-    public static void resetTetherInterfaceName() {
+    public static void resetTetherInterfaceNames() {
         apInterfaceNameFromReceiver = null;
+        usbModemInterfaceNameFromReceiver = null;
     }
 
 }

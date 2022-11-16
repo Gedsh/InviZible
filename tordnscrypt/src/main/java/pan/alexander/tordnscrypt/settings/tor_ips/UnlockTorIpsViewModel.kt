@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings.tor_ips
@@ -24,7 +24,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.*
-import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.di.CoroutinesModule.Companion.DISPATCHER_COMPUTATION
 import pan.alexander.tordnscrypt.domain.dns_resolver.DnsInteractor
 import pan.alexander.tordnscrypt.domain.resources.ResourceRepository
@@ -41,22 +40,14 @@ import javax.inject.Inject
 import javax.inject.Named
 
 @ObsoleteCoroutinesApi
-class UnlockTorIpsViewModel : ViewModel() {
-
-    @Inject
-    lateinit var torIpsInteractor: TorIpsInteractor
-    @Inject
-    lateinit var dnsInteractor: dagger.Lazy<DnsInteractor>
-    @Inject @Named(DISPATCHER_COMPUTATION)
-    lateinit var dispatcherIo: CoroutineDispatcher
-    @Inject
-    lateinit var exceptionHandler: CoroutineExceptionHandler
-    @Inject
-    lateinit var resourceRepository: dagger.Lazy<ResourceRepository>
-
-    init {
-        App.instance.daggerComponent.inject(this)
-    }
+class UnlockTorIpsViewModel @Inject constructor(
+    private val torIpsInteractor: TorIpsInteractor,
+    private val dnsInteractor: dagger.Lazy<DnsInteractor>,
+    @Named(DISPATCHER_COMPUTATION)
+    private val dispatcherIo: CoroutineDispatcher,
+    private val exceptionHandler: CoroutineExceptionHandler,
+    private val resourceRepository: dagger.Lazy<ResourceRepository>
+) : ViewModel() {
 
     var deviceOrTether: String = ""
     private var unlockHostsStr: String = ""

@@ -15,13 +15,15 @@ package pan.alexander.tordnscrypt.di
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import dagger.Binds
 import dagger.Module
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.ObsoleteCoroutinesApi
+import pan.alexander.tordnscrypt.data.bridges.DefaultVanillaBridgeDataSource
+import pan.alexander.tordnscrypt.data.bridges.DefaultVanillaBridgeDataSourceImpl
+import pan.alexander.tordnscrypt.data.bridges.RequestBridgesDataSource
+import pan.alexander.tordnscrypt.data.bridges.RequestBridgesDataSourceImpl
 import pan.alexander.tordnscrypt.data.connection_checker.ConnectionCheckerDataSource
 import pan.alexander.tordnscrypt.data.connection_checker.ConnectionCheckerDataSourceImpl
 import pan.alexander.tordnscrypt.data.dns_resolver.DnsDataSource
@@ -31,8 +33,6 @@ import pan.alexander.tordnscrypt.data.preferences.PreferenceDataSourceImpl
 
 @Module
 abstract class DataSourcesModule {
-    @ObsoleteCoroutinesApi
-    @ExperimentalCoroutinesApi
     @Binds
     abstract fun providePreferencesDataSource(
         preferenceDataSource: PreferenceDataSourceImpl
@@ -47,4 +47,14 @@ abstract class DataSourcesModule {
     abstract fun provideInternetCheckerDataSource(
         internetCheckerDataSource: ConnectionCheckerDataSourceImpl
     ): ConnectionCheckerDataSource
+
+    @Binds
+    abstract fun provideDefaultVanillaBridgeDataSource(
+        bridgeDataSource: DefaultVanillaBridgeDataSourceImpl
+    ): DefaultVanillaBridgeDataSource
+
+    @Binds
+    abstract fun provideRequestBridgesDataSource(
+        bridgesDataSource: RequestBridgesDataSourceImpl
+    ): RequestBridgesDataSource
 }

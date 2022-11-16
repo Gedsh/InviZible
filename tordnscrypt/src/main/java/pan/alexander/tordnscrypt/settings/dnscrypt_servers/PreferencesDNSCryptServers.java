@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_servers;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Activity;
@@ -114,8 +114,8 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
         setRetainInstance(true);
 
-        Context context = getActivity();
-        if (context == null) {
+        Activity activity = getActivity();
+        if (activity == null) {
             return;
         }
 
@@ -123,22 +123,22 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
         cachedExecutor.submit(() -> {
             try {
-                Verifier verifier = new Verifier(context);
+                Verifier verifier = new Verifier(activity);
                 String appSign = verifier.getApkSignatureZip();
                 String appSignAlt = verifier.getApkSignature();
                 if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                            context, getText(R.string.verifier_error).toString(), "6787");
+                            activity, getText(R.string.verifier_error).toString(), "6787");
                     if (notificationHelper != null && isAdded()) {
-                        notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
+                        activity.runOnUiThread(() -> notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER));
                     }
                 }
 
             } catch (Exception e) {
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                        context, getText(R.string.verifier_error).toString(), "8990");
+                        activity, getText(R.string.verifier_error).toString(), "8990");
                 if (isAdded() && notificationHelper != null) {
-                    notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
+                    activity.runOnUiThread(() -> notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER));
                 }
                 Log.e(LOG_TAG, "PreferencesDNSCryptServers fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                         Arrays.toString(e.getStackTrace()));
@@ -722,7 +722,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
                     || (dnsServerItem.isNofilter() && searchText.toLowerCase().contains("non-filtering"))
                     || (dnsServerItem.isNolog() && searchText.toLowerCase().contains("non-logging"))
                     || (!dnsServerItem.isNolog() && searchText.toLowerCase().contains("keep logs"))
-                    || (!dnsServerItem.isNofilter() && searchText.toLowerCase().contains("ad-filtering"))) {
+                    || (!dnsServerItem.isNofilter() && searchText.toLowerCase().contains("filtering"))) {
                 list_dns_servers.add(dnsServerItem);
             }
         }

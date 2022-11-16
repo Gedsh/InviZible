@@ -9,7 +9,7 @@ def keystoreProperties = new Properties()
 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 33
 
 
     flavorDimensions "version", "processor"
@@ -33,7 +33,7 @@ android {
     productFlavors {
         lite {
             applicationId "pan.alexander.tordnscrypt.stable"
-            versionName "5.5.0"
+            versionName "5.9.0"
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
@@ -41,7 +41,7 @@ android {
 
         pro {
             applicationId "pan.alexander.tordnscrypt.stable"
-            versionName "5.5.0"
+            versionName "5.9.0"
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
@@ -49,7 +49,7 @@ android {
 
         beta {
             applicationId "pan.alexander.tordnscrypt"
-            versionName "1.4.4"
+            versionName "1.7.7"
             dimension = 'version'
             signingConfig signingConfigs.betasign
             resValue 'string', 'package_name', applicationId
@@ -58,7 +58,7 @@ android {
         google_play {
             minSdkVersion 22
             applicationId "pan.alexander.tordnscrypt.gp"
-            versionName "5.5.0"
+            versionName "5.9.0"
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
@@ -89,10 +89,10 @@ android {
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 31
-        versionCode 144
+        targetSdkVersion 33
+        versionCode 177
 
-        resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt-rBR"
+        resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt-rBR", "el", "tr", "it"
 
         externalNativeBuild {
             cmake {
@@ -148,6 +148,8 @@ android {
     }
 
     packagingOptions{
+        jniLibs.useLegacyPackaging = true
+
         doNotStrip '*/*/libdnscrypt-proxy.so'
         doNotStrip '*/*/libobfs4proxy.so'
         doNotStrip '*/*/libsnowflake.so'
@@ -168,7 +170,9 @@ android {
         viewBinding true
     }
 
-    kotlinOptions.useIR = true
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
 
 }
 
@@ -180,24 +184,23 @@ repositories {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    //implementation 'androidx.appcompat:appcompat:1.4.0-rc01' Android Emoji Policy February 2
-    implementation 'androidx.appcompat:appcompat:1.3.1'
-    implementation 'androidx.preference:preference-ktx:1.1.1'
+    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'androidx.preference:preference-ktx:1.2.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'com.google.android.material:material:1.4.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.2'
+    implementation 'com.google.android.material:material:1.7.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
-    implementation 'androidx.preference:preference-ktx:1.1.1'
-    implementation 'androidx.lifecycle:lifecycle-process:2.4.0'
-    google_playImplementation 'com.android.billingclient:billing:4.0.0'
+    implementation 'androidx.lifecycle:lifecycle-process:2.5.1'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.5.1'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1'
+    google_playImplementation 'com.android.billingclient:billing:5.0.0'
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
-    //noinspection GradleDynamicVersion
-    implementation 'eu.chainfire:libsuperuser:1.1.0.+'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.4'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
+    implementation 'eu.chainfire:libsuperuser:1.1.1'
     implementation 'com.jrummyapps:android-shell:1.0.1'
-    implementation 'androidx.core:core-ktx:1.7.0'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.1'
+    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1'
     implementation project(':filepicker')
 
     //DI

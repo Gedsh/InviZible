@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.modules;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
@@ -34,28 +34,25 @@ import pan.alexander.tordnscrypt.MainActivity;
 
 import static pan.alexander.tordnscrypt.AppKt.ANDROID_CHANNEL_ID;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 public class ModulesServiceNotificationManager {
     private final Service service;
     private final NotificationManager notificationManager;
     private final Long startTime;
+    private final PendingIntent contentIntent;
+    private final int iconResource;
 
     public ModulesServiceNotificationManager(Service service, NotificationManager notificationManager, Long startTime) {
         this.service = service;
         this.notificationManager = notificationManager;
         this.startTime = startTime;
+        this.contentIntent = getContentIntent();
+        this.iconResource = getIconResource();
     }
 
     @SuppressLint("UnspecifiedImmutableFlag")
-    public synchronized void sendNotification(String Title, String Text) {
-
-        if (service == null || notificationManager == null) {
-            return;
-        }
-
-        notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
-
-        //These three lines makes Notification to open main activity after clicking on it
+    private PendingIntent getContentIntent() {
         Intent notificationIntent = new Intent(service, MainActivity.class);
         notificationIntent.setAction(Intent.ACTION_MAIN);
         notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
@@ -75,17 +72,44 @@ public class ModulesServiceNotificationManager {
                     PendingIntent.FLAG_UPDATE_CURRENT);
         }
 
-        int iconResource = service.getResources().getIdentifier("ic_service_notification", "drawable", service.getPackageName());
-        if (iconResource == 0) {
-            iconResource = android.R.drawable.ic_menu_view;
+        return contentIntent;
+    }
+
+    private int getIconResource() {
+
+        int iconResource = android.R.drawable.ic_menu_view;
+
+        try {
+            iconResource = service.getResources().getIdentifier(
+                    "ic_service_notification",
+                    "drawable",
+                    service.getPackageName()
+            );
+            if (iconResource == 0) {
+                iconResource = android.R.drawable.ic_menu_view;
+            }
+        } catch (Exception e) {
+            loge("ModulesServiceNotificationManager getIconResource", e);
         }
+
+        return iconResource;
+    }
+
+
+    public synchronized void sendNotification(String title, String text) {
+
+        if (service == null || notificationManager == null) {
+            return;
+        }
+
+        notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(service, ANDROID_CHANNEL_ID);
         builder.setContentIntent(contentIntent)
-                .setOngoing(true)   //Can't be swiped out
+                .setOngoing(true)
                 .setSmallIcon(iconResource)
-                .setContentTitle(Title) //Заголовок
-                .setContentText(Text) // Текст уведомления
+                .setContentTitle(title)
+                .setContentText(text)
                 .setPriority(Notification.PRIORITY_MIN)
                 .setOnlyAlertOnce(true)
                 .setChannelId(ANDROID_CHANNEL_ID)
@@ -110,41 +134,17 @@ public class ModulesServiceNotificationManager {
     }
 
     @SuppressLint("UnspecifiedImmutableFlag")
-    public void updateNotification(String Title, String Text) {
+    public void updateNotification(String title, String text) {
         if (service == null || notificationManager == null) {
             return;
         }
 
-        Intent notificationIntent = new Intent(service, MainActivity.class);
-        notificationIntent.setAction(Intent.ACTION_MAIN);
-        notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-
-        PendingIntent contentIntent;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            contentIntent = PendingIntent.getActivity(
-                    service.getApplicationContext(),
-                    0,
-                    notificationIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        } else {
-            contentIntent = PendingIntent.getActivity(
-                    service.getApplicationContext(),
-                    0,
-                    notificationIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT);
-        }
-
-        int iconResource = service.getResources().getIdentifier("ic_service_notification", "drawable", service.getPackageName());
-        if (iconResource == 0) {
-            iconResource = android.R.drawable.ic_menu_view;
-        }
-
         NotificationCompat.Builder builder = new NotificationCompat.Builder(service, ANDROID_CHANNEL_ID);
         builder.setContentIntent(contentIntent)
-                .setOngoing(true)   //Can't be swiped out
+                .setOngoing(true)
                 .setSmallIcon(iconResource)
-                .setContentTitle(Title) //Заголовок
-                .setContentText(Text) // Текст уведомления
+                .setContentTitle(title)
+                .setContentText(text)
                 .setPriority(Notification.PRIORITY_MIN)
                 .setOnlyAlertOnce(true)
                 .setChannelId(ANDROID_CHANNEL_ID)

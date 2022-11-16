@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.proxy
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context
@@ -45,6 +45,8 @@ import pan.alexander.tordnscrypt.databinding.FragmentProxyBinding
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_ADDRESS
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PORT
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.util.concurrent.Future
 import javax.inject.Inject
@@ -61,6 +63,8 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
     lateinit var cachedExecutor: CachedExecutor
     @Inject
     lateinit var handler: dagger.Lazy<Handler>
+    @Inject
+    lateinit var proxyHelper: ProxyHelper
 
     private var _binding: FragmentProxyBinding? = null
     private val binding get() = _binding!!
@@ -109,8 +113,8 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
             isChecked = getBoolFromSharedPreferences("ProxifyITPD")
         }
 
-        binding.etProxyServer.setText(getTextFromSharedPreferences("ProxyServer"))
-        binding.etProxyPort.setText(getTextFromSharedPreferences("ProxyPort"))
+        binding.etProxyServer.setText(getTextFromSharedPreferences(PROXY_ADDRESS))
+        binding.etProxyPort.setText(getTextFromSharedPreferences(PROXY_PORT))
 
         binding.etProxyUserName.apply {
             setText(getTextFromSharedPreferences("ProxyUserName"))
@@ -146,13 +150,13 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
         val proxyUserName = binding.etProxyUserName.text.toString().trim()
         val proxyPass = binding.etProxyPass.text.toString().trim()
 
-        if (proxyServer != getTextFromSharedPreferences("ProxyServer")
-                || proxyPort != getTextFromSharedPreferences("ProxyPort")) {
+        if (proxyServer != getTextFromSharedPreferences(PROXY_ADDRESS)
+                || proxyPort != getTextFromSharedPreferences(PROXY_PORT)) {
             serverOrPortChanged = true
         }
 
-        saveToSharedPreferences("ProxyServer", proxyServer)
-        saveToSharedPreferences("ProxyPort", proxyPort)
+        saveToSharedPreferences(PROXY_ADDRESS, proxyServer)
+        saveToSharedPreferences(PROXY_PORT, proxyPort)
         saveToSharedPreferences("ProxyUserName", proxyUserName)
         saveToSharedPreferences("ProxyPass", proxyPass)
 
@@ -160,10 +164,10 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
 
         if (proxyServer.isNotEmpty() && proxyPort.isNotEmpty()
                 && (setBypassProxy.isNotEmpty() || proxyServer != LOOPBACK_ADDRESS)) {
-            ProxyHelper.manageProxy(context, proxyServer, proxyPort, serverOrPortChanged,
+            proxyHelper.manageProxy(proxyServer, proxyPort, serverOrPortChanged,
                     activateDNSCryptProxy, activateTorProxy, activateITPDProxy)
         } else {
-            ProxyHelper.manageProxy(context, proxyServer, proxyPort, false,
+            proxyHelper.manageProxy(proxyServer, proxyPort, false,
                     enableDNSCryptProxy = false, enableTorProxy = false, enableItpdProxy = false)
         }
 
@@ -240,7 +244,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
 
         futureTask = cachedExecutor.submit {
             try {
-                val result = ProxyHelper.checkProxyConnectivity(server, port.toInt())
+                val result = proxyHelper.checkProxyConnectivity(server, port.toInt())
 
                 if (_binding != null) {
                     if (result.matches(Regex("\\d+"))) {

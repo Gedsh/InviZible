@@ -7,6 +7,7 @@ import pan.alexander.tordnscrypt.domain.log_reader.dnscrypt.DNSCryptInteractor
 import pan.alexander.tordnscrypt.domain.log_reader.itpd.ITPDHtmlInteractor
 import pan.alexander.tordnscrypt.domain.log_reader.itpd.ITPDInteractor
 import pan.alexander.tordnscrypt.domain.log_reader.tor.TorInteractor
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.lang.Exception
 import java.util.concurrent.locks.ReentrantLock
@@ -77,12 +78,18 @@ class LogReaderLoop(
     }
 
     private fun stopLogsParser() {
-        timer?.stopExecutor()
-        timer = null
-        connectionRecordsInteractor.stopConverter(true)
-        App.instance.releaseLogReaderScope()
-
-        Log.i(LOG_TAG, "LogReaderLoop stopLogsParser")
+        reentrantLock.lock()
+        try {
+            timer?.stopExecutor()
+            timer = null
+            connectionRecordsInteractor.stopConverter(true)
+            App.instance.subcomponentsManager.releaseLogReaderScope()
+            Log.i(LOG_TAG, "LogReaderLoop stopLogsParser")
+        } catch (e: Exception) {
+            loge("LogReaderLoop stopLogsParser", e)
+        } finally {
+            reentrantLock.unlock()
+        }
     }
 
     private fun parseLogs() {

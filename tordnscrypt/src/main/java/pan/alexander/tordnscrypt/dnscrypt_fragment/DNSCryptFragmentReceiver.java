@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.dnscrypt_fragment;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Activity;
@@ -49,6 +49,7 @@ import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DNSCRYPT_KEYWORD;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.DNSCRYPT_RUN_FRAGMENT_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -96,9 +97,11 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
         if (intent != null) {
             final String action = intent.getAction();
-            if (action == null || action.equals("") || ((intent.getIntExtra("Mark", 0) !=
-                    RootExecService.DNSCryptRunFragmentMark) &&
+            if (action == null
+                    || action.equals("")
+                    || ((intent.getIntExtra("Mark", 0) != DNSCRYPT_RUN_FRAGMENT_MARK) &&
                     !action.equals(TOP_BROADCAST))) return;
+
             Log.i(LOG_TAG, "DNSCryptRunFragment onReceive");
 
             if (action.equals(RootExecService.COMMAND_RESULT)) {
@@ -125,8 +128,8 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
                 if (sb.toString().contains("DNSCrypt_version")) {
                     String[] strArr = sb.toString().split("DNSCrypt_version");
-                    if (strArr.length > 1 && strArr[1].trim().matches("\\d+\\.\\d+\\.\\d+")) {
-                        DNSCryptVersion = strArr[1].trim();
+                    if (strArr.length > 1 && strArr[1].trim().matches("(STDOUT=)?\\d+\\.\\d+\\.\\d+")) {
+                        DNSCryptVersion = strArr[1].replace("STDOUT=", "").trim();
                         preferenceRepository.get()
                                 .setStringPreference("DNSCryptVersion", DNSCryptVersion);
 
@@ -215,12 +218,8 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                     busyboxPath + "echo 'DNSCrypt_version' 2> /dev/null",
                     dnscryptPath + " --version 2> /dev/null"
             ));
-            RootCommands rootCommands = new RootCommands(commandsCheck);
-            Intent intent = new Intent(context, RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands", rootCommands);
-            intent.putExtra("Mark", RootExecService.DNSCryptRunFragmentMark);
-            RootExecService.performAction(context, intent);
+
+            RootCommands.execute(context, commandsCheck, DNSCRYPT_RUN_FRAGMENT_MARK);
 
             view.setDNSCryptProgressBarIndeterminate(true);
         }

@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.settings.firewall
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
@@ -26,4 +26,23 @@ data class FirewallAppModel(val applicationData: ApplicationData,
                             var allowWifi: Boolean,
                             var allowGsm: Boolean,
                             var allowRoaming: Boolean,
-                            var allowVPN: Boolean)
+                            var allowVPN: Boolean): Comparable<FirewallAppModel> {
+
+    override fun compareTo(other: FirewallAppModel): Int {
+        return applicationData.uid.compareTo(other.applicationData.uid)
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (javaClass != other?.javaClass) return false
+
+        other as FirewallAppModel
+
+        if (applicationData.uid != other.applicationData.uid) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return applicationData.uid.hashCode()
+    }
+}

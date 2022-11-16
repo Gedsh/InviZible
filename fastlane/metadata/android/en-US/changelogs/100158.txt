@@ -1,0 +1,7 @@
+**InviZible Pro beta 1.5.8**
+* Improved root commands execution.
+* Fixed active bridges sorting.
+* Added Turkish translation.
+* Updated Spanish translation.
+* Updated Indonesian translation.
+* Fixes and optimizations.

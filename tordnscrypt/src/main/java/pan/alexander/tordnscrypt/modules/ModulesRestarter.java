@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.modules;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
@@ -35,17 +35,17 @@ import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class ModulesRestarter {
     public static void restartDNSCrypt(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.actionRestartDnsCrypt);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.ACTION_RESTART_DNSCRYPT);
         ModulesAux.speedupModulesStateLoopTimer(context);
     }
 
     public static void restartTor(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.actionRestartTorFull);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.ACTION_RESTART_TOR_FULL);
         ModulesAux.speedupModulesStateLoopTimer(context);
     }
 
     public static void restartITPD(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.actionRestartITPD);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.ACTION_RESTART_ITPD);
         ModulesAux.speedupModulesStateLoopTimer(context);
     }
 
@@ -121,9 +121,9 @@ public class ModulesRestarter {
         String[] result;
 
         if (pid.isEmpty() || killWithRoot) {
-            String killStringBusybox = pathVars.getBusyboxPath() + "pkill -SIGHUP" + " " + module;
+            String killStringBusybox = pathVars.getBusyboxPath() + "pkill -SIGHUP " + module + " || true";
             //String killAllStringBusybox = pathVars.busyboxPath + "kill -s SIGHUP" + " $(pgrep " + module + ")";
-            String killStringToyBox = "toybox pkill -SIGHUP" + " " + module;
+            String killStringToyBox = "toybox pkill -SIGHUP " + module + " || true";
             //String killString = "pkill -" + "SIGHUP" + " " + module;
 
             String killString = killStringBusybox;
@@ -138,7 +138,7 @@ public class ModulesRestarter {
             //String killStringBusyBox = pathVars.busyboxPath + "kill -s SIGHUP" + " " + pid;
             //String killAllStringToolBox = "toolbox kill -s SIGHUP" + " " + pid;
             //String killStringToyBox = "toybox kill -s SIGHUP" + " " + pid;
-            String killString = "kill -s SIGHUP" + " " + pid;
+            String killString = "kill -s SIGHUP " + pid + " || true";
 
             result = new String[]{
                     //killStringBusyBox,

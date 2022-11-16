@@ -1,5 +1,5 @@
 
-cmake_minimum_required(VERSION 3.4.1)
+cmake_minimum_required(VERSION 3.18.1)
 
 project(inviziblePro)
 
@@ -23,4 +23,8 @@ find_library( log-lib
 target_link_libraries( invizible
                        ${log-lib} )
 
-target_compile_options(invizible PRIVATE "$<$<CONFIG:RELEASE>:-Ofast>")
+if(${CMAKE_ANDROID_ARCH_ABI} STREQUAL "arm64-v8a")
+    target_compile_options(invizible PRIVATE -Ofast -funsafe-math-optimizations -ftree-vectorize -fvectorize -fslp-vectorize)
+else()
+    target_compile_options(invizible PRIVATE -Ofast -funsafe-math-optimizations -ftree-vectorize -fvectorize -fslp-vectorize)
+endif()

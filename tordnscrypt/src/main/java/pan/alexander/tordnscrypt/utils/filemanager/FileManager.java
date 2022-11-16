@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.utils.filemanager;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
@@ -24,7 +24,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Process;
 import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -53,6 +52,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import dagger.Lazy;
+import kotlin.jvm.JvmStatic;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.settings.PathVars;
@@ -65,6 +65,7 @@ import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveB
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.writeToTextFile;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.FILE_OPERATIONS_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
@@ -90,8 +91,10 @@ public class FileManager {
         public void onReceive(Context context, Intent intent) {
             if (intent != null) {
                 final String action = intent.getAction();
-                if (action == null || action.equals("") || ((intent.getIntExtra("Mark", 0) !=
-                        RootExecService.FileOperationsMark))) return;
+                if (action == null
+                        || action.equals("")
+                        || ((intent.getIntExtra("Mark", 0) != FILE_OPERATIONS_MARK))) return;
+
                 Log.i(LOG_TAG, "FileOperations onReceive");
 
                 if (action.equals(RootExecService.COMMAND_RESULT)) {
@@ -115,12 +118,12 @@ public class FileManager {
                 File dir = new File(outputPath);
                 if (!dir.isDirectory()) {
                     if (!dir.mkdirs()) {
-                        throw new IllegalStateException("Unable to create dir " + dir.toString());
+                        throw new IllegalStateException("Unable to create dir " + dir);
                     }
 
                     if (!dir.canRead() || !dir.canWrite()) {
                         if (!dir.setReadable(true) || !dir.setWritable(true)) {
-                            Log.w(LOG_TAG, "Unable to chmod dir " + dir.toString());
+                            Log.w(LOG_TAG, "Unable to chmod dir " + dir);
                         }
                     }
                 }
@@ -128,7 +131,7 @@ public class FileManager {
                 File oldFile = new File(outputPath + "/" + inputFile);
                 if (oldFile.exists()) {
                     if (deleteFileSynchronous(context, outputPath, inputFile)) {
-                        throw new IllegalStateException("Unable to delete file " + oldFile.toString());
+                        throw new IllegalStateException("Unable to delete file " + oldFile);
                     }
                 }
 
@@ -148,11 +151,11 @@ public class FileManager {
 
                 if (!inFile.canRead()) {
                     if (!inFile.setReadable(true)) {
-                        Log.w(LOG_TAG, "Unable to chmod file " + inFile.toString());
+                        Log.w(LOG_TAG, "Unable to chmod file " + inFile);
                         FileManager fileManager = new FileManager();
                         fileManager.restoreAccess(context, inFile.getPath());
                     } else if (!inFile.canRead()) {
-                        throw new IllegalStateException("Unable to chmod file " + inFile.toString());
+                        throw new IllegalStateException("Unable to chmod file " + inFile);
                     }
                 }
 
@@ -168,7 +171,7 @@ public class FileManager {
 
                 File newFile = new File(outputPath + "/" + inputFile);
                 if (!newFile.exists()) {
-                    throw new IllegalStateException("New file not exist " + oldFile.toString());
+                    throw new IllegalStateException("New file not exist " + oldFile);
                 }
 
                 if (tag.contains("executable")) {
@@ -222,12 +225,12 @@ public class FileManager {
                 File dir = new File(outputPath);
                 if (!dir.isDirectory()) {
                     if (!dir.mkdirs()) {
-                        throw new IllegalStateException("Unable to create dir " + dir.toString());
+                        throw new IllegalStateException("Unable to create dir " + dir);
                     }
 
                     if (!dir.canRead() || !dir.canWrite()) {
                         if (!dir.setReadable(true) || !dir.setWritable(true)) {
-                            Log.w(LOG_TAG, "Unable to chmod dir " + dir.toString());
+                            Log.w(LOG_TAG, "Unable to chmod dir " + dir);
                         }
                     }
                 }
@@ -235,7 +238,7 @@ public class FileManager {
                 File oldFile = new File(outputPath + "/" + inputFile);
                 if (oldFile.exists()) {
                     if (deleteFileSynchronous(context, outputPath, inputFile)) {
-                        throw new IllegalStateException("Unable to delete file " + oldFile.toString());
+                        throw new IllegalStateException("Unable to delete file " + oldFile);
                     }
                 }
 
@@ -255,11 +258,11 @@ public class FileManager {
 
                 if (!inFile.canRead()) {
                     if (!inFile.setReadable(true)) {
-                        Log.w(LOG_TAG, "Unable to chmod file " + inFile.toString());
+                        Log.w(LOG_TAG, "Unable to chmod file " + inFile);
                         FileManager fileManager = new FileManager();
                         fileManager.restoreAccess(context, inFile.getPath());
                     } else if (!inFile.canRead()) {
-                        throw new IllegalStateException("Unable to chmod file " + inFile.toString());
+                        throw new IllegalStateException("Unable to chmod file " + inFile);
                     }
                 }
 
@@ -275,7 +278,7 @@ public class FileManager {
 
                 File newFile = new File(outputPath + "/" + inputFile);
                 if (!newFile.exists()) {
-                    throw new IllegalStateException("New file not exist " + oldFile.toString());
+                    throw new IllegalStateException("New file not exist " + oldFile);
                 }
 
                 if (callback != null && !tag.contains("ignored")) {
@@ -320,12 +323,12 @@ public class FileManager {
             File dir = new File(outputPath);
             if (!dir.isDirectory()) {
                 if (!dir.mkdirs()) {
-                    throw new IllegalStateException("Unable to create dir " + dir.toString());
+                    throw new IllegalStateException("Unable to create dir " + dir);
                 }
 
                 if (!dir.canRead() || !dir.canWrite()) {
                     if (!dir.setReadable(true) || !dir.setWritable(true)) {
-                        Log.w(LOG_TAG, "Unable to chmod dir " + dir.toString());
+                        Log.w(LOG_TAG, "Unable to chmod dir " + dir);
                     }
                 }
             }
@@ -333,7 +336,7 @@ public class FileManager {
             File oldFile = new File(outputPath + "/" + inputFile);
             if (oldFile.exists()) {
                 if (deleteFileSynchronous(context, outputPath, inputFile)) {
-                    throw new IllegalStateException("Unable to delete file " + oldFile.toString());
+                    throw new IllegalStateException("Unable to delete file " + oldFile);
                 }
             }
 
@@ -353,11 +356,11 @@ public class FileManager {
 
             if (!inFile.canRead()) {
                 if (!inFile.setReadable(true)) {
-                    Log.w(LOG_TAG, "Unable to chmod file " + inFile.toString());
+                    Log.w(LOG_TAG, "Unable to chmod file " + inFile);
                     FileManager fileManager = new FileManager();
                     fileManager.restoreAccess(context, inFile.getPath());
                 } else if (!inFile.canRead()) {
-                    throw new IllegalStateException("Unable to chmod file " + inFile.toString());
+                    throw new IllegalStateException("Unable to chmod file " + inFile);
                 }
             }
 
@@ -373,7 +376,7 @@ public class FileManager {
 
             File newFile = new File(outputPath + "/" + inputFile);
             if (!newFile.exists()) {
-                throw new IllegalStateException("New file not exist " + oldFile.toString());
+                throw new IllegalStateException("New file not exist " + oldFile);
             }
 
         } catch (Exception e) {
@@ -405,23 +408,23 @@ public class FileManager {
 
             if (!inDir.canRead()) {
                 if (!inDir.setReadable(true)) {
-                    Log.w(LOG_TAG, "Unable to chmod dir " + inDir.toString());
+                    Log.w(LOG_TAG, "Unable to chmod dir " + inDir);
                     FileManager fileManager = new FileManager();
                     fileManager.restoreAccess(context, inDir.getPath());
                 } else if (!inDir.canRead()) {
-                    throw new IllegalStateException("Unable to chmod dir " + inDir.toString());
+                    throw new IllegalStateException("Unable to chmod dir " + inDir);
                 }
             }
 
             File outDir = new File(outputPath+ "/" + inDir.getName());
             if (!outDir.isDirectory()) {
                 if (!outDir.mkdirs()) {
-                    throw new IllegalStateException("Unable to create dir " + outDir.toString());
+                    throw new IllegalStateException("Unable to create dir " + outDir);
                 }
             }
 
             if (!outDir.setReadable(true) || !outDir.setWritable(true) || !outDir.setExecutable(true)) {
-                Log.w(LOG_TAG, "Unable to chmod dir " + outDir.toString());
+                Log.w(LOG_TAG, "Unable to chmod dir " + outDir);
             }
 
             for (File file: Objects.requireNonNull(inDir.listFiles())) {
@@ -432,7 +435,7 @@ public class FileManager {
                     copyFolderSynchronous(context, file.getCanonicalPath(), outDir.getCanonicalPath());
                 } else {
                     throw new IllegalStateException("copyFolderSynchronous cannot copy "
-                            + inDir.toString() + " because this is no file and no dir");
+                            + inDir + " because this is no file and no dir");
                 }
 
             }
@@ -475,19 +478,19 @@ public class FileManager {
                     }
                 }
                 if (!usedFile.delete()) {
-                    Log.w(LOG_TAG, "Unable to delete file " + usedFile.toString() + " Try restore access!");
+                    Log.w(LOG_TAG, "Unable to delete file " + usedFile + " Try restore access!");
 
                     FileManager fileManager = new FileManager();
                     fileManager.restoreAccess(context, inputPath + "/" + inputFile);
 
                     if (!usedFile.delete()) {
-                        Log.e(LOG_TAG, "Unable to delete file " + usedFile.toString());
+                        Log.e(LOG_TAG, "Unable to delete file " + usedFile);
                     }
 
                     return true;
                 }
             } else {
-                Log.w(LOG_TAG, "Unable to delete file internal function. No file " + usedFile.toString());
+                Log.w(LOG_TAG, "Unable to delete file internal function. No file " + usedFile);
                 return false;
             }
         } catch (Exception e) {
@@ -535,17 +538,17 @@ public class FileManager {
                         }
                     }
                     if (!usedFile.delete()) {
-                        Log.w(LOG_TAG, "Unable to delete file " + usedFile.toString() + " Try restore access!");
+                        Log.w(LOG_TAG, "Unable to delete file " + usedFile + " Try restore access!");
 
                         FileManager fileManager = new FileManager();
                         fileManager.restoreAccess(context, inputPath + "/" + inputFile);
 
                         if (!usedFile.delete()) {
-                            throw new IllegalStateException("Unable to delete file " + usedFile.toString());
+                            throw new IllegalStateException("Unable to delete file " + usedFile);
                         }
                     }
                 } else {
-                    Log.w(LOG_TAG, "Unable to delete file. No file " + usedFile.toString());
+                    Log.w(LOG_TAG, "Unable to delete file. No file " + usedFile);
                 }
 
                 if (callback != null && !tag.contains("ignored")) {
@@ -582,6 +585,7 @@ public class FileManager {
         executorService.execute(runnable);
     }
 
+    @JvmStatic
     public static boolean deleteDirSynchronous(final Context context, final String inputPath) {
         reentrantLock.lock();
 
@@ -993,19 +997,15 @@ public class FileManager {
             IntentFilter intentFilterBckgIntSer = new IntentFilter(RootExecService.COMMAND_RESULT);
             LocalBroadcastManager.getInstance(context).registerReceiver(br, intentFilterBckgIntSer);
 
-            String appUID = String.valueOf(Process.myUid());
             PathVars pathVars = App.getInstance().getDaggerComponent().getPathVars().get();
+            String appUID = pathVars.getAppUidStr();
             List<String> commands = new ArrayList<>(Arrays.asList(
                     pathVars.getBusyboxPath()+ "chown -R " + appUID + "." + appUID + " " + filePath + " 2> /dev/null",
                     "restorecon " + filePath + " 2> /dev/null",
                     pathVars.getBusyboxPath() + "sleep 1 2> /dev/null"
             ));
-            RootCommands rootCommands = new RootCommands(commands);
-            Intent intent = new Intent(context, RootExecService.class);
-            intent.setAction(RootExecService.RUN_COMMAND);
-            intent.putExtra("Commands", rootCommands);
-            intent.putExtra("Mark", RootExecService.FileOperationsMark);
-            RootExecService.performAction(context, intent);
+
+            RootCommands.execute(context, commands, FILE_OPERATIONS_MARK);
 
             waitRestoreAccessWithRoot();
         }

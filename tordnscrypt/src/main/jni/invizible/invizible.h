@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 #include <jni.h>
 #include <stdio.h>
@@ -474,6 +474,10 @@ ssize_t write_tcp(const struct arguments *args, const struct tcp_session *cur,
                   const uint8_t *data, size_t datalen,
                   int syn, int ack, int fin, int rst);
 
+void write_connection_unreach(const struct arguments *args,
+                              const struct ng_session *s,
+                              const int serr);
+
 uint8_t char2nible(const char c);
 
 void hex2bytes(const char *hex, uint8_t *buffer);
@@ -487,6 +491,18 @@ jint get_uid_sub(const int version, const int protocol,
                  const void *daddr, const uint16_t dport,
                  const char *source, const char *dest,
                  long now);
+
+jint restore_uid(const struct arguments *args,
+                 const int version,
+                 const int protocol,
+                 const void *saddr,
+                 const uint16_t sport,
+                 const void *daddr,
+                 const uint16_t dport,
+                 const char *source,
+                 const char *dest,
+                 const char *flags,
+                 const uint8_t *payload);
 
 int protect_socket(const struct arguments *args, int socket);
 

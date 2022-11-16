@@ -15,18 +15,14 @@ package pan.alexander.tordnscrypt.data.preferences
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceType
 import pan.alexander.tordnscrypt.utils.preferences.AppPreferenceHelper
 import javax.inject.Inject
 import javax.inject.Singleton
 
-@ExperimentalCoroutinesApi
-@ObsoleteCoroutinesApi
 @Singleton
 class PreferenceDataSourceImpl @Inject constructor(
     private val appPreferenceHelper: AppPreferenceHelper

@@ -16,19 +16,35 @@ package pan.alexander.tordnscrypt.settings.tor_bridges;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
+
+import java.util.Objects;
 
 import pan.alexander.tordnscrypt.utils.enums.BridgeType;
 
-class ObfsBridge {
+public class ObfsBridge {
     String bridge;
     BridgeType obfsType;
+    int ping;
     boolean active;
 
     ObfsBridge(String bridge, BridgeType obfsType, boolean active) {
         this.bridge = bridge;
         this.obfsType = obfsType;
         this.active = active;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ObfsBridge bridge1 = (ObfsBridge) o;
+        return bridge.equals(bridge1.bridge) && obfsType == bridge1.obfsType;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(bridge, obfsType);
     }
 }

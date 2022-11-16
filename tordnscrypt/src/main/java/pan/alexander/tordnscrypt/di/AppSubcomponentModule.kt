@@ -14,14 +14,21 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.di
 
 import dagger.Module
-import pan.alexander.tordnscrypt.di.logreader.LogReaderSubcomponent
+import pan.alexander.tordnscrypt.di.arp.ArpSubcomponent
+import pan.alexander.tordnscrypt.di.modulesservice.ModulesServiceSubcomponent
 import pan.alexander.tordnscrypt.di.tiles.TilesSubcomponent
 
-@Module(subcomponents = [LogReaderSubcomponent::class, TilesSubcomponent::class])
+@Module(
+    subcomponents = [
+        TilesSubcomponent::class,
+        ArpSubcomponent::class,
+        ModulesServiceSubcomponent::class
+    ]
+)
 class AppSubcomponentModule

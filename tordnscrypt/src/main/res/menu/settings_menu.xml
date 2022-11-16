@@ -9,16 +9,4 @@
         android:orderInCategory="1"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="ifRoom" />
-    <item
-        android:id="@+id/menu_switch_item"
-        android:title="@string/firewall_switch"
-        android:orderInCategory="2"
-        app:actionLayout="@layout/switch_item"
-        app:showAsAction="ifRoom" />
-    <item
-        android:id="@+id/menu_settings"
-        android:orderInCategory="3"
-        android:title="@string/title_activity_settings"
-        android:visible="false"
-        app:showAsAction="never" />
 </menu>

@@ -16,11 +16,10 @@ package pan.alexander.tordnscrypt.iptables;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.IntentFilter;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -29,8 +28,8 @@ import java.util.List;
 
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
-import pan.alexander.tordnscrypt.utils.root.RootExecService;
 
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.IPTABLES_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT;
 
 abstract class IptablesRulesSender implements IptablesRules {
@@ -99,11 +98,6 @@ abstract class IptablesRulesSender implements IptablesRules {
 
     @Override
     public void sendToRootExecService(List<String> commands) {
-        RootCommands rootCommands = new RootCommands(commands);
-        Intent intent = new Intent(context, RootExecService.class);
-        intent.setAction(RootExecService.RUN_COMMAND);
-        intent.putExtra("Commands", rootCommands);
-        intent.putExtra("Mark", RootExecService.IptablesMark);
-        RootExecService.performAction(context, intent);
+        RootCommands.execute(context, commands, IPTABLES_MARK);
     }
 }

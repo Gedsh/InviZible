@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.settings.tor_ips;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Activity;
@@ -54,6 +54,7 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
@@ -73,6 +74,8 @@ public class UnlockTorIpsFragment extends Fragment {
     public Lazy<CoroutineExecutor> coroutineExecutor;
     @Inject
     public CachedExecutor cachedExecutor;
+    @Inject
+    ViewModelProvider.Factory viewModelFactory;
 
     public UnlockTorIpsViewModel viewModel;
 
@@ -84,7 +87,7 @@ public class UnlockTorIpsFragment extends Fragment {
         App.getInstance().getDaggerComponent().inject(this);
         super.onCreate(savedInstanceState);
 
-        viewModel = new ViewModelProvider(this).get(UnlockTorIpsViewModel.class);
+        viewModel = new ViewModelProvider(this, viewModelFactory).get(UnlockTorIpsViewModel.class);
 
         Activity activity = getActivity();
         if (activity == null) {
@@ -95,7 +98,7 @@ public class UnlockTorIpsFragment extends Fragment {
         ///////////////////////Reverse logic when route all through Tor!///////////////////
         //////////////////////////////////////////////////////////////////////////////////
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(activity);
-        boolean routeAllThroughTorDevice = shPref.getBoolean("pref_fast_all_through_tor", true);
+        boolean routeAllThroughTorDevice = shPref.getBoolean(ALL_THROUGH_TOR, true);
         boolean routeAllThroughTorTether = shPref.getBoolean("pref_common_tor_route_all", false);
 
         String deviceOrTether = null;
@@ -130,7 +133,7 @@ public class UnlockTorIpsFragment extends Fragment {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             activity, getString(R.string.verifier_error), "123");
                     if (notificationHelper != null && isAdded()) {
-                        notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
+                        activity.runOnUiThread(() -> notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER));
                     }
                 }
 
@@ -138,7 +141,7 @@ public class UnlockTorIpsFragment extends Fragment {
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                         activity, getString(R.string.verifier_error), "168");
                 if (notificationHelper != null && isAdded()) {
-                    notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
+                    activity.runOnUiThread(() -> notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER));
                 }
                 Log.e(LOG_TAG, "UnlockTorIpsFrag fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                         Arrays.toString(e.getStackTrace()));

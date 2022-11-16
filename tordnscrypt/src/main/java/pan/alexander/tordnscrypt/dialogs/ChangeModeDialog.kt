@@ -16,39 +16,32 @@ package pan.alexander.tordnscrypt.dialogs
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.util.Log
-import android.view.MenuItem
+import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
+import androidx.core.os.bundleOf
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.utils.mode.AppModeManager
 import pan.alexander.tordnscrypt.utils.mode.AppModeManagerCallback
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
-import java.lang.ref.WeakReference
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+import javax.inject.Inject
 
-private var instance: WeakReference<ChangeModeDialog>? = null
-private var appModeManagerCallback: WeakReference<AppModeManagerCallback>? = null
-private var menuItem: WeakReference<MenuItem>? = null
-private var mode: OperationMode? = OperationMode.UNDEFINED
+private const val OPERATION_MODE_ARG = "pan.alexander.tordnscrypt.dialogs.ChangeModeDialog"
 
+@ExperimentalCoroutinesApi
 class ChangeModeDialog: ExtendedDialogFragment() {
 
-    companion object INSTANCE {
-        fun getInstance(_appModeManagerCallback: AppModeManagerCallback, _item: MenuItem, _mode: OperationMode): ChangeModeDialog? {
+    @Inject
+    lateinit var appModeManager: AppModeManager
 
-            appModeManagerCallback = WeakReference(_appModeManagerCallback)
-            menuItem = WeakReference(_item)
-            mode = _mode
-
-            if (instance == null) {
-                instance = WeakReference(ChangeModeDialog())
-            }
-
-            return instance?.get()
-        }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        App.instance.subcomponentsManager.modulesServiceSubcomponent().inject(this)
+        super.onCreate(savedInstanceState)
     }
 
     override fun assignBuilder(): AlertDialog.Builder? {
@@ -60,15 +53,21 @@ class ChangeModeDialog: ExtendedDialogFragment() {
 
         val builder = AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme)
 
-        builder.setTitle(mode?.name ?: "")
+        val mode = arguments?.get(OPERATION_MODE_ARG) as OperationMode
+
+        builder.setTitle(mode.name)
         builder.setMessage(R.string.ask_save_changes)
 
         builder.setPositiveButton(R.string.ok) { _, _ ->
+
+            val appModeManagerCallback = activity as? AppModeManagerCallback
+            appModeManagerCallback ?: return@setPositiveButton
+
             when (mode) {
-                OperationMode.ROOT_MODE -> AppModeManager.switchToRootMode(activity.applicationContext, menuItem?.get(), appModeManagerCallback?.get())
-                OperationMode.PROXY_MODE -> AppModeManager.switchToProxyMode(activity.applicationContext, menuItem?.get(), appModeManagerCallback?.get())
-                OperationMode.VPN_MODE -> AppModeManager.switchToVPNMode(activity.applicationContext, menuItem?.get(), appModeManagerCallback?.get())
-                else -> Log.e(LOG_TAG, "ChangeModeDialog unknown mode!")
+                OperationMode.ROOT_MODE -> appModeManager.switchToRootMode(appModeManagerCallback)
+                OperationMode.PROXY_MODE -> appModeManager.switchToProxyMode(appModeManagerCallback)
+                OperationMode.VPN_MODE -> appModeManager.switchToVPNMode(appModeManagerCallback)
+                else -> loge("ChangeModeDialog unknown mode!")
             }
 
         }
@@ -80,12 +79,10 @@ class ChangeModeDialog: ExtendedDialogFragment() {
         return builder
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-
-        instance = null
-        appModeManagerCallback = null
-        menuItem = null
-        mode = null
+    companion object INSTANCE {
+        @JvmStatic
+        fun getInstance(mode: OperationMode) = ChangeModeDialog().apply {
+            arguments = bundleOf(OPERATION_MODE_ARG to mode)
+        }
     }
 }

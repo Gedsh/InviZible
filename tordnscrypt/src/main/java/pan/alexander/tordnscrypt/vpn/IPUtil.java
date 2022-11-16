@@ -15,10 +15,8 @@ package pan.alexander.tordnscrypt.vpn;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
-
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -27,7 +25,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 public class IPUtil {
 
@@ -110,7 +108,7 @@ public class IPUtil {
                 this.address = InetAddress.getByName(ip);
                 this.prefix = prefix;
             } catch (UnknownHostException ex) {
-                Log.e(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+                loge("IPUtil CIDR", ex, true);
             }
         }
 

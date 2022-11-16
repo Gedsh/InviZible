@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.backup;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Activity;
@@ -68,13 +68,13 @@ import pan.alexander.tordnscrypt.utils.filemanager.OnBinaryFileOperationsComplet
 
 import static android.app.Activity.RESULT_OK;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
-import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_ALLOW_GSM_PREF;
-import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_ALLOW_LAN_PREF;
-import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_ALLOW_ROAMING;
-import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_ALLOW_VPN;
-import static pan.alexander.tordnscrypt.settings.firewall.FirewallFragmentKt.APPS_ALLOW_WIFI_PREF;
 import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.CLEARNET_APPS;
 import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.UNLOCK_APPS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_GSM_PREF;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_LAN_PREF;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_ROAMING;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_VPN;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_WIFI_PREF;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.deleteFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;

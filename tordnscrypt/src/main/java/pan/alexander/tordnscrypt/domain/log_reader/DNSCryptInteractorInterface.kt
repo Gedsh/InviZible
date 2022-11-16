@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.domain.log_reader
@@ -22,6 +22,6 @@ package pan.alexander.tordnscrypt.domain.log_reader
 import pan.alexander.tordnscrypt.domain.log_reader.dnscrypt.OnDNSCryptLogUpdatedListener
 
 interface DNSCryptInteractorInterface {
-    fun addOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: OnDNSCryptLogUpdatedListener)
-    fun removeOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: OnDNSCryptLogUpdatedListener)
+    fun <T: OnDNSCryptLogUpdatedListener> addOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: T)
+    fun <T: OnDNSCryptLogUpdatedListener> removeOnDNSCryptLogUpdatedListener(onDNSCryptLogUpdatedListener: T)
 }

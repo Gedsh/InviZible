@@ -16,25 +16,26 @@ package pan.alexander.tordnscrypt.dialogs;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
+
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ITPD_TETHERING;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TETHERING;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.os.Handler;
-import android.os.Looper;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentActivity;
 import androidx.preference.PreferenceManager;
 
 import java.util.Arrays;
 import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.settings.SettingsActivity;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
@@ -74,19 +75,14 @@ public class DialogSaveConfigChanges extends ExtendedDialogFragment {
                 FileManager.writeToTextFile(activity, filePath, lines, "ignored");
                 restartModuleIfRequired();
 
-                Looper looper = Looper.getMainLooper();
-                Handler handler = null;
-                if (looper != null) {
-                    handler = new Handler(looper);
-                }
-
-                if (handler != null) {
-                    handler.postDelayed(() -> reopenSettings(activity), 300);
-                }
+                pressBack(dialog);
             }
         });
 
-        alertDialog.setNegativeButton(R.string.discard_changes, (dialog, id) -> dialog.cancel());
+        alertDialog.setNegativeButton(
+                R.string.discard_changes,
+                (dialog, id) -> pressBack(dialog)
+        );
 
         return alertDialog;
     }
@@ -110,8 +106,8 @@ public class DialogSaveConfigChanges extends ExtendedDialogFragment {
             ModulesRestarter.restartITPD(context);
 
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-            boolean torTethering = sharedPreferences.getBoolean("pref_common_tor_tethering", false) && torRunning;
-            boolean itpdTethering = sharedPreferences.getBoolean("pref_common_itpd_tethering", false);
+            boolean torTethering = sharedPreferences.getBoolean(TOR_TETHERING, false) && torRunning;
+            boolean itpdTethering = sharedPreferences.getBoolean(ITPD_TETHERING, false);
             boolean routeAllThroughTorTether = sharedPreferences.getBoolean("pref_common_tor_route_all", false);
 
             if (torTethering && routeAllThroughTorTether && itpdTethering) {
@@ -120,29 +116,12 @@ public class DialogSaveConfigChanges extends ExtendedDialogFragment {
         }
     }
 
-    private void reopenSettings(Activity activity) {
+    private void pressBack(DialogInterface dialog) {
+        dialog.dismiss();
 
-        if (activity == null) {
-            return;
+        FragmentActivity activity = getActivity();
+        if (activity != null) {
+            activity.getSupportFragmentManager().popBackStack();
         }
-
-        Intent intent = new Intent(activity, SettingsActivity.class);
-
-        if ("DNSCrypt".equals(moduleName)) {
-            intent.setAction("DNS_Pref");
-        } else if ("Tor".equals(moduleName)) {
-            intent.setAction("Tor_Pref");
-        } else if ("ITPD".equals(moduleName)) {
-            intent.setAction("I2PD_Pref");
-        }
-
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK
-                | Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-
-        activity.overridePendingTransition(0, 0);
-        activity.finish();
-
-        activity.overridePendingTransition(0, 0);
-        activity.startActivity(intent);
     }
 }

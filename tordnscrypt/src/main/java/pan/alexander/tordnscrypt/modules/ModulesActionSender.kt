@@ -16,16 +16,15 @@ package pan.alexander.tordnscrypt.modules
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.utils.Utils.isShowNotification
-import java.lang.ref.WeakReference
+import pan.alexander.tordnscrypt.utils.app
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 
 object ModulesActionSender {
     fun sendIntent(context: Context, action: String) {
@@ -36,15 +35,13 @@ object ModulesActionSender {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             intent.putExtra("showNotification", true)
 
-            var isActivityActive = false
-            if (context.applicationContext is App) {
-                val applicationExt = context.applicationContext as App
-                val currentActivity: WeakReference<Activity>? = applicationExt.currentActivity
-                isActivityActive = currentActivity?.get()?.isFinishing == false
-            }
-
-            if (isActivityActive) {
-                context.startService(intent)
+            if (context.app.isAppForeground) {
+                try {
+                    context.startService(intent)
+                } catch (e: Exception) {
+                    loge("ModulesActionSender sendIntent with action $action", e)
+                    context.startForegroundService(intent)
+                }
             } else {
                 context.startForegroundService(intent)
             }

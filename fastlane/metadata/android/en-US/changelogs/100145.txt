@@ -1,0 +1,8 @@
+**InviZible Pro beta 1.4.5**
+* Updated Tor to version 4.6.8 (onion v2 services are no longer supported).
+* Updated Tor snowflake bridge to version 2.0.1.
+* Updated Purple I2P to version 2.40.0.
+* Optimized battery usage.
+* Improved firewall.
+* Fixed using onion websites with DNSCrypt force_tcp enabled.
+* Improved the Arp Spoofing attack detector.

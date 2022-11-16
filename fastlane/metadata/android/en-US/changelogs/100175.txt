@@ -1,0 +1,4 @@
+**InviZible Pro beta 1.7.5**
+* Fixed display of notifications on Android 13.
+* Fixed requesting Tor bridges on Android 4.4.2.
+* Minor fixes and optimizations.

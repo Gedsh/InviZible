@@ -16,17 +16,18 @@ package pan.alexander.tordnscrypt.utils.bootcomplete;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import static pan.alexander.tordnscrypt.BootCompleteReceiver.MY_PACKAGE_REPLACED;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
-import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.actionStopServiceForeground;
+import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.ACTION_STOP_SERVICE_FOREGROUND;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.stopRefreshTorUnlockIPs;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATION_MODE;
@@ -146,9 +147,18 @@ public class BootCompleteManager {
             autoStartTor = savedTorStateRunning;
             autoStartITPD = savedITPDStateRunning;
         } else if (action.equals(SHELL_SCRIPT_CONTROL)) {
-            autoStartDNSCrypt = intent.getIntExtra(MANAGE_DNSCRYPT_EXTRA, 0) == 1;
-            autoStartTor = intent.getIntExtra(MANAGE_TOR_EXTRA, 0) == 1;
-            autoStartITPD = intent.getIntExtra(MANAGE_ITPD_EXTRA, 0) == 1;
+            int startDnsCrypt = intent.getIntExtra(MANAGE_DNSCRYPT_EXTRA, -1);
+            int startTor = intent.getIntExtra(MANAGE_TOR_EXTRA, -1);
+            int startItpd = intent.getIntExtra(MANAGE_ITPD_EXTRA, -1);
+
+            if (startDnsCrypt < 0 || startTor < 0 || startItpd < 0) {
+                loge("SHELL_SCRIPT_CONTROL wrong command");
+                return;
+            }
+
+            autoStartDNSCrypt = startDnsCrypt == 1;
+            autoStartTor = startTor == 1;
+            autoStartITPD = startItpd == 1;
 
             Log.i(LOG_TAG, "SHELL_SCRIPT_CONTROL start: " +
                     "DNSCrypt " + autoStartDNSCrypt + " Tor " + autoStartTor + " ITPD " + autoStartITPD);
@@ -161,7 +171,7 @@ public class BootCompleteManager {
         }
 
         if (autoStartITPD) {
-            shortenTooLongITPDLog();
+            //shortenTooLongITPDLog();
         }
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
@@ -332,13 +342,13 @@ public class BootCompleteManager {
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (mode == VPN_MODE || mode == ROOT_MODE && fixTTL) {
                 Intent stopVPNServiceForeground = new Intent(context, VpnService.class);
-                stopVPNServiceForeground.setAction(actionStopServiceForeground);
+                stopVPNServiceForeground.setAction(ACTION_STOP_SERVICE_FOREGROUND);
                 stopVPNServiceForeground.putExtra("showNotification", true);
                 context.startForegroundService(stopVPNServiceForeground);
             }
 
             Intent stopModulesServiceForeground = new Intent(context, ModulesService.class);
-            stopModulesServiceForeground.setAction(actionStopServiceForeground);
+            stopModulesServiceForeground.setAction(ACTION_STOP_SERVICE_FOREGROUND);
             context.startForegroundService(stopModulesServiceForeground);
             stopModulesServiceForeground.putExtra("showNotification", true);
 

@@ -14,29 +14,97 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.data.connection_records
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsRepository
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecord
+import pan.alexander.tordnscrypt.domain.connection_records.RawConnectionRecordsMapper
+import pan.alexander.tordnscrypt.domain.connection_records.entities.DnsRecord
+import pan.alexander.tordnscrypt.domain.connection_records.entities.PacketRecord
+import pan.alexander.tordnscrypt.modules.ModulesStatus
+import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_KERNEL
+import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import javax.inject.Inject
 
-class ConnectionRecordsRepositoryImpl @Inject constructor(): ConnectionRecordsRepository {
-    private var connectionRecordsGetter: ConnectionRecordsGetter? = null
+@ExperimentalCoroutinesApi
+class ConnectionRecordsRepositoryImpl @Inject constructor(
+    private val connectionRecordsGetter: ConnectionRecordsGetter,
+    private val nflogRecordsGetter: NflogRecordsGetter,
+    private val rawConnectionRecordsMapper: RawConnectionRecordsMapper
+) : ConnectionRecordsRepository {
 
-    override fun getRawConnectionRecords(): List<ConnectionRecord?> {
-        connectionRecordsGetter = connectionRecordsGetter ?: ConnectionRecordsGetter()
-        return connectionRecordsGetter?.getConnectionRawRecords() ?: emptyList()
-    }
+    private val modulesStatus = ModulesStatus.getInstance()
+
+    @Volatile
+    private var savedMode = modulesStatus.mode
+
+    override fun getRawConnectionRecords(): List<ConnectionRecord?> =
+        if (isVpnMode()) {
+
+            if (modulesStatus.mode != savedMode) {
+                stopNflogRecordsGetter()
+                savedMode = modulesStatus.mode
+            }
+
+            rawConnectionRecordsMapper.map(connectionRecordsGetter.getConnectionRawRecords())
+
+        } else if (isFixTTL()) {
+            rawConnectionRecordsMapper.map(
+                connectionRecordsGetter.getConnectionRawRecords()
+                        + nflogRecordsGetter.getConnectionRawRecords().filter {
+                    when (val record = it.key) {
+                        is PacketRecord -> record.uid != SPECIAL_UID_KERNEL
+                        is DnsRecord -> true
+                    }
+                }
+            )
+
+        } else if (isRootMode()) {
+
+            if (modulesStatus.mode != savedMode) {
+                stopConnectionRecordsGetter()
+                savedMode = modulesStatus.mode
+            }
+
+            rawConnectionRecordsMapper.map(nflogRecordsGetter.getConnectionRawRecords())
+        } else {
+            emptyList()
+        }
 
     override fun clearConnectionRawRecords() {
-        connectionRecordsGetter?.clearConnectionRawRecords()
+        if (isVpnMode() || isFixTTL()) {
+            connectionRecordsGetter.clearConnectionRawRecords()
+        } else if (isRootMode()) {
+            nflogRecordsGetter.clearConnectionRawRecords()
+        }
     }
 
     override fun connectionRawRecordsNoMoreRequired() {
-        connectionRecordsGetter?.connectionRawRecordsNoMoreRequired()
+        if (isVpnMode() || isFixTTL()) {
+            connectionRecordsGetter.connectionRawRecordsNoMoreRequired()
+        }
     }
+
+    private fun stopConnectionRecordsGetter() = with(connectionRecordsGetter) {
+        clearConnectionRawRecords()
+        connectionRawRecordsNoMoreRequired()
+    }
+
+    private fun stopNflogRecordsGetter() = with(nflogRecordsGetter) {
+        clearConnectionRawRecords()
+    }
+
+    private fun isVpnMode() = modulesStatus.mode == OperationMode.VPN_MODE
+
+    private fun isRootMode() = modulesStatus.mode == OperationMode.ROOT_MODE
+            && !modulesStatus.isUseModulesWithRoot
+
+    private fun isFixTTL() = modulesStatus.isFixTTL
+            && modulesStatus.mode == OperationMode.ROOT_MODE
+            && !modulesStatus.isUseModulesWithRoot
 
 }

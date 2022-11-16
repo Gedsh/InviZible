@@ -16,13 +16,14 @@ package pan.alexander.tordnscrypt.installer;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import androidx.fragment.app.FragmentManager;
@@ -48,20 +49,24 @@ import pan.alexander.tordnscrypt.modules.ModulesVersions;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
-import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.INSTALLER_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.InstallerMark;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 public class Installer implements TopFragment.OnActivityChangeListener {
 
     @Inject
     public Lazy<PathVars> pathVars;
+    @Inject @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultPreferences;
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
@@ -286,7 +291,8 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
         boolean result = true;
         try {
-            countDownLatch.await();
+            //noinspection ResultOfMethodCallIgnored
+            countDownLatch.await(10, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             Log.e(LOG_TAG, "Installer CountDownLatch interrupted");
             result = false;
@@ -376,14 +382,12 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
     @SuppressLint("SdCardPath")
     private List<String> prepareDNSCryptForGP(List<String> lines) {
+
+        defaultPreferences.get().edit().putBoolean("require_nofilter", true).apply();
+
         ArrayList<String> prepared = new ArrayList<>();
 
         for (String line : lines) {
-            /*if (line.contains("block_unqualified")) {
-                line = "block_unqualified = false";
-            } else if (line.contains("block_undelegated")) {
-                line = "block_undelegated = false";
-            } else */
 
             if (line.contains("blacklist_file")) {
                 line = "";
@@ -396,16 +400,18 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             } else if (line.matches("(^| )\\{ ?server_name([ =]).+")) {
                 line = "";
             } else if (line.matches("(^| )server_names([ =]).+")) {
-                line = "server_names = ['ams-dnscrypt-nl', " +
-                        "'ams-doh-nl', " +
-                        "'plan9-ns1', " +
+                line = "server_names = ['uncensoreddns-dk-ipv4', " +
+                        "'njalla-doh', " +
+                        "'faelix-ch-ipv4', " +
                         "'dns.digitale-gesellschaft.ch', " +
                         "'dnscrypt.ca-1', " +
                         "'sth-doh-se', " +
                         "'libredns', " +
-                        "'opennic-luggs', " +
+                        "'dnscrypt.eu-nl', " +
                         "'publicarray-au-doh', " +
                         "'scaleway-fr']";
+            } else if (line.contains("require_nofilter")) {
+                line = "require_nofilter = true";
             }
 
             if (!line.isEmpty()) {
@@ -440,9 +446,9 @@ public class Installer implements TopFragment.OnActivityChangeListener {
                 "iptables -F tordnscrypt_forward 2> /dev/null",
                 "iptables -t nat -D PREROUTING -j tordnscrypt_prerouting 2> /dev/null || true",
                 "iptables -D FORWARD -j tordnscrypt_forward 2> /dev/null || true",
-                busyboxNative + "pkill -SIGTERM /libdnscrypt-proxy.so 2> /dev/null",
-                busyboxNative + "pkill -SIGTERM /libtor.so 2> /dev/null",
-                busyboxNative + "pkill -SIGTERM /libi2pd.so 2> /dev/null",
+                busyboxNative + "pkill -SIGTERM /libdnscrypt-proxy.so 2> /dev/null || true",
+                busyboxNative + "pkill -SIGTERM /libtor.so 2> /dev/null || true",
+                busyboxNative + "pkill -SIGTERM /libi2pd.so 2> /dev/null || true",
                 busyboxNative + "sleep 7 2> /dev/null",
                 busyboxNative + "pgrep -l /libdnscrypt-proxy.so 2> /dev/null",
                 busyboxNative + "pgrep -l /libtor.so 2> /dev/null",
@@ -450,12 +456,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
                 busyboxNative + "echo 'checkModulesRunning' 2> /dev/null"
         ));
 
-        RootCommands rootCommands = new RootCommands(commandsInstall);
-        Intent intent = new Intent(activity, RootExecService.class);
-        intent.setAction(RootExecService.RUN_COMMAND);
-        intent.putExtra("Commands", rootCommands);
-        intent.putExtra("Mark", InstallerMark);
-        RootExecService.performAction(activity, intent);
+        RootCommands.execute(activity, commandsInstall, INSTALLER_MARK);
     }
 
     protected void stopAllRunningModulesWithNoRootCommand() {
@@ -496,7 +497,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         RootCommands comResult = new RootCommands(new ArrayList<>(Collections.singletonList(result)));
         Intent intent = new Intent(COMMAND_RESULT);
         intent.putExtra("CommandsResult", comResult);
-        intent.putExtra("Mark", InstallerMark);
+        intent.putExtra("Mark", INSTALLER_MARK);
         LocalBroadcastManager.getInstance(activity).sendBroadcast(intent);
     }
 
@@ -522,7 +523,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             modulesVersions.get().refreshVersions(activity);
         }
 
-        preferenceRepository.get().setBoolPreference("refresh_main_activity", true);
+        preferenceRepository.get().setBoolPreference(MAIN_ACTIVITY_RECREATE, true);
     }
 
     protected void registerReceiver(Activity activity) {

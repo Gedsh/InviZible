@@ -16,22 +16,23 @@ package pan.alexander.tordnscrypt.dialogs;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Dialog;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 
 import javax.inject.Inject;
 
@@ -78,7 +79,7 @@ public abstract class ExtendedDialogFragment extends DialogFragment {
         if (builder != null) {
             return builder.create();
         } else {
-            Log.e(LOG_TAG, "ExtendedDialogFragment fault: please assignBuilder first");
+            loge("ExtendedDialogFragment fault: please assignBuilder first");
             return super.onCreateDialog(savedInstanceState);
         }
     }
@@ -86,11 +87,15 @@ public abstract class ExtendedDialogFragment extends DialogFragment {
     @Override
     public void show(FragmentManager manager, String tag) {
         try {
-            FragmentTransaction ft = manager.beginTransaction();
-            ft.add(this, tag);
-            ft.commitAllowingStateLoss();
+            manager.executePendingTransactions();
+            Fragment fragment = manager.findFragmentByTag(tag);
+            if (fragment == null || !fragment.isAdded()) {
+                FragmentTransaction ft = manager.beginTransaction();
+                ft.add(this, tag);
+                ft.commitAllowingStateLoss();
+            }
         } catch (IllegalStateException e) {
-            Log.w(LOG_TAG, "ExtendedDialogFragment Exception " + e.getMessage() + " " + e.getCause());
+            logw("ExtendedDialogFragment show", e);
         }
     }
 

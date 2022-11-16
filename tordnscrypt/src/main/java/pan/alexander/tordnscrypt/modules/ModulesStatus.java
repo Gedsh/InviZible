@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.modules;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
@@ -45,6 +45,7 @@ public final class ModulesStatus {
     private volatile boolean dnsCryptReady;
     private volatile boolean torReady;
     private volatile boolean itpdReady;
+    private volatile boolean deviceInteractive = true;
 
     private static volatile ModulesStatus modulesStatus;
 
@@ -183,5 +184,13 @@ public final class ModulesStatus {
 
     public void setItpdReady(boolean itpdReady) {
         this.itpdReady = itpdReady;
+    }
+
+    public boolean isDeviceInteractive() {
+        return deviceInteractive;
+    }
+
+    public void setDeviceInteractive(boolean interactive) {
+        this.deviceInteractive = interactive;
     }
 }

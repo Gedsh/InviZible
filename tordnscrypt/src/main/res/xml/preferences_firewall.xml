@@ -7,4 +7,12 @@
         android:title="@string/pref_firewall_allow_internet_for_new_apps"
         android:summaryOn="@string/pref_firewall_allow_internet_for_new_apps_on_summ"
         android:summaryOff="@string/pref_firewall_allow_internet_for_new_apps_off_summ"/>
+
+    <SwitchPreference
+        android:id="@+id/pref_firewall_show_all_apps"
+        android:defaultValue="false"
+        android:key="FirewallShowsAllApps"
+        android:title="@string/pref_firewall_show_all_apps"
+        android:summaryOn="@string/pref_firewall_show_all_apps_on_summ"
+        android:summaryOff="@string/pref_firewall_show_all_apps_off_summ"/>
 </androidx.preference.PreferenceScreen>

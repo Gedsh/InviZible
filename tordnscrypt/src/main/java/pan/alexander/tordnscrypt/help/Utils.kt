@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.help
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context
@@ -28,7 +28,7 @@ import android.util.Log
 import pan.alexander.tordnscrypt.BuildConfig
 import pan.alexander.tordnscrypt.TopFragment
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
-import pan.alexander.tordnscrypt.vpn.NetworkUtils
+import pan.alexander.tordnscrypt.vpn.VpnUtils
 import java.util.*
 
 object Utils {
@@ -95,7 +95,7 @@ object Utils {
                     "APP_VERSION_CODE " + BuildConfig.VERSION_CODE + 10.toChar() +
                     "APP_VERSION_NAME " + BuildConfig.VERSION_NAME + 10.toChar() +
                     "APP_PROC_VERSION " + TopFragment.appProcVersion + 10.toChar() +
-                    "CAN_FILTER " + NetworkUtils.canFilter() + 10.toChar() +
+                    "CAN_FILTER " + VpnUtils.canFilter() + 10.toChar() +
                     "APP_VERSION " + TopFragment.appVersion + 10.toChar() +
                     "DNSCRYPT_INTERNAL_VERSION " + TopFragment.DNSCryptVersion + 10.toChar() +
                     "TOR_INTERNAL_VERSION " + TopFragment.TorVersion + 10.toChar() +
@@ -113,7 +113,7 @@ object Utils {
                     "APP_VERSION_CODE " + BuildConfig.VERSION_CODE + 10.toChar() +
                     "APP_VERSION_NAME " + BuildConfig.VERSION_NAME + 10.toChar() +
                     "APP_PROC_VERSION " + TopFragment.appProcVersion + 10.toChar() +
-                    "CAN_FILTER " + NetworkUtils.canFilter() + 10.toChar() +
+                    "CAN_FILTER " + VpnUtils.canFilter() + 10.toChar() +
                     "APP_VERSION " + TopFragment.appVersion + 10.toChar() +
                     "DNSCRYPT_INTERNAL_VERSION " + TopFragment.DNSCryptVersion + 10.toChar() +
                     "TOR_INTERNAL_VERSION " + TopFragment.TorVersion + 10.toChar() +

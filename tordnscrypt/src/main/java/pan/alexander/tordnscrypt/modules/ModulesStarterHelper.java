@@ -16,14 +16,12 @@ package pan.alexander.tordnscrypt.modules;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -31,7 +29,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.jrummyapps.android.shell.CommandResult;
 import com.jrummyapps.android.shell.Shell;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -48,12 +45,17 @@ import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DNSCRYPT_KEYWORD;
 import static pan.alexander.tordnscrypt.modules.ModulesService.ITPD_KEYWORD;
 import static pan.alexander.tordnscrypt.modules.ModulesService.TOR_KEYWORD;
+import static pan.alexander.tordnscrypt.utils.AppExtension.getApp;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_DEFAULT_BRIDGES;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_OWN_BRIDGES;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.DNSCRYPT_RUN_FRAGMENT_MARK;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.I2PD_RUN_FRAGMENT_MARK;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.TOP_FRAGMENT_MARK;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.TOR_RUN_FRAGMENT_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.DNSCryptRunFragmentMark;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.I2PDRunFragmentMark;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.TopFragmentMark;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.TorRunFragmentMark;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -118,9 +120,9 @@ public class ModulesStarterHelper {
                 preferenceRepository.get().setBoolPreference("DNSCryptStartedWithRoot", true);
 
                 if (shellResult.getStdout().contains(dnscryptPath)) {
-                    sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, dnscryptPath);
+                    sendResultIntent(DNSCRYPT_RUN_FRAGMENT_MARK, DNSCRYPT_KEYWORD, dnscryptPath);
                 } else {
-                    sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
+                    sendResultIntent(DNSCRYPT_RUN_FRAGMENT_MARK, DNSCRYPT_KEYWORD, "");
                 }
 
             } else {
@@ -150,15 +152,23 @@ public class ModulesStarterHelper {
                     sendAskForceCloseBroadcast(context, "DNSCrypt");
                 }
 
-                Log.e(LOG_TAG, "Error DNSCrypt: "
+                loge("Error DNSCrypt: "
                         + shellResult.exitCode + " ERR=" + shellResult.getStderr()
                         + " OUT=" + shellResult.getStdout());
 
-                modulesStatus.setDnsCryptState(STOPPED);
+                if (!getApp(context).isAppForeground()
+                        && modulesStatus.getDnsCryptState() == RUNNING
+                        && modulesStatus.isDnsCryptReady()) {
+                    ModulesRestarter.restartDNSCrypt(context);
+                    logw("Trying to restart DNSCrypt");
+                } else {
+                    modulesStatus.setDnsCryptState(STOPPED);
 
-                ModulesAux.makeModulesStateExtraLoop(context);
+                    ModulesAux.makeModulesStateExtraLoop(context);
 
-                sendResultIntent(DNSCryptRunFragmentMark, DNSCRYPT_KEYWORD, "");
+                    sendResultIntent(DNSCRYPT_RUN_FRAGMENT_MARK, DNSCRYPT_KEYWORD, "");
+                }
+
             }
 
             Thread.currentThread().interrupt();
@@ -188,9 +198,9 @@ public class ModulesStarterHelper {
                 preferenceRepository.get().setBoolPreference("TorStartedWithRoot", true);
 
                 if (shellResult.getStdout().contains(torPath)) {
-                    sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, torPath);
+                    sendResultIntent(TOR_RUN_FRAGMENT_MARK, TOR_KEYWORD, torPath);
                 } else {
-                    sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
+                    sendResultIntent(TOR_RUN_FRAGMENT_MARK, TOR_KEYWORD, "");
                 }
 
             } else {
@@ -232,39 +242,30 @@ public class ModulesStarterHelper {
                     }
                 }
 
-                Log.e(LOG_TAG, "Error Tor: " + shellResult.exitCode
+                loge("Error Tor: " + shellResult.exitCode
                         + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
 
-                if (!isActivityActive() && modulesStatus.getTorState() == RUNNING) {
-                    System.exit(0);
+                if (!getApp(context).isAppForeground()
+                        && modulesStatus.getTorState() == RUNNING) {
+                    if (modulesStatus.isTorReady()) {
+                        ModulesRestarter.restartTor(context);
+                        logw("Trying to restart Tor");
+                    } else {
+                        loge("Using System.exit() to ask Android to restart everything from scratch");
+                        System.exit(0);
+                    }
+                } else {
+                    modulesStatus.setTorState(STOPPED);
+
+                    ModulesAux.makeModulesStateExtraLoop(context);
+
+                    sendResultIntent(TOR_RUN_FRAGMENT_MARK, TOR_KEYWORD, "");
                 }
 
-                modulesStatus.setTorState(STOPPED);
-
-                ModulesAux.makeModulesStateExtraLoop(context);
-
-                sendResultIntent(TorRunFragmentMark, TOR_KEYWORD, "");
             }
 
             Thread.currentThread().interrupt();
         };
-    }
-
-    private boolean isActivityActive() {
-
-        App app = App.Companion.getInstance();
-
-        WeakReference<Activity> activityWeakReference = app.getCurrentActivity();
-        if (activityWeakReference == null) {
-            return false;
-        }
-
-        Activity activity = activityWeakReference.get();
-        if (activity == null) {
-            return false;
-        }
-
-        return !activity.isFinishing();
     }
 
     Runnable getITPDStarterRunnable() {
@@ -293,9 +294,9 @@ public class ModulesStarterHelper {
                 preferenceRepository.get().setBoolPreference("ITPDStartedWithRoot", true);
 
                 if (shellResult.getStdout().contains(itpdPath)) {
-                    sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, itpdPath);
+                    sendResultIntent(I2PD_RUN_FRAGMENT_MARK, ITPD_KEYWORD, itpdPath);
                 } else {
-                    sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
+                    sendResultIntent(I2PD_RUN_FRAGMENT_MARK, ITPD_KEYWORD, "");
                 }
 
             } else {
@@ -326,14 +327,21 @@ public class ModulesStarterHelper {
                     sendAskForceCloseBroadcast(context, "I2P");
                 }
 
-                Log.e(LOG_TAG, "Error ITPD: " + shellResult.exitCode + " ERR="
+                loge("Error ITPD: " + shellResult.exitCode + " ERR="
                         + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
 
-                modulesStatus.setItpdState(STOPPED);
+                if (!getApp(context).isAppForeground()
+                        && modulesStatus.getItpdState() == RUNNING
+                        && modulesStatus.isItpdReady()) {
+                    ModulesRestarter.restartITPD(context);
+                    logw("Trying to restart Purple I2P");
+                } else {
+                    modulesStatus.setItpdState(STOPPED);
 
-                ModulesAux.makeModulesStateExtraLoop(context);
+                    ModulesAux.makeModulesStateExtraLoop(context);
 
-                sendResultIntent(I2PDRunFragmentMark, ITPD_KEYWORD, "");
+                    sendResultIntent(I2PD_RUN_FRAGMENT_MARK, ITPD_KEYWORD, "");
+                }
             }
 
             Thread.currentThread().interrupt();
@@ -387,8 +395,8 @@ public class ModulesStarterHelper {
 
             preferences.setStringPreference("ObfsBinaryPath", currentObfsBinaryPath);
 
-            boolean useDefaultBridges = preferences.getBoolPreference("useDefaultBridges");
-            boolean useOwnBridges = preferences.getBoolPreference("useOwnBridges");
+            boolean useDefaultBridges = preferences.getBoolPreference(USE_DEFAULT_BRIDGES);
+            boolean useOwnBridges = preferences.getBoolPreference(USE_OWN_BRIDGES);
 
             if (useDefaultBridges || useOwnBridges) {
 
@@ -406,7 +414,7 @@ public class ModulesStarterHelper {
 
                 FileManager.writeTextFileSynchronous(context, torConfPath, lines);
 
-                Log.i(LOG_TAG, "ModulesService Tor Obfs module path is corrected");
+                logi("ModulesService Tor Obfs module path is corrected");
             }
         }
     }
@@ -439,7 +447,7 @@ public class ModulesStarterHelper {
 
     private void sendAskForceCloseBroadcast(Context context, String module) {
         Intent intent = new Intent(ASK_FORCE_CLOSE);
-        intent.putExtra("Mark", TopFragmentMark);
+        intent.putExtra("Mark", TOP_FRAGMENT_MARK);
         intent.putExtra(MODULE_NAME, module);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }

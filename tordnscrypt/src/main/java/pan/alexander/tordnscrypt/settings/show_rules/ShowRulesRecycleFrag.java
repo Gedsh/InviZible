@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.settings.show_rules;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Activity;
@@ -28,7 +28,6 @@ import androidx.annotation.Nullable;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import androidx.appcompat.widget.LinearLayoutCompat;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
@@ -66,7 +65,6 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
 
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter<RulesAdapter.RuleViewHolder> mAdapter;
-    private FloatingActionButton btnAddRule;
 
     private final ArrayList<String> rules_file = new ArrayList<>();
     private final ArrayList<Rules> rules_list = new ArrayList<>();
@@ -111,7 +109,7 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
             showTooManyRulesDialog();
         }
 
-        btnAddRule = view.findViewById(R.id.floatingBtnAddRule);
+        FloatingActionButton btnAddRule = view.findViewById(R.id.floatingBtnAddRule);
         if (readOnly) {
             btnAddRule.setVisibility(View.GONE);
         } else {
@@ -215,7 +213,7 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
     private void showTooManyRulesDialog() {
         DialogFragment dialogFragment = NotificationDialogFragment.newInstance(R.string.dnscrypt_many_rules_dialog_message);
         if (isAdded()) {
-            dialogFragment.show(getParentFragmentManager(), "TooManyRules");
+            dialogFragment.show(getChildFragmentManager(), "TooManyRules");
         }
     }
 
@@ -265,7 +263,7 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
     public void onClick(View v) {
         boolean subscription = file_path.contains("subscriptions");
         rules_list.add(new Rules("", true, false, subscription));
-        mAdapter.notifyDataSetChanged();
+        mAdapter.notifyItemInserted(rules_list.size() - 1);
         mRecyclerView.scrollToPosition(rules_list.size() - 1);
     }
 
@@ -317,14 +315,12 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
             EditText etRule;
             ImageButton delBtnRules;
             SwitchCompat swRuleActive;
-            LinearLayoutCompat llRules;
 
             RuleViewHolder(View itemView) {
                 super(itemView);
 
                 etRule = itemView.findViewById(R.id.etRule);
                 delBtnRules = itemView.findViewById(R.id.delBtnRules);
-                llRules = itemView.findViewById(R.id.llRules);
                 swRuleActive = itemView.findViewById(R.id.swRuleActive);
 
                 if (readOnly) {
@@ -356,12 +352,6 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
                 if (getRule(position).locked) {
                     delBtnRules.setEnabled(false);
                 }
-
-                if (position == list_rules_adapter.size() - 1) {
-                    llRules.setPadding(0, 0, 0, btnAddRule.getHeight());
-                } else {
-                    llRules.setPadding(0, 0, 0, 0);
-                }
             }
 
             TextWatcher textWatcher = new TextWatcher() {
@@ -371,8 +361,9 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
 
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if (!getRule(getAdapterPosition()).locked)
-                        getRule(getAdapterPosition()).text = s.toString();
+                    int position = getBindingAdapterPosition();
+                    if (!getRule(position).locked)
+                        getRule(position).text = s.toString();
                 }
 
                 @Override
@@ -383,23 +374,25 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
             @Override
             public void onClick(View v) {
                 if (v.getId() == R.id.delBtnRules) {
-                    delRule(getAdapterPosition());
-                    notifyDataSetChanged();
+                    int position = getBindingAdapterPosition();
+                    delRule(position);
+                    notifyItemRemoved(position);
                 }
             }
 
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (getRule(getAdapterPosition()).active != isChecked) {
-                    getRule(getAdapterPosition()).active = isChecked;
-                    notifyItemChanged(getAdapterPosition());
+                int position = getBindingAdapterPosition();
+                if (getRule(position).active != isChecked) {
+                    getRule(position).active = isChecked;
+                    notifyItemChanged(position);
                 }
             }
 
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 if (hasFocus) {
-                    mRecyclerView.smoothScrollToPosition(getAdapterPosition());
+                    mRecyclerView.smoothScrollToPosition(getBindingAdapterPosition());
                 }
             }
         }

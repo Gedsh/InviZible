@@ -25,5 +25,7 @@
 #}
 
 -keep class com.android.vending.billing.**
+#fix android.view.InflateException: Error inflating class com.google.android.material.chip.Chip for Android 4.4.2
+-keepclassmembers,allowoptimization,allowobfuscation public class com.google.android.material.chip.** {*;}
 
 -keepattributes *Annotation*,SourceFile,LineNumberTable

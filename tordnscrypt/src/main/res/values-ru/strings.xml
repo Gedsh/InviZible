@@ -11,7 +11,7 @@
     <string name="tvITPDInstalled">I2P установлен</string>
     <string name="tvITPDNotInstalled">I2P не установлен</string>
     <string name="swRunOnBoot">Автозагрузка</string>
-    <string name="root_available">Проверка наличия Root</string>
+    <string name="root_available">Проверка наличия Root…</string>
     <string name="please_wait">Пожалуйста подождите…</string>
     <string name="dont_show">Больше не показывать</string>
     <string name="tvDNSStop">DNSCrypt остановлен</string>
@@ -36,7 +36,7 @@
     <string name="wrong">Что-то пошло не так!</string>
     <string name="areYouSure">Вы уверены? Это действие не может быть отменено!</string>
     <string name="install_message">Вы хотите завершить установку?</string>
-    <string name="write_file_error">Ошибка при сохранении файла!</string>
+    <string name="write_file_error">Ошибка сохранения файла!</string>
     <string name="drawer_menu_commonSettings">Общие настройки</string>
     <string name="drawer_menu_DNSSettings">Настройки DNSCrypt</string>
     <string name="drawer_menu_TorSettings">Настройки Tor</string>
@@ -56,7 +56,7 @@
     <string name="pref_fast_tor_autostart">Автозагрузка Tor</string>
     <string name="pref_fast_itpd_autostart">Автозагрузка I2P</string>
     <string name="pref_fast_autostart_delay">Задержка</string>
-    <string name="pref_fast_autostart_delay_summ">Используйте задержку автозагрузки (в сек) только если автозапуск работает некорректно</string>
+    <string name="pref_fast_autostart_delay_summ">Используйте задержку автозагрузки (сек) только в том случае, если автозапуск работает неправильно</string>
     <string name="pref_fast_dns_server">Сервера DNSCrypt</string>
     <string name="pref_fast_select_dns_server">Выбрать сервера DNSCrypt</string>
     <string name="pref_fast_tor">Настройки Tor</string>
@@ -107,6 +107,10 @@
         Иначе андроид может завершить DNSCrypt, Tor или I2P в любой момент.
         Для некоторых оболочек, например MIUI, могут потребоваться дополнительные настройки.</string>
     <string name="pref_common_use_busybox">Выбрать BusyBox</string>
+    <string name="pref_common_use_busybox_auto">Автоматически</string>
+    <string name="pref_common_use_busybox_device">Использовать BusyBox телефона</string>
+    <string name="pref_common_use_busybox_app">Использовать BusyBox приложения</string>
+    <string name="pref_common_use_busybox_not_use">Не использовать BusyBox</string>
     <string name="pref_common_categ_hotspot">Точка доступа</string>
     <string name="pref_common_tethering_autostart">Автозапуск раздачи</string>
     <string name="pref_common_tor_tethering">Разрешить раздачу Tor</string>
@@ -124,7 +128,11 @@
     <string name="pref_common_tethering_settings">Открыть настройки точки доступа</string>
     <string name="pref_common_restart_tor">Пожалуйста, перезапустите Tor</string>
     <string name="pref_common_restart_itpd">Пожалуйста, перезапустите I2P</string>
-    <string name="pref_common_use_iptables">Выбрать Iptables</string>
+    <string name="pref_common_use_iptables">Выбрать iptables</string>
+    <string name="pref_common_use_iptables_app">Использовать iptables приложения</string>
+    <string name="pref_common_use_iptables_device">Использовать iptables телефона</string>
+    <string name="pref_common_wait_iptables">Ожидать разблокировку xtables</string>
+    <string name="pref_common_wait_iptables_summ">Ждать разблокировку iptables, чтобы предотвратить одновременную модификацию правил iptables несколькими программами.</string>
     <string name="pref_common_log_root_commands">Логировать команды root</string>
     <string name="notification_text">DNSCrypt, Tor, I2P защищены. Не скрывайте уведомление.</string>
     <string name="notification_temp_text">Выполнение Рут команд…</string>
@@ -133,56 +141,50 @@
     <string name="pref_dnscrypt_global_settings_categ">ОБЩИЕ НАСТРОЙКИ</string>
     <string name="pref_advanced">Только для опытных пользователей!</string>
     <string name="pref_dnscrypt_select_server_names">Выберите хотя бы один сервер!</string>
-    <string name="pref_dnscrypt_local_port_summ">Номер порта</string>
+    <string name="pref_dnscrypt_local_port_summ">Номер порта.</string>
     <string name="pref_dnscrypt_require_servers_categ">Фильтровать сервера по параметрам.</string>
     <string name="pref_dnscrypt_dnscrypt_servers_summ">Использовать сервера, которые поддерживают протокол DNSCrypt.</string>
     <string name="pref_dnscrypt_doh_servers_summ">Использовать сервера, которые поддерживают протокол DNS-over-HTTPS.</string>
     <string name="pref_dnscrypt_require_servers_prop_categ">Фильтровать сервера по параметрам.</string>
     <string name="pref_dnscrypt_require_dnssec_summ">Использовать сервера, которые поддерживают безопасное расширение DNS - (DNSSEC).</string>
-    <string name="pref_dnscrypt_require_nolog_summ">Использовать сервера, которые не логируют запросы (обещают:))</string>
+    <string name="pref_dnscrypt_require_nolog_summ">Использовать сервера, которые не логируют запросы (обещают:)).</string>
     <string name="pref_dnscrypt_require_nofilter_summ">Сервера не должны использовать черный список (для родительского контроля, блокировки рекламы…).</string>
     <string name="pref_dnscrypt_force_tcp_categ">Всегда использовать TCP протокол, для соединения с серверами.</string>
     <string name="pref_dnscrypt_force_tcp_summ">Это может быть полезным, когда вы перенаправляете весь трафик через Tor.
-        Иначе не активируйте, так как это не улучшит безопасность. DNSCrypt и так шифрует все запросы, даже через UDP. А задержки могут увеличиться.
-        Не включайте если хотите пользоваться onion сайтами Tor!</string>
+        Иначе не активируйте, так как это не улучшит безопасность. DNSCrypt и так шифрует все запросы, даже через UDP. А задержки могут увеличиться.</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS прокси.</string>
     <string name="pref_dnscrypt_use_proxy">Включить прокси</string>
-    <string name="pref_dnscrypt_proxy_summ">Перенаправить все TCP соединения на Tor. Tor не поддерживает UDP, поэтому обязательно активируйте force_tcp.</string>
+    <string name="pref_dnscrypt_proxy_summ">Перенаправить все TCP соединения на Tor. Он не поддерживает UDP, поэтому обязательно активируйте force_tcp.</string>
     <string name="pref_dnscrypt_proxy">Прокси порт</string>
-    <string name="pref_dnscrypt_other_categ">Другие настройки</string>
-    <string name="pref_dnscrypt_ignore_system_dns_summ">Не позволять dnscrypt-proxy использовать системные настройки DNS.
-        Использовать сервер для восстановления…</string>
-    <string name="pref_dnscrypt_fallback_resolver_summ">Сервер для начальной загрузки.\nЭто обычный сервер,
-        который не поддерживает шифрование. Используется только для скачивания списка серверов,
-        которые поддерживают шифрование, если системный DNS сервер не работает. Он никогда не используется,
-        если загружен список серверов, которые поддерживают шифрование.</string>
+    <string name="pref_dnscrypt_other_categ">Другие настройки.</string>
+    <string name="pref_dnscrypt_ignore_system_dns_summ">Не позволять dnscrypt-proxy использовать системные настройки DNS. Использовать сервер для восстановления..</string>
+    <string name="pref_dnscrypt_fallback_resolver_summ">Сервер для начальной загрузки. Это обычный сервер, который не поддерживает шифрование. Используется только для скачивания списка серверов, которые поддерживают шифрование, если системный DNS сервер не работает. Он никогда не используется, если загружен список серверов, которые поддерживают шифрование.</string>
     <string name="pref_dnscrypt_filters_categ">ФИЛЬТРЫ</string>
-    <string name="pref_dnscrypt_forwarding_rules_summ">Перенаправить запросы к выбраным сайтам на определенные сервера.</string>
-    <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking возвращает предопределенные адреса для
-        выбранных сайтов. Работает как дополнительный HOSTS файл.</string>
+    <string name="pref_dnscrypt_forwarding_rules_summ">Перенаправить запросы к выбранным сайтам на определенные сервера.</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking возвращает предопределенные адреса для выбранных сайтов.
+\n Работает как дополнительный HOSTS файл.</string>
     <string name="pref_dnscrypt_query_log_categ">Логировать запросы.</string>
     <string name="pref_dnscrypt_query_log_summ">Записывать лог в файл.</string>
-    <string name="pref_dnscrypt_query_log">Включить лог.</string>
+    <string name="pref_dnscrypt_query_log">Включить лог</string>
     <string name="pref_dnscrypt_ignored_qtypes_summ">Не логировать эти типы запросов. Оставьте пустым, чтоб логировать все.</string>
-    <string name="open_query_log">Открыть лог запросов.</string>
+    <string name="open_query_log">Открыть лог запросов</string>
     <string name="pref_dnscrypt_nx_log_categ">Логировать подозрительные запросы.</string>
     <string name="pref_dnscrypt_nx_log_summ">Логировать запросы к несуществующим зонам.
-        Эти запросы могут показать наличие вредоносов или неправильных приложений.
-        А также передачу информации о их наличии третьей стороне.</string>
+\n Эти запросы могут показать наличие вредоносов или неправильных приложений. А также передачу информации о их наличии третьей стороне..</string>
     <string name="pref_dnscrypt_nx_log">Включить лог</string>
     <string name="open_nx_log">Открыть лог запросов</string>
-    <string name="pref_dnscrypt_blacklist_categ">Черный список сайтов</string>
+    <string name="pref_dnscrypt_blacklist_categ">Черный список сайтов.</string>
     <string name="pref_dnscrypt_blacklist">Черный список</string>
-    <string name="pref_dnscrypt_blacklist_summ">Черный список формируется одним сайтом в строчке</string>
-    <string name="pref_dnscrypt_ipblacklist_categ">Черный список IP</string>
+    <string name="pref_dnscrypt_blacklist_summ">Черный список формируется одним сайтом в строчке.</string>
+    <string name="pref_dnscrypt_ipblacklist_categ">Черный список IP.</string>
     <string name="pref_dnscrypt_ipblacklist">Черный список IP</string>
-    <string name="pref_dnscrypt_ipblacklist_summ">Черный список формируется одним IP в строчке</string>
-    <string name="pref_dnscrypt_whitelist_categ">Белый список (обход черного списка)</string>
+    <string name="pref_dnscrypt_ipblacklist_summ">Черный список формируется одним IP в строчке.</string>
+    <string name="pref_dnscrypt_whitelist_categ">Белый список (обход черного списка).</string>
     <string name="pref_dnscrypt_whitelist">Белый список</string>
     <string name="pref_dnscrypt_whitelist_summ">Если имя сайта совпадает с записью в списке, к нему доступ будет осуществляться в обход черных списков.</string>
     <string name="pref_dnscrypt_sources_categ">Сервера</string>
     <string name="pref_dnscrypt_sources">Источники</string>
-    <string name="pref_dnscrypt_sources_summ">Список серверов</string>
+    <string name="pref_dnscrypt_sources_summ">Список серверов.</string>
     <string name="pref_dnscrypt_refresh_delay_summ">Список серверов будет обновлен после refresh_delay в часах.</string>
     <string name="pref_dnscrypt_not_exist">Настройка не существует в dnscrypt-proxy.toml!</string>
     <string name="btn_dnscrypt_delete_log">Удалить лог</string>
@@ -191,8 +193,7 @@
     <string name="dnscrypt_empty_log">Лог пустой</string>
     <string name="pref_dnscrypt_block_unqualified_summ">Немедленно отвечать на А и АААА запросы хостов без доменного имени.</string>
     <string name="pref_dnscrypt_block_undelegated_summ">Немедленно отвечать на запросы к локальным зонам вместо их утечки резолверам, что всегда приводит к ошибкам и лагам.</string>
-    <string name="pref_tor_virtual_addr_network_IPv4_summ">Необходимо, чтоб Tor назначил
-        неиспользованный виртуальный диаппазон адресов, для доступа к сайтам в зоне .onion</string>
+    <string name="pref_tor_virtual_addr_network_IPv4_summ">Необходимо, чтоб Tor назначил неиспользованный виртуальный диаппазон адресов, для доступа к сайтам в зоне .onion.</string>
     <string name="pref_tor_avoid_disc_writes_summ">Попытаться уменьшить частоту записи на диск.</string>
     <string name="pref_tor_connections_padding_summ">Эта опция указывает Tor использовать padding, для
         предотвращения некоторых форм анализа трафика. Выключите, чтоб уменьшить траффик.</string>
@@ -208,9 +209,7 @@
     <string name="pref_tor_new_circuit_period_summ">Количество секунд перед построением новой цепочки.</string>
     <string name="pref_tor_max_circuit_dirtiness_summ">Свободно переиспользовать цепочку через заданное
         количество секунд, но никогда не присоединяться к цепочке, если она слишком старая.</string>
-    <string name="pref_tor_enforce_distinct_subnets_summ">Если активированно, Tor никогда не будет
-        выбирать два сервера, чьи IP адреса слишком близко, для одной и той же цепочки.
-        На данный момент IP серверов считается слишком близкими, если они находятся в одном /16 диаппазоне</string>
+    <string name="pref_tor_enforce_distinct_subnets_summ">Если активированно, Tor никогда не будет выбирать два сервера, чьи IP адреса слишком близко, для одной и той же цепочки. На данный момент IP серверов считается слишком близкими, если они находятся в одном /16 диаппазоне.</string>
     <string name="pref_tor_enable_SOCKS_proxy">Включить SOCKS прокси</string>
     <string name="pref_tor_SOCKS_port_summ">Открыть этот порт для приложений, поддерживающих SOCKS проксификацию.</string>
     <string name="pref_tor_enable_HTTPTunnel_proxy">Активировать HTTPTunnel</string>
@@ -242,6 +241,7 @@
     <string name="pref_itpd_com_bandwidth_summ">Ограничение полосы пропускания в KBps.</string>
     <string name="pref_itpd_com_share_summ">Максимальная полоса пропускания для транзита 0–100%.</string>
     <string name="pref_itpd_com_ssu_summ">Включить SSU протокол (использовать UDP).</string>
+    <string name="pref_itpd_com_ssu2_summ">Включить SSU2 протокол (использовать UDP).</string>
     <string name="pref_itpd_com_ntcp_summ">Включить NTCP2 протокол (использовать TCP).</string>
     <string name="pref_itpd_com_use_ntcpproxy">Включить ntcpproxy</string>
     <string name="pref_itpd_com_ntcpproxy_summ">Выбрать прокси сервер для NTCP. Должно быть http://address:port или socks://address:port.</string>
@@ -256,7 +256,7 @@
     <string name="pref_itpd_SAM_interface">SAM интерфейс</string>
     <string name="pref_itpd_SAM_interface_enabled">SAM интерфейс</string>
     <string name="pref_itpd_SAM_interface_port">SAM порт</string>
-    <string name="pref_itpd_SAM_interface_port_summ">Порт SAM моста</string>
+    <string name="pref_itpd_SAM_interface_port_summ">Порт SAM моста.</string>
     <string name="pref_itpd_Cryptography">Криптография</string>
     <string name="pref_itpd_elgamal_summ">Использовать таблицы ElGamal.</string>
     <string name="pref_itpd_UPNP_summ">Включить или выключить UPnP.</string>
@@ -266,6 +266,7 @@
     <string name="pref_itpd_limits_transittunnels_summ">Максимальное количество транзитных тунелей. 2500 по умолчанию.</string>
     <string name="pref_itpd_limits_openfiles_summ">Ограничить количество открытых файловых дескрипторов (0 - использовать системное ограничение).</string>
     <string name="pref_itpd_limits_coresize_summ">Максимальный размер файла ядра в Kb (0 - использовать системное ограничение).</string>
+    <string name="pref_itpd_addressbook">Адресная книга</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">Каталог адресов для начальной настройки.</string>
     <string name="pref_itpd_addressbook_subscriptions_summ">Каталог адресов.</string>
     <string name="pref_itpd_not_exist">Настройка не существует в i2pd.conf!</string>
@@ -278,13 +279,13 @@
     <string name="helper_dnscrypt_no_internet">Похоже InviZible НЕ МОЖЕТ подключиться к ИНТЕРНЕТУ.
         Пожалуйста, проверьте ваш ФАЙРВОЛ. Разрешите интернет для InviZible и приложениям с Root доступом.</string>
     <string name="helper_tor_use_bridges">Похоже Tor НЕ МОЖЕТ подключиться к ИНТЕРНЕТУ.
-        Интернет провайдер может блокировать Tor. Попробуйте использовать мосты Tor. Вы сможете найти их в МЕНЮ -> Быстрые настройки -> Мосты</string>
+        Интернет провайдер может блокировать Tor. Попробуйте использовать мосты Tor. Вы сможете найти их в МЕНЮ -&gt; Быстрые настройки -&gt; Мосты</string>
     <string name="action_mode_child_lock">Детский замок</string>
     <string name="action_mode_dialog_message_lock">Вы можете заблокировать интерфейс этого приложения. Пожалуйста, введите пароль или используйте предыдущий.</string>
     <string name="action_mode_dialog_message_unlock">Пожалуйста, введите пароль.</string>
     <string name="action_mode_dialog_wrong_pass">Пароль неправильный!</string>
-    <string name="action_mode_dialog_unlocked">Интерфейс разблокирован.</string>
-    <string name="action_mode_dialog_locked">Интерфейс заблокирован.</string>
+    <string name="action_mode_dialog_unlocked">Интерфейс разблокирован</string>
+    <string name="action_mode_dialog_locked">Интерфейс заблокирован</string>
     <string name="action_mode_hotspot">Точка доступа</string>
     <string name="help_activity_save_logs">Сохранить логи</string>
     <string name="help_activity_path">Путь к логам:</string>
@@ -346,7 +347,7 @@
     <string name="pref_dnscrypt_relays">Источники</string>
     <string name="pref_dnscrypt_relays_delay_summ">Список реле будет обновлен после refresh_delay в часах.</string>
     <string name="pref_dnscrypt_relays_categ">Реле</string>
-    <string name="pref_dnscrypt_relays_summ">Список реле</string>
+    <string name="pref_dnscrypt_relays_summ">Список реле.</string>
     <string name="pref_dnscrypt_relays_title">Реле DNSCrypt</string>
     <string name="vpn_mode_active">Режим VPN активирован</string>
     <string name="vpn_mode_off">Режим VPN выключен</string>
@@ -362,7 +363,7 @@
     <string name="main_fragment_access_i2p">Доступ к I2P сайтам с помощью Purple I2P</string>
     <string name="tvTorConnecting">Подключение</string>
     <string name="ask_force_close_title">Внимание</string>
-    <string name="ask_force_close_text">InviZible Pro не может запустить %s! Пожалуйста, проверьте настройки %s или попробуйте Завершить приложение.
+    <string name="ask_force_close_text">InviZible Pro не может запустить %1$s! Пожалуйста, проверьте настройки %2$s или попробуйте Завершить приложение.
         Если это не помогает, перезагрузите ваше устройство.</string>
     <string name="ask_force_close_btn">Завершить</string>
     <string name="add_custom_server_title">Добавить сервер</string>
@@ -382,7 +383,7 @@
         \n\n\tInviZible Pro может использовать рут, если у Вас есть рут права, или использовать локальный VPN для доставки интернет траффика в сети Tor, DNSCrypt и I2P.
         \n\n\tПолитика конфиденциальности:
         \n\tInviZible Pro не собирает и не передает какие-либо личные или конфиденциальные данные пользователей.
-        \n\n\tCopyright © 2019-2021
+        \n\n\tCopyright © 2019-2022
         \n\tGarmatin Oleksandr
         \n\tinvizible.soft@gmail.com
         \n\tinvizible.net/en/privacy
@@ -430,11 +431,11 @@
         Это ускоряет работу при отсутствии подключения по протоколу IPv6, но иногда может вызывать проблемы.</string>
     <string name="pref_common_local_eth_device_addr">IP адрес устройства в LAN</string>
     <string name="pref_common_local_eth_device_addr_summ">Включите Зафиксировать TTL и настройте устройство в LAN, чтобы подключиться к InviZible.
-        Используйте шлюз: %s, DNS сервер: %s.</string>
+        Используйте шлюз: %1$s, DNS сервер: %2$s.</string>
     <string name="pref_common_shell_control">Включить управление скриптами</string>
     <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">Используйте следующую команду для управления модулями:
         \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
-        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 -n %s/.BootCompleteReceiver\". Где 1 - запустить, 0 - остановить модуль.</string>
+        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Где 1 - запустить, 0 - остановить модуль.</string>
     <string name="notification_channel_services">Запущенные сервисы</string>
     <string name="notification_channel_update">Обновление</string>
     <string name="notification_channel_root">Команды Рут</string>
@@ -467,7 +468,6 @@
     <string name="pref_common_multi_user">Многопользовательская поддержка</string>
     <string name="pref_common_multi_user_summ">Поддержка двойных приложений, MIUI, Island, Shelter и приложений рабочего профиля</string>
     <string name="dialog_new_tor_default_bridges_available">Доступны новые мосты Tor по-умолчанию. Вы хотите их обновить?</string>
-
     <string name="pref_common_mitm_categ">Обнаружение MITM атак</string>
     <string name="pref_common_arp_spoofing_detection">Обнаружение ARP-спуфинга</string>
     <string name="pref_common_arp_spoofing_detection_summ">Обнаружение ARP-спуфинга и мошеннических DHCP в Wi-Fi сетях.</string>
@@ -520,4 +520,24 @@
     <string name="tile_changing_tor_ip">Смена Tor IP</string>
     <string name="tile_dialog_over_three_tiles_message">Вы добавили более 3-х ярлыков в быстрые настройки.
          Оставьте только 3. Добавление более 3-х ярлыков может вызвать проблемы с управлением приложением.</string>
+    <string name="pref_common_rogue_dhcp_detection">Обнаружение мошеннических DHCP</string>
+    <string name="pref_common_rogue_dhcp_detection_summ">Обнаружение мошеннических DHCP в Wi-Fi сетях.</string>
+    <string name="pref_tor_snowflake_select_rendezvous">Выбрать точку рандеву</string>
+    <string name="pref_tor_snowflake_select_rendezvous_summ">Скрывает доменное имя брокера от интернет-провайдера. Брокер используется для установки соединения.</string>
+    <string name="pref_firewall_show_all_apps">Показывать все приложения</string>
+    <string name="pref_firewall_show_all_apps_on_summ">Показываются все приложения независимо от того, может ли приложение подключаться к Интернету или нет.</string>
+    <string name="pref_firewall_show_all_apps_off_summ">Показаны только те приложения, которые могут подключаться к Интернету.</string>
+    <string name="pref_common_kill_switch">Аварийный блокировщик</string>
+    <string name="pref_common_kill_switch_summ">Блокировать подключение к Интернету, когда Tor, DNSCrypt и Purple I2P остановлены</string>
+    <string name="notification_internet_blocked_message">Интернет заблокирован Аварийным блокировщиком. Запустите Tor, DNSCrypt или Purple I2P, чтобы разрешить соединение. Либо выключите Аварийный блокировщик в Общих настройках.</string>
+    <string name="list_is_empty">Список пустой</string>
+    <string name="pref_dnscrypt_forwarding_rules_categ">Правила переадресации</string>
+    <string name="pref_dnscrypt_cloaking_rules_categ">Правила маскировки</string>
+    <string name="pref_itpd_reseeding">Повторное заполнение</string>
+    <string name="connectivity_check">Проверка подключения к интернету</string>
+    <string name="pref_fast_logs">Логи соединений</string>
+    <string name="pref_fast_logs_summ">Показывать лог подключений приложений на вкладке DNS</string>
+    <string name="pref_dnscrypt_http3_summ">Включить поддержку HTTP/3 (DoH3, HTTP over QUIC). Обратите внимание, что, как и DNSCrypt, но в отличие от других версий HTTP, здесь используется UDP и (обычно) порт 443 вместо TCP.</string>
+    <string name="notifications_permission_rationale_message">Уведомления необходимы для отображения важной информации о работе приложения, управлении приложением, и обнаруженных атаках. Разрешить уведомления для InviZible?</string>
+    <string name="ask_later">Спросить позже</string>
 </resources>

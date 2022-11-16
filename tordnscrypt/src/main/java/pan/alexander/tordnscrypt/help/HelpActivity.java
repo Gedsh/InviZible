@@ -15,11 +15,10 @@ package pan.alexander.tordnscrypt.help;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
-import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Build;
@@ -33,7 +32,6 @@ import androidx.fragment.app.DialogFragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.os.Looper;
-import android.os.Process;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -70,6 +68,8 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.deleteFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SAVE_ROOT_LOGS;
+import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.HELP_ACTIVITY_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
@@ -124,7 +124,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         SwitchCompat swRootCommandsLog = findViewById(R.id.swRootCommandsLog);
 
         if (ModulesStatus.getInstance().isRootAvailable()) {
-            swRootCommandsLog.setChecked(preferenceRepository.get().getBoolPreference("swRootCommandsLog"));
+            swRootCommandsLog.setChecked(preferenceRepository.get().getBoolPreference(SAVE_ROOT_LOGS));
             swRootCommandsLog.setOnCheckedChangeListener(this);
         } else {
             swRootCommandsLog.setVisibility(View.GONE);
@@ -142,7 +142,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         busyboxPath = pathVars.getBusyboxPath();
         pathToSaveLogs = pathVars.getDefaultBackupPath();
         iptables = pathVars.getIptablesPath();
-        appUID = String.valueOf(Process.myUid());
+        appUID = pathVars.getAppUidStr();
 
         cacheDir = pathVars.getCacheDirPath(this);
 
@@ -233,29 +233,25 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
         List<String> logcatCommands = new ArrayList<>(Arrays.asList(
                 "cd " + cacheDir,
-                busyboxPath + "rm -rf logs_dir 2> /dev/null",
-                busyboxPath + "mkdir -m 655 -p logs_dir 2> /dev/null",
-                busyboxPath + "cp -R " + appDataDir + "/logs" + " logs_dir 2> /dev/null",
-                "logcat -d | grep " + pid + " > logs_dir/logcat.log 2> /dev/null",
-                "ifconfig > logs_dir/ifconfig.log 2> /dev/null",
-                iptables + "-L -v > logs_dir/filter.log 2> /dev/null",
-                iptables + "-t nat -L -v > logs_dir/nat.log 2> /dev/null",
-                iptables + "-t mangle -L -v > logs_dir/mangle.log 2> /dev/null",
-                iptables + "-t raw -L -v > logs_dir/raw.log 2> /dev/null",
-                busyboxPath + "cp -R "+ appDataDir + "/shared_prefs"+" logs_dir 2> /dev/null",
-                busyboxPath + "sleep 1 2> /dev/null",
-                busyboxPath + "echo \"" + info + "\" > logs_dir/device_info.log 2> /dev/null",
-                "restorecon -R logs_dir 2> /dev/null",
-                busyboxPath + "chown -R " + appUID + "." + appUID + " logs_dir 2> /dev/null",
-                busyboxPath + "chmod -R 755 logs_dir 2> /dev/null",
-                busyboxPath + "echo 'Logs Saved' 2> /dev/null"
+                busyboxPath + "rm -rf logs_dir 2> /dev/null || true",
+                busyboxPath + "mkdir -m 655 -p logs_dir 2> /dev/null || true",
+                busyboxPath + "cp -R " + appDataDir + "/logs" + " logs_dir 2> /dev/null || true",
+                "logcat -d | grep " + pid + " > logs_dir/logcat.log 2> /dev/null || true",
+                "ifconfig > logs_dir/ifconfig.log 2> /dev/null || true",
+                busyboxPath + "cp -R "+ appDataDir + "/shared_prefs"+" logs_dir 2> /dev/null || true",
+                busyboxPath + "sleep 1 2> /dev/null || true",
+                busyboxPath + "echo \"" + info + "\" > logs_dir/device_info.log 2> /dev/null || true",
+                iptables + "-L -v > logs_dir/filter.log 2> /dev/null || true",
+                iptables + "-t nat -L -v > logs_dir/nat.log 2> /dev/null || true",
+                iptables + "-t mangle -L -v > logs_dir/mangle.log 2> /dev/null || true",
+                iptables + "-t raw -L -v > logs_dir/raw.log 2> /dev/null || true",
+                "restorecon -R logs_dir 2> /dev/null || true",
+                busyboxPath + "chown -R " + appUID + "." + appUID + " logs_dir 2> /dev/null || true",
+                busyboxPath + "chmod -R 755 logs_dir 2> /dev/null || true",
+                busyboxPath + "echo 'Logs Saved' 2> /dev/null || true"
         ));
-        RootCommands rootCommands = new RootCommands(logcatCommands);
-        Intent intent = new Intent(this, RootExecService.class);
-        intent.setAction(RootExecService.RUN_COMMAND);
-        intent.putExtra("Commands", rootCommands);
-        intent.putExtra("Mark", RootExecService.HelpActivityMark);
-        RootExecService.performAction(this, intent);
+
+        RootCommands.execute(this, logcatCommands, HELP_ACTIVITY_MARK);
     }
 
 
@@ -292,7 +288,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     @Override
     public void onCheckedChanged(CompoundButton compoundButton, boolean newValue) {
         if (compoundButton.getId() == R.id.swRootCommandsLog) {
-            preferenceRepository.get().setBoolPreference("swRootCommandsLog", newValue);
+            preferenceRepository.get().setBoolPreference(SAVE_ROOT_LOGS, newValue);
 
             if (!newValue) {
                 FileManager.deleteFile(getApplicationContext(), appDataDir + "/logs", "RootExec.log", "RootExec.log");

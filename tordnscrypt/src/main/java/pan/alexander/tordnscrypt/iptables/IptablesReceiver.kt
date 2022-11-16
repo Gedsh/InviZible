@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.iptables
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.BroadcastReceiver
@@ -28,8 +28,9 @@ import android.widget.Toast
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.utils.root.RootCommands
+import pan.alexander.tordnscrypt.utils.root.RootCommandsMark.IPTABLES_MARK
 import pan.alexander.tordnscrypt.utils.root.RootExecService.*
 import java.util.*
 import javax.inject.Inject
@@ -45,14 +46,14 @@ class IptablesReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         App.instance.daggerComponent.inject(this)
 
-        if (intent == null) {
+        if (context == null || intent == null) {
             return
         }
 
         val action = intent.action
 
         if (action == null || action.isBlank() || action != COMMAND_RESULT
-                || intent.getIntExtra("Mark", 0) != IptablesMark) {
+                || intent.getIntExtra("Mark", 0) != IPTABLES_MARK) {
             return
         }
 
@@ -63,7 +64,7 @@ class IptablesReceiver : BroadcastReceiver() {
         val result = StringBuilder()
         if (comResult != null) {
             for (com in comResult.commands) {
-                Log.i(LOG_TAG, com!!)
+                Log.i(LOG_TAG, com)
                 result.append(com).append("\n")
             }
         }
@@ -89,15 +90,16 @@ class IptablesReceiver : BroadcastReceiver() {
 
             val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
             val showToastWithCommandsResultError = sharedPreferences.getBoolean(ALWAYS_SHOW_HELP_MESSAGES, false)
-            val refreshRules = sharedPreferences.getBoolean("swRefreshRules", false)
+            val refreshRules = sharedPreferences.getBoolean(REFRESH_RULES, false)
 
             if (resultStr.contains("unknown option \"-w\"")) {
-                sharedPreferences.edit().putString("pref_common_use_iptables", "2").apply()
+                sharedPreferences.edit().putBoolean(WAIT_IPTABLES, false).apply()
                 it.postDelayed({ ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true) }, 1000)
             } else if (refreshRules
                 && (resultStr.contains(" -w ")
                 || resultStr.contains("Exit code=4")
-                || resultStr.contains("try again"))) {
+                || resultStr.contains("try again")) ||
+                resultStr.matches(Regex(".*tun\\d+.*"))) {
                 it.postDelayed({ ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true) }, 5000)
             }
             if (showToastWithCommandsResultError) {

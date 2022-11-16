@@ -15,13 +15,14 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Environment;
+import android.os.Process;
 import android.util.Log;
 
 import androidx.preference.PreferenceManager;
@@ -34,6 +35,8 @@ import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_IPTABLES;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.WAIT_IPTABLES;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
@@ -49,7 +52,10 @@ public class PathVars {
     private final String itpdPath;
     private final String obfsPath;
     private final String snowflakePath;
+    private final String nflogPath;
     private final boolean bbOK;
+    private volatile int appUid = -1;
+    private volatile String appUidStr = "";
 
     @SuppressLint("SdCardPath")
     @Inject
@@ -72,6 +78,7 @@ public class PathVars {
         itpdPath = nativeLibPath + "/libi2pd.so";
         obfsPath = nativeLibPath + "/libobfs4proxy.so";
         snowflakePath = nativeLibPath + "/libsnowflake.so";
+        nflogPath = nativeLibPath + "/libnflog.so";
     }
 
     public String getDefaultBackupPath() {
@@ -79,46 +86,52 @@ public class PathVars {
     }
 
     public String getIptablesPath() {
-        String iptablesSelector = preferences.getString("pref_common_use_iptables", "1");
+        String iptablesSelector = preferences.getString(USE_IPTABLES, "2");
         if (iptablesSelector == null) {
-            iptablesSelector = "1";
+            iptablesSelector = "2";
         }
+
+        boolean waitIptables = preferences.getBoolean(WAIT_IPTABLES, true);
 
         String path;
         switch (iptablesSelector) {
+            case "1":
+                path = appDataDir + "/app_bin/iptables ";
+                break;
             case "2":
+            default:
                 path = "iptables ";
                 break;
-            case "1":
+        }
 
-            default:
-                path = appDataDir + "/app_bin/iptables -w ";
-                break;
+        if (waitIptables) {
+            path += "-w ";
         }
 
         return path;
     }
 
     public String getIp6tablesPath() {
-        String iptablesSelector = preferences.getString("pref_common_use_iptables", "1");
+        String iptablesSelector = preferences.getString(USE_IPTABLES, "2");
         if (iptablesSelector == null) {
-            iptablesSelector = "1";
+            iptablesSelector = "2";
         }
+
+        boolean waitIptables = preferences.getBoolean(WAIT_IPTABLES, true);
 
         String path;
         switch (iptablesSelector) {
+            case "1":
+                path = appDataDir + "/app_bin/ip6tables ";
+                break;
             case "2":
+            default:
                 path = "ip6tables ";
                 break;
-            case "1":
+        }
 
-            default:
-                if (new File(appDataDir + "/app_bin/ip6tables").isFile()) {
-                    path = appDataDir + "/app_bin/ip6tables -w ";
-                } else {
-                    path = "ip6tables -w ";
-                }
-                break;
+        if (waitIptables) {
+            path += "-w ";
         }
 
         return path;
@@ -187,6 +200,10 @@ public class PathVars {
 
     public String getSnowflakePath() {
         return snowflakePath;
+    }
+
+    public String getNflogPath() {
+        return nflogPath;
     }
 
     public String getTorVirtAdrNet() {
@@ -320,6 +337,10 @@ public class PathVars {
         return appDataDir + "/app_data/dnscrypt-proxy/forwarding-rules-remote.txt";
     }
 
+    public String getDNSCryptCaptivePortalsPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/captive-portals.txt";
+    }
+
     public String getCacheDirPath(Context context) {
         String cacheDirPath = "/storage/emulated/0/Android/data/" + context.getPackageName() + "/cache";
 
@@ -351,7 +372,7 @@ public class PathVars {
         return cacheDirPath;
     }
 
-    public String getDnscryptConfPath () {
+    public String getDnscryptConfPath() {
         return appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml";
     }
 
@@ -363,7 +384,21 @@ public class PathVars {
         return appDataDir + "/app_data/i2pd/i2pd.conf";
     }
 
-    public String getItpdTunnelsPath () {
+    public String getItpdTunnelsPath() {
         return appDataDir + "/app_data/i2pd/tunnels.conf";
+    }
+
+    public synchronized int getAppUid() {
+        if (appUid < 0) {
+            appUid = Process.myUid();
+        }
+        return appUid;
+    }
+
+    public synchronized String getAppUidStr() {
+        if (appUidStr.isEmpty()) {
+            appUidStr = String.valueOf(getAppUid());
+        }
+        return appUidStr;
     }
 }

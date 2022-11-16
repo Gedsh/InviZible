@@ -15,20 +15,21 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import androidx.preference.PreferenceScreen;
 
-import android.util.Log;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -45,7 +46,7 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
@@ -106,6 +107,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
         preferences.add(findPreference("elgamal"));
         preferences.add(findPreference("UPNP"));
         preferences.add(findPreference("ntcp2 enabled"));
+        preferences.add(findPreference("ssu2 enabled"));
         preferences.add(findPreference("verify"));
         preferences.add(findPreference("transittunnels"));
         preferences.add(findPreference("openfiles"));
@@ -116,7 +118,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
             if (preference != null) {
                 preference.setOnPreferenceChangeListener(this);
             } else if (!appVersion.startsWith("g")){
-                Log.e(LOG_TAG, "PreferencesITPDFragment preference is null exception");
+                loge("PreferencesITPDFragment preference is null exception");
             }
         }
 
@@ -219,6 +221,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                     key_itpd_to_save.set(i, "outproxy");
                     break;
                 case "ntcp2 enabled":
+                case "ssu2 enabled":
                 case "SAM interface":
                 case "Socks proxy":
                 case "http enabled":
@@ -251,7 +254,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
     }
 
     @Override
-    public boolean onPreferenceChange(Preference preference, Object newValue) {
+    public boolean onPreferenceChange(@NonNull Preference preference, Object newValue) {
 
         Context context = getActivity();
 
@@ -305,6 +308,29 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                     || Objects.equals(preference.getKey(), "defaulturl"))
                     && newValue.toString().trim().isEmpty()) {
                 return false;
+            } else if (Objects.equals(preference.getKey(), "notransit")) {
+                for (int i = 0; i < key_itpd.size(); i++) {
+                    String key = key_itpd.get(i);
+                    if (key.equals("published")) {
+                        val_itpd.set(i, String.valueOf(!Boolean.parseBoolean(newValue.toString())));
+                    }
+                }
+            } else if (Objects.equals(preference.getKey(), "ssu2 enabled")) {
+                if (!key_itpd.contains("[ssu2]") && key_itpd.contains("[ntcp2]")) {
+                    int positionNtcp2 = key_itpd.indexOf("[ntcp2]");
+                    key_itpd.add(positionNtcp2, "[ssu2]");
+                    val_itpd.add(positionNtcp2, "");
+                    key_itpd.add(positionNtcp2 + 1, "ssu2 enabled");
+                    val_itpd.add(positionNtcp2 + 1, "true");
+                    key_itpd.add(positionNtcp2 + 2, "published");
+
+                    int positionNoTransit = key_itpd.indexOf("notransit");
+                    if (positionNoTransit >= 0 && "false".equals(val_itpd.get(positionNoTransit))) {
+                        val_itpd.add(positionNtcp2 + 2, "true");
+                    } else {
+                        val_itpd.add(positionNtcp2 + 2, "false");
+                    }
+                }
             }
 
             if (key_itpd.contains(preference.getKey().trim())) {
@@ -314,7 +340,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                 Toast.makeText(context, R.string.pref_itpd_not_exist, Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "PreferencesITPDFragment onPreferenceChange exception " + e.getMessage() + " " + e.getCause());
+            loge("PreferencesITPDFragment onPreferenceChange", e);
             Toast.makeText(context, R.string.wrong, Toast.LENGTH_LONG).show();
         }
 
@@ -387,7 +413,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
     }
 
     @Override
-    public boolean onPreferenceClick(Preference preference) {
+    public boolean onPreferenceClick(@NonNull Preference preference) {
         if (getActivity() == null) {
             return false;
         }

@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Activity;
@@ -31,10 +31,10 @@ import androidx.annotation.NonNull;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
-import androidx.preference.PreferenceManager;
 import androidx.preference.PreferenceScreen;
 import androidx.preference.SwitchPreference;
 
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -68,13 +68,29 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
 import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.ISOLATE_DEST_ADDRESS;
 import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.ISOLATE_DEST_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_BLOCK_INTERNET;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_NOT_SUPPORTED;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.COMPATIBILITY_MODE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNS_REBIND_PROTECTION;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ITPD_TETHERING;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.KILL_SWITCH;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MULTI_USER_SUPPORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TETHERING;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_IPTABLES;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.WAIT_IPTABLES;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
@@ -82,6 +98,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 
 public class PreferencesCommonFragment extends PreferenceFragmentCompat
@@ -94,6 +111,15 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     public Lazy<PathVars> pathVars;
     @Inject
     public CachedExecutor cachedExecutor;
+    @Inject
+    public Lazy<Handler> handler;
+    @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultPreferences;
+    @Inject
+    public Lazy<ProxyHelper> proxyHelper;
+
+    private static final int ARP_SCANNER_CHANGE_STATE_DELAY_SEC = 5;
 
     private String torTransPort;
     private String torSocksPort;
@@ -119,6 +145,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         addPreferencesFromResource(R.xml.preferences_common);
     }
 
+    @NonNull
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
@@ -134,11 +161,11 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         activity.setTitle(R.string.drawer_menu_commonSettings);
 
-        PreferenceCategory others = findPreference("common_other");
+        PreferenceCategory otherCategory = findPreference("common_other");
         Preference swShowNotification = findPreference("swShowNotification");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (others != null && swShowNotification != null) {
-                others.removePreference(swShowNotification);
+            if (otherCategory != null && swShowNotification != null) {
+                otherCategory.removePreference(swShowNotification);
             }
         } else {
             if (swShowNotification != null) {
@@ -147,9 +174,9 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         }
 
 
-        Preference swCompatibilityMode = findPreference("swCompatibilityMode");
-        if (modulesStatus.getMode() != VPN_MODE && others != null && swCompatibilityMode != null) {
-            others.removePreference(swCompatibilityMode);
+        Preference swCompatibilityMode = findPreference(COMPATIBILITY_MODE);
+        if (modulesStatus.getMode() != VPN_MODE && otherCategory != null && swCompatibilityMode != null) {
+            otherCategory.removePreference(swCompatibilityMode);
         } else if (swCompatibilityMode != null) {
             swCompatibilityMode.setOnPreferenceChangeListener(this);
         }
@@ -159,7 +186,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 && !modulesStatus.isUseModulesWithRoot();
         PreferenceScreen preferenceScreen = findPreference("pref_common");
         PreferenceCategory proxySettingsCategory = findPreference("categoryCommonProxy");
-        Preference swUseProxy = findPreference("swUseProxy");
+        Preference swUseProxy = findPreference(USE_PROXY);
         if (preferenceScreen != null && proxySettingsCategory != null) {
             if ((modulesStatus.getMode() == VPN_MODE || fixTTL) && swUseProxy != null) {
                 swUseProxy.setOnPreferenceChangeListener(this);
@@ -175,8 +202,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             }
         }
 
-        PreferenceCategory otherCategory = findPreference("common_other");
-        Preference multiUser = findPreference("pref_common_multi_user");
+        Preference multiUser = findPreference(MULTI_USER_SUPPORT);
         if (otherCategory != null && multiUser != null) {
             if (modulesStatus.getMode() == PROXY_MODE) {
                 otherCategory.removePreference(multiUser);
@@ -186,10 +212,19 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         }
 
         PreferenceCategory mitmCategory = findPreference("pref_common_mitm_categ");
-        Preference mitmDetection = findPreference("pref_common_arp_spoofing_detection");
-        Preference mitmBlockInternet = findPreference("pref_common_arp_block_internet");
+        Preference mitmDetection = findPreference(ARP_SPOOFING_DETECTION);
+        Preference mitmBlockInternet = findPreference(ARP_SPOOFING_BLOCK_INTERNET);
         if (mitmCategory != null && mitmDetection != null && mitmBlockInternet != null) {
             mitmDetection.setOnPreferenceChangeListener(this);
+
+            if (preferenceRepository.get().getBoolPreference(ARP_SPOOFING_NOT_SUPPORTED)) {
+                mitmDetection.setTitle(R.string.pref_common_rogue_dhcp_detection);
+                mitmDetection.setSummary(R.string.pref_common_rogue_dhcp_detection_summ);
+            } else {
+                mitmDetection.setTitle(R.string.pref_common_arp_spoofing_detection);
+                mitmDetection.setSummary(R.string.pref_common_arp_spoofing_detection_summ);
+            }
+
             if (modulesStatus.getMode() == PROXY_MODE) {
                 mitmCategory.removePreference(mitmBlockInternet);
             } else {
@@ -197,7 +232,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             }
         }
 
-        Preference rebindDetection = findPreference("pref_common_dns_rebind_protection");
+        Preference rebindDetection = findPreference(DNS_REBIND_PROTECTION);
         if (mitmCategory != null && rebindDetection != null) {
             if (modulesStatus.getMode() == VPN_MODE || fixTTL) {
                 rebindDetection.setOnPreferenceChangeListener(this);
@@ -214,7 +249,6 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         manageLANDeviceAddressPreference(fixTTL);
 
-        PreferenceCategory otherSettingsCategory = findPreference("common_other");
         Preference shellControl = findPreference("pref_common_shell_control");
 
         if (appVersion.startsWith("g")) {
@@ -224,8 +258,8 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 hotspotSettingsCategory.removePreference(blockHTTP);
             }
 
-            if (otherSettingsCategory != null && shellControl != null) {
-                otherSettingsCategory.removePreference(shellControl);
+            if (otherCategory != null && shellControl != null) {
+                otherCategory.removePreference(shellControl);
             }
 
         } else if (shellControl != null) {
@@ -257,17 +291,17 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         itpdConfPath = pathVars.get().getItpdConfPath();
         itpdTunnelsPath = pathVars.get().getItpdTunnelsPath();
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean swUseProxy = sharedPreferences.getBoolean("swUseProxy", false);
-        String proxyServer = sharedPreferences.getString("ProxyServer", "");
-        String proxyPort = sharedPreferences.getString("ProxyPort", "");
+        SharedPreferences sharedPreferences = defaultPreferences.get();
+        boolean swUseProxy = sharedPreferences.getBoolean(USE_PROXY, false);
+        String proxyServer = sharedPreferences.getString(PROXY_ADDRESS, "");
+        String proxyPort = sharedPreferences.getString(PROXY_PORT, "");
         Set<String> setBypassProxy = preferenceRepository.get().getStringSetPreference(CLEARNET_APPS_FOR_PROXY);
         if (swUseProxy && ModulesStatus.getInstance().getMode() == VPN_MODE
                 && (proxyServer == null || proxyServer.isEmpty()
                 || proxyPort == null || proxyPort.isEmpty()
                 || setBypassProxy.isEmpty() && proxyServer.equals(LOOPBACK_ADDRESS))) {
 
-            Preference swUseProxyPreference = findPreference("swUseProxy");
+            Preference swUseProxyPreference = findPreference(USE_PROXY);
             if (swUseProxyPreference != null) {
                 ((SwitchPreference) swUseProxyPreference).setChecked(false);
             }
@@ -282,15 +316,15 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             context, getString(R.string.verifier_error), "5889");
                     if (notificationHelper != null && isAdded()) {
-                        notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
+                        handler.get().post(() -> notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER));
                     }
                 }
 
             } catch (Exception e) {
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                       context, getString(R.string.verifier_error), "5804");
+                        context, getString(R.string.verifier_error), "5804");
                 if (notificationHelper != null && isAdded()) {
-                    notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER);
+                    handler.get().post(() -> notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER));
                 }
                 Log.e(LOG_TAG, "PreferencesCommonFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
                         Arrays.toString(e.getStackTrace()));
@@ -300,7 +334,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     }
 
     @Override
-    public boolean onPreferenceChange(Preference preference, Object newValue) {
+    public boolean onPreferenceChange(@NonNull Preference preference, Object newValue) {
 
         Context context = getActivity();
 
@@ -312,15 +346,15 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             case "swShowNotification":
                 if (!Boolean.parseBoolean(newValue.toString())) {
                     Intent intent = new Intent(context, ModulesService.class);
-                    intent.setAction(ModulesServiceActions.actionDismissNotification);
+                    intent.setAction(ModulesServiceActions.ACTION_DISMISS_NOTIFICATION);
                     context.startService(intent);
                 }
                 break;
-            case "pref_common_tor_tethering":
+            case TOR_TETHERING:
                 allowTorTether = Boolean.parseBoolean(newValue.toString());
                 readTorConf(context);
                 break;
-            case "pref_common_itpd_tethering":
+            case ITPD_TETHERING:
                 allowITPDtether = Boolean.parseBoolean(newValue.toString());
                 readITPDConf(context);
                 readITPDTunnelsConf(context);
@@ -365,23 +399,41 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
                 activityCurrentRecreate();
                 break;
+            case MULTI_USER_SUPPORT:
+                if (Boolean.parseBoolean(newValue.toString())) {
+                    Utils.allowInteractAcrossUsersPermissionIfRequired(context);
+                }
+                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
+                break;
             case "pref_common_local_eth_device_addr":
-            case "swCompatibilityMode":
-            case "pref_common_multi_user":
-            case "pref_common_dns_rebind_protection":
+            case COMPATIBILITY_MODE:
+            case DNS_REBIND_PROTECTION:
+            case KILL_SWITCH:
                 ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
                 break;
             case "swWakelock":
                 ModulesAux.requestModulesStatusUpdate(context);
                 break;
-            case "pref_common_arp_spoofing_detection":
+            case ARP_SPOOFING_DETECTION:
                 if (Boolean.parseBoolean(newValue.toString())) {
                     ModulesAux.startArpDetection(context);
                 } else {
                     ModulesAux.stopArpDetection(context);
                 }
+                handler.get().postDelayed(() -> {
+                    ModulesStatus status = ModulesStatus.getInstance();
+                    boolean fixTTL = status.isFixTTL() && (status.getMode() == ROOT_MODE)
+                            && !status.isUseModulesWithRoot();
+                    if (fixTTL) {
+                        //Manually reload the VPN service because setIptablesRulesUpdateRequested does not do this in case of an ARP attack detected
+                        ServiceVPNHelper.reload("Internet blocking settings for ARP attacks changed", context);
+                    }
+                    ModulesStatus.getInstance()
+                            .setIptablesRulesUpdateRequested(context, true);
+
+                }, ARP_SCANNER_CHANGE_STATE_DELAY_SEC * 1000);
                 break;
-            case "pref_common_arp_block_internet":
+            case ARP_SPOOFING_BLOCK_INTERNET:
                 modulesStatus = ModulesStatus.getInstance();
                 boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
                         && !modulesStatus.isUseModulesWithRoot();
@@ -391,7 +443,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 }
                 ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
                 break;
-            case "swUseProxy":
+            case USE_PROXY:
                 if (Boolean.parseBoolean(newValue.toString())) {
                     commandDisableProxy = false;
 
@@ -407,7 +459,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     }
 
     @Override
-    public boolean onPreferenceClick(Preference preference) {
+    public boolean onPreferenceClick(@NonNull Preference preference) {
         Context context = getActivity();
 
         if (context == null) {
@@ -429,13 +481,13 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         return false;
     }
 
-    private void disableProxy(Context context) {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        String proxyServer = sharedPreferences.getString("ProxyServer", "");
-        String proxyPort = sharedPreferences.getString("ProxyPort", "");
+    private void disableProxy() {
+        SharedPreferences sharedPreferences = defaultPreferences.get();
+        String proxyServer = sharedPreferences.getString(PROXY_ADDRESS, "");
+        String proxyPort = sharedPreferences.getString(PROXY_PORT, "");
 
         if (proxyServer != null && proxyPort != null) {
-            ProxyHelper.INSTANCE.manageProxy(context, proxyServer, proxyPort, false,
+            proxyHelper.get().manageProxy(proxyServer, proxyPort, false,
                     false, false, false);
         }
     }
@@ -457,7 +509,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         activity.overridePendingTransition(0, 0);
         startActivity(intent);
 
-        preferenceRepository.get().setBoolPreference("refresh_main_activity", true);
+        preferenceRepository.get().setBoolPreference(MAIN_ACTIVITY_RECREATE, true);
     }
 
     private void readTorConf(Context context) {
@@ -472,7 +524,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             return;
         }
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences sharedPreferences = defaultPreferences.get();
         boolean isolateDestAddress = sharedPreferences.getBoolean("pref_tor_isolate_dest_address", false);
         boolean isolateDestPort = sharedPreferences.getBoolean("pref_tor_isolate_dest_port", false);
 
@@ -617,24 +669,33 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         if (swFixTTL != null) {
             swFixTTL.setOnPreferenceChangeListener(this);
 
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+            SharedPreferences sharedPreferences = defaultPreferences.get();
             swFixTTL.setEnabled(!sharedPreferences.getBoolean(RUN_MODULES_WITH_ROOT, false));
         }
 
         Preference prefTorSiteUnlockTether = findPreference("prefTorSiteUnlockTether");
         if (prefTorSiteUnlockTether != null) {
-            SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
+            SharedPreferences shPref = defaultPreferences.get();
             prefTorSiteUnlockTether.setEnabled(!shPref.getBoolean("pref_common_tor_route_all", false));
         }
 
+        if (!defaultPreferences.get().getBoolean(RUN_MODULES_WITH_ROOT, false)) {
+            PreferenceScreen preferenceScreen = findPreference("pref_common");
+            PreferenceCategory categoryUseModulesRoot = findPreference("categoryUseModulesRoot");
+            if (preferenceScreen != null && categoryUseModulesRoot != null) {
+                preferenceScreen.removePreference(categoryUseModulesRoot);
+            }
+        }
+
         ArrayList<Preference> preferences = new ArrayList<>();
-        preferences.add(findPreference("pref_common_tor_tethering"));
+        preferences.add(findPreference(TOR_TETHERING));
         preferences.add(findPreference("pref_common_tor_route_all"));
-        preferences.add(findPreference("pref_common_itpd_tethering"));
+        preferences.add(findPreference(ITPD_TETHERING));
         preferences.add(findPreference("pref_common_block_http"));
         preferences.add(findPreference(RUN_MODULES_WITH_ROOT));
         preferences.add(findPreference("swWakelock"));
         preferences.add(findPreference("pref_common_local_eth_device_addr"));
+        preferences.add(findPreference(KILL_SWITCH));
 
         for (Preference preference : preferences) {
             if (preference != null) {
@@ -658,7 +719,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             preferencesHOTSPOT.add(findPreference("pref_common_tor_route_all"));
             preferencesHOTSPOT.add(findPreference("prefTorSiteUnlockTether"));
             preferencesHOTSPOT.add(findPreference("prefTorSiteExcludeTether"));
-            preferencesHOTSPOT.add(findPreference("pref_common_itpd_tethering"));
+            preferencesHOTSPOT.add(findPreference(ITPD_TETHERING));
             preferencesHOTSPOT.add(findPreference("pref_common_block_http"));
             preferencesHOTSPOT.add(findPreference(FIX_TTL));
             preferencesHOTSPOT.add(findPreference("pref_common_local_eth_device_addr"));
@@ -671,7 +732,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 }
             }
 
-            Preference pref_common_tor_tethering = findPreference("pref_common_tor_tethering");
+            Preference pref_common_tor_tethering = findPreference(TOR_TETHERING);
 
             if (pref_common_tor_tethering != null) {
                 pref_common_tor_tethering.setSummary(getText(R.string.vpn_tor_tether_summ));
@@ -681,7 +742,8 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
 
         if (ModulesStatus.getInstance().isRootAvailable()
-                && ModulesStatus.getInstance().getMode() != VPN_MODE) {
+                && ModulesStatus.getInstance().getMode() != VPN_MODE
+                && defaultPreferences.get().getBoolean(RUN_MODULES_WITH_ROOT, false)) {
             Preference pref_common_use_modules_with_root = findPreference(RUN_MODULES_WITH_ROOT);
             if (pref_common_use_modules_with_root != null) {
                 pref_common_use_modules_with_root.setOnPreferenceChangeListener(this);
@@ -694,13 +756,22 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         }
 
         PreferenceCategory categoryOther = findPreference("common_other");
-        Preference selectIptables = findPreference("pref_common_use_iptables");
+        Preference selectIptables = findPreference(USE_IPTABLES);
+        Preference waitIptables = findPreference(WAIT_IPTABLES);
         Preference selectBusybox = findPreference("pref_common_use_busybox");
+        Preference killSwitch = findPreference(KILL_SWITCH);
+
         if (categoryOther != null && selectIptables != null) {
             categoryOther.removePreference(selectIptables);
         }
+        if (categoryOther != null && waitIptables != null) {
+            categoryOther.removePreference(waitIptables);
+        }
         if (categoryOther != null && selectBusybox != null) {
             categoryOther.removePreference(selectBusybox);
+        }
+        if (categoryOther != null && killSwitch != null) {
+            categoryOther.removePreference(killSwitch);
         }
     }
 
@@ -735,7 +806,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         if (context != null && commandDisableProxy) {
             commandDisableProxy = false;
-            disableProxy(context);
+            disableProxy();
             Toast.makeText(context, R.string.toastSettings_saved, Toast.LENGTH_SHORT).show();
         }
     }

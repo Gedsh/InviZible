@@ -2,8 +2,8 @@
 
 buildscript {
     ext {
-        kotlin_version = '1.5.31'
-        dagger_version = '2.40'
+        kotlin_version = '1.7.20'
+        dagger_version = '2.42'
         multidex_version = "2.0.1"
     }
 
@@ -13,7 +13,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.3'
+        classpath 'com.android.tools.build:gradle:7.2.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
 
 
@@ -26,7 +26,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        jcenter()
+        maven { url 'https://jitpack.io' }
     }
 }
 

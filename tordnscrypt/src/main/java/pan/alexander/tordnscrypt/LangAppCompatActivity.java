@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.res.Configuration;
@@ -28,16 +28,12 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.lang.ref.WeakReference;
-import java.util.Objects;
-
 import pan.alexander.tordnscrypt.language.Language;
 
 
 public abstract class LangAppCompatActivity extends AppCompatActivity {
 
     private final boolean DEVELOPER_MODE = false;
-    private App applicationContext;
 
     @RequiresApi(api = Build.VERSION_CODES.P)
     @Override
@@ -63,18 +59,6 @@ public abstract class LangAppCompatActivity extends AppCompatActivity {
 
         Language.setFromPreference(this, "pref_fast_language");
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && getApplicationContext() instanceof App) {
-            applicationContext = (App) getApplicationContext();
-        }
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        if (applicationContext != null) {
-            applicationContext.setCurrentActivity(new WeakReference<>(this));
-        }
     }
 
     @Override
@@ -94,26 +78,4 @@ public abstract class LangAppCompatActivity extends AppCompatActivity {
         super.applyOverrideConfiguration(overrideConfiguration);
     }
 
-    @Override
-    protected void onStop() {
-
-        clearCurrentActivity();
-
-        super.onStop();
-    }
-
-    @Override
-    protected void onDestroy() {
-
-        clearCurrentActivity();
-
-        super.onDestroy();
-    }
-
-    private void clearCurrentActivity() {
-        if (applicationContext != null && applicationContext.getCurrentActivity() != null
-                && Objects.equals(applicationContext.getCurrentActivity().get(), this)) {
-            applicationContext.setCurrentActivity(null);
-        }
-    }
 }

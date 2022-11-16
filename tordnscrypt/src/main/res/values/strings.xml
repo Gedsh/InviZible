@@ -74,6 +74,7 @@
     <string name="allow">Allow</string>
     <string name="deny">Deny</string>
     <string name="areYouSure">Are you sure? This action cannot be undone!</string>
+    <string name="ask_later">Ask later</string>
     <string name="empty_string" translatable="false" />
 
     <string name="message_no_root_used">You can use InviZible Pro with local VPN mode, or applications with own proxy or local VPN feature in proxy mode.</string>
@@ -110,7 +111,7 @@
     <string name="pref_fast_tor_autostart">Start Tor On Boot</string>
     <string name="pref_fast_itpd_autostart">Start I2P On Boot</string>
     <string name="pref_fast_autostart_delay">Delay</string>
-    <string name="pref_fast_autostart_delay_summ">Use delay (in sec) only if auto start works Not Correct</string>
+    <string name="pref_fast_autostart_delay_summ">Use a delay (secs) only if Autostart does not work correctly</string>
     <string name="pref_fast_dns_server">DNSCrypt servers</string>
     <string name="pref_fast_select_dns_server">Select DNSCrypt servers</string>
     <string name="pref_fast_tor">Tor Settings</string>
@@ -144,6 +145,7 @@
         <item>obfs3</item>
         <item>meek_lite</item>
         <item>snowflake</item>
+        <item>vanilla</item>
     </string-array>
     <string-array name="tor_bridges_own_obfs">
         <item>obfs4</item>
@@ -169,6 +171,8 @@
     <string name="pref_fast_tor_bypass_lan">Bypass LAN addresses</string>
     <string name="pref_fast_tor_bypass_lan_summ">Do not use Tor for LAN destinations and IANA reserved IP blocks</string>
     <string name="pref_fast_language">Select Language</string>
+    <string name="pref_fast_logs">Real-time logs</string>
+    <string name="pref_fast_logs_summ">Show application connection logs in the DNS tab</string>
     <string name="pref_fast_block_http">Block http</string>
     <string name="pref_fast_block_http_summ">Deny connection to http port 80</string>
     <string name="pref_fast_categ_update">Update</string>
@@ -190,6 +194,8 @@
     <string name="pref_common_mitm_categ">MITM attack detection</string>
     <string name="pref_common_arp_spoofing_detection">ARP spoofing detection</string>
     <string name="pref_common_arp_spoofing_detection_summ">Detect Man-in-the-middle ARP spoofing and rogue DHCP attacks in Wi-Fi networks.</string>
+    <string name="pref_common_rogue_dhcp_detection">Rogue DHCP detection</string>
+    <string name="pref_common_rogue_dhcp_detection_summ">Detect Man-in-the-middle rogue DHCP attacks in Wi-Fi networks.</string>
     <string name="pref_common_arp_block_internet">Block internet when an attack is detected</string>
     <string name="pref_common_arp_block_internet_summ">Internet connection will be blocked during attack</string>
     <string name="pref_common_dns_rebind_protection">DNS rebinding protection</string>
@@ -197,6 +203,8 @@
     <string name="pref_common_proxy_categ">Proxy</string>
     <string name="pref_common_proxy">Use socks5 proxy</string>
     <string name="pref_common_proxy_summ">InviZible Pro will make all connections through the SOCKS5 proxy</string>
+    <string name="pref_common_kill_switch">Kill switch</string>
+    <string name="pref_common_kill_switch_summ">Block internet connection when Tor, DNSCrypt and Purple I2P are stopped</string>
     <string name="pref_common_refresh_rules">Refresh rules</string>
     <string name="pref_common_refresh_rules_summ">Update rules on every connectivity change</string>
     <string name="pref_common_show_notification">Show notification</string>
@@ -209,23 +217,15 @@
     <string name="pref_common_shell_control">Enable script control</string>
     <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">Use the following command to manage application modules:
         \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
-        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 -n %s/.BootCompleteReceiver\". Where 1 - starts, 0 - stops the module.</string>
+        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Where 1 - starts, 0 - stops the module.</string>
     <string name="pref_common_notification_helper">Please exclude InviZible Pro from android battery optimisation.
         Otherwise android will kill DNSCrypt, Tor or I2P at any time. On special systems,
         like MIUI, required some additional steps.</string>
     <string name="pref_common_use_busybox">Select BusyBox</string>
-    <string-array name="pref_common_categ_use_busybox_titles">
-        <item>Auto</item>
-        <item>Use device BusyBox</item>
-        <item>Use application BusyBox</item>
-        <item>Not use BusyBox</item>
-    </string-array>
-    <string-array name="pref_common_use_busybox_values">
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-        <item>4</item>
-    </string-array>
+    <string name="pref_common_use_busybox_auto">Auto</string>
+    <string name="pref_common_use_busybox_device">Use device BusyBox</string>
+    <string name="pref_common_use_busybox_app">Use application BusyBox</string>
+    <string name="pref_common_use_busybox_not_use">Not use BusyBox</string>
     <string name="pref_common_categ_hotspot">HOTSPOT-Experimental</string>
     <string name="pref_common_tethering_autostart">Start Tethering On Boot</string>
     <string name="pref_common_tor_tethering">Allow Tor Tethering</string>
@@ -241,7 +241,7 @@
         It can only be used in \"root mode\" with the \"Run Modules With Root\" option disabled.
         To fix TTL please start DNSCrypt or/and Tor.</string>
     <string name="pref_common_local_eth_device_addr">LAN device IP address</string>
-    <string name="pref_common_local_eth_device_addr_summ">Enable Fix TTL and configure LAN device to connect to InviZible. Use default gateway: %s, DNS server: %s.</string>
+    <string name="pref_common_local_eth_device_addr_summ">Enable Fix TTL and configure LAN device to connect to InviZible. Use default gateway: %1$s, DNS server: %2$s.</string>
     <string name="pref_common_tethering_settings">Open Tethering config</string>
     <string name="pref_common_restart_dnscrypt">Please restart DNSCrypt</string>
     <string name="pref_common_restart_tor">Please restart Tor</string>
@@ -249,15 +249,11 @@
     <string name="pref_common_multi_user">Multi-user support</string>
     <string name="pref_common_multi_user_summ">Support for Dual Apps, MIUI, Island, Shelter and Work profile applications</string>
 
-    <string name="pref_common_use_iptables">Select Iptables</string>
-    <string-array name="pref_common_categ_use_iptables_titles">
-        <item>Use application Iptables</item>
-        <item>Use device Iptables</item>
-    </string-array>
-    <string-array name="pref_common_use_iptables_values">
-        <item>1</item>
-        <item>2</item>
-    </string-array>
+    <string name="pref_common_use_iptables">Select iptables</string>
+    <string name="pref_common_use_iptables_app">Use application iptables</string>
+    <string name="pref_common_use_iptables_device">Use device iptables</string>
+    <string name="pref_common_wait_iptables">Wait for the xtables lock</string>
+    <string name="pref_common_wait_iptables_summ">Wait until the exclusive iptables lock can be obtained to prevent concurrent modification of iptables rules.</string>
 
     <string name="pref_common_log_root_commands">Save Root Commands to Log</string>
 
@@ -266,6 +262,8 @@
     <string name="notification_temp_text">Executing Root commands…</string>
     <string name="notification_connecting">Connecting…</string>
     <string name="notification_waiting_network">Waiting for network…</string>
+
+    <string name="notification_internet_blocked_message">Internet blocked due to the Kill switch. Start Tor, DNSCrypt or I2P to allow the connection. Or disable the Kill switch in Common Settings.</string>
 
     <string name="tvSettings_text">Please wait…</string>
     <string name="toastSettings_saved">Settings saved</string>
@@ -300,7 +298,7 @@
     <string name="pref_dnscrypt_force_tcp_categ">Always use TCP to connect to upstream servers.</string>
     <string name="pref_dnscrypt_force_tcp_summ"> This can be can be useful if you need to route everything through Tor.\n
         Otherwise, leave this to false, as it doesn\'t improve security (dnscrypt-proxy will always encrypt everything even using UDP), and can only increase latency.
-        Do not enable if you want to use Tor onion sites!</string>
+    </string>
     <string name="pref_dnscrypt_force_tcp" translatable="false">force_tcp</string>
 
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS proxy.</string>
@@ -317,6 +315,8 @@
     <string name="pref_dnscrypt_fallback_resolver" translatable="false">bootstrap_resolvers</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">Never let dnscrypt-proxy try to use the system DNS settings. Unconditionally use the fallback resolver..</string>
     <string name="pref_dnscrypt_ignore_system_dns" translatable="false">ignore_system_dns</string>
+    <string name="pref_dnscrypt_http3_summ">Enable support for HTTP/3 (DoH3, HTTP over QUIC). Note that, like DNSCrypt but unlike other HTTP versions, this uses UDP and (usually) port 443 instead of TCP.</string>
+    <string name="pref_dnscrypt_http3" translatable="false">http3</string>
 
     <string name="pref_dnscrypt_filters_categ">FILTERS</string>
 
@@ -465,6 +465,12 @@
     <string name="pref_tor_clearnet">Host or IP for bypass</string>
     <string name="pref_tor_unlock_edit">Edit Host or IP</string>
     <string name="pref_tor_unlock_disabled">Disabled</string>
+    <string name="pref_tor_snowflake_categ" translatable="false">Snowflake</string>
+    <string name="pref_tor_snowflake_select_rendezvous">Select rendezvous</string>
+    <string name="pref_tor_snowflake_select_rendezvous_summ">
+       Hides the broker\'s domain name from the Internet provider. The broker is used to establish a connection.</string>
+    <string name="pref_tor_snowflake_amp" translatable="false">AMP</string>
+    <string name="pref_tor_snowflake_fastly" translatable="false">Fastly</string>
     <string name="pref_tor_snowflake_stun">STUN servers for SnowFlake bridges</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">Enable SOCKS output proxy</string>
     <string name="pref_tor_SOCKS_output_address" translatable="false">Socks5Proxy</string>
@@ -514,6 +520,8 @@
     <string name="pref_itpd_com_share_summ">Max % of bandwidth limit for transit. 0–100.</string>
     <string name="pref_itpd_com_ssu" translatable="false">ssu</string>
     <string name="pref_itpd_com_ssu_summ">Enable SSU transport protocol (use UDP).</string>
+    <string name="pref_itpd_com_ssu2" translatable="false">ssu2</string>
+    <string name="pref_itpd_com_ssu2_summ">Enable SSU2 transport protocol (use UDP).</string>
     <string name="pref_itpd_com_ntcp" translatable="false">ntcp</string>
     <string name="pref_itpd_com_ntcp_summ">Enable NTCP2 transport protocol (use TCP).</string>
     <string name="pref_itpd_com_use_ntcpproxy">Enable ntcpproxy</string>
@@ -599,7 +607,7 @@
     <string name="about_app_ver" translatable="false">Application Version:</string>
     <string name="about_build_date" translatable="false">Build Date:</string>
     <string name="about_proc_ver" translatable="false">Processor Version:</string>
-    <string name="about_own_copyright" translatable="false">Copyright (C) 2019-2021 Garmatin Oleksandr\n All Rights Reserved\n Web Site:</string>
+    <string name="about_own_copyright" translatable="false">Copyright (C) 2019-2022 Garmatin Oleksandr\n All Rights Reserved\n Web Site:</string>
     <string name="privacy_policy_title" translatable="false">Privacy Policy</string>
     <string name="privacy_policy" translatable="false">\tInviZible Pro does not collect or share any personal or sensitive user data.
         InviZible Pro forwards internet traffic to Tor, DNSCrypt and I2P networks.
@@ -672,7 +680,7 @@
     <string name="main_fragment_access_i2p">Access to I2P sites with Purple I2P</string>
 
     <string name="ask_force_close_title">Attention</string>
-    <string name="ask_force_close_text">InviZible Pro cannot start %s! Please check %s settings or try to Force Close the application.
+    <string name="ask_force_close_text">InviZible Pro cannot start %1$s! Please check %2$s settings or try to Force Close the application.
         If this does not help, please reboot your device.</string>
     <string name="ask_force_close_btn">Force close</string>
 
@@ -689,7 +697,7 @@
         \n\n\tInviZible Pro can use root, if your device has root privileges, or uses a local VPN to deliver Internet traffic to Tor, DNSCrypt and I2P networks.
         \n\n\tPrivacy Policy:
         \n\tInviZible Pro does not collect or share any personal or sensitive user data.
-        \n\n\tCopyright © 2019-2021
+        \n\n\tCopyright © 2019-2022
         \n\tGarmatin Oleksandr
         \n\tinvizible.soft@gmail.com
         \n\tinvizible.net/en/privacy
@@ -754,8 +762,14 @@
     <string name="pref_firewall_allow_internet_for_new_apps">Allow connections for new apps</string>
     <string name="pref_firewall_allow_internet_for_new_apps_on_summ">Internet connections for newly installed apps are allowed.</string>
     <string name="pref_firewall_allow_internet_for_new_apps_off_summ">Internet connections for newly installed applications are blocked.</string>
+    <string name="pref_firewall_show_all_apps">Show all apps</string>
+    <string name="pref_firewall_show_all_apps_on_summ">Apps are shown regardless of whether the app can connect to the Internet or not.</string>
+    <string name="pref_firewall_show_all_apps_off_summ">Only apps that can connect to the Internet are shown.</string>
     <string name="tile_change_tor_ip">Change Tor IP</string>
     <string name="tile_changing_tor_ip">Tor IP changing</string>
     <string name="tile_dialog_over_three_tiles_message">You have added more than 3 tiles to Quick Settings.
         Please leave only 3. Adding more than 3 tiles can cause issues with app control.</string>
+    <string name="list_is_empty">List is Empty</string>
+    <string name="connectivity_check">Internet connectivity check</string>
+    <string name="notifications_permission_rationale_message">Notifications are essential for displaying important information about the app\'s operation, app control, and detected attacks. Would you like to allow notifications for InviZible?</string>
 </resources>

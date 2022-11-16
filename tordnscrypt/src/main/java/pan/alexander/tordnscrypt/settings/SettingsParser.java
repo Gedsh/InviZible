@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.SharedPreferences;
@@ -44,6 +44,8 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.writeToTextFile;
@@ -270,11 +272,11 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     case "#HTTPTunnelPort":
                         editor.putBoolean("Enable HTTPTunnel", false);
                         break;
-                    case "Socks5Proxy":
-                        editor.putBoolean("Enable output Socks5Proxy", true);
+                    case TOR_OUTBOUND_PROXY_ADDRESS:
+                        editor.putBoolean(TOR_OUTBOUND_PROXY, true);
                         break;
                     case "#Socks5Proxy":
-                        editor.putBoolean("Enable output Socks5Proxy", false);
+                        editor.putBoolean(TOR_OUTBOUND_PROXY, false);
                         break;
                 }
             }
@@ -324,6 +326,8 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     key = "incoming port";
                 } else if (header.equals("[ntcp2]") && key.equals("enabled")) {
                     key = "ntcp2 enabled";
+                } else if (header.equals("[ssu2]") && key.equals("enabled")) {
+                    key = "ssu2 enabled";
                 } else if (header.equals("[http]") && key.equals("enabled")) {
                     key = "http enabled";
                 } else if (header.equals("[httpproxy]") && key.equals("enabled")) {

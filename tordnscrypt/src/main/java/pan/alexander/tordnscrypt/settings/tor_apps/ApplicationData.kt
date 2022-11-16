@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.settings.tor_apps
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.graphics.drawable.Drawable
@@ -49,6 +49,7 @@ data class ApplicationData(private val name: String = "",
         const val SPECIAL_UID_AGPS = -15
         const val SPECIAL_PORT_AGPS1 = 7275
         const val SPECIAL_PORT_AGPS2 = 7276
+        const val SPECIAL_UID_CONNECTIVITY_CHECK = -16
 
         fun <T> sortListBy(list: CopyOnWriteArrayList<T>?, comparator: Comparator<T>) {
             if (list != null && list.size > 1) {

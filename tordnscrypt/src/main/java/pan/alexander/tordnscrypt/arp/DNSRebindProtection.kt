@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.arp
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Notification
@@ -30,6 +30,7 @@ import androidx.core.app.NotificationCompat
 import pan.alexander.tordnscrypt.AUX_CHANNEL_ID
 import pan.alexander.tordnscrypt.MainActivity
 import pan.alexander.tordnscrypt.R
+import pan.alexander.tordnscrypt.utils.Utils.areNotificationsNotAllowed
 
 const val dnsRebindingWarning = "pan.alexander.tordnscrypt.dns_rebinding_attack_warning"
 private const val DNS_REBINDING_NOTIFICATION_ID = 112
@@ -39,6 +40,10 @@ object DNSRebindProtection {
     fun sendNotification(context: Context, site: String) {
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (areNotificationsNotAllowed(notificationManager)) {
+            return
+        }
 
         val title = context.getString(R.string.notification_dns_rebinding_title)
         val text = String.format(context.getString(R.string.notification_dns_rebinding_text), site)

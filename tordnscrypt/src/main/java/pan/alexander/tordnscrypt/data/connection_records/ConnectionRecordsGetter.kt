@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.data.connection_records
@@ -25,85 +25,88 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
-import pan.alexander.tordnscrypt.App
-import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecord
-import pan.alexander.tordnscrypt.utils.root.RootExecService
+import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData
+import pan.alexander.tordnscrypt.utils.logger.Logger.logi
+import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPN
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPN.VPNBinder
 import java.lang.ref.WeakReference
+import java.util.concurrent.atomic.AtomicBoolean
+import javax.inject.Inject
 
-class ConnectionRecordsGetter {
-    private val applicationContext = App.instance.applicationContext
-    @Volatile private var serviceConnection: ServiceConnection? = null
-    @Volatile private var serviceVPN: WeakReference<ServiceVPN?>? = null
-    @Volatile private var bound = false
+class ConnectionRecordsGetter @Inject constructor(
+    private val context: Context
+) {
 
-    fun getConnectionRawRecords(): List<ConnectionRecord?> {
-        if (serviceVPN == null || serviceConnection == null) {
-            bindToVPNService(applicationContext)
+    private val bound = AtomicBoolean(false)
+
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            if (service is VPNBinder) {
+                serviceVPN = WeakReference(service.service)
+            }
         }
 
-        if (!bound) {
-            return emptyList()
+        override fun onServiceDisconnected(name: ComponentName) {
+            if (bound.compareAndSet(true, false)) {
+                serviceVPN = null
+            }
+        }
+    }
+
+    @Volatile
+    private var serviceVPN: WeakReference<ServiceVPN?>? = null
+
+    fun getConnectionRawRecords(): Map<ConnectionData, Boolean> {
+        if (bound.compareAndSet(false, true)) {
+            logi("ConnectionRecordsGetter bind to VPN service")
+            bindToVPNService()
         }
 
-        lockConnectionRawRecordsListForRead(true)
-
-        val rawRecords = ArrayList<ConnectionRecord?>(serviceVPN?.get()?.dnsQueryRawRecords ?: emptyList())
-
-        lockConnectionRawRecordsListForRead(false)
+        val rawRecords = try {
+            serviceVPN?.get()?.dnsQueryRawRecords ?: emptyMap<ConnectionData, Boolean>()
+        } catch (e: Exception) {
+            logw("ConnectionRecordsGetter getConnectionRawRecords", e)
+            emptyMap<ConnectionData, Boolean>()
+        }
 
         return rawRecords
     }
 
     fun clearConnectionRawRecords() {
-        serviceVPN?.get()?.clearDnsQueryRawRecords()
+        try {
+            serviceVPN?.get()?.clearDnsQueryRawRecords()
+        } catch (e: java.lang.Exception) {
+            logw("ConnectionRecordsGetter clearConnectionRawRecords", e)
+        }
     }
 
     fun connectionRawRecordsNoMoreRequired() {
-        unbindVPNService(applicationContext)
-    }
-
-    private fun lockConnectionRawRecordsListForRead(lock: Boolean) {
-        serviceVPN?.get()?.lockDnsQueryRawRecordsListForRead(lock)
+        unbindVPNService()
     }
 
     @Synchronized
-    private fun bindToVPNService(context: Context?) {
-        serviceConnection = object : ServiceConnection {
-            override fun onServiceConnected(name: ComponentName, service: IBinder) {
-                if (service is VPNBinder) {
-                    serviceVPN = WeakReference(service.service)
-                    bound = true
-                }
-            }
-
-            override fun onServiceDisconnected(name: ComponentName) {
-                bound = false
-            }
-        }
-
-        context?.let {
-            val intent = Intent(context, ServiceVPN::class.java)
-            serviceConnection?.let { context.bindService(intent, it, 0) }
+    private fun bindToVPNService() {
+        val intent = Intent(context, ServiceVPN::class.java)
+        serviceConnection.let {
+            context.bindService(intent, it, Context.BIND_IMPORTANT)
         }
     }
 
-    private fun unbindVPNService(context: Context?) {
-        if (bound) {
+    private fun unbindVPNService() {
+        if (bound.compareAndSet(true, false)) {
+            logi("ConnectionRecordsGetter unbind VPN service")
+
             try {
-                context?.let {
-                    serviceConnection?.let { context.unbindService(it) }
-                }
+                serviceConnection.let { context.unbindService(it) }
             } catch (e: Exception) {
-                Log.w(
-                    RootExecService.LOG_TAG,
-                    "ConnectionRecordsGetter unbindVPNService exception " + e.message + " " + e.cause
+                logw(
+                    "ConnectionRecordsGetter unbindVPNService exception "
+                            + e.message + " "
+                            + e.cause + "\n"
+                            + Log.getStackTraceString(e)
                 )
             }
-            bound = false
-            serviceVPN = null
-            serviceConnection = null
         }
 
     }

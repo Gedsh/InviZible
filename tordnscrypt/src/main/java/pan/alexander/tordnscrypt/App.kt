@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.annotation.TargetApi
@@ -25,17 +25,14 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
-import androidx.annotation.MainThread
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.ProcessLifecycleOwner
 import pan.alexander.tordnscrypt.crash_handling.TopExceptionHandler
 import pan.alexander.tordnscrypt.di.*
-import pan.alexander.tordnscrypt.di.logreader.LogReaderSubcomponent
 import pan.alexander.tordnscrypt.language.Language
 import pan.alexander.tordnscrypt.utils.multidex.MultidexActivator
-import java.lang.ref.WeakReference
 
 const val ANDROID_CHANNEL_ID = "InviZible"
 const val FIREWALL_CHANNEL_ID = "Firewall"
@@ -43,13 +40,18 @@ const val AUX_CHANNEL_ID = "Auxiliary"
 
 class App : Application() {
 
-    var currentActivity: WeakReference<Activity>? = null
+    val daggerComponent: AppComponent by lazy {
+        DaggerAppComponent
+            .builder()
+            .appContext(applicationContext)
+            .build()
+    }
 
-    lateinit var daggerComponent: AppComponent
-    private set
+    val subcomponentsManager by lazy {
+        SubcomponentsManager(this, daggerComponent)
+    }
 
-    private var logReaderDaggerSubcomponent: LogReaderSubcomponent? = null
-
+    @Volatile
     var isAppForeground: Boolean = false
 
     companion object {
@@ -76,8 +78,6 @@ class App : Application() {
 
         instance = this
 
-        initDaggerComponent()
-
         Language.setFromPreference(this, "pref_fast_language")
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -93,26 +93,6 @@ class App : Application() {
         }
 
         initAppLifecycleListener()
-    }
-
-    private fun initDaggerComponent() {
-        daggerComponent = DaggerAppComponent
-            .builder()
-            .sharedPreferencesModule(SharedPreferencesModule())
-            .coroutinesModule(CoroutinesModule())
-            .handlerModule(HandlerModule())
-            .contextModule(ContextModule(this))
-            .build()
-    }
-
-    @MainThread
-    fun initLogReaderDaggerSubcomponent() = logReaderDaggerSubcomponent ?:
-        daggerComponent.logReaderSubcomponent().create().also {
-            logReaderDaggerSubcomponent = it
-        }
-
-    fun releaseLogReaderScope() {
-        logReaderDaggerSubcomponent = null
     }
 
     @TargetApi(Build.VERSION_CODES.O)
@@ -168,7 +148,12 @@ class App : Application() {
     }
 
     private fun setExceptionHandler() {
-        Thread.setDefaultUncaughtExceptionHandler(TopExceptionHandler())
+        Thread.setDefaultUncaughtExceptionHandler(
+            TopExceptionHandler(getSharedPreferences(
+                SharedPreferencesModule.APP_PREFERENCES_NAME,
+                Context.MODE_PRIVATE
+            ))
+        )
     }
 
     private fun initAppLifecycleListener() {

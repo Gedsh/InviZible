@@ -16,33 +16,45 @@ package pan.alexander.tordnscrypt.utils
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.app.Activity
 import android.app.ActivityManager
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Point
+import android.os.Build
 import android.os.Environment
+import android.os.Process
 import android.util.Base64
 import android.util.Log
 import android.view.Display
+import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
+import pan.alexander.tordnscrypt.TopFragment.appVersion
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesService
+import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
+import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_CONNECTIVITY_CHECK
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges
+import pan.alexander.tordnscrypt.utils.Constants.DNS_DEFAULT_UID
+import pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_DEFAULT_UID
 import pan.alexander.tordnscrypt.utils.appexit.AppExitDetectService
 import pan.alexander.tordnscrypt.utils.filemanager.FileShortener
+import pan.alexander.tordnscrypt.utils.logger.Logger.logi
+import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
+import pan.alexander.tordnscrypt.utils.root.RootCommands
+import pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.io.File
 import java.io.PrintWriter
-import java.lang.IllegalArgumentException
 import java.net.Inet4Address
-import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
 import kotlin.math.roundToInt
@@ -214,12 +226,16 @@ object Utils {
     }
 
     @JvmStatic
-    fun shortenTooLongSnowflakeLog(context: Context, preferences: PreferenceRepository, pathVars: PathVars) {
+    fun shortenTooLongSnowflakeLog(
+        context: Context,
+        preferences: PreferenceRepository,
+        pathVars: PathVars
+    ) {
         try {
             val bridgesSnowflakeDefault =
-                preferences.getStringPreference(DEFAULT_BRIDGES_OBFS) == PreferencesTorBridges.snowFlakeBridgesDefault
+                preferences.getStringPreference(DEFAULT_BRIDGES_OBFS) == PreferencesTorBridges.SNOWFLAKE_BRIDGES_DEFAULT
             val bridgesSnowflakeOwn =
-                preferences.getStringPreference(OWN_BRIDGES_OBFS) == PreferencesTorBridges.snowFlakeBridgesOwn
+                preferences.getStringPreference(OWN_BRIDGES_OBFS) == PreferencesTorBridges.SNOWFLAKE_BRIDGES_OWN
             val shPref = PreferenceManager.getDefaultSharedPreferences(context)
             val showHelperMessages =
                 shPref.getBoolean(ALWAYS_SHOW_HELP_MESSAGES, false)
@@ -230,5 +246,64 @@ object Utils {
             Log.e(LOG_TAG, "ShortenTooLongSnowflakeLog exception ${e.message} ${e.cause}")
         }
     }
+
+    fun getUidForName(name: String, defaultValue: Int): Int {
+        var uid = defaultValue
+        try {
+            val result = Process.getUidForName(name)
+            if (result > 0) {
+                uid = result
+            } else {
+                logw("No uid for $name, using default value $defaultValue")
+            }
+        } catch (e: Exception) {
+            logw("No uid for $name, using default value $defaultValue")
+        }
+        return uid
+    }
+
+    fun getCriticalSystemUids(ownUid: Int): List<Int> =
+        arrayListOf(
+            getUidForName("dns", DNS_DEFAULT_UID + ownUid / 100_000 * 100_000),
+            getUidForName("network_stack", NETWORK_STACK_DEFAULT_UID + ownUid / 100_000 * 100_000),
+            SPECIAL_UID_CONNECTIVITY_CHECK
+        )
+
+    fun getDnsTetherUid(ownUid: Int) =
+        getUidForName("dns_tether", 1052 + ownUid / 100_000 * 100_000)
+
+    @JvmStatic
+    fun allowInteractAcrossUsersPermissionIfRequired(
+        context: Context
+    ) {
+        if (!appVersion.endsWith("p")
+            && ModulesStatus.getInstance().isRootAvailable
+            && !isInteractAcrossUsersPermissionGranted(context)
+        ) {
+            val allowAccessToWorkProfileApps = listOf(
+                "pm grant ${context.packageName} android.permission.INTERACT_ACROSS_USERS"
+            )
+            RootCommands.execute(context, allowAccessToWorkProfileApps, NULL_MARK)
+            logi("Grant INTERACT_ACROSS_USERS permission to access applications in work profile")
+        }
+    }
+
+    private fun isInteractAcrossUsersPermissionGranted(context: Context) =
+        ContextCompat.checkSelfPermission(
+            context,
+            "android.permission.INTERACT_ACROSS_USERS"
+        ) == PackageManager.PERMISSION_GRANTED
+
+    @JvmStatic
+    fun areNotificationsAllowed(notificationManager: NotificationManager) =
+        if (Build.VERSION.SDK_INT >= 24) {
+            notificationManager.areNotificationsEnabled()
+        } else {
+            true
+        }
+
+    @JvmStatic
+    fun areNotificationsNotAllowed(notificationManager: NotificationManager) =
+        !areNotificationsAllowed(notificationManager)
 
 }

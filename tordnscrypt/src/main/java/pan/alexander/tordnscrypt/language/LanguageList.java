@@ -15,7 +15,7 @@ package pan.alexander.tordnscrypt.language;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.util.Base64;
@@ -33,13 +33,16 @@ public class LanguageList {
             "RmlubmlzaCAoU3VvbWFsYWluZW4p",
             "RnJlbmNoIChGcmFuw6dhaXNlKQ==",
             "R2VybWFuIChEZXV0c2NoZSk=",
+            "R3JlZWsgKM6VzrvOu863zr3Ouc66zq4p",
             "SW5kb25lc2lhbiAoYmFoYXNhIEluZG9uZXNpYSk=",
+            "SXRhbGlhbiAoSXRhbGlhbmEp",
             "SmFwYW5lc2UgKOaXpeacrOiqnik=",
             "UGVyc2lhbiAo2YHYp9ix2LPbjCk=",
             "UG9saXNoIChQb2xza2kp",
             "UG9ydHVndWVzZS1CUiAoUG9ydHVndcOqcy1CUik=",
             "UnVzc2lhbiAo0KDRg9GB0YHQutC40Lkp",
-            "U3BhbmlzaCAoRXNwYcOxb2xhKQ=="
+            "U3BhbmlzaCAoRXNwYcOxb2xhKQ==",
+            "VHVya2lzaCAoVMO8cmsp"
     };
     private static final String[] MACHINE = {
             "",
@@ -48,13 +51,16 @@ public class LanguageList {
             "fi",
             "fr",
             "de",
+            "el",
             "in",
+            "it",
             "ja",
             "fa",
             "pl",
             "pt-rBR",
             "ru",
-            "es"
+            "es",
+            "tr"
     };
     private static String[] mHuman;
 
@@ -65,8 +71,7 @@ public class LanguageList {
             for (int i = 1; i < mHuman.length; i++) {
                 try {
                     mHuman[i] = decodeBase64(HUMAN_RAW[i]);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     mHuman[i] = MACHINE[i];
                 }
             }

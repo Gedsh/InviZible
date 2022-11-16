@@ -14,13 +14,24 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.data.connection_checker
 
 interface ConnectionCheckerDataSource {
-    fun checkInternetAvailableOverHttp(site: String): Boolean
-    fun checkInternetAvailableOverSocks(ip: String, port: Int, withTor: Boolean): Boolean
+    fun checkInternetAvailableOverHttp(
+        site: String,
+        proxyAddress: String,
+        proxyPort: Int
+    ): Boolean
+
+    fun checkInternetAvailableOverSocks(
+        ip: String,
+        port: Int,
+        proxyAddress: String,
+        proxyPort: Int
+    ): Boolean
+
     fun checkNetworkAvailable(): Boolean
 }

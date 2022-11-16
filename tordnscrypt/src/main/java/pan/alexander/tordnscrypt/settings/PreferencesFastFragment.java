@@ -15,9 +15,10 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -46,16 +47,25 @@ import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
+import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsInteractorInterface;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.language.Language;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.nflog.NflogManager;
 import pan.alexander.tordnscrypt.utils.ThemeUtils;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.startRefreshTorUnlockIPs;
 import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.stopRefreshTorUnlockIPs;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.AUTO_START_DELAY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BLOCK_HTTP;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BYPASS_LAN;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CONNECTION_LOGS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SITES_IPS_REFRESH_INTERVAL;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -70,10 +80,18 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
     public Lazy<Handler> handler;
+    @Inject
+    public Lazy<NflogManager> nflogManager;
+    @Inject
+    public Lazy<ConnectionRecordsInteractorInterface> connectionRecordsInteractor;
+
+    private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        App.getInstance().getDaggerComponent().inject(this);
+        App.getInstance().getSubcomponentsManager()
+                .initLogReaderDaggerSubcomponent()
+                .inject(this);
         super.onCreate(savedInstanceState);
 
         //noinspection deprecation
@@ -82,6 +100,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         addPreferencesFromResource(R.xml.preferences_fast);
     }
 
+    @NonNull
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
@@ -107,7 +126,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
             useBridges.setSummary(R.string.pref_fast_use_tor_bridges_alt_summ);
         }
 
-        Preference pref_fast_autostart_delay = findPreference("pref_fast_autostart_delay");
+        Preference pref_fast_autostart_delay = findPreference(AUTO_START_DELAY);
         if (pref_fast_autostart_delay != null) {
             pref_fast_autostart_delay.setOnPreferenceChangeListener(this);
         }
@@ -122,8 +141,8 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
             pref_fast_language.setOnPreferenceChangeListener(this);
         }
 
-        if (ModulesStatus.getInstance().getMode() == ROOT_MODE
-                || ModulesStatus.getInstance().getMode() == VPN_MODE) {
+        if (modulesStatus.getMode() == ROOT_MODE
+                || modulesStatus.getMode() == VPN_MODE) {
             changePreferencesWithRootOrVPNMode(context);
         } else {
             changePreferencesWithProxyMode();
@@ -250,8 +269,12 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         }
 
         handler.get().post(() -> {
-            ThemeUtils.setDayNightTheme(context);
-            activityCurrentRecreate();
+            try {
+                ThemeUtils.setDayNightTheme(context);
+                activityCurrentRecreate();
+            } catch (Exception e) {
+                loge("PreferencesFastFragment changeTheme", e);
+            }
         });
 
     }
@@ -273,7 +296,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         activity.overridePendingTransition(0, 0);
         startActivity(intent);
 
-        preferenceRepository.get().setBoolPreference("refresh_main_activity", true);
+        preferenceRepository.get().setBoolPreference(MAIN_ACTIVITY_RECREATE, true);
     }
 
     @Override
@@ -294,8 +317,9 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         handler.get().removeCallbacksAndMessages(null);
     }
 
+    @SuppressLint("UnsafeOptInUsageWarning")
     @Override
-    public boolean onPreferenceChange(Preference preference, Object newValue) {
+    public boolean onPreferenceChange(@NonNull Preference preference, Object newValue) {
 
         Context context = getActivity();
 
@@ -311,9 +335,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                     stopRefreshTorUnlockIPs(context);
                 }
                 return true;
-            case "pref_fast_all_through_tor":
-
-                ModulesStatus modulesStatus = ModulesStatus.getInstance();
+            case ALL_THROUGH_TOR:
 
                 if (modulesStatus.getMode() == ROOT_MODE || modulesStatus.getMode() == VPN_MODE) {
 
@@ -336,11 +358,30 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 }
 
                 return true;
-            case "pref_fast_block_http":
-            case "Allow LAN":
+            case CONNECTION_LOGS:
+                if (Boolean.parseBoolean(newValue.toString())) {
+                    if (ModulesAux.isDnsCryptSavedStateRunning() && !modulesStatus.isUseModulesWithRoot()) {
+                        if (modulesStatus.getMode() == ROOT_MODE) {
+                            nflogManager.get().startNflog();
+                        }
+                        modulesStatus.setIptablesRulesUpdateRequested(context, true);
+                    }
+                } else {
+                    if (ModulesAux.isDnsCryptSavedStateRunning() && !modulesStatus.isUseModulesWithRoot()) {
+                        if (modulesStatus.getMode() == ROOT_MODE) {
+                            nflogManager.get().stopNflog();
+                        } else if (modulesStatus.getMode() == VPN_MODE) {
+                            connectionRecordsInteractor.get().clearConnectionRecords();
+                        }
+                        modulesStatus.setIptablesRulesUpdateRequested(context, true);
+                    }
+                }
+                return true;
+            case BLOCK_HTTP:
+            case BYPASS_LAN:
                 if (ModulesAux.isDnsCryptSavedStateRunning()
                         || ModulesAux.isTorSavedStateRunning()) {
-                    ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
+                    modulesStatus.setIptablesRulesUpdateRequested(context, true);
                 }
                 return true;
             case "pref_fast_theme":
@@ -359,7 +400,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                     return true;
                 }
             case SITES_IPS_REFRESH_INTERVAL:
-            case "pref_fast_autostart_delay":
+            case AUTO_START_DELAY:
                 return newValue.toString().matches("\\d+");
         }
 
@@ -367,17 +408,22 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
     }
 
     private void changePreferencesWithRootOrVPNMode(Context context) {
-        Preference pref_fast_all_through_tor = findPreference("pref_fast_all_through_tor");
+        Preference pref_fast_all_through_tor = findPreference(ALL_THROUGH_TOR);
         if (pref_fast_all_through_tor != null) {
             pref_fast_all_through_tor.setOnPreferenceChangeListener(this);
         }
 
-        Preference bypassLan = findPreference("Allow LAN");
+        Preference bypassLan = findPreference(BYPASS_LAN);
         if (bypassLan != null) {
             bypassLan.setOnPreferenceChangeListener(this);
         }
 
-        Preference pref_fast_block_http = findPreference("pref_fast_block_http");
+        Preference pref_fast_logs = findPreference(CONNECTION_LOGS);
+        if (pref_fast_logs != null) {
+            pref_fast_logs.setOnPreferenceChangeListener(this);
+        }
+
+        Preference pref_fast_block_http = findPreference(BLOCK_HTTP);
         if (pref_fast_block_http != null) {
             pref_fast_block_http.setOnPreferenceChangeListener(this);
         }
@@ -391,7 +437,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         Preference prefTorAppUnlock = findPreference("prefTorAppUnlock");
 
         SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
-        if (shPref.getBoolean("pref_fast_all_through_tor", true)) {
+        if (shPref.getBoolean(ALL_THROUGH_TOR, true)) {
             if (prefTorSiteUnlock != null && prefTorAppUnlock != null) {
                 prefTorSiteUnlock.setEnabled(false);
                 prefTorAppUnlock.setEnabled(false);
@@ -410,12 +456,12 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
         List<Preference> preferencesList = new ArrayList<>();
 
-        preferencesList.add(findPreference("pref_fast_all_through_tor"));
+        preferencesList.add(findPreference(ALL_THROUGH_TOR));
         preferencesList.add(findPreference("prefTorSiteUnlock"));
         preferencesList.add(findPreference("prefTorAppUnlock"));
         preferencesList.add(findPreference("prefTorSiteExclude"));
         preferencesList.add(findPreference("prefTorAppExclude"));
-        preferencesList.add(findPreference("Allow LAN"));
+        preferencesList.add(findPreference(BYPASS_LAN));
         preferencesList.add(findPreference(SITES_IPS_REFRESH_INTERVAL));
 
         for (Preference preference : preferencesList) {
@@ -432,7 +478,12 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
         PreferenceCategory fastOtherCategory = findPreference("fast_other");
 
-        Preference blockHttp = findPreference("pref_fast_block_http");
+        Preference connectionLogs = findPreference(CONNECTION_LOGS);
+        if (fastOtherCategory != null && connectionLogs != null) {
+            fastOtherCategory.removePreference(connectionLogs);
+        }
+
+        Preference blockHttp = findPreference(BLOCK_HTTP);
         if (fastOtherCategory != null && blockHttp != null) {
             fastOtherCategory.removePreference(blockHttp);
         }
@@ -447,7 +498,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
         PreferenceCategory fastOtherCategory = findPreference("fast_other");
 
-        Preference blockHttp = findPreference("pref_fast_block_http");
+        Preference blockHttp = findPreference(BLOCK_HTTP);
         if (fastOtherCategory != null && blockHttp != null) {
             fastOtherCategory.removePreference(blockHttp);
         }

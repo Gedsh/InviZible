@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.settings.tor_bridges;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import java.util.List;
@@ -30,10 +30,12 @@ public interface PreferencesBridges {
     void  setCurrentBridgesType(BridgeType type);
     BridgesSelector getSavedBridgesSelector();
     void setSavedBridgesSelector(BridgesSelector selector);
-    Set<String> getCurrentBridges();
-    List<ObfsBridge> getBridgeList();
+    Set<String> getBridgesInUse();
+    List<ObfsBridge> getBridgesToDisplay();
     BridgeAdapter getBridgeAdapter();
-    List<String> getAnotherBridges();
+    List<String> getBridgesInappropriateType();
     String getBridgesFilePath();
-
+    boolean areDefaultVanillaBridgesSelected();
+    boolean areRelayBridgesWereRequested();
+    void saveRelayBridgesWereRequested(boolean requested);
 }

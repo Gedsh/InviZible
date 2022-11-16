@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.modules;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.content.Context;
@@ -24,14 +24,14 @@ import android.content.Context;
 public class ModulesRunner {
 
     public static void runDNSCrypt(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.actionStartDnsCrypt);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.ACTION_START_DNSCRYPT);
     }
 
     public static void runTor(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.actionStartTor);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.ACTION_START_TOR);
     }
 
     public static void runITPD(Context context) {
-        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.actionStartITPD);
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.ACTION_START_ITPD);
     }
 }

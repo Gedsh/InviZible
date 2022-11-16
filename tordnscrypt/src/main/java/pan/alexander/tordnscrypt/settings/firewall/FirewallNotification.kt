@@ -16,7 +16,7 @@ package pan.alexander.tordnscrypt.settings.firewall
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2021 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 import android.Manifest
@@ -39,6 +39,8 @@ import pan.alexander.tordnscrypt.FIREWALL_CHANNEL_ID
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.settings.SettingsActivity
 import pan.alexander.tordnscrypt.modules.ModulesStatus
+import pan.alexander.tordnscrypt.utils.Utils.areNotificationsNotAllowed
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 
 const val ALLOW_ACTION = "pan.alexander.tordnscrypt.ALLOW_APP_FOR_FIREWALL"
@@ -54,6 +56,7 @@ class FirewallNotification : BroadcastReceiver() {
     private var newAppsAreAllowed = false
 
     companion object {
+        @JvmStatic
         fun registerFirewallReceiver(context: Context): FirewallNotification {
             val firewallNotification = FirewallNotification()
 
@@ -67,6 +70,7 @@ class FirewallNotification : BroadcastReceiver() {
             return firewallNotification
         }
 
+        @JvmStatic
         fun unregisterFirewallReceiver(context: Context, receiver: FirewallNotification?) {
             receiver?.let { context.unregisterReceiver(it) }
         }
@@ -74,7 +78,7 @@ class FirewallNotification : BroadcastReceiver() {
 
     override fun onReceive(context: Context?, intent: Intent?) {
 
-        if (context == null || !preferenceRepository.get().getBoolPreference("FirewallEnabled")) {
+        if (context == null || !preferenceRepository.get().getBoolPreference(FIREWALL_ENABLED)) {
             return
         }
 
@@ -297,6 +301,13 @@ class FirewallNotification : BroadcastReceiver() {
             return
         }
 
+        val notificationManager =
+            context.applicationContext?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (areNotificationsNotAllowed(notificationManager)) {
+            return
+        }
+
         val notificationIntent = Intent(context, SettingsActivity::class.java)
         notificationIntent.action = "firewall"
         notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER)
@@ -386,8 +397,6 @@ class FirewallNotification : BroadcastReceiver() {
         }
 
         val notification = builder.build()
-        val notificationManager =
-            context.applicationContext?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?
-        notificationManager?.notify(notificationId, notification)
+        notificationManager.notify(notificationId, notification)
     }
 }
