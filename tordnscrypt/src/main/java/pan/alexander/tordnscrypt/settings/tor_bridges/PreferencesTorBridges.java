@@ -50,8 +50,8 @@ import android.widget.Toast;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
@@ -121,7 +121,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     private final String ADD_REQUESTED_BRIDGES_TAG = "pan.alexander.tordnscrypt/abstract_add_requested_bridges";
 
     private final List<String> tor_conf = new ArrayList<>();
-    private final Set<String> bridgesInUse = new HashSet<>();
+    private final Set<String> bridgesInUse = new LinkedHashSet<>();
     private final List<String> bridgesInappropriateType = new ArrayList<>();
     private final List<ObfsBridge> bridgesToDisplay = new ArrayList<>();
 

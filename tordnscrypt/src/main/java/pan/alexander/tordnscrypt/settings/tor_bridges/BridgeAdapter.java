@@ -238,27 +238,28 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
                     setSavedBridgesSelector(currentBridgesSelector);
                 }
 
+                setActive(position, true);
+
                 if (!preferencesBridges.areDefaultVanillaBridgesSelected()
                         && preferencesBridges.areRelayBridgesWereRequested()) {
                     preferencesBridges.saveRelayBridgesWereRequested(false);
                 }
 
-                if (preferencesBridges.areRelayBridgesWereRequested()) {
-                    bridgesInUse.clear();
-                    for (ObfsBridge bridge: preferencesBridges.getBridgesToDisplay()) {
-                        if (bridge.active) {
-                            bridgesInUse.add(bridge.bridge);
-                        }
-                    }
-                }
-
-                bridgesInUse.add(getItem(position).bridge);
-
             } else {
-                bridgesInUse.remove(getItem(position).bridge);
+                setActive(position, false);
             }
 
-            setActive(position, isChecked);
+            bridgesInUse.clear();
+
+            List<ObfsBridge> bridgesToDisplay = new ArrayList<>(preferencesBridges.getBridgesToDisplay());
+            Collections.sort(bridgesToDisplay, new BridgePingComparator());
+
+            for (ObfsBridge bridge : bridgesToDisplay) {
+                if (bridge.active) {
+                    bridgesInUse.add(bridge.bridge);
+                }
+            }
+
         }
 
         @Override
