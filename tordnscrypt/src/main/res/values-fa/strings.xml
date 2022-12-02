@@ -73,7 +73,7 @@
     <!-- هنگام راه اندازی I2P شروع -->
     <string name="pref_fast_itpd_autostart">"شروع I2P هنگام راه‌اندازی مجدد"</string>
     <string name="pref_fast_autostart_delay">"تأخیر"</string>
-    <string name="pref_fast_autostart_delay_summ">"شروع با تأخیر (در چند ثانیه) تنها اگر شروع خودکار به درستی کار نکرد"</string>
+    <string name="pref_fast_autostart_delay_summ">شروع با تأخیر (چند ثانیه) تنها اگر شروع خودکار به درستی کار نکرد</string>
     <string name="pref_fast_dns_server">"سرورهای DNSCrypt"</string>
     <string name="pref_fast_select_dns_server">"انتخاب سرورهای DNSCrypt"</string>
     <string name="pref_fast_tor">"تنظیمات TOR"</string>
@@ -154,7 +154,7 @@
     <string name="pref_common_restart_dnscrypt">"لطفاً DNSCrypt را مجدداً راه‌اندازی کنید"</string>
     <string name="pref_common_restart_tor">"لطفا TOR را مجدداً راه‌اندازی نمایید"</string>
     <string name="pref_common_restart_itpd">"لطفا l2P را مجدداً راه‌اندازی نمایید"</string>
-    <string name="pref_common_use_iptables">"انتخاب Iptables"</string>
+    <string name="pref_common_use_iptables">انتخاب iptables</string>
     <string name="pref_common_log_root_commands">"دستورات Root در وقایع‌نگار ذخیره شود"</string>
     <string name="notification_text">"DNSCrypt و TOR و I2P محافظت شده‌اند. لطفاً مخفی ننمایید."</string>
     <string name="notification_temp_text">درحال اجرای فرمانهای روت…</string>
@@ -491,8 +491,8 @@
     <string name="helper_dnscrypt_proxy_wifi">لطفا پروکسی را در تنظیمات شبکه WiFi اندروید غیرفعال کنید. این گزینه با InviZible تداخل دارد.</string>
     <string name="helper_dnscrypt_proxy_gsm">لطفا پروکسی را در تنظیمات APN داده شبکه غیرفعال کنید. این گزینه با InviZible تداخل دارد.</string>
     <string name="notification_channel_auxiliary">اعلان‌های کمکی</string>
-    <string name="pref_common_dns_rebind_protection">"DNS rebinding protection"</string>
-    <string name="pref_common_dns_rebind_protection_summ">"Block site when DNS rebinding attack is detected"</string>
+    <string name="pref_common_dns_rebind_protection">حفاظت مجدد از DNS</string>
+    <string name="pref_common_dns_rebind_protection_summ">هنگام شناسایی حمله مجدد DNS، سایت را مسدود کنید</string>
     <string name="notification_dns_rebinding_title">"DNS rebinding"</string>
     <string name="notification_dns_rebinding_text">حمله بالقوه DNS Rebinding شناسایی شد! سایت %s مسدود شده است.</string>
     <string name="areYouSure">آیا اطمینان دارید؟ این اقدام قابل برگشت نیست!</string>
