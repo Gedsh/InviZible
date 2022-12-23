@@ -143,7 +143,7 @@ Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="pref_common_restart_dnscrypt">"Bitte starte DNSCrypt neu"</string>
     <string name="pref_common_restart_tor">"Bitte starte Tor neu"</string>
     <string name="pref_common_restart_itpd">"Bitte starte I2P neu"</string>
-    <string name="pref_common_use_iptables">"Iptables auswählen"</string>
+    <string name="pref_common_use_iptables">iptables auswählen</string>
     <string name="pref_common_log_root_commands">"Speichere Root Kommandos im Log"</string>
     <string name="notification_text">"DNSCrypt, Tor, I2P sind geschützt. Nicht verstecken."</string>
     <string name="notification_temp_text">"Diese Benachrichtigung verschwindet gleich"</string>
