@@ -261,9 +261,8 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
     }
 
     private fun getNetworkDns(): List<String> = try {
-        //Do not get network DNS if SDK_INT < O to avoid loading jni lib in root mode
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
-            || modulesStatus.mode == OperationMode.VPN_MODE) {
+        //Don't get network DNS if SDK_INT < O because jni_getprop("net.dns1") doesn't work well on all phones
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             VpnUtils.getDefaultDNS(context)
                 .filter {
                     val dns = InetAddress.getByName(it)
