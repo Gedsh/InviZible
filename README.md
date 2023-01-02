@@ -169,7 +169,7 @@ and carries no guarantee from The Above Projects about quality, suitability or a
 
 [GNU General Public License version 3](https://www.gnu.org/licenses/gpl-3.0.txt)
 
-Copyright (c) 2019-2022 Garmatin Oleksandr invizible.soft@gmail.com
+Copyright (c) 2019-2023 Garmatin Oleksandr invizible.soft@gmail.com
 
 All rights reserved
 
