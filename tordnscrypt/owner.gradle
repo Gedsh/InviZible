@@ -49,7 +49,7 @@ android {
 
         beta {
             applicationId "pan.alexander.tordnscrypt"
-            versionName "1.7.7"
+            versionName "1.7.8"
             dimension = 'version'
             signingConfig signingConfigs.betasign
             resValue 'string', 'package_name', applicationId
@@ -90,7 +90,7 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 33
-        versionCode 177
+        versionCode 178
 
         resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt-rBR", "el", "tr", "it"
 
