@@ -852,3 +852,12 @@
 * Updated Tor to version 4.7.11.
 * The app will not block port 80 on the LAN if the corresponding option is enabled.
 * Fixed compatibility with Android 4.4.2.
+
+**InviZible Pro beta 1.7.8**
+* Updated Tor to version 4.7.12.
+* Updated Tor snowflake bridge to version 2.4.1.
+* Updated Tor geoip.
+* Updated Purple I2P to version 2.45.0.
+* Removed no longers supported I2P SSU option.
+* Do not block related, established connections while updating iptables rules in Root mode.
+* Fixes and optimizations.
