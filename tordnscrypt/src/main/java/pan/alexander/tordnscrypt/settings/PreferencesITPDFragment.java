@@ -91,7 +91,6 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
         preferences.add(findPreference("floodfill"));
         preferences.add(findPreference("bandwidth"));
         preferences.add(findPreference("share"));
-        preferences.add(findPreference("ssu"));
         preferences.add(findPreference("Enable ntcpproxy"));
         preferences.add(findPreference("ntcpproxy"));
         preferences.add(findPreference("HTTP proxy"));
