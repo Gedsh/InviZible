@@ -858,6 +858,6 @@
 * Updated Tor snowflake bridge to version 2.4.1.
 * Updated Tor geoip.
 * Updated Purple I2P to version 2.45.0.
-* Removed no longers supported I2P SSU option.
+* Removed no longer supported I2P SSU option.
 * Do not block related, established connections while updating iptables rules in Root mode.
 * Fixes and optimizations.
