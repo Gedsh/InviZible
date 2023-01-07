@@ -134,7 +134,7 @@ En otros sistemas, como MIUI, se requieren ajustes adicionales."</string>
     <string name="pref_common_unblock_with_tor">"Sitios web para abrir con Tor"</string>
     <string name="pref_common_unblock_with_tor_summ">Lista de sitios web para abrir con Tor a través de un PUNTO DE ACCESO</string>
     <string name="pref_common_excludes_from_tor">"Sitios Web para excluir de Tor"</string>
-    <string name="pref_common_excludes_from_tor_summ">"Conexión directa a sitios web desde Compartir Internet."</string>
+    <string name="pref_common_excludes_from_tor_summ">Lista de sitios web para abrir directamente a través de un PUNTO DE ACCESO</string>
     <string name="pref_common_itpd_tethering">"Compartir tráfico I2P"</string>
     <!-- Not sure about this translation. ¿What is it literal meaning, to repair, or to stick a value? -->
     <string name="pref_common_fix_ttl">"Establecer TTL"</string>
@@ -153,21 +153,21 @@ En otros sistemas, como MIUI, se requieren ajustes adicionales."</string>
     <string name="pref_advanced">"¡Solo para usuarios avanzados!"</string>
     <string name="pref_dnscrypt_select_server_names">"¡Selecciona al menos un servidor!"</string>
     <string name="pref_dnscrypt_local_port_summ">"Puerto local de escucha."</string>
-    <string name="pref_dnscrypt_require_servers_categ">"Requisitos de los servidores"</string>
-    <string name="pref_dnscrypt_dnscrypt_servers_summ">"Requiere servidores compatibles con el protocolo DNSCrypt"</string>
-    <string name="pref_dnscrypt_doh_servers_summ">"Requiere servidores compatibles con el protocolo DNS-sobre-HTTPS"</string>
-    <string name="pref_dnscrypt_require_servers_prop_categ">"Requisitos de los servidores"</string>
+    <string name="pref_dnscrypt_require_servers_categ">Necesita servidores (de fuentes estáticas + remotas) para cumplir con propiedades especiales.</string>
+    <string name="pref_dnscrypt_dnscrypt_servers_summ">Utilice servidores que implementen el protocolo DNSCrypt.</string>
+    <string name="pref_dnscrypt_doh_servers_summ">Utilice servidores que implementen el protocolo DNS sobre HTTPS.</string>
+    <string name="pref_dnscrypt_require_servers_prop_categ">Requiere servidores definidos por fuentes remotas para satisfacer ciertas características.</string>
     <string name="pref_dnscrypt_require_dnssec_summ">"Requiere servidores compatibles con Extensiones de seguridad DNS (DNSSEC)."</string>
     <string name="pref_dnscrypt_require_nolog_summ">"Requiere que los servidores no registren las peticiones DNS."</string>
     <string name="pref_dnscrypt_require_nofilter_summ">"Requiere que los servidores no utilicen ningún tipo de filtro (anuncios, control parental, bloqueos…) para las peticiones DNS."</string>
-    <string name="pref_dnscrypt_force_tcp_categ">"Habilitar comunicación TCP para conectar a los servidores"</string>
+    <string name="pref_dnscrypt_force_tcp_categ">Utilice siempre TCP para conectarse a servidores ascendentes.</string>
     <string name="pref_dnscrypt_force_tcp_summ">Esto puede ser útil si necesita enrutar todo a través de Tor.
 \n De lo contrario, déjelo en false, ya que no mejora la seguridad (dnscrypt-proxy siempre cifrará todo, incluso usando UDP), y solo puede aumentar la latencia.</string>
-    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"Proxy SOCKS"</string>
+    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">Servidor proxy SOCKS.</string>
     <string name="pref_dnscrypt_use_proxy">"Activar proxy"</string>
     <string name="pref_dnscrypt_proxy_summ">Dirija todas las conexiones TCP a un nodo Tor local. Dado que Tor no es compatible con UDP, configure force_tcp como activo también.</string>
     <string name="pref_dnscrypt_proxy">"puerto_proxy"</string>
-    <string name="pref_dnscrypt_other_categ">"Otros ajustes"</string>
+    <string name="pref_dnscrypt_other_categ">Otros ajustes.</string>
     <string name="pref_dnscrypt_fallback_resolver_summ">Solucionador de respaldo. Este es un solucionador de DNS sin encriptar, que solo se utilizará para consultas únicas al recuperar la lista de solucionador inicial, y solo si la configuración de DNS de su sistema falla. Nunca se utilizará si las listas ya se han almacenado en caché.</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">"No usar el DNS obtenido por el sistema Android. Activada, ésta opción obliga siempre a usar primero el servidor de resolución de último recurso."</string>
     <string name="pref_dnscrypt_filters_categ">"FILTROS"</string>
@@ -176,7 +176,7 @@ En otros sistemas, como MIUI, se requieren ajustes adicionales."</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">"Reglas de encubrimiento"</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">El encubrimiento devuelve una dirección predeterminada para un nombre específico.
 \n Además de actuar como un archivo HOSTS, también puede devolver la dirección IP con un nombre diferente. También hará el aplanamiento de CNAME.</string>
-    <string name="pref_dnscrypt_query_log_categ">"Registro de peticiones"</string>
+    <string name="pref_dnscrypt_query_log_categ">Registro de solicitudes.</string>
     <string name="pref_dnscrypt_query_log_summ">"Registra las peticiones de cliente a fichero."</string>
     <string name="pref_dnscrypt_query_log">"Activar el registro de peticiones"</string>
     <string name="pref_dnscrypt_ignored_qtypes_summ">"Tipos de peticiones a omitir, para reducir ruido, en los registros. Un valor vacío indica registrar todo."</string>
@@ -189,10 +189,10 @@ En otros sistemas, como MIUI, se requieren ajustes adicionales."</string>
     <string name="pref_dnscrypt_blacklist_categ">"Bloqueo basado en patrones (Lista de bloqueo)."</string>
     <string name="pref_dnscrypt_blacklist">"Lista de bloqueo"</string>
     <string name="pref_dnscrypt_blacklist_summ">"La lista de bloqueo se define por un patrón por línea."</string>
-    <string name="pref_dnscrypt_ipblacklist_categ">"Bloqueo basado en patrones de direcciones IP (Lista de bloqueo de IPs)"</string>
+    <string name="pref_dnscrypt_ipblacklist_categ">Bloqueo de patrones de IP (lista negra de IP).</string>
     <string name="pref_dnscrypt_ipblacklist">"Lista de bloqueo de direcciones IP"</string>
     <string name="pref_dnscrypt_ipblacklist_summ">"Lista de bloqueo de IPs se define por un patrón por línea."</string>
-    <string name="pref_dnscrypt_whitelist_categ">"Permiso basado en patrones (Lista de permitidos)"</string>
+    <string name="pref_dnscrypt_whitelist_categ">Listas blancas basadas en patrones (omisión de listas negras).</string>
     <string name="pref_dnscrypt_whitelist">"Lista de permitidos"</string>
     <string name="pref_dnscrypt_whitelist_summ">"La lista de permitidos funciona con los mismos patrones que la lista de bloqueo. Si un nombre coincide con una entrada en la lista, la correspondiente conexión pasará los filtros y/o bloqueos de nombres o IPs."</string>
     <string name="pref_dnscrypt_sources_categ">"Servidores"</string>
@@ -334,8 +334,8 @@ En otros sistemas, como MIUI, se requieren ajustes adicionales."</string>
     <string name="enter_code">"Introducir código"</string>
     <string name="thanks_for_donate">"La comunidad del proyecto InviZible Pro y su desarrollador expresan su gratitud por tu ayuda. ¿Te gustaría descargar y actualizar a la versión PRO? La actualización continuará en segundo plano."</string>
     <string name="pref_dnscrypt_relays_summ">"Lista remota de obtención de los retransmisores disponibles."</string>
-    <string name="vpn_mode_active">"Modo VPN activo."</string>
-    <string name="vpn_mode_off">"Modo VPN desactivado."</string>
+    <string name="vpn_mode_active">El modo VPN está activo</string>
+    <string name="vpn_mode_off">El modo VPN está desactivado</string>
     <string name="vpn_mode_error">"¡Fallo detectado en modo VPN!"</string>
     <string name="vpn_tor_tether_summ">"Por favor, configura el uso de un servidor de proxy en la configuración del dispositivo. Configuración por defecto: IP: 10.1.10.1 Puerto:8118"</string>
     <string name="main_fragment_hide_ip">"Ocultar IP con TOR"</string>
@@ -375,8 +375,8 @@ En otros sistemas, como MIUI, se requieren ajustes adicionales."</string>
     <string name="pref_itpd_edit_conf">"Modificar el archivo i2pd.conf"</string>
     <string name="pref_itpd_edit_tunnels">"Modificar el archivo tunnels.conf"</string>
     <string name="config_changes_dialog_message">"¿Estás realmente seguro de guardar los cambios? Ésto podría provocar errores."</string>
-    <string name="pref_dnscrypt_ipv4_servers_summ">"Requiere servidores IPv4."</string>
-    <string name="pref_dnscrypt_ipv6_servers_summ">"Requiere servidores IPv6."</string>
+    <string name="pref_dnscrypt_ipv4_servers_summ">Utilice servidores accesibles a través de IPv4</string>
+    <string name="pref_dnscrypt_ipv6_servers_summ">Utilice servidores a los que se pueda acceder a través de IPv6</string>
     <string name="pref_dnscrypt_import_forwarding_rules">"Introducir reglas de reenvío"</string>
     <string name="pref_dnscrypt_import_forwarding_rules_summ">"Introduce aquí un fichero de reglas de envío. Puedes seleccionar múltiples archivos, las líneas duplicadas se eliminarán."</string>
     <string name="pref_dnscrypt_erase_forwarding_rules">"Borrar reglas de reenvío"</string>
@@ -419,7 +419,7 @@ Donde 1 - arranca el módulo, y 0 - lo para."</string>
     <string name="pref_common_local_eth_device_addr">"Dirección LAN IP del dispositivo"</string>
     <string name="pref_common_local_eth_device_addr_summ">"Activa \"Establecer TTL\" y configura el dispositivo en LAN para que conecte a InviZible. Usa como router por defecto: %1$s, y como servidor DNS: %2$s."</string>
     <string name="pref_common_multi_user">"Modo Multi-usuario"</string>
-    <string name="pref_common_multi_user_summ">"Busca e identifica apps de otros usuarios como apps duplicadas, duplicación MIUI, o en el perfil de trabajo, como en la app Insular."</string>
+    <string name="pref_common_multi_user_summ">Soporte para aplicaciones duales, MIUI, Island, Shelter y aplicaciones con perfiles de trabajo</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">"Activar proxy de salida SOCKS"</string>
     <string name="pref_tor_SOCKS_output_address_summ">"Tor remitirá todas las conexiones OR al proxy SOCKS5 indicado."</string>
     <string name="notification_channel_services">"Servicios en marcha"</string>
@@ -449,7 +449,7 @@ Donde 1 - arranca el módulo, y 0 - lo para."</string>
     <string name="pref_fast_use_tor_bridges_alt_summ">"Por favor, desactiva el elemento Nodos de entrada (EntryNodes) en la configuración de Tor, de otra manera no podrá usar los puentes con Tor."</string>
     <string name="pref_fast_tor_bypass_lan">"Excluir direcciones LAN"</string>
     <string name="pref_fast_tor_bypass_lan_summ">No use la red Tor para destinos LAN y bloques de IP reservados por IANA</string>
-    <string name="pref_tor_entry_nodes_alt_summ">"Desactiva los puentes para Tor si quieres seleccionar nodos de entrada"</string>
+    <string name="pref_tor_entry_nodes_alt_summ">Deshabilite los puentes Tor si desea seleccionar nodos de entrada.</string>
     <string name="notification_channel_firewall">"Notificaciones del cortafuegos"</string>
     <string name="menu_firewall">"Cortafuegos"</string>
     <string name="firewall_all_apps">"Todos"</string>
