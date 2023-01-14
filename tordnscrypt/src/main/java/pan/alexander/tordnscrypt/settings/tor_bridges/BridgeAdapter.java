@@ -212,27 +212,13 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
 
             if (isChecked) {
 
-                boolean useNoBridges = preferenceRepository.get().getBoolPreference(USE_NO_BRIDGES);
-                boolean useDefaultBridges = preferenceRepository.get().getBoolPreference(USE_DEFAULT_BRIDGES);
-                boolean useOwnBridges = preferenceRepository.get().getBoolPreference(USE_OWN_BRIDGES);
-
-                BridgesSelector currentBridgesSelector;
-                if (!useNoBridges && !useDefaultBridges && !useOwnBridges) {
-                    currentBridgesSelector = BridgesSelector.NO_BRIDGES;
-                } else if (useNoBridges) {
-                    currentBridgesSelector = BridgesSelector.NO_BRIDGES;
-                } else if (useDefaultBridges) {
-                    currentBridgesSelector = BridgesSelector.DEFAULT_BRIDGES;
-                } else {
-                    currentBridgesSelector = BridgesSelector.OWN_BRIDGES;
-                }
-
                 BridgeType obfsType = getItem(position).obfsType;
                 if (!obfsType.equals(preferencesBridges.getCurrentBridgesType())) {
                     bridgesInUse.clear();
                     setCurrentBridgesType(obfsType);
                 }
 
+                BridgesSelector currentBridgesSelector = getCurrentBridgesSelector();
                 if (!currentBridgesSelector.equals(preferencesBridges.getSavedBridgesSelector())) {
                     bridgesInUse.clear();
                     setSavedBridgesSelector(currentBridgesSelector);
@@ -247,6 +233,16 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
 
             } else {
                 setActive(position, false);
+            }
+
+            BridgesSelector currentBridgesSelector = getCurrentBridgesSelector();
+            if (!currentBridgesSelector.equals(preferencesBridges.getSavedBridgesSelector())) {
+                return;
+            }
+
+            BridgeType obfsType = getItem(position).obfsType;
+            if (!obfsType.equals(preferencesBridges.getCurrentBridgesType())) {
+                return;
             }
 
             bridgesInUse.clear();
@@ -277,6 +273,26 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
                 deleteBridge(position);
             }
         }
+    }
+
+    private BridgesSelector getCurrentBridgesSelector() {
+
+        boolean useNoBridges = preferenceRepository.get().getBoolPreference(USE_NO_BRIDGES);
+        boolean useDefaultBridges = preferenceRepository.get().getBoolPreference(USE_DEFAULT_BRIDGES);
+        boolean useOwnBridges = preferenceRepository.get().getBoolPreference(USE_OWN_BRIDGES);
+
+        BridgesSelector currentBridgesSelector;
+        if (!useNoBridges && !useDefaultBridges && !useOwnBridges) {
+            currentBridgesSelector = BridgesSelector.NO_BRIDGES;
+        } else if (useNoBridges) {
+            currentBridgesSelector = BridgesSelector.NO_BRIDGES;
+        } else if (useDefaultBridges) {
+            currentBridgesSelector = BridgesSelector.DEFAULT_BRIDGES;
+        } else {
+            currentBridgesSelector = BridgesSelector.OWN_BRIDGES;
+        }
+
+        return currentBridgesSelector;
     }
 
     private void editBridge(final int position) {
