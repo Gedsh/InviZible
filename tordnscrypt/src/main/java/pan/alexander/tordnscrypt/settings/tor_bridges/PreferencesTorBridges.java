@@ -69,6 +69,7 @@ import pan.alexander.tordnscrypt.dialogs.BridgesReadyDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.ExtendedDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.SelectBridgesTransportDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitDialogBridgesRequest;
+import pan.alexander.tordnscrypt.domain.bridges.BridgeCountryData;
 import pan.alexander.tordnscrypt.domain.bridges.BridgePingData;
 import pan.alexander.tordnscrypt.domain.bridges.BridgePingResult;
 import pan.alexander.tordnscrypt.domain.bridges.PingCheckComplete;
@@ -298,6 +299,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         spOwnBridges.setOnItemSelectedListener(this);
 
         observeDialogsFlow();
+        observeBridgeCountries();
         observeTimeouts();
         observeDefaultVanillaBridges();
         observeErrors();
@@ -579,6 +581,19 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 }));
     }
 
+    private void observeBridgeCountries() {
+        viewModel.getBridgeCountriesLiveData().observe(getViewLifecycleOwner(), bridgeCountriesData ->
+                doActionAndUpdateRecycler(() -> {
+                    for (BridgeCountryData bridgeCountry : bridgeCountriesData) {
+                        for (ObfsBridge obfsBridge : bridgesToDisplay) {
+                            if (obfsBridge.bridge.hashCode() == bridgeCountry.getBridgeHash()) {
+                                obfsBridge.country = bridgeCountry.getCountry();
+                            }
+                        }
+                    }
+                }));
+    }
+
     private void limitDisplayedBridgesInCaseOfDefaultVanillaBridges() {
         if (areDefaultVanillaBridgesSelected()
                 && bridgesToDisplay.size() > DEFAULT_VANILLA_BRIDGES_DISPLAY_COUNT) {
@@ -788,6 +803,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
             viewModel.cancelRequestingRelayBridges();
             viewModel.cancelMeasuringTimeouts();
+            viewModel.cancelSearchingBridgeCountries();
             swipeRefreshBridges.setRefreshing(false);
 
             bridgesToDisplay.clear();
@@ -820,6 +836,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             } else {
                 tvBridgesListEmpty.setVisibility(View.GONE);
 
+                viewModel.searchBridgeCountries(bridgesToDisplay);
+
                 if (modulesStatus.getTorState() == STOPPED
                         || areDefaultVanillaBridgesSelected()) {
                     viewModel.measureTimeouts(bridgesToDisplay);
@@ -850,6 +868,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 tvBridgesListEmpty.setVisibility(View.VISIBLE);
             } else {
                 tvBridgesListEmpty.setVisibility(View.GONE);
+
+                viewModel.searchBridgeCountries(bridgesToDisplay);
 
                 if (modulesStatus.getTorState() == STOPPED) {
                     viewModel.measureTimeouts(bridgesToDisplay);

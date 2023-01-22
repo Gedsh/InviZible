@@ -381,6 +381,10 @@ public class PathVars {
         return appDataDir + "/app_data/tor/tor.conf";
     }
 
+    public String getTorGeoipPath() {
+        return appDataDir + "/app_data/tor/geoip";
+    }
+
     public String getItpdConfPath() {
         return appDataDir + "/app_data/i2pd/i2pd.conf";
     }

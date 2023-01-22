@@ -21,10 +21,7 @@ package pan.alexander.tordnscrypt.di
 
 import dagger.Binds
 import dagger.Module
-import pan.alexander.tordnscrypt.data.bridges.DefaultVanillaBridgeDataSource
-import pan.alexander.tordnscrypt.data.bridges.DefaultVanillaBridgeDataSourceImpl
-import pan.alexander.tordnscrypt.data.bridges.RequestBridgesDataSource
-import pan.alexander.tordnscrypt.data.bridges.RequestBridgesDataSourceImpl
+import pan.alexander.tordnscrypt.data.bridges.*
 import pan.alexander.tordnscrypt.data.connection_checker.ConnectionCheckerDataSource
 import pan.alexander.tordnscrypt.data.connection_checker.ConnectionCheckerDataSourceImpl
 import pan.alexander.tordnscrypt.data.dns_resolver.DnsDataSource
@@ -58,4 +55,9 @@ abstract class DataSourcesModule {
     abstract fun provideRequestBridgesDataSource(
         bridgesDataSource: RequestBridgesDataSourceImpl
     ): RequestBridgesDataSource
+
+    @Binds
+    abstract fun provideBridgesCountriesDataSource(
+        bridgesCountriesDataSource: BridgesCountriesDataSourceImpl
+    ): BridgesCountriesDataSource
 }
