@@ -26,6 +26,17 @@
             android:orientation="horizontal">
 
             <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvBridgeCountry"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:fontFamily="serif"
+                android:gravity="center"
+                android:textAlignment="gravity"
+                tools:text = "EN"/>
+
+            <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvBridge"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"

@@ -60,6 +60,8 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="q">
 
+        <profileable android:shell="false"/>
+
         <service
             android:name=".tiles.TorTileService"
             android:enabled="true"

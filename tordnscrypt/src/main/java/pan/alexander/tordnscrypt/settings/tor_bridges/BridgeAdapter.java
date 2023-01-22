@@ -122,6 +122,7 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
             View.OnClickListener {
 
         private final TextView tvBridge;
+        private final TextView tvBridgeCountry;
         private final TextView tvPing;
         private final SwitchCompat swBridge;
 
@@ -129,6 +130,7 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
             super(itemView);
 
             tvBridge = itemView.findViewById(R.id.tvBridge);
+            tvBridgeCountry = itemView.findViewById(R.id.tvBridgeCountry);
             tvPing = itemView.findViewById(R.id.tvBridgePing);
             swBridge = itemView.findViewById(R.id.swBridge);
             swBridge.setOnCheckedChangeListener(this);
@@ -179,6 +181,7 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
             }
 
             tvBridge.setText(tvBridgeText);
+            tvBridgeCountry.setText(obfsBridge.country);
             swBridge.setChecked(obfsBridge.active);
         }
 

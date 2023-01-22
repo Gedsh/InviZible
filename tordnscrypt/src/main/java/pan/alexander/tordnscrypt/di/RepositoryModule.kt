@@ -21,12 +21,14 @@ package pan.alexander.tordnscrypt.di
 
 import dagger.Binds
 import dagger.Module
+import pan.alexander.tordnscrypt.data.bridges.BridgesCountriesRepositoryImpl
 import pan.alexander.tordnscrypt.data.bridges.DefaultVanillaBridgeRepositoryImpl
 import pan.alexander.tordnscrypt.data.bridges.RequestBridgesRepositoryImpl
 import pan.alexander.tordnscrypt.data.connection_checker.ConnectionCheckerRepositoryImpl
 import pan.alexander.tordnscrypt.data.dns_resolver.DnsRepositoryImpl
 import pan.alexander.tordnscrypt.data.preferences.PreferenceRepositoryImpl
 import pan.alexander.tordnscrypt.data.resources.ResourceRepositoryImpl
+import pan.alexander.tordnscrypt.domain.bridges.BridgesCountriesRepository
 import pan.alexander.tordnscrypt.domain.bridges.DefaultVanillaBridgeRepository
 import pan.alexander.tordnscrypt.domain.bridges.RequestBridgesRepository
 import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerRepository
@@ -62,4 +64,9 @@ abstract class RepositoryModule {
     abstract fun provideRequestBridgesRepository(
         bridgesRepository: RequestBridgesRepositoryImpl
     ): RequestBridgesRepository
+
+    @Binds
+    abstract fun provideBridgesCountriesRepository(
+        bridgesCountriesRepository: BridgesCountriesRepositoryImpl
+    ): BridgesCountriesRepository
 }
