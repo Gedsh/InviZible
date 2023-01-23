@@ -861,3 +861,9 @@
 * Removed no longer supported I2P SSU option.
 * Do not block related, established connections while updating iptables rules in Root mode.
 * Fixes and optimizations.
+
+**InviZible Pro beta 1.7.9**
+* Updated Tor to version 4.7.13.
+* Updated Tor snowflake bridge to version 2.5.1.
+* Updated Purple I2P to version 2.45.1.
+* Added display of Tor bridges country.
