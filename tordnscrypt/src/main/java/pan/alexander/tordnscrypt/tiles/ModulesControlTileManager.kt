@@ -73,7 +73,7 @@ class ModulesControlTileManager @Inject constructor(
     private var task: Job? = null
     private var tile: Tile? = null
 
-    val coroutineScope by lazy { baseCoroutineScope + coroutineExceptionHandler }
+    private val coroutineScope by lazy { baseCoroutineScope + coroutineExceptionHandler }
 
     fun startUpdatingState(tile: Tile, manageTask: ManageTask) {
 
@@ -268,11 +268,13 @@ class ModulesControlTileManager @Inject constructor(
     }
 
     private fun initActionsInCaseOfFirstStart() {
-        var mode = modulesStatus.mode
+        var mode = modulesStatus.mode ?: OperationMode.UNDEFINED
 
         if (mode != OperationMode.UNDEFINED) {
             return
         }
+
+        resetModulesSavedState(preferenceRepository)
 
         val rootIsAvailable: Boolean = preferenceRepository.getBoolPreference(ROOT_IS_AVAILABLE)
         val runModulesWithRoot: Boolean =
@@ -291,6 +293,12 @@ class ModulesControlTileManager @Inject constructor(
         Utils.startAppExitDetectService(context)
 
         //shortenTooLongSnowflakeLog(context, preferenceRepository, pathVars)
+    }
+
+    private fun resetModulesSavedState(preferences: PreferenceRepository) {
+        preferences.setStringPreference(SAVED_DNSCRYPT_STATE_PREF, ModuleState.UNDEFINED.toString())
+        preferences.setStringPreference(SAVED_TOR_STATE_PREF, ModuleState.UNDEFINED.toString())
+        preferences.setStringPreference(SAVED_ITPD_STATE_PREF, ModuleState.UNDEFINED.toString())
     }
 
     private suspend fun manageTor() {
@@ -424,7 +432,9 @@ class ModulesControlTileManager @Inject constructor(
 
     private fun isStartingNotAllowed(moduleState: ModuleState): Boolean {
         return modulesStatus.isContextUIDUpdateRequested
-                || !(moduleState == ModuleState.STOPPED || moduleState == ModuleState.FAULT)
+                || !(moduleState == ModuleState.STOPPED
+                || moduleState == ModuleState.FAULT
+                || moduleState == ModuleState.UNDEFINED)
     }
 
     private fun allowSystemDNS() {
