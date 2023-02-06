@@ -1,0 +1,4 @@
+**InviZible Pro beta 1.8.0**
+* Updated DNSCrypt to version 2.1.3.
+* Fixed starting app modules using tiles.
+* Fixed restoring a backup on Android 13.

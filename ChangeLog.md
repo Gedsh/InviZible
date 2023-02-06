@@ -867,3 +867,8 @@
 * Updated Tor snowflake bridge to version 2.5.1.
 * Updated Purple I2P to version 2.45.1.
 * Added display of Tor bridges country.
+
+**InviZible Pro beta 1.8.0**
+* Updated DNSCrypt to version 2.1.3.
+* Fixed starting app modules using tiles.
+* Fixed restoring a backup on Android 13.
