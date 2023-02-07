@@ -407,7 +407,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
                         "'dnscrypt.ca-1', " +
                         "'sth-doh-se', " +
                         "'libredns', " +
-                        "'dnscrypt.eu-nl', " +
+                        "'dnswarden-uncensor-dc-swiss', " +
                         "'publicarray-au-doh', " +
                         "'scaleway-fr']";
             } else if (line.contains("require_nofilter")) {
