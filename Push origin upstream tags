@@ -1,4 +1,4 @@
 git push origin --tags
 git remote add upstream https://github.com/Gedsh/InviZible
 git fetch upstream
-git rebase upstream/stable
+git rebase upstream/https://github.com/Universalizer/Stealth/tree/Stealth-Base-Master
