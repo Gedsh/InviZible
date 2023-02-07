@@ -872,3 +872,8 @@
 * Updated DNSCrypt to version 2.1.3.
 * Fixed starting app modules using tiles.
 * Fixed restoring a backup on Android 13.
+
+**InviZible Pro beta 1.8.1**
+* Updated DNSCrypt to version 2.1.4.
+* Updated default DNSCrypt servers.
+* Updated default Tor bridges.
