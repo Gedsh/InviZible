@@ -1,1 +1,4 @@
 git push origin --tags
+git remote add upstream https://github.com/Gedsh/InviZible
+git fetch upstream
+git rebase upstream/Gedsh:master
