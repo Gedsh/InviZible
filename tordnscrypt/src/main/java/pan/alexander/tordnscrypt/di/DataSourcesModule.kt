@@ -1,4 +1,3 @@
-package pan.alexander.tordnscrypt.di
 /*
     This file is part of InviZible Pro.
 
@@ -15,15 +14,14 @@ package pan.alexander.tordnscrypt.di
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
-*/
+    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+ */
+
+package pan.alexander.tordnscrypt.di
 
 import dagger.Binds
 import dagger.Module
-import pan.alexander.tordnscrypt.data.bridges.DefaultVanillaBridgeDataSource
-import pan.alexander.tordnscrypt.data.bridges.DefaultVanillaBridgeDataSourceImpl
-import pan.alexander.tordnscrypt.data.bridges.RequestBridgesDataSource
-import pan.alexander.tordnscrypt.data.bridges.RequestBridgesDataSourceImpl
+import pan.alexander.tordnscrypt.data.bridges.*
 import pan.alexander.tordnscrypt.data.connection_checker.ConnectionCheckerDataSource
 import pan.alexander.tordnscrypt.data.connection_checker.ConnectionCheckerDataSourceImpl
 import pan.alexander.tordnscrypt.data.dns_resolver.DnsDataSource
@@ -57,4 +55,9 @@ abstract class DataSourcesModule {
     abstract fun provideRequestBridgesDataSource(
         bridgesDataSource: RequestBridgesDataSourceImpl
     ): RequestBridgesDataSource
+
+    @Binds
+    abstract fun provideBridgesCountriesDataSource(
+        bridgesCountriesDataSource: BridgesCountriesDataSourceImpl
+    ): BridgesCountriesDataSource
 }

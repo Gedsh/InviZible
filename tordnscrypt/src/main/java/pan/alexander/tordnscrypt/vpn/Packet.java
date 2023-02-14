@@ -1,4 +1,3 @@
-package pan.alexander.tordnscrypt.vpn;
 /*
     This file is part of InviZible Pro.
 
@@ -15,8 +14,10 @@ package pan.alexander.tordnscrypt.vpn;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
-*/
+    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+ */
+
+package pan.alexander.tordnscrypt.vpn;
 
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;

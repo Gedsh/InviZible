@@ -1,5 +1,3 @@
-package pan.alexander.tordnscrypt.installer;
-
 /*
     This file is part of InviZible Pro.
 
@@ -16,8 +14,10 @@ package pan.alexander.tordnscrypt.installer;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
-*/
+    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+ */
+
+package pan.alexander.tordnscrypt.installer;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -407,7 +407,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
                         "'dnscrypt.ca-1', " +
                         "'sth-doh-se', " +
                         "'libredns', " +
-                        "'dnscrypt.eu-nl', " +
+                        "'dnswarden-uncensor-dc-swiss', " +
                         "'publicarray-au-doh', " +
                         "'scaleway-fr']";
             } else if (line.contains("require_nofilter")) {

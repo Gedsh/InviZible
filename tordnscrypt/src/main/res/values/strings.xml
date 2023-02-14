@@ -607,7 +607,7 @@
     <string name="about_app_ver" translatable="false">Application Version:</string>
     <string name="about_build_date" translatable="false">Build Date:</string>
     <string name="about_proc_ver" translatable="false">Processor Version:</string>
-    <string name="about_own_copyright" translatable="false">Copyright (C) 2019-2022 Garmatin Oleksandr\n All Rights Reserved\n Web Site:</string>
+    <string name="about_own_copyright" translatable="false">Copyright (C) 2019-2023 Garmatin Oleksandr\n All Rights Reserved\n Web Site:</string>
     <string name="privacy_policy_title" translatable="false">Privacy Policy</string>
     <string name="privacy_policy" translatable="false">\tInviZible Pro does not collect or share any personal or sensitive user data.
         InviZible Pro forwards internet traffic to Tor, DNSCrypt and I2P networks.
@@ -697,7 +697,7 @@
         \n\n\tInviZible Pro can use root, if your device has root privileges, or uses a local VPN to deliver Internet traffic to Tor, DNSCrypt and I2P networks.
         \n\n\tPrivacy Policy:
         \n\tInviZible Pro does not collect or share any personal or sensitive user data.
-        \n\n\tCopyright © 2019-2022
+        \n\n\tCopyright © 2019-2023
         \n\tGarmatin Oleksandr
         \n\tinvizible.soft@gmail.com
         \n\tinvizible.net/en/privacy

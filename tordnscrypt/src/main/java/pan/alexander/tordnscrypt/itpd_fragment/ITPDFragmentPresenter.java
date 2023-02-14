@@ -1,5 +1,3 @@
-package pan.alexander.tordnscrypt.itpd_fragment;
-
 /*
     This file is part of InviZible Pro.
 
@@ -16,8 +14,10 @@ package pan.alexander.tordnscrypt.itpd_fragment;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
-*/
+    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+ */
+
+package pan.alexander.tordnscrypt.itpd_fragment;
 
 import android.app.Activity;
 import android.content.Context;

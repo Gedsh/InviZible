@@ -1,4 +1,3 @@
-package pan.alexander.tordnscrypt.di
 /*
     This file is part of InviZible Pro.
 
@@ -15,17 +14,21 @@ package pan.alexander.tordnscrypt.di
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
-*/
+    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+ */
+
+package pan.alexander.tordnscrypt.di
 
 import dagger.Binds
 import dagger.Module
+import pan.alexander.tordnscrypt.data.bridges.BridgesCountriesRepositoryImpl
 import pan.alexander.tordnscrypt.data.bridges.DefaultVanillaBridgeRepositoryImpl
 import pan.alexander.tordnscrypt.data.bridges.RequestBridgesRepositoryImpl
 import pan.alexander.tordnscrypt.data.connection_checker.ConnectionCheckerRepositoryImpl
 import pan.alexander.tordnscrypt.data.dns_resolver.DnsRepositoryImpl
 import pan.alexander.tordnscrypt.data.preferences.PreferenceRepositoryImpl
 import pan.alexander.tordnscrypt.data.resources.ResourceRepositoryImpl
+import pan.alexander.tordnscrypt.domain.bridges.BridgesCountriesRepository
 import pan.alexander.tordnscrypt.domain.bridges.DefaultVanillaBridgeRepository
 import pan.alexander.tordnscrypt.domain.bridges.RequestBridgesRepository
 import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerRepository
@@ -61,4 +64,9 @@ abstract class RepositoryModule {
     abstract fun provideRequestBridgesRepository(
         bridgesRepository: RequestBridgesRepositoryImpl
     ): RequestBridgesRepository
+
+    @Binds
+    abstract fun provideBridgesCountriesRepository(
+        bridgesCountriesRepository: BridgesCountriesRepositoryImpl
+    ): BridgesCountriesRepository
 }

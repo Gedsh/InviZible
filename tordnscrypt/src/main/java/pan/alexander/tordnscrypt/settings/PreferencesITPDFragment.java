@@ -1,4 +1,3 @@
-package pan.alexander.tordnscrypt.settings;
 /*
     This file is part of InviZible Pro.
 
@@ -15,8 +14,10 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
-*/
+    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+ */
+
+package pan.alexander.tordnscrypt.settings;
 
 import android.app.Activity;
 import android.content.Context;
@@ -90,7 +91,6 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
         preferences.add(findPreference("floodfill"));
         preferences.add(findPreference("bandwidth"));
         preferences.add(findPreference("share"));
-        preferences.add(findPreference("ssu"));
         preferences.add(findPreference("Enable ntcpproxy"));
         preferences.add(findPreference("ntcpproxy"));
         preferences.add(findPreference("HTTP proxy"));

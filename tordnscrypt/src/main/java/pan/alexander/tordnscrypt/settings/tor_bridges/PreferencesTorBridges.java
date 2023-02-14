@@ -1,4 +1,3 @@
-package pan.alexander.tordnscrypt.settings.tor_bridges;
 /*
     This file is part of InviZible Pro.
 
@@ -15,8 +14,10 @@ package pan.alexander.tordnscrypt.settings.tor_bridges;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
-*/
+    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+ */
+
+package pan.alexander.tordnscrypt.settings.tor_bridges;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -50,8 +51,8 @@ import android.widget.Toast;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
@@ -68,6 +69,7 @@ import pan.alexander.tordnscrypt.dialogs.BridgesReadyDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.ExtendedDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.SelectBridgesTransportDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitDialogBridgesRequest;
+import pan.alexander.tordnscrypt.domain.bridges.BridgeCountryData;
 import pan.alexander.tordnscrypt.domain.bridges.BridgePingData;
 import pan.alexander.tordnscrypt.domain.bridges.BridgePingResult;
 import pan.alexander.tordnscrypt.domain.bridges.PingCheckComplete;
@@ -121,7 +123,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     private final String ADD_REQUESTED_BRIDGES_TAG = "pan.alexander.tordnscrypt/abstract_add_requested_bridges";
 
     private final List<String> tor_conf = new ArrayList<>();
-    private final Set<String> bridgesInUse = new HashSet<>();
+    private final Set<String> bridgesInUse = new LinkedHashSet<>();
     private final List<String> bridgesInappropriateType = new ArrayList<>();
     private final List<ObfsBridge> bridgesToDisplay = new ArrayList<>();
 
@@ -297,6 +299,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         spOwnBridges.setOnItemSelectedListener(this);
 
         observeDialogsFlow();
+        observeBridgeCountries();
         observeTimeouts();
         observeDefaultVanillaBridges();
         observeErrors();
@@ -376,7 +379,16 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     }
                 } else {
                     if (!currentBridge.isEmpty() && currentBridge.contains(currentBridgesType.toString())) {
-                        torConfCleaned.add("Bridge " + currentBridge);
+                        if (currentBridgesType.equals(snowflake)) {
+                            torConfCleaned.add(
+                                    "Bridge " + currentBridge
+                                            + " utls-imitate="
+                                            + snowflakeConfigurator.get().getUtlsClientID()
+
+                            );
+                        } else {
+                            torConfCleaned.add("Bridge " + currentBridge);
+                        }
                     }
                 }
 
@@ -566,6 +578,19 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                         }
                     }
 
+                }));
+    }
+
+    private void observeBridgeCountries() {
+        viewModel.getBridgeCountriesLiveData().observe(getViewLifecycleOwner(), bridgeCountriesData ->
+                doActionAndUpdateRecycler(() -> {
+                    for (BridgeCountryData bridgeCountry : bridgeCountriesData) {
+                        for (ObfsBridge obfsBridge : bridgesToDisplay) {
+                            if (obfsBridge.bridge.hashCode() == bridgeCountry.getBridgeHash()) {
+                                obfsBridge.country = bridgeCountry.getCountry();
+                            }
+                        }
+                    }
                 }));
     }
 
@@ -778,6 +803,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
             viewModel.cancelRequestingRelayBridges();
             viewModel.cancelMeasuringTimeouts();
+            viewModel.cancelSearchingBridgeCountries();
             swipeRefreshBridges.setRefreshing(false);
 
             bridgesToDisplay.clear();
@@ -810,6 +836,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             } else {
                 tvBridgesListEmpty.setVisibility(View.GONE);
 
+                viewModel.searchBridgeCountries(bridgesToDisplay);
+
                 if (modulesStatus.getTorState() == STOPPED
                         || areDefaultVanillaBridgesSelected()) {
                     viewModel.measureTimeouts(bridgesToDisplay);
@@ -840,6 +868,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 tvBridgesListEmpty.setVisibility(View.VISIBLE);
             } else {
                 tvBridgesListEmpty.setVisibility(View.GONE);
+
+                viewModel.searchBridgeCountries(bridgesToDisplay);
 
                 if (modulesStatus.getTorState() == STOPPED) {
                     viewModel.measureTimeouts(bridgesToDisplay);
@@ -909,6 +939,11 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     for (int i = 0; i < tor_conf.size(); i++) {
                         String line = tor_conf.get(i);
                         if (!line.contains("#") && line.contains("Bridge ")) {
+
+                            if (line.contains(snowflake.toString())) {
+                                line = line.replaceAll("utls-imitate.+?( |\\z)", "");
+                            }
+
                             bridgesInUse.add(line.replace("Bridge ", "").trim());
                         }
                     }

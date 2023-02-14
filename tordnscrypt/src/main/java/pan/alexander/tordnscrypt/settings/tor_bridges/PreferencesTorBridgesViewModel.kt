@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings.tor_bridges
@@ -34,7 +34,8 @@ import kotlin.Exception
 @ExperimentalCoroutinesApi
 class PreferencesTorBridgesViewModel @Inject constructor(
     private val defaultVanillaBridgeInteractor: DefaultVanillaBridgeInteractor,
-    private val requestBridgesInteractor: RequestBridgesInteractor
+    private val requestBridgesInteractor: RequestBridgesInteractor,
+    private val bridgesCountriesInteractor: BridgesCountriesInteractor
 ) : ViewModel() {
 
     private val timeouts = mutableListOf<BridgePingResult>()
@@ -49,6 +50,12 @@ class PreferencesTorBridgesViewModel @Inject constructor(
     private var relayBridgesRequestJob: Job? = null
 
     private var torBridgesRequestJob: Job? = null
+
+    private val bridgeCountries = mutableListOf<BridgeCountryData>()
+    private val bridgeCountriesMutableLiveData = MutableLiveData<List<BridgeCountryData>>()
+    val bridgeCountriesLiveData: LiveData<List<BridgeCountryData>> get() = bridgeCountriesMutableLiveData
+    private var bridgeCountriesSearchingJob: Job? = null
+    private var bridgeCountriesObserveJob: Job? = null
 
     private val dialogsFlowMutableLiveData = MutableLiveData<DialogsFlowState>()
     val dialogsFlowLiveData: LiveData<DialogsFlowState> get() = dialogsFlowMutableLiveData.distinctUntilChanged()
@@ -179,6 +186,38 @@ class PreferencesTorBridgesViewModel @Inject constructor(
                 loge("PreferencesTorBridgesViewModel requestTorBridges", e)
             }
         }
+    }
+
+    fun searchBridgeCountries(bridges: List<ObfsBridge>) {
+
+        if (bridges.isEmpty()) {
+            return
+        }
+
+        cancelSearchingBridgeCountries()
+
+        if (bridgeCountriesObserveJob?.isCancelled != false) {
+            initBridgeCountriesObserver()
+        }
+
+        bridgeCountriesSearchingJob = viewModelScope.launch {
+            bridgesCountriesInteractor.searchBridgeCountries(bridges.map { it.bridge })
+        }
+    }
+
+    private fun initBridgeCountriesObserver() {
+        bridgeCountriesObserveJob = viewModelScope.launch {
+            bridgesCountriesInteractor.observeBridgeCountries()
+               .onEach {
+                   bridgeCountries.add(it)
+                   bridgeCountriesMutableLiveData.value = bridgeCountries
+                }.collect()
+        }
+    }
+
+    fun cancelSearchingBridgeCountries() {
+        bridgeCountriesSearchingJob?.cancelChildren()
+        bridgeCountries.clear()
     }
 
     private fun showBridgesReadyDialog(bridges: String) {

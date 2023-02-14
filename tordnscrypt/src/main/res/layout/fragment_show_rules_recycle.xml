@@ -11,7 +11,9 @@
         android:id="@+id/rvRules"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:clipToPadding="false"
         android:focusable="false"
+        android:paddingBottom="48dp"
         android:scrollbarAlwaysDrawVerticalTrack="false"
         android:scrollbars="vertical" />
 
@@ -26,10 +28,10 @@
         android:cropToPadding="true"
         android:fitsSystemWindows="false"
         android:focusable="true"
-        app:srcCompat="@drawable/ic_add_white_24dp"
         app:backgroundTint="@color/buttonColor"
         app:fabSize="auto"
         app:rippleColor="@color/colorAccent"
+        app:srcCompat="@drawable/ic_add_white_24dp"
         app:useCompatPadding="false" />
 
 </FrameLayout>

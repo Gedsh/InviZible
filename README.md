@@ -25,12 +25,14 @@ They are used to achieve maximum security, privacy and comfortable use of the In
 * Can block ads *
 * Can protect against dangerous and malicious sites *
 * Can block "adult" sites *
-* Hides visited sites from your provider
+* Hides visited sites from your provider **
 * Prevents some types of resource blocks
 * Open-source
 
 **Depending on the selected dnscrypt server*
 **(Not available in Google Play version!)**
+
+***In case your ISP does not use DPI equipment*
 
 ### Tor
 * Encrypts Internet traffic
@@ -167,7 +169,7 @@ and carries no guarantee from The Above Projects about quality, suitability or a
 
 [GNU General Public License version 3](https://www.gnu.org/licenses/gpl-3.0.txt)
 
-Copyright (c) 2019-2022 Garmatin Oleksandr invizible.soft@gmail.com
+Copyright (c) 2019-2023 Garmatin Oleksandr invizible.soft@gmail.com
 
 All rights reserved
 

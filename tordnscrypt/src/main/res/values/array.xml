@@ -21,7 +21,6 @@
         <item>Andorra</item>
         <item>Angola</item>
         <item>Anguilla</item>
-        <item>Antarctica</item>
         <item>Antigua and Barbuda</item>
         <item>Argentina</item>
         <item>Armenia</item>
@@ -183,7 +182,6 @@
         <item>Paraguay</item>
         <item>Peru</item>
         <item>Philippines</item>
-        <item>Pitcairn</item>
         <item>Poland</item>
         <item>Portugal</item>
         <item>Puerto Rico</item>
@@ -193,7 +191,6 @@
         <item>Russian Federation</item>
         <item>Rwanda</item>
         <item>Saint Barthélemy</item>
-        <item>Saint Helena, Ascension and Tristan da Cunha</item>
         <item>Saint Kitts and Nevis</item>
         <item>Saint Lucia</item>
         <item>Saint Martin (French part)</item>
@@ -263,7 +260,6 @@
         <item>AD</item>
         <item>AO</item>
         <item>AI</item>
-        <item>AQ</item>
         <item>AG</item>
         <item>AR</item>
         <item>AM</item>
@@ -425,7 +421,6 @@
         <item>PY</item>
         <item>PE</item>
         <item>PH</item>
-        <item>PN</item>
         <item>PL</item>
         <item>PT</item>
         <item>PR</item>
@@ -435,7 +430,6 @@
         <item>RU</item>
         <item>RW</item>
         <item>BL</item>
-        <item>SH</item>
         <item>KN</item>
         <item>LC</item>
         <item>MF</item>
@@ -509,14 +503,11 @@
     <string-array name="tor_snowflake_stun_servers">
         <item>stun.l.google.com:19302</item>
         <item>stun.voip.blackberry.com:3478</item>
-        <item>stun.altar.com.pl:3478</item>
         <item>stun.antisip.com:3478</item>
         <item>stun.bluesip.net:3478</item>
         <item>stun.dus.net:3478</item>
         <item>stun.epygi.com:3478</item>
         <item>stun.sonetel.com:3478</item>
-        <item>stun.sonetel.net:3478</item>
-        <item>stun.stunprotocol.org:3478</item>
         <item>stun.uls.co.za:3478</item>
         <item>stun.voipgate.com:3478</item>
         <item>stun.voys.nl:3478</item>

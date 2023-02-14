@@ -1,4 +1,3 @@
-package pan.alexander.tordnscrypt.settings;
 /*
     This file is part of InviZible Pro.
 
@@ -15,8 +14,10 @@ package pan.alexander.tordnscrypt.settings;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
-*/
+    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+ */
+
+package pan.alexander.tordnscrypt.settings;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -378,6 +379,10 @@ public class PathVars {
 
     public String getTorConfPath() {
         return appDataDir + "/app_data/tor/tor.conf";
+    }
+
+    public String getTorGeoipPath() {
+        return appDataDir + "/app_data/tor/geoip";
     }
 
     public String getItpdConfPath() {

@@ -1,0 +1,4 @@
+**InviZible Pro beta 1.8.1**
+* Updated DNSCrypt to version 2.1.4.
+* Updated default DNSCrypt servers.
+* Updated default Tor bridges.

@@ -840,3 +840,40 @@
 * Fixed display of notifications on Android 13.
 * Fixed requesting Tor bridges on Android 4.4.2.
 * Minor fixes and optimizations.
+
+**InviZible Pro beta 1.7.6**
+* Updated Tor.
+* Updated Tor snowflake bridge.
+* Updated Tor obfs4proxy to version 0.0.14.
+* Use default network DNS to test connectivity if only DNSCrypt is running.
+* Fixed Tor bridges requesting dialog when font size is too large.
+
+**InviZible Pro beta 1.7.7**
+* Updated Tor to version 4.7.11.
+* The app will not block port 80 on the LAN if the corresponding option is enabled.
+* Fixed compatibility with Android 4.4.2.
+
+**InviZible Pro beta 1.7.8**
+* Updated Tor to version 4.7.12.
+* Updated Tor snowflake bridge to version 2.4.1.
+* Updated Tor geoip.
+* Updated Purple I2P to version 2.45.0.
+* Removed no longer supported I2P SSU option.
+* Do not block related, established connections while updating iptables rules in Root mode.
+* Fixes and optimizations.
+
+**InviZible Pro beta 1.7.9**
+* Updated Tor to version 4.7.13.
+* Updated Tor snowflake bridge to version 2.5.1.
+* Updated Purple I2P to version 2.45.1.
+* Added display of Tor bridges country.
+
+**InviZible Pro beta 1.8.0**
+* Updated DNSCrypt to version 2.1.3.
+* Fixed starting app modules using tiles.
+* Fixed restoring a backup on Android 13.
+
+**InviZible Pro beta 1.8.1**
+* Updated DNSCrypt to version 2.1.4.
+* Updated default DNSCrypt servers.
+* Updated default Tor bridges.

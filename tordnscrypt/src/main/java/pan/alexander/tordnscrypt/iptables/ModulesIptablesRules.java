@@ -1,5 +1,3 @@
-package pan.alexander.tordnscrypt.iptables;
-
 /*
     This file is part of InviZible Pro.
 
@@ -16,8 +14,10 @@ package pan.alexander.tordnscrypt.iptables;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
-*/
+    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+ */
+
+package pan.alexander.tordnscrypt.iptables;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -360,6 +360,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-F " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
                         iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true",
                         iptables + "-N " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                        iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m state --state ESTABLISHED,RELATED -j RETURN",
                         iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner " + appUID + " -j RETURN",
                         criticalUidsAllowed,
                         iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -j DROP",
@@ -387,6 +388,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
+                        bypassLanNat,
                         blockHttpRuleNatTCP,
                         blockHttpRuleNatUDP,
                         blockTlsRuleNatTCP,
@@ -402,7 +404,6 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
                         blockRejectAddressFilter,
                         proxyAppsBypassNat,
-                        bypassLanNat,
                         //Redirect TCP sites to Tor
                         torSitesRedirectNat,
                         //Redirect TCP apps to Tor
@@ -427,6 +428,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-F " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
                         iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true",
                         iptables + "-N " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                        iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m state --state ESTABLISHED,RELATED -j RETURN",
                         iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner " + appUID + " -j RETURN",
                         criticalUidsAllowed,
                         iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -j DROP",
@@ -455,6 +457,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -m owner --uid-owner " + appUID + " -j RETURN",
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
+                        bypassLanNat,
                         blockHttpRuleNatTCP,
                         blockHttpRuleNatUDP,
                         blockTlsRuleNatTCP,
@@ -464,7 +467,6 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         torAppsBypassNat,
                         kernelBypassNat,
                         proxyAppsBypassNat,
-                        bypassLanNat,
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
                         iptables + "-N " + FILTER_OUTPUT_CORE + " 2> /dev/null",
                         nflogDns,
@@ -509,6 +511,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     iptables + "-F " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
                     iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true",
                     iptables + "-N " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                    iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m state --state ESTABLISHED,RELATED -j RETURN",
                     iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner " + appUID + " -j RETURN",
                     criticalUidsAllowed,
                     iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -j DROP",
@@ -593,6 +596,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-F " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
                         iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true",
                         iptables + "-N " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                        iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m state --state ESTABLISHED,RELATED -j RETURN",
                         iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner " + appUID + " -j RETURN",
                         criticalUidsAllowed,
                         iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -j DROP",
@@ -614,6 +618,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort(),
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort(),
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
+                        bypassLanNat,
                         blockHttpRuleNatTCP,
                         blockHttpRuleNatUDP,
                         blockTlsRuleNatTCP,
@@ -627,7 +632,6 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         torRootDNSAllowedFilter,
                         blockRejectAddressFilter,
                         proxyAppsBypassNat,
-                        bypassLanNat,
                         //Redirect TCP sites to Tor
                         torSitesRedirectNat,
                         //Redirect TCP apps to Tor
@@ -652,6 +656,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-F " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
                         iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true",
                         iptables + "-N " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                        iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m state --state ESTABLISHED,RELATED -j RETURN",
                         iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner " + appUID + " -j RETURN",
                         criticalUidsAllowed,
                         iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -j DROP",
@@ -673,6 +678,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort(),
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -m owner --uid-owner " + appUID + " -j RETURN",
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -d " + pathVars.getTorVirtAdrNet() + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
+                        bypassLanNat,
                         blockHttpRuleNatTCP,
                         blockHttpRuleNatUDP,
                         blockTlsRuleNatTCP,
@@ -682,7 +688,6 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         torAppsBypassNat,
                         kernelBypassNat,
                         proxyAppsBypassNat,
-                        bypassLanNat,
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
                         iptables + "-N " + FILTER_OUTPUT_CORE + " 2> /dev/null",
                         nflogDns,
@@ -725,6 +730,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     iptables + "-F " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
                     iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true",
                     iptables + "-N " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                    iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m state --state ESTABLISHED,RELATED -j RETURN",
                     iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner " + appUID + " -j RETURN",
                     criticalUidsAllowed,
                     iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -j DROP",
@@ -750,6 +756,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                 iptables + "-F " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
                 iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true",
                 iptables + "-N " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m state --state ESTABLISHED,RELATED -j RETURN",
                 iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner " + appUID + " -j RETURN",
                 criticalUidsAllowed,
                 iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -j DROP",
@@ -796,6 +803,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                 iptables + "-F " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
                 iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true",
                 iptables + "-N " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m state --state ESTABLISHED,RELATED -j RETURN",
                 iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner " + appUID + " -j RETURN",
                 criticalUidsAllowed,
                 iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -j DROP",

@@ -1,5 +1,3 @@
-package pan.alexander.tordnscrypt.settings.tor_bridges;
-
 /*
     This file is part of InviZible Pro.
 
@@ -16,8 +14,10 @@ package pan.alexander.tordnscrypt.settings.tor_bridges;
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2022 by Garmatin Oleksandr invizible.soft@gmail.com
-*/
+    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+ */
+
+package pan.alexander.tordnscrypt.settings.tor_bridges;
 
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.meek_lite;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.obfs3;
@@ -122,6 +122,7 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
             View.OnClickListener {
 
         private final TextView tvBridge;
+        private final TextView tvBridgeCountry;
         private final TextView tvPing;
         private final SwitchCompat swBridge;
 
@@ -129,6 +130,7 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
             super(itemView);
 
             tvBridge = itemView.findViewById(R.id.tvBridge);
+            tvBridgeCountry = itemView.findViewById(R.id.tvBridgeCountry);
             tvPing = itemView.findViewById(R.id.tvBridgePing);
             swBridge = itemView.findViewById(R.id.swBridge);
             swBridge.setOnCheckedChangeListener(this);
@@ -179,6 +181,7 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
             }
 
             tvBridge.setText(tvBridgeText);
+            tvBridgeCountry.setText(obfsBridge.country);
             swBridge.setChecked(obfsBridge.active);
         }
 
@@ -212,53 +215,50 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
 
             if (isChecked) {
 
-                boolean useNoBridges = preferenceRepository.get().getBoolPreference(USE_NO_BRIDGES);
-                boolean useDefaultBridges = preferenceRepository.get().getBoolPreference(USE_DEFAULT_BRIDGES);
-                boolean useOwnBridges = preferenceRepository.get().getBoolPreference(USE_OWN_BRIDGES);
-
-                BridgesSelector currentBridgesSelector;
-                if (!useNoBridges && !useDefaultBridges && !useOwnBridges) {
-                    currentBridgesSelector = BridgesSelector.NO_BRIDGES;
-                } else if (useNoBridges) {
-                    currentBridgesSelector = BridgesSelector.NO_BRIDGES;
-                } else if (useDefaultBridges) {
-                    currentBridgesSelector = BridgesSelector.DEFAULT_BRIDGES;
-                } else {
-                    currentBridgesSelector = BridgesSelector.OWN_BRIDGES;
-                }
-
                 BridgeType obfsType = getItem(position).obfsType;
                 if (!obfsType.equals(preferencesBridges.getCurrentBridgesType())) {
                     bridgesInUse.clear();
                     setCurrentBridgesType(obfsType);
                 }
 
+                BridgesSelector currentBridgesSelector = getCurrentBridgesSelector();
                 if (!currentBridgesSelector.equals(preferencesBridges.getSavedBridgesSelector())) {
                     bridgesInUse.clear();
                     setSavedBridgesSelector(currentBridgesSelector);
                 }
+
+                setActive(position, true);
 
                 if (!preferencesBridges.areDefaultVanillaBridgesSelected()
                         && preferencesBridges.areRelayBridgesWereRequested()) {
                     preferencesBridges.saveRelayBridgesWereRequested(false);
                 }
 
-                if (preferencesBridges.areRelayBridgesWereRequested()) {
-                    bridgesInUse.clear();
-                    for (ObfsBridge bridge: preferencesBridges.getBridgesToDisplay()) {
-                        if (bridge.active) {
-                            bridgesInUse.add(bridge.bridge);
-                        }
-                    }
-                }
-
-                bridgesInUse.add(getItem(position).bridge);
-
             } else {
-                bridgesInUse.remove(getItem(position).bridge);
+                setActive(position, false);
             }
 
-            setActive(position, isChecked);
+            BridgesSelector currentBridgesSelector = getCurrentBridgesSelector();
+            if (!currentBridgesSelector.equals(preferencesBridges.getSavedBridgesSelector())) {
+                return;
+            }
+
+            BridgeType obfsType = getItem(position).obfsType;
+            if (!obfsType.equals(preferencesBridges.getCurrentBridgesType())) {
+                return;
+            }
+
+            bridgesInUse.clear();
+
+            List<ObfsBridge> bridgesToDisplay = new ArrayList<>(preferencesBridges.getBridgesToDisplay());
+            Collections.sort(bridgesToDisplay, new BridgePingComparator());
+
+            for (ObfsBridge bridge : bridgesToDisplay) {
+                if (bridge.active) {
+                    bridgesInUse.add(bridge.bridge);
+                }
+            }
+
         }
 
         @Override
@@ -276,6 +276,26 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
                 deleteBridge(position);
             }
         }
+    }
+
+    private BridgesSelector getCurrentBridgesSelector() {
+
+        boolean useNoBridges = preferenceRepository.get().getBoolPreference(USE_NO_BRIDGES);
+        boolean useDefaultBridges = preferenceRepository.get().getBoolPreference(USE_DEFAULT_BRIDGES);
+        boolean useOwnBridges = preferenceRepository.get().getBoolPreference(USE_OWN_BRIDGES);
+
+        BridgesSelector currentBridgesSelector;
+        if (!useNoBridges && !useDefaultBridges && !useOwnBridges) {
+            currentBridgesSelector = BridgesSelector.NO_BRIDGES;
+        } else if (useNoBridges) {
+            currentBridgesSelector = BridgesSelector.NO_BRIDGES;
+        } else if (useDefaultBridges) {
+            currentBridgesSelector = BridgesSelector.DEFAULT_BRIDGES;
+        } else {
+            currentBridgesSelector = BridgesSelector.OWN_BRIDGES;
+        }
+
+        return currentBridgesSelector;
     }
 
     private void editBridge(final int position) {

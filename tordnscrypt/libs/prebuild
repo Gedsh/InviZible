@@ -4,15 +4,15 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 obfs4proxy_version=workaround/ntor-auth-mismatch
 dnscryptproxy_version=master
-snowflake_version=v2.3.0
-tor_openssl_version=OpenSSL_1_1_1q
+snowflake_version=v2.5.1
+tor_openssl_version=OpenSSL_1_1_1s
 libevent_version=release-2.1.12-stable
 zstd_version=v1.4.9
 xz_version=v5.2.4
 tor_version=release-0.4.7
-i2pd_openssl_version=OpenSSL_1_1_1o
+i2pd_openssl_version=OpenSSL_1_1_1s
 miniupnpc_version=c2818392e12f42901ab5abf145f43d69825a38c9
-i2pd_version=2.43.0
+i2pd_version=2.45.1
 
 git clone https://github.com/Gedsh/obfs4
 pushd obfs4
