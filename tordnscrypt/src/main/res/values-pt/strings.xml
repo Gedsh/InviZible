@@ -469,4 +469,27 @@
     <string name="pref_firewall_allow_internet_for_new_apps_off_summ">As conexões de Internet para aplicações recém-instaladas estão bloqueadas.</string>
     <string name="tile_change_tor_ip">Alterar IP Tor</string>
     <string name="tile_changing_tor_ip">Alterando IP Tor</string>
+    <string name="dialog_new_tor_default_bridges_available">Novas pontes padrão de Tor estão disponíveis. Deseja atualizá-las\?</string>
+    <string name="pref_common_proxy">Usar proxy socks5</string>
+    <string name="pref_common_categ_hotspot">HOTSPOT-Experimental</string>
+    <string name="pref_dnscrypt_force_tcp_summ">Isto pode ser útil se precisar de rotear tudo através do Tor.
+\n Caso contrário, deixe-o em falso, pois não melhora a segurança (o dnscrypt-proxy sempre criptografará tudo, mesmo usando UDP) e só pode aumentar a latência.</string>
+    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">Proxy SOCKS.</string>
+    <string name="pref_dnscrypt_forwarding_rules_categ">Regras de encaminhamento</string>
+    <string name="pref_dnscrypt_cloaking_rules_categ">Regras de camuflagem</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">A cmulfagem retorna um endereço predefinido para um nome específico.
+\n Além de atuar como um ficheiro HOSTS, também pode retornar o endereço IP de um nome diferente. Também fará o achatamento do CNAME..</string>
+    <string name="pref_dnscrypt_nx_log_summ">Registar consultas para regiões inexistentes.
+\n Essts consultas podem revelar a presença de malware, aplicações quebradas/obsoletas e aparelhos sinalizando a presença deles a terceiros.</string>
+    <string name="pref_dnscrypt_whitelist">Lista de permissões</string>
+    <string name="pref_tor_exit_nodes_summ">Uma lista de códigos de país a usar como nó de saída - ou seja, um nó que entrega tráfego para si para fora da rede Tor.</string>
+    <string name="pref_tor_SOCKS_port_summ">Abra esta porta para escutar conexões de aplicações que falam SOCKS.</string>
+    <string name="pref_tor_HTTPTunnel_port_summ">Abra esta porta para escutar conexões de proxy usando o protocolo HTTP CONNECT em vez de SOCKS.</string>
+    <string name="pref_itpd_use_HTTP_outproxy">Proxy de saída HTTP</string>
+    <string name="pref_itpd_Socks_proxy">Proxy de socks</string>
+    <string name="pref_itpd_Socks_proxy_enabled">Proxy de socks</string>
+    <string name="pref_itpd_use_Socks_outproxy">proxy de saída SOCKS</string>
+    <string name="pref_itpd_SAM_interface_port_summ">Porto da ponte SAM.</string>
+    <string name="firewall_switch">Firewall ligado/desligado</string>
+    <string name="tile_dialog_over_three_tiles_message">Adicionou mais que 3 blocos às Configurações Rápidas. Por favor, deixe apenas 3. Adicionar mais de 3 blocos pode causar problemas com o controlo de apps.</string>
 </resources>
