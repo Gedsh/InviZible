@@ -24,6 +24,7 @@ import androidx.annotation.Keep;
 @Keep
 public interface Constants {
     String LOOPBACK_ADDRESS = "127.0.0.1";
+    String LOOPBACK_ADDRESS_IPv6 = "::1";
     String META_ADDRESS = "0.0.0.0";
 
     String STANDARD_WIFI_INTERFACE_NAME = "wlan0";

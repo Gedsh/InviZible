@@ -192,7 +192,7 @@ public class VpnRulesHolder {
             // Reload service
             logi("Block due to reloading " + packet);
         } else if ((vpnPreferences.getBlockIPv6() || fixTTLForPacket
-                || packet.dport == PLAINTEXT_DNS_PORT
+                //|| packet.dport == PLAINTEXT_DNS_PORT
                 || (torIsRunning && redirectToTor)
                 || (vpnPreferences.getUseProxy() && redirectToProxy))
                 && (packet.saddr.contains(":") || packet.daddr.contains(":"))) {

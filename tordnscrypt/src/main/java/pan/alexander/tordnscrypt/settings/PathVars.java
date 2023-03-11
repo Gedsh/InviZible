@@ -36,6 +36,7 @@ import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_LISTEN_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_IPTABLES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.WAIT_IPTABLES;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
@@ -212,7 +213,7 @@ public class PathVars {
     }
 
     public String getDNSCryptPort() {
-        return preferences.getString("listen_port", "5354");
+        return preferences.getString(DNSCRYPT_LISTEN_PORT, "5354");
     }
 
     public String getITPDHttpProxyPort() {

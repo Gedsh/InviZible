@@ -105,6 +105,7 @@ public interface PreferenceKeys {
 
     //DNSCrypt Settings
     String BLOCK_IPv6 = "block_ipv6";
+    String DNSCRYPT_LISTEN_PORT = "listen_port";
 
     //Tor Settings
     String TOR_OUTBOUND_PROXY = "Enable output Socks5Proxy";

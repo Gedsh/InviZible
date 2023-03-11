@@ -45,6 +45,7 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_LISTEN_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
@@ -88,7 +89,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                 }
 
                 if (key.equals("listen_addresses")) {
-                    key = "listen_port";
+                    key = DNSCRYPT_LISTEN_PORT;
                     if (val.contains("\"") && val.contains(":")) {
                         val = val.substring(val.indexOf(":") + 1, val.indexOf("\"", 3)).trim();
                     } else if (val.contains("'") && val.contains(":")) {

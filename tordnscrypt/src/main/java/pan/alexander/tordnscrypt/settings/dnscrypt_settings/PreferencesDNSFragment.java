@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_settings;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -65,16 +66,19 @@ import pan.alexander.tordnscrypt.vpn.service.VpnBuilder;
 import static android.provider.DocumentsContract.EXTRA_INITIAL_URI;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BLOCK_IPv6;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_LISTEN_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.HTTP3_QUIC;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 public class PreferencesDNSFragment extends PreferenceFragmentCompat
         implements Preference.OnPreferenceChangeListener,
@@ -90,6 +94,9 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
     public Lazy<PathVars> pathVars;
     @Inject
     public CachedExecutor cachedExecutor;
+    @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
+    public SharedPreferences defaultPreferences;
 
     private final static String ipv4Regex = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
 
@@ -118,7 +125,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
         ArrayList<Preference> preferences = new ArrayList<>();
 
-        preferences.add(findPreference("listen_port"));
+        preferences.add(findPreference(DNSCRYPT_LISTEN_PORT));
         preferences.add(findPreference("dnscrypt_servers"));
         preferences.add(findPreference("doh_servers"));
         preferences.add(findPreference("require_dnssec"));
@@ -312,14 +319,21 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             boolean invalidFallbackResolver = !newValue.toString().matches(ipv4Regex)
                     || newValue.toString().equals(LOOPBACK_ADDRESS) || newValue.toString().equals(META_ADDRESS);
 
-            if (Objects.equals(preference.getKey(), "listen_port")) {
+            if (Objects.equals(preference.getKey(), DNSCRYPT_LISTEN_PORT)) {
                 boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
                         && ModulesStatus.getInstance().isUseModulesWithRoot();
                 if (!newValue.toString().matches("\\d+")
                         || (!useModulesWithRoot && Integer.parseInt(newValue.toString()) < 1024)) {
                     return false;
                 }
-                String val = "['127.0.0.1:" + newValue + "']";
+
+                String val = "['127.0.0.1:" + newValue;
+                if (defaultPreferences.getBoolean(BLOCK_IPv6, true)) {
+                    val += "']";
+                } else {
+                    val += "', '[::1]:" + newValue + "']";
+                }
+
                 val_toml.set(key_toml.indexOf("listen_addresses"), val);
                 return true;
             } else if (Objects.equals(preference.getKey(), "bootstrap_resolvers")) {
@@ -422,6 +436,18 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                     key_toml.add(position + 1, "http3");
                     val_toml.add(position + 1, "false");
                 }
+            } else if (Objects.equals(preference.getKey().trim(), BLOCK_IPv6)) {
+
+                String dnsCryptPort = pathVars.get().getDNSCryptPort();
+
+                String val = "['127.0.0.1:" + dnsCryptPort;
+                if (Boolean.parseBoolean(newValue.toString())) {
+                    val += "']";
+                } else {
+                    val += "', '[::1]:" + dnsCryptPort + "']";
+                }
+
+                val_toml.set(key_toml.indexOf("listen_addresses"), val);
             }
 
             if (key_toml.contains(preference.getKey().trim()) && !newValue.toString().isEmpty()) {

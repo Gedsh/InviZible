@@ -1056,7 +1056,7 @@ void queue_tcp(const struct arguments *args,
 }
 
 int open_tcp_socket(const struct arguments *args,
-                    const struct tcp_session *cur, const struct allowed *redirect) {
+                    const struct tcp_session *cur, struct allowed *redirect) {
     int sock;
     int version;
     if (redirect == NULL) {
@@ -1065,8 +1065,12 @@ int open_tcp_socket(const struct arguments *args,
             version = (strstr(tor_socks5_addr, ":") == NULL ? 4 : 6);
         else
             version = cur->version;
-    } else
+    } else if (cur->version == 6 && strcmp(redirect->raddr, LOOPBACK_ADDRESS) == 0) {
+        strcpy(redirect->raddr, LOOPBACK_ADDRESS_IPv6);
+        version = 6;
+    } else {
         version = (strstr(redirect->raddr, ":") == NULL ? 4 : 6);
+    }
 
     // Get TCP socket
     if ((sock = socket(version == 4 ? PF_INET : PF_INET6, SOCK_STREAM | SOCK_CLOEXEC, 0)) < 0) {
