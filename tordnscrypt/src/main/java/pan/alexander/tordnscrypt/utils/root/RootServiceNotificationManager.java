@@ -170,6 +170,7 @@ public class RootServiceNotificationManager {
                 .setPriority(Notification.PRIORITY_MIN)
                 .setOnlyAlertOnce(true)
                 .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+                .setSilent(true)
                 .setChannelId(ROOT_CHANNEL_ID)
                 .setProgress(100, progress, false);
 

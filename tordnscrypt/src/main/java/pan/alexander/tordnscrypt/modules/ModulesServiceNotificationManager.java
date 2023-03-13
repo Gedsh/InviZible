@@ -112,6 +112,7 @@ public class ModulesServiceNotificationManager {
                 .setContentText(text)
                 .setPriority(Notification.PRIORITY_MIN)
                 .setOnlyAlertOnce(true)
+                .setSilent(true)
                 .setChannelId(ANDROID_CHANNEL_ID)
                 .setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
 
@@ -147,6 +148,7 @@ public class ModulesServiceNotificationManager {
                 .setContentText(text)
                 .setPriority(Notification.PRIORITY_MIN)
                 .setOnlyAlertOnce(true)
+                .setSilent(true)
                 .setChannelId(ANDROID_CHANNEL_ID)
                 .setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
 
