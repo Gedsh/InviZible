@@ -39,7 +39,6 @@ import pan.alexander.tordnscrypt.utils.Utils.getUidForName
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
-import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_SHOWS_ALL_APPS
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MULTI_USER_SUPPORT
 import java.util.concurrent.locks.ReentrantLock
 import java.util.regex.Pattern
@@ -54,7 +53,6 @@ class InstalledApplicationsManager private constructor(
     private var onAppAddListener: OnAppAddListener?,
     private val activeApps: Set<String>,
     private val showSpecialApps: Boolean,
-    private var showAllApps: Boolean?,
     private var iconIsRequired: Boolean
 ) {
 
@@ -73,8 +71,6 @@ class InstalledApplicationsManager private constructor(
 
     init {
         App.instance.daggerComponent.inject(this)
-
-        showAllApps = showAllApps ?: defaultPreferences.getBoolean(FIREWALL_SHOWS_ALL_APPS, false)
     }
 
     private val ownUID = pathVars.appUid
@@ -124,7 +120,15 @@ class InstalledApplicationsManager private constructor(
                 }
             }
 
-            val installedApps = packageManager.getInstalledApplications(pkgManagerFlags)
+            val installedApps = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                packageManager.getInstalledApplications(
+                    PackageManager.ApplicationInfoFlags.of(pkgManagerFlags.toLong())
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                packageManager.getInstalledApplications(pkgManagerFlags)
+            }
+
             val userAppsMap = hashMapOf<Int, ApplicationData>()
             val multiUserAppsMap = hashMapOf<Int, ApplicationData>()
             var application: ApplicationData?
@@ -149,13 +153,7 @@ class InstalledApplicationsManager private constructor(
 
                     val system = (applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
 
-                    if (!system && showAllApps == false) {
-                        val useInternet = isAppUseInternet(packageManager, applicationInfo)
-
-                        if (!useInternet) {
-                            return@forEach
-                        }
-                    }
+                    val useInternet = isAppUseInternet(packageManager, applicationInfo)
 
                     val packageName = applicationInfo.packageName
 
@@ -165,6 +163,7 @@ class InstalledApplicationsManager private constructor(
                         uid,
                         icon,
                         system,
+                        useInternet,
                         activeApps.contains(uid.toString())
                     )
 
@@ -237,10 +236,20 @@ class InstalledApplicationsManager private constructor(
     ): Boolean {
         var useInternet = false
         try {
-            val pInfo: PackageInfo = packageManager.getPackageInfo(
-                applicationInfo.packageName,
-                PackageManager.GET_PERMISSIONS
-            )
+
+            val pInfo: PackageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                packageManager.getPackageInfo(
+                    applicationInfo.packageName,
+                    PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS.toLong())
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                packageManager.getPackageInfo(
+                    applicationInfo.packageName,
+                    PackageManager.GET_PERMISSIONS
+                )
+            }
+
             if (pInfo.requestedPermissions != null) {
                 for (permInfo in pInfo.requestedPermissions) {
                     if (permInfo == Manifest.permission.INTERNET) {
@@ -275,10 +284,16 @@ class InstalledApplicationsManager private constructor(
 
                     packages?.let {
                         val system = (applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+                        val useInternet = isAppUseInternet(packageManager, applicationInfo)
                         val packageName = it.joinToString()
                         val application = ApplicationData(
-                            "$name(M)", packageName, applicationUID,
-                            icon, system, activeApps.contains(applicationUID.toString())
+                            "$name(M)",
+                            packageName,
+                            applicationUID,
+                            icon,
+                            system,
+                            useInternet,
+                            activeApps.contains(applicationUID.toString())
                         )
 
                         tempMultiUserAppsMap[applicationUID] = application
@@ -315,13 +330,30 @@ class InstalledApplicationsManager private constructor(
         val shell = getUidForName("shell", 2000 + userId * 100_000)
         val clat = getUidForName("clat", 1029 + userId * 100_000)
         val specialDataApps = arrayListOf(
-            ApplicationData("Kernel", "UID -1", -1, defaultIcon, true, activeApps.contains("-1")),
-            ApplicationData("Root", "root", 0, defaultIcon, true, activeApps.contains("0")),
+            ApplicationData(
+                "Kernel",
+                "UID -1",
+                -1,
+                defaultIcon,
+                system = true,
+                true,
+                activeApps.contains("-1")
+            ),
+            ApplicationData(
+                "Root",
+                "root",
+                0,
+                defaultIcon,
+                system = true,
+                true,
+                activeApps.contains("0")
+            ),
             ApplicationData(
                 "Android Debug Bridge",
                 "adb",
                 adb,
                 defaultIcon,
+                system = true,
                 true,
                 activeApps.contains(adb.toString())
             ),
@@ -330,6 +362,7 @@ class InstalledApplicationsManager private constructor(
                 "media",
                 media,
                 defaultIcon,
+                system = true,
                 true,
                 activeApps.contains(media.toString())
             ),
@@ -338,6 +371,7 @@ class InstalledApplicationsManager private constructor(
                 "vpn",
                 vpn,
                 defaultIcon,
+                system = true,
                 true,
                 activeApps.contains(vpn.toString())
             ),
@@ -346,6 +380,7 @@ class InstalledApplicationsManager private constructor(
                 "drm",
                 drm,
                 defaultIcon,
+                system = true,
                 true,
                 activeApps.contains(drm.toString())
             ),
@@ -354,6 +389,7 @@ class InstalledApplicationsManager private constructor(
                 "mDNS",
                 mdns,
                 defaultIcon,
+                system = true,
                 true,
                 activeApps.contains(mdns.toString())
             ),
@@ -362,6 +398,7 @@ class InstalledApplicationsManager private constructor(
                 "gps",
                 gps,
                 defaultIcon,
+                system = true,
                 true,
                 activeApps.contains(gps.toString())
             ),
@@ -370,6 +407,7 @@ class InstalledApplicationsManager private constructor(
                 "dns",
                 dns,
                 defaultIcon,
+                system = true,
                 true,
                 activeApps.contains(dns.toString())
             ),
@@ -378,6 +416,7 @@ class InstalledApplicationsManager private constructor(
                 "dns.tether",
                 dnsTether,
                 defaultIcon,
+                system = true,
                 true,
                 activeApps.contains(dnsTether.toString())
             ),
@@ -386,6 +425,7 @@ class InstalledApplicationsManager private constructor(
                 "shell",
                 shell,
                 defaultIcon,
+                system = true,
                 true,
                 activeApps.contains(shell.toString())
             )
@@ -398,6 +438,7 @@ class InstalledApplicationsManager private constructor(
                     "clat",
                     clat,
                     defaultIcon,
+                    system = true,
                     true,
                     activeApps.contains(clat.toString())
                 )
@@ -411,6 +452,7 @@ class InstalledApplicationsManager private constructor(
                     "ntp",
                     ApplicationData.SPECIAL_UID_NTP,
                     defaultIcon,
+                    system = true,
                     true,
                     activeApps.contains(ApplicationData.SPECIAL_UID_NTP.toString())
                 )
@@ -421,6 +463,7 @@ class InstalledApplicationsManager private constructor(
                     "agps",
                     ApplicationData.SPECIAL_UID_AGPS,
                     defaultIcon,
+                    system = true,
                     true,
                     activeApps.contains(ApplicationData.SPECIAL_UID_AGPS.toString())
                 )
@@ -431,6 +474,7 @@ class InstalledApplicationsManager private constructor(
                     "connectivitycheck.gstatic.com",
                     ApplicationData.SPECIAL_UID_CONNECTIVITY_CHECK,
                     defaultIcon,
+                    system = true,
                     true,
                     activeApps.contains(ApplicationData.SPECIAL_UID_CONNECTIVITY_CHECK.toString())
                 )
@@ -449,7 +493,6 @@ class InstalledApplicationsManager private constructor(
         private var onAppAddListener: OnAppAddListener? = null
         private var activeApps = setOf<String>()
         private var showSpecialApps = false
-        private var showAllApps: Boolean? = null
         private var iconIsRequired = false
 
         fun setOnAppAddListener(onAppAddListener: OnAppAddListener): Builder {
@@ -467,11 +510,6 @@ class InstalledApplicationsManager private constructor(
             return this
         }
 
-        fun showAllApps(show: Boolean?): Builder {
-            this.showAllApps = show
-            return this
-        }
-
         fun setIconRequired(): Builder {
             this.iconIsRequired = true
             return this
@@ -482,7 +520,6 @@ class InstalledApplicationsManager private constructor(
                 onAppAddListener,
                 activeApps,
                 showSpecialApps,
-                showAllApps,
                 iconIsRequired
             )
     }

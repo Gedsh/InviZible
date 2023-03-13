@@ -53,8 +53,6 @@ class FirewallViewModel @Inject constructor(
 
     val modulesStatus = ModulesStatus.getInstance()
 
-    var showAllApps: Boolean? = null
-
     var appsAllowLan = mutableSetOf<Int>()
     var appsAllowWifi = mutableSetOf<Int>()
     var appsAllowGsm = mutableSetOf<Int>()
@@ -96,7 +94,6 @@ class FirewallViewModel @Inject constructor(
             val installedApps = InstalledApplicationsManager.Builder()
                 .setOnAppAddListener(this)
                 .showSpecialApps(true)
-                .showAllApps(showAllApps)
                 .setIconRequired()
                 .build()
                 .getInstalledApps()

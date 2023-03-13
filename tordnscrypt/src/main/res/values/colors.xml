@@ -34,4 +34,6 @@
     <color name="torBridgePingGood">#009688</color>
     <color name="torBridgePingAverage">#E7AD42</color>
     <color name="torBridgePingBad">#F08080</color>
+    <color name="systemAppWithoutInternetPermission">#D45E5E</color>
+    <color name="userAppWithoutInternetPermission">#64A39D</color>
 </resources>

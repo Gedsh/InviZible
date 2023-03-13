@@ -126,8 +126,12 @@ class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHold
             ApplicationData app = getItem(position);
 
             tvTorAppName.setText(app.toString());
-            if (app.getSystem()) {
+            if (app.getSystem() && app.getHasInternetPermission()) {
                 tvTorAppName.setTextColor(ContextCompat.getColor(context, R.color.colorAlert));
+            } else if (app.getSystem()) {
+                tvTorAppName.setTextColor(ContextCompat.getColor(context, R.color.systemAppWithoutInternetPermission));
+            } else if (app.getSystem() || !app.getHasInternetPermission()) {
+                tvTorAppName.setTextColor(ContextCompat.getColor(context, R.color.userAppWithoutInternetPermission));
             } else {
                 tvTorAppName.setTextColor(ContextCompat.getColor(context, R.color.textModuleStatusColorStopped));
             }
