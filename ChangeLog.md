@@ -877,3 +877,8 @@
 * Updated DNSCrypt to version 2.1.4.
 * Updated default DNSCrypt servers.
 * Updated default Tor bridges.
+
+**InviZible Pro beta 1.8.2**
+* Updated Purple I2P to version 2.47.0.
+* Fixed using of IPv6 protocol with DNSCrypt.
+* Fixes and optimizations.
