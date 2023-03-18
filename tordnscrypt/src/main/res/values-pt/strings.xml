@@ -363,8 +363,8 @@
     <string name="update_core_not_show_again">Não pergunte novamente</string>
     <string name="update_core_restart">Reinicie InviZible Pro e permita a instalação completa! Após a instalação, reconfigure o HOTSPOT, se for usá-lo!</string>
     <string name="update_notification">A descarregar ficheiro</string>
-    <string name="update_interrupt_notification">Download foi interrompido</string>
-    <string name="cancel_download">CANCELAR O DOWNLOAD</string>
+    <string name="update_interrupt_notification">A descarga foi interrompida</string>
+    <string name="cancel_download">CANCELAR A DESCARGA</string>
     <string name="update_new_version">Nova Versão:</string>
     <string name="update_ipro_has_apdate">A atualização do InviZible Pro está disponível. Quer descarregar e atualizá-lo\? A atualização continuará em segundo plano.</string>
     <string name="update_dnscrypt_has_apdate">A atualização do DNSCrypt Pro está disponível. Quer descarregar e atualizá-lo\? A atualização continuará em segundo plano.</string>
