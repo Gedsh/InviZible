@@ -62,7 +62,7 @@
     <string name="pref_fast_tor_autostart">"Starte Tor beim Booten"</string>
     <string name="pref_fast_itpd_autostart">"Starte I2P beim Booten"</string>
     <string name="pref_fast_autostart_delay">"Verzögerung"</string>
-    <string name="pref_fast_autostart_delay_summ">"Nutze die Verzögerung (in Sek) nur, wenn der Autostart nicht korrekt funktioniert"</string>
+    <string name="pref_fast_autostart_delay_summ">Verzögerung (Sek.) nur verwenden, wenn der Autostart nicht korrekt funktioniert</string>
     <string name="pref_fast_dns_server">"DNSCrypt Server"</string>
     <string name="pref_fast_select_dns_server">"Wähle die DNSCrypt Server"</string>
     <string name="pref_fast_tor">"Tor Einstellungen"</string>
