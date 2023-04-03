@@ -39,7 +39,7 @@ private const val ANDROID_CONNECTIVITY_CHECK_URL = "connectivitycheck.android.co
 private const val ANDROID_CONNECTIVITY_CHECK_DEFAULT_IPS =
     "64.233.162.102, 64.233.162.113, 64.233.162.101, 142.250.180.238, 64.233.162.100, 142.250.180.206, 142.251.39.46, 64.233.162.139, 64.233.162.138, 172.217.20.14"
 private const val GET_CONNECTIVITY_CHECK_IPS_TIME_INTERVAL_HRS = 1
-private const val ATTEMPTS_RESOLVE_DOMAIN = 3
+private const val ATTEMPTS_RESOLVE_DOMAIN = 5
 private const val RESOLVE_TIMEOUT_SEC = 10
 
 @ModulesServiceScope
@@ -240,7 +240,7 @@ class ConnectivityCheckManager @Inject constructor(
     ): Set<String> = try {
         if (attempt < ATTEMPTS_RESOLVE_DOMAIN) {
             if (attempt > 0) {
-                delay(attempt * 1000L)
+                delay(attempt * 3000L)
             }
             dnsInteractor.resolveDomain(url, RESOLVE_TIMEOUT_SEC)
         } else {
