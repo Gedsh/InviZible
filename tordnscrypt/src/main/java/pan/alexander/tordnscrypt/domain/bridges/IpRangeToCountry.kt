@@ -19,8 +19,20 @@
 
 package pan.alexander.tordnscrypt.domain.bridges
 
-data class IpRangeToCountry(
+import java.math.BigInteger
+
+abstract class IpRangeToCountry {
+    abstract val country: String
+}
+
+data class Ipv4RangeToCountry(
     val ipRangeStart: Long,
     val ipRangeEnd: Long,
-    val country: String
-)
+    override val country: String
+): IpRangeToCountry()
+
+data class Ipv6RangeToCountry(
+    val ipRangeStart: BigInteger,
+    val ipRangeEnd: BigInteger,
+    override val country: String
+): IpRangeToCountry()

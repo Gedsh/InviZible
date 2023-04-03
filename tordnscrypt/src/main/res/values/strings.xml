@@ -317,6 +317,10 @@
     <string name="pref_dnscrypt_ignore_system_dns" translatable="false">ignore_system_dns</string>
     <string name="pref_dnscrypt_http3_summ">Enable support for HTTP/3 (DoH3, HTTP over QUIC). Note that, like DNSCrypt but unlike other HTTP versions, this uses UDP and (usually) port 443 instead of TCP.</string>
     <string name="pref_dnscrypt_http3" translatable="false">http3</string>
+    <string name="pref_dnscrypt_dns64" translatable="false">dns64</string>
+    <string name="pref_dnscrypt_dns64_summ">Activate this option if you are on an ipv6-only network and ipv4 sites become unavailable. Don\'t enable it otherwise, or you won\'t be able to connect to anything at all.</string>
+    <string name="pref_dnscrypt_dns64_prefix" translatable="false">dns64 prefix</string>
+    <string name="pref_dnscrypt_dns64_prefix_summ">Set of used static IPv6 prefixes.</string>
 
     <string name="pref_dnscrypt_filters_categ">FILTERS</string>
 

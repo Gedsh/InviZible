@@ -67,6 +67,7 @@ import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_DEFAULT_UID;
 import static pan.alexander.tordnscrypt.utils.Constants.NFLOG_GROUP;
 import static pan.alexander.tordnscrypt.utils.Constants.NFLOG_PREFIX;
+import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_BLOCK_INTERNET;
@@ -156,6 +157,14 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         boolean mitmDetected = ArpScanner.getArpAttackDetected() || ArpScanner.getDhcpGatewayAttackDetected();
 
         boolean killSwitch = shPref.getBoolean(KILL_SWITCH, false);
+
+        String dnscryptBootstrapResolver = QUAD_DNS_41;
+        for (String resolver: pathVars.getDNSCryptFallbackRes().split(", ?")) {
+            if (resolver.matches(IPv4_REGEX)) {
+                dnscryptBootstrapResolver = resolver;
+                break;
+            }
+        }
 
         IptablesFirewall firewall = iptablesFirewall.get();
 
@@ -381,7 +390,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + pathVars.getITPDHttpProxyPort(),
                         dnsCryptSystemDNSAllowedNat,
                         dnsCryptRootDNSAllowedNat,
-                        iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
+                        iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp -d " + dnscryptBootstrapResolver + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
                         //handle onion websites
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -m string --algo bm --from 16 --to 128 --hex-string " + ONION_HEX + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort() + " 2> /dev/null || true",
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -m string --algo bm --from 16 --to 128 --hex-string " + TOR_PROJECT_ORG_HEX + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort() + " 2> /dev/null || true",
@@ -401,7 +410,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
                         dnsCryptSystemDNSAllowedFilter,
                         dnsCryptRootDNSAllowedFilter,
-                        iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
+                        iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -d " + dnscryptBootstrapResolver + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
                         blockRejectAddressFilter,
                         proxyAppsBypassNat,
                         //Redirect TCP sites to Tor
@@ -449,7 +458,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + pathVars.getITPDHttpProxyPort(),
                         dnsCryptSystemDNSAllowedNat,
                         dnsCryptRootDNSAllowedNat,
-                        iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
+                        iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp -d " + dnscryptBootstrapResolver + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
                         //handle onion websites
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -m string --algo bm --from 16 --to 128 --hex-string " + ONION_HEX + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort() + " 2> /dev/null || true",
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -m string --algo bm --from 16 --to 128 --hex-string " + TOR_PROJECT_ORG_HEX + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort() + " 2> /dev/null || true",
@@ -474,7 +483,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p all -j RETURN",
-                        iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
+                        iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -d " + dnscryptBootstrapResolver + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -m owner --uid-owner " + appUID + " -j RETURN",
                         dnsCryptSystemDNSAllowedFilter,
                         dnsCryptRootDNSAllowedFilter,
@@ -532,7 +541,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + pathVars.getITPDHttpProxyPort(),
                     dnsCryptSystemDNSAllowedNat,
                     dnsCryptRootDNSAllowedNat,
-                    iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
+                    iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp -d " + dnscryptBootstrapResolver + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
                     iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                     iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                     blockHttpRuleNatTCP,
@@ -546,7 +555,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                     dnsCryptSystemDNSAllowedFilter,
                     dnsCryptRootDNSAllowedFilter,
-                    iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -d " + pathVars.getDNSCryptFallbackRes() + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
+                    iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -d " + dnscryptBootstrapResolver + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
                     blockRejectAddressFilter,
                     iptables + "-A " + FILTER_OUTPUT_CORE + " -m state --state ESTABLISHED,RELATED -j RETURN",
                     iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,

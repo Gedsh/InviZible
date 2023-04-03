@@ -28,6 +28,7 @@ import pan.alexander.tordnscrypt.BuildConfig
 import pan.alexander.tordnscrypt.TopFragment.appVersion
 import pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_BOOTSTRAP_RESOLVERS
 import java.util.concurrent.atomic.AtomicBoolean
 
 private const val SAVED_VERSION_CODE = "SAVED_VERSION_CODE"
@@ -184,19 +185,21 @@ class Patch(private val context: Context) {
         var fallbackResolver = QUAD_DNS_41
 
         when {
-            sharedPreferences.contains("bootstrap_resolvers") -> {
-                fallbackResolver = extractResolverIp(sharedPreferences, "bootstrap_resolvers")
+            sharedPreferences.contains(DNSCRYPT_BOOTSTRAP_RESOLVERS) -> {
+                fallbackResolver = extractResolverIp(sharedPreferences, DNSCRYPT_BOOTSTRAP_RESOLVERS)
             }
             sharedPreferences.contains("fallback_resolvers") -> {
                 fallbackResolver = extractResolverIp(sharedPreferences, "fallback_resolvers")
                 sharedPreferences.edit()
-                    .putString("bootstrap_resolvers", fallbackResolver)
+                    .putString(DNSCRYPT_BOOTSTRAP_RESOLVERS, fallbackResolver)
+                    .remove("fallback_resolvers")
                     .apply()
             }
             sharedPreferences.contains("fallback_resolver") -> {
                 fallbackResolver = extractResolverIp(sharedPreferences, "fallback_resolver")
                 sharedPreferences.edit()
-                    .putString("bootstrap_resolvers", fallbackResolver)
+                    .putString(DNSCRYPT_BOOTSTRAP_RESOLVERS, fallbackResolver)
+                    .remove("fallback_resolver")
                     .apply()
             }
         }

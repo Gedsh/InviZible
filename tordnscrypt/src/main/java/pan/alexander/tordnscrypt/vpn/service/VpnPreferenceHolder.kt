@@ -47,7 +47,8 @@ class VpnPreferenceHolder @Inject constructor(
     val routeAllThroughTor = defaultPreferences.getBoolean(ALL_THROUGH_TOR, true)
     val torTethering = defaultPreferences.getBoolean(TOR_TETHERING, false)
     val torVirtualAddressNetwork: String = pathVars.torVirtAdrNet ?: "10.192.0.0/10"
-    val blockIPv6 = defaultPreferences.getBoolean(BLOCK_IPv6, true)
+    val blockIPv6DnsCrypt = defaultPreferences.getBoolean(DNSCRYPT_BLOCK_IPv6, true)
+    val useIPv6Tor = defaultPreferences.getBoolean(TOR_USE_IPV6, false)
 
     val setBypassProxy = preferenceRepository.getStringSetPreference(CLEARNET_APPS_FOR_PROXY)
 
