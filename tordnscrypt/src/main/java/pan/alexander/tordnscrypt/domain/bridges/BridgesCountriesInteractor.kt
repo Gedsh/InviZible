@@ -24,7 +24,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import pan.alexander.tordnscrypt.di.CoroutinesModule
 import pan.alexander.tordnscrypt.utils.Constants
+import pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_NO_CAPTURING
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+import java.math.BigInteger
 import java.net.InetAddress
 import java.util.regex.Pattern
 import javax.inject.Inject
@@ -33,12 +35,13 @@ import javax.inject.Named
 
 class BridgesCountriesInteractor @Inject constructor(
     private val bridgesCountriesRepository: BridgesCountriesRepository,
-    @Named(CoroutinesModule.DISPATCHER_IO)
-    private val dispatcherIo: CoroutineDispatcher
+    @Named(CoroutinesModule.DISPATCHER_IO) private val dispatcherIo: CoroutineDispatcher
 ) {
 
-    private val bridgePattern =
+    private val bridgePatternIPv4 =
         Pattern.compile("(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}):(\\d+)\\b")
+
+    private val bridgePatternIPv6 = Pattern.compile("\\[($IPv6_REGEX_NO_CAPTURING)]:(\\d+)\\b")
 
     private val bridgeCountries = MutableSharedFlow<BridgeCountryData>()
 
@@ -50,39 +53,87 @@ class BridgesCountriesInteractor @Inject constructor(
 
             ensureActive()
 
-            val bridgeHashToAddresses = convertBridges(bridges).sortedBy {
-                it.address
-            }.toMutableList()
-
-            bridgesCountriesRepository.getGeoipFile().forEachLine { line ->
-
-                ensureActive()
-
-                if (line.isNotBlank() && !line.startsWith("#")) {
-                    tryParseIpRangeToCountry(line)?.let { rangeToCountry ->
-
-                        getBridgesWithinRange(rangeToCountry, bridgeHashToAddresses)
-                            .takeIf { it.isNotEmpty() }
-                            ?.forEach { bridgeToCountry ->
-                                launch { bridgeCountries.emit(bridgeToCountry) }
-                                bridgeHashToAddresses.removeAll { bridgeToCountry.bridgeHash == it.hash }
-                            }
-                    }
-                }
-
-                if (bridgeHashToAddresses.isEmpty()) {
-                    return@forEachLine
+            val bridgesIPv4 = mutableListOf<String>()
+            val bridgesIPv6 = mutableListOf<String>()
+            bridges.forEach {
+                if (it.isIPv6Bridge()) {
+                    bridgesIPv6.add(it)
+                } else {
+                    bridgesIPv4.add(it)
                 }
             }
+
+            if (bridgesIPv4.isNotEmpty()) {
+                searchIPv4BridgeCountries(bridgesIPv4)
+            }
+            if (bridgesIPv6.isNotEmpty()) {
+                searchIPv6BridgeCountries(bridgesIPv6)
+            }
+
         } catch (ignored: CancellationException) {
         } catch (e: java.lang.Exception) {
             loge("BridgesToCountriesInteractor searchBridgeCountries", e)
         }
     }
 
-    private fun getBridgesWithinRange(
-        rangeWithCountry: IpRangeToCountry,
-        bridges: List<BridgeHashToAddress>
+    private suspend fun searchIPv4BridgeCountries(bridges: List<String>) = coroutineScope {
+        val bridgeHashToAddresses = convertIpv4Bridges(bridges).sortedBy {
+            it.address
+        }.toMutableList()
+
+        bridgesCountriesRepository.getGeoipFile().forEachLine { line ->
+
+            ensureActive()
+
+            if (line.isNotBlank() && !line.startsWith("#")) {
+                tryParseIpv4RangeToCountry(line)?.let { rangeToCountry ->
+
+                    getBridgesIPv4WithinRange(
+                        rangeToCountry,
+                        bridgeHashToAddresses
+                    ).takeIf { it.isNotEmpty() }?.forEach { bridgeToCountry ->
+                            launch { bridgeCountries.emit(bridgeToCountry) }
+                            bridgeHashToAddresses.removeAll { bridgeToCountry.bridgeHash == it.hash }
+                        }
+                }
+            }
+
+            if (bridgeHashToAddresses.isEmpty()) {
+                return@forEachLine
+            }
+        }
+    }
+
+    private suspend fun searchIPv6BridgeCountries(bridges: List<String>) = coroutineScope {
+        val bridgeHashToAddresses = convertIPv6Bridges(bridges).sortedBy {
+            it.address
+        }.toMutableList()
+
+        bridgesCountriesRepository.getGeoip6File().forEachLine { line ->
+
+            ensureActive()
+
+            if (line.isNotBlank() && !line.startsWith("#")) {
+                tryParseIpv6RangeToCountry(line)?.let { rangeToCountry ->
+
+                    getBridgesIPv6WithinRange(
+                        rangeToCountry,
+                        bridgeHashToAddresses
+                    ).takeIf { it.isNotEmpty() }?.forEach { bridgeToCountry ->
+                            launch { bridgeCountries.emit(bridgeToCountry) }
+                            bridgeHashToAddresses.removeAll { bridgeToCountry.bridgeHash == it.hash }
+                        }
+                }
+            }
+
+            if (bridgeHashToAddresses.isEmpty()) {
+                return@forEachLine
+            }
+        }
+    }
+
+    private fun getBridgesIPv4WithinRange(
+        rangeWithCountry: Ipv4RangeToCountry, bridges: List<BridgeIPv4HashToAddress>
     ): List<BridgeCountryData> {
 
         val result = arrayListOf<BridgeCountryData>()
@@ -100,8 +151,27 @@ class BridgesCountriesInteractor @Inject constructor(
         return result
     }
 
-    private fun getBridgeIp(bridgeLine: String): String {
-        val matcher = bridgePattern.matcher(bridgeLine)
+    private fun getBridgesIPv6WithinRange(
+        rangeWithCountry: Ipv6RangeToCountry, bridges: List<BridgeIPv6HashToAddress>
+    ): List<BridgeCountryData> {
+
+        val result = arrayListOf<BridgeCountryData>()
+
+        if (bridges.isEmpty() || bridges.last().address < rangeWithCountry.ipRangeStart) {
+            return result
+        }
+
+        for (bridge in bridges) {
+            if (bridge.address >= rangeWithCountry.ipRangeStart && bridge.address <= rangeWithCountry.ipRangeEnd) {
+                result += BridgeCountryData(bridge.hash, rangeWithCountry.country)
+            }
+        }
+
+        return result
+    }
+
+    private fun getBridgeIpIPv4(bridgeLine: String): String {
+        val matcher = bridgePatternIPv4.matcher(bridgeLine)
 
         if (matcher.find()) {
             val ip = matcher.group(1)
@@ -117,38 +187,80 @@ class BridgesCountriesInteractor @Inject constructor(
         return ""
     }
 
-    private fun tryParseIpRangeToCountry(line: String): IpRangeToCountry? =
-        try {
-            line.split(",").let { rangesWithCountry ->
-                IpRangeToCountry(
-                    rangesWithCountry[0].toLong(),
-                    rangesWithCountry[1].toLong(),
-                    rangesWithCountry[2]
-                )
+    private fun getBridgeIpIPv6(bridgeLine: String): String {
+        val matcher = bridgePatternIPv6.matcher(bridgeLine)
+
+        if (matcher.find()) {
+            val ip = matcher.group(1)
+            val port = matcher.group(2)
+
+            if (ip != null && port != null) {
+                return ip
             }
-        } catch (e: Exception) {
-            loge("BridgesToCountriesInteractor tryParseIpRangeToCountry($line)", e)
-            null
+        } else {
+            loge("BridgesCountriesInteractor It looks like the bridge $bridgeLine is not valid")
         }
 
-    private fun convertBridges(bridges: List<String>): HashSet<BridgeHashToAddress> {
+        return ""
+    }
 
-        val result = hashSetOf<BridgeHashToAddress>()
+    private fun tryParseIpv4RangeToCountry(line: String): Ipv4RangeToCountry? = try {
+        line.split(",").let { rangesWithCountry ->
+            Ipv4RangeToCountry(
+                rangesWithCountry[0].toLong(), rangesWithCountry[1].toLong(), rangesWithCountry[2]
+            )
+        }
+    } catch (e: Exception) {
+        loge("BridgesToCountriesInteractor tryParseIpRangeToCountry($line)", e)
+        null
+    }
+
+    private fun tryParseIpv6RangeToCountry(line: String): Ipv6RangeToCountry? = try {
+        line.split(",").let { rangesWithCountry ->
+            Ipv6RangeToCountry(
+                ipv6ToBigInteger(InetAddress.getByName(rangesWithCountry[0]).address),
+                ipv6ToBigInteger(InetAddress.getByName(rangesWithCountry[1]).address),
+                rangesWithCountry[2]
+            )
+        }
+    } catch (e: Exception) {
+        loge("BridgesToCountriesInteractor tryParseIpRangeToCountry($line)", e)
+        null
+    }
+
+    private fun convertIpv4Bridges(bridges: List<String>): HashSet<BridgeIPv4HashToAddress> {
+
+        val result = hashSetOf<BridgeIPv4HashToAddress>()
 
         for (bridge in bridges) {
-
-            val bridgeIp = getBridgeIp(bridge)
+            val bridgeIp = getBridgeIpIPv4(bridge)
 
             if (bridgeIp.isNotEmpty()) {
-                val bridgeAddress = pack(InetAddress.getByName(bridgeIp).address)
-                result += BridgeHashToAddress(bridge.hashCode(), bridgeAddress)
+                val bridgeAddress = ipv4toLong(InetAddress.getByName(bridgeIp).address)
+                result += BridgeIPv4HashToAddress(bridge.hashCode(), bridgeAddress)
             }
         }
 
         return result
     }
 
-    private fun pack(bytes: ByteArray): Long {
+    private fun convertIPv6Bridges(bridges: List<String>): HashSet<BridgeIPv6HashToAddress> {
+
+        val result = hashSetOf<BridgeIPv6HashToAddress>()
+
+        for (bridge in bridges) {
+            val bridgeIp = getBridgeIpIPv6(bridge)
+
+            if (bridgeIp.isNotEmpty()) {
+                val bridgeAddress = ipv6ToBigInteger(InetAddress.getByName(bridgeIp).address)
+                result += BridgeIPv6HashToAddress(bridge.hashCode(), bridgeAddress)
+            }
+        }
+
+        return result
+    }
+
+    private fun ipv4toLong(bytes: ByteArray): Long {
         var result = 0L
         for (i in bytes.indices) {
             result = result shl 8 or (bytes[i].toLong() and 0xff)
@@ -156,8 +268,10 @@ class BridgesCountriesInteractor @Inject constructor(
         return result
     }
 
-    data class BridgeHashToAddress(
-        val hash: Int,
-        val address: Long
-    )
+    private fun ipv6ToBigInteger(bytes: ByteArray): BigInteger {
+        return BigInteger(1, bytes)
+    }
+
+    private fun String.isIPv6Bridge() = contains("[") && contains("]")
+
 }

@@ -17,11 +17,20 @@
     Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.data.bridges
+package pan.alexander.tordnscrypt.domain.bridges
 
-import java.io.File
+import java.math.BigInteger
 
-interface BridgesCountriesDataSource {
-    fun getGeoipFile(): File
-    fun getGeoip6File(): File
+abstract class BridgeHashToAddress {
+    abstract val hash: Int
 }
+
+data class BridgeIPv4HashToAddress(
+    override val hash: Int,
+    val address: Long
+) : BridgeHashToAddress()
+
+data class BridgeIPv6HashToAddress(
+    override val hash: Int,
+    val address: BigInteger
+) : BridgeHashToAddress()

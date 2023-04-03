@@ -87,6 +87,7 @@ import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_DEFAULT_UID;
 import static pan.alexander.tordnscrypt.utils.Constants.PLAINTEXT_DNS_PORT;
+import static pan.alexander.tordnscrypt.utils.Constants.TOR_VIRTUAL_ADDR_NETWORK_IPV6;
 import static pan.alexander.tordnscrypt.utils.bootcomplete.BootCompleteManager.ALWAYS_ON_VPN;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
@@ -426,7 +427,8 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         }
 
         if (!destAddress.isEmpty()
-                && VpnUtils.isIpInSubnet(destAddress, vpnPreferences.getTorVirtualAddressNetwork())) {
+                && (VpnUtils.isIpInSubnet(destAddress, vpnPreferences.getTorVirtualAddressNetwork())
+                || VpnUtils.isIpInSubnet(destAddress, TOR_VIRTUAL_ADDR_NETWORK_IPV6))) {
             return true;
         }
 

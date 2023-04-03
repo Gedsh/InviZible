@@ -27,4 +27,5 @@ class BridgesCountriesDataSourceImpl @Inject constructor(
     private val pathVars: PathVars
 ) : BridgesCountriesDataSource {
     override fun getGeoipFile(): File = File(pathVars.torGeoipPath)
+    override fun getGeoip6File(): File = File(pathVars.torGeoip6Path)
 }
