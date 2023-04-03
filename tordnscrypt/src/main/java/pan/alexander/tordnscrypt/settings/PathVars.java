@@ -29,13 +29,14 @@ import android.util.Log;
 import androidx.preference.PreferenceManager;
 
 import java.io.File;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 
+import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX;
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_BOOTSTRAP_RESOLVERS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_LISTEN_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_IPTABLES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.WAIT_IPTABLES;
@@ -234,41 +235,50 @@ public class PathVars {
 
     public String getDNSCryptFallbackRes() {
 
-        Pattern pattern =
-                Pattern.compile("((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)");
+        String dnsCryptFallbackResolvers = preferences.getString(DNSCRYPT_BOOTSTRAP_RESOLVERS, QUAD_DNS_41);
+        StringBuilder fallbackResolvers = new StringBuilder();
 
-        String dnsCryptFallbackResolver = preferences.getString("bootstrap_resolvers", QUAD_DNS_41);
-        if (dnsCryptFallbackResolver == null) {
-            dnsCryptFallbackResolver = QUAD_DNS_41;
+        for (String resolver: dnsCryptFallbackResolvers.split(", ?")) {
+            resolver = resolver
+                    .replace("[", "").replace("]", "")
+                    .replace("'", "").replace("\"", "");
+            if (resolver.endsWith(":53")) {
+                resolver = resolver.substring(0, resolver.lastIndexOf(":53"));
+            }
+            if (resolver.matches(IPv4_REGEX) || resolver.matches(IPv6_REGEX)) {
+                if (fallbackResolvers.length() != 0) {
+                    fallbackResolvers.append(", ");
+                }
+                fallbackResolvers.append(resolver);
+            }
         }
 
-        Matcher matcher = pattern.matcher(dnsCryptFallbackResolver);
-        String fallbackResolver = QUAD_DNS_41;
-        if (matcher.find()) {
-            fallbackResolver = matcher.group();
+        if (fallbackResolvers.length() == 0) {
+            fallbackResolvers.append(QUAD_DNS_41);
         }
 
-        return fallbackResolver;
+        return fallbackResolvers.toString();
     }
 
     public String getTorDNSPort() {
-        return preferences.getString("DNSPort", "5400");
+        String torDnsPort = preferences.getString("DNSPort", "5400");
+        return torDnsPort.split(" ")[0]
+                .replaceAll(".+:", "")
+                .replaceAll("\\D+", "");
     }
 
     public String getTorSOCKSPort() {
         String torSocksPort = preferences.getString("SOCKSPort", "9050");
-        if (torSocksPort == null) {
-            torSocksPort = "9050";
-        }
-        return torSocksPort.split(" ")[0].replaceAll(".+:", "").replaceAll("\\D+", "");
+        return torSocksPort.split(" ")[0]
+                .replaceAll(".+:", "")
+                .replaceAll("\\D+", "");
     }
 
     public String getTorHTTPTunnelPort() {
         String torHttpTunnelPort = preferences.getString("HTTPTunnelPort", "8118");
-        if (torHttpTunnelPort == null) {
-            torHttpTunnelPort = "8118";
-        }
-        return torHttpTunnelPort.split(" ")[0].replaceAll(".+:", "").replaceAll("\\D+", "");
+        return torHttpTunnelPort.split(" ")[0]
+                .replaceAll(".+:", "")
+                .replaceAll("\\D+", "");
     }
 
     public String getITPDSOCKSPort() {
@@ -384,6 +394,10 @@ public class PathVars {
 
     public String getTorGeoipPath() {
         return appDataDir + "/app_data/tor/geoip";
+    }
+
+    public String getTorGeoip6Path() {
+        return appDataDir + "/app_data/tor/geoip6";
     }
 
     public String getItpdConfPath() {

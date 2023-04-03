@@ -25,6 +25,8 @@ import pan.alexander.tordnscrypt.di.SharedPreferencesModule.Companion.DEFAULT_PR
 import pan.alexander.tordnscrypt.modules.ModulesRestarter
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
+import pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX
+import pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager
@@ -93,6 +95,10 @@ class ProxyHelper @Inject constructor(
 
         try {
             val dnsCryptFallbackRes = pathVars.dnsCryptFallbackRes
+                .split(Regex(", ?"))
+                .filter { it.matches(Regex(IPv4_REGEX)) }
+                .shuffled()
+                .getOrElse(0) { QUAD_DNS_41}
             val sockaddr: SocketAddress = InetSocketAddress(InetAddress.getByName(dnsCryptFallbackRes), 53)
             val proxy = Proxy(Proxy.Type.SOCKS, InetSocketAddress(proxyHost, proxyPort))
 

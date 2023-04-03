@@ -241,7 +241,7 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
                     )
                 } else {
                     val dnsForConnectivityCheck = getNetworkDns()
-                        .plus(pathVars.dnsCryptFallbackRes)
+                        .plus(pathVars.dnsCryptFallbackRes.split(Regex(", ?")))
                         .shuffled()
                         .first()
 
@@ -272,7 +272,7 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
             emptyList()
         }
     } catch (e: Exception) {
-        listOf(pathVars.dnsCryptFallbackRes)
+        pathVars.dnsCryptFallbackRes.split(Regex(", ?"))
     }
 
     private enum class Via {
