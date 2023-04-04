@@ -398,12 +398,12 @@ class FirewallNotification : BroadcastReceiver() {
             .setChannelId(FIREWALL_CHANNEL_ID)
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .addAction(
-                R.drawable.ic_done_white_24dp,
+                R.drawable.ic_done_white,
                 context.getText(R.string.allow),
                 allowPendingIntent
             )
             .addAction(
-                R.drawable.ic_baseline_close_24,
+                R.drawable.ic_close_white,
                 context.getText(R.string.deny),
                 denyPendingIntent
             )
