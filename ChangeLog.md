@@ -882,3 +882,8 @@
 * Updated Purple I2P to version 2.47.0.
 * Fixed using of IPv6 protocol with DNSCrypt.
 * Fixes and optimizations.
+
+**InviZible Pro beta 1.8.3**
+* Added full ipv6 support for DNSCrypt in VPN mode.
+* Added full ipv6 support for Tor in VPN mode.
+* Fixed a crash on Android 4.4.2 when installing a new app.
