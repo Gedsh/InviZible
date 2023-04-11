@@ -96,13 +96,19 @@ class PreferencesTorBridgesViewModel @Inject constructor(
         }
     }
 
-    fun requestRelayBridges() {
+    fun requestRelayBridges(allowIPv6Relays: Boolean) {
         relayBridgesRequestJob?.cancel()
         relayBridgesRequestJob = viewModelScope.launch {
             try {
                 defaultVanillaBridgesMutableLiveData.value =
-                    defaultVanillaBridgeInteractor.requestRelays()
-                        .map { "${it.address}:${it.port} ${it.fingerprint}" }
+                    defaultVanillaBridgeInteractor.requestRelays(allowIPv6Relays)
+                        .map {
+                            if (it.address.isIPv6Address()) {
+                                "[${it.address}]:${it.port} ${it.fingerprint}"
+                            } else {
+                                "${it.address}:${it.port} ${it.fingerprint}"
+                            }
+                        }
             } catch (ignored: CancellationException) {
             } catch (e: Exception) {
                 e.message?.let {
@@ -112,6 +118,8 @@ class PreferencesTorBridgesViewModel @Inject constructor(
             }
         }
     }
+
+    private fun String.isIPv6Address() = contains(":")
 
     fun cancelRequestingRelayBridges() {
         relayBridgesRequestJob?.cancel()
@@ -208,9 +216,9 @@ class PreferencesTorBridgesViewModel @Inject constructor(
     private fun initBridgeCountriesObserver() {
         bridgeCountriesObserveJob = viewModelScope.launch {
             bridgesCountriesInteractor.observeBridgeCountries()
-               .onEach {
-                   bridgeCountries.add(it)
-                   bridgeCountriesMutableLiveData.value = bridgeCountries
+                .onEach {
+                    bridgeCountries.add(it)
+                    bridgeCountriesMutableLiveData.value = bridgeCountries
                 }.collect()
         }
     }

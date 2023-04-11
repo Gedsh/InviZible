@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.settings.tor_bridges;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 
@@ -86,12 +87,14 @@ import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_NO_BOUNDS;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RELAY_BRIDGES_REQUESTED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OWN_BRIDGES_OBFS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_USE_IPV6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_DEFAULT_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_NO_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_OWN_BRIDGES;
@@ -106,6 +109,7 @@ import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readT
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 
 @SuppressLint("UnsafeOptInUsageWarning")
@@ -154,6 +158,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultPreferences;
     @Inject
     public Lazy<PathVars> pathVars;
     @Inject
@@ -1239,7 +1246,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         doActionAndUpdateRecycler(() -> {
             bridgesToDisplay.clear();
-            viewModel.requestRelayBridges();
+            viewModel.requestRelayBridges(
+                    defaultPreferences.get().getBoolean(TOR_USE_IPV6, false)
+            );
         });
 
     }

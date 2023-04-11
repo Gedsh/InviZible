@@ -20,6 +20,7 @@
 package pan.alexander.tordnscrypt.data.bridges
 
 import android.content.SharedPreferences
+import org.json.JSONException
 import org.json.JSONObject
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule.Companion.DEFAULT_PREFERENCES_NAME
 import pan.alexander.tordnscrypt.domain.bridges.DefaultVanillaBridgeRepository
@@ -28,12 +29,13 @@ import pan.alexander.tordnscrypt.utils.connectionchecker.SocketInternetChecker
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY_ADDRESS
-import java.lang.Exception
 import java.lang.IllegalArgumentException
+import java.util.regex.Matcher
 import java.util.regex.Pattern
 import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Provider
+import kotlin.Exception
 
 class DefaultVanillaBridgeRepositoryImpl @Inject constructor(
     private val socketInternetChecker: Provider<SocketInternetChecker>,
@@ -68,7 +70,8 @@ class DefaultVanillaBridgeRepositoryImpl @Inject constructor(
             val port = matcher.group(2)
 
             if (ip != null && port != null
-                && (bridgeIPv6 && isBridgeIPv6Correct(port) || isBridgeIPv4Correct(ip, port))) {
+                && (bridgeIPv6 && isBridgeIPv6Correct(port) || isBridgeIPv4Correct(ip, port))
+            ) {
                 if (isTorOutboundProxyEnabled()) {
                     val proxyAddress = getTorOutboundProxyAddress()?.split(":") ?: emptyList()
                     if (proxyAddress.size == 2
@@ -116,7 +119,9 @@ class DefaultVanillaBridgeRepositoryImpl @Inject constructor(
     ) = socketInternetChecker.get()
         .checkConnectionPing(ip, port.toInt(), proxyAddress, proxyPort)
 
-    override suspend fun getRelaysWithFingerprintAndAddress(): List<RelayAddressFingerprint> {
+    override suspend fun getRelaysWithFingerprintAndAddress(
+        allowIPv6Relays: Boolean
+    ): List<RelayAddressFingerprint> {
 
         val relays = mutableListOf<RelayAddressFingerprint>()
 
@@ -124,8 +129,8 @@ class DefaultVanillaBridgeRepositoryImpl @Inject constructor(
             .forEach {
                 try {
                     if (it.contains("fingerprint")) {
-                        val relay = mapJsonToRelay(JSONObject(it))
-                        relays.add(relay)
+                        val relay = mapJsonToRelay(JSONObject(it), allowIPv6Relays)
+                        relays.addAll(relay)
                     }
                 } catch (e: Exception) {
                     logw("BridgeRepository getRelaysWithFingerprintAndAddress", e)
@@ -135,13 +140,53 @@ class DefaultVanillaBridgeRepositoryImpl @Inject constructor(
         return relays
     }
 
-    private fun mapJsonToRelay(json: JSONObject): RelayAddressFingerprint {
+    private fun mapJsonToRelay(
+        json: JSONObject,
+        allowIPv6Relays: Boolean
+    ): List<RelayAddressFingerprint> {
 
-        val bridgeLine = json.getJSONArray("or_addresses").getString(0)
+        val relays = mutableListOf<RelayAddressFingerprint>()
+
+        val relayIPv4Line = try {
+            json.getJSONArray("or_addresses").getString(0)
+        } catch (e: JSONException) {
+            ""
+        }
+        val relayIPv6Line = try {
+            json.getJSONArray("or_addresses").getString(1)
+        } catch (e: JSONException) {
+            ""
+        }
         val fingerprint = json.getString("fingerprint")
 
-        val matcher = bridgeIPv4Pattern.matcher(bridgeLine)
+        parseIPv4Relay(relayIPv4Line, fingerprint)?.let { relays.add(it) }
 
+        if (allowIPv6Relays && relayIPv6Line.isIPv6Bridge()) {
+            parseIPv6Relay(relayIPv6Line, fingerprint)?.let { relays.add(it) }
+        }
+
+        if (relays.isNotEmpty()) {
+            return relays
+        }
+
+        throw IllegalArgumentException("JSON $json is not valid relay")
+
+    }
+
+    private fun parseIPv4Relay(relayLine: String, fingerprint: String): RelayAddressFingerprint? {
+        val matcher = bridgeIPv4Pattern.matcher(relayLine)
+        return mapToRelayAddressFingerprint(matcher, fingerprint)
+    }
+
+    private fun parseIPv6Relay(relayLine: String, fingerprint: String): RelayAddressFingerprint? {
+        val matcher = bridgeIPv6Pattern.matcher(relayLine)
+        return mapToRelayAddressFingerprint(matcher, fingerprint)
+    }
+
+    private fun mapToRelayAddressFingerprint(
+        matcher: Matcher,
+        fingerprint: String
+    ): RelayAddressFingerprint? {
         if (matcher.find()) {
             val ip = matcher.group(1)
             val port = matcher.group(2)
@@ -156,9 +201,7 @@ class DefaultVanillaBridgeRepositoryImpl @Inject constructor(
                 )
             }
         }
-
-        throw IllegalArgumentException("JSON $json is not valid relay")
-
+        return null
     }
 
 }

@@ -63,8 +63,10 @@ class DefaultVanillaBridgeInteractor @Inject constructor(
             timeouts.emit(PingCheckComplete)
         }
 
-    suspend fun requestRelays(): List<RelayAddressFingerprint> = withContext(dispatcherIo) {
-        repository.getRelaysWithFingerprintAndAddress()
+    suspend fun requestRelays(
+        allowIPv6Relays: Boolean
+    ): List<RelayAddressFingerprint> = withContext(dispatcherIo) {
+        repository.getRelaysWithFingerprintAndAddress(allowIPv6Relays)
             .filter { !DESIGNATED_TOR_PORTS.contains(it.port) }
             .shuffled()
             .take(MAX_RELAY_COUNT)
