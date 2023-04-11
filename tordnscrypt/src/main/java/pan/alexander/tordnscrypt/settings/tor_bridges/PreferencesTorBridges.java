@@ -484,6 +484,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             } else if (dialogsState instanceof DialogsFlowState.CaptchaDialog) {
                 showCaptchaDialog(
                         ((DialogsFlowState.CaptchaDialog) dialogsState).getTransport(),
+                        ((DialogsFlowState.CaptchaDialog) dialogsState).getIpv6(),
                         ((DialogsFlowState.CaptchaDialog) dialogsState).getCaptcha(),
                         ((DialogsFlowState.CaptchaDialog) dialogsState).getSecretCode()
                 );
@@ -517,13 +518,14 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         }
     }
 
-    private void showCaptchaDialog(String transport, Bitmap captcha, String secretCode) {
+    private void showCaptchaDialog(String transport, boolean ipv6, Bitmap captcha, String secretCode) {
         String tag = BridgesCaptchaDialogFragment.class.getCanonicalName();
         BridgesCaptchaDialogFragment dialog =
                 (BridgesCaptchaDialogFragment) getChildFragmentManager().findFragmentByTag(tag);
         if (dialog == null || !dialog.isAdded()) {
             dialog = bridgesCaptchaDialogFragment.get();
             dialog.setTransport(transport);
+            dialog.setIpv6(ipv6);
             dialog.setCaptcha(captcha);
             dialog.setSecretCode(secretCode);
             dialog.show(getChildFragmentManager(), tag);

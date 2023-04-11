@@ -46,12 +46,12 @@ class RequestBridgesInteractor @Inject constructor(
     @Volatile
     private var wakeLockIsHeld = false
 
-    suspend fun requestCaptchaChallenge(transport: String): Pair<Bitmap, String> =
+    suspend fun requestCaptchaChallenge(transport: String, ipv6: Boolean): Pair<Bitmap, String> =
 
         suspendCancellableCoroutine { continuation ->
 
             val captchaChallengeTask = try {
-                tryGetCaptchaImage(transport, continuation)
+                tryGetCaptchaImage(transport, ipv6, continuation)
             } catch (e: Exception) {
                 continuation.resumeWithException(e)
                 null
@@ -64,15 +64,20 @@ class RequestBridgesInteractor @Inject constructor(
 
     private fun tryGetCaptchaImage(
         transport: String,
+        ipv6: Boolean,
         continuation: CancellableContinuation<Pair<Bitmap, String>>
     ): Future<*>? = cachedExecutor.submit {
         try {
 
             lockWakeLock()
 
-            httpsConnectionManager.get(
-                TOR_BRIDGES_ADDRESS + "bridges?transport=" + transport
-            ) { inputStream ->
+            val url = if (ipv6) {
+                "${TOR_BRIDGES_ADDRESS}bridges?transport=${transport}&ipv6=yes"
+            } else {
+                "${TOR_BRIDGES_ADDRESS}bridges?transport=$transport"
+            }
+
+            httpsConnectionManager.get(url) { inputStream ->
                 val captchaToSecret =
                     requestBridgesRepository.parseCaptchaChallengeImage(inputStream)
                 continuation.resume(captchaToSecret, null)
@@ -86,12 +91,13 @@ class RequestBridgesInteractor @Inject constructor(
 
     suspend fun requestBridges(
         transport: String,
+        ipv6: Boolean,
         captchaText: String,
         secretCode: String
     ): ParseBridgesResult =
         suspendCancellableCoroutine { continuation ->
             val requestBridgesTask = try {
-                tryGetBridges(transport, captchaText, secretCode, continuation)
+                tryGetBridges(transport, ipv6, captchaText, secretCode, continuation)
             } catch (e: Exception) {
                 continuation.resumeWithException(e)
                 null
@@ -104,6 +110,7 @@ class RequestBridgesInteractor @Inject constructor(
 
     private fun tryGetBridges(
         transport: String,
+        ipv6: Boolean,
         captchaText: String,
         secretCode: String,
         continuation: CancellableContinuation<ParseBridgesResult>
@@ -118,10 +125,13 @@ class RequestBridgesInteractor @Inject constructor(
                 put("submit", "submit")
             }
 
-            httpsConnectionManager.post(
-                TOR_BRIDGES_ADDRESS + "bridges?transport=" + transport,
-                query
-            ) {
+            val url = if (ipv6) {
+                "${TOR_BRIDGES_ADDRESS}bridges?transport=${transport}&ipv6=yes"
+            } else {
+                "${TOR_BRIDGES_ADDRESS}bridges?transport=$transport"
+            }
+
+            httpsConnectionManager.post(url, query) {
                 continuation.resume(requestBridgesRepository.parseBridges(it), null)
             }
         } catch (e: Exception) {

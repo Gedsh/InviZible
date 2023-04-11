@@ -138,16 +138,16 @@ class PreferencesTorBridgesViewModel @Inject constructor(
         dialogsFlowMutableLiveData.value = DialogsFlowState.SelectBridgesTransportDialog
     }
 
-    fun requestTorBridgesCaptchaChallenge(transport: String) {
+    fun requestTorBridgesCaptchaChallenge(transport: String, ipv6Bridges: Boolean) {
 
         showPleaseWaitDialog()
 
         torBridgesRequestJob?.cancel()
         torBridgesRequestJob = viewModelScope.launch {
             try {
-                val result = requestBridgesInteractor.requestCaptchaChallenge(transport)
+                val result = requestBridgesInteractor.requestCaptchaChallenge(transport, ipv6Bridges)
                 dismissRequestBridgesDialogs()
-                showCaptchaDialog(transport, result.first, result.second)
+                showCaptchaDialog(transport, ipv6Bridges, result.first, result.second)
             } catch (e: CancellationException) {
                 logw("PreferencesTorBridgesViewModel requestTorBridgesCaptchaChallenge", e)
             } catch (e: java.util.concurrent.CancellationException) {
@@ -159,12 +159,17 @@ class PreferencesTorBridgesViewModel @Inject constructor(
         }
     }
 
-    private fun showCaptchaDialog(transport: String, captcha: Bitmap, secretCode: String) {
+    private fun showCaptchaDialog(transport: String, ipv6Bridges: Boolean, captcha: Bitmap, secretCode: String) {
         dialogsFlowMutableLiveData.value =
-            DialogsFlowState.CaptchaDialog(transport, captcha, secretCode)
+            DialogsFlowState.CaptchaDialog(transport, ipv6Bridges, captcha, secretCode)
     }
 
-    fun requestTorBridges(transport: String, captchaText: String, secretCode: String) {
+    fun requestTorBridges(
+        transport: String,
+        ipv6Bridges: Boolean,
+        captchaText: String,
+        secretCode: String
+    ) {
 
         showPleaseWaitDialog()
 
@@ -173,6 +178,7 @@ class PreferencesTorBridgesViewModel @Inject constructor(
             try {
                 val result = requestBridgesInteractor.requestBridges(
                     transport,
+                    ipv6Bridges,
                     captchaText,
                     secretCode
                 )
@@ -183,7 +189,7 @@ class PreferencesTorBridgesViewModel @Inject constructor(
                     is ParseBridgesResult.BridgesReady ->
                         showBridgesReadyDialog(result.bridges)
                     is ParseBridgesResult.RecaptchaChallenge ->
-                        showCaptchaDialog(transport, result.captcha, result.secretCode)
+                        showCaptchaDialog(transport, ipv6Bridges, result.captcha, result.secretCode)
                 }
             } catch (e: CancellationException) {
                 logw("PreferencesTorBridgesViewModel requestTorBridges", e)

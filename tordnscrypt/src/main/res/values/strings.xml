@@ -140,6 +140,7 @@
     <string name="pref_fast_use_tor_bridges_edit">Edit Bridge</string>
     <string name="pref_fast_use_tor_bridges_deactivate">Pls deactivate bridge first!</string>
     <string name="pref_fast_use_tor_bridges_obfs">Obfuscation</string>
+    <string name="pref_fast_use_tor_bridges_ipv6">IPv6 bridges</string>
     <string-array name="tor_bridges_default_obfs">
         <item>obfs4</item>
         <item>obfs3</item>

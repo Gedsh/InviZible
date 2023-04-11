@@ -13,17 +13,24 @@
 
         <androidx.appcompat.widget.AppCompatRadioButton
             android:id="@+id/rbObfsNone"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Vanilla" />
 
         <androidx.appcompat.widget.AppCompatRadioButton
             android:id="@+id/rbObfs4"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Obfs4" />
 
     </RadioGroup>
+
+    <androidx.appcompat.widget.AppCompatCheckBox
+        android:id="@+id/chbRequestIPv6Bridges"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="@string/pref_fast_use_tor_bridges_ipv6" />
 </androidx.appcompat.widget.LinearLayoutCompat>

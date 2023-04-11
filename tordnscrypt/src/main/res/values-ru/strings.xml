@@ -542,4 +542,5 @@
     <string name="ask_later">Спросить позже</string>
     <string name="pref_dnscrypt_dns64_summ">Активируйте эту опцию, если вы находитесь в сети, поддерживающей только ipv6, и сайты ipv4 становятся недоступными. В противном случае не включайте ее, иначе вы вообще не сможете ни к чему подключиться.</string>
     <string name="pref_dnscrypt_dns64_prefix_summ">Набор используемых статических префиксов IPv6.</string>
+    <string name="pref_fast_use_tor_bridges_ipv6">IPv6 мосты</string>
 </resources>

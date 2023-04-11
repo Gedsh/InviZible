@@ -41,6 +41,7 @@ class BridgesCaptchaDialogFragment @Inject constructor(
 ) : ExtendedDialogFragment() {
 
     var transport = ""
+    var ipv6 = false
     var captcha: Bitmap? = null
     var secretCode: String = ""
 
@@ -75,6 +76,7 @@ class BridgesCaptchaDialogFragment @Inject constructor(
                 if (transport.isNotEmpty() && secretCode.isNotEmpty()) {
                     preferencesTorBridgesViewModel.requestTorBridges(
                         transport,
+                        ipv6,
                         captchaText,
                         secretCode
                     )
