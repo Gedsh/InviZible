@@ -152,13 +152,13 @@
             android:name=".utils.root.RootExecService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="mediaPlayback" />
+            android:foregroundServiceType="dataSync" />
 
         <service
             android:name=".modules.ModulesService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="mediaPlayback" />
+            android:foregroundServiceType="dataSync" />
 
         <activity
             android:name=".MainActivity"
