@@ -23,6 +23,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Base64;
 
+import androidx.annotation.Keep;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,6 +38,7 @@ import javax.inject.Inject;
 import kotlin.Pair;
 import pan.alexander.tordnscrypt.domain.bridges.ParseBridgesResult;
 
+@Keep
 public class TorBridgesParser {
 
     @Inject
@@ -50,6 +53,7 @@ public class TorBridgesParser {
             final String captcha_challenge_field_value;
             String inputLine;
             boolean imageFound = false;
+            boolean captchaChallengeFieldFound = false;
 
 
             while ((inputLine = bufferedReader.readLine()) != null
@@ -73,11 +77,13 @@ public class TorBridgesParser {
                     }
 
 
-                } else if (inputLine.contains("captcha_challenge_field") && inputLine.contains("value")) {
+                } else if (inputLine.contains("captcha_challenge_field")) {
+                    captchaChallengeFieldFound = true;
+                } else if (captchaChallengeFieldFound && inputLine.contains("value")) {
 
                     String[] secretCodeArr = inputLine.split("\"");
-                    if (secretCodeArr.length > 5) {
-                        captcha_challenge_field_value = secretCodeArr[5];
+                    if (secretCodeArr.length > 0 && codeImage != null) {
+                        captcha_challenge_field_value = secretCodeArr[1];
 
                         return new Pair<>(codeImage, captcha_challenge_field_value);
 
@@ -109,6 +115,7 @@ public class TorBridgesParser {
             boolean keyWordBridge = false;
             boolean wrongImageCode = false;
             boolean imageFound = false;
+            boolean captchaChallengeFieldFound = false;
             List<String> newBridges = new LinkedList<>();
 
             final StringBuilder sb = new StringBuilder();
@@ -125,7 +132,7 @@ public class TorBridgesParser {
                         && keyWordBridge
                         && !wrongImageCode) {
                     break;
-                } else if (inputLine.contains("bridgedb-captcha-container")) {
+                } else if (inputLine.contains("captcha-submission-container")) {
                     wrongImageCode = true;
                 } else if (wrongImageCode) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -149,10 +156,12 @@ public class TorBridgesParser {
                             throw new IllegalStateException("Tor Project web site error");
                         }
 
-                    } else if (inputLine.contains("captcha_challenge_field") && inputLine.contains("value")) {
+                    } else if (inputLine.contains("captcha_challenge_field")) {
+                        captchaChallengeFieldFound = true;
+                    } else if (captchaChallengeFieldFound && inputLine.contains("value")) {
                         String[] secretCodeArr = inputLine.split("\"");
-                        if (secretCodeArr.length > 5 && codeImage != null) {
-                            captcha_challenge_field_value = secretCodeArr[5];
+                        if (secretCodeArr.length > 0 && codeImage != null) {
+                            captcha_challenge_field_value = secretCodeArr[1];
 
                             return new ParseBridgesResult.RecaptchaChallenge(
                                     codeImage,
