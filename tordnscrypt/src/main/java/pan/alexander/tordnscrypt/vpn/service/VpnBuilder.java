@@ -317,7 +317,7 @@ public class VpnBuilder {
                 if (vpnDns1 != null) {
                     String name = dnsInteractor.get().reverseResolve(vpnDns1);
                     if (!name.isEmpty()) {
-                        vpnDnsSet.addAll(dnsInteractor.get().resolveDomain("https://" + name));
+                        vpnDnsSet.addAll(dnsInteractor.get().resolveDomain("https://" + name, ip6));
                     }
                 }
                 logi("VPNBuilder vpnDnsSet " + vpnDnsSet);
