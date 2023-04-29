@@ -32,7 +32,8 @@ import java.util.List;
 
 public abstract class DnsResolver implements Resolver {
 
-    private final static String PTR_SUFFIX = ".in-addr.arpa";
+    private final static String PTR_SUFFIX_IPV4 = ".in-addr.arpa";
+    private final static String PTR_SUFFIX_IPV6 = ".ip6.arpa";
 
     private final int recordType;
     private final String server;
@@ -96,10 +97,75 @@ public abstract class DnsResolver implements Resolver {
     }
 
     private String ipToPointerRequest(String ip) {
-        List<String> list = Arrays.asList(ip.split("\\."));
-        Collections.reverse(list);
-        return TextUtils.join(".", list) +
-                PTR_SUFFIX;
+        if (isIPv6Address(ip)) {
+            String ipDecompressed = decompressIPv6Address(ip);
+            List<String> list = Arrays.asList(
+                    ipDecompressed.replace(":", "").split("")
+            );
+            Collections.reverse(list);
+            return TextUtils.join(".", list) +
+                    PTR_SUFFIX_IPV6;
+        } else {
+            List<String> list = Arrays.asList(ip.split("\\."));
+            Collections.reverse(list);
+            return TextUtils.join(".", list) +
+                    PTR_SUFFIX_IPV4;
+        }
+    }
+
+    private boolean isIPv6Address(String ip) {
+        return ip.contains(":");
+    }
+
+    private String decompressIPv6Address(String ip) {
+
+        StringBuilder address = new StringBuilder(ip);
+
+        // Store the location where you need add zeroes that were removed during decompression
+        int tempCompressLocation = address.indexOf("::");
+
+        //if address was compressed and zeroes were removed, remove that marker i.e "::"
+        if (tempCompressLocation != -1) {
+            address.replace(tempCompressLocation, tempCompressLocation + 2, ":");
+        }
+
+        //extract rest of the components by splitting them using ":"
+        String[] addressComponents = address.toString().split(":");
+
+        for (int i = 0; i < addressComponents.length; i++) {
+            StringBuilder decompressedComponent = new StringBuilder();
+            for (int j = 0; j < 4 - addressComponents[i].length(); j++) {
+                //add a padding of the ignored zeroes during compression if required
+                decompressedComponent.append("0");
+            }
+            decompressedComponent.append(addressComponents[i]);
+
+            //replace the compressed component with the uncompressed one
+            addressComponents[i] = decompressedComponent.toString();
+        }
+
+
+        //Iterate over the uncompressed address components to add the ignored "0000" components depending on position of "::"
+        ArrayList<String> decompressedAddressComponents = new ArrayList<>();
+
+        for (int i = 0; i < addressComponents.length; i++) {
+            if (i == tempCompressLocation / 4) {
+                for (int j = 0; j < 8 - addressComponents.length; j++) {
+                    decompressedAddressComponents.add("0000");
+                }
+            }
+            decompressedAddressComponents.add(addressComponents[i]);
+
+        }
+
+        //iterate over the decompressed components to append and produce a full address
+        StringBuilder decompressedAddress = new StringBuilder();
+        for (String decompressedAddressComponent : decompressedAddressComponents) {
+            decompressedAddress.append(decompressedAddressComponent);
+            decompressedAddress.append(":");
+        }
+        decompressedAddress.replace(decompressedAddress.length() - 1, decompressedAddress.length(), "");
+        return decompressedAddress.toString();
     }
 
     private DnsResponse lookupHost(String host) throws IOException {

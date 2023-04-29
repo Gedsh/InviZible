@@ -33,27 +33,80 @@ class DnsDataSourceImpl @Inject constructor(
 
     override fun resolveDomainUDP(
         domain: String,
-        port: Int, timeout: Int
+        includeIPv6: Boolean,
+        port: Int,
+        timeout: Int
     ): Array<Record>? {
         val domainVerified = Domain(URL(domain).host ?: "")
+        return if (includeIPv6) {
+            (resolveDomainUDPIPv4(domainVerified, port, timeout) ?: emptyArray()) +
+                    (resolveDomainUDPIPv6(domainVerified, port, timeout) ?: emptyArray())
+        } else {
+            resolveDomainUDPIPv4(domainVerified, port, timeout)
+        }
+    }
+
+
+    private fun resolveDomainUDPIPv4(
+        domain: Domain,
+        port: Int,
+        timeout: Int
+    ): Array<Record>? {
         return udpResolverFactory.createUdpResolver(
             LOOPBACK_ADDRESS,
             port,
             Record.TYPE_A,
             timeout
-        ).resolve(domainVerified)
+        ).resolve(domain)
+    }
+
+    private fun resolveDomainUDPIPv6(
+        domain: Domain,
+        port: Int,
+        timeout: Int
+    ): Array<Record>? {
+        return udpResolverFactory.createUdpResolver(
+            LOOPBACK_ADDRESS,
+            port,
+            Record.TYPE_AAAA,
+            timeout
+        ).resolve(domain)
     }
 
     override fun resolveDomainDOH(
         domain: String,
+        includeIPv6: Boolean,
         timeout: Int
     ): Array<Record>? {
         val domainVerified = Domain(URL(domain).host ?: "")
+        return if (includeIPv6) {
+            (resolveDomainDOHIPv4(domainVerified, timeout) ?: emptyArray()) +
+                    (resolveDomainDOHIPv6(domainVerified, timeout) ?: emptyArray())
+        } else {
+            resolveDomainDOHIPv4(domainVerified, timeout)
+        }
+    }
+
+    private fun resolveDomainDOHIPv4(
+        domain: Domain,
+        timeout: Int
+    ): Array<Record>? {
         return dohResolverFactory.createDohResolver(
             QUAD_DOH_SERVER,
             Record.TYPE_A,
             timeout
-        ).resolve(domainVerified)
+        ).resolve(domain)
+    }
+
+    private fun resolveDomainDOHIPv6(
+        domain: Domain,
+        timeout: Int
+    ): Array<Record>? {
+        return dohResolverFactory.createDohResolver(
+            QUAD_DOH_SERVER,
+            Record.TYPE_AAAA,
+            timeout
+        ).resolve(domain)
     }
 
     override fun reverseResolveUDP(

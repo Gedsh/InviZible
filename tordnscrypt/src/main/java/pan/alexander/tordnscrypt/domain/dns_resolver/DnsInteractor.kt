@@ -27,10 +27,12 @@ interface DnsInteractor {
 
     fun resolveDomain(
         domain: String,
+        includeIPv6: Boolean,
     ): Set<String>
 
     fun resolveDomain(
         domain: String,
+        includeIPv6: Boolean,
         timeout: Int
     ): Set<String>
 
@@ -39,6 +41,7 @@ interface DnsInteractor {
     @ObsoleteCoroutinesApi
     suspend fun resolveDomainOrIp(
         domainIps: Set<DomainIpEntity>,
+        includeIPv6: Boolean,
         timeout: Int = Resolver.DNS_DEFAULT_TIMEOUT_SEC
     ): Set<DomainIpEntity>
 }

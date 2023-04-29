@@ -23,6 +23,7 @@ import androidx.annotation.NonNull;
 
 import java.io.IOException;
 import java.net.IDN;
+import java.net.Inet6Address;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -217,13 +218,8 @@ class DnsResponse extends DnsMessage {
             break;
             case Record.TYPE_AAAA: {
                 if (length == 16) {
-                    StringBuilder builder = new StringBuilder();
-                    for (int i = 0; i < 16; i += 2) {
-                        builder.append(i > 0 ? ":" : "");
-                        builder.append(readRecordDataInt8(from + i));
-                        builder.append(readRecordDataInt8(from + i + 1));
-                    }
-                    dataString = builder.toString();
+                    byte[] data = readRecordDataInet6Address(from);
+                    return Inet6Address.getByAddress(data).getHostAddress();
                 }
             }
             break;
@@ -249,6 +245,15 @@ class DnsResponse extends DnsMessage {
                 break;
         }
         return dataString;
+    }
+
+    private byte[] readRecordDataInet6Address(int from) throws IOException {
+        if (from >= recordData.length) {
+            throw new IOException("read response data out of range");
+        }
+        byte[] data = new byte[16];
+        System.arraycopy(recordData, from, data, 0, 16);
+        return data;
     }
 
     private int readRecordDataInt8(int from) throws IOException {
