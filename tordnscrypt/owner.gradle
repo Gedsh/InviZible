@@ -92,7 +92,7 @@ android {
         targetSdkVersion 33
         versionCode 183
 
-        resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt-rBR", "el", "tr", "it"
+        resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt", "pt-rBR", "el", "tr", "it"
 
         externalNativeBuild {
             cmake {
@@ -199,7 +199,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     implementation 'eu.chainfire:libsuperuser:1.1.1'
     implementation 'com.jrummyapps:android-shell:1.0.1'
-    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'androidx.core:core-ktx:1.10.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
     implementation project(':filepicker')
 
