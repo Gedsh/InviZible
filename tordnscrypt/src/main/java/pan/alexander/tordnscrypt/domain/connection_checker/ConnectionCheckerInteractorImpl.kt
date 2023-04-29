@@ -211,6 +211,7 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
                 logi("Checking connection via Tor")
                 dnsRepository.resolveDomainUDP(
                     TOR_SITE_ADDRESS,
+                    true,
                     pathVars.torDNSPort.toInt(),
                     CHECK_SOCKET_TIMEOUT_SEC
                 ).isNotEmpty()
