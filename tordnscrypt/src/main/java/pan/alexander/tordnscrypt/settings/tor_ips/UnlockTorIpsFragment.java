@@ -30,7 +30,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -55,10 +54,15 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appSign;
 import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_BLOCK_IPv6;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_USE_IPV6;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 public class UnlockTorIpsFragment extends Fragment {
 
@@ -77,6 +81,8 @@ public class UnlockTorIpsFragment extends Fragment {
     public CachedExecutor cachedExecutor;
     @Inject
     ViewModelProvider.Factory viewModelFactory;
+    @Inject @Named(DEFAULT_PREFERENCES_NAME)
+    Lazy<SharedPreferences> defaultPreferences;
 
     public UnlockTorIpsViewModel viewModel;
 
@@ -98,7 +104,7 @@ public class UnlockTorIpsFragment extends Fragment {
         ////////////////////////////////////////////////////////////////////////////////////
         ///////////////////////Reverse logic when route all through Tor!///////////////////
         //////////////////////////////////////////////////////////////////////////////////
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(activity);
+        SharedPreferences shPref = defaultPreferences.get();
         boolean routeAllThroughTorDevice = shPref.getBoolean(ALL_THROUGH_TOR, true);
         boolean routeAllThroughTorTether = shPref.getBoolean("pref_common_tor_route_all", false);
 
@@ -211,10 +217,19 @@ public class UnlockTorIpsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         if (savedInstanceState == null) {
-            viewModel.getDomainIps();
+
+            viewModel.getDomainIps(isIncludeIPv6Addresses());
         }
 
         observeResolvedDomainIps();
+    }
+
+    public boolean isIncludeIPv6Addresses() {
+        SharedPreferences prefs = defaultPreferences.get();
+        boolean blockIPv6DnsCrypt = prefs.getBoolean(DNSCRYPT_BLOCK_IPv6, true);
+        boolean useIPv6Tor = prefs.getBoolean(TOR_USE_IPV6, true);
+        return ModulesStatus.getInstance().getMode() != ROOT_MODE
+                && (!blockIPv6DnsCrypt || useIPv6Tor);
     }
 
     @Override

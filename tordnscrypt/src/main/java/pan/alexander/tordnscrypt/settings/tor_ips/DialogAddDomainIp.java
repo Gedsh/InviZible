@@ -113,7 +113,8 @@ public class DialogAddDomainIp extends DialogDomainIp {
 
         UnlockTorIpsFragment fragment = unlockTorIpsFragment.get();
         if (fragment != null) {
-            fragment.viewModel.addDomainIp(domainIp);
+            boolean includeIPv6 = fragment.isIncludeIPv6Addresses();
+            fragment.viewModel.addDomainIp(domainIp, includeIPv6);
             fragment.viewModel.addDomainToPreferences(host);
         }
 
@@ -126,7 +127,8 @@ public class DialogAddDomainIp extends DialogDomainIp {
 
         UnlockTorIpsFragment fragment = unlockTorIpsFragment.get();
         if (fragment != null) {
-            fragment.viewModel.addDomainIp(domainIp);
+            boolean includeIPv6 = fragment.isIncludeIPv6Addresses();
+            fragment.viewModel.addDomainIp(domainIp, includeIPv6);
             fragment.viewModel.addIpToPreferences(ip);
         }
 

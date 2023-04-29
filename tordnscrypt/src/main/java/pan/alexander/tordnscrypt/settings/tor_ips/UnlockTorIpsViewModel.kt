@@ -31,6 +31,7 @@ import pan.alexander.tordnscrypt.domain.tor_ips.TorIpsInteractor
 import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFragment.DEVICE_VALUE
 import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFragment.TETHER_VALUE
 import pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX
+import pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR_CLEARNET
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_UNLOCK
@@ -69,6 +70,9 @@ class UnlockTorIpsViewModel @Inject constructor(
     @Volatile
     private var getDomainIpsJob: Job? = null
 
+    private val ipv4Regex by lazy { Regex(IPv4_REGEX) }
+    private val ipv6Regex by lazy { Regex(IPv6_REGEX) }
+
     fun defineAppropriatePreferenceKeys(
         deviceOrTether: String,
         routeAllThroughTorDevice: Boolean,
@@ -103,39 +107,40 @@ class UnlockTorIpsViewModel @Inject constructor(
         mutableDomainIpLiveData.postValue(this.domainIps)
     }
 
-    fun addDomainIp(domainIp: DomainIpEntity) {
+    fun addDomainIp(domainIp: DomainIpEntity, includeIPv6: Boolean) {
         this.domainIps.remove(domainIp)
         this.domainIps.add(domainIp)
-        resolveDomainIps()
+        resolveDomainIps(includeIPv6)
         mutableDomainIpLiveData.postValue(domainIps)
     }
 
     fun updateDomainIp(
         domainIp: DomainIpEntity,
-        oldDomainIp: DomainIpEntity
+        oldDomainIp: DomainIpEntity,
+        includeIPv6: Boolean
     ) {
         this.domainIps.remove(oldDomainIp)
         this.domainIps.add(domainIp)
-        resolveDomainIps()
+        resolveDomainIps(includeIPv6)
         mutableDomainIpLiveData.postValue(domainIps)
     }
 
-    fun removeDomainIp(domainIp: DomainIpEntity) {
+    fun removeDomainIp(domainIp: DomainIpEntity, includeIPv6: Boolean) {
         this.domainIps.remove(domainIp)
-        resolveDomainIps()
+        resolveDomainIps(includeIPv6)
         mutableDomainIpLiveData.postValue(domainIps)
     }
 
-    fun resolveDomain(domain: String): Set<String> =
-        dnsInteractor.get().resolveDomain(domain)
+    fun resolveDomain(domain: String, includeIPv6: Boolean): Set<String> =
+        dnsInteractor.get().resolveDomain(domain, includeIPv6)
 
     fun reverseResolve(ip: String): String =
         dnsInteractor.get().reverseResolve(ip)
 
-    fun getDomainIps() {
+    fun getDomainIps(includeIPv6: Boolean) {
         viewModelScope.launch(coroutineContext) {
             getDomainIpsFromPreferences()
-            resolveDomainIps()
+            resolveDomainIps(includeIPv6)
         }
     }
 
@@ -153,12 +158,12 @@ class UnlockTorIpsViewModel @Inject constructor(
         }
     }
 
-    private fun resolveDomainIps() {
+    private fun resolveDomainIps(includeIPv6: Boolean) {
 
         getDomainIpsJob?.cancel()
 
         getDomainIpsJob = viewModelScope.launch(coroutineContext) {
-            val result = dnsInteractor.get().resolveDomainOrIp(domainIps)
+            val result = dnsInteractor.get().resolveDomainOrIp(domainIps, includeIPv6)
                 .map {
                     replacePleaseWaitMessage(
                         it,
@@ -179,7 +184,7 @@ class UnlockTorIpsViewModel @Inject constructor(
     ): DomainIpEntity =
         when (domainIp) {
             is DomainEntity -> {
-                if (pleaseWaitMessage == domainIp.ips.firstOrNull() ?: pleaseWaitMessage) {
+                if (pleaseWaitMessage == (domainIp.ips.firstOrNull() ?: pleaseWaitMessage)) {
                     DomainEntity(domainIp.domain, setOf(wrongDomainIpMessage), domainIp.isActive)
                 } else {
                     domainIp
@@ -213,11 +218,15 @@ class UnlockTorIpsViewModel @Inject constructor(
             if (domainIp.isActive) {
                 if (domainIp is DomainEntity) {
                     for (ip in domainIp.ips) {
-                        if (ip.matches(Regex(IPv4_REGEX))) ipsToUnlock.add(ip)
+                        if (ip.matches(ipv4Regex) || ip.matches(ipv6Regex)) {
+                            ipsToUnlock.add(ip)
+                        }
                     }
                 } else if (domainIp is IpEntity) {
                     val ip = domainIp.ip
-                    if (ip.matches(Regex(IPv4_REGEX))) ipsToUnlock.add(ip)
+                    if (ip.matches(ipv4Regex) || ip.matches(ipv6Regex)) {
+                        ipsToUnlock.add(ip)
+                    }
                 }
                 unlockHostIPContainsActive = true
             }
@@ -246,12 +255,12 @@ class UnlockTorIpsViewModel @Inject constructor(
         } else if (TETHER_VALUE == deviceOrTether) {
             settingsChanged = if (!routeAllThroughTorTether) {
                 saveDomainIpsToPreferences(
-                    ipsToUnlock,
+                    ipsToUnlock.filter { it.matches(ipv4Regex) }.toSet(),
                     PreferenceKeys.IPS_TO_UNLOCK_TETHER
                 )
             } else {
                 saveDomainIpsToPreferences(
-                    ipsToUnlock,
+                    ipsToUnlock.filter { it.matches(ipv4Regex) }.toSet(),
                     PreferenceKeys.IPS_FOR_CLEARNET_TETHER
                 )
             }

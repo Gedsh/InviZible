@@ -20,6 +20,7 @@
 package pan.alexander.tordnscrypt.settings.tor_ips;
 
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX;
 
 import androidx.appcompat.app.AlertDialog;
 
@@ -43,7 +44,7 @@ public abstract class DialogDomainIp extends AlertDialog.Builder {
     }
 
     boolean isTextIP(String text) {
-        return text.matches(IPv4_REGEX);
+        return text.matches(IPv4_REGEX) || text.matches(IPv6_REGEX);
     }
 
     void resolveHostOrIP(DomainIpEntity domainIp) {
@@ -52,12 +53,14 @@ public abstract class DialogDomainIp extends AlertDialog.Builder {
             return;
         }
 
+        boolean includeIPv6 = fragment.isIncludeIPv6Addresses();
+
         boolean active = domainIp.isActive();
 
         if (domainIp instanceof DomainEntity) {
             String domain = ((DomainEntity) domainIp).getDomain();
             try {
-                Set<String> ips = fragment.viewModel.resolveDomain(domain);
+                Set<String> ips = fragment.viewModel.resolveDomain(domain, includeIPv6);
                 if (ips.isEmpty()) {
                     throw new Exception();
                 }
@@ -66,7 +69,7 @@ public abstract class DialogDomainIp extends AlertDialog.Builder {
                                 domain,
                                 ips,
                                 active
-                        )
+                        ), includeIPv6
                 );
             } catch (Exception ignored) {
                 String ip = unlockTorIpsFrag.get().getString(R.string.pref_fast_unlock_host_wrong);
@@ -75,7 +78,7 @@ public abstract class DialogDomainIp extends AlertDialog.Builder {
                                 domain,
                                 new HashSet<>(Collections.singletonList(ip)),
                                 active
-                        )
+                        ), includeIPv6
                 );
             }
         } else if (domainIp instanceof IpEntity) {
@@ -86,12 +89,12 @@ public abstract class DialogDomainIp extends AlertDialog.Builder {
                     throw new Exception();
                 }
                 fragment.viewModel.addDomainIp(
-                        new IpEntity(ip, host, active)
+                        new IpEntity(ip, host, active), includeIPv6
                 );
             } catch (Exception ignored) {
                 String host = "";
                 fragment.viewModel.addDomainIp(
-                        new IpEntity(ip, host, active)
+                        new IpEntity(ip, host, active), includeIPv6
                 );
             }
         }

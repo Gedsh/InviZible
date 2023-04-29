@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
@@ -124,6 +125,8 @@ public class Tethering {
         Set<String> ipsToUnlockTether = preferences.getStringSetPreference(IPS_TO_UNLOCK_TETHER);
         Set<String> ipsForClearNetTether = preferences.getStringSetPreference(IPS_FOR_CLEARNET_TETHER);
 
+        Pattern ipv4Pattern = Pattern.compile(IPv4_REGEX);
+
         setInterfaceNames();
 
         String bypassLanPrerouting = "";
@@ -161,6 +164,11 @@ public class Tethering {
             StringBuilder torSitesBypassForwardBuilder = new StringBuilder();
 
             for (String ipForClearNetTether : ipsForClearNetTether) {
+
+                if (!ipForClearNetTether.matches(IPv4_REGEX)) {
+                    continue;
+                }
+
                 torSitesBypassPreroutingBuilder.append(iptables).append("-t nat -A " + NAT_PREROUTING_CORE + " -p all -d ").append(ipForClearNetTether).append(" -j ACCEPT; ");
                 torSitesBypassForwardBuilder.append(iptables).append("-A " + FILTER_FORWARD_CORE + " -p all -d ").append(ipForClearNetTether).append(" -j ACCEPT; ");
             }
@@ -181,6 +189,11 @@ public class Tethering {
             StringBuilder torSitesRejectNonTCPForwardEthernetBuilder = new StringBuilder();
 
             for (String ipToUnlockTether : ipsToUnlockTether) {
+
+                if (!ipToUnlockTether.matches(IPv4_REGEX)) {
+                    continue;
+                }
+
                 torSitesRedirectPreroutingWiFiBuilder.append(iptables).append("-t nat -A " + NAT_PREROUTING_CORE + " -i ").append(wifiAPInterfaceName).append(" -p tcp -d ").append(ipToUnlockTether).append(" -j REDIRECT --to-port ").append(pathVars.getTorTransPort()).append(" || true; ");
                 torSitesRedirectPreroutingUSBModemBuilder.append(iptables).append("-t nat -A " + NAT_PREROUTING_CORE + " -i ").append(usbModemInterfaceName).append(" -p tcp -d ").append(ipToUnlockTether).append(" -j REDIRECT --to-port ").append(pathVars.getTorTransPort()).append(" || true; ");
                 torSitesRedirectPreroutingEthernetBuilder.append(iptables).append("-t nat -A " + NAT_PREROUTING_CORE + " -i ").append(ethernetInterfaceName).append(" -p tcp -d ").append(ipToUnlockTether).append(" -j REDIRECT --to-port ").append(pathVars.getTorTransPort()).append(" || true; ");
