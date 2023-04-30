@@ -887,3 +887,12 @@
 * Added full ipv6 support for DNSCrypt in VPN mode.
 * Added full ipv6 support for Tor in VPN mode.
 * Fixed a crash on Android 4.4.2 when installing a new app.
+
+**InviZible Pro beta 1.8.4**
+* Fixed requesting for new Tor bridges.
+* Allowed requesting for ipv6 bridges in addition to ipv4 for default vanilla bridges.
+* Allowed requesting ipv6 bridges from torproject database.
+* Added IPv6 support for auxiliary app's features.
+* Added Portuguese translation.
+* Updated German translation.
+* Updated French translation.
