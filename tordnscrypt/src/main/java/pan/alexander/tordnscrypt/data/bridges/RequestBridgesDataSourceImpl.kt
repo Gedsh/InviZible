@@ -21,12 +21,12 @@ package pan.alexander.tordnscrypt.data.bridges
 
 import android.graphics.Bitmap
 import pan.alexander.tordnscrypt.domain.bridges.ParseBridgesResult
-import pan.alexander.tordnscrypt.utils.parsers.TorBridgesParser
+import pan.alexander.tordnscrypt.utils.parsers.TorProjectBridgesParser
 import java.io.InputStream
 import javax.inject.Inject
 
 class RequestBridgesDataSourceImpl @Inject constructor(
-    private val torBridgesParser: TorBridgesParser
+    private val torBridgesParser: TorProjectBridgesParser
 ) : RequestBridgesDataSource {
 
     override fun parseCaptchaChallengeImage(inputStream: InputStream): Pair<Bitmap, String> =
