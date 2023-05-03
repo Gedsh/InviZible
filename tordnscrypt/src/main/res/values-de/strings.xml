@@ -110,7 +110,7 @@
     <string name="pref_fast_through_tor_update_summ">"Updateprüfung nur mit Tor und wenn Tor läuft"</string>
     <string name="pref_common_categ_run_with_root">"Benutze Root Rechte"</string>
     <string name="pref_common_run_with_root">"Führe Module mit Root aus"</string>
-    <string name="pref_common_run_with_root_summ">"Benutze Root Rechte für DNSCrypt, Tor und I2P "</string>
+    <string name="pref_common_run_with_root_summ">Benutze Root Rechte für DNSCrypt, Tor und I2P Module. Durch Aktivierung dieser Funktion bleiben die Module unverwaltet, dies kann zu Verbindungsproblemen führen!</string>
     <string name="pref_common_categ_other">"Diverses"</string>
     <string name="pref_common_block_http">"Blockiere HOTSPOT http"</string>
     <string name="pref_common_block_http_summ">"Verbindung zu http Port 80 im HOTSPOT Modus verweigern"</string>
@@ -161,8 +161,8 @@ Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="pref_dnscrypt_require_nolog_summ">"Server darf Useranfragen nicht speichern(deklarativ)."</string>
     <string name="pref_dnscrypt_require_nofilter_summ">"Server darf keine eigene Blacklist erzwingen (Elterliche Kontrolle, Blockieren von Werbung…)."</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Benutze immer TCP um zu Upstream Servern zu verbinden."</string>
-    <string name="pref_dnscrypt_force_tcp_summ">"Dies kann nützlich sein, wenn du jeglichen Datenverkehr durch Tor schicken musst.
-Andernfalls belasse dies auf \"Deaktiviert\", da es die Sicherheit nicht verbessert und nur die Latenz erhöht.(DNSCrypt-Proxy wird immer alles (auch UDP) verschlüsseln)"</string>
+    <string name="pref_dnscrypt_force_tcp_summ">Dies kann nützlich sein, wenn jeglicher Datenverkehr durch Tor geleitet werden soll.
+\nAndernfalls sollte dies nicht aktiviert werden, da die Sicherheit dadurch nicht verbessert, die Latenz jedoch erhöht wird (DNSCrypt-Proxy wird immer alles verschlüsseln, auch wenn UDP verwendet wird).</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"HTTP / SOCKS Proxy."</string>
     <string name="pref_dnscrypt_use_proxy">"Proxy aktivieren"</string>
     <string name="pref_dnscrypt_proxy_summ">"Route alle TCP Verbindungen zu einem lokalen Tor Knoten.
@@ -242,7 +242,7 @@ Die Anfragen können das Vorhandensein von Malware, kaputten Applikationen oder 
     <string name="pref_tor_clearnet">"Host oder IP Umgehung"</string>
     <string name="pref_tor_unlock_edit">"Bearbeite Host oder IP"</string>
     <string name="pref_tor_unlock_disabled">"Deaktiviert"</string>
-    <string name="pref_tor_clean_module_folder">"Clean module folder"</string>
+    <string name="pref_tor_clean_module_folder">Modulordner bereinigen</string>
     <string name="pref_routing_unlock_app">"Apps zur Benutzung von InviZible"</string>
     <string name="pref_routing_clearnet_app">"Apps zur Umgehung InviZible"</string>
     <string name="country_select_select_all">"Wähle alle"</string>
