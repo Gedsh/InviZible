@@ -896,3 +896,8 @@
 * Added Portuguese translation.
 * Updated German translation.
 * Updated French translation.
+
+**InviZible Pro beta 1.8.5**
+* Fixed requesting for new Tor bridges.
+* Updated Tor.
+* Updated DNSCrypt.
