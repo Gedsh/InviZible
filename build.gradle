@@ -2,7 +2,7 @@
 
 buildscript {
     ext {
-        kotlin_version = '1.8.10'
+        kotlin_version = '1.8.20'
         dagger_version = '2.45'
         multidex_version = "2.0.1"
     }
