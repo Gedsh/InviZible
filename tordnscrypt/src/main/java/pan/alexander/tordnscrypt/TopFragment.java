@@ -608,6 +608,7 @@ public class TopFragment extends Fragment {
                         return;
                     }
                     DialogFragment accelerateDevelop = AskAccelerateDevelop.getInstance();
+                    accelerateDevelop.setCancelable(false);
                     if (isAdded() && !isStateSaved()) {
                         accelerateDevelop.show(getParentFragmentManager(), "accelerateDevelop");
                     }
